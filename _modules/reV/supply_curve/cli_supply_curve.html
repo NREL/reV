@@ -1,0 +1,740 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.cli_supply_curve &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.cli_supply_curve</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.cli_supply_curve</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># pylint: disable=all</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV Supply Curve command line interface (cli).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">reV.config.supply_curve_configs</span> <span class="kn">import</span> <span class="n">SupplyCurveConfig</span>
+<span class="kn">from</span> <span class="nn">reV.pipeline.status</span> <span class="kn">import</span> <span class="n">Status</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.supply_curve</span> <span class="kn">import</span> <span class="n">SupplyCurve</span>
+<span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities.hpc</span> <span class="kn">import</span> <span class="n">SLURM</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.cli_dtypes</span> <span class="kn">import</span> <span class="n">STR</span><span class="p">,</span> <span class="n">INT</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.loggers</span> <span class="kn">import</span> <span class="n">init_mult</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">dict_str_load</span><span class="p">,</span> <span class="n">get_class_properties</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--name&#39;</span><span class="p">,</span> <span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;reV-sc&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Job name. Default is &quot;reV-sc&quot;.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reV Supply Curve Command Line Interface&quot;&quot;&quot;</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">ensure_object</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    print version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">valid_config_keys</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Echo the valid SupplyCurve config keys</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">get_class_properties</span><span class="p">(</span><span class="n">SupplyCurveConfig</span><span class="p">)))</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--config_file&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;reV supply curve configuration json file.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run reV supply curve compute from a config file.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Instantiate the config object</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SupplyCurveConfig</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
+    <span class="c1"># take name from config if not default</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;rev&#39;</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="c1"># Enforce verbosity if logging level is specified in the config</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">log_level</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># initialize loggers</span>
+    <span class="n">init_mult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="s1">&#39;rex&#39;</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Initial log statements</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running reV supply curve from config &#39;</span>
+                <span class="s1">&#39;file: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_file</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Target output directory: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Target logging directory: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The full configuration input is as follows:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;local&#39;</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">retrieve_job_status</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span> <span class="s1">&#39;supply-curve&#39;</span><span class="p">,</span>
+                                            <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+            <span class="n">Status</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span> <span class="s1">&#39;supply-curve&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">job_attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hardware&#39;</span><span class="p">:</span> <span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                           <span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">})</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">direct</span><span class="p">,</span>
+                       <span class="n">sc_points</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sc_points</span><span class="p">,</span>
+                       <span class="n">trans_table</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">trans_table</span><span class="p">,</span>
+                       <span class="n">fixed_charge_rate</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">fixed_charge_rate</span><span class="p">,</span>
+                       <span class="n">sc_features</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sc_features</span><span class="p">,</span>
+                       <span class="n">transmission_costs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transmission_costs</span><span class="p">,</span>
+                       <span class="n">sort_on</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">sort_on</span><span class="p">,</span>
+                       <span class="n">wind_dirs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">wind_dirs</span><span class="p">,</span>
+                       <span class="n">n_dirs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">n_dirs</span><span class="p">,</span>
+                       <span class="n">downwind</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">downwind</span><span class="p">,</span>
+                       <span class="n">max_workers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_workers</span><span class="p">,</span>
+                       <span class="n">out_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                       <span class="n">log_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
+                       <span class="n">simple</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">simple</span><span class="p">,</span>
+                       <span class="n">line_limited</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">line_limited</span><span class="p">,</span>
+                       <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;eagle&#39;</span><span class="p">,</span> <span class="s1">&#39;slurm&#39;</span><span class="p">):</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_POINTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">sc_points</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANS_TABLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">trans_table</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FIXED_CHARGE_RATE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_FEATURES&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">sc_features</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANSMISSION_COSTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">transmission_costs</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SORT_ON&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">sort_on</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_TRANS_TABLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">offshore_trans_table</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;WIND_DIRS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">wind_dirs</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;N_DIRS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_dirs</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DOWNWIND&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">downwind</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_COMPETE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">offshore_compete</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MAX_WORKERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">max_workers</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">dirout</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">logdir</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SIMPLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">simple</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LINE_LIMITED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">line_limited</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">slurm</span><span class="p">,</span>
+                   <span class="n">alloc</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">allocation</span><span class="p">,</span>
+                   <span class="n">memory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span>
+                   <span class="n">walltime</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">walltime</span><span class="p">,</span>
+                   <span class="n">feature</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">feature</span><span class="p">,</span>
+                   <span class="n">conda_env</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">conda_env</span><span class="p">,</span>
+                   <span class="n">module</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">invoke_without_command</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--sc_points&#39;</span><span class="p">,</span> <span class="s1">&#39;-sc&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Supply curve point summary table (.csv or .json).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--trans_table&#39;</span><span class="p">,</span> <span class="s1">&#39;-tt&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Supply curve transmission mapping table (.csv or .json).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--fixed_charge_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;-fcr&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Fixed charge rate used to compute LCOT&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--sc_features&#39;</span><span class="p">,</span> <span class="s1">&#39;-scf&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Table containing additional supply curve features &#39;</span>
+                   <span class="s1">&#39;(.csv or .json)&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--transmission_costs&#39;</span><span class="p">,</span> <span class="s1">&#39;-tc&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Table or serialized dict of transmission cost inputs.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--sort_on&#39;</span><span class="p">,</span> <span class="s1">&#39;-so&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The supply curve table column label to sort on. &#39;</span>
+              <span class="s1">&#39;This determines the ordering of the SC buildout algorithm.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--offshore_trans_table&#39;</span><span class="p">,</span> <span class="s1">&#39;-ott&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Path to offshore transmission table, if None offshore sc &#39;</span>
+                    <span class="s1">&#39;points will not be included, by default None&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--wind_dirs&#39;</span><span class="p">,</span> <span class="s1">&#39;-wd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs&#39;</span>
+                    <span class="s1">&#39; output with the neighboring supply curve point gids and &#39;</span>
+                    <span class="s1">&#39;power-rose value at each cardinal direction&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--n_dirs&#39;</span><span class="p">,</span> <span class="s1">&#39;-dirs&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of prominent directions to use&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--downwind&#39;</span><span class="p">,</span> <span class="s1">&#39;-dw&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Flag to remove downwind neighbors as well as upwind &#39;</span>
+                    <span class="s1">&#39;neighbors&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--offshore_compete&#39;</span><span class="p">,</span> <span class="s1">&#39;-oc&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Flag as to whether offshore farms should be included &#39;</span>
+                    <span class="s1">&#39;during CompetitiveWindFarms, by default False&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--max_workers&#39;</span><span class="p">,</span> <span class="s1">&#39;-mw&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">INT</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Number of workers to use to compute lcot, if &gt; 1 run in &#39;</span>
+                    <span class="s1">&#39;parallel. None uses all available cpus.&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--out_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save aggregation summary output.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--log_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;-ld&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./logs/&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save aggregation logs.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-s&#39;</span><span class="p">,</span> <span class="s1">&#39;--simple&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on simple supply curve calculation.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-ll&#39;</span><span class="p">,</span> <span class="s1">&#39;--line_limited&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on line-limited substation capacity &#39;</span>
+              <span class="s1">&#39;calculation (legacy methodology). Alternative is multi-line &#39;</span>
+              <span class="s1">&#39;spread capacity.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">direct</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fixed_charge_rate</span><span class="p">,</span> <span class="n">sc_features</span><span class="p">,</span>
+           <span class="n">transmission_costs</span><span class="p">,</span> <span class="n">sort_on</span><span class="p">,</span> <span class="n">offshore_trans_table</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">,</span>
+           <span class="n">n_dirs</span><span class="p">,</span> <span class="n">downwind</span><span class="p">,</span> <span class="n">offshore_compete</span><span class="p">,</span> <span class="n">max_workers</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span>
+           <span class="n">simple</span><span class="p">,</span> <span class="n">line_limited</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reV Supply Curve CLI.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_POINTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sc_points</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANS_TABLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trans_table</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FIXED_CHARGE_RATE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fixed_charge_rate</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_FEATURES&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sc_features</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANSMISSION_COSTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">transmission_costs</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SORT_ON&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_on</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_TRANS_TABLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">offshore_trans_table</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;WIND_DIRS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wind_dirs</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;N_DIRS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_dirs</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DOWNWIND&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">downwind</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MAX_WORKERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_workers</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_COMPETE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">offshore_compete</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_dir</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log_dir</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SIMPLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simple</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LINE_LIMITED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">line_limited</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+    <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">invoked_subcommand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">init_mult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="s1">&#39;rex&#39;</span><span class="p">],</span>
+                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transmission_costs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">transmission_costs</span> <span class="o">=</span> <span class="n">dict_str_load</span><span class="p">(</span><span class="n">transmission_costs</span><span class="p">)</span>
+
+        <span class="n">offshore_table</span> <span class="o">=</span> <span class="n">offshore_trans_table</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">simple</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">SupplyCurve</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span>
+                                         <span class="n">fixed_charge_rate</span><span class="p">,</span>
+                                         <span class="n">sc_features</span><span class="o">=</span><span class="n">sc_features</span><span class="p">,</span>
+                                         <span class="n">transmission_costs</span><span class="o">=</span><span class="n">transmission_costs</span><span class="p">,</span>
+                                         <span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="o">=</span><span class="n">wind_dirs</span><span class="p">,</span>
+                                         <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">,</span>
+                                         <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                         <span class="n">offshore_trans_table</span><span class="o">=</span><span class="n">offshore_table</span><span class="p">,</span>
+                                         <span class="n">offshore_compete</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">SupplyCurve</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span>
+                                       <span class="n">fixed_charge_rate</span><span class="p">,</span>
+                                       <span class="n">sc_features</span><span class="o">=</span><span class="n">sc_features</span><span class="p">,</span>
+                                       <span class="n">transmission_costs</span><span class="o">=</span><span class="n">transmission_costs</span><span class="p">,</span>
+                                       <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span>
+                                       <span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="o">=</span><span class="n">wind_dirs</span><span class="p">,</span>
+                                       <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">,</span>
+                                       <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                       <span class="n">offshore_trans_table</span><span class="o">=</span><span class="n">offshore_table</span><span class="p">,</span>
+                                       <span class="n">offshore_compete</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Supply curve compute failed. Received the &#39;</span>
+                             <span class="s1">&#39;following error:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="n">fn_out</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">fpath_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">fn_out</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">runtime</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Supply curve complete. Time elapsed: </span><span class="si">{:.2f}</span><span class="s1"> min. &#39;</span>
+                    <span class="s1">&#39;Target output dir: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">))</span>
+
+        <span class="n">finput</span> <span class="o">=</span> <span class="p">[</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sc_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">finput</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sc_features</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">transmission_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">finput</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transmission_costs</span><span class="p">)</span>
+
+        <span class="c1"># add job to reV status file.</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="n">fn_out</span><span class="p">,</span>
+                  <span class="s1">&#39;job_status&#39;</span><span class="p">:</span> <span class="s1">&#39;successful&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="n">runtime</span><span class="p">,</span>
+                  <span class="s1">&#39;finput&#39;</span><span class="p">:</span> <span class="n">finput</span><span class="p">}</span>
+        <span class="n">Status</span><span class="o">.</span><span class="n">make_job_file</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_node_cmd"><a class="viewcode-back" href="../../../reV/reV.supply_curve.cli_supply_curve.html#reV.supply_curve.cli_supply_curve.get_node_cmd">[docs]</a><span class="k">def</span> <span class="nf">get_node_cmd</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fixed_charge_rate</span><span class="p">,</span> <span class="n">sc_features</span><span class="p">,</span>
+                 <span class="n">transmission_costs</span><span class="p">,</span> <span class="n">sort_on</span><span class="p">,</span> <span class="n">offshore_trans_table</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">,</span>
+                 <span class="n">n_dirs</span><span class="p">,</span> <span class="n">downwind</span><span class="p">,</span> <span class="n">offshore_compete</span><span class="p">,</span> <span class="n">max_workers</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span>
+                 <span class="n">log_dir</span><span class="p">,</span> <span class="n">simple</span><span class="p">,</span> <span class="n">line_limited</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a CLI call command for the Supply Curve cli.&quot;&quot;&quot;</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-sc </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">sc_points</span><span class="p">)),</span>
+            <span class="s1">&#39;-tt </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">trans_table</span><span class="p">)),</span>
+            <span class="s1">&#39;-fcr </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">fixed_charge_rate</span><span class="p">)),</span>
+            <span class="s1">&#39;-scf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">sc_features</span><span class="p">)),</span>
+            <span class="s1">&#39;-tc </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">transmission_costs</span><span class="p">)),</span>
+            <span class="s1">&#39;-so </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">sort_on</span><span class="p">)),</span>
+            <span class="s1">&#39;-ott </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">offshore_trans_table</span><span class="p">)),</span>
+            <span class="s1">&#39;-dirs </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">n_dirs</span><span class="p">)),</span>
+            <span class="s1">&#39;-mw </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">max_workers</span><span class="p">)),</span>
+            <span class="s1">&#39;-o </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)),</span>
+            <span class="s1">&#39;-ld </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)),</span>
+            <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">wind_dirs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-wd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">downwind</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-dw&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">offshore_compete</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-oc&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simple</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-s&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">line_limited</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-ll&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;python -m reV.supply_curve.cli_supply_curve -n </span><span class="si">{}</span><span class="s1"> direct </span><span class="si">{}</span><span class="s1">&#39;</span>
+           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Creating the following command line call:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cmd</span></div>
+
+
+<span class="nd">@direct</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--alloc&#39;</span><span class="p">,</span> <span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM allocation account name.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--memory&#39;</span><span class="p">,</span> <span class="s1">&#39;-mem&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">INT</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM node &#39;</span>
+              <span class="s1">&#39;memory request in GB. Default is None&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--walltime&#39;</span><span class="p">,</span> <span class="s1">&#39;-wt&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM walltime request in hours. Default is 1.0&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--feature&#39;</span><span class="p">,</span> <span class="s1">&#39;-l&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Additional flags for SLURM job. Format is &quot;--qos=high&quot; &#39;</span>
+                    <span class="s1">&#39;or &quot;--depend=[state:job_id]&quot;. Default is None.&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--module&#39;</span><span class="p">,</span> <span class="s1">&#39;-mod&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Module to load&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--conda_env&#39;</span><span class="p">,</span> <span class="s1">&#39;-env&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Conda env to activate&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--stdout_path&#39;</span><span class="p">,</span> <span class="s1">&#39;-sout&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Subprocess standard output path. Default is in out_dir.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">slurm</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">memory</span><span class="p">,</span> <span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">conda_env</span><span class="p">,</span>
+          <span class="n">stdout_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;slurm (eagle) submission tool for reV supply curve.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+    <span class="n">sc_points</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_POINTS&#39;</span><span class="p">]</span>
+    <span class="n">trans_table</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANS_TABLE&#39;</span><span class="p">]</span>
+    <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FIXED_CHARGE_RATE&#39;</span><span class="p">]</span>
+    <span class="n">sc_features</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SC_FEATURES&#39;</span><span class="p">]</span>
+    <span class="n">transmission_costs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TRANSMISSION_COSTS&#39;</span><span class="p">]</span>
+    <span class="n">simple</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SIMPLE&#39;</span><span class="p">]</span>
+    <span class="n">line_limited</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LINE_LIMITED&#39;</span><span class="p">]</span>
+    <span class="n">sort_on</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SORT_ON&#39;</span><span class="p">]</span>
+    <span class="n">offshore_trans_table</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_TRANS_TABLE&#39;</span><span class="p">]</span>
+    <span class="n">wind_dirs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;WIND_DIRS&#39;</span><span class="p">]</span>
+    <span class="n">n_dirs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;N_DIRS&#39;</span><span class="p">]</span>
+    <span class="n">downwind</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DOWNWIND&#39;</span><span class="p">]</span>
+    <span class="n">offshore_compete</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OFFSHORE_COMPETE&#39;</span><span class="p">]</span>
+    <span class="n">max_workers</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MAX_WORKERS&#39;</span><span class="p">]</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">stdout_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stdout_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="s1">&#39;stdout/&#39;</span><span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_node_cmd</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fixed_charge_rate</span><span class="p">,</span>
+                       <span class="n">sc_features</span><span class="p">,</span> <span class="n">transmission_costs</span><span class="p">,</span> <span class="n">sort_on</span><span class="p">,</span>
+                       <span class="n">offshore_trans_table</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">,</span> <span class="n">n_dirs</span><span class="p">,</span> <span class="n">downwind</span><span class="p">,</span>
+                       <span class="n">offshore_compete</span><span class="p">,</span> <span class="n">max_workers</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span>
+                       <span class="n">simple</span><span class="p">,</span> <span class="n">line_limited</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">slurm_manager</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SLURM_MANAGER&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">slurm_manager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">slurm_manager</span> <span class="o">=</span> <span class="n">SLURM</span><span class="p">()</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SLURM_MANAGER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slurm_manager</span>
+
+    <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">retrieve_job_status</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+                                        <span class="n">hardware</span><span class="o">=</span><span class="s1">&#39;eagle&#39;</span><span class="p">,</span>
+                                        <span class="n">subprocess_manager</span><span class="o">=</span><span class="n">slurm_manager</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Job &quot;</span><span class="si">{}</span><span class="s1">&quot; is successful in status json found in &quot;</span><span class="si">{}</span><span class="s1">&quot;, &#39;</span>
+               <span class="s1">&#39;not re-running.&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="s1">&#39;fail&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Job &quot;</span><span class="si">{}</span><span class="s1">&quot; was found with status &quot;</span><span class="si">{}</span><span class="s1">&quot;, not resubmitting&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running reV Supply Curve on SLURM with &#39;</span>
+                    <span class="s1">&#39;node name &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">slurm_manager</span><span class="o">.</span><span class="n">sbatch</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span> <span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">,</span>
+                                   <span class="n">walltime</span><span class="o">=</span><span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="n">feature</span><span class="p">,</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">stdout_path</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">,</span>
+                                   <span class="n">conda_env</span><span class="o">=</span><span class="n">conda_env</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Kicked off reV SC job &quot;</span><span class="si">{}</span><span class="s1">&quot; (SLURM jobid #</span><span class="si">{}</span><span class="s1">).&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+            <span class="n">Status</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span>
+                <span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">job_attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="n">out</span><span class="p">,</span> <span class="s1">&#39;hardware&#39;</span><span class="p">:</span> <span class="s1">&#39;eagle&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">out_dir</span><span class="p">})</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="p">{})</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Error running reV Supply Curve CLI.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

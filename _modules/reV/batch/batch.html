@@ -1,0 +1,938 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.batch.batch &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.batch.batch</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.batch.batch</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV batching framework for parametric runs.</span>
+
+<span class="sd">The batch framework allows users to modify key-value pairs in input jsons files</span>
+<span class="sd">based on a batch config file. The batch module will create run directories for</span>
+<span class="sd">all combinations of input parametrics, and run the reV pipelines for each job.</span>
+
+<span class="sd">Created on Mon Jun 10 13:49:53 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.pipeline.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span> <span class="nn">reV.config.batch</span> <span class="kn">import</span> <span class="n">BatchConfig</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">PipelineError</span>
+<span class="kn">from</span> <span class="nn">reV.pipeline.cli_pipeline</span> <span class="kn">import</span> <span class="n">pipeline_monitor_background</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities</span> <span class="kn">import</span> <span class="n">safe_json_load</span><span class="p">,</span> <span class="n">parse_year</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.loggers</span> <span class="kn">import</span> <span class="n">init_logger</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BatchJob"><a class="viewcode-back" href="../../../reV/reV.batch.batch.html#reV.batch.batch.BatchJob">[docs]</a><span class="k">class</span> <span class="nc">BatchJob</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Framework for building a batched job suite.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str</span>
+<span class="sd">            File path to config json or csv (str).</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Flag to turn on debug logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_job_tags</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">BatchConfig</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">config_dir</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;logging&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">:</span>
+            <span class="n">logging_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;logging&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logging_kwargs</span><span class="p">[</span><span class="s1">&#39;log_level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;DEBUG&#39;</span>
+
+            <span class="n">init_logger</span><span class="p">(</span><span class="s1">&#39;reV.batch&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">logging_kwargs</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arg_combs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_sets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_tags</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Batch job initialized with </span><span class="si">{}</span><span class="s1"> sub jobs.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arg_combs</span><span class="p">)))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse batch config object for useful data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : from reV.config.batch.BatchConfig</span>
+<span class="sd">            reV batch config object that emulates a dict.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arg_combs : list</span>
+<span class="sd">            List of dictionaries representing the different arg/value</span>
+<span class="sd">            combinations made available in the batch config json.</span>
+<span class="sd">        file_sets : list</span>
+<span class="sd">            List representing the files to manipulate for each arg comb</span>
+<span class="sd">            (same length as arg_combs).</span>
+<span class="sd">        set_tags : list</span>
+<span class="sd">            List of strings of tags for each batch job set</span>
+<span class="sd">            (same length as arg_combs).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arg_combs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">file_sets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">set_tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sets</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># iterate through batch sets</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
+            <span class="n">set_tag</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;set_tag&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">set_tag</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Found multiple sets with the same set_tag: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">set_tag</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">set_tag</span><span class="p">)</span>
+
+            <span class="c1"># iterate through combinations of arg values</span>
+            <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+
+                <span class="c1"># make a dictionary representation of this combination</span>
+                <span class="n">comb_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="n">comb_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">comb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="c1"># append the unique dictionary representation to the attr</span>
+                <span class="n">arg_combs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comb_dict</span><span class="p">)</span>
+                <span class="n">file_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">])</span>
+                <span class="n">set_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">set_tag</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">arg_combs</span><span class="p">,</span> <span class="n">file_sets</span><span class="p">,</span> <span class="n">set_tags</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_fix_tag_w_year</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If one of the tag values looks like a year, add a zero for the tag.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : str | int | float</span>
+<span class="sd">            Value from a batch run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        value : str</span>
+<span class="sd">            Value from a batch run converted to a string tag, if the input</span>
+<span class="sd">            value looks like a year, a zero will be added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parse_year</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">value</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">+=</span> <span class="s1">&#39;0&#39;</span>
+
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_make_job_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_tag</span><span class="p">,</span> <span class="n">arg_comb</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a job tags from a unique combination of args + values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        set_tag : str</span>
+<span class="sd">            Optional set tag to prefix job tag.</span>
+<span class="sd">        arg_comb : dict</span>
+<span class="sd">            Key-value pairs for this argument combination.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        job_tag : str</span>
+<span class="sd">            Identifying string from the arg comb.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">job_tag</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">arg_comb</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">temp</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">temp</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fix_tag_w_year</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">]:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">i</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">][</span><span class="n">arg</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">break</span>
+                <span class="n">temp</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">job_tag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
+        <span class="n">job_tag</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">job_tag</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">set_tag</span><span class="p">:</span>
+            <span class="n">job_tag</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">set_tag</span><span class="p">,</span> <span class="n">job_tag</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">job_tag</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="n">job_tag</span> <span class="o">=</span> <span class="n">job_tag</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">job_tag</span>
+
+    <span class="k">def</span> <span class="nf">_clean_arg_comb_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_tag</span><span class="p">,</span> <span class="n">arg_comb</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clean a dictionary of arg combinations for a single job by removing</span>
+<span class="sd">        any args that only have one value in the current set tag.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        set_tag : str</span>
+<span class="sd">            Optional set tag to prefix job tag.</span>
+<span class="sd">        arg_comb : dict</span>
+<span class="sd">            Key-value pairs for this argument combination.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tag_arg_comb : str</span>
+<span class="sd">            Arg combinations just for making the job tags. This may not have</span>
+<span class="sd">            all the arg combinations for the actual job setup.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ignore_tags</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arg_comb</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">all_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">batch_set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">batch_set</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;set_tag&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">set_tag</span>
+                        <span class="ow">and</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">batch_set</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">]):</span>
+                    <span class="n">all_values</span> <span class="o">+=</span> <span class="n">batch_set</span><span class="p">[</span><span class="s1">&#39;args&#39;</span><span class="p">][</span><span class="n">arg</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ignore_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="n">tag_arg_comb</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arg_comb</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_tags</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">tag_arg_comb</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">job_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dataframe summarizing the batch jobs.&quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">job_tag</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">job_tags</span><span class="p">):</span>
+            <span class="n">job_info</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_combs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">job_info</span><span class="p">[</span><span class="s1">&#39;set_tag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_tags</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">job_info</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_sets</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">job_info</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">job_info</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="n">job_tag</span><span class="p">])</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_info</span><span class="p">)</span>
+
+        <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;job&#39;</span>
+
+        <span class="k">return</span> <span class="n">table</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">job_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ordered list of job tags corresponding to unique arg/value combs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        job_tags : list</span>
+<span class="sd">            List of job tag strings corresponding to the unique arg/value</span>
+<span class="sd">            combinations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_job_tags</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg_comb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arg_combs</span><span class="p">):</span>
+                <span class="n">tag_arg_comb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_arg_comb_tag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_tags</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                        <span class="n">arg_comb</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_job_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_job_tag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_tags</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                         <span class="n">tag_arg_comb</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_job_tags</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arg_combs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of all viable arg/value combinations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _arg_combs : list</span>
+<span class="sd">            List of dictionaries representing the different arg/value</span>
+<span class="sd">            combinations made available in the batch config json.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arg_combs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of files to be manipulated for each arg comb batch job.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        file_sets : list</span>
+<span class="sd">            List of same length as arg_combs, representing the files to</span>
+<span class="sd">            manipulate for each arg comb.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_sets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sub_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of job sub directories.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sub_dirs : list</span>
+<span class="sd">            List of strings of job sub directories.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sub_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="n">tag</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_tags</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sub_dirs</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_clean_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform any cleaning steps required before writing an arg to a json</span>
+
+<span class="sd">        Cleaning steps:</span>
+<span class="sd">            1. Convert stringified dictionary to python dictionary object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arg : str | int | float | dict</span>
+<span class="sd">            Value to be written to a batch job json file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arg : str | int | float | dict</span>
+<span class="sd">            Cleaned value ready to be written to a batch job json file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">arg</span> <span class="ow">and</span> <span class="s1">&#39;}&#39;</span> <span class="ow">in</span> <span class="n">arg</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;&#39;&quot;</span> <span class="ow">in</span> <span class="n">arg</span> <span class="ow">or</span> <span class="s1">&#39;&quot;&#39;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Could not load json string: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="k">return</span> <span class="n">arg</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_mod_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">arg_mods</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively modify key/value pairs in a dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : dict | list | str | int | float</span>
+<span class="sd">            Input to modify such as a loaded json reV config to modify with</span>
+<span class="sd">            batch. Can also be nested data from a recursive call. Should be a</span>
+<span class="sd">            dict first, the recusive call can input nested values as</span>
+<span class="sd">            dict/list/str etc...</span>
+<span class="sd">        arg_mods : dict</span>
+<span class="sd">            Key/value pairs to insert in the inp.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict | list | str | int | float</span>
+<span class="sd">            Modified inp with arg_mods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inp</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">arg_mods</span><span class="p">:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_clean_arg</span><span class="p">(</span><span class="n">arg_mods</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+                    <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_mod_dict</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">arg_mods</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_mod_dict</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">arg_mods</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_mod_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">fpath_out</span><span class="p">,</span> <span class="n">arg_mods</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Import and modify the contents of a json. Dump to new file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            File path to json to be imported/modified</span>
+<span class="sd">        fpath_out : str</span>
+<span class="sd">            File path to dump new modified json.</span>
+<span class="sd">        arg_mods : dict</span>
+<span class="sd">            Dictionary representing one set of arg/value combinations to</span>
+<span class="sd">            implement in the json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">safe_json_load</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_mod_dict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">arg_mods</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_make_job_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Copy job files from the batch config dir into sub job dirs.&quot;&quot;&quot;</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="s1">&#39;batch_jobs.csv&#39;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Batch jobs list: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Preparing batch job directories...&#39;</span><span class="p">)</span>
+
+        <span class="c1"># walk through current directory getting everything to copy</span>
+        <span class="k">for</span> <span class="n">source_dir</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">):</span>
+
+            <span class="c1"># do make additional copies of job sub directories.</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span><span class="n">job_tag</span> <span class="ow">in</span> <span class="n">source_dir</span> <span class="k">for</span> <span class="n">job_tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_tags</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
+
+                <span class="c1"># For each dir level, iterate through the batch arg combos</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg_comb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arg_combs</span><span class="p">):</span>
+                    <span class="c1"># tag and files to mod corresponding to this arg combo</span>
+                    <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_tags</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">mod_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_sets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">mod_fnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">mod_files</span><span class="p">]</span>
+
+                    <span class="c1"># Add the job tag to the directory path.</span>
+                    <span class="c1"># This will copy config subdirs into the job subdirs</span>
+                    <span class="n">destination_dir</span> <span class="o">=</span> <span class="n">source_dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="n">tag</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination_dir</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Making new job directory: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">destination_dir</span><span class="p">))</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">destination_dir</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_copy_batch_file</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">source_dir</span><span class="p">,</span> <span class="n">destination_dir</span><span class="p">,</span>
+                                              <span class="n">tag</span><span class="p">,</span> <span class="n">arg_comb</span><span class="p">,</span> <span class="n">mod_fnames</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Batch job directories ready for execution.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_copy_batch_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">source_dir</span><span class="p">,</span> <span class="n">destination_dir</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span>
+                         <span class="n">arg_comb</span><span class="p">,</span> <span class="n">mod_fnames</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Copy a file in the batch directory into a job directory with</span>
+<span class="sd">        appropriate batch modifications (permutations) as defined by arg_comb.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fn : str</span>
+<span class="sd">            Filename being copied.</span>
+<span class="sd">        source_dir : str</span>
+<span class="sd">            Directory that the file is sourced from (usually the base batch</span>
+<span class="sd">            project directory)</span>
+<span class="sd">        destination_dir : str</span>
+<span class="sd">            Directory that the file should be copied to (usually a job&#39;s</span>
+<span class="sd">            sub directory in source_dir)</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Batch job name (for logging purposes)</span>
+<span class="sd">        arg_comb : dict</span>
+<span class="sd">            Dictionary representing one set of arg/value combinations to</span>
+<span class="sd">            implement in the fn if the fn is a .json file specified as one</span>
+<span class="sd">            of the batch permutation files to modify.</span>
+<span class="sd">        mod_fnames : list</span>
+<span class="sd">            List of filenames that need to be modified by the batch module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">mod_fnames</span> <span class="ow">and</span> <span class="n">fn</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>
+            <span class="c1"># modify json and dump to new path</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Copying and modifying run json file &#39;</span>
+                         <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; to job: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">job_name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mod_json</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">),</span>
+                           <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destination_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">),</span>
+                           <span class="n">arg_comb</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># straight copy of non-mod and non-json</span>
+            <span class="n">fp_source</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+            <span class="n">fp_target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destination_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+
+            <span class="n">modified</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fp_target</span><span class="p">):</span>
+                <span class="n">modified</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">fp_source</span><span class="p">)</span>
+                            <span class="o">&gt;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">fp_target</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">modified</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Copying run file &quot;</span><span class="si">{}</span><span class="s1">&quot; to job: &#39;</span>
+                             <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">job_name</span><span class="p">))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">fp_source</span><span class="p">,</span> <span class="n">fp_target</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not copy &quot;</span><span class="si">{}</span><span class="s1">&quot; to job: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">job_name</span><span class="p">))</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">monitor_background</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the reV pipeline modules for each batch job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        monitor_background : bool</span>
+<span class="sd">            Flag to monitor all batch pipelines continuously</span>
+<span class="sd">            in the background using the nohup command. Note that the</span>
+<span class="sd">            stdout/stderr will not be captured, but you can set a</span>
+<span class="sd">            pipeline &quot;log_file&quot; to capture logs.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Flag to turn on debug logging for the pipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_dirs</span><span class="p">:</span>
+            <span class="n">pipeline_config</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">d</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">pipeline_config</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s1">&#39;Could not find pipeline config to run: &#39;</span>
+                                    <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">monitor_background</span><span class="p">:</span>
+                <span class="n">pipeline_monitor_background</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_cancel_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel all reV pipeline modules for all batch jobs.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_dirs</span><span class="p">:</span>
+            <span class="n">pipeline_config</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">d</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">pipeline_config</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">):</span>
+                <span class="n">Pipeline</span><span class="o">.</span><span class="n">cancel_all</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_delete_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear all of the batch sub job folders based on the job summary</span>
+<span class="sd">        csv file in the batch config directory.&quot;&quot;&quot;</span>
+
+        <span class="n">fp_job_table</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="s1">&#39;batch_jobs.csv&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fp_job_table</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot delete batch jobs without jobs summary table: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp_job_table</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">job_table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fp_job_table</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">job_table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;job&#39;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot delete batch jobs when the batch summary table &#39;</span>
+                   <span class="s1">&#39;does not have &quot;job&quot; as the index key&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sub_dir</span> <span class="ow">in</span> <span class="n">job_table</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">job_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">job_dir</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing batch job directory: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">))</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">job_dir</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="s1">&#39;Cannot find batch job directory: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fp_job_table</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BatchJob.cancel_all"><a class="viewcode-back" href="../../../reV/reV.batch.batch.html#reV.batch.batch.BatchJob.cancel_all">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cancel_all</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel all reV pipeline modules for all batch jobs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str</span>
+<span class="sd">            File path to batch config json or csv (str).</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Flag to turn on debug logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">_cancel_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BatchJob.delete_all"><a class="viewcode-back" href="../../../reV/reV.batch.batch.html#reV.batch.batch.BatchJob.delete_all">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">delete_all</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete all reV batch sub job folders based on the job summary csv</span>
+<span class="sd">        in the batch config directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str</span>
+<span class="sd">            File path to batch config json or csv (str).</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Flag to turn on debug logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">_delete_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BatchJob.run"><a class="viewcode-back" href="../../../reV/reV.batch.batch.html#reV.batch.batch.BatchJob.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">monitor_background</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the reV batch job from a config file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str</span>
+<span class="sd">            File path to config json or csv (str).</span>
+<span class="sd">        dry_run : bool</span>
+<span class="sd">            Flag to make job directories without running.</span>
+<span class="sd">        delete : bool</span>
+<span class="sd">            Flag to delete all batch job sub directories based on the job</span>
+<span class="sd">            summary csv in the batch config directory.</span>
+<span class="sd">        monitor_background : bool</span>
+<span class="sd">            Flag to monitor all batch pipelines continuously</span>
+<span class="sd">            in the background using the nohup command. Note that the</span>
+<span class="sd">            stdout/stderr will not be captured, but you can set a</span>
+<span class="sd">            pipeline &quot;log_file&quot; to capture logs.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Flag to turn on debug logging for the pipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">delete</span><span class="p">:</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">_delete_all</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">_make_job_dirs</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">_run_pipelines</span><span class="p">(</span><span class="n">monitor_background</span><span class="o">=</span><span class="n">monitor_background</span><span class="p">,</span>
+                                 <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,902 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.sc_aggregation module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve.supply_curve module" href="reV.supply_curve.supply_curve.html" />
+    <link rel="prev" title="reV.supply_curve.points module" href="reV.supply_curve.points.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.supply_curve.html">reV.supply_curve package</a> &raquo;</li>
+        
+      <li>reV.supply_curve.sc_aggregation module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.supply_curve.sc_aggregation.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.supply_curve.sc_aggregation">
+<span id="rev-supply-curve-sc-aggregation-module"></span><h1>reV.supply_curve.sc_aggregation module<a class="headerlink" href="#module-reV.supply_curve.sc_aggregation" title="Permalink to this headline">¶</a></h1>
+<p>reV supply curve aggregation framework.</p>
+<p>Created on Fri Jun 21 13:24:31 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="py class">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.sc_aggregation.</code><code class="sig-name descname">SupplyCurveAggFileHandler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">econ_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_filter_kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">check_excl_layers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggFileHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="reV.supply_curve.aggregation.html#reV.supply_curve.aggregation.AbstractAggFileHandler" title="reV.supply_curve.aggregation.AbstractAggFileHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.aggregation.AbstractAggFileHandler</span></code></a></p>
+<p>Framework to handle aggregation summary context managers:
+- exclusions .h5 file
+- generation .h5 file
+- econ .h5 file (optional)
+- friction surface .h5 file (optional)
+- variable power density .csv (optional)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5 with techmap dataset.</p></li>
+<li><p><strong>gen_fpath</strong> (<em>str</em>) – Filepath to .h5 reV generation output results.</p></li>
+<li><p><strong>econ_fpath</strong> (<em>str | None</em>) – Filepath to .h5 reV econ output results. This is optional and only
+used if the lcoe_dset is not present in the gen_fpath file.</p></li>
+<li><p><strong>data_layers</strong> (<em>None | dict</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”.</p></li>
+<li><p><strong>power_density</strong> (<em>float | str | None</em>) – Power density in MW/km2 or filepath to variable power
+density file. None will attempt to infer a constant
+power density from the generation meta data technology.
+Variable power density csvs must have “gid” and “power_density”
+columns where gid is the resource gid (typically wtk or nsrdb gid)
+and the power_density column is in MW/km2.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>friction_fpath</strong> (<em>str | None</em>) – Filepath to friction surface data (cost based exclusions).
+Must be paired with friction_dset. The friction data must be the
+same shape as the exclusions. Friction input creates a new output
+“mean_lcoe_friction” which is the nominal LCOE multiplied by the
+friction data.</p></li>
+<li><p><strong>friction_dset</strong> (<em>str | None</em>) – Dataset name in friction_fpath for the friction surface data.
+Must be paired with friction_fpath. Must be same shape as
+exclusions.</p></li>
+<li><p><strong>area_filter_kernel</strong> (<em>str</em>) – Contiguous area filter method to use on final exclusions mask</p></li>
+<li><p><strong>min_area</strong> (<em>float | None</em>) – Minimum required contiguous area filter in sq-km</p></li>
+<li><p><strong>check_excl_layers</strong> (<em>bool</em>) – Run a pre-flight check on each exclusion layer to ensure they
+contain un-excluded values</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggFileHandler.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close all file handlers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.gen">
+<em class="property">property </em><code class="sig-name descname">gen</code><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the gen file handler object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_gen</strong> (<em>Outputs</em>) – reV gen outputs handler object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.data_layers">
+<em class="property">property </em><code class="sig-name descname">data_layers</code><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.data_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data layers object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_data_layers</strong> (<em>dict</em>) – Data layers namespace.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.power_density">
+<em class="property">property </em><code class="sig-name descname">power_density</code><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.power_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the power density object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_power_density</strong> (<em>float | None | pd.DataFrame</em>) – Constant power density float, None, or opened dataframe with
+(resource) “gid” and “power_density columns”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.friction_layer">
+<em class="property">property </em><code class="sig-name descname">friction_layer</code><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.friction_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the friction layer (cost based exclusions).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>friction_layer</strong> (<em>None | FrictionMask</em>) – Friction layer with scalar friction values if valid friction inputs
+were entered. Otherwise, None to not apply friction layer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.sc_aggregation.OffshoreAggregation">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.sc_aggregation.</code><code class="sig-name descname">OffshoreAggregation</code><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#OffshoreAggregation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.OffshoreAggregation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Offshore aggregation utility methods.</p>
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.OffshoreAggregation.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary</span></em>, <em class="sig-param"><span class="n">handler</span></em>, <em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">res_data</span></em>, <em class="sig-param"><span class="n">res_class_bins</span></em>, <em class="sig-param"><span class="n">cf_data</span></em>, <em class="sig-param"><span class="n">lcoe_data</span></em>, <em class="sig-param"><span class="n">offshore_flag</span></em>, <em class="sig-param"><span class="n">h5_dsets_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">offshore_capacity</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">offshore_gid_counts</span><span class="o">=</span><span class="default_value">494</span></em>, <em class="sig-param"><span class="n">offshore_pixel_area</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">offshore_meta_cols</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#OffshoreAggregation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.OffshoreAggregation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the offshore supply curve point summary. Each offshore resource
+pixel will be summarized in its own supply curve point which will be
+added to the summary list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an onshore SC point summary.</p></li>
+<li><p><strong>handler</strong> (<em>SupplyCurveAggFileHandler</em>) – Instantiated SupplyCurveAggFileHandler.</p></li>
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5 with techmap dataset.</p></li>
+<li><p><strong>res_data</strong> (<em>np.ndarray | None</em>) – Extracted resource data from res_class_dset</p></li>
+<li><p><strong>res_class_bins</strong> (<em>list</em>) – List of resouce class bin ranges.</p></li>
+<li><p><strong>cf_data</strong> (<em>np.ndarray | None</em>) – Capacity factor data extracted from cf_dset in gen</p></li>
+<li><p><strong>lcoe_data</strong> (<em>np.ndarray | None</em>) – LCOE data extracted from lcoe_dset in gen</p></li>
+<li><p><strong>offshore_flag</strong> (<em>np.ndarray</em>) – Array of offshore boolean flags if available from wind generation
+data. If this is input as None, this method has been called
+without offshore data in error and summary will be passed
+through un manipulated.</p></li>
+<li><p><strong>h5_dsets_data</strong> (<em>dict | None</em>) – If additional h5_dsets are requested, this will be a dictionary
+keyed by the h5 dataset names. The corresponding values will be
+the extracted arrays from the h5 files.</p></li>
+<li><p><strong>resolution</strong> (<em>int, optional</em>) – SC resolution, by default 64</p></li>
+<li><p><strong>offshore_capacity</strong> (<em>int | float</em>) – Offshore resource pixel generation capacity in MW.</p></li>
+<li><p><strong>offshore_gid_counts</strong> (<em>int</em>) – Approximate number of exclusion pixels that would fall into an
+offshore pixel area.</p></li>
+<li><p><strong>offshore_pixel_area</strong> (<em>int | float</em>) – Approximate area of offshore resource pixels in km2.</p></li>
+<li><p><strong>offshore_meta_cols</strong> (<em>list | tuple | None</em>) – Column labels from original offshore data file that were passed
+through to the offshore module output meta data. None will use
+Offshore class variable DEFAULT_META_COLS, and any
+additional requested cols will be added to DEFAULT_META_COLS.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an SC point summary, includng SC
+points for single offshore resource pixels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.sc_aggregation.</code><code class="sig-name descname">SupplyCurveAggregation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">econ_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_filter_kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">check_excl_layers</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_bins</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cf_dset</span><span class="o">=</span><span class="default_value">'cf_mean-means'</span></em>, <em class="sig-param"><span class="n">lcoe_dset</span><span class="o">=</span><span class="default_value">'lcoe_fcr-means'</span></em>, <em class="sig-param"><span class="n">h5_dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cap_cost_scale</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="reV.supply_curve.aggregation.html#reV.supply_curve.aggregation.AbstractAggregation" title="reV.supply_curve.aggregation.AbstractAggregation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.aggregation.AbstractAggregation</span></code></a></p>
+<p>Supply curve points aggregation framework.</p>
+<p class="rubric">Examples</p>
+<p>Standard outputs:</p>
+<dl class="simple">
+<dt>sc_gid<span class="classifier">int</span></dt><dd><p>Unique supply curve gid. This is the enumerated supply curve points,
+which can have overlapping geographic locations due to different
+resource bins at the same geographic SC point.</p>
+</dd>
+<dt>res_gids<span class="classifier">list</span></dt><dd><p>Stringified list of resource gids (e.g. original WTK or NSRDB resource
+GIDs) corresponding to each SC point.</p>
+</dd>
+<dt>gen_gids<span class="classifier">list</span></dt><dd><p>Stringified list of generation gids (e.g. GID in the reV generation
+output, which corresponds to the reV project points and not
+necessarily the resource GIDs).</p>
+</dd>
+<dt>gid_counts<span class="classifier">list</span></dt><dd><p>Stringified list of the sum of inclusion scalar values corresponding
+to each gen_gid and res_gid, where 1 is included, 0 is excluded, and
+0.7 is included with 70 percent of available land. Each entry in this
+list is associated with the corresponding entry in the gen_gids and
+res_gids lists.</p>
+</dd>
+<dt>n_gids<span class="classifier">int</span></dt><dd><p>Total number of included pixels. This is a boolean sum and considers
+partial inclusions to be included (e.g. 1).</p>
+</dd>
+<dt>mean_cf<span class="classifier">float</span></dt><dd><p>Mean capacity factor of each supply curve point (the arithmetic mean is
+weighted by the inclusion layer) (unitless).</p>
+</dd>
+<dt>mean_lcoe<span class="classifier">float</span></dt><dd><p>Mean LCOE of each supply curve point (the arithmetic mean is weighted
+by the inclusion layer). Units match the reV econ output ($/MWh).</p>
+</dd>
+<dt>mean_res<span class="classifier">float</span></dt><dd><p>Mean resource, the resource dataset to average is provided by the user
+in ‘res_class_dset’. The arithmetic mean is weighted by the inclusion
+layer.</p>
+</dd>
+<dt>capacity<span class="classifier">float</span></dt><dd><p>Total capacity of each supply curve point (MW). Units are contingent on
+the ‘power_density’ input units of MW/km2.</p>
+</dd>
+<dt>area_sq_km<span class="classifier">float</span></dt><dd><p>Total included area for each supply curve point in km2. This is based
+on the nominal area of each exclusion pixel which by default is
+calculated from the exclusion profile attributes. The NREL reV default
+is 0.0081 km2 pixels (90m x 90m). The area sum considers partial
+inclusions.</p>
+</dd>
+<dt>latitude<span class="classifier">float</span></dt><dd><p>Supply curve point centroid latitude coordinate, in degrees
+(does not consider exclusions).</p>
+</dd>
+<dt>longitude<span class="classifier">float</span></dt><dd><p>Supply curve point centroid longitude coordinate, in degrees
+(does not consider exclusions).</p>
+</dd>
+<dt>country<span class="classifier">str</span></dt><dd><p>Country of the supply curve point based on the most common country
+of the associated resource meta data. Does not consider exclusions.</p>
+</dd>
+<dt>state<span class="classifier">str</span></dt><dd><p>State of the supply curve point based on the most common state
+of the associated resource meta data. Does not consider exclusions.</p>
+</dd>
+<dt>county<span class="classifier">str</span></dt><dd><p>County of the supply curve point based on the most common county
+of the associated resource meta data. Does not consider exclusions.</p>
+</dd>
+<dt>elevation<span class="classifier">float</span></dt><dd><p>Mean elevation of the supply curve point based on the mean elevation
+of the associated resource meta data. Does not consider exclusions.</p>
+</dd>
+<dt>timezone<span class="classifier">int</span></dt><dd><p>UTC offset of local timezone based on the most common timezone of the
+associated resource meta data. Does not consider exclusions.</p>
+</dd>
+<dt>sc_point_gid<span class="classifier">int</span></dt><dd><p>Spatially deterministic supply curve point gid. Duplicate sc_point_gid
+values can exist due to resource binning.</p>
+</dd>
+<dt>sc_row_ind<span class="classifier">int</span></dt><dd><p>Row index of the supply curve point in the aggregated exclusion grid.</p>
+</dd>
+<dt>sc_col_ind<span class="classifier">int</span></dt><dd><p>Column index of the supply curve point in the aggregated exclusion grid</p>
+</dd>
+<dt>res_class<span class="classifier">int</span></dt><dd><p>Resource class for the supply curve gid. Each geographic supply curve
+point (sc_point_gid) can have multiple resource classes associated with
+it, resulting in multiple supply curve gids (sc_gid) associated with
+the same spatially deterministic supply curve point.</p>
+</dd>
+</dl>
+<p>Optional outputs:</p>
+<dl>
+<dt>mean_friction<span class="classifier">float</span></dt><dd><p>Mean of the friction data provided in ‘friction_fpath’ and
+‘friction_dset’. The arithmetic mean is weighted by boolean
+inclusions and considers partial inclusions to be included.</p>
+</dd>
+<dt>mean_lcoe_friction<span class="classifier">float</span></dt><dd><p>Mean of the nominal LCOE multiplied by mean_friction value.</p>
+</dd>
+<dt>mean_{dset}<span class="classifier">float</span></dt><dd><p>Mean input h5 dataset(s) provided by the user in ‘h5_dsets’. These
+mean calculations are weighted by the partial inclusion layer.</p>
+</dd>
+<dt>data_layers<span class="classifier">float | int | str | dict</span></dt><dd><p>Requested data layer aggregations, each data layer must be the same
+shape as the exclusion layers.
+- mode: int | str</p>
+<blockquote>
+<div><p>Most common value of a given data layer after applying the
+boolean inclusion mask.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>mean<span class="classifier">float</span></dt><dd><p>Arithmetic mean value of a given data layer weighted by the
+scalar inclusion mask (considers partial inclusions).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>min<span class="classifier">float | int</span></dt><dd><p>Minimum value of a given data layer after applying the
+boolean inclusion mask.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>max<span class="classifier">float | int</span></dt><dd><p>Maximum value of a given data layer after applying the
+boolean inclusion mask.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>sum<span class="classifier">float</span></dt><dd><p>Sum of a given data layer weighted by the scalar inclusion mask
+(considers partial inclusions).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>category<span class="classifier">dict</span></dt><dd><p>Dictionary mapping the unique values in the data_layer to the
+sum of inclusion scalar values associated with all pixels with that
+unique value.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5 with techmap dataset.</p></li>
+<li><p><strong>gen_fpath</strong> (<em>str</em>) – Filepath to .h5 reV generation output results.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the techmap file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>econ_fpath</strong> (<em>str | None</em>) – Filepath to .h5 reV econ output results. This is optional and only
+used if the lcoe_dset is not present in the gen_fpath file.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>area_filter_kernel</strong> (<em>str</em>) – Contiguous area filter method to use on final exclusions mask</p></li>
+<li><p><strong>min_area</strong> (<em>float | None</em>) – Minimum required contiguous area filter in sq-km</p></li>
+<li><p><strong>check_excl_layers</strong> (<em>bool</em>) – Run a pre-flight check on each exclusion layer to ensure they
+contain un-excluded values</p></li>
+<li><p><strong>resolution</strong> (<em>int | None</em>) – SC resolution, must be input in combination with gid. Prefered
+option is to use the row/col slices to define the SC point instead.</p></li>
+<li><p><strong>excl_area</strong> (<em>float | None</em>) – Area of an exclusion pixel in km2. None will try to infer the area
+from the profile transform attribute in excl_fpath.</p></li>
+<li><p><strong>gids</strong> (<em>list | None</em>) – List of gids to get summary for (can use to subset if running in
+parallel), or None for all gids in the SC extent.</p></li>
+<li><p><strong>res_class_dset</strong> (<em>str | None</em>) – Dataset in the generation file dictating resource classes.
+None if no resource classes.</p></li>
+<li><p><strong>res_class_bins</strong> (<em>list | None</em>) – List of floats or ints (bin edges) to convert to list of two-entry
+bin boundaries or list of two-entry bind boundaries in final format</p></li>
+<li><p><strong>cf_dset</strong> (<em>str</em>) – Dataset name from f_gen containing capacity factor mean values.</p></li>
+<li><p><strong>lcoe_dset</strong> (<em>str</em>) – Dataset name from f_gen containing LCOE mean values.</p></li>
+<li><p><strong>h5_dsets</strong> (<em>list | None</em>) – Optional list of additional datasets from the source h5 gen/econ
+files to aggregate.</p></li>
+<li><p><strong>data_layers</strong> (<em>None | dict</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”.</p></li>
+<li><p><strong>power_density</strong> (<em>float | str | None</em>) – Power density in MW/km2 or filepath to variable power
+density file. None will attempt to infer a constant
+power density from the generation meta data technology.
+Variable power density csvs must have “gid” and “power_density”
+columns where gid is the resource gid (typically wtk or nsrdb gid)
+and the power_density column is in MW/km2.</p></li>
+<li><p><strong>friction_fpath</strong> (<em>str | None</em>) – Filepath to friction surface data (cost based exclusions).
+Must be paired with friction_dset. The friction data must be the
+same shape as the exclusions. Friction input creates a new output
+“mean_lcoe_friction” which is the nominal LCOE multiplied by the
+friction data.</p></li>
+<li><p><strong>friction_dset</strong> (<em>str | None</em>) – Dataset name in friction_fpath for the friction surface data.
+Must be paired with friction_fpath. Must be same shape as
+exclusions.</p></li>
+<li><p><strong>cap_cost_scale</strong> (<em>str | None</em>) – Optional LCOE scaling equation to implement “economies of scale”.
+Equations must be in python string format and return a scalar
+value to multiply the capital cost by. Independent variables in
+the equation should match the names of the columns in the reV
+supply curve aggregation table. This will not affect offshore
+wind LCOE.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_serial">
+<em class="property">classmethod </em><code class="sig-name descname">run_serial</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">gen_index</span></em>, <em class="sig-param"><span class="n">econ_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_filter_kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">check_excl_layers</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">gids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_bins</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cf_dset</span><span class="o">=</span><span class="default_value">'cf_mean-means'</span></em>, <em class="sig-param"><span class="n">lcoe_dset</span><span class="o">=</span><span class="default_value">'lcoe_fcr-means'</span></em>, <em class="sig-param"><span class="n">h5_dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">cap_cost_scale</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation.run_serial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_serial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standalone method to create agg summary - can be parallelized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5 with techmap dataset.</p></li>
+<li><p><strong>gen_fpath</strong> (<em>str</em>) – Filepath to .h5 reV generation output results.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+<li><p><strong>econ_fpath</strong> (<em>str | None</em>) – Filepath to .h5 reV econ output results. This is optional and only
+used if the lcoe_dset is not present in the gen_fpath file.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>area_filter_kernel</strong> (<em>str</em>) – Contiguous area filter method to use on final exclusions mask</p></li>
+<li><p><strong>min_area</strong> (<em>float | None</em>) – Minimum required contiguous area filter in sq-km</p></li>
+<li><p><strong>check_excl_layers</strong> (<em>bool</em>) – Run a pre-flight check on each exclusion layer to ensure they
+contain un-excluded values</p></li>
+<li><p><strong>resolution</strong> (<em>int | None</em>) – SC resolution, must be input in combination with gid. Prefered
+option is to use the row/col slices to define the SC point instead.</p></li>
+<li><p><strong>gids</strong> (<em>list | None</em>) – List of gids to get summary for (can use to subset if running in
+parallel), or None for all gids in the SC extent.</p></li>
+<li><p><strong>args</strong> (<em>list | None</em>) – List of positional args for sc_point_method</p></li>
+<li><p><strong>res_class_dset</strong> (<em>str | None</em>) – Dataset in the generation file dictating resource classes.
+None if no resource classes.</p></li>
+<li><p><strong>res_class_bins</strong> (<em>list | None</em>) – List of two-entry lists dictating the resource class bins.
+None if no resource classes.</p></li>
+<li><p><strong>cf_dset</strong> (<em>str</em>) – Dataset name from f_gen containing capacity factor mean values.</p></li>
+<li><p><strong>lcoe_dset</strong> (<em>str</em>) – Dataset name from f_gen containing LCOE mean values.</p></li>
+<li><p><strong>h5_dsets</strong> (<em>list | None</em>) – Optional list of additional datasets from the source h5 gen/econ
+files to aggregate.</p></li>
+<li><p><strong>data_layers</strong> (<em>None | dict</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”.</p></li>
+<li><p><strong>power_density</strong> (<em>float | str | None</em>) – Power density in MW/km2 or filepath to variable power
+density file. None will attempt to infer a constant
+power density from the generation meta data technology.
+Variable power density csvs must have “gid” and “power_density”
+columns where gid is the resource gid (typically wtk or nsrdb gid)
+and the power_density column is in MW/km2.</p></li>
+<li><p><strong>friction_fpath</strong> (<em>str | None</em>) – Filepath to friction surface data (cost based exclusions).
+Must be paired with friction_dset. The friction data must be the
+same shape as the exclusions. Friction input creates a new output
+“mean_lcoe_friction” which is the nominal LCOE multiplied by the
+friction data.</p></li>
+<li><p><strong>friction_dset</strong> (<em>str | None</em>) – Dataset name in friction_fpath for the friction surface data.
+Must be paired with friction_fpath. Must be same shape as
+exclusions.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>cap_cost_scale</strong> (<em>str | None</em>) – Optional LCOE scaling equation to implement “economies of scale”.
+Equations must be in python string format and return a scalar
+value to multiply the capital cost by. Independent variables in
+the equation should match the names of the columns in the reV
+supply curve aggregation table. This will not affect offshore
+wind LCOE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an SC point summary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_parallel">
+<code class="sig-name descname">run_parallel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation.run_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the supply curve points aggregation summary using futures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>tuple | list | None</em>) – List of summary arguments to include. None defaults to all
+available args defined in the class attr.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>max_workers</strong> (<em>int | None</em>) – Number of cores to run summary on. None is all
+available cpus.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an SC point summary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_offshore">
+<code class="sig-name descname">run_offshore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary</span></em>, <em class="sig-param"><span class="n">offshore_capacity</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">offshore_gid_counts</span><span class="o">=</span><span class="default_value">494</span></em>, <em class="sig-param"><span class="n">offshore_pixel_area</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">offshore_meta_cols</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation.run_offshore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_offshore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the offshore supply curve point summary. Each offshore resource
+pixel will be summarized in its own supply curve point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an onshore SC point summary.</p></li>
+<li><p><strong>offshore_capacity</strong> (<em>int | float</em>) – Offshore resource pixel generation capacity in MW.</p></li>
+<li><p><strong>offshore_gid_counts</strong> (<em>int</em>) – Approximate number of exclusion pixels that would fall into an
+offshore pixel area.</p></li>
+<li><p><strong>offshore_pixel_area</strong> (<em>int | float</em>) – Approximate area of offshore resource pixels in km2.</p></li>
+<li><p><strong>offshore_meta_cols</strong> (<em>list | tuple | None</em>) – Column labels from original offshore data file that were passed
+through to the offshore module output meta data. None will use
+Offshore class variable DEFAULT_META_COLS, and any
+additional requested cols will be added to DEFAULT_META_COLS.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an SC point summary, includng SC
+points for single offshore resource pixels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summarize">
+<code class="sig-name descname">summarize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offshore_capacity</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">offshore_gid_counts</span><span class="o">=</span><span class="default_value">494</span></em>, <em class="sig-param"><span class="n">offshore_pixel_area</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">offshore_meta_cols</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation.summarize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summarize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the supply curve points aggregation summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>tuple | list | None</em>) – List of summary arguments to include. None defaults to all
+available args defined in the class attr.</p></li>
+<li><p><strong>max_workers</strong> (<em>int | None</em>) – Number of cores to run summary on. None is all
+available cpus.</p></li>
+<li><p><strong>offshore_capacity</strong> (<em>int | float</em>) – Offshore resource pixel generation capacity in MW.</p></li>
+<li><p><strong>offshore_gid_counts</strong> (<em>int</em>) – Approximate number of exclusion pixels that would fall into an
+offshore pixel area.</p></li>
+<li><p><strong>offshore_pixel_area</strong> (<em>int | float</em>) – Approximate area of offshore resource pixels in km2.</p></li>
+<li><p><strong>offshore_meta_cols</strong> (<em>list | tuple | None</em>) – Column labels from original offshore data file that were passed
+through to the offshore module output meta data. None will use
+Offshore class variable DEFAULT_META_COLS, and any
+additional requested cols will be added to DEFAULT_META_COLS.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>list</em>) – List of dictionaries, each being an SC point summary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summary">
+<em class="property">classmethod </em><code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">econ_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_filter_kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">check_excl_layers</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">gids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_bins</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cf_dset</span><span class="o">=</span><span class="default_value">'cf_mean-means'</span></em>, <em class="sig-param"><span class="n">lcoe_dset</span><span class="o">=</span><span class="default_value">'lcoe_fcr-means'</span></em>, <em class="sig-param"><span class="n">h5_dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_fpath</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cap_cost_scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offshore_capacity</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">offshore_gid_counts</span><span class="o">=</span><span class="default_value">494</span></em>, <em class="sig-param"><span class="n">offshore_pixel_area</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">offshore_meta_cols</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/sc_aggregation.html#SupplyCurveAggregation.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the supply curve points aggregation summary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5 with techmap dataset.</p></li>
+<li><p><strong>gen_fpath</strong> (<em>str</em>) – Filepath to .h5 reV generation output results.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the techmap file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>econ_fpath</strong> (<em>str | None</em>) – Filepath to .h5 reV econ output results. This is optional and only
+used if the lcoe_dset is not present in the gen_fpath file.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>area_filter_kernel</strong> (<em>str</em>) – Contiguous area filter method to use on final exclusions mask</p></li>
+<li><p><strong>min_area</strong> (<em>float | None</em>) – Minimum required contiguous area filter in sq-km</p></li>
+<li><p><strong>check_excl_layers</strong> (<em>bool</em>) – Run a pre-flight check on each exclusion layer to ensure they
+contain un-excluded values</p></li>
+<li><p><strong>resolution</strong> (<em>int | None</em>) – SC resolution, must be input in combination with gid. Prefered
+option is to use the row/col slices to define the SC point instead.</p></li>
+<li><p><strong>gids</strong> (<em>list | None</em>) – List of gids to get summary for (can use to subset if running in
+parallel), or None for all gids in the SC extent.</p></li>
+<li><p><strong>res_class_dset</strong> (<em>str | None</em>) – Dataset in the generation file dictating resource classes.
+None if no resource classes.</p></li>
+<li><p><strong>res_class_bins</strong> (<em>list | None</em>) – List of floats or ints (bin edges) to convert to list of two-entry
+bin boundaries or list of two-entry bind boundaries in final format</p></li>
+<li><p><strong>cf_dset</strong> (<em>str</em>) – Dataset name from f_gen containing capacity factor mean values.</p></li>
+<li><p><strong>lcoe_dset</strong> (<em>str</em>) – Dataset name from f_gen containing LCOE mean values.</p></li>
+<li><p><strong>h5_dsets</strong> (<em>list | None</em>) – Optional list of additional datasets from the source h5 gen/econ
+files to aggregate.</p></li>
+<li><p><strong>data_layers</strong> (<em>None | dict</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”.</p></li>
+<li><p><strong>power_density</strong> (<em>float | str | None</em>) – Power density in MW/km2 or filepath to variable power
+density file. None will attempt to infer a constant
+power density from the generation meta data technology.
+Variable power density csvs must have “gid” and “power_density”
+columns where gid is the resource gid (typically wtk or nsrdb gid)
+and the power_density column is in MW/km2.</p></li>
+<li><p><strong>friction_fpath</strong> (<em>str | None</em>) – Filepath to friction surface data (cost based exclusions).
+Must be paired with friction_dset. The friction data must be the
+same shape as the exclusions. Friction input creates a new output
+“mean_lcoe_friction” which is the nominal LCOE multiplied by the
+friction data.</p></li>
+<li><p><strong>friction_dset</strong> (<em>str | None</em>) – Dataset name in friction_fpath for the friction surface data.
+Must be paired with friction_fpath. Must be same shape as
+exclusions.</p></li>
+<li><p><strong>args</strong> (<em>tuple | list | None</em>) – List of summary arguments to include. None defaults to all
+available args defined in the class attr.</p></li>
+<li><p><strong>excl_area</strong> (<em>float | None</em>) – Area of an exclusion pixel in km2. None will try to infer the area
+from the profile transform attribute in excl_fpath.</p></li>
+<li><p><strong>max_workers</strong> (<em>int | None</em>) – Number of cores to run summary on. None is all
+available cpus.</p></li>
+<li><p><strong>cap_cost_scale</strong> (<em>str | None</em>) – Optional LCOE scaling equation to implement “economies of scale”.
+Equations must be in python string format and return a scalar
+value to multiply the capital cost by. Independent variables in
+the equation should match the names of the columns in the reV
+supply curve aggregation table. This will not affect offshore
+wind LCOE.</p></li>
+<li><p><strong>offshore_capacity</strong> (<em>int | float</em>) – Offshore resource pixel generation capacity in MW.</p></li>
+<li><p><strong>offshore_gid_counts</strong> (<em>int</em>) – Approximate number of exclusion pixels that would fall into an
+offshore pixel area.</p></li>
+<li><p><strong>offshore_pixel_area</strong> (<em>int | float</em>) – Approximate area of offshore resource pixels in km2.</p></li>
+<li><p><strong>offshore_meta_cols</strong> (<em>list | tuple | None</em>) – Column labels from original offshore data file that were passed
+through to the offshore module output meta data. None will use
+Offshore class variable DEFAULT_META_COLS, and any
+additional requested cols will be added to DEFAULT_META_COLS.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>DataFrame</em>) – Summary of the SC points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.supply_curve.supply_curve.html" class="btn btn-neutral float-right" title="reV.supply_curve.supply_curve module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.supply_curve.points.html" class="btn btn-neutral float-left" title="reV.supply_curve.points module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

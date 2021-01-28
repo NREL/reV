@@ -1,0 +1,876 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.qa_qc.cli_qa_qc module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.qa_qc.qa_qc module" href="reV.qa_qc.qa_qc.html" />
+    <link rel="prev" title="reV.qa_qc package" href="reV.qa_qc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.qa_qc.html">reV.qa_qc package</a> &raquo;</li>
+        
+      <li>reV.qa_qc.cli_qa_qc module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.qa_qc.cli_qa_qc.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-qa-qc-cli-qa-qc-module">
+<h1>reV.qa_qc.cli_qa_qc module<a class="headerlink" href="#rev-qa-qc-cli-qa-qc-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rev-qa-qc">
+<h2>reV-QA-QC<a class="headerlink" href="#rev-qa-qc" title="Permalink to this headline">¶</a></h2>
+<p>reV QA/QC Command Line Interface</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-n">
+<span id="cmdoption-rev-qa-qc-n"></span><span id="cmdoption-reV-QA-QC-name"></span><span id="cmdoption-rev-qa-qc-name"></span><code class="sig-name descname">-n</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--name</code><code class="sig-prename descclassname"> &lt;name&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-n" title="Permalink to this definition">¶</a></dt>
+<dd><p>reV QA/QC name, by default “reV-QA/QC”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-v">
+<span id="cmdoption-rev-qa-qc-v"></span><span id="cmdoption-reV-QA-QC-verbose"></span><span id="cmdoption-rev-qa-qc-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-qa-qc-exclusions">
+<h3>exclusions<a class="headerlink" href="#rev-qa-qc-exclusions" title="Permalink to this headline">¶</a></h3>
+<p>Extract and plot reV exclusions mask</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC exclusions <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-excl">
+<span id="cmdoption-rev-qa-qc-exclusions-excl"></span><span id="cmdoption-reV-QA-QC-exclusions-excl_fpath"></span><span id="cmdoption-rev-qa-qc-exclusions-excl-fpath"></span><code class="sig-name descname">-excl</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--excl_fpath</code><code class="sig-prename descclassname"> &lt;excl_fpath&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-excl" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Exclusions file (.h5).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-o">
+<span id="cmdoption-rev-qa-qc-exclusions-o"></span><span id="cmdoption-reV-QA-QC-exclusions-out_dir"></span><span id="cmdoption-rev-qa-qc-exclusions-out-dir"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-o" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project output directory path.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-sd">
+<span id="cmdoption-rev-qa-qc-exclusions-sd"></span><span id="cmdoption-reV-QA-QC-exclusions-sub_dir"></span><span id="cmdoption-rev-qa-qc-exclusions-sub-dir"></span><code class="sig-name descname">-sd</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sub_dir</code><code class="sig-prename descclassname"> &lt;sub_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-sd" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Sub directory to save summary tables and plots too</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-exd">
+<span id="cmdoption-rev-qa-qc-exclusions-exd"></span><span id="cmdoption-reV-QA-QC-exclusions-excl_dict"></span><span id="cmdoption-rev-qa-qc-exclusions-excl-dict"></span><code class="sig-name descname">-exd</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--excl_dict</code><code class="sig-prename descclassname"> &lt;excl_dict&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-exd" title="Permalink to this definition">¶</a></dt>
+<dd><p>String representation of a dictionary of exclusions LayerMask arguments {layer: {kwarg: value}} where layer is a dataset in excl_fpath and kwarg can be “inclusion_range”, “exclude_values”, “include_values”, “use_as_weights”, “exclude_nodata”, and/or “weight”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-afk">
+<span id="cmdoption-rev-qa-qc-exclusions-afk"></span><span id="cmdoption-reV-QA-QC-exclusions-area_filter_kernel"></span><span id="cmdoption-rev-qa-qc-exclusions-area-filter-kernel"></span><code class="sig-name descname">-afk</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--area_filter_kernel</code><code class="sig-prename descclassname"> &lt;area_filter_kernel&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-afk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contiguous area filter kernel name (“queen”, “rook”).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-ma">
+<span id="cmdoption-rev-qa-qc-exclusions-ma"></span><span id="cmdoption-reV-QA-QC-exclusions-min_area"></span><span id="cmdoption-rev-qa-qc-exclusions-min-area"></span><code class="sig-name descname">-ma</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--min_area</code><code class="sig-prename descclassname"> &lt;min_area&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-ma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contiguous area filter minimum area, default is None (No minimum area filter).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-plt">
+<span id="cmdoption-rev-qa-qc-exclusions-plt"></span><span id="cmdoption-reV-QA-QC-exclusions-plot_type"></span><span id="cmdoption-rev-qa-qc-exclusions-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-cmap">
+<span id="cmdoption-rev-qa-qc-exclusions-cmap"></span><span id="cmdoption-reV-QA-QC-exclusions-cmap"></span><code class="sig-name descname">-cmap</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cmap</code><code class="sig-prename descclassname"> &lt;cmap&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colormap name, by default ‘viridis’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-step">
+<span id="cmdoption-rev-qa-qc-exclusions-step"></span><span id="cmdoption-reV-QA-QC-exclusions-plot_step"></span><span id="cmdoption-rev-qa-qc-exclusions-plot-step"></span><code class="sig-name descname">-step</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_step</code><code class="sig-prename descclassname"> &lt;plot_step&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step between points to plot</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-log">
+<span id="cmdoption-rev-qa-qc-exclusions-log"></span><span id="cmdoption-reV-QA-QC-exclusions-log_file"></span><span id="cmdoption-rev-qa-qc-exclusions-log-file"></span><code class="sig-name descname">-log</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_file</code><code class="sig-prename descclassname"> &lt;log_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-log" title="Permalink to this definition">¶</a></dt>
+<dd><p>File to log to, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-v">
+<span id="cmdoption-rev-qa-qc-exclusions-v"></span><span id="cmdoption-reV-QA-QC-exclusions-verbose"></span><span id="cmdoption-rev-qa-qc-exclusions-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-exclusions-t">
+<span id="cmdoption-rev-qa-qc-exclusions-t"></span><span id="cmdoption-reV-QA-QC-exclusions-terminal"></span><span id="cmdoption-rev-qa-qc-exclusions-terminal"></span><code class="sig-name descname">-t</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--terminal</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-exclusions-t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag for terminal QA pipeline call. Prints successful status file.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-from-config">
+<h3>from-config<a class="headerlink" href="#rev-qa-qc-from-config" title="Permalink to this headline">¶</a></h3>
+<p>Run reV QA/QC from a config file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC from-config <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-from-config-c">
+<span id="cmdoption-rev-qa-qc-from-config-c"></span><span id="cmdoption-reV-QA-QC-from-config-config_file"></span><span id="cmdoption-rev-qa-qc-from-config-config-file"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--config_file</code><code class="sig-prename descclassname"> &lt;config_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-from-config-c" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV QA/QC configuration json file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-from-config-v">
+<span id="cmdoption-rev-qa-qc-from-config-v"></span><span id="cmdoption-reV-QA-QC-from-config-verbose"></span><span id="cmdoption-rev-qa-qc-from-config-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-from-config-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-rev-h5">
+<h3>rev-h5<a class="headerlink" href="#rev-qa-qc-rev-h5" title="Permalink to this headline">¶</a></h3>
+<p>Summarize and plot data for reV h5_file</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC rev-h5 <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-h5">
+<span id="cmdoption-rev-qa-qc-rev-h5-h5"></span><span id="cmdoption-reV-QA-QC-rev-h5-h5_file"></span><span id="cmdoption-rev-qa-qc-rev-h5-h5-file"></span><code class="sig-name descname">-h5</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--h5_file</code><code class="sig-prename descclassname"> &lt;h5_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-h5" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Path to .h5 file to summarize</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-o">
+<span id="cmdoption-rev-qa-qc-rev-h5-o"></span><span id="cmdoption-reV-QA-QC-rev-h5-out_dir"></span><span id="cmdoption-rev-qa-qc-rev-h5-out-dir"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-o" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project output directory path.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-sd">
+<span id="cmdoption-rev-qa-qc-rev-h5-sd"></span><span id="cmdoption-reV-QA-QC-rev-h5-sub_dir"></span><span id="cmdoption-rev-qa-qc-rev-h5-sub-dir"></span><code class="sig-name descname">-sd</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sub_dir</code><code class="sig-prename descclassname"> &lt;sub_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-sd" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Sub directory to save summary tables and plots too</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-ds">
+<span id="cmdoption-rev-qa-qc-rev-h5-ds"></span><span id="cmdoption-reV-QA-QC-rev-h5-dsets"></span><span id="cmdoption-rev-qa-qc-rev-h5-dsets"></span><code class="sig-name descname">-ds</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--dsets</code><code class="sig-prename descclassname"> &lt;dsets&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datasets to summarize, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-grp">
+<span id="cmdoption-rev-qa-qc-rev-h5-grp"></span><span id="cmdoption-reV-QA-QC-rev-h5-group"></span><span id="cmdoption-rev-qa-qc-rev-h5-group"></span><code class="sig-name descname">-grp</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--group</code><code class="sig-prename descclassname"> &lt;group&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-grp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group within h5_file to summarize datasets for, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-ps">
+<span id="cmdoption-rev-qa-qc-rev-h5-ps"></span><span id="cmdoption-reV-QA-QC-rev-h5-process_size"></span><span id="cmdoption-rev-qa-qc-rev-h5-process-size"></span><code class="sig-name descname">-ps</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--process_size</code><code class="sig-prename descclassname"> &lt;process_size&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-ps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of sites to process at a time, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-w">
+<span id="cmdoption-rev-qa-qc-rev-h5-w"></span><span id="cmdoption-reV-QA-QC-rev-h5-max_workers"></span><span id="cmdoption-rev-qa-qc-rev-h5-max-workers"></span><code class="sig-name descname">-w</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--max_workers</code><code class="sig-prename descclassname"> &lt;max_workers&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-w" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of workers to use when summarizing 2D datasets, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-plt">
+<span id="cmdoption-rev-qa-qc-rev-h5-plt"></span><span id="cmdoption-reV-QA-QC-rev-h5-plot_type"></span><span id="cmdoption-rev-qa-qc-rev-h5-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-cmap">
+<span id="cmdoption-rev-qa-qc-rev-h5-cmap"></span><span id="cmdoption-reV-QA-QC-rev-h5-cmap"></span><code class="sig-name descname">-cmap</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cmap</code><code class="sig-prename descclassname"> &lt;cmap&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colormap name, by default ‘viridis’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-log">
+<span id="cmdoption-rev-qa-qc-rev-h5-log"></span><span id="cmdoption-reV-QA-QC-rev-h5-log_file"></span><span id="cmdoption-rev-qa-qc-rev-h5-log-file"></span><code class="sig-name descname">-log</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_file</code><code class="sig-prename descclassname"> &lt;log_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-log" title="Permalink to this definition">¶</a></dt>
+<dd><p>File to log to, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-v">
+<span id="cmdoption-rev-qa-qc-rev-h5-v"></span><span id="cmdoption-reV-QA-QC-rev-h5-verbose"></span><span id="cmdoption-rev-qa-qc-rev-h5-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-rev-h5-t">
+<span id="cmdoption-rev-qa-qc-rev-h5-t"></span><span id="cmdoption-reV-QA-QC-rev-h5-terminal"></span><span id="cmdoption-rev-qa-qc-rev-h5-terminal"></span><code class="sig-name descname">-t</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--terminal</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-rev-h5-t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag for terminal QA pipeline call. Prints successful status file.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-summarize">
+<h3>summarize<a class="headerlink" href="#rev-qa-qc-summarize" title="Permalink to this headline">¶</a></h3>
+<p>Summarize reV data</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND1 <span class="o">[</span>ARGS<span class="o">]</span>... <span class="o">[</span>COMMAND2 <span class="o">[</span>ARGS<span class="o">]</span>...<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-o">
+<span id="cmdoption-rev-qa-qc-summarize-o"></span><span id="cmdoption-reV-QA-QC-summarize-out_dir"></span><span id="cmdoption-rev-qa-qc-summarize-out-dir"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-o" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Directory path to save summary tables and plots too</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-log">
+<span id="cmdoption-rev-qa-qc-summarize-log"></span><span id="cmdoption-reV-QA-QC-summarize-log_file"></span><span id="cmdoption-rev-qa-qc-summarize-log-file"></span><code class="sig-name descname">-log</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_file</code><code class="sig-prename descclassname"> &lt;log_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-log" title="Permalink to this definition">¶</a></dt>
+<dd><p>File to log to, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-v">
+<span id="cmdoption-rev-qa-qc-summarize-v"></span><span id="cmdoption-reV-QA-QC-summarize-verbose"></span><span id="cmdoption-rev-qa-qc-summarize-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging.</p>
+</dd></dl>
+
+<div class="section" id="rev-qa-qc-summarize-exclusions-mask">
+<h4>exclusions-mask<a class="headerlink" href="#rev-qa-qc-summarize-exclusions-mask" title="Permalink to this headline">¶</a></h4>
+<p>create heat map of exclusions mask</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize exclusions-mask <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-exclusions-mask-mask">
+<span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-mask"></span><span id="cmdoption-reV-QA-QC-summarize-exclusions-mask-excl_mask"></span><span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-excl-mask"></span><code class="sig-name descname">-mask</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--excl_mask</code><code class="sig-prename descclassname"> &lt;excl_mask&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-exclusions-mask-mask" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Path to .npy file containing final exclusions mask</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-exclusions-mask-plt">
+<span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-plt"></span><span id="cmdoption-reV-QA-QC-summarize-exclusions-mask-plot_type"></span><span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-exclusions-mask-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-exclusions-mask-cmap">
+<span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-cmap"></span><span id="cmdoption-reV-QA-QC-summarize-exclusions-mask-cmap"></span><code class="sig-name descname">-cmap</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cmap</code><code class="sig-prename descclassname"> &lt;cmap&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-exclusions-mask-cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colormap name, by default ‘viridis’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-exclusions-mask-step">
+<span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-step"></span><span id="cmdoption-reV-QA-QC-summarize-exclusions-mask-plot_step"></span><span id="cmdoption-rev-qa-qc-summarize-exclusions-mask-plot-step"></span><code class="sig-name descname">-step</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_step</code><code class="sig-prename descclassname"> &lt;plot_step&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-exclusions-mask-step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step between points to plot</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-summarize-h5">
+<h4>h5<a class="headerlink" href="#rev-qa-qc-summarize-h5" title="Permalink to this headline">¶</a></h4>
+<p>Summarize datasets in .h5 file</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize h5 <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-h5-h5">
+<span id="cmdoption-rev-qa-qc-summarize-h5-h5"></span><span id="cmdoption-reV-QA-QC-summarize-h5-h5_file"></span><span id="cmdoption-rev-qa-qc-summarize-h5-h5-file"></span><code class="sig-name descname">-h5</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--h5_file</code><code class="sig-prename descclassname"> &lt;h5_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-h5-h5" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Path to .h5 file to summarize</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-h5-ds">
+<span id="cmdoption-rev-qa-qc-summarize-h5-ds"></span><span id="cmdoption-reV-QA-QC-summarize-h5-dsets"></span><span id="cmdoption-rev-qa-qc-summarize-h5-dsets"></span><code class="sig-name descname">-ds</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--dsets</code><code class="sig-prename descclassname"> &lt;dsets&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-h5-ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datasets to summarize, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-h5-grp">
+<span id="cmdoption-rev-qa-qc-summarize-h5-grp"></span><span id="cmdoption-reV-QA-QC-summarize-h5-group"></span><span id="cmdoption-rev-qa-qc-summarize-h5-group"></span><code class="sig-name descname">-grp</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--group</code><code class="sig-prename descclassname"> &lt;group&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-h5-grp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group within h5_file to summarize datasets for, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-h5-ps">
+<span id="cmdoption-rev-qa-qc-summarize-h5-ps"></span><span id="cmdoption-reV-QA-QC-summarize-h5-process_size"></span><span id="cmdoption-rev-qa-qc-summarize-h5-process-size"></span><code class="sig-name descname">-ps</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--process_size</code><code class="sig-prename descclassname"> &lt;process_size&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-h5-ps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of sites to process at a time, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-h5-w">
+<span id="cmdoption-rev-qa-qc-summarize-h5-w"></span><span id="cmdoption-reV-QA-QC-summarize-h5-max_workers"></span><span id="cmdoption-rev-qa-qc-summarize-h5-max-workers"></span><code class="sig-name descname">-w</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--max_workers</code><code class="sig-prename descclassname"> &lt;max_workers&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-h5-w" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of workers to use when summarizing 2D datasets, by default None</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-summarize-scatter-plots">
+<h4>scatter-plots<a class="headerlink" href="#rev-qa-qc-summarize-scatter-plots" title="Permalink to this headline">¶</a></h4>
+<p>create scatter plots from h5 summary tables</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize scatter-plots <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-scatter-plots-plt">
+<span id="cmdoption-rev-qa-qc-summarize-scatter-plots-plt"></span><span id="cmdoption-reV-QA-QC-summarize-scatter-plots-plot_type"></span><span id="cmdoption-rev-qa-qc-summarize-scatter-plots-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-scatter-plots-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-scatter-plots-cmap">
+<span id="cmdoption-rev-qa-qc-summarize-scatter-plots-cmap"></span><span id="cmdoption-reV-QA-QC-summarize-scatter-plots-cmap"></span><code class="sig-name descname">-cmap</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cmap</code><code class="sig-prename descclassname"> &lt;cmap&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-scatter-plots-cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colormap name, by default ‘viridis’</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-summarize-supply-curve-plot">
+<h4>supply-curve-plot<a class="headerlink" href="#rev-qa-qc-summarize-supply-curve-plot" title="Permalink to this headline">¶</a></h4>
+<p>Plot Supply Curve (cumulative capacity vs LCOE)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize supply-curve-plot <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-sct">
+<span id="cmdoption-rev-qa-qc-summarize-supply-curve-plot-sct"></span><span id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-sc_table"></span><span id="cmdoption-rev-qa-qc-summarize-supply-curve-plot-sc-table"></span><code class="sig-name descname">-sct</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sc_table</code><code class="sig-prename descclassname"> &lt;sc_table&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-supply-curve-plot-sct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to .csv containing Supply Curve table, can be supplied in ‘supply-curve-table’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-plt">
+<span id="cmdoption-rev-qa-qc-summarize-supply-curve-plot-plt"></span><span id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-plot_type"></span><span id="cmdoption-rev-qa-qc-summarize-supply-curve-plot-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-supply-curve-plot-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-lcoe">
+<span id="cmdoption-rev-qa-qc-summarize-supply-curve-plot-lcoe"></span><span id="cmdoption-reV-QA-QC-summarize-supply-curve-plot-lcoe"></span><code class="sig-name descname">-lcoe</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--lcoe</code><code class="sig-prename descclassname"> &lt;lcoe&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-supply-curve-plot-lcoe" title="Permalink to this definition">¶</a></dt>
+<dd><p>LCOE value to plot, by default ‘mean_lcoe’</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-summarize-supply-curve-table">
+<h4>supply-curve-table<a class="headerlink" href="#rev-qa-qc-summarize-supply-curve-table" title="Permalink to this headline">¶</a></h4>
+<p>Summarize Supply Curve Table</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC summarize supply-curve-table <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-supply-curve-table-sct">
+<span id="cmdoption-rev-qa-qc-summarize-supply-curve-table-sct"></span><span id="cmdoption-reV-QA-QC-summarize-supply-curve-table-sc_table"></span><span id="cmdoption-rev-qa-qc-summarize-supply-curve-table-sc-table"></span><code class="sig-name descname">-sct</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sc_table</code><code class="sig-prename descclassname"> &lt;sc_table&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-supply-curve-table-sct" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Path to .csv containing Supply Curve table</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-summarize-supply-curve-table-cols">
+<span id="cmdoption-rev-qa-qc-summarize-supply-curve-table-cols"></span><span id="cmdoption-reV-QA-QC-summarize-supply-curve-table-columns"></span><span id="cmdoption-rev-qa-qc-summarize-supply-curve-table-columns"></span><code class="sig-name descname">-cols</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--columns</code><code class="sig-prename descclassname"> &lt;columns&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-summarize-supply-curve-table-cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column(s) to summarize, if None summarize all numeric columns, by default None</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="rev-qa-qc-supply-curve">
+<h3>supply-curve<a class="headerlink" href="#rev-qa-qc-supply-curve" title="Permalink to this headline">¶</a></h3>
+<p>Summarize and plot reV Supply Curve data</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC supply-curve <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-sct">
+<span id="cmdoption-rev-qa-qc-supply-curve-sct"></span><span id="cmdoption-reV-QA-QC-supply-curve-sc_table"></span><span id="cmdoption-rev-qa-qc-supply-curve-sc-table"></span><code class="sig-name descname">-sct</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sc_table</code><code class="sig-prename descclassname"> &lt;sc_table&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-sct" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Path to .csv containing Supply Curve table</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-o">
+<span id="cmdoption-rev-qa-qc-supply-curve-o"></span><span id="cmdoption-reV-QA-QC-supply-curve-out_dir"></span><span id="cmdoption-rev-qa-qc-supply-curve-out-dir"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-o" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project output directory path.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-sd">
+<span id="cmdoption-rev-qa-qc-supply-curve-sd"></span><span id="cmdoption-reV-QA-QC-supply-curve-sub_dir"></span><span id="cmdoption-rev-qa-qc-supply-curve-sub-dir"></span><code class="sig-name descname">-sd</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sub_dir</code><code class="sig-prename descclassname"> &lt;sub_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-sd" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Sub directory to save summary tables and plots too</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-cols">
+<span id="cmdoption-rev-qa-qc-supply-curve-cols"></span><span id="cmdoption-reV-QA-QC-supply-curve-columns"></span><span id="cmdoption-rev-qa-qc-supply-curve-columns"></span><code class="sig-name descname">-cols</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--columns</code><code class="sig-prename descclassname"> &lt;columns&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column(s) to summarize, if None summarize all numeric columns, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-plt">
+<span id="cmdoption-rev-qa-qc-supply-curve-plt"></span><span id="cmdoption-reV-QA-QC-supply-curve-plot_type"></span><span id="cmdoption-rev-qa-qc-supply-curve-plot-type"></span><code class="sig-name descname">-plt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--plot_type</code><code class="sig-prename descclassname"> &lt;plot_type&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-plt" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plot’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>plot|plotly</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-cmap">
+<span id="cmdoption-rev-qa-qc-supply-curve-cmap"></span><span id="cmdoption-reV-QA-QC-supply-curve-cmap"></span><code class="sig-name descname">-cmap</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cmap</code><code class="sig-prename descclassname"> &lt;cmap&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colormap name, by default ‘viridis’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-lcoe">
+<span id="cmdoption-rev-qa-qc-supply-curve-lcoe"></span><span id="cmdoption-reV-QA-QC-supply-curve-lcoe"></span><code class="sig-name descname">-lcoe</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--lcoe</code><code class="sig-prename descclassname"> &lt;lcoe&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-lcoe" title="Permalink to this definition">¶</a></dt>
+<dd><p>LCOE column label to plot, by default ‘mean_lcoe’</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-log">
+<span id="cmdoption-rev-qa-qc-supply-curve-log"></span><span id="cmdoption-reV-QA-QC-supply-curve-log_file"></span><span id="cmdoption-rev-qa-qc-supply-curve-log-file"></span><code class="sig-name descname">-log</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_file</code><code class="sig-prename descclassname"> &lt;log_file&gt;</code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-log" title="Permalink to this definition">¶</a></dt>
+<dd><p>File to log to, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-v">
+<span id="cmdoption-rev-qa-qc-supply-curve-v"></span><span id="cmdoption-reV-QA-QC-supply-curve-verbose"></span><span id="cmdoption-rev-qa-qc-supply-curve-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-QA-QC-supply-curve-t">
+<span id="cmdoption-rev-qa-qc-supply-curve-t"></span><span id="cmdoption-reV-QA-QC-supply-curve-terminal"></span><span id="cmdoption-rev-qa-qc-supply-curve-terminal"></span><code class="sig-name descname">-t</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--terminal</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-QA-QC-supply-curve-t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag for terminal QA pipeline call. Prints successful status file.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-qa-qc-valid-config-keys">
+<h3>valid-config-keys<a class="headerlink" href="#rev-qa-qc-valid-config-keys" title="Permalink to this headline">¶</a></h3>
+<p>Echo the valid QaQc config keys</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC valid-config-keys <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rev-qa-qc-version">
+<h3>version<a class="headerlink" href="#rev-qa-qc-version" title="Permalink to this headline">¶</a></h3>
+<p>print version</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-QA-QC version <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span class="target" id="module-reV.qa_qc.cli_qa_qc"></span><p>QA/QC CLI entry points.</p>
+<dl class="py function">
+<dt id="reV.qa_qc.cli_qa_qc.get_h5_cmd">
+<code class="sig-prename descclassname">reV.qa_qc.cli_qa_qc.</code><code class="sig-name descname">get_h5_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">sub_dir</span></em>, <em class="sig-param"><span class="n">dsets</span></em>, <em class="sig-param"><span class="n">group</span></em>, <em class="sig-param"><span class="n">process_size</span></em>, <em class="sig-param"><span class="n">max_workers</span></em>, <em class="sig-param"><span class="n">plot_type</span></em>, <em class="sig-param"><span class="n">cmap</span></em>, <em class="sig-param"><span class="n">log_file</span></em>, <em class="sig-param"><span class="n">verbose</span></em>, <em class="sig-param"><span class="n">terminal</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/cli_qa_qc.html#get_h5_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.cli_qa_qc.get_h5_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build CLI call for reV_h5.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="reV.qa_qc.cli_qa_qc.get_sc_cmd">
+<code class="sig-prename descclassname">reV.qa_qc.cli_qa_qc.</code><code class="sig-name descname">get_sc_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">sc_table</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">sub_dir</span></em>, <em class="sig-param"><span class="n">columns</span></em>, <em class="sig-param"><span class="n">plot_type</span></em>, <em class="sig-param"><span class="n">cmap</span></em>, <em class="sig-param"><span class="n">lcoe</span></em>, <em class="sig-param"><span class="n">log_file</span></em>, <em class="sig-param"><span class="n">verbose</span></em>, <em class="sig-param"><span class="n">terminal</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/cli_qa_qc.html#get_sc_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.cli_qa_qc.get_sc_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build CLI call for supply_curve.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="reV.qa_qc.cli_qa_qc.get_excl_cmd">
+<code class="sig-prename descclassname">reV.qa_qc.cli_qa_qc.</code><code class="sig-name descname">get_excl_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">sub_dir</span></em>, <em class="sig-param"><span class="n">excl_dict</span></em>, <em class="sig-param"><span class="n">area_filter_kernel</span></em>, <em class="sig-param"><span class="n">min_area</span></em>, <em class="sig-param"><span class="n">plot_type</span></em>, <em class="sig-param"><span class="n">cmap</span></em>, <em class="sig-param"><span class="n">plot_step</span></em>, <em class="sig-param"><span class="n">log_file</span></em>, <em class="sig-param"><span class="n">verbose</span></em>, <em class="sig-param"><span class="n">terminal</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/cli_qa_qc.html#get_excl_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.cli_qa_qc.get_excl_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build CLI call for exclusions.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="reV.qa_qc.cli_qa_qc.get_multiple_cmds">
+<code class="sig-prename descclassname">reV.qa_qc.cli_qa_qc.</code><code class="sig-name descname">get_multiple_cmds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">log_file</span></em>, <em class="sig-param"><span class="n">verbose</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/cli_qa_qc.html#get_multiple_cmds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.cli_qa_qc.get_multiple_cmds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a command string for multiple QA steps based on the module config</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>QaQcConfig</em>) – QAQC top level config containing multiple module configs.</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Top level project output directory. QAQC modules may be output to sub
+directories in this out_dir.</p></li>
+<li><p><strong>log_file</strong> (<em>str | None</em>) – Log file specification or None for logging to stdout.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Flag for debug logging (default is info logging).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>node_cmd</strong> (<em>str</em>) – reV command line string for all requested QAQC modules. Split by
+line-breaks.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="reV.qa_qc.cli_qa_qc.launch_slurm">
+<code class="sig-prename descclassname">reV.qa_qc.cli_qa_qc.</code><code class="sig-name descname">launch_slurm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">verbose</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/cli_qa_qc.html#launch_slurm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.cli_qa_qc.launch_slurm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch slurm QA/QC job</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – ‘reV QA/QC configuration dictionary’</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.qa_qc.qa_qc.html" class="btn btn-neutral float-right" title="reV.qa_qc.qa_qc module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.qa_qc.html" class="btn btn-neutral float-left" title="reV.qa_qc package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

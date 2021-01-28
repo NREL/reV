@@ -1,0 +1,1220 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.points module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve.sc_aggregation module" href="reV.supply_curve.sc_aggregation.html" />
+    <link rel="prev" title="reV.supply_curve.point_summary module" href="reV.supply_curve.point_summary.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.supply_curve.html">reV.supply_curve package</a> &raquo;</li>
+        
+      <li>reV.supply_curve.points module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.supply_curve.points.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.supply_curve.points">
+<span id="rev-supply-curve-points-module"></span><h1>reV.supply_curve.points module<a class="headerlink" href="#module-reV.supply_curve.points" title="Permalink to this headline">¶</a></h1>
+<p>reV supply curve extent and points base frameworks.</p>
+<dl class="py class">
+<dt id="reV.supply_curve.points.AbstractSupplyCurvePoint">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.points.</code><code class="sig-name descname">AbstractSupplyCurvePoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#AbstractSupplyCurvePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.AbstractSupplyCurvePoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/abc.html#abc.ABC" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract SC point based on only the point gid, SC shape, and resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols).</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.points.AbstractSupplyCurvePoint.sc_point_gid">
+<em class="property">property </em><code class="sig-name descname">sc_point_gid</code><a class="headerlink" href="#reV.supply_curve.points.AbstractSupplyCurvePoint.sc_point_gid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supply curve point gid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>int</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AbstractSupplyCurvePoint.rows">
+<em class="property">property </em><code class="sig-name descname">rows</code><a class="headerlink" href="#reV.supply_curve.points.AbstractSupplyCurvePoint.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the rows of the exclusions layer associated with this SC point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rows</strong> (<em>slice</em>) – Row slice to index the high-res layer (exclusions layer) for the
+gid in the agg layer (supply curve layer).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AbstractSupplyCurvePoint.cols">
+<em class="property">property </em><code class="sig-name descname">cols</code><a class="headerlink" href="#reV.supply_curve.points.AbstractSupplyCurvePoint.cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the cols of the exclusions layer associated with this SC point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cols</strong> (<em>slice</em>) – Column slice to index the high-res layer (exclusions layer) for the
+gid in the agg layer (supply curve layer).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AbstractSupplyCurvePoint.get_agg_slices">
+<em class="property">static </em><code class="sig-name descname">get_agg_slices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">resolution</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#AbstractSupplyCurvePoint.get_agg_slices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.AbstractSupplyCurvePoint.get_agg_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the row, col slices of an aggregation gid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – Gid of interest in the aggregated layer.</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em>) – (row, col) shape tuple of the underlying high-res layer.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Resolution of the aggregation: number of pixels in 1D being
+aggregated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>row_slice</strong> (<em>slice</em>) – Row slice to index the high-res layer for the gid in the agg layer.</p></li>
+<li><p><strong>col_slice</strong> (<em>slice</em>) – Col slice to index the high-res layer for the gid in the agg layer.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.points.SupplyCurvePoint">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.points.</code><code class="sig-name descname">SupplyCurvePoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.supply_curve.points.AbstractSupplyCurvePoint" title="reV.supply_curve.points.AbstractSupplyCurvePoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.points.AbstractSupplyCurvePoint</span></code></a></p>
+<p>Generic single SC point based on exclusions, resolution, and techmap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close all file handlers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.exclusions">
+<em class="property">property </em><code class="sig-name descname">exclusions</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.exclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excls</strong> (<em>ExclusionMask</em>) – ExclusionMask h5 handler object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.centroid">
+<em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the supply curve point centroid coordinate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>centroid</strong> (<em>tuple</em>) – SC point centroid (lat, lon).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.area">
+<em class="property">property </em><code class="sig-name descname">area</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the non-excluded resource area of the supply curve point in the
+current resource class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>area</strong> (<em>float</em>) – Non-excluded resource/generation area in square km.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.latitude">
+<em class="property">property </em><code class="sig-name descname">latitude</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.latitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point latitude</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.longitude">
+<em class="property">property </em><code class="sig-name descname">longitude</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.longitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point longitude</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.n_gids">
+<em class="property">property </em><code class="sig-name descname">n_gids</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.n_gids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the total number of not fully excluded pixels associated with the
+available resource/generation gids at the given sc gid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>n_gids</strong> (<em>list</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.excl_data">
+<em class="property">property </em><code class="sig-name descname">excl_data</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.excl_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>[0, 1]).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_data</strong> (<em>np.ndarray</em>) – 2D exclusions data mask corresponding to the exclusions grid in
+the SC domain.</p>
+</dd>
+<dt class="field-even">Type</dt>
+<dd class="field-even"><p>Get the exclusions mask (normalized with expected range</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.excl_data_flat">
+<em class="property">property </em><code class="sig-name descname">excl_data_flat</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.excl_data_flat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the flattened exclusions mask (normalized with expected
+range: [0, 1]).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_data_flat</strong> (<em>np.ndarray</em>) – 1D flattened exclusions data mask.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.bool_mask">
+<em class="property">property </em><code class="sig-name descname">bool_mask</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.bool_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a boolean inclusion mask (True if excl point is not excluded).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<em>np.ndarray</em>) – Mask with length equal to the flattened exclusion shape</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.h5">
+<em class="property">property </em><code class="sig-name descname">h5</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>placeholder for h5 Resource handler object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.summary">
+<em class="property">property </em><code class="sig-name descname">summary</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder for Supply curve point’s meta data summary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.exclusion_weighted_mean">
+<code class="sig-name descname">exclusion_weighted_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em>, <em class="sig-param"><span class="n">drop_nan</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.exclusion_weighted_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.exclusion_weighted_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calc the exclusions-weighted mean value of an array of resource data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arr</strong> (<em>np.ndarray</em>) – Array of resource data.</p></li>
+<li><p><strong>drop_nan</strong> (<em>bool</em>) – Flag to drop nan values from the mean calculation (only works for
+1D arr input, profiles should not have NaN’s)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mean</strong> (<em>float | np.ndarray</em>) – Mean of arr masked by the binary exclusions then weighted by
+the non-zero exclusions. This will be a 1D numpy array if the
+input data is a 2D numpy array (averaged along axis=1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.mean_wind_dirs">
+<code class="sig-name descname">mean_wind_dirs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.mean_wind_dirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.mean_wind_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calc the mean wind directions at every time-step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>np.ndarray</em>) – Array of wind direction data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mean_wind_dirs</strong> (<em>np.ndarray | float</em>) – Mean wind direction of arr masked by the binary exclusions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.aggregate">
+<code class="sig-name descname">aggregate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.aggregate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calc sum (aggregation) of the resource data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>np.ndarray</em>) – Array of resource data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>agg</strong> (<em>float</em>) – Sum of arr masked by the binary exclusions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.sc_mean">
+<em class="property">classmethod </em><code class="sig-name descname">sc_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.sc_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.sc_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute exclusions weight mean for the sc point from data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>data</strong> (<em>ndarray | ResourceDataset</em>) – Array of data or open dataset handler to apply exclusions too</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>ndarray</em> – Exclusions weighted means of data for supply curve point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurvePoint.sc_sum">
+<em class="property">classmethod </em><code class="sig-name descname">sc_sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurvePoint.sc_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurvePoint.sc_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the aggregate (sum) of data for the sc point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>data</strong> (<em>ndarray | ResourceDataset</em>) – Array of data or open dataset handler to apply exclusions too</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>ndarray</em> – Sum / aggregation of data for supply curve point</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.points.</code><code class="sig-name descname">AggregationSupplyCurvePoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">agg_h5</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gen_index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#AggregationSupplyCurvePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.supply_curve.points.SupplyCurvePoint" title="reV.supply_curve.points.SupplyCurvePoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.points.SupplyCurvePoint</span></code></a></p>
+<p>Generic single SC point to aggregate data from an h5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>agg_h5</strong> (<em>str | Resource</em>) – Filepath to .h5 file to aggregate or Resource handler</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#AggregationSupplyCurvePoint.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close all file handlers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.h5">
+<em class="property">property </em><code class="sig-name descname">h5</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>h5 Resource handler object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_h5</strong> (<em>Resource</em>) – Resource h5 handler object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.country">
+<em class="property">property </em><code class="sig-name descname">country</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.country" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point country based on the resource meta data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.state">
+<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point state based on the resource meta data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.county">
+<em class="property">property </em><code class="sig-name descname">county</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.county" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point county based on the resource meta data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.elevation">
+<em class="property">property </em><code class="sig-name descname">elevation</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.elevation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point elevation based on the resource meta data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.timezone">
+<em class="property">property </em><code class="sig-name descname">timezone</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.timezone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SC point timezone based on the resource meta data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.h5_gid_set">
+<em class="property">property </em><code class="sig-name descname">h5_gid_set</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.h5_gid_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of unique h5 gids corresponding to this sc point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>h5_gids</strong> (<em>list</em>) – List of h5 gids.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.gid_counts">
+<em class="property">property </em><code class="sig-name descname">gid_counts</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.gid_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sum of the inclusion values in each resource/generation gid
+corresponding to this sc point. The sum of the gid counts can be less
+than the value provided by n_gids if fractional exclusion/inclusions
+are provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>gid_counts</strong> (<em>list</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.summary">
+<em class="property">property </em><code class="sig-name descname">summary</code><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supply curve point’s meta data summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pandas.Series</em> – List of supply curve point’s meta data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.AggregationSupplyCurvePoint.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">agg_h5</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">agg_dset</span></em>, <em class="sig-param"><span class="n">agg_method</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gen_index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#AggregationSupplyCurvePoint.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.AggregationSupplyCurvePoint.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute exclusions weight mean for the sc point from data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>agg_h5</strong> (<em>str | Resource</em>) – Filepath to .h5 file to aggregate or Resource handler</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>agg_dset</strong> (<em>str</em>) – Dataset to aggreate, can supply multiple datasets</p></li>
+<li><p><strong>agg_method</strong> (<em>str</em>) – Aggregation method, either mean or sum/aggregate</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> (<em>dict</em>) – Given datasets and meta data aggregated to supply curve points</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.points.</code><code class="sig-name descname">GenerationSupplyCurvePoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">gen</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">gen_index</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offshore_flags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#GenerationSupplyCurvePoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.supply_curve.points.AggregationSupplyCurvePoint" title="reV.supply_curve.points.AggregationSupplyCurvePoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.points.AggregationSupplyCurvePoint</span></code></a></p>
+<p>Single supply curve point with associated reV generation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>gen</strong> (<em>str | reV.handlers.Resource</em>) – Filepath to .h5 reV generation output results or reV Resource file
+handler.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the exclusions file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the full exclusions extent (rows, cols). Inputing this
+will speed things up considerably.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.exclusion_weighted_mean">
+<code class="sig-name descname">exclusion_weighted_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flat_arr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#GenerationSupplyCurvePoint.exclusion_weighted_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.exclusion_weighted_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calc the exclusions-weighted mean value of a flat array of gen data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flat_arr</strong> (<em>np.ndarray</em>) – Flattened array of resource/generation/econ data. Must be
+index-able with the self._gen_gids array (must be a 1D array with
+an entry for every site in the generation extent).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mean</strong> (<em>float</em>) – Mean of flat_arr masked by the binary exclusions then weighted by
+the non-zero exclusions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.gen">
+<em class="property">property </em><code class="sig-name descname">gen</code><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the generation output object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_gen</strong> (<em>Resource</em>) – reV generation Resource object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.res_gid_set">
+<em class="property">property </em><code class="sig-name descname">res_gid_set</code><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.res_gid_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of unique resource gids corresponding to this sc point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>res_gids</strong> (<em>list</em>) – List of resource gids.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.gen_gid_set">
+<em class="property">property </em><code class="sig-name descname">gen_gid_set</code><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.gen_gid_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of unique generation gids corresponding to this sc point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>gen_gids</strong> (<em>list</em>) – List of generation gids.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.h5_gid_set">
+<em class="property">property </em><code class="sig-name descname">h5_gid_set</code><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.h5_gid_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of unique h5 gids corresponding to this sc point.
+Same as gen_gid_set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>h5_gids</strong> (<em>list</em>) – List of h5 gids.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.GenerationSupplyCurvePoint.gid_counts">
+<em class="property">property </em><code class="sig-name descname">gid_counts</code><a class="headerlink" href="#reV.supply_curve.points.GenerationSupplyCurvePoint.gid_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of exclusion pixels in each resource/generation gid
+corresponding to this sc point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>gid_counts</strong> (<em>list</em>) – List of exclusion pixels in each resource/generation gid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.points.SupplyCurveExtent">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.points.</code><code class="sig-name descname">SupplyCurveExtent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f_excl</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Supply curve full extent framework.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f_excl</strong> (<em>str | ExclusionLayers</em>) – File path to the exclusions grid, or pre-initialized
+ExclusionLayers. The exclusions dictate the SC analysis extent.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close all file handlers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Supply curve shape tuple (n_rows, n_cols).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>shape</strong> (<em>tuple</em>) – 2-entry tuple representing the full supply curve extent.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.exclusions">
+<em class="property">property </em><code class="sig-name descname">exclusions</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.exclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excls</strong> (<em>ExclusionLayers</em>) – ExclusionLayers h5 handler object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.resolution">
+<em class="property">property </em><code class="sig-name descname">resolution</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.resolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the 1D resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_res</strong> (<em>int</em>) – Number of exclusion points per SC point along an axis.
+This number**2 is the total number of exclusion points per
+SC point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.excl_rows">
+<em class="property">property </em><code class="sig-name descname">excl_rows</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.excl_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the unique row indices identifying the exclusion points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>excl_rows</strong> (<em>np.ndarray</em>) – Array of exclusion row indices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.excl_cols">
+<em class="property">property </em><code class="sig-name descname">excl_cols</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.excl_cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the unique column indices identifying the exclusion points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>excl_cols</strong> (<em>np.ndarray</em>) – Array of exclusion column indices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.rows_of_excl">
+<em class="property">property </em><code class="sig-name descname">rows_of_excl</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.rows_of_excl" title="Permalink to this definition">¶</a></dt>
+<dd><p>List representing the supply curve points rows and which
+exclusions rows belong to each supply curve row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_rows_of_excl</strong> (<em>list</em>) – List representing the supply curve points rows. Each list entry
+contains the exclusion row indices that are included in the sc
+point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.cols_of_excl">
+<em class="property">property </em><code class="sig-name descname">cols_of_excl</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.cols_of_excl" title="Permalink to this definition">¶</a></dt>
+<dd><p>List representing the supply curve points columns and which
+exclusions columns belong to each supply curve column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_cols_of_excl</strong> (<em>list</em>) – List representing the supply curve points columns. Each list entry
+contains the exclusion column indices that are included in the sc
+point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.excl_row_slices">
+<em class="property">property </em><code class="sig-name descname">excl_row_slices</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.excl_row_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>List representing the supply curve points rows and which
+exclusions rows belong to each supply curve row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_row_slices</strong> (<em>list</em>) – List representing the supply curve points rows. Each list entry
+contains the exclusion row slice that are included in the sc
+point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.excl_col_slices">
+<em class="property">property </em><code class="sig-name descname">excl_col_slices</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.excl_col_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>List representing the supply curve points cols and which
+exclusions cols belong to each supply curve col.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_col_slices</strong> (<em>list</em>) – List representing the supply curve points cols. Each list entry
+contains the exclusion col slice that are included in the sc
+point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.n_rows">
+<em class="property">property </em><code class="sig-name descname">n_rows</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.n_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of supply curve grid rows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>n_rows</strong> (<em>int</em>) – Number of row entries in the full supply curve grid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.n_cols">
+<em class="property">property </em><code class="sig-name descname">n_cols</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.n_cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of supply curve grid columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>n_cols</strong> (<em>int</em>) – Number of column entries in the full supply curve grid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.latitude">
+<em class="property">property </em><code class="sig-name descname">latitude</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.latitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get supply curve point latitudes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.longitude">
+<em class="property">property </em><code class="sig-name descname">longitude</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.longitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get supply curve point longitudes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.lat_lon">
+<em class="property">property </em><code class="sig-name descname">lat_lon</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.lat_lon" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array of lat, lon coordinates for all sc points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the summary dataframe of supply curve points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_points</strong> (<em>pd.DataFrame</em>) – Supply curve points with columns for attributes of each sc point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.get_excl_slices">
+<code class="sig-name descname">get_excl_slices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.get_excl_slices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.get_excl_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the row and column slices of the exclusions grid corresponding
+to the supply curve point gid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – Supply curve point gid.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>row_slice</strong> (<em>int</em>) – Exclusions grid row index slice corresponding to the sc point gid.</p></li>
+<li><p><strong>col_slice</strong> (<em>int</em>) – Exclusions grid col index slice corresponding to the sc point gid.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.get_flat_excl_ind">
+<code class="sig-name descname">get_flat_excl_ind</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.get_flat_excl_ind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.get_flat_excl_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the index values of the flattened exclusions grid corresponding
+to the supply curve point gid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – Supply curve point gid.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>excl_ind</strong> (<em>np.ndarray</em>) – Index values of the flattened exclusions grid corresponding to
+the SC gid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.get_excl_points">
+<code class="sig-name descname">get_excl_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dset</span></em>, <em class="sig-param"><span class="n">gid</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.get_excl_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.get_excl_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions data corresponding to a supply curve gid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dset</strong> (<em>str | int</em>) – Used as the first arg in the exclusions __getitem__ slice.
+String can be “meta”, integer can be layer number.</p></li>
+<li><p><strong>gid</strong> (<em>int</em>) – Supply curve point gid.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>excl_points</strong> (<em>pd.DataFrame</em>) – Exclusions data reduced to just the exclusion points associated
+with the requested supply curve gid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.get_coord">
+<code class="sig-name descname">get_coord</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.get_coord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.get_coord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the centroid coordinate for the supply curve gid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – Supply curve point gid.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>coord</strong> (<em>tuple</em>) – Two entry coordinate tuple: (latitude, longitude)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.points.SupplyCurveExtent.valid_sc_points">
+<code class="sig-name descname">valid_sc_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tm_dset</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/points.html#SupplyCurveExtent.valid_sc_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.points.SupplyCurveExtent.valid_sc_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine which sc_point_gids contain resource gids and are thus
+valid supply curve points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tm_dset</strong> (<em>str</em>) – Techmap dataset name</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>valid_gids</strong> (<em>ndarray</em>) – Vector of valid sc_point_gids that contain resource gis</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.supply_curve.sc_aggregation.html" class="btn btn-neutral float-right" title="reV.supply_curve.sc_aggregation module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.supply_curve.point_summary.html" class="btn btn-neutral float-left" title="reV.supply_curve.point_summary module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,598 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.handlers.collection module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.handlers.exclusions module" href="reV.handlers.exclusions.html" />
+    <link rel="prev" title="reV.handlers.cli_multi_year module" href="reV.handlers.cli_multi_year.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.handlers.html">reV.handlers package</a> &raquo;</li>
+        
+      <li>reV.handlers.collection module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.handlers.collection.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.handlers.collection">
+<span id="rev-handlers-collection-module"></span><h1>reV.handlers.collection module<a class="headerlink" href="#module-reV.handlers.collection" title="Permalink to this headline">¶</a></h1>
+<p>Base class to handle collection of profiles and means across multiple .h5 files</p>
+<dl class="py class">
+<dt id="reV.handlers.collection.DatasetCollector">
+<em class="property">class </em><code class="sig-prename descclassname">reV.handlers.collection.</code><code class="sig-name descname">DatasetCollector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">source_files</span></em>, <em class="sig-param"><span class="n">gids</span></em>, <em class="sig-param"><span class="n">dset_in</span></em>, <em class="sig-param"><span class="n">dset_out</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#DatasetCollector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.DatasetCollector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to collect single datasets from several source files into a final
+output file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to h5_file into which dataset is to be collected</p></li>
+<li><p><strong>source_files</strong> (<em>list</em>) – List of source filepaths.</p></li>
+<li><p><strong>gids</strong> (<em>list</em>) – list of gids to be collected</p></li>
+<li><p><strong>dset_in</strong> (<em>str</em>) – Dataset to collect</p></li>
+<li><p><strong>dset_out</strong> (<em>str</em>) – Dataset into which collected data is to be written</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This sets how many sites
+will be collected at a time.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.handlers.collection.DatasetCollector.parse_meta">
+<em class="property">static </em><code class="sig-name descname">parse_meta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#DatasetCollector.parse_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.DatasetCollector.parse_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract and convert meta data from a rec.array to pandas.DataFrame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file from which meta is to be parsed</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>meta</strong> (<em>pandas.DataFrame</em>) – Portion of meta data corresponding to sites in h5_file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.DatasetCollector.collect_dset">
+<em class="property">classmethod </em><code class="sig-name descname">collect_dset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">source_files</span></em>, <em class="sig-param"><span class="n">gids</span></em>, <em class="sig-param"><span class="n">dset_in</span></em>, <em class="sig-param"><span class="n">dset_out</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#DatasetCollector.collect_dset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.DatasetCollector.collect_dset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect a single dataset from a list of source files into a final
+output file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to h5_file into which dataset is to be collected</p></li>
+<li><p><strong>source_files</strong> (<em>list</em>) – List of source filepaths.</p></li>
+<li><p><strong>gids</strong> (<em>list</em>) – list of gids to be collected</p></li>
+<li><p><strong>dset_in</strong> (<em>str</em>) – Dataset to collect</p></li>
+<li><p><strong>dset_out</strong> (<em>str</em>) – Dataset into which collected data is to be written</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This sets how many sites
+will be collected at a time.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.handlers.collection.Collector">
+<em class="property">class </em><code class="sig-prename descclassname">reV.handlers.collection.</code><code class="sig-name descname">Collector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to handle the collection and combination of .h5 files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file into which data will be collected</p></li>
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory containing .h5 files to combine</p></li>
+<li><p><strong>project_points</strong> (<em>str | slice | list | pandas.DataFrame | None</em>) – Project points that correspond to the full collection of points
+contained in the .h5 files to be collected. None if points list is
+to be ignored (collect all data in h5_files)</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – .h5 file prefix, if None collect all files in h5_dir</p></li>
+<li><p><strong>clobber</strong> (<em>bool</em>) – Flag to purge .h5 file if it already exists</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.find_h5_files">
+<em class="property">static </em><code class="sig-name descname">find_h5_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.find_h5_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.find_h5_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search h5_dir for .h5 file, return sorted
+If file_prefix is not None, only return .h5 files with given prefix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory to search</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – Prefix for .h5 file in h5_dir, if None return all .h5 files</p></li>
+<li><p><strong>ignore</strong> (<em>str | list | NoneType</em>) – File name(s) to ignore.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.parse_project_points">
+<em class="property">static </em><code class="sig-name descname">parse_project_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_points</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.parse_project_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.parse_project_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract resource gids from project points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>project_points</strong> (<em>str | slice | list | pandas.DataFrame</em>) – Reference to resource points that were processed and need
+collecting</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gids</strong> (<em>list</em>) – List of resource gids that are to be collected</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.parse_gids_from_files">
+<em class="property">static </em><code class="sig-name descname">parse_gids_from_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_files</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.parse_gids_from_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.parse_gids_from_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a sorted gid list from a list of h5_files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>h5_files</strong> (<em>list</em>) – List of h5 files to be collected.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gids</strong> (<em>list</em>) – List of sorted resource gids to be collected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.get_dset_shape">
+<code class="sig-name descname">get_dset_shape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dset_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.get_dset_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.get_dset_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the dataset shape from the first file in the collection list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dset_name</strong> (<em>str</em>) – Dataset to be collected whose shape is in question.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>shape</strong> (<em>tuple</em>) – Dataset shape tuple.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.h5_files">
+<em class="property">property </em><code class="sig-name descname">h5_files</code><a class="headerlink" href="#reV.handlers.collection.Collector.h5_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of .h5 files to be combined</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.gids">
+<em class="property">property </em><code class="sig-name descname">gids</code><a class="headerlink" href="#reV.handlers.collection.Collector.gids" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of gids corresponding to all sites to be combined</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.combine_time_index">
+<code class="sig-name descname">combine_time_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.combine_time_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.combine_time_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract time_index, None if not present in .h5 files</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.combine_meta">
+<code class="sig-name descname">combine_meta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.combine_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.combine_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load and combine meta data from .h5</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.collect">
+<em class="property">classmethod </em><code class="sig-name descname">collect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">dset_out</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect dataset from h5_dir to h5_file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file into which data will be collected</p></li>
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory containing .h5 files to combine</p></li>
+<li><p><strong>project_points</strong> (<em>str | slice | list | pandas.DataFrame | None</em>) – Project points that correspond to the full collection of points
+contained in the .h5 files to be collected. None if points list is
+to be ignored (collect all data in h5_files)</p></li>
+<li><p><strong>dset_name</strong> (<em>str</em>) – Dataset to be collected. If source shape is 2D, time index will be
+collected.</p></li>
+<li><p><strong>dset_out</strong> (<em>str</em>) – Dataset to collect means into</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – .h5 file prefix, if None collect all files on h5_dir</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This sets how many sites
+will be collected at a time.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.add_dataset">
+<em class="property">classmethod </em><code class="sig-name descname">add_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">dset_out</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.add_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.add_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect and add dataset to h5_file from h5_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file into which data will be collected</p></li>
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory containing .h5 files to combine</p></li>
+<li><p><strong>dset_name</strong> (<em>str</em>) – Dataset to be collected. If source shape is 2D, time index will be
+collected.</p></li>
+<li><p><strong>dset_out</strong> (<em>str</em>) – Dataset to collect means into</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – .h5 file prefix, if None collect all files on h5_dir</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This sets how many sites
+will be collected at a time.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.purge_chunks">
+<em class="property">classmethod </em><code class="sig-name descname">purge_chunks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.purge_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.purge_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge (remove) chunked files from h5_dir (after collection).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file into which data will be collected</p></li>
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory containing .h5 files to combine</p></li>
+<li><p><strong>project_points</strong> (<em>str | slice | list | pandas.DataFrame</em>) – Project points that correspond to the full collection of points
+contained in the .h5 files to be collected</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – .h5 file prefix, if None collect all files on h5_dir</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.collection.Collector.move_chunks">
+<em class="property">classmethod </em><code class="sig-name descname">move_chunks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">h5_dir</span></em>, <em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">file_prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sub_dir</span><span class="o">=</span><span class="default_value">'chunk_files'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/collection.html#Collector.move_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.collection.Collector.move_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move chunked files from h5_dir (after collection) to subdir.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file into which data will be collected</p></li>
+<li><p><strong>h5_dir</strong> (<em>str</em>) – Root directory containing .h5 files to combine</p></li>
+<li><p><strong>project_points</strong> (<em>str | slice | list | pandas.DataFrame</em>) – Project points that correspond to the full collection of points
+contained in the .h5 files to be collected</p></li>
+<li><p><strong>file_prefix</strong> (<em>str</em>) – .h5 file prefix, if None collect all files on h5_dir</p></li>
+<li><p><strong>sub_dir</strong> (<em>str | None</em>) – Sub directory name to move chunks to. None to not move files.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.handlers.exclusions.html" class="btn btn-neutral float-right" title="reV.handlers.exclusions module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.handlers.cli_multi_year.html" class="btn btn-neutral float-left" title="reV.handlers.cli_multi_year module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

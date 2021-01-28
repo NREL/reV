@@ -1,0 +1,684 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.point_summary module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve.points module" href="reV.supply_curve.points.html" />
+    <link rel="prev" title="reV.supply_curve.exclusions module" href="reV.supply_curve.exclusions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.supply_curve.html">reV.supply_curve package</a> &raquo;</li>
+        
+      <li>reV.supply_curve.point_summary module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.supply_curve.point_summary.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.supply_curve.point_summary">
+<span id="rev-supply-curve-point-summary-module"></span><h1>reV.supply_curve.point_summary module<a class="headerlink" href="#module-reV.supply_curve.point_summary" title="Permalink to this headline">¶</a></h1>
+<p>reV supply curve single point data summary framework.</p>
+<p>Created on Fri Jun 21 13:24:31 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="py class">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.point_summary.</code><code class="sig-name descname">SupplyCurvePointSummary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl</span></em>, <em class="sig-param"><span class="n">gen</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">gen_index</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_bin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cf_dset</span><span class="o">=</span><span class="default_value">'cf_mean-means'</span></em>, <em class="sig-param"><span class="n">lcoe_dset</span><span class="o">=</span><span class="default_value">'lcoe_fcr-means'</span></em>, <em class="sig-param"><span class="n">h5_dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">offshore_flags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_layer</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/point_summary.html#SupplyCurvePointSummary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="reV.supply_curve.points.html#reV.supply_curve.points.GenerationSupplyCurvePoint" title="reV.supply_curve.points.GenerationSupplyCurvePoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.points.GenerationSupplyCurvePoint</span></code></a></p>
+<p>Supply curve summary framework with extra methods for summary calc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl</strong> (<em>str | ExclusionMask</em>) – Filepath to exclusions h5 or ExclusionMask file handler.</p></li>
+<li><p><strong>gen</strong> (<em>str | reV.handlers.Outputs</em>) – Filepath to .h5 reV generation output results or reV Outputs file
+handler.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the techmap file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>res_class_dset</strong> (<em>str | np.ndarray | None</em>) – Dataset in the generation file dictating resource classes.
+Can be pre-extracted resource data in np.ndarray.
+None if no resource classes.</p></li>
+<li><p><strong>res_class_bin</strong> (<em>list | None</em>) – Two-entry lists dictating the single resource class bin.
+None if no resource classes.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>power_density</strong> (<em>float | None | pd.DataFrame</em>) – Constant power density float, None, or opened dataframe with
+(resource) “gid” and “power_density columns”.</p></li>
+<li><p><strong>cf_dset</strong> (<em>str | np.ndarray</em>) – Dataset name from gen containing capacity factor mean values.
+Can be pre-extracted generation output data in np.ndarray.</p></li>
+<li><p><strong>lcoe_dset</strong> (<em>str | np.ndarray</em>) – Dataset name from gen containing LCOE mean values.
+Can be pre-extracted generation output data in np.ndarray.</p></li>
+<li><p><strong>h5_dsets</strong> (<em>None | list | dict</em>) – Optional list of dataset names to summarize from the gen/econ h5
+files. Can also be pre-extracted data dictionary where keys are
+the dataset names and values are the arrays of data from the
+h5 files.</p></li>
+<li><p><strong>resolution</strong> (<em>int | None</em>) – SC resolution, must be input in combination with gid.</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the exclusions extent (rows, cols). Inputing this will
+speed things up considerably.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>friction_layer</strong> (<em>None | FrictionMask</em>) – Friction layer with scalar friction values if valid friction inputs
+were entered. Otherwise, None to not apply friction layer.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.POWER_DENSITY">
+<code class="sig-name descname">POWER_DENSITY</code><em class="property"> = {'pv': 36, 'wind': 3}</em><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.POWER_DENSITY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.res_data">
+<em class="property">property </em><code class="sig-name descname">res_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.res_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the resource data array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_res_data</strong> (<em>np.ndarray</em>) – Multi-year-mean resource data array for all sites in the
+generation data output file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.gen_data">
+<em class="property">property </em><code class="sig-name descname">gen_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.gen_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the generation capacity factor data array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_gen_data</strong> (<em>np.ndarray</em>) – Multi-year-mean capacity factor data array for all sites in the
+generation data output file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.lcoe_data">
+<em class="property">property </em><code class="sig-name descname">lcoe_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.lcoe_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the LCOE data array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_lcoe_data</strong> (<em>np.ndarray</em>) – Multi-year-mean LCOE data array for all sites in the
+generation data output file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_cf">
+<em class="property">property </em><code class="sig-name descname">mean_cf</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_cf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean capacity factor for the non-excluded data. Capacity
+factor is weighted by the exclusions (usually 0 or 1, but 0.5
+exclusions will weight appropriately).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mean_cf</strong> (<em>float | None</em>) – Mean capacity factor value for the non-excluded data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_lcoe">
+<em class="property">property </em><code class="sig-name descname">mean_lcoe</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_lcoe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean LCOE for the non-excluded data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mean_lcoe</strong> (<em>float | None</em>) – Mean LCOE value for the non-excluded data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_res">
+<em class="property">property </em><code class="sig-name descname">mean_res</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_res" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean resource for the non-excluded data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mean_res</strong> (<em>float | None</em>) – Mean resource for the non-excluded data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_lcoe_friction">
+<em class="property">property </em><code class="sig-name descname">mean_lcoe_friction</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_lcoe_friction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean LCOE for the non-excluded data, multiplied by the
+mean_friction scalar value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mean_lcoe_friction</strong> (<em>float | None</em>) – Mean LCOE value for the non-excluded data multiplied by the
+mean friction scalar value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_friction">
+<em class="property">property </em><code class="sig-name descname">mean_friction</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_friction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean friction scalar for the non-excluded data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>friction</strong> (<em>None | float</em>) – Mean value of the friction data layer for the non-excluded data.
+If friction layer is not input to this class, None is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.friction_data">
+<em class="property">property </em><code class="sig-name descname">friction_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.friction_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the friction data for the full SC point (no exclusions)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>friction_data</strong> (<em>None | np.ndarray</em>) – 2D friction data layer corresponding to the exclusions grid in
+the SC domain. If friction layer is not input to this class,
+None is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.power_density">
+<em class="property">property </em><code class="sig-name descname">power_density</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.power_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the estimated power density either from input or infered from
+generation output meta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_power_density</strong> (<em>float</em>) – Estimated power density in MW/km2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.capacity">
+<em class="property">property </em><code class="sig-name descname">capacity</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the estimated capacity in MW of the supply curve point in the
+current resource class with the applied exclusions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>capacity</strong> (<em>float</em>) – Estimated capacity in MW of the supply curve point in the
+current resource class with the applied exclusions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.h5_dsets_data">
+<em class="property">property </em><code class="sig-name descname">h5_dsets_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.h5_dsets_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get any additional/supplemental h5 dataset data to summarize.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>h5_dsets_data</strong> (<em>dict | None</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_h5_dsets_data">
+<em class="property">property </em><code class="sig-name descname">mean_h5_dsets_data</code><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.mean_h5_dsets_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean supplemental h5 datasets data (optional)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mean_h5_dsets_data</strong> (<em>dict | None</em>) – Mean dataset values for the non-excluded data for the optional
+h5_dsets input.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.agg_data_layers">
+<code class="sig-name descname">agg_data_layers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary</span></em>, <em class="sig-param"><span class="n">data_layers</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/point_summary.html#SupplyCurvePointSummary.agg_data_layers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.agg_data_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform additional data layer aggregation. If there is no valid data
+in the included area, the data layer will be taken from the full SC
+point extent (ignoring exclusions). If there is still no valid data,
+a warning will be raised and the data layer will have a NaN/None value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point.</p></li>
+<li><p><strong>data_layers</strong> (<em>None | dict</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point. A new entry for
+each data layer is added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.point_summary">
+<code class="sig-name descname">point_summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/point_summary.html#SupplyCurvePointSummary.point_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.point_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a summary dictionary of a single supply curve point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>args</strong> (<em>tuple | list | None</em>) – List of summary arguments to include. None defaults to all
+available args defined in the class attr.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.economies_of_scale">
+<em class="property">static </em><code class="sig-name descname">economies_of_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_cost_scale</span></em>, <em class="sig-param"><span class="n">summary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/point_summary.html#SupplyCurvePointSummary.economies_of_scale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.economies_of_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply economies of scale to this point summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cap_cost_scale</strong> (<em>str</em>) – LCOE scaling equation to implement “economies of scale”.
+Equation must be in python string format and return a scalar
+value to multiply the capital cost by. Independent variables in
+the equation should match the names of the columns in the reV
+supply curve aggregation table. This will not affect offshore
+wind LCOE.</p></li>
+<li><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.point_summary.SupplyCurvePointSummary.summarize">
+<em class="property">classmethod </em><code class="sig-name descname">summarize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em>, <em class="sig-param"><span class="n">excl_fpath</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">tm_dset</span></em>, <em class="sig-param"><span class="n">gen_index</span></em>, <em class="sig-param"><span class="n">excl_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_dset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_class_bin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excl_area</span><span class="o">=</span><span class="default_value">0.0081</span></em>, <em class="sig-param"><span class="n">power_density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cf_dset</span><span class="o">=</span><span class="default_value">'cf_mean-means'</span></em>, <em class="sig-param"><span class="n">lcoe_dset</span><span class="o">=</span><span class="default_value">'lcoe_fcr-means'</span></em>, <em class="sig-param"><span class="n">h5_dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">exclusion_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">close</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">offshore_flags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">friction_layer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cap_cost_scale</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/point_summary.html#SupplyCurvePointSummary.summarize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.point_summary.SupplyCurvePointSummary.summarize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a summary dictionary of a single supply curve point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gid</strong> (<em>int</em>) – gid for supply curve point to analyze.</p></li>
+<li><p><strong>excl_fpath</strong> (<em>str</em>) – Filepath to exclusions h5.</p></li>
+<li><p><strong>gen_fpath</strong> (<em>str</em>) – Filepath to .h5 reV generation output results.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the techmap file containing the
+exclusions-to-resource mapping data.</p></li>
+<li><p><strong>gen_index</strong> (<em>np.ndarray</em>) – Array of generation gids with array index equal to resource gid.
+Array value is -1 if the resource index was not used in the
+generation run.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict | None</em>) – Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+None if excl input is pre-initialized.</p></li>
+<li><p><strong>res_class_dset</strong> (<em>str | np.ndarray | None</em>) – Dataset in the generation file dictating resource classes.
+Can be pre-extracted resource data in np.ndarray.
+None if no resource classes.</p></li>
+<li><p><strong>res_class_bin</strong> (<em>list | None</em>) – Two-entry lists dictating the single resource class bin.
+None if no resource classes.</p></li>
+<li><p><strong>excl_area</strong> (<em>float</em>) – Area of an exclusion cell (square km).</p></li>
+<li><p><strong>power_density</strong> (<em>float | None | pd.DataFrame</em>) – Constant power density float, None, or opened dataframe with
+(resource) “gid” and “power_density columns”.</p></li>
+<li><p><strong>cf_dset</strong> (<em>str | np.ndarray</em>) – Dataset name from gen containing capacity factor mean values.
+Can be pre-extracted generation output data in np.ndarray.</p></li>
+<li><p><strong>lcoe_dset</strong> (<em>str | np.ndarray</em>) – Dataset name from gen containing LCOE mean values.
+Can be pre-extracted generation output data in np.ndarray.</p></li>
+<li><p><strong>h5_dsets</strong> (<em>None | list | dict</em>) – Optional list of dataset names to summarize from the gen/econ h5
+files. Can also be pre-extracted data dictionary where keys are
+the dataset names and values are the arrays of data from the
+h5 files.</p></li>
+<li><p><strong>resolution</strong> (<em>int | None</em>) – SC resolution, must be input in combination with gid.</p></li>
+<li><p><strong>exclusion_shape</strong> (<em>tuple</em>) – Shape of the exclusions extent (rows, cols). Inputing this will
+speed things up considerably.</p></li>
+<li><p><strong>close</strong> (<em>bool</em>) – Flag to close object file handlers on exit.</p></li>
+<li><p><strong>offshore_flags</strong> (<em>np.ndarray | None</em>) – Array of offshore boolean flags if available from wind generation
+data. None if offshore flag is not available.</p></li>
+<li><p><strong>friction_layer</strong> (<em>None | FrictionMask</em>) – Friction layer with scalar friction values if valid friction inputs
+were entered. Otherwise, None to not apply friction layer.</p></li>
+<li><p><strong>args</strong> (<em>tuple | list, optional</em>) – List of summary arguments to include. None defaults to all
+available args defined in the class attr, by default None</p></li>
+<li><p><strong>data_layers</strong> (<em>dict, optional</em>) – Aggregation data layers. Must be a dictionary keyed by data label
+name. Each value must be another dictionary with “dset”, “method”,
+and “fpath”, by default None</p></li>
+<li><p><strong>cap_cost_scale</strong> (<em>str | None</em>) – Optional LCOE scaling equation to implement “economies of scale”.
+Equations must be in python string format and return a scalar
+value to multiply the capital cost by. Independent variables in
+the equation should match the names of the columns in the reV
+supply curve aggregation table. This will not affect offshore
+wind LCOE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>dict</em>) – Dictionary of summary outputs for this sc point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.supply_curve.points.html" class="btn btn-neutral float-right" title="reV.supply_curve.points module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.supply_curve.exclusions.html" class="btn btn-neutral float-left" title="reV.supply_curve.exclusions module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

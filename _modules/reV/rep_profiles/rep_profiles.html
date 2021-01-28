@@ -1,0 +1,1663 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.rep_profiles.rep_profiles &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.rep_profiles.rep_profiles</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.rep_profiles.rep_profiles</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Representative profile extraction utilities.</span>
+
+<span class="sd">Created on Thu Oct 31 12:49:23 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">as_completed</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="kn">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">FileInputError</span><span class="p">,</span> <span class="n">DataShapeError</span>
+
+<span class="kn">from</span> <span class="nn">rex.rechunk_h5</span> <span class="kn">import</span> <span class="n">to_records_array</span>
+<span class="kn">from</span> <span class="nn">rex.resource</span> <span class="kn">import</span> <span class="n">Resource</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.execution</span> <span class="kn">import</span> <span class="n">SpawnProcessPool</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">parse_year</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.loggers</span> <span class="kn">import</span> <span class="n">log_mem</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RepresentativeMethods"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods">[docs]</a><span class="k">class</span> <span class="nc">RepresentativeMethods</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class for organizing the methods to determine representative-ness&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span>
+                 <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        weights : np.ndarray | list</span>
+<span class="sd">            1D array of weighting factors (multiplicative) for profiles.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rep_methods</span><span class="p">[</span><span class="n">rep_method</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">err_methods</span><span class="p">[</span><span class="n">err_method</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span> <span class="o">=</span> <span class="n">profiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_weights</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the weights attribute. Check shape and make np.array.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">emsg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Weighting factors array of length </span><span class="si">{}</span><span class="s1"> does not match &#39;</span>
+                    <span class="s1">&#39;profiles of shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">emsg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rep_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lookup table of representative methods&quot;&quot;&quot;</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanoid</span><span class="p">,</span>
+                   <span class="s1">&#39;meanoid&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanoid</span><span class="p">,</span>
+                   <span class="s1">&#39;median&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">medianoid</span><span class="p">,</span>
+                   <span class="s1">&#39;medianoid&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">medianoid</span><span class="p">,</span>
+                   <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">methods</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">err_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lookup table of error methods&quot;&quot;&quot;</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mbe&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbe</span><span class="p">,</span>
+                   <span class="s1">&#39;mae&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mae</span><span class="p">,</span>
+                   <span class="s1">&#39;rmse&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmse</span><span class="p">,</span>
+                   <span class="kc">None</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">methods</span>
+
+<div class="viewcode-block" id="RepresentativeMethods.nargmin"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.nargmin">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">nargmin</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index of the Nth min value in arr.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr : np.ndarray</span>
+<span class="sd">            1D array.</span>
+<span class="sd">        n : int</span>
+<span class="sd">            If n is 0, this returns the location of the min value in arr.</span>
+<span class="sd">            If n is 1, this returns the location of the 2nd min value in arr.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Location of the Nth min value in arr.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.meanoid"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.meanoid">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">meanoid</span><span class="p">(</span><span class="n">profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the mean profile across all sites.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        weights : np.ndarray | list</span>
+<span class="sd">            1D array of weighting factors (multiplicative) for profiles.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arr : np.ndarray</span>
+<span class="sd">            (time, 1) timeseries of the mean of all cf profiles across sites.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">profiles</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+            <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span><span class="n">profiles</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">weights</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">arr</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.medianoid"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.medianoid">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">medianoid</span><span class="p">(</span><span class="n">profiles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the median profile across all sites.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arr : np.ndarray</span>
+<span class="sd">            (time, 1) timeseries of the median at every timestep of all</span>
+<span class="sd">            cf profiles across sites.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">profiles</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">profiles</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">arr</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.mbe"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.mbe">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mbe</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">i_profile</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the mean bias error of profiles vs. a baseline profile.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        baseline : np.ndarray</span>
+<span class="sd">            (time, 1) timeseries of the meanoid or medianoid to which</span>
+<span class="sd">            cf profiles should be compared.</span>
+<span class="sd">        i_profile : int</span>
+<span class="sd">            The index of the represntative profile being saved</span>
+<span class="sd">            (for n_profiles). 0 is the most representative profile.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profile : np.ndarray</span>
+<span class="sd">            (time, 1) array for the most representative profile</span>
+<span class="sd">        i_rep : int</span>
+<span class="sd">            Column Index in profiles of the representative profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">profiles</span> <span class="o">-</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">baseline</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mbe</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">i_rep</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">nargmin</span><span class="p">(</span><span class="n">mbe</span><span class="p">,</span> <span class="n">i_profile</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">i_rep</span><span class="p">],</span> <span class="n">i_rep</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.mae"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.mae">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mae</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">i_profile</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the mean absolute error of profiles vs. a baseline profile</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        baseline : np.ndarray</span>
+<span class="sd">            (time, 1) timeseries of the meanoid or medianoid to which</span>
+<span class="sd">            cf profiles should be compared.</span>
+<span class="sd">        i_profile : int</span>
+<span class="sd">            The index of the represntative profile being saved</span>
+<span class="sd">            (for n_profiles). 0 is the most representative profile.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profile : np.ndarray</span>
+<span class="sd">            (time, 1) array for the most representative profile</span>
+<span class="sd">        i_rep : int</span>
+<span class="sd">            Column Index in profiles of the representative profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">profiles</span> <span class="o">-</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">baseline</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mae</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">i_rep</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">nargmin</span><span class="p">(</span><span class="n">mae</span><span class="p">,</span> <span class="n">i_profile</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">i_rep</span><span class="p">],</span> <span class="n">i_rep</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.rmse"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.rmse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">rmse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">i_profile</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the RMSE of profiles vs. a baseline profile</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        baseline : np.ndarray</span>
+<span class="sd">            (time, 1) timeseries of the meanoid or medianoid to which</span>
+<span class="sd">            cf profiles should be compared.</span>
+<span class="sd">        i_profile : int</span>
+<span class="sd">            The index of the represntative profile being saved</span>
+<span class="sd">            (for n_profiles). 0 is the most representative profile.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profile : np.ndarray</span>
+<span class="sd">            (time, 1) array for the most representative profile</span>
+<span class="sd">        i_rep : int</span>
+<span class="sd">            Column Index in profiles of the representative profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">profiles</span> <span class="o">-</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">baseline</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">rmse</span> <span class="o">**=</span> <span class="mi">2</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rmse</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">i_rep</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">nargmin</span><span class="p">(</span><span class="n">rmse</span><span class="p">,</span> <span class="n">i_profile</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">i_rep</span><span class="p">],</span> <span class="n">i_rep</span></div>
+
+<div class="viewcode-block" id="RepresentativeMethods.run"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepresentativeMethods.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span>
+            <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run representative profile methods.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, sites) timeseries array of cf profile data.</span>
+<span class="sd">        weights : np.ndarray | list</span>
+<span class="sd">            1D array of weighting factors (multiplicative) for profiles.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to save to fout.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            (time, n_profiles) array for the most representative profile(s)</span>
+<span class="sd">        i_reps : list</span>
+<span class="sd">            List (length of n_profiles) with column Index in profiles of the</span>
+<span class="sd">            representative profile(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="n">rep_method</span><span class="p">,</span>
+                   <span class="n">err_method</span><span class="o">=</span><span class="n">err_method</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inst</span><span class="o">.</span><span class="n">_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">_profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">inst</span><span class="o">.</span><span class="n">_weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">_profiles</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">err_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">profiles</span> <span class="o">=</span> <span class="n">baseline</span>
+            <span class="n">i_reps</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">profiles</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">i_reps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_profiles</span><span class="p">):</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">ir</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">_err_method</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">_profiles</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">i_profile</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">profiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">profiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">n_profiles</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+                <span class="n">profiles</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+                <span class="n">i_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ir</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">i_reps</span></div></div>
+
+
+<div class="viewcode-block" id="RegionRepProfile"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RegionRepProfile">[docs]</a><span class="k">class</span> <span class="nc">RegionRepProfile</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Framework to handle rep profile for one resource region&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span>
+                 <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file trimmed to just one</span>
+<span class="sd">            region to get a rep profile for.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to retrieve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span> <span class="o">=</span> <span class="n">gen_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span> <span class="o">=</span> <span class="n">rev_summary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span> <span class="o">=</span> <span class="n">gid_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span> <span class="o">=</span> <span class="n">cf_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_profiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_reps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span> <span class="o">=</span> <span class="n">rep_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span> <span class="o">=</span> <span class="n">err_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="o">=</span> <span class="n">weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span> <span class="o">=</span> <span class="n">n_profiles</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve the cf profile array from the source generation h5 file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            Timeseries array of cf profile data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_profiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gen_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_region_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_source_profiles</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span> <span class="p">:,</span> <span class="n">gen_gids</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_profiles</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the weights array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        weights : np.ndarray | None</span>
+<span class="sd">            Flat array of weight values from the weight column. The supply</span>
+<span class="sd">            curve table data in the weight column should have a list of weight</span>
+<span class="sd">            values corresponding to the gen_gids list in the same row.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_region_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_region_attr</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve a flat list of attribute data from a col in rev summary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rev_summary : pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file trimmed to just one</span>
+<span class="sd">            region to get a rep profile for.</span>
+<span class="sd">        attr_name : str</span>
+<span class="sd">            Column label to extract flattened data from (gen_gids,</span>
+<span class="sd">            gid_counts, etc...)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : list</span>
+<span class="sd">            Flat list of data from the column with label &quot;attr_name&quot;.</span>
+<span class="sd">            Either a list of numbers or strings. Lists of jsonified lists</span>
+<span class="sd">            will be unpacked.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">rev_summary</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="ow">and</span> <span class="s1">&#39;]&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;(&#39;</span> <span class="ow">and</span> <span class="s1">&#39;)&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_run_rep_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the representative profile methods to find the meanoid/medianoid</span>
+<span class="sd">        profile and find the profiles most similar.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Weights column &quot;</span><span class="si">{}</span><span class="s1">&quot; resulted in </span><span class="si">{}</span><span class="s1"> weight scalars &#39;</span>
+                     <span class="s1">&#39;which doesnt match gid column &quot;</span><span class="si">{}</span><span class="s1">&quot; which yields &#39;</span>
+                     <span class="s1">&#39;profiles with shape </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="n">gen_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_region_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Gids from column &quot;</span><span class="si">{}</span><span class="s1">&quot; with len </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gen_gids</span><span class="p">),</span> <span class="n">gen_gids</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Weights from column &quot;</span><span class="si">{}</span><span class="s1">&quot; with len </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">),</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">DataShapeError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_reps</span> <span class="o">=</span> <span class="n">RepresentativeMethods</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_profiles</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+            <span class="n">rep_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span><span class="p">,</span>
+            <span class="n">n_profiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rep_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the representative profiles of this region.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_rep_methods</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">i_reps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the representative profile index(es) of this region.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_reps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_rep_methods</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_reps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rep_gen_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the representative profile gen gids of this region.&quot;&quot;&quot;</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_region_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_reps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rep_gids</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rep_gids</span> <span class="o">=</span> <span class="p">[</span><span class="n">gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_reps</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">rep_gids</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rep_res_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the representative profile resource gids of this region.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span> <span class="o">==</span> <span class="s1">&#39;gen_gids&#39;</span><span class="p">:</span>
+            <span class="n">gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_region_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="s1">&#39;res_gids&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gids</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_reps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">gids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rep_gids</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rep_gids</span> <span class="o">=</span> <span class="p">[</span><span class="n">gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_reps</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">rep_gids</span>
+
+<div class="viewcode-block" id="RegionRepProfile.get_region_rep_profile"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RegionRepProfile.get_region_rep_profile">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_region_rep_profile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+                               <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span>
+                               <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span>
+                               <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Class method for parallelization of rep profile calc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file trimmed to just one</span>
+<span class="sd">            region to get a rep profile for.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to retrieve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rep_profile : np.ndarray</span>
+<span class="sd">            (time, n_profiles) array for the most representative profile(s)</span>
+<span class="sd">        i_rep : list</span>
+<span class="sd">            Column Index in profiles of the representative profile(s).</span>
+<span class="sd">        gen_gid_reps : list</span>
+<span class="sd">            Generation gid(s) of the representative profile(s).</span>
+<span class="sd">        res_gid_reps : list</span>
+<span class="sd">            Resource gid(s) of the representative profile(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="n">gid_col</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                <span class="n">rep_method</span><span class="o">=</span><span class="n">rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="n">err_method</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                <span class="n">n_profiles</span><span class="o">=</span><span class="n">n_profiles</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">rep_profiles</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">i_reps</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">rep_gen_gids</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">rep_res_gids</span></div></div>
+
+
+<div class="viewcode-block" id="RepProfilesBase"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepProfilesBase">[docs]</a><span class="k">class</span> <span class="nc">RepProfilesBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract utility framework for representative profile run classes.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span>
+                 <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span>
+                 <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+<span class="sd">        reg_cols : str | list | None</span>
+<span class="sd">            Label(s) for a categorical region column(s) to extract profiles</span>
+<span class="sd">            for. e.g. &quot;state&quot; will extract a rep profile for each unique entry</span>
+<span class="sd">            in the &quot;state&quot; column in rev_summary.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to save to fout.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with gen_fpath: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with rev_summary: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with gid column: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid_col</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with region columns: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg_cols</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with representative method: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rep_method</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with error method: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err_method</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running rep profiles with weight factor: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weight</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="o">=</span> <span class="n">weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span> <span class="o">=</span> <span class="n">gid_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span> <span class="o">=</span> <span class="n">n_profiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span> <span class="o">=</span> <span class="n">cf_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span> <span class="o">=</span> <span class="n">gen_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span> <span class="o">=</span> <span class="n">reg_cols</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regions</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_rev_summary</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_req_cols</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_req_cols</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_req_cols</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_rev_gen</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">cf_dset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_regions</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span> <span class="o">=</span> <span class="n">rep_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span> <span class="o">=</span> <span class="n">err_method</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_rev_summary</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract, parse, and check the rev summary table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rev_summary : pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span> <span class="ow">and</span> <span class="n">rev_summary</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+                <span class="n">rev_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span> <span class="ow">and</span> <span class="n">rev_summary</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>
+                <span class="n">rev_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="s1">&#39;Could not parse reV summary file: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Bad input dtype for rev_summary input: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rev_summary</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_req_cols</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check a dataframe for required columns.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : pd.DataFrame</span>
+<span class="sd">            Dataframe to check columns.</span>
+<span class="sd">        cols : str | list | tuple</span>
+<span class="sd">            Required columns in df.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">cols</span><span class="p">]</span>
+
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="p">:</span>
+                    <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Column labels not found in rev_summary table: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_rev_gen</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">cf_dset</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check rev gen file for requisite datasets.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rev_summary : pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">dsets</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">datasets</span>
+            <span class="k">if</span> <span class="n">cf_dset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;reV gen file needs to have &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                               <span class="s1">&#39;dataset to calculate representative profiles!&#39;</span>
+                               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cf_dset</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="s1">&#39;time_index&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;reV gen file needs to have &quot;time_index&quot; &#39;</span>
+                               <span class="s1">&#39;dataset to calculate representative profiles!&#39;</span><span class="p">)</span>
+
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">cf_dset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;WARNING: reV SC summary table has </span><span class="si">{}</span><span class="s1"> sc points and CF &#39;</span>
+                   <span class="s1">&#39;dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; has </span><span class="si">{}</span><span class="s1"> profiles. There should never be more &#39;</span>
+                   <span class="s1">&#39;SC points than CF profiles.&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rev_summary</span><span class="p">),</span> <span class="n">cf_dset</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the output rep profiles attribute.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">),</span>
+                                       <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)),</span>
+                                      <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the time index for the rep profiles.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_index : pd.datetimeindex</span>
+<span class="sd">            Time index sourced from the reV gen file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">ds</span> <span class="o">=</span> <span class="s1">&#39;time_index&#39;</span>
+                <span class="k">if</span> <span class="n">parse_year</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span><span class="p">):</span>
+                    <span class="n">year</span> <span class="o">=</span> <span class="n">parse_year</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">)</span>
+                    <span class="n">ds</span> <span class="o">+=</span> <span class="s1">&#39;-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">_get_time_index</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Meta data for the representative profiles.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Meta data for the representative profiles. At the very least,</span>
+<span class="sd">            this has columns for the region and res class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the arrays of representative CF profiles corresponding to meta.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : dict</span>
+<span class="sd">            dict of n_profile-keyed arrays with shape (time, n) for the</span>
+<span class="sd">            representative profiles for each region.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span>
+
+    <span class="k">def</span> <span class="nf">_init_h5_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize an output h5 file for n_profiles</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fout : str</span>
+<span class="sd">            None or filepath to output h5 file.</span>
+<span class="sd">        save_rev_summary : bool</span>
+<span class="sd">            Flag to save full reV SC table to rep profile output.</span>
+<span class="sd">        scaled_precision : bool</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dsets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">shapes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">dtypes</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">):</span>
+            <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;rep_profiles_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">dsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+            <span class="n">shapes</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">profiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">chunks</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">scaled_precision</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">}</span>
+                <span class="n">dtypes</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">dtypes</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">profiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">meta</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="n">Outputs</span><span class="o">.</span><span class="n">init_h5</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">dsets</span><span class="p">,</span> <span class="n">shapes</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">dtypes</span><span class="p">,</span>
+                        <span class="n">meta</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_rev_summary</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+                <span class="n">rev_sum</span> <span class="o">=</span> <span class="n">to_records_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">_create_dset</span><span class="p">(</span><span class="s1">&#39;rev_summary&#39;</span><span class="p">,</span> <span class="n">rev_sum</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                 <span class="n">rev_sum</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">rev_sum</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_write_h5_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write profiles and meta to an output file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fout : str</span>
+<span class="sd">            None or filepath to output h5 file.</span>
+<span class="sd">        save_rev_summary : bool</span>
+<span class="sd">            Flag to save full reV SC table to rep profile output.</span>
+<span class="sd">        scaled_precision : bool</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="s1">&#39;rev_summary&#39;</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">datasets</span> <span class="ow">and</span> <span class="n">save_rev_summary</span><span class="p">:</span>
+                <span class="n">rev_sum</span> <span class="o">=</span> <span class="n">to_records_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">)</span>
+                <span class="n">out</span><span class="p">[</span><span class="s1">&#39;rev_summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rev_sum</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">):</span>
+                <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;rep_profiles_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">profiles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<div class="viewcode-block" id="RepProfilesBase.save_profiles"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepProfilesBase.save_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize fout and save profiles.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fout : str</span>
+<span class="sd">            None or filepath to output h5 file.</span>
+<span class="sd">        save_rev_summary : bool</span>
+<span class="sd">            Flag to save full reV SC table to rep profile output.</span>
+<span class="sd">        scaled_precision : bool</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_h5_out</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="n">save_rev_summary</span><span class="p">,</span>
+                          <span class="n">scaled_precision</span><span class="o">=</span><span class="n">scaled_precision</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_h5_out</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="n">save_rev_summary</span><span class="p">)</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_run_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract method for serial run method.&quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_run_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract method for parallel run method.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RepProfilesBase.run"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepProfilesBase.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract method for generic run method.&quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="RepProfiles"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepProfiles">[docs]</a><span class="k">class</span> <span class="nc">RepProfiles</span><span class="p">(</span><span class="n">RepProfilesBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Framework for calculating the representative profiles based on an</span>
+<span class="sd">    error metric vs. a mean or median profile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span>
+                 <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span>
+                 <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+<span class="sd">        reg_cols : str | list | None</span>
+<span class="sd">            Label(s) for a categorical region column(s) to extract profiles</span>
+<span class="sd">            for. e.g. &quot;state&quot; will extract a rep profile for each unique entry</span>
+<span class="sd">            in the &quot;state&quot; column in rev_summary.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to save to fout.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Finding representative profiles that are most similar &#39;</span>
+                    <span class="s1">&#39;to the weighted meanoid for each supply curve region.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reg_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Need to define &quot;reg_cols&quot;! If you want a profile for each &#39;</span>
+                 <span class="s1">&#39;supply curve point, try setting &quot;reg_cols&quot; to a primary &#39;</span>
+                 <span class="s1">&#39;key such as &quot;sc_gid&quot;.&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">reg_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">reg_cols</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_cols</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">reg_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reg_cols</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="o">=</span><span class="n">reg_cols</span><span class="p">,</span>
+                         <span class="n">gid_col</span><span class="o">=</span><span class="n">gid_col</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                         <span class="n">rep_method</span><span class="o">=</span><span class="n">rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="n">err_method</span><span class="p">,</span>
+                         <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="n">n_profiles</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_meta</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_profiles</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the rep profile meta data with each row being a unique</span>
+<span class="sd">        combination of the region columns.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">stats</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">mode</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s1">&#39;rep_gen_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s1">&#39;rep_res_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the mask for a given region and res class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region_dict : dict</span>
+<span class="sd">            Column-value pairs to filter the rev summary on.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : np.ndarray</span>
+<span class="sd">            Boolean mask to filter rev_summary to the appropriate</span>
+<span class="sd">            region_dict values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">region_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">temp</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="n">temp</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_run_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute all representative profiles in serial.&quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running </span><span class="si">{}</span><span class="s1"> rep profile calculations in serial.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span>
+        <span class="n">meta_static</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">meta_static</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">region_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                           <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span><span class="p">}</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mask</span><span class="p">(</span><span class="n">region_dict</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Skipping profile </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                               <span class="s1">&#39;for region: </span><span class="si">{}</span><span class="s1"> with no valid mask.&#39;</span>
+                               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta_static</span><span class="p">),</span> <span class="n">region_dict</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Working on profile </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> for region: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta_static</span><span class="p">),</span> <span class="n">region_dict</span><span class="p">))</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">RegionRepProfile</span><span class="o">.</span><span class="n">get_region_rep_profile</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
+                    <span class="n">gid_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                    <span class="n">rep_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span><span class="p">,</span>
+                    <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)</span>
+                <span class="n">profiles</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ggids</span><span class="p">,</span> <span class="n">rgids</span> <span class="o">=</span> <span class="n">out</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Profile </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> complete &#39;</span>
+                            <span class="s1">&#39;for region: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta_static</span><span class="p">),</span> <span class="n">region_dict</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">[</span><span class="n">n</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">n</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ggids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_gen_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ggids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_res_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rgids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_gen_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ggids</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_res_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rgids</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">72</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute all representative profiles in parallel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available.</span>
+<span class="sd">        pool_size : int</span>
+<span class="sd">            Number of futures to submit to a single process pool for</span>
+<span class="sd">            parallel futures.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Kicking off </span><span class="si">{}</span><span class="s1"> rep profile futures.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span>
+
+        <span class="n">iter_chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                     <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span> <span class="o">/</span> <span class="n">pool_size</span><span class="p">))</span>
+        <span class="n">n_complete</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">iter_chunk</span> <span class="ow">in</span> <span class="n">iter_chunks</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Starting process pool...&#39;</span><span class="p">)</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;reV&#39;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">SpawnProcessPool</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                  <span class="n">loggers</span><span class="o">=</span><span class="n">loggers</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_chunk</span><span class="p">:</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="n">region_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                                   <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reg_cols</span><span class="p">}</span>
+
+                    <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mask</span><span class="p">(</span><span class="n">region_dict</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping profile </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                                    <span class="s1">&#39;for region: </span><span class="si">{}</span><span class="s1"> with no valid mask.&#39;</span>
+                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">),</span>
+                                            <span class="n">region_dict</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">future</span> <span class="o">=</span> <span class="n">exe</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                            <span class="n">RegionRepProfile</span><span class="o">.</span><span class="n">get_region_rep_profile</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
+                            <span class="n">gid_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span>
+                            <span class="n">cf_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                            <span class="n">rep_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">,</span>
+                            <span class="n">err_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span><span class="p">,</span>
+                            <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span>
+                            <span class="n">n_profiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)</span>
+
+                        <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">region_dict</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                    <span class="n">i</span><span class="p">,</span> <span class="n">region_dict</span> <span class="o">=</span> <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                    <span class="n">profiles</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ggids</span><span class="p">,</span> <span class="n">rgids</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                    <span class="n">n_complete</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Future </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> complete &#39;</span>
+                                <span class="s1">&#39;for region: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_complete</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">),</span>
+                                        <span class="n">region_dict</span><span class="p">))</span>
+                    <span class="n">log_mem</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">[</span><span class="n">n</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">n</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ggids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_gen_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ggids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_res_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rgids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_gen_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ggids</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;rep_res_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rgids</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run representative profiles in serial or parallel and save to disc</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fout : str, optional</span>
+<span class="sd">            filepath to output h5 file, by default None</span>
+<span class="sd">        save_rev_summary : bool, optional</span>
+<span class="sd">            Flag to save full reV SC table to rep profile output.,</span>
+<span class="sd">            by default True</span>
+<span class="sd">        scaled_precision : bool, optional</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        max_workers : int, optional</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available., by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_serial</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_parallel</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_profiles</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="n">save_rev_summary</span><span class="p">,</span>
+                               <span class="n">scaled_precision</span><span class="o">=</span><span class="n">scaled_precision</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Representative profiles complete!&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RepProfiles.run"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.RepProfiles.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+            <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run representative profiles by finding the closest single profile</span>
+<span class="sd">        to the weighted meanoid for each SC region.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+<span class="sd">        reg_cols : str | list | None</span>
+<span class="sd">            Label(s) for a categorical region column(s) to extract profiles</span>
+<span class="sd">            for. e.g. &quot;state&quot; will extract a rep profile for each unique entry</span>
+<span class="sd">            in the &quot;state&quot; column in rev_summary.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        rep_method : str</span>
+<span class="sd">            Method identifier for calculation of the representative profile.</span>
+<span class="sd">        err_method : str</span>
+<span class="sd">            Method identifier for calculation of error from the representative</span>
+<span class="sd">            profile.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        n_profiles : int</span>
+<span class="sd">            Number of representative profiles to save to fout.</span>
+<span class="sd">        fout : str, optional</span>
+<span class="sd">            filepath to output h5 file, by default None</span>
+<span class="sd">        save_rev_summary : bool, optional</span>
+<span class="sd">            Flag to save full reV SC table to rep profile output.,</span>
+<span class="sd">            by default True</span>
+<span class="sd">        scaled_precision : bool, optional</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        max_workers : int, optional</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available., by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : dict</span>
+<span class="sd">            dict of n_profile-keyed arrays with shape (time, n) for the</span>
+<span class="sd">            representative profiles for each region.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Meta dataframes recording the regions and the selected rep profile</span>
+<span class="sd">            gid.</span>
+<span class="sd">        time_index : pd.DatatimeIndex</span>
+<span class="sd">            Datetime Index for represntative profiles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">rp</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="n">gid_col</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span> <span class="n">rep_method</span><span class="o">=</span><span class="n">rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="n">err_method</span><span class="p">,</span>
+                 <span class="n">n_profiles</span><span class="o">=</span><span class="n">n_profiles</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="n">rp</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">save_rev_summary</span><span class="o">=</span><span class="n">save_rev_summary</span><span class="p">,</span>
+                <span class="n">scaled_precision</span><span class="o">=</span><span class="n">scaled_precision</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rp</span><span class="o">.</span><span class="n">_profiles</span><span class="p">,</span> <span class="n">rp</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span> <span class="n">rp</span><span class="o">.</span><span class="n">_time_index</span></div></div>
+
+
+<div class="viewcode-block" id="AggregatedRepProfiles"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.AggregatedRepProfiles">[docs]</a><span class="k">class</span> <span class="nc">AggregatedRepProfiles</span><span class="p">(</span><span class="n">RepProfilesBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Framework for calculating the aggregate representative supply curve</span>
+<span class="sd">    cf profiles based on an area-weighted aggregation of contributing profiles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating the weighted aggregate (meanoid) &#39;</span>
+                    <span class="s1">&#39;representative profiles for each supply curve point.&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">reg_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">gid_col</span><span class="o">=</span><span class="n">gid_col</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                         <span class="n">rep_method</span><span class="o">=</span><span class="s1">&#39;meanoid&#39;</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rev_summary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_profiles</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute all representative profiles in serial.&quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running </span><span class="si">{}</span><span class="s1"> aggregate rep profile calculations in serial.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span>
+        <span class="n">meta_static</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">meta_static</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">RegionRepProfile</span><span class="o">.</span><span class="n">get_region_rep_profile</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span>
+                <span class="n">rep_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">,</span> <span class="n">err_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span><span class="p">,</span>
+                <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span> <span class="n">n_profiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Profile </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> complete.&#39;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta_static</span><span class="p">)))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">72</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute all representative profiles in parallel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available.</span>
+<span class="sd">        pool_size : int</span>
+<span class="sd">            Number of futures to submit to a single process pool for</span>
+<span class="sd">            parallel futures.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Kicking off </span><span class="si">{}</span><span class="s1"> aggregate rep profile futures.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span>
+
+        <span class="n">iter_chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                     <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span> <span class="o">/</span> <span class="n">pool_size</span><span class="p">))</span>
+        <span class="n">n_complete</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">iter_chunk</span> <span class="ow">in</span> <span class="n">iter_chunks</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Starting process pool...&#39;</span><span class="p">)</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;reV&#39;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">SpawnProcessPool</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                  <span class="n">loggers</span><span class="o">=</span><span class="n">loggers</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_chunk</span><span class="p">:</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">future</span> <span class="o">=</span> <span class="n">exe</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                        <span class="n">RegionRepProfile</span><span class="o">.</span><span class="n">get_region_rep_profile</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span>
+                        <span class="n">gid_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid_col</span><span class="p">,</span>
+                        <span class="n">cf_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                        <span class="n">rep_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rep_method</span><span class="p">,</span>
+                        <span class="n">err_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_err_method</span><span class="p">,</span>
+                        <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">,</span>
+                        <span class="n">n_profiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_profiles</span><span class="p">)</span>
+
+                    <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                    <span class="n">profile</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">n_complete</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Future </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> complete.&#39;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_complete</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span>
+                    <span class="n">log_mem</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run representative profiles in serial or parallel and save to disc</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fout : str, optional</span>
+<span class="sd">            filepath to output h5 file, by default None</span>
+<span class="sd">        scaled_precision : bool, optional</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        max_workers : int, optional</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available., by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_serial</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_parallel</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_profiles</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">scaled_precision</span><span class="o">=</span><span class="n">scaled_precision</span><span class="p">,</span>
+                               <span class="n">save_rev_summary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Representative aggregate profiles complete!&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AggregatedRepProfiles.run"><a class="viewcode-back" href="../../../reV/reV.rep_profiles.rep_profiles.html#reV.rep_profiles.rep_profiles.AggregatedRepProfiles.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="s1">&#39;gen_gids&#39;</span><span class="p">,</span>
+            <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;gid_counts&#39;</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">scaled_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run representative profiles by calculating the weighted aggregate</span>
+<span class="sd">        (meanoid) profile for each SC point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to reV gen output file to extract &quot;cf_profile&quot; from.</span>
+<span class="sd">        rev_summary : str | pd.DataFrame</span>
+<span class="sd">            Aggregated rev supply curve summary file. Str filepath or full df.</span>
+<span class="sd">        gid_col : str</span>
+<span class="sd">            Column label in rev_summary that contains the generation gids</span>
+<span class="sd">            (data index in gen_fpath).</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name to pull generation profiles from.</span>
+<span class="sd">        weight : str | None</span>
+<span class="sd">            Column in rev_summary used to apply weighted mean to profiles.</span>
+<span class="sd">            The supply curve table data in the weight column should have</span>
+<span class="sd">            weight values corresponding to the gid_col in the same row.</span>
+<span class="sd">        fout : str, optional</span>
+<span class="sd">            filepath to output h5 file, by default None</span>
+<span class="sd">        scaled_precision : bool, optional</span>
+<span class="sd">            Flag to scale cf_profiles by 1000 and save as uint16.,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        max_workers : int, optional</span>
+<span class="sd">            Number of parallel workers. 1 will run serial, None will use all</span>
+<span class="sd">            available., by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : dict</span>
+<span class="sd">            dict of n_profile-keyed arrays with shape (time, n) for the</span>
+<span class="sd">            representative profiles for each supply curve point (n).</span>
+<span class="sd">            For the AggregateRepProfile class, this only has one key: 0.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Meta dataframe (reV supply curve summary).</span>
+<span class="sd">        time_index : pd.DatatimeIndex</span>
+<span class="sd">            Datetime Index for represntative profiles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arp</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">rev_summary</span><span class="p">,</span> <span class="n">gid_col</span><span class="o">=</span><span class="n">gid_col</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                  <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="n">arp</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">scaled_precision</span><span class="o">=</span><span class="n">scaled_precision</span><span class="p">,</span>
+                 <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">arp</span><span class="o">.</span><span class="n">_profiles</span><span class="p">,</span> <span class="n">arp</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span> <span class="n">arp</span><span class="o">.</span><span class="n">_time_index</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

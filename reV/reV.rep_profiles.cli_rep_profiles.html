@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.rep_profiles.cli_rep_profiles module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.rep_profiles.rep_profiles module" href="reV.rep_profiles.rep_profiles.html" />
+    <link rel="prev" title="reV.rep_profiles package" href="reV.rep_profiles.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.rep_profiles.html">reV.rep_profiles package</a> &raquo;</li>
+        
+      <li>reV.rep_profiles.cli_rep_profiles module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.rep_profiles.cli_rep_profiles.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-rep-profiles-cli-rep-profiles-module">
+<h1>reV.rep_profiles.cli_rep_profiles module<a class="headerlink" href="#rev-rep-profiles-cli-rep-profiles-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rev-rep-profiles">
+<h2>reV-rep-profiles<a class="headerlink" href="#rev-rep-profiles" title="Permalink to this headline">¶</a></h2>
+<p>reV Representative Profiles Command Line Interface</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-n">
+<span id="cmdoption-rev-rep-profiles-n"></span><span id="cmdoption-reV-rep-profiles-name"></span><span id="cmdoption-rev-rep-profiles-name"></span><code class="sig-name descname">-n</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--name</code><code class="sig-prename descclassname"> &lt;name&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Job name. Default is “reV-rep_profiles”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-v">
+<span id="cmdoption-rev-rep-profiles-v"></span><span id="cmdoption-reV-rep-profiles-verbose"></span><span id="cmdoption-rev-rep-profiles-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-rep-profiles-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-rep-profiles-direct">
+<h3>direct<a class="headerlink" href="#rev-rep-profiles-direct" title="Permalink to this headline">¶</a></h3>
+<p>reV representative profiles CLI.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles direct <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-g">
+<span id="cmdoption-rev-rep-profiles-direct-g"></span><span id="cmdoption-reV-rep-profiles-direct-gen_fpath"></span><span id="cmdoption-rev-rep-profiles-direct-gen-fpath"></span><code class="sig-name descname">-g</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--gen_fpath</code><code class="sig-prename descclassname"> &lt;gen_fpath&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-g" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Filepath to reV gen file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-r">
+<span id="cmdoption-rev-rep-profiles-direct-r"></span><span id="cmdoption-reV-rep-profiles-direct-rev_summary"></span><span id="cmdoption-rev-rep-profiles-direct-rev-summary"></span><code class="sig-name descname">-r</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--rev_summary</code><code class="sig-prename descclassname"> &lt;rev_summary&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-r" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Filepath to reV SC summary (agg) file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-rc">
+<span id="cmdoption-rev-rep-profiles-direct-rc"></span><span id="cmdoption-reV-rep-profiles-direct-reg_cols"></span><span id="cmdoption-rev-rep-profiles-direct-reg-cols"></span><code class="sig-name descname">-rc</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--reg_cols</code><code class="sig-prename descclassname"> &lt;reg_cols&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-rc" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of column rev summary column labels to define regions to get rep profiles for.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-cf">
+<span id="cmdoption-rev-rep-profiles-direct-cf"></span><span id="cmdoption-reV-rep-profiles-direct-cf_dset"></span><span id="cmdoption-rev-rep-profiles-direct-cf-dset"></span><code class="sig-name descname">-cf</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--cf_dset</code><code class="sig-prename descclassname"> &lt;cf_dset&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-cf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Capacity factor dataset in gen_fpath to get profiles from</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-rm">
+<span id="cmdoption-rev-rep-profiles-direct-rm"></span><span id="cmdoption-reV-rep-profiles-direct-rep_method"></span><span id="cmdoption-rev-rep-profiles-direct-rep-method"></span><code class="sig-name descname">-rm</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--rep_method</code><code class="sig-prename descclassname"> &lt;rep_method&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-rm" title="Permalink to this definition">¶</a></dt>
+<dd><p>String identifier for representative method (e.g. meanoid, medianoid).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-em">
+<span id="cmdoption-rev-rep-profiles-direct-em"></span><span id="cmdoption-reV-rep-profiles-direct-err_method"></span><span id="cmdoption-rev-rep-profiles-direct-err-method"></span><code class="sig-name descname">-em</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--err_method</code><code class="sig-prename descclassname"> &lt;err_method&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-em" title="Permalink to this definition">¶</a></dt>
+<dd><p>String identifier for error method (e.g. rmse, mae, mbe).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-w">
+<span id="cmdoption-rev-rep-profiles-direct-w"></span><span id="cmdoption-reV-rep-profiles-direct-weight"></span><span id="cmdoption-rev-rep-profiles-direct-weight"></span><code class="sig-name descname">-w</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--weight</code><code class="sig-prename descclassname"> &lt;weight&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-w" title="Permalink to this definition">¶</a></dt>
+<dd><p>The supply curve column to use for a weighted average in the representative profile meanoid algorithm. Default weighting factor is “gid_counts”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-np">
+<span id="cmdoption-rev-rep-profiles-direct-np"></span><span id="cmdoption-reV-rep-profiles-direct-n_profiles"></span><span id="cmdoption-rev-rep-profiles-direct-n-profiles"></span><code class="sig-name descname">-np</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--n_profiles</code><code class="sig-prename descclassname"> &lt;n_profiles&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-np" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of representative profiles to save.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-od">
+<span id="cmdoption-rev-rep-profiles-direct-od"></span><span id="cmdoption-reV-rep-profiles-direct-out_dir"></span><span id="cmdoption-rev-rep-profiles-direct-out-dir"></span><code class="sig-name descname">-od</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-od" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory to save rep profile output h5.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-ld">
+<span id="cmdoption-rev-rep-profiles-direct-ld"></span><span id="cmdoption-reV-rep-profiles-direct-log_dir"></span><span id="cmdoption-rev-rep-profiles-direct-log-dir"></span><code class="sig-name descname">-ld</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_dir</code><code class="sig-prename descclassname"> &lt;log_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-ld" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory to save rep profile logs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-mw">
+<span id="cmdoption-rev-rep-profiles-direct-mw"></span><span id="cmdoption-reV-rep-profiles-direct-max_workers"></span><span id="cmdoption-rev-rep-profiles-direct-max-workers"></span><code class="sig-name descname">-mw</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--max_workers</code><code class="sig-prename descclassname"> &lt;max_workers&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-mw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of parallel workers. 1 will run in serial. None will use all available.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-agg">
+<span id="cmdoption-rev-rep-profiles-direct-agg"></span><span id="cmdoption-reV-rep-profiles-direct-aggregate_profiles"></span><span id="cmdoption-rev-rep-profiles-direct-aggregate-profiles"></span><code class="sig-name descname">-agg</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--aggregate_profiles</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-agg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to calculate the aggregate (weighted meanoid) profile for each supply curve point. This behavior is instead of finding the single profile per region closest to the meanoid.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-v">
+<span id="cmdoption-rev-rep-profiles-direct-v"></span><span id="cmdoption-reV-rep-profiles-direct-verbose"></span><span id="cmdoption-rev-rep-profiles-direct-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-rep-profiles-direct-slurm">
+<h4>slurm<a class="headerlink" href="#rev-rep-profiles-direct-slurm" title="Permalink to this headline">¶</a></h4>
+<p>slurm (Eagle) submission tool for reV representative profiles.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles direct slurm <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-a">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-a"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-alloc"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-alloc"></span><code class="sig-name descname">-a</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--alloc</code><code class="sig-prename descclassname"> &lt;alloc&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-a" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> SLURM allocation account name.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-mem">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-mem"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-memory"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-memory"></span><code class="sig-name descname">-mem</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--memory</code><code class="sig-prename descclassname"> &lt;memory&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-mem" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM node memory request in GB. Default is None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-wt">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-wt"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-walltime"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-walltime"></span><code class="sig-name descname">-wt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--walltime</code><code class="sig-prename descclassname"> &lt;walltime&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-wt" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM walltime request in hours for single year rep_profiles run. Default is 1.0</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-l">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-l"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-feature"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-feature"></span><code class="sig-name descname">-l</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--feature</code><code class="sig-prename descclassname"> &lt;feature&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-l" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional flags for SLURM job. Format is “–qos=high” or “–depend=[state:job_id]”. Default is None.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-env">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-env"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-conda_env"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-conda-env"></span><code class="sig-name descname">-env</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--conda_env</code><code class="sig-prename descclassname"> &lt;conda_env&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conda env to activate</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-mod">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-mod"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-module"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-module"></span><code class="sig-name descname">-mod</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--module</code><code class="sig-prename descclassname"> &lt;module&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-mod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module to load</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-direct-slurm-sout">
+<span id="cmdoption-rev-rep-profiles-direct-slurm-sout"></span><span id="cmdoption-reV-rep-profiles-direct-slurm-stdout_path"></span><span id="cmdoption-rev-rep-profiles-direct-slurm-stdout-path"></span><code class="sig-name descname">-sout</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--stdout_path</code><code class="sig-prename descclassname"> &lt;stdout_path&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-direct-slurm-sout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subprocess standard output path. Default is in out_dir.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="rev-rep-profiles-from-config">
+<h3>from-config<a class="headerlink" href="#rev-rep-profiles-from-config" title="Permalink to this headline">¶</a></h3>
+<p>Run reV representative profiles from a config file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles from-config <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-from-config-c">
+<span id="cmdoption-rev-rep-profiles-from-config-c"></span><span id="cmdoption-reV-rep-profiles-from-config-config_file"></span><span id="cmdoption-rev-rep-profiles-from-config-config-file"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--config_file</code><code class="sig-prename descclassname"> &lt;config_file&gt;</code><a class="headerlink" href="#cmdoption-reV-rep-profiles-from-config-c" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV representative profiles configuration json file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-rep-profiles-from-config-v">
+<span id="cmdoption-rev-rep-profiles-from-config-v"></span><span id="cmdoption-reV-rep-profiles-from-config-verbose"></span><span id="cmdoption-rev-rep-profiles-from-config-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-rep-profiles-from-config-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-rep-profiles-valid-config-keys">
+<h3>valid-config-keys<a class="headerlink" href="#rev-rep-profiles-valid-config-keys" title="Permalink to this headline">¶</a></h3>
+<p>Echo the valid RepProfiles config keys</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles valid-config-keys <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rev-rep-profiles-version">
+<h3>version<a class="headerlink" href="#rev-rep-profiles-version" title="Permalink to this headline">¶</a></h3>
+<p>print version</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-rep-profiles version <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span class="target" id="module-reV.rep_profiles.cli_rep_profiles"></span><p>reV Representative Profiles command line interface (cli).</p>
+<dl class="py function">
+<dt id="reV.rep_profiles.cli_rep_profiles.get_node_cmd">
+<code class="sig-prename descclassname">reV.rep_profiles.cli_rep_profiles.</code><code class="sig-name descname">get_node_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">rev_summary</span></em>, <em class="sig-param"><span class="n">reg_cols</span></em>, <em class="sig-param"><span class="n">cf_dset</span></em>, <em class="sig-param"><span class="n">rep_method</span></em>, <em class="sig-param"><span class="n">err_method</span></em>, <em class="sig-param"><span class="n">weight</span></em>, <em class="sig-param"><span class="n">n_profiles</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">log_dir</span></em>, <em class="sig-param"><span class="n">max_workers</span></em>, <em class="sig-param"><span class="n">aggregate_profiles</span></em>, <em class="sig-param"><span class="n">verbose</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/rep_profiles/cli_rep_profiles.html#get_node_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.rep_profiles.cli_rep_profiles.get_node_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a CLI call command for the rep profiles cli.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.rep_profiles.rep_profiles.html" class="btn btn-neutral float-right" title="reV.rep_profiles.rep_profiles module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.rep_profiles.html" class="btn btn-neutral float-left" title="reV.rep_profiles package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

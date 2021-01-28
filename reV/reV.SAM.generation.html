@@ -1,0 +1,1056 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.SAM.generation module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.SAM.version_checker module" href="reV.SAM.version_checker.html" />
+    <link rel="prev" title="reV.SAM.econ module" href="reV.SAM.econ.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.SAM.html">reV.SAM package</a> &raquo;</li>
+        
+      <li>reV.SAM.generation module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.SAM.generation.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.SAM.generation">
+<span id="rev-sam-generation-module"></span><h1>reV.SAM.generation module<a class="headerlink" href="#module-reV.SAM.generation" title="Permalink to this headline">¶</a></h1>
+<p>reV-to-SAM generation interface module.</p>
+<p>Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
+additional reV features.</p>
+<dl class="py class">
+<dt id="reV.SAM.generation.Generation">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">Generation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">meta</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span></em>, <em class="sig-param"><span class="n">output_request</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="reV.SAM.SAM.html#reV.SAM.SAM.RevPySam" title="reV.SAM.SAM.RevPySam"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.SAM.RevPySam</span></code></a>, <a class="reference external" href="https://docs.python.org/3.5/library/abc.html#abc.ABC" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class for SAM generation simulations.</p>
+<p>Initialize a SAM object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.tz_check">
+<em class="property">static </em><code class="sig-name descname">tz_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sam_sys_inputs</span></em>, <em class="sig-param"><span class="n">meta</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.tz_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.tz_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check timezone input and use json config tz if not in resource meta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data. If meta was not originally set in
+the resource meta data, but was set as “tz” or “timezone” in the
+SAM model input parameters json file, timezone will be added to
+this instance of meta.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.has_timezone">
+<em class="property">property </em><code class="sig-name descname">has_timezone</code><a class="headerlink" href="#reV.SAM.generation.Generation.has_timezone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if instance has a timezone set</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.cf_mean">
+<code class="sig-name descname">cf_mean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.cf_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.cf_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get mean capacity factor (fractional) from SAM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Mean capacity factor (fractional).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.cf_profile">
+<code class="sig-name descname">cf_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.cf_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.cf_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get hourly capacity factor (frac) profile in orig timezone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cf_profile</strong> (<em>np.ndarray</em>) – 1D numpy array of capacity factor profile.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.annual_energy">
+<code class="sig-name descname">annual_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.annual_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.annual_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get annual energy generation value in kWh from SAM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Annual energy generation (kWh).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.energy_yield">
+<code class="sig-name descname">energy_yield</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.energy_yield"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.energy_yield" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get annual energy yield value in kwh/kw from SAM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Annual energy yield (kwh/kw).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.gen_profile">
+<code class="sig-name descname">gen_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.gen_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.gen_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get power generation profile (orig timezone) in kW.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>np.ndarray</em>) – 1D array of hourly power generation in kW.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.collect_outputs">
+<code class="sig-name descname">collect_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_lookup</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.collect_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.collect_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect SAM gen output_request. Rolls outputs to UTC if appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>output_lookup</strong> (<em>dict | None</em>) – Lookup dictionary mapping output keys to special output methods.
+None defaults to generation default outputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Generation.reV_run">
+<em class="property">classmethod </em><code class="sig-name descname">reV_run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points_control</span></em>, <em class="sig-param"><span class="n">res_file</span></em>, <em class="sig-param"><span class="n">site_df</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">('cf_mean')</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Generation.reV_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Generation.reV_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute SAM generation based on a reV points control instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_control</strong> (<em>config.PointsControl</em>) – PointsControl instance containing project points site and SAM
+config info.</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Resource file with full path.</p></li>
+<li><p><strong>site_df</strong> (<em>pd.DataFrame</em>) – Dataframe of site-specific input variables. Row index corresponds
+to site number/gid (via df.loc not df.iloc), column labels are the
+variable keys that will be passed forward as SAM parameters.</p></li>
+<li><p><strong>output_request</strong> (<em>list | tuple</em>) – Outputs to retrieve from SAM.</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> (<em>dict</em>) – Nested dictionaries where the top level key is the site index,
+the second level key is the variable name, second level value is
+the output variable value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.Solar">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">Solar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Solar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Solar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Generation" title="reV.SAM.generation.Generation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Generation</span></code></a>, <a class="reference external" href="https://docs.python.org/3.5/library/abc.html#abc.ABC" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base Class for Solar generation from SAM</p>
+<p>Initialize a SAM solar object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.SAM.generation.Solar.set_latitude_tilt_az">
+<code class="sig-name descname">set_latitude_tilt_az</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sam_sys_inputs</span></em>, <em class="sig-param"><span class="n">meta</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Solar.set_latitude_tilt_az"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Solar.set_latitude_tilt_az" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if tilt is specified as latitude and set tilt=lat, az=180 or 0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.
+If for a pv simulation the “tilt” parameter was originally not
+present or set to ‘lat’ or ‘latitude’, the tilt will be set to
+the absolute value of the latitude found in meta and the azimuth
+will be 180 if lat&gt;0, 0 if lat&lt;0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Solar.set_nsrdb">
+<code class="sig-name descname">set_nsrdb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Solar.set_nsrdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Solar.set_nsrdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set NSRDB resource data arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have var_list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.Pvwatts">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">Pvwatts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Solar" title="reV.SAM.generation.Solar"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Solar</span></code></a>, <a class="reference external" href="https://docs.python.org/3.5/library/abc.html#abc.ABC" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Photovoltaic (PV) generation with pvwattsv5.</p>
+<p>Initialize a SAM solar PV object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwatts.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'pvwattsv7'</em><a class="headerlink" href="#reV.SAM.generation.Pvwatts.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwatts.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.Pvwattsv7' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/Pvwattsv7.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.Pvwatts.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.cf_mean">
+<code class="sig-name descname">cf_mean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.cf_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.cf_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get mean capacity factor (fractional) from SAM.</p>
+<p>NOTE: PV capacity factor is the AC power production / the DC nameplate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Mean capacity factor (fractional).
+PV CF is calculated as AC power / DC nameplate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.cf_profile">
+<code class="sig-name descname">cf_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.cf_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.cf_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get hourly capacity factor (frac) profile in orig timezone.</p>
+<p>NOTE: PV capacity factor is the AC power production / the DC nameplate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cf_profile</strong> (<em>np.ndarray</em>) – 1D numpy array of capacity factor profile.
+Datatype is float32 and array length is 8760*time_interval.
+PV CF is calculated as AC power / DC nameplate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.gen_profile">
+<code class="sig-name descname">gen_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.gen_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.gen_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get AC inverter power generation profile (orig timezone) in kW.
+This is an alias of the “ac” SAM output variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>np.ndarray</em>) – 1D array of AC inverter power generation in kW.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.ac">
+<code class="sig-name descname">ac</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.ac"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.ac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get AC inverter power generation profile (orig timezone) in kW.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>np.ndarray</em>) – 1D array of AC inverter power generation in kW.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.dc">
+<code class="sig-name descname">dc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.dc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.dc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get DC array power generation profile (orig timezone) in kW.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>np.ndarray</em>) – 1D array of DC array power generation in kW.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.clipped_power">
+<code class="sig-name descname">clipped_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.clipped_power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.clipped_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the clipped DC power generated behind the inverter
+(orig timezone) in kW.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>clipped</strong> (<em>np.ndarray</em>) – 1D array of clipped DC power in kW.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.Pvwatts.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam PVWATTS object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwatts.collect_outputs">
+<code class="sig-name descname">collect_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_lookup</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwatts.collect_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwatts.collect_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect SAM gen output_request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>output_lookup</strong> (<em>dict | None</em>) – Lookup dictionary mapping output keys to special output methods.
+None defaults to generation default outputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.Pvwattsv5">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">Pvwattsv5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwattsv5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwattsv5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Pvwatts" title="reV.SAM.generation.Pvwatts"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Pvwatts</span></code></a></p>
+<p>Photovoltaic (PV) generation with pvwattsv5.</p>
+<p>Initialize a SAM solar PV object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwattsv5.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'pvwattsv5'</em><a class="headerlink" href="#reV.SAM.generation.Pvwattsv5.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwattsv5.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.Pvwattsv5' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/Pvwattsv5.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.Pvwattsv5.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwattsv5.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.Pvwattsv5.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam PVWATTSV5 object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_default</strong> (<em>PySAM.Pvwattsv5</em>) – Executed pvwatts pysam object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.Pvwattsv7">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">Pvwattsv7</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#Pvwattsv7"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.Pvwattsv7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Pvwatts" title="reV.SAM.generation.Pvwatts"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Pvwatts</span></code></a></p>
+<p>Photovoltaic (PV) generation with pvwattsv7.</p>
+<p>Initialize a SAM solar PV object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwattsv7.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'pvwattsv7'</em><a class="headerlink" href="#reV.SAM.generation.Pvwattsv7.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.Pvwattsv7.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.Pvwattsv7' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/Pvwattsv7.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.Pvwattsv7.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.Pvwattsv7.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.Pvwattsv7.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam PVWATTSV7 object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_default</strong> (<em>PySAM.Pvwattsv7</em>) – Executed pvwatts pysam object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.TcsMoltenSalt">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">TcsMoltenSalt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#TcsMoltenSalt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.TcsMoltenSalt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Solar" title="reV.SAM.generation.Solar"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Solar</span></code></a></p>
+<p>Concentrated Solar Power (CSP) generation with tower molten salt</p>
+<p>Initialize a SAM concentrated solar power (CSP) object.</p>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.TcsMoltenSalt.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'tcsmolten_salt'</em><a class="headerlink" href="#reV.SAM.generation.TcsMoltenSalt.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.TcsMoltenSalt.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.TcsmoltenSalt' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/TcsmoltenSalt.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.TcsMoltenSalt.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.TcsMoltenSalt.cf_profile">
+<code class="sig-name descname">cf_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#TcsMoltenSalt.cf_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.TcsMoltenSalt.cf_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get absolute value hourly capacity factor (frac) profile in
+orig timezone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cf_profile</strong> (<em>np.ndarray</em>) – 1D numpy array of capacity factor profile.
+Datatype is float32 and array length is 8760*time_interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.TcsMoltenSalt.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.TcsMoltenSalt.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam CSP object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_default</strong> (<em>PySAM.TcsmoltenSalt</em>) – Executed TcsmoltenSalt pysam object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.SolarThermal">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">SolarThermal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#SolarThermal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.SolarThermal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Solar" title="reV.SAM.generation.Solar"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Solar</span></code></a>, <a class="reference external" href="https://docs.python.org/3.5/library/abc.html#abc.ABC" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class for solar thermal</p>
+<p>Initialize a SAM solar thermal object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years. PySAM will not accept csv data on
+Feb 29th. For leap years, December 31st is dropped and time steps
+are shifted to relabel Feb 29th as March 1st, March 1st as March
+2nd, etc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.SAM.generation.SolarThermal.set_nsrdb">
+<code class="sig-name descname">set_nsrdb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#SolarThermal.set_nsrdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.SolarThermal.set_nsrdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set NSRDB resource file. Overloads Solar.set_nsrdb(). Solar thermal
+PySAM models require a data file, not raw data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have var_list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.SolarWaterHeat">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">SolarWaterHeat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#SolarWaterHeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.SolarWaterHeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.SolarThermal" title="reV.SAM.generation.SolarThermal"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.SolarThermal</span></code></a></p>
+<p>Solar Water Heater generation</p>
+<p>Initialize a SAM solar water heater object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years. PySAM will not accept csv data on
+Feb 29th. For leap years, December 31st is dropped and time steps
+are shifted to relabel Feb 29th as March 1st, March 1st as March
+2nd, etc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.SolarWaterHeat.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'solarwaterheat'</em><a class="headerlink" href="#reV.SAM.generation.SolarWaterHeat.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.SolarWaterHeat.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.Swh' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/Swh.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.SolarWaterHeat.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.SolarWaterHeat.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.SolarWaterHeat.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam swh object.
+:returns: <strong>_default</strong> (<em>PySAM.</em>) – Executed  pysam object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.LinearDirectSteam">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">LinearDirectSteam</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#LinearDirectSteam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.LinearDirectSteam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.SolarThermal" title="reV.SAM.generation.SolarThermal"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.SolarThermal</span></code></a></p>
+<p>Process heat linear Fresnel direct steam generation</p>
+<p>Initialize a SAM process heat linear Fresnel direct steam object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years. PySAM will not accept csv data on
+Feb 29th. For leap years, December 31st is dropped and time steps
+are shifted to relabel Feb 29th as March 1st, March 1st as March
+2nd, etc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.LinearDirectSteam.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'lineardirectsteam'</em><a class="headerlink" href="#reV.SAM.generation.LinearDirectSteam.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.LinearDirectSteam.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.LinearFresnelDsgIph' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/LinearFresnelDsgIph.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.LinearDirectSteam.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.LinearDirectSteam.cf_mean">
+<code class="sig-name descname">cf_mean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#LinearDirectSteam.cf_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.LinearDirectSteam.cf_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mean capacity factor (fractional) from SAM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Mean capacity factor (fractional).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.LinearDirectSteam.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.LinearDirectSteam.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam linear Fresnel object.
+:returns: <strong>_default</strong> (<em>PySAM.</em>) – Executed  pysam object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.TroughPhysicalHeat">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">TroughPhysicalHeat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#TroughPhysicalHeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.TroughPhysicalHeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.SolarThermal" title="reV.SAM.generation.SolarThermal"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.SolarThermal</span></code></a></p>
+<p>Trough Physical Process Heat generation</p>
+<p>Initialize a SAM trough physical process heat object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have solar_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years. PySAM will not accept csv data on
+Feb 29th. For leap years, December 31st is dropped and time steps
+are shifted to relabel Feb 29th as March 1st, March 1st as March
+2nd, etc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.TroughPhysicalHeat.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'troughphysicalheat'</em><a class="headerlink" href="#reV.SAM.generation.TroughPhysicalHeat.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.TroughPhysicalHeat.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.TroughPhysicalProcessHeat' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/TroughPhysicalProcessHeat.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.TroughPhysicalHeat.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.TroughPhysicalHeat.cf_mean">
+<code class="sig-name descname">cf_mean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#TroughPhysicalHeat.cf_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.TroughPhysicalHeat.cf_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mean capacity factor (fractional) from SAM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>float</em>) – Mean capacity factor (fractional).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.TroughPhysicalHeat.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.TroughPhysicalHeat.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam trough object.
+:returns: <strong>_default</strong> (<em>PySAM.</em>) – Executed  pysam object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.generation.WindPower">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.generation.</code><code class="sig-name descname">WindPower</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">meta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_sys_inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#WindPower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.WindPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.SAM.generation.Generation" title="reV.SAM.generation.Generation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Generation</span></code></a></p>
+<p>Base class for Wind generation from SAM</p>
+<p>Initialize a SAM wind object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have wind_vars</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – 1D table with resource meta data.</p></li>
+<li><p><strong>sam_sys_inputs</strong> (<em>dict</em>) – Site-agnostic SAM system model inputs arguments.</p></li>
+<li><p><strong>site_sys_inputs</strong> (<em>dict</em>) – Optional set of site-specific SAM system inputs to complement the
+site-agnostic inputs.</p></li>
+<li><p><strong>output_request</strong> (<em>list</em>) – Requested SAM outputs (e.g., ‘cf_mean’, ‘annual_energy’,
+‘cf_profile’, ‘gen_profile’, ‘energy_yield’, ‘ppa_price’,
+‘lcoe_fcr’).</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drops February 29th from the resource data. If False, December
+31st is dropped from leap years.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.SAM.generation.WindPower.MODULE">
+<code class="sig-name descname">MODULE</code><em class="property"> = 'windpower'</em><a class="headerlink" href="#reV.SAM.generation.WindPower.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.SAM.generation.WindPower.PYSAM">
+<code class="sig-name descname">PYSAM</code><em class="property"> = &lt;module 'PySAM.Windpower' from '/opt/hostedtoolcache/Python/3.8.7/x64/lib/python3.8/site-packages/PySAM/Windpower.cpython-38-x86_64-linux-gnu.so'&gt;</em><a class="headerlink" href="#reV.SAM.generation.WindPower.PYSAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.WindPower.set_wtk">
+<code class="sig-name descname">set_wtk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resource</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/generation.html#WindPower.set_wtk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.generation.WindPower.set_wtk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set WTK resource data arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>resource</strong> (<em>pd.DataFrame</em>) – 2D table with resource data. Available columns must have var_list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.SAM.generation.WindPower.default">
+<em class="property">property </em><code class="sig-name descname">default</code><a class="headerlink" href="#reV.SAM.generation.WindPower.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the executed default pysam WindPower object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_default</strong> (<em>PySAM.Windpower</em>) – Executed Windpower pysam object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.SAM.version_checker.html" class="btn btn-neutral float-right" title="reV.SAM.version_checker module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.SAM.econ.html" class="btn btn-neutral float-left" title="reV.SAM.econ module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

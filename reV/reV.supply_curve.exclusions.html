@@ -1,0 +1,711 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.exclusions module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve.point_summary module" href="reV.supply_curve.point_summary.html" />
+    <link rel="prev" title="reV.supply_curve.competitive_wind_farms module" href="reV.supply_curve.competitive_wind_farms.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.supply_curve.html">reV.supply_curve package</a> &raquo;</li>
+        
+      <li>reV.supply_curve.exclusions module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.supply_curve.exclusions.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.supply_curve.exclusions">
+<span id="rev-supply-curve-exclusions-module"></span><h1>reV.supply_curve.exclusions module<a class="headerlink" href="#module-reV.supply_curve.exclusions" title="Permalink to this headline">¶</a></h1>
+<p>Generate reV inclusion mask from exclusion layers</p>
+<dl class="py class">
+<dt id="reV.supply_curve.exclusions.LayerMask">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.exclusions.</code><code class="sig-name descname">LayerMask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">inclusion_range</span><span class="o">=</span><span class="default_value">(None, None)</span></em>, <em class="sig-param"><span class="n">exclude_values</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_values</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inclusion_weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force_include_values</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_as_weights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">exclude_nodata</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">nodata_value</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#LayerMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to convert exclusion layer to inclusion layer mask</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>str</em>) – Layer name</p></li>
+<li><p><strong>inclusion_range</strong> (<em>tuple</em>) – (min threshold, max threshold) for values to include</p></li>
+<li><p><strong>exclude_values</strong> (<em>list</em>) – list of values to exclude
+Note: Only supply exclusions OR inclusions</p></li>
+<li><p><strong>include_values</strong> (<em>list</em>) – List of values to include
+Note: Only supply inclusions OR exclusions</p></li>
+<li><p><strong>inclusions_weights</strong> (<em>dict</em>) – Include given values with given weights</p></li>
+<li><p><strong>force_include_values</strong> (<em>list</em>) – Force the inclusion of the given values</p></li>
+<li><p><strong>use_as_weights</strong> (<em>bool</em>) – Use layer as final inclusion weights</p></li>
+<li><p><strong>weight</strong> (<em>float</em>) – How much to weight the inclusion of each pixel, Default = 1</p></li>
+<li><p><strong>exclude_nodata</strong> (<em>bool</em>) – Flag to exclude nodata values (nodata_value). If nodata_value=None
+the nodata_value is infered by ExclusionMask</p></li>
+<li><p><strong>nodata_value</strong> (<em>int | float | None</em>) – Nodata value for the layer. If None, it will be infered when
+LayerMask is added to ExclusionMask</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.layer">
+<em class="property">property </em><code class="sig-name descname">layer</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Layer name to extract from exclusions .h5 file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_layer</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.min_value">
+<em class="property">property </em><code class="sig-name descname">min_value</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.min_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum value to include</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>float</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.max_value">
+<em class="property">property </em><code class="sig-name descname">max_value</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.max_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum value to include</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>float</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.exclude_values">
+<em class="property">property </em><code class="sig-name descname">exclude_values</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.exclude_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Values to exclude</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_exclude_values</strong> (<em>list</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.include_values">
+<em class="property">property </em><code class="sig-name descname">include_values</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.include_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Values to include</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_include_values</strong> (<em>list</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.inclusion_weights">
+<em class="property">property </em><code class="sig-name descname">inclusion_weights</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.inclusion_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mapping of values to include and at what weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_inclusion_weights</strong> (<em>dict</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.force_include">
+<em class="property">property </em><code class="sig-name descname">force_include</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.force_include" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to force include mask</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_force_include</strong> (<em>bool</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.LayerMask.mask_type">
+<em class="property">property </em><code class="sig-name descname">mask_type</code><a class="headerlink" href="#reV.supply_curve.exclusions.LayerMask.mask_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of exclusion mask for this layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.exclusions.ExclusionMask">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.exclusions.</code><code class="sig-name descname">ExclusionMask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_h5</span></em>, <em class="sig-param"><span class="n">layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_layers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to create final exclusion mask</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_h5</strong> (<em>str</em>) – Path to exclusions .h5 file</p></li>
+<li><p><strong>layers</strong> (<em>list | NoneType</em>) – list of LayerMask instances for each exclusion layer to combine</p></li>
+<li><p><strong>min_area</strong> (<em>float | NoneType</em>) – Minimum required contiguous area in sq-km</p></li>
+<li><p><strong>kernel</strong> (<em>str</em>) – Contiguous filter method to use on final exclusion</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+<li><p><strong>check_layers</strong> (<em>bool</em>) – Run a pre-flight check on each layer to ensure they contain
+un-excluded values</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.FILTER_KERNELS">
+<code class="sig-name descname">FILTER_KERNELS</code><em class="property"> = {'queen': array([[1, 1, 1],        [1, 1, 1],        [1, 1, 1]]), 'rook': array([[0, 1, 0],        [1, 1, 1],        [0, 1, 0]])}</em><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.FILTER_KERNELS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMask.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close h5 instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>shape</strong> (<em>tuple</em>) – (rows, cols) shape tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.excl_h5">
+<em class="property">property </em><code class="sig-name descname">excl_h5</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.excl_h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open ExclusionLayers instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_h5</strong> (<em>ExclusionLayers</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.excl_layers">
+<em class="property">property </em><code class="sig-name descname">excl_layers</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.excl_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of available exclusion layers in exclusions .h5</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_excl_layers</strong> (<em>list</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.layer_names">
+<em class="property">property </em><code class="sig-name descname">layer_names</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.layer_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of layers to combines</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.layers">
+<em class="property">property </em><code class="sig-name descname">layers</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of LayerMask instances for each exclusion layer to combine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.mask">
+<em class="property">property </em><code class="sig-name descname">mask</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inclusion mask for entire exclusion domain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.latitude">
+<em class="property">property </em><code class="sig-name descname">latitude</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.latitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Latitude coordinates array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.longitude">
+<em class="property">property </em><code class="sig-name descname">longitude</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.longitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Longitude coordinates array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.add_layer">
+<code class="sig-name descname">add_layer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">replace</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMask.add_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.add_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add layer to be combined</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>LayerMask</em>) – LayerMask instance to add to set of layers to be combined</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.nodata_lookup">
+<em class="property">property </em><code class="sig-name descname">nodata_lookup</code><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.nodata_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary lookup of the nodata values for each layer name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>nodata</strong> (<em>dict</em>) – Lookup keyed by layer name and values are nodata values for the
+respective layers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMask.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_h5</span></em>, <em class="sig-param"><span class="n">layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMask.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMask.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create inclusion mask from given layers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_h5</strong> (<em>str</em>) – Path to exclusions .h5 file</p></li>
+<li><p><strong>layers</strong> (<em>list | NoneType</em>) – list of LayerMask instances for each exclusion layer to combine</p></li>
+<li><p><strong>min_area</strong> (<em>float | NoneType</em>) – Minimum required contiguous area in sq-km</p></li>
+<li><p><strong>kernel</strong> (<em>str</em>) – Contiguous filter method to use on final exclusion</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> (<em>ndarray</em>) – Full inclusion mask</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.exclusions.ExclusionMaskFromDict">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.exclusions.</code><code class="sig-name descname">ExclusionMaskFromDict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_h5</span></em>, <em class="sig-param"><span class="n">layers_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_layers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMaskFromDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMaskFromDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.supply_curve.exclusions.ExclusionMask" title="reV.supply_curve.exclusions.ExclusionMask"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.exclusions.ExclusionMask</span></code></a></p>
+<p>Class to initialize ExclusionMask from a dictionary defining layers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_h5</strong> (<em>str</em>) – Path to exclusions .h5 file</p></li>
+<li><p><strong>layers_dict</strong> (<em>dict | NoneType</em>) – Dictionary of LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>min_area</strong> (<em>float | NoneType</em>) – Minimum required contiguous area in sq-km</p></li>
+<li><p><strong>kernel</strong> (<em>str</em>) – Contiguous filter method to use on final exclusion</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+<li><p><strong>check_layers</strong> (<em>bool</em>) – Run a pre-flight check on each layer to ensure they contain
+un-excluded values</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.ExclusionMaskFromDict.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_h5</span></em>, <em class="sig-param"><span class="n">layers_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel</span><span class="o">=</span><span class="default_value">'queen'</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#ExclusionMaskFromDict.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.ExclusionMaskFromDict.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create inclusion mask from given layers dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>excl_h5</strong> (<em>str</em>) – Path to exclusions .h5 file</p></li>
+<li><p><strong>layers_dict</strong> (<em>dict | NoneType</em>) – Dictionary of LayerMask arugments {layer: {kwarg: value}}</p></li>
+<li><p><strong>min_area</strong> (<em>float | NoneType</em>) – Minimum required contiguous area in sq-km</p></li>
+<li><p><strong>kernel</strong> (<em>str</em>) – Contiguous filter method to use on final exclusion</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> (<em>ndarray</em>) – Full inclusion mask</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.supply_curve.exclusions.FrictionMask">
+<em class="property">class </em><code class="sig-prename descclassname">reV.supply_curve.exclusions.</code><code class="sig-name descname">FrictionMask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fric_h5</span></em>, <em class="sig-param"><span class="n">fric_dset</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">check_layers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#FrictionMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.FrictionMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.supply_curve.exclusions.ExclusionMask" title="reV.supply_curve.exclusions.ExclusionMask"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.exclusions.ExclusionMask</span></code></a></p>
+<p>Class to handle exclusion-style friction layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fric_h5</strong> (<em>str</em>) – Path to friction layer .h5 file (same format as exclusions file)</p></li>
+<li><p><strong>fric_dset</strong> (<em>str</em>) – Friction layer dataset in fric_h5</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+<li><p><strong>check_layers</strong> (<em>bool</em>) – Run a pre-flight check on each layer to ensure they contain
+un-excluded values</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.supply_curve.exclusions.FrictionMask.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_h5</span></em>, <em class="sig-param"><span class="n">fric_dset</span></em>, <em class="sig-param"><span class="n">hsds</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/exclusions.html#FrictionMask.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.exclusions.FrictionMask.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create inclusion mask from given layers dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fric_h5</strong> (<em>str</em>) – Path to friction layer .h5 file (same format as exclusions file)</p></li>
+<li><p><strong>fric_dset</strong> (<em>str</em>) – Friction layer dataset in fric_h5</p></li>
+<li><p><strong>hsds</strong> (<em>bool</em>) – Boolean flag to use h5pyd to handle .h5 ‘files’ hosted on AWS
+behind HSDS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> (<em>ndarray</em>) – Full inclusion mask</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.supply_curve.point_summary.html" class="btn btn-neutral float-right" title="reV.supply_curve.point_summary module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.supply_curve.competitive_wind_farms.html" class="btn btn-neutral float-left" title="reV.supply_curve.competitive_wind_farms module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

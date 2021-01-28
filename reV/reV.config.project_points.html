@@ -1,0 +1,797 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.config.project_points module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.config.qa_qc_config module" href="reV.config.qa_qc_config.html" />
+    <link rel="prev" title="reV.config.pipeline module" href="reV.config.pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.config.html">reV.config package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.config.html">reV.config package</a> &raquo;</li>
+        
+      <li>reV.config.project_points module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.config.project_points.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.config.project_points">
+<span id="rev-config-project-points-module"></span><h1>reV.config.project_points module<a class="headerlink" href="#module-reV.config.project_points" title="Permalink to this headline">¶</a></h1>
+<p>reV Project Points Configuration</p>
+<dl class="py class">
+<dt id="reV.config.project_points.PointsControl">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.project_points.</code><code class="sig-name descname">PointsControl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">sites_per_split</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#PointsControl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.PointsControl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to manage and split ProjectPoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_points</strong> (<em>reV.config.ProjectPoints</em>) – ProjectPoints instance to be split between execution workers.</p></li>
+<li><p><strong>sites_per_split</strong> (<em>int</em>) – Sites per project points split instance returned in the __next__
+iterator function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.N">
+<em class="property">property </em><code class="sig-name descname">N</code><a class="headerlink" href="#reV.config.project_points.PointsControl.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of current iterator list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>N</strong> (<em>int</em>) – Number of iterators in list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.sites_per_split">
+<em class="property">property </em><code class="sig-name descname">sites_per_split</code><a class="headerlink" href="#reV.config.project_points.PointsControl.sites_per_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of sites per split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sites_per_split</strong> (<em>int</em>) – Sites per split iter object.</p>
+</dd>
+<dt class="field-even">Type</dt>
+<dd class="field-even"><p>Get the iterator increment</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.project_points">
+<em class="property">property </em><code class="sig-name descname">project_points</code><a class="headerlink" href="#reV.config.project_points.PointsControl.project_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_project_points</strong> (<em>reV.config.project_points.ProjectPoints</em>) – ProjectPoints instance corresponding to this PointsControl
+instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.sites">
+<em class="property">property </em><code class="sig-name descname">sites</code><a class="headerlink" href="#reV.config.project_points.PointsControl.sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points sites for this instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>sites</strong> (<em>list</em>) – List of sites belonging to the _project_points attribute.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.split_range">
+<em class="property">property </em><code class="sig-name descname">split_range</code><a class="headerlink" href="#reV.config.project_points.PointsControl.split_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current split range property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_split_range</strong> (<em>list</em>) – Two-entry list that indicates the starting and finishing
+(inclusive, exclusive, respectively) indices of a split instance
+of the PointsControl object. This is set in the iterator dunder
+methods of PointsControl.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.PointsControl.split">
+<em class="property">classmethod </em><code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i0</span></em>, <em class="sig-param"><span class="n">i1</span></em>, <em class="sig-param"><span class="n">project_points</span></em>, <em class="sig-param"><span class="n">sites_per_split</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#PointsControl.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.PointsControl.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split this execution by splitting the project points attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i0/i1</strong> (<em>int</em>) – Beginning/end (inclusive/exclusive, respectively) index split
+parameters for ProjectPoints.split.</p></li>
+<li><p><strong>project_points</strong> (<em>reV.config.ProjectPoints</em>) – Project points instance that will be split.</p></li>
+<li><p><strong>sites_per_split</strong> (<em>int</em>) – Sites per project points split instance returned in the __next__
+iterator function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sub</strong> (<em>PointsControl</em>) – New instance of PointsControl with a subset of the original
+project points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.config.project_points.ProjectPoints">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.project_points.</code><code class="sig-name descname">ProjectPoints</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">sam_config</span></em>, <em class="sig-param"><span class="n">tech</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">curtailment</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to manage site and SAM input configuration requests.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">TESTDATADIR</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">reV.config.project_points</span> <span class="kn">import</span> <span class="n">ProjectPoints</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">points</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sam_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TESTDATADIR</span><span class="p">,</span> <span class="s1">&#39;SAM/naris_pv_1axis_inv13.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="n">ProjectPoints</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">sam_file</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config_id_site0</span><span class="p">,</span> <span class="n">SAM_config_dict_site0</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_list_or_slice</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">sites</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_list_or_slice</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">get_sites_from_config</span><span class="p">(</span><span class="n">config_id</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ProjectPoints_sub</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">project_points</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h_list</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>points</strong> (<em>slice | list | tuple | str | pd.DataFrame | dict</em>) – Slice specifying project points, string pointing to a project
+points csv, or a dataframe containing the effective csv contents.</p></li>
+<li><p><strong>sam_config</strong> (<em>dict | str | list | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s), top level value is the SAM path. Can also be a single
+config file str. If it’s a list, it is mapped to the sorted list
+of unique configs requested by points csv. Can also be a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>res_file</strong> (<em>str | NoneType</em>) – Optional resource file to find maximum length of project points if
+points slice stop is None.</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.index">
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gid</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the index location (iloc not loc) for a resource gid found in
+the project points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – Resource GID found in the project points gid column.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ind</strong> (<em>int</em>) – Row index of gid in the project points dataframe.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.df">
+<em class="property">property </em><code class="sig-name descname">df</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points dataframe property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_df</strong> (<em>pd.DataFrame</em>) – Table of sites and corresponding SAM configuration IDs.
+Has columns ‘gid’ and ‘config’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.sam_files">
+<em class="property">property </em><code class="sig-name descname">sam_files</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM files dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_files</strong> (<em>dict</em>) – Multi-level dictionary containing multiple SAM input config files.
+The top level key is the SAM config ID, top level value is the SAM
+config file path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.sam_config_obj">
+<em class="property">property </em><code class="sig-name descname">sam_config_obj</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_config_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_config_obj</strong> (<em>reV.config.sam_config.SAMConfig</em>) – SAM configuration object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.sam_configs">
+<em class="property">property </em><code class="sig-name descname">sam_configs</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM configs dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_configs</strong> (<em>dict</em>) – Multi-level dictionary containing multiple SAM input
+configurations. The top level key is the SAM config ID, top level
+value is the SAM config. Each SAM config is a dictionary with keys
+equal to input names, values equal to the actual inputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.all_sam_input_keys">
+<em class="property">property </em><code class="sig-name descname">all_sam_input_keys</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.all_sam_input_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of unique input keys from all SAM technology configs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>all_sam_input_keys</strong> (<em>list</em>) – List of unique strings where each string is a input key for the
+SAM technology configs. For example, “gcr” or “losses” for PVWatts
+or “wind_turbine_hub_ht” for windpower.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.gids">
+<em class="property">property </em><code class="sig-name descname">gids</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.gids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of gids (resource file index values) belonging to this
+instance of ProjectPoints. This is an alias of self.sites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>gids</strong> (<em>list</em>) – List of integer gids (resource file index values) belonging to this
+instance of ProjectPoints. This is an alias of self.sites.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.sites">
+<em class="property">property </em><code class="sig-name descname">sites</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of sites (resource file gids) belonging to this
+instance of ProjectPoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>sites</strong> (<em>list</em>) – List of integer sites (resource file gids) belonging to this
+instance of ProjectPoints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.sites_as_slice">
+<em class="property">property </em><code class="sig-name descname">sites_as_slice</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites_as_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sites in slice format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>sites_as_slice</strong> (<em>list | slice</em>) – Sites slice belonging to this instance of ProjectPoints.
+The type is slice if possible. Will be a list only if sites are
+non-sequential.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.tech">
+<em class="property">property </em><code class="sig-name descname">tech</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.tech" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the tech property from the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_tech</strong> (<em>str</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.h">
+<em class="property">property </em><code class="sig-name descname">h</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hub heights corresponding to the site list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_h</strong> (<em>list | NoneType</em>) – Hub heights corresponding to each site, taken from the sam config
+for each site. This is None if the technology is not wind.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.curtailment">
+<em class="property">property </em><code class="sig-name descname">curtailment</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.curtailment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the curtailment config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_curtailment</strong> (<em>NoneType | reV.config.curtailment.Curtailment</em>) – None if no curtailment, reV curtailment config object if
+curtailment is being assessed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.join_df">
+<code class="sig-name descname">join_df</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df2</span></em>, <em class="sig-param"><span class="n">key</span><span class="o">=</span><span class="default_value">'gid'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.join_df"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.join_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Join new df2 to the _df attribute using the _df’s gid as pkey.</p>
+<p>This can be used to add site-specific data to the project_points,
+taking advantage of the points_control iterator/split functions such
+that only the relevant site data is passed to the analysis functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df2</strong> (<em>pd.DataFrame</em>) – Dataframe to be joined to the self._df attribute (this instance
+of project points dataframe). This likely contains
+site-specific inputs that are to be passed to parallel workers.</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – Primary key of df2 to be joined to the _df attribute (this
+instance of the project points dataframe). Primary key
+of the self._df attribute is fixed as the gid column.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.get_sites_from_config">
+<code class="sig-name descname">get_sites_from_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.get_sites_from_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.get_sites_from_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a site list that corresponds to a config key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – SAM configuration ID associated with sites.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sites</strong> (<em>list</em>) – List of sites associated with the requested configuration ID. If
+the configuration ID is not recognized, an empty list is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.split">
+<em class="property">classmethod </em><code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i0</span></em>, <em class="sig-param"><span class="n">i1</span></em>, <em class="sig-param"><span class="n">project_points</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return split instance of a ProjectPoints instance w/ site subset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i0</strong> (<em>int</em>) – Starting INDEX (not resource gid) (inclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the starting site number, for instance if ProjectPoints
+is sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>i1</strong> (<em>int</em>) – Ending INDEX (not resource gid) (exclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the final site number, for instance if ProjectPoints is
+sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>project_points</strong> (<em>ProjectPoints</em>) – Instance of project points to split.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sub</strong> (<em>ProjectPoints</em>) – New instance of ProjectPoints with a subset of the following
+attributes: sites, project points df, and the self dictionary data
+struct.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.lat_lon_coords">
+<em class="property">classmethod </em><code class="sig-name descname">lat_lon_coords</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lat_lons</span></em>, <em class="sig-param"><span class="n">res_file</span></em>, <em class="sig-param"><span class="n">sam_config</span></em>, <em class="sig-param"><span class="n">tech</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">curtailment</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.lat_lon_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.lat_lon_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>lat_lons</strong> (<em>str | tuple | list | ndarray</em>) – Pair or pairs of latitude longitude coordinates</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Resource file, needed to fine nearest neighbors</p></li>
+<li><p><strong>sam_config</strong> (<em>dict | str | list | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s), top level value is the SAM path. Can also be a single
+config file str. If it’s a list, it is mapped to the sorted list
+of unique configs requested by points csv. Can also be a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>pp</strong> (<em>ProjectPoints</em>) – Initialized ProjectPoints object for points nearest to given
+lat_lons</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.config.project_points.ProjectPoints.regions">
+<em class="property">classmethod </em><code class="sig-name descname">regions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regions</span></em>, <em class="sig-param"><span class="n">res_file</span></em>, <em class="sig-param"><span class="n">sam_config</span></em>, <em class="sig-param"><span class="n">tech</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">curtailment</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>regions</strong> (<em>dict</em>) – Dictionary of regions to extract points for in the form:
+{‘region’: ‘region_column’}</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Resource file, needed to fine nearest neighbors</p></li>
+<li><p><strong>sam_config</strong> (<em>dict | str | list | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s), top level value is the SAM path. Can also be a single
+config file str. If it’s a list, it is mapped to the sorted list
+of unique configs requested by points csv. Can also be a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>pp</strong> (<em>ProjectPoints</em>) – Initialized ProjectPoints object for points nearest to given
+lat_lons</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.config.qa_qc_config.html" class="btn btn-neutral float-right" title="reV.config.qa_qc_config module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.config.pipeline.html" class="btn btn-neutral float-left" title="reV.config.pipeline module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

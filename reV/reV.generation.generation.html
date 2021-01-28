@@ -1,0 +1,511 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.generation.generation module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.handlers package" href="reV.handlers.html" />
+    <link rel="prev" title="reV.generation.cli_gen module" href="reV.generation.cli_gen.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.generation.html">reV.generation package</a> &raquo;</li>
+        
+      <li>reV.generation.generation module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.generation.generation.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.generation.generation">
+<span id="rev-generation-generation-module"></span><h1>reV.generation.generation module<a class="headerlink" href="#module-reV.generation.generation" title="Permalink to this headline">¶</a></h1>
+<p>reV generation module.</p>
+<dl class="py class">
+<dt id="reV.generation.generation.Gen">
+<em class="property">class </em><code class="sig-prename descclassname">reV.generation.generation.</code><code class="sig-name descname">Gen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points_control</span></em>, <em class="sig-param"><span class="n">res_file</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">('cf_mean')</span></em>, <em class="sig-param"><span class="n">site_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dirout</span><span class="o">=</span><span class="default_value">'./gen_out'</span></em>, <em class="sig-param"><span class="n">drop_leap</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.4</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/generation/generation.html#Gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.generation.generation.Gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">reV.generation.base.BaseGen</span></code></p>
+<p>reV generation analysis class to run SAM simulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_control</strong> (<em>reV.config.project_points.PointsControl</em>) – Project points control instance for site and SAM config spec.</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Filepath to single resource file, multi-h5 directory,
+or /h5_dir/prefix*suffix</p></li>
+<li><p><strong>output_request</strong> (<em>list | tuple</em>) – Output variables requested from SAM.</p></li>
+<li><p><strong>site_data</strong> (<em>str | pd.DataFrame | None</em>) – Site-specific input data for SAM calculation. String should be a
+filepath that points to a csv, DataFrame is pre-extracted data.
+Rows match sites, columns are input keys. Need a “gid” column.
+Input as None if no site-specific data.</p></li>
+<li><p><strong>fout</strong> (<em>str | None</em>) – Optional .h5 output file specification.</p></li>
+<li><p><strong>dirout</strong> (<em>str | None</em>) – Optional output directory specification. The directory will be
+created if it does not already exist.</p></li>
+<li><p><strong>drop_leap</strong> (<em>bool</em>) – Drop leap day instead of final day of year during leap years</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This sets how many site
+results will be stored in-memory at any given time before flushing
+to disk.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="reV.generation.generation.Gen.OPTIONS">
+<code class="sig-name descname">OPTIONS</code><em class="property"> = {'lineardirectsteam': &lt;class 'reV.SAM.generation.LinearDirectSteam'&gt;, 'pvwattsv5': &lt;class 'reV.SAM.generation.Pvwattsv5'&gt;, 'pvwattsv7': &lt;class 'reV.SAM.generation.Pvwattsv7'&gt;, 'solarwaterheat': &lt;class 'reV.SAM.generation.SolarWaterHeat'&gt;, 'tcsmoltensalt': &lt;class 'reV.SAM.generation.TcsMoltenSalt'&gt;, 'troughphysicalheat': &lt;class 'reV.SAM.generation.TroughPhysicalHeat'&gt;, 'windpower': &lt;class 'reV.SAM.generation.WindPower'&gt;}</em><a class="headerlink" href="#reV.generation.generation.Gen.OPTIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="reV.generation.generation.Gen.OUT_ATTRS">
+<code class="sig-name descname">OUT_ATTRS</code><em class="property"> = {'I_incident': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'I_transmitted': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'Q_deliv': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'T_amb': {'chunks': None, 'dtype': 'int16', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_cold': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_deliv': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_field_cold_in': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_field_hot_out': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_hot': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'T_tank': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'C'}, 'W_dot_heat_sink_pump': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWe'}, 'ac': {'chunks': [None, 100], 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'air_temperature': {'chunks': [None, 100], 'dtype': 'int16', 'scale_factor': 10, 'type': 'array', 'units': 'Celsius'}, 'annual_Q_deliv': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh'}, 'annual_energy': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh'}, 'annual_field_energy': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh'}, 'annual_gross_energy': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh'}, 'annual_thermal_consumption': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh'}, 'beam': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'bos_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'capital_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'cf_mean': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'scalar', 'units': 'unitless'}, 'cf_profile': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'array', 'units': 'unitless'}, 'clipped_power': {'chunks': [None, 100], 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'dc': {'chunks': [None, 100], 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'dhi': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'dhi_mean': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'scalar', 'units': 'kWh/m2/day'}, 'diffuse': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'dni': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'dni_costh': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'dni_mean': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'scalar', 'units': 'kWh/m2/day'}, 'draw': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kg/hr'}, 'energy_yield': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'kWh/kW'}, 'fixed_charge_rate': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'unitless'}, 'fixed_operating_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'flip_actual_irr': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'perc'}, 'gen': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'gen_profile': {'chunks': [None, 100], 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kW'}, 'ghi': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'ghi_mean': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'scalar', 'units': 'kWh/m2/day'}, 'gross_revenue': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'lcoe_fcr': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol/MWh'}, 'lcoe_nom': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol/MWh'}, 'lcoe_real': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol/MWh'}, 'm_dot_field': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kg/s'}, 'm_dot_field_delivered': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kg/s'}, 'm_dot_field_recirc': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kg/s'}, 'm_dot_loop': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'kg/s'}, 'other': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'units': 'unknown'}, 'poa': {'chunks': [None, 100], 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'W/m2'}, 'ppa_price': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol/MWh'}, 'pressure': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 10, 'type': 'array', 'units': 'atm'}, 'project_return_aftertax_npv': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol'}, 'q_dot_htf_sf_out': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWt'}, 'q_dot_rec_inc': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWt'}, 'q_dot_sf_out': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWt'}, 'q_dot_to_heat_sink': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWt'}, 'qinc_costh': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'array', 'units': 'MWt'}, 'sales_tax_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'solar_fraction': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'None'}, 'surface_albedo': {'chunks': [None, 100], 'dtype': 'uint8', 'scale_factor': 100, 'type': 'array', 'units': 'unitless'}, 'temperature': {'chunks': [None, 100], 'dtype': 'int16', 'scale_factor': 100, 'type': 'array', 'units': 'Celsius'}, 'total_installed_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'turbine_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dollars'}, 'variable_operating_cost': {'chunks': None, 'dtype': 'float32', 'scale_factor': 1, 'type': 'scalar', 'units': 'dol/kWh'}, 'wind_speed': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 100, 'type': 'array', 'units': 'm/s'}, 'windspeed': {'chunks': [None, 100], 'dtype': 'uint16', 'scale_factor': 100, 'type': 'array', 'units': 'm/s'}, 'ws_mean': {'chunks': None, 'dtype': 'uint16', 'scale_factor': 1000, 'type': 'scalar', 'units': 'm/s'}}</em><a class="headerlink" href="#reV.generation.generation.Gen.OUT_ATTRS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="reV.generation.generation.Gen.res_file">
+<em class="property">property </em><code class="sig-name descname">res_file</code><a class="headerlink" href="#reV.generation.generation.Gen.res_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the resource filename and path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>res_file</strong> (<em>str</em>) – Filepath to single resource file, multi-h5 directory,
+or /h5_dir/prefix*suffix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.generation.generation.Gen.meta">
+<em class="property">property </em><code class="sig-name descname">meta</code><a class="headerlink" href="#reV.generation.generation.Gen.meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get resource meta for all sites in project points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>meta</strong> (<em>pd.DataFrame</em>) – Meta data df for sites in project points. Column names are meta
+data variables, rows are different sites. The row index
+does not indicate the site number if the project points are
+non-sequential or do not start from 0, so a ‘gid’ column is added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.generation.generation.Gen.time_index">
+<em class="property">property </em><code class="sig-name descname">time_index</code><a class="headerlink" href="#reV.generation.generation.Gen.time_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the generation resource time index data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_time_index</strong> (<em>pandas.DatetimeIndex</em>) – Time-series datetime index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.generation.generation.Gen.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points_control</span></em>, <em class="sig-param"><span class="n">tech</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">res_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale_outputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/generation/generation.html#Gen.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.generation.generation.Gen.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a SAM generation analysis based on the points_control iterator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_control</strong> (<em>reV.config.PointsControl</em>) – A PointsControl instance dictating what sites and configs are run.</p></li>
+<li><p><strong>tech</strong> (<em>str</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed.</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Filepath to single resource file, multi-h5 directory,
+or /h5_dir/prefix*suffix</p></li>
+<li><p><strong>output_request</strong> (<em>list | tuple</em>) – Output variables requested from SAM.</p></li>
+<li><p><strong>scale_outputs</strong> (<em>bool</em>) – Flag to scale outputs in-place immediately upon Gen returning data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> (<em>dict</em>) – Output dictionary from the SAM reV_run function. Data is scaled
+within this function to the datatype specified in Gen.OUT_ATTRS.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.generation.generation.Gen.reV_run">
+<em class="property">classmethod </em><code class="sig-name descname">reV_run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tech</span></em>, <em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">sam_files</span></em>, <em class="sig-param"><span class="n">res_file</span></em>, <em class="sig-param"><span class="n">output_request</span><span class="o">=</span><span class="default_value">('cf_mean')</span></em>, <em class="sig-param"><span class="n">site_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">curtailment</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">sites_per_worker</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pool_size</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">1800</span></em>, <em class="sig-param"><span class="n">points_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dirout</span><span class="o">=</span><span class="default_value">'./gen_out'</span></em>, <em class="sig-param"><span class="n">mem_util_lim</span><span class="o">=</span><span class="default_value">0.4</span></em>, <em class="sig-param"><span class="n">scale_outputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/generation/generation.html#Gen.reV_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.generation.generation.Gen.reV_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a parallel reV generation run with smart data flushing.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>tech</strong> (<em>str</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, troughphysicalheat, lineardirectsteam)
+The string should be lower-cased with spaces and _ removed.</p></li>
+<li><p><strong>points</strong> (<em>slice | list | str | reV.config.project_points.PointsControl</em>) – Slice specifying project points, or string pointing to a project
+points csv, or a fully instantiated PointsControl object.</p></li>
+<li><p><strong>sam_files</strong> (<em>dict | str | list | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s), top level value is the SAM path. Can also be a single
+config file str. If it’s a list, it is mapped to the sorted list
+of unique configs requested by points csv. Can also be a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Filepath to single resource file, multi-h5 directory,
+or /h5_dir/prefix*suffix</p></li>
+<li><p><strong>output_request</strong> (<em>list | tuple</em>) – Output variables requested from SAM.</p></li>
+<li><p><strong>site_data</strong> (<em>str | pd.DataFrame | None</em>) – Site-specific input data for SAM calculation. String should be a
+filepath that points to a csv, DataFrame is pre-extracted data.
+Rows match sites, columns are input keys. Need a “gid” column.
+Input as None if no site-specific data.</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>max_workers</strong> (<em>int</em>) – Number of local workers to run on.</p></li>
+<li><p><strong>sites_per_worker</strong> (<em>int | None</em>) – Number of sites to run in series on a worker. None defaults to the
+resource file chunk size.</p></li>
+<li><p><strong>pool_size</strong> (<em>int</em>) – Number of futures to submit to a single process pool for
+parallel futures.</p></li>
+<li><p><strong>timeout</strong> (<em>int | float</em>) – Number of seconds to wait for parallel run iteration to complete
+before returning zeros. Default is 1800 seconds.</p></li>
+<li><p><strong>points_range</strong> (<em>list | None</em>) – Optional two-entry list specifying the index range of the sites to
+analyze. To be taken from the reV.config.PointsControl.split_range
+property.</p></li>
+<li><p><strong>fout</strong> (<em>str | None</em>) – Optional .h5 output file specification. Object will be returned
+if None.</p></li>
+<li><p><strong>dirout</strong> (<em>str | None</em>) – Optional output directory specification. The directory will be
+created if it does not already exist.</p></li>
+<li><p><strong>mem_util_lim</strong> (<em>float</em>) – Memory utilization limit (fractional). This will determine how many
+site results are stored in memory at any given time.</p></li>
+<li><p><strong>scale_outputs</strong> (<em>bool</em>) – Flag to scale outputs in-place immediately upon Gen returning data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gen</strong> (<em>Gen</em>) – Gen instance with outputs saved to gen.out dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.handlers.html" class="btn btn-neutral float-right" title="reV.handlers package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.generation.cli_gen.html" class="btn btn-neutral float-left" title="reV.generation.cli_gen module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

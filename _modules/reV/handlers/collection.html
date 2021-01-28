@@ -1,0 +1,1116 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.handlers.collection &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.handlers.collection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.handlers.collection</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base class to handle collection of profiles and means across multiple .h5 files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">psutil</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="kn">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">CollectionRuntimeError</span><span class="p">,</span>
+                                      <span class="n">CollectionValueError</span><span class="p">,</span>
+                                      <span class="n">CollectionWarning</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities.loggers</span> <span class="kn">import</span> <span class="n">log_mem</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DatasetCollector"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.DatasetCollector">[docs]</a><span class="k">class</span> <span class="nc">DatasetCollector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to collect single datasets from several source files into a final</span>
+<span class="sd">    output file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">source_files</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">dset_in</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to h5_file into which dataset is to be collected</span>
+<span class="sd">        source_files : list</span>
+<span class="sd">            List of source filepaths.</span>
+<span class="sd">        gids : list</span>
+<span class="sd">            list of gids to be collected</span>
+<span class="sd">        dset_in : str</span>
+<span class="sd">            Dataset to collect</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Dataset into which collected data is to be written</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This sets how many sites</span>
+<span class="sd">            will be collected at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span> <span class="o">=</span> <span class="n">h5_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_files</span> <span class="o">=</span> <span class="n">source_files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span> <span class="o">=</span> <span class="n">gids</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span> <span class="o">=</span> <span class="n">dset_in</span>
+        <span class="k">if</span> <span class="n">dset_out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dset_out</span> <span class="o">=</span> <span class="n">dset_in</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dset_out</span> <span class="o">=</span> <span class="n">dset_out</span>
+
+        <span class="n">tot_mem</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span><span class="o">.</span><span class="n">total</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_avail</span> <span class="o">=</span> <span class="n">mem_util_lim</span> <span class="o">*</span> <span class="n">tot_mem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_mem_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pre_collect</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Available memory for collection is </span><span class="si">{}</span><span class="s1"> bytes&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_avail</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Site memory requirement is: </span><span class="si">{}</span><span class="s1"> bytes&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_mem_req</span><span class="p">))</span>
+
+<div class="viewcode-block" id="DatasetCollector.parse_meta"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.DatasetCollector.parse_meta">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_meta</span><span class="p">(</span><span class="n">h5_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract and convert meta data from a rec.array to pandas.DataFrame</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file from which meta is to be parsed</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pandas.DataFrame</span>
+<span class="sd">            Portion of meta data corresponding to sites in h5_file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">meta</span>
+
+        <span class="k">return</span> <span class="n">meta</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_site_mem_req</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the memory requirement to collect one site from a dataset of</span>
+<span class="sd">        shape and dtype</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            Shape of dataset to be collected (n_time, n_sites)</span>
+<span class="sd">        dtype : np.dtype</span>
+<span class="sd">            Numpy dtype of dataset (disk dtype)</span>
+<span class="sd">        n : int</span>
+<span class="sd">            Number of sites to prototype the memory req with.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        site_mem : float</span>
+<span class="sd">            Memory requirement in bytes for one site from a dataset with</span>
+<span class="sd">            shape and dtype.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">site_mem</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">))</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="k">return</span> <span class="n">site_mem</span>
+
+    <span class="k">def</span> <span class="nf">_pre_collect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run a pre-collection check and get relevant dset attrs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        attrs : dict</span>
+<span class="sd">            Dictionary of dataset attributes for the dataset being collected.</span>
+<span class="sd">        axis : int</span>
+<span class="sd">            Axis size (1 is 1D array, 2 is 2D array)</span>
+<span class="sd">        site_mem_req : float</span>
+<span class="sd">            Memory requirement in bytes to collect a single site from one</span>
+<span class="sd">            source file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">)</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">)</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">dset_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">),)</span>
+            <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;time_index&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                    <span class="n">dset_shape</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&#39;time_index&#39; must be combined &quot;</span>
+                         <span class="s2">&quot;before profiles can be &quot;</span>
+                         <span class="s2">&quot;combined.&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">CollectionRuntimeError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot collect dset &quot;</span><span class="si">{}</span><span class="s1">&quot; with &#39;</span>
+                     <span class="s1">&#39;axis </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">,</span> <span class="n">axis</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">CollectionRuntimeError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dset_out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">_create_dset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_out</span><span class="p">,</span> <span class="n">dset_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span>
+                               <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="n">site_mem_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_site_mem_req</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">site_mem_req</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_gid_slice</span><span class="p">(</span><span class="n">gids_out</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">,</span> <span class="n">fn_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the site slice that the chunked set of source gids belongs to.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gids_out : list</span>
+<span class="sd">            List of resource GIDS in the final output meta data f_out</span>
+<span class="sd">        source_gids : list</span>
+<span class="sd">            List of resource GIDS in one chunk of source data.</span>
+<span class="sd">        fn_source : str</span>
+<span class="sd">            Source filename for warning printout.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        site_slice : slice | np.ndarray</span>
+<span class="sd">            Slice in the final output file to write data to from source gids.</span>
+<span class="sd">            If gids in destination file are non-sequential, a boolean array of</span>
+<span class="sd">            indexes is returned and a warning is printed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">gids_out</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">locs</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;DatasetCollector could not locate source gids in &#39;</span>
+                 <span class="s1">&#39;output gids. </span><span class="se">\n\t</span><span class="s1"> Source gids: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\n\t</span><span class="s1"> Output gids: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source_gids</span><span class="p">,</span> <span class="n">gids_out</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CollectionRuntimeError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">sequential_locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">locs</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">locs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">locs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequential_locs</span><span class="p">):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;GID indices for source file &quot;</span><span class="si">{}</span><span class="s1">&quot; are not &#39;</span>
+                 <span class="s1">&#39;sequential in destination file!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn_source</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">CollectionWarning</span><span class="p">)</span>
+            <span class="n">site_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">gids_out</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">site_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">locs</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">locs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">site_slice</span>
+
+    <span class="k">def</span> <span class="nf">_get_source_gid_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split the gids from the f_source into chunks based on memory req.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f_source : reV.handlers.outputs.Output</span>
+<span class="sd">            Source file handler</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        all_source_gids : list</span>
+<span class="sd">            List of all source gids to be collected</span>
+<span class="sd">        source_gid_chunks : list</span>
+<span class="sd">            List of source gid chunks to collect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">all_source_gids</span> <span class="o">=</span> <span class="n">f_source</span><span class="o">.</span><span class="n">get_meta_arr</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">)</span>
+        <span class="n">mem_req</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_source_gids</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_mem_req</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mem_req</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_avail</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">source_gid_chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">all_source_gids</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+                <span class="n">new_mem_req</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">source_gid_chunks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_mem_req</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_mem_req</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_avail</span><span class="p">:</span>
+                    <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Collecting dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; in </span><span class="si">{}</span><span class="s1"> chunks with &#39;</span>
+                                 <span class="s1">&#39;an estimated </span><span class="si">{}</span><span class="s1"> bytes in each chunk &#39;</span>
+                                 <span class="s1">&#39;(mem avail limit is </span><span class="si">{}</span><span class="s1"> bytes).&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">new_mem_req</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_mem_avail</span><span class="p">))</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">source_gid_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_source_gids</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">all_source_gids</span><span class="p">,</span> <span class="n">source_gid_chunks</span>
+
+    <span class="k">def</span> <span class="nf">_collect_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_source_gids</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">,</span> <span class="n">f_out</span><span class="p">,</span>
+                       <span class="n">f_source</span><span class="p">,</span> <span class="n">fp_source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect one set of source gids from f_source to f_out.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_source_gids : list</span>
+<span class="sd">            List of all source gids to be collected</span>
+<span class="sd">        source_gids : np.ndarray | list</span>
+<span class="sd">            Source gids to be collected</span>
+<span class="sd">        f_out : reV.handlers.outputs.Output</span>
+<span class="sd">            Output file handler</span>
+<span class="sd">        f_source : reV.handlers.outputs.Output</span>
+<span class="sd">            Source file handler</span>
+<span class="sd">        fp_source : str</span>
+<span class="sd">            Source filepath</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gid_slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">,</span>
+                                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fp_source</span><span class="p">))</span>
+
+        <span class="n">source_i0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">all_source_gids</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">source_gids</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">source_i1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">all_source_gids</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">source_gids</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">source_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">source_i0</span><span class="p">,</span> <span class="n">source_i1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">source_indexer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">source_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">- Running low mem collection of &quot;</span><span class="si">{}</span><span class="s1">&quot; for &#39;</span>
+                     <span class="s1">&#39;output site </span><span class="si">{}</span><span class="s1"> from source site </span><span class="si">{}</span><span class="s1"> and file : </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">,</span> <span class="n">out_slice</span><span class="p">,</span> <span class="n">source_slice</span><span class="p">,</span>
+                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fp_source</span><span class="p">)))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f_source</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">,</span> <span class="n">source_slice</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">source_indexer</span><span class="p">):</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">source_indexer</span><span class="p">]</span>
+                <span class="n">f_out</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_out</span><span class="p">,</span> <span class="n">out_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f_source</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_in</span><span class="p">,</span> <span class="p">:,</span> <span class="n">source_slice</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">source_indexer</span><span class="p">):</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">source_indexer</span><span class="p">]</span>
+                <span class="n">f_out</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_out</span><span class="p">,</span> <span class="p">:,</span> <span class="n">out_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Failed to collect source file </span><span class="si">{}</span><span class="s1">. &#39;</span>
+                             <span class="s1">&#39;Raised the following exception:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fp_source</span><span class="p">),</span> <span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="k">def</span> <span class="nf">_collect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simple &amp; robust serial collection optimized for low memory usage.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_files</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_source</span><span class="p">:</span>
+
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source_gid_chunks</span><span class="p">(</span><span class="n">f_source</span><span class="p">)</span>
+                    <span class="n">all_source_gids</span><span class="p">,</span> <span class="n">source_gid_chunks</span> <span class="o">=</span> <span class="n">x</span>
+
+                    <span class="k">for</span> <span class="n">source_gids</span> <span class="ow">in</span> <span class="n">source_gid_chunks</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_chunk</span><span class="p">(</span><span class="n">all_source_gids</span><span class="p">,</span> <span class="n">source_gids</span><span class="p">,</span>
+                                            <span class="n">f_out</span><span class="p">,</span> <span class="n">f_source</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+                <span class="n">log_mem</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DatasetCollector.collect_dset"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.DatasetCollector.collect_dset">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">collect_dset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">source_files</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">dset_in</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect a single dataset from a list of source files into a final</span>
+<span class="sd">        output file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to h5_file into which dataset is to be collected</span>
+<span class="sd">        source_files : list</span>
+<span class="sd">            List of source filepaths.</span>
+<span class="sd">        gids : list</span>
+<span class="sd">            list of gids to be collected</span>
+<span class="sd">        dset_in : str</span>
+<span class="sd">            Dataset to collect</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Dataset into which collected data is to be written</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This sets how many sites</span>
+<span class="sd">            will be collected at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dc</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">source_files</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">dset_in</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="n">dset_out</span><span class="p">,</span>
+                 <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+        <span class="n">dc</span><span class="o">.</span><span class="n">_collect</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="Collector"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector">[docs]</a><span class="k">class</span> <span class="nc">Collector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle the collection and combination of .h5 files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">clobber</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file into which data will be collected</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory containing .h5 files to combine</span>
+<span class="sd">        project_points : str | slice | list | pandas.DataFrame | None</span>
+<span class="sd">            Project points that correspond to the full collection of points</span>
+<span class="sd">            contained in the .h5 files to be collected. None if points list is</span>
+<span class="sd">            to be ignored (collect all data in h5_files)</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            .h5 file prefix, if None collect all files in h5_dir</span>
+<span class="sd">        clobber : bool</span>
+<span class="sd">            Flag to purge .h5 file if it already exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">clobber</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">h5_file</span><span class="p">):</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> already exists and is being replaced&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_file</span><span class="p">),</span>
+                     <span class="n">CollectionWarning</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">h5_file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_out</span> <span class="o">=</span> <span class="n">h5_file</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_h5_files</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
+                                            <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_project_points</span><span class="p">(</span><span class="n">project_points</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_gids_from_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_files</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_meta</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Collector.find_h5_files"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.find_h5_files">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_h5_files</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search h5_dir for .h5 file, return sorted</span>
+<span class="sd">        If file_prefix is not None, only return .h5 files with given prefix</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory to search</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            Prefix for .h5 file in h5_dir, if None return all .h5 files</span>
+<span class="sd">        ignore : str | list | NoneType</span>
+<span class="sd">            File name(s) to ignore.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ignore</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span><span class="n">ignore</span><span class="p">]</span>
+        <span class="n">h5_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Looking for source files in </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">file_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span> <span class="ow">and</span> <span class="n">file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">- Found source file to collect: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+                        <span class="n">h5_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">- Found source file to collect: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+                    <span class="n">h5_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+        <span class="n">h5_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">h5_files</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Final list of </span><span class="si">{}</span><span class="s1"> source files: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">h5_files</span><span class="p">),</span> <span class="n">h5_files</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">h5_files</span></div>
+
+<div class="viewcode-block" id="Collector.parse_project_points"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.parse_project_points">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_project_points</span><span class="p">(</span><span class="n">project_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract resource gids from project points</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_points : str | slice | list | pandas.DataFrame</span>
+<span class="sd">            Reference to resource points that were processed and need</span>
+<span class="sd">            collecting</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gids : list</span>
+<span class="sd">            List of resource gids that are to be collected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">gids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">project_points</span><span class="p">)[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">gids</span> <span class="o">=</span> <span class="n">project_points</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">gids</span> <span class="o">=</span> <span class="n">project_points</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">start</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">e</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">stop</span>
+            <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="s2">&quot;slice must be bounded!&quot;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">CollectionValueError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="n">step</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">step</span>
+            <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;Cannot parse project_points&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CollectionValueError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gids</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">gids</span></div>
+
+<div class="viewcode-block" id="Collector.parse_gids_from_files"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.parse_gids_from_files">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_gids_from_files</span><span class="p">(</span><span class="n">h5_files</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract a sorted gid list from a list of h5_files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_files : list</span>
+<span class="sd">            List of h5 files to be collected.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gids : list</span>
+<span class="sd">            List of sorted resource gids to be collected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">[</span><span class="n">DatasetCollector</span><span class="o">.</span><span class="n">parse_meta</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">h5_files</span><span class="p">]</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gids</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">gids</span></div>
+
+<div class="viewcode-block" id="Collector.get_dset_shape"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.get_dset_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_dset_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract the dataset shape from the first file in the collection list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_name : str</span>
+<span class="sd">            Dataset to be collected whose shape is in question.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            Dataset shape tuple.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">dset_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">shape</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">h5_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of .h5 files to be combined</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_files</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of gids corresponding to all sites to be combined</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span>
+
+<div class="viewcode-block" id="Collector.combine_time_index"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.combine_time_index">[docs]</a>    <span class="k">def</span> <span class="nf">combine_time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract time_index, None if not present in .h5 files</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;time_index&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">time_index</span>
+                <span class="n">attrs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="s1">&#39;time_index&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&#39;time_index&#39; was not processed as it is not &quot;</span>
+                     <span class="s2">&quot;present in .h5 files to be combined.&quot;</span><span class="p">,</span>
+                     <span class="n">CollectionWarning</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">time_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">_set_time_index</span><span class="p">(</span><span class="s1">&#39;time_index&#39;</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check combined meta against self._gids to make sure all sites</span>
+<span class="sd">        are present in self._h5_files</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta : pandas.DataFrame</span>
+<span class="sd">            DataFrame of combined meta from all files in self._h5_files</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta : pandas.DataFrame</span>
+<span class="sd">            DataFrame of combined meta from all files in self._h5_files.</span>
+<span class="sd">            Duplicate GIDs are dropped and a warning is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta_gids</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gids</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">gids</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">gids</span><span class="p">,</span> <span class="n">meta_gids</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+            <span class="c1"># TODO: Write missing gids to disk to allow for automated re-run</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="s2">&quot;gids: </span><span class="si">{}</span><span class="s2"> are missing&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CollectionRuntimeError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">meta_gids</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Meta of length </span><span class="si">{}</span><span class="s1"> has </span><span class="si">{}</span><span class="s1"> unique gids! &#39;</span>
+                 <span class="s1">&#39;There are duplicate gids in the source file list: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meta</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">meta_gids</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">CollectionWarning</span><span class="p">)</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;gid&#39;</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta</span>
+
+    <span class="k">def</span> <span class="nf">_purge_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove the chunked files (after collection). Will not delete files</span>
+<span class="sd">        if any datasets were not collected.&quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">dsets_collected</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">datasets</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">dsets_source</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">datasets</span>
+
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dsets_source</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dsets_collected</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Not purging chunked output files. These dsets &#39;</span>
+                 <span class="s1">&#39;have not been collected: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">CollectionWarning</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_move_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Move the chunked files to a sub dir (after collection).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sub_dir : str | None</span>
+<span class="sd">            Sub directory name to move chunks to. None to not move files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">sub_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">:</span>
+                <span class="n">base_dir</span><span class="p">,</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+                <span class="n">new_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_dir</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">new_dir</span><span class="p">)</span>
+                <span class="n">new_fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">new_fpath</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Collector.combine_meta"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.combine_meta">[docs]</a>    <span class="k">def</span> <span class="nf">combine_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load and combine meta data from .h5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;meta&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_meta</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+                    <span class="n">global_attrs</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">()</span>
+                    <span class="n">meta_attrs</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">global_attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">_h5</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+                <span class="n">meta</span> <span class="o">=</span> <span class="p">[</span><span class="n">DatasetCollector</span><span class="o">.</span><span class="n">parse_meta</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_files</span><span class="p">]</span>
+
+                <span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_meta</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Writing meta data with shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">_set_meta</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">meta_attrs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Collector.collect"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.collect">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect dataset from h5_dir to h5_file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file into which data will be collected</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory containing .h5 files to combine</span>
+<span class="sd">        project_points : str | slice | list | pandas.DataFrame | None</span>
+<span class="sd">            Project points that correspond to the full collection of points</span>
+<span class="sd">            contained in the .h5 files to be collected. None if points list is</span>
+<span class="sd">            to be ignored (collect all data in h5_files)</span>
+<span class="sd">        dset_name : str</span>
+<span class="sd">            Dataset to be collected. If source shape is 2D, time index will be</span>
+<span class="sd">            collected.</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Dataset to collect means into</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            .h5 file prefix, if None collect all files on h5_dir</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This sets how many sites</span>
+<span class="sd">            will be collected at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">file_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5_files</span> <span class="o">=</span> <span class="s2">&quot;*.h5&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h5_files</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">*.h5&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Collecting dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; from </span><span class="si">{}</span><span class="s1"> files in </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_name</span><span class="p">,</span> <span class="n">h5_files</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">))</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">clt</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
+                  <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- &#39;meta&#39; collected&quot;</span><span class="p">)</span>
+
+        <span class="n">dset_shape</span> <span class="o">=</span> <span class="n">clt</span><span class="o">.</span><span class="n">get_dset_shape</span><span class="p">(</span><span class="n">dset_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dset_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">clt</span><span class="o">.</span><span class="n">combine_time_index</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- &#39;time_index&#39; collected&quot;</span><span class="p">)</span>
+
+        <span class="n">DatasetCollector</span><span class="o">.</span><span class="n">collect_dset</span><span class="p">(</span><span class="n">clt</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">,</span> <span class="n">clt</span><span class="o">.</span><span class="n">h5_files</span><span class="p">,</span> <span class="n">clt</span><span class="o">.</span><span class="n">gids</span><span class="p">,</span>
+                                      <span class="n">dset_name</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="n">dset_out</span><span class="p">,</span>
+                                      <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Collection of &#39;</span><span class="si">{}</span><span class="s2">&#39; complete&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_name</span><span class="p">))</span>
+
+        <span class="n">tt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">ts</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Collection complete&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">- Collection took </span><span class="si">{:.4f}</span><span class="s1"> minutes&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tt</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Collector.add_dataset"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.add_dataset">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">add_dataset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect and add dataset to h5_file from h5_dir</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file into which data will be collected</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory containing .h5 files to combine</span>
+<span class="sd">        dset_name : str</span>
+<span class="sd">            Dataset to be collected. If source shape is 2D, time index will be</span>
+<span class="sd">            collected.</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Dataset to collect means into</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            .h5 file prefix, if None collect all files on h5_dir</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This sets how many sites</span>
+<span class="sd">            will be collected at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">file_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5_files</span> <span class="o">=</span> <span class="s2">&quot;*.h5&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h5_files</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">*.h5&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Collecting &quot;</span><span class="si">{}</span><span class="s1">&quot; from </span><span class="si">{}</span><span class="s1"> files in </span><span class="si">{}</span><span class="s1"> and adding to </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_name</span><span class="p">,</span> <span class="n">h5_files</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">))</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">meta</span>
+
+        <span class="n">clt</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">)</span>
+
+        <span class="n">dset_shape</span> <span class="o">=</span> <span class="n">clt</span><span class="o">.</span><span class="n">get_dset_shape</span><span class="p">(</span><span class="n">dset_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dset_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">clt</span><span class="o">.</span><span class="n">combine_time_index</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- &#39;time_index&#39; collected&quot;</span><span class="p">)</span>
+
+        <span class="n">DatasetCollector</span><span class="o">.</span><span class="n">collect_dset</span><span class="p">(</span><span class="n">clt</span><span class="o">.</span><span class="n">_h5_out</span><span class="p">,</span> <span class="n">clt</span><span class="o">.</span><span class="n">h5_files</span><span class="p">,</span> <span class="n">clt</span><span class="o">.</span><span class="n">gids</span><span class="p">,</span>
+                                      <span class="n">dset_name</span><span class="p">,</span> <span class="n">dset_out</span><span class="o">=</span><span class="n">dset_out</span><span class="p">,</span>
+                                      <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Collection of &#39;</span><span class="si">{}</span><span class="s2">&#39; complete&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_name</span><span class="p">))</span>
+
+        <span class="n">tt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">ts</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> collected&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_name</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">- Collection took </span><span class="si">{:.4f}</span><span class="s1"> minutes&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tt</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Collector.purge_chunks"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.purge_chunks">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">purge_chunks</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Purge (remove) chunked files from h5_dir (after collection).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file into which data will be collected</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory containing .h5 files to combine</span>
+<span class="sd">        project_points : str | slice | list | pandas.DataFrame</span>
+<span class="sd">            Project points that correspond to the full collection of points</span>
+<span class="sd">            contained in the .h5 files to be collected</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            .h5 file prefix, if None collect all files on h5_dir</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">clt</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">)</span>
+        <span class="n">clt</span><span class="o">.</span><span class="n">_purge_chunks</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Purged chunk files from </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Collector.move_chunks"><a class="viewcode-back" href="../../../reV/reV.handlers.collection.html#reV.handlers.collection.Collector.move_chunks">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">move_chunks</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">sub_dir</span><span class="o">=</span><span class="s1">&#39;chunk_files&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Move chunked files from h5_dir (after collection) to subdir.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 file into which data will be collected</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Root directory containing .h5 files to combine</span>
+<span class="sd">        project_points : str | slice | list | pandas.DataFrame</span>
+<span class="sd">            Project points that correspond to the full collection of points</span>
+<span class="sd">            contained in the .h5 files to be collected</span>
+<span class="sd">        file_prefix : str</span>
+<span class="sd">            .h5 file prefix, if None collect all files on h5_dir</span>
+<span class="sd">        sub_dir : str | None</span>
+<span class="sd">            Sub directory name to move chunks to. None to not move files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">clt</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">)</span>
+        <span class="n">clt</span><span class="o">.</span><span class="n">_move_chunks</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Moved chunk files from </span><span class="si">{}</span><span class="s1"> to sub_dir: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

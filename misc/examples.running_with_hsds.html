@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Running with HSDS &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV package" href="../reV/reV.html" />
+    <link rel="prev" title="Eagle Node Requests" href="examples.eagle_node_requests.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="misc.html#examples">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="misc.html">Installation and Usage</a> &raquo;</li>
+        
+      <li>Running with HSDS</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/misc/examples.running_with_hsds.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="running-with-hsds">
+<h1>Running with HSDS<a class="headerlink" href="#running-with-hsds" title="Permalink to this headline">¶</a></h1>
+<p>The Highly Scalable Distributed Service (HSDS) is a cloud optimized API to
+enable access to .h5 files hosted on AWS. The HSDS software was developed by
+the <a class="reference external" href="https://www.hdfgroup.org/">HDF Group</a> and is hosted on Amazon Web
+Services (AWS) using a combination of EC2 (Elastic Compute) and S3 (Scalable
+Storage Service). You can read more about the HSDS service
+<a class="reference external" href="https://www.slideshare.net/HDFEOS/hdf-cloud-services">in this slide deck</a>.</p>
+<div class="section" id="setting-up-hsds">
+<h2>Setting up HSDS<a class="headerlink" href="#setting-up-hsds" title="Permalink to this headline">¶</a></h2>
+<p>To get started install the h5pyd library:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install h5pyd
+</pre></div>
+</div>
+<p>Next, configure h5pyd by running <code class="docutils literal notranslate"><span class="pre">hsconfigure</span></code> from the command line, or by
+creating a configuration file at <code class="docutils literal notranslate"><span class="pre">~/.hscfg</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hsconfigure
+<span class="nv">hs_endpoint</span> <span class="o">=</span> https://developer.nrel.gov/api/hsds
+<span class="nv">hs_username</span> <span class="o">=</span> None
+<span class="nv">hs_password</span> <span class="o">=</span> None
+<span class="nv">hs_api_key</span> <span class="o">=</span> 3K3JQbjZmWctY0xmIfSYvYgtIcM3CN0cb1Y2w9bf
+</pre></div>
+</div>
+<p><em>The example API key here is for demonstration and is rate-limited per IP. To
+get your own API key, visit https://developer.nrel.gov/signup/</em></p>
+<p><em>Please note that our HSDS service is for demonstration purposes only, if you
+would like to use HSDS for production runs of reV please setup your own
+service: https://github.com/HDFGroup/hsds and point it to our public HSDS
+bucket: s3://nrel-pds-hsds</em></p>
+</div>
+<div class="section" id="using-hsds-with-rev">
+<h2>Using HSDS with reV<a class="headerlink" href="#using-hsds-with-rev" title="Permalink to this headline">¶</a></h2>
+<p>Once h5pyd has been installed and configured, <a class="reference external" href="https://github.com/nrel/rex">rex</a>
+can pull data directly from AWS using <a class="reference external" href="https://github.com/NREL/hsds-examples">HSDS</a>
+To access the resource data used by reV (NSRDB or WTK) you have to turn on the
+<code class="docutils literal notranslate"><span class="pre">hsds</span></code> flag in the <a class="reference external" href="https://nrel.github.io/rex/rex/rex.renewable_resource.html">resource handlers</a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nsrdb_file</span> <span class="o">=</span> <span class="s1">&#39;/nrel/nsrdb/nsrdb_2013.h5&#39;</span>
+<span class="k">with</span> <span class="n">rex</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="n">nsrdb_file</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">meta</span>
+    <span class="n">time_index</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">time_index</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rev-gen">
+<h2>reV Gen<a class="headerlink" href="#rev-gen" title="Permalink to this headline">¶</a></h2>
+<p>reV generation (<a class="reference external" href="https://nrel.github.io/reV/reV/reV.generation.html">reV.Gen</a>)
+will automatically infer if a file path is locally on disk or from HSDS:</p>
+<div class="section" id="windpower">
+<h3>windpower<a class="headerlink" href="#windpower" title="Permalink to this headline">¶</a></h3>
+<p>Compute wind capacity factors for a given set of latitude and longitude
+coordinates:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">TESTDATADIR</span>
+<span class="kn">from</span> <span class="nn">reV.config.project_points</span> <span class="kn">import</span> <span class="n">ProjectPoints</span>
+<span class="kn">from</span> <span class="nn">reV.generation.generation</span> <span class="kn">import</span> <span class="n">Gen</span>
+
+<span class="n">lat_lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">41.25</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.66</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.74</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.45</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.66</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.97</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.78</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.65</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.74</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.53</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.7</span> <span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.25</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.7</span> <span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.78</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">42.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.74</span><span class="p">],</span>
+                     <span class="p">[</span> <span class="mf">41.45</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.78</span><span class="p">]])</span>
+
+<span class="n">res_file</span> <span class="o">=</span> <span class="s1">&#39;/nrel/wtk/conus/wtk_conus_2012.h5&#39;</span>  <span class="c1"># HSDS &#39;file&#39; path</span>
+<span class="n">sam_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TESTDATADIR</span><span class="p">,</span>
+                         <span class="s1">&#39;SAM/wind_gen_standard_losses_0.json&#39;</span><span class="p">)</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">ProjectPoints</span><span class="o">.</span><span class="n">lat_lon_coords</span><span class="p">(</span><span class="n">lat_lons</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">sam_file</span><span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">Gen</span><span class="o">.</span><span class="n">reV_run</span><span class="p">(</span><span class="n">tech</span><span class="o">=</span><span class="s1">&#39;windpower&#39;</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">pp</span><span class="p">,</span> <span class="n">sam_files</span><span class="o">=</span><span class="n">sam_file</span><span class="p">,</span>
+                  <span class="n">res_file</span><span class="o">=</span><span class="n">res_file</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;cf_profile&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;cf_profile&#39;</span><span class="p">])</span>
+
+<span class="p">[[</span><span class="mf">0.319</span> <span class="mf">0.538</span> <span class="mf">0.287</span> <span class="o">...</span> <span class="mf">0.496</span> <span class="mf">0.579</span> <span class="mf">0.486</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.382</span> <span class="mf">0.75</span>  <span class="mf">0.474</span> <span class="o">...</span> <span class="mf">0.595</span> <span class="mf">0.339</span> <span class="mf">0.601</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.696</span> <span class="mf">0.814</span> <span class="mf">0.724</span> <span class="o">...</span> <span class="mf">0.66</span>  <span class="mf">0.466</span> <span class="mf">0.677</span><span class="p">]</span>
+ <span class="o">...</span>
+ <span class="p">[</span><span class="mf">0.833</span> <span class="mf">0.833</span> <span class="mf">0.823</span> <span class="o">...</span> <span class="mf">0.833</span> <span class="mf">0.833</span> <span class="mf">0.833</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.782</span> <span class="mf">0.833</span> <span class="mf">0.833</span> <span class="o">...</span> <span class="mf">0.833</span> <span class="mf">0.833</span> <span class="mf">0.833</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.756</span> <span class="mf">0.801</span> <span class="mf">0.833</span> <span class="o">...</span> <span class="mf">0.833</span> <span class="mf">0.833</span> <span class="mf">0.833</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pvwatts">
+<h3>pvwatts<a class="headerlink" href="#pvwatts" title="Permalink to this headline">¶</a></h3>
+<p>NOTE: <code class="docutils literal notranslate"><span class="pre">pvwattsv5</span></code> and <code class="docutils literal notranslate"><span class="pre">pvwattsv7</span></code> are both available from reV.</p>
+<p>Compute pvcapacity factors for all resource gids in a Rhode Island:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">TESTDATADIR</span>
+<span class="kn">from</span> <span class="nn">reV.config.project_points</span> <span class="kn">import</span> <span class="n">ProjectPoints</span>
+<span class="kn">from</span> <span class="nn">reV.generation.generation</span> <span class="kn">import</span> <span class="n">Gen</span>
+
+<span class="n">regions</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Rhode Island&#39;</span><span class="p">:</span> <span class="s1">&#39;state&#39;</span><span class="p">}</span>
+
+<span class="n">res_file</span> <span class="o">=</span> <span class="s1">&#39;/nrel/nsrdb/v3/nsrdb_2012.h5&#39;</span>  <span class="c1"># HSDS &#39;file&#39; path</span>
+<span class="n">sam_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TESTDATADIR</span><span class="p">,</span> <span class="s1">&#39;SAM/naris_pv_1axis_inv13.json&#39;</span><span class="p">)</span>
+
+<span class="n">pp</span> <span class="o">=</span> <span class="n">ProjectPoints</span><span class="o">.</span><span class="n">regions</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">sam_file</span><span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">Gen</span><span class="o">.</span><span class="n">reV_run</span><span class="p">(</span><span class="n">tech</span><span class="o">=</span><span class="s1">&#39;pvwattsv5&#39;</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="n">pp</span><span class="p">,</span> <span class="n">sam_files</span><span class="o">=</span><span class="n">sam_file</span><span class="p">,</span>
+                  <span class="n">res_file</span><span class="o">=</span><span class="n">res_file</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;cf_profile&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">])</span>
+
+<span class="p">[</span><span class="mf">0.183</span> <span class="mf">0.166</span> <span class="mf">0.177</span> <span class="mf">0.175</span> <span class="mf">0.167</span> <span class="mf">0.183</span> <span class="mf">0.176</span> <span class="mf">0.175</span> <span class="mf">0.176</span> <span class="mf">0.177</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="command-line-interface-cli">
+<h2>Command Line Interface (CLI)<a class="headerlink" href="#command-line-interface-cli" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen">reV-gen</a>
+can also be run from the command line and will output the results to an .h5
+file that can be read with <a class="reference external" href="https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource">rex.resource.Resource</a>.</p>
+<div class="section" id="id3">
+<h3>windpower<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>Compute wind capacity factors for a given set of latitude and longitude
+coordinates:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">out_file</span><span class="o">=</span><span class="s1">&#39;./project_points.csv&#39;</span>
+
+<span class="nv">TESTDATADIR</span><span class="o">=</span>reV/tests/data
+<span class="nv">res_file</span><span class="o">=</span>/nrel/wtk/conus/wtk_conus_2012.h5
+<span class="nv">sam_file</span><span class="o">=</span><span class="si">${</span><span class="nv">TESTDATADIR</span><span class="si">}</span>/SAM/wind_gen_standard_losses_0.json
+
+reV-gen direct --tech<span class="o">=</span>windpower --res_file<span class="o">=</span><span class="si">${</span><span class="nv">res_file</span><span class="si">}</span> --sam_files<span class="o">=</span><span class="si">${</span><span class="nv">sam_file</span><span class="si">}</span> --lat_lon_coords <span class="m">41</span>.77 -71.74 <span class="nb">local</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>pvwatts<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>NOTE: <code class="docutils literal notranslate"><span class="pre">pvwattsv5</span></code> and <code class="docutils literal notranslate"><span class="pre">pvwattsv7</span></code> are both available from reV.</p>
+<p>Compute pvcapacity factors for all resource gids in a Rhode Island:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">out_file</span><span class="o">=</span><span class="s1">&#39;./project_points.csv&#39;</span>
+
+<span class="nv">TESTDATADIR</span><span class="o">=</span>../tests/data
+<span class="nv">res_file</span><span class="o">=</span>/nrel/nsrdb/v3/nsrdb_2012.h5
+<span class="nv">sam_file</span><span class="o">=</span><span class="si">${</span><span class="nv">TESTDATADIR</span><span class="si">}</span>/SAM/naris_pv_1axis_inv13.json
+
+reV-gen direct --tech<span class="o">=</span>pvwattsv5 --res_file<span class="o">=</span><span class="si">${</span><span class="nv">res_file</span><span class="si">}</span> --sam_files<span class="o">=</span><span class="si">${</span><span class="nv">sam_file</span><span class="si">}</span> --region<span class="o">=</span><span class="s2">&quot;Rhode Island&quot;</span> --region_col<span class="o">=</span>state <span class="nb">local</span>
+</pre></div>
+</div>
+<p>For more HSDS examples please see: <a class="reference external" href="https://github.com/NREL/hsds-examples">https://github.com/NREL/hsds-examples</a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../reV/reV.html" class="btn btn-neutral float-right" title="reV package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="examples.eagle_node_requests.html" class="btn btn-neutral float-left" title="Eagle Node Requests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

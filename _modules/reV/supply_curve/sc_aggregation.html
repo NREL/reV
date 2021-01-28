@@ -1,0 +1,1872 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.sc_aggregation &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.sc_aggregation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.sc_aggregation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV supply curve aggregation framework.</span>
+
+<span class="sd">Created on Fri Jun 21 13:24:31 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">as_completed</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.generation.base</span> <span class="kn">import</span> <span class="n">BaseGen</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.exclusions</span> <span class="kn">import</span> <span class="n">ExclusionLayers</span>
+<span class="kn">from</span> <span class="nn">reV.offshore.offshore</span> <span class="kn">import</span> <span class="n">Offshore</span> <span class="k">as</span> <span class="n">OffshoreClass</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.aggregation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">AbstractAggFileHandler</span><span class="p">,</span>
+                                          <span class="n">AbstractAggregation</span><span class="p">,</span>
+                                          <span class="n">Aggregation</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.exclusions</span> <span class="kn">import</span> <span class="n">FrictionMask</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.points</span> <span class="kn">import</span> <span class="n">SupplyCurveExtent</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.point_summary</span> <span class="kn">import</span> <span class="n">SupplyCurvePointSummary</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">EmptySupplyCurvePointError</span><span class="p">,</span>
+                                      <span class="n">OutputWarning</span><span class="p">,</span> <span class="n">FileInputError</span><span class="p">,</span>
+                                      <span class="n">InputWarning</span><span class="p">,</span> <span class="n">SupplyCurveInputError</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">rex.resource</span> <span class="kn">import</span> <span class="n">Resource</span>
+<span class="kn">from</span> <span class="nn">rex.multi_file_resource</span> <span class="kn">import</span> <span class="n">MultiFileResource</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.execution</span> <span class="kn">import</span> <span class="n">SpawnProcessPool</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SupplyCurveAggFileHandler"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurveAggFileHandler</span><span class="p">(</span><span class="n">AbstractAggFileHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Framework to handle aggregation summary context managers:</span>
+<span class="sd">    - exclusions .h5 file</span>
+<span class="sd">    - generation .h5 file</span>
+<span class="sd">    - econ .h5 file (optional)</span>
+<span class="sd">    - friction surface .h5 file (optional)</span>
+<span class="sd">    - variable power density .csv (optional)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">data_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">power_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excl_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">friction_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">friction_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">area_filter_kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">check_excl_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        econ_fpath : str | None</span>
+<span class="sd">            Filepath to .h5 reV econ output results. This is optional and only</span>
+<span class="sd">            used if the lcoe_dset is not present in the gen_fpath file.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        power_density : float | str | None</span>
+<span class="sd">            Power density in MW/km2 or filepath to variable power</span>
+<span class="sd">            density file. None will attempt to infer a constant</span>
+<span class="sd">            power density from the generation meta data technology.</span>
+<span class="sd">            Variable power density csvs must have &quot;gid&quot; and &quot;power_density&quot;</span>
+<span class="sd">            columns where gid is the resource gid (typically wtk or nsrdb gid)</span>
+<span class="sd">            and the power_density column is in MW/km2.</span>
+<span class="sd">        excl_dict : dict | None</span>
+<span class="sd">            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        friction_fpath : str | None</span>
+<span class="sd">            Filepath to friction surface data (cost based exclusions).</span>
+<span class="sd">            Must be paired with friction_dset. The friction data must be the</span>
+<span class="sd">            same shape as the exclusions. Friction input creates a new output</span>
+<span class="sd">            &quot;mean_lcoe_friction&quot; which is the nominal LCOE multiplied by the</span>
+<span class="sd">            friction data.</span>
+<span class="sd">        friction_dset : str | None</span>
+<span class="sd">            Dataset name in friction_fpath for the friction surface data.</span>
+<span class="sd">            Must be paired with friction_fpath. Must be same shape as</span>
+<span class="sd">            exclusions.</span>
+<span class="sd">        area_filter_kernel : str</span>
+<span class="sd">            Contiguous area filter method to use on final exclusions mask</span>
+<span class="sd">        min_area : float | None</span>
+<span class="sd">            Minimum required contiguous area filter in sq-km</span>
+<span class="sd">        check_excl_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each exclusion layer to ensure they</span>
+<span class="sd">            contain un-excluded values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">excl_dict</span><span class="o">=</span><span class="n">excl_dict</span><span class="p">,</span>
+                         <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">area_filter_kernel</span><span class="p">,</span>
+                         <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                         <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">check_excl_layers</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_gen_econ_resource</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">)</span>
+        <span class="c1"># pre-initialize any import attributes</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span><span class="o">.</span><span class="n">meta</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_data_layers</span><span class="p">(</span><span class="n">data_layers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="n">power_density</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_power_density</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">friction_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">friction_dset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span> <span class="o">=</span> <span class="n">FrictionMask</span><span class="p">(</span><span class="n">friction_fpath</span><span class="p">,</span> <span class="n">friction_dset</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Friction layer shape </span><span class="si">{}</span><span class="s1"> must match exclusions shape </span><span class="si">{}</span><span class="s1">!&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_open_gen_econ_resource</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open a rex resource file handler for the reV generation and</span>
+<span class="sd">        (optionally) the reV econ output(s).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        econ_fpath : str | None</span>
+<span class="sd">            Filepath to .h5 reV econ output results. This is optional and only</span>
+<span class="sd">            used if the lcoe_dset is not present in the gen_fpath file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        handler : Resource | MultiFileResource</span>
+<span class="sd">            Open resource handler initialized with gen_fpath and</span>
+<span class="sd">            (optionally) econ_fpath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">econ_fpath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">handler</span> <span class="o">=</span> <span class="n">Resource</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">handler</span> <span class="o">=</span> <span class="n">MultiFileResource</span><span class="p">([</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">],</span>
+                                        <span class="n">check_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">handler</span>
+
+    <span class="k">def</span> <span class="nf">_open_data_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open data layer Exclusion h5 handlers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. fobj is added to the dictionary of each</span>
+<span class="sd">            layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">data_layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="n">data_layers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">data_layers</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;fobj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl</span><span class="o">.</span><span class="n">excl_h5</span>
+                <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">:</span>
+                        <span class="n">data_layers</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;fobj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ExclusionLayers</span><span class="p">(</span>
+                            <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">data_layers</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_close_data_layers</span><span class="p">(</span><span class="n">data_layers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close all data layers with exclusion h5 handlers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must have fobj exclusion handlers to close</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">data_layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">data_layers</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;fobj&#39;</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">:</span>
+                    <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;fobj&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_power_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the power density input. If file, open file handler.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;gid&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span>
+                        <span class="ow">and</span> <span class="s1">&#39;power_density&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Variable power density file must include &quot;gid&quot; &#39;</span>
+                           <span class="s1">&#39;and &quot;power_density&quot; columns, but received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Variable power density file must be csv but received: &#39;</span>
+                       <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SupplyCurveAggFileHandler.close"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close all file handlers.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excl</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_close_data_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the gen file handler object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _gen : Outputs</span>
+<span class="sd">            reV gen outputs handler object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the data layers object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _data_layers : dict</span>
+<span class="sd">            Data layers namespace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">power_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the power density object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _power_density : float | None | pd.DataFrame</span>
+<span class="sd">            Constant power density float, None, or opened dataframe with</span>
+<span class="sd">            (resource) &quot;gid&quot; and &quot;power_density columns&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">friction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the friction layer (cost based exclusions).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        friction_layer : None | FrictionMask</span>
+<span class="sd">            Friction layer with scalar friction values if valid friction inputs</span>
+<span class="sd">            were entered. Otherwise, None to not apply friction layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layer</span></div>
+
+
+<div class="viewcode-block" id="OffshoreAggregation"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.OffshoreAggregation">[docs]</a><span class="k">class</span> <span class="nc">OffshoreAggregation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Offshore aggregation utility methods.&quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_res_class</span><span class="p">(</span><span class="n">res_class_bins</span><span class="p">,</span> <span class="n">res_data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the offshore resource class for one site if data is available.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_class_bins : list</span>
+<span class="sd">            List of resource class bins. Can be [None] if not resource</span>
+<span class="sd">            classes are requested (output will be 0).</span>
+<span class="sd">        res_data : np.ndarray | None</span>
+<span class="sd">            Generation output array of site resource data indexed by gen_gid.</span>
+<span class="sd">            None if no resource data was computed (output will be 0).</span>
+<span class="sd">        gen_gid : int</span>
+<span class="sd">            Generation gid (index) for site in question.</span>
+<span class="sd">            This is used to index res_data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_class : int</span>
+<span class="sd">            Resource class integer. Zero if required data is not available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">res_class</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res_class_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">res_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ri</span><span class="p">,</span> <span class="n">res_bin</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">res_class_bins</span><span class="p">):</span>
+
+                <span class="n">c1</span> <span class="o">=</span> <span class="n">res_data</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">res_bin</span><span class="p">)</span>
+                <span class="n">c2</span> <span class="o">=</span> <span class="n">res_data</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">res_bin</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">c1</span> <span class="ow">and</span> <span class="n">c2</span><span class="p">:</span>
+                    <span class="n">res_class</span> <span class="o">=</span> <span class="n">ri</span>
+                    <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">res_class</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_means</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the mean point data from the data array for gen_gid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : np.ndarray | None</span>
+<span class="sd">            Array of mean data values or None if no data is available.</span>
+<span class="sd">        gen_gid : int</span>
+<span class="sd">            location to get mean data for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean_data : float | None</span>
+<span class="sd">            Mean data value or None if no data available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mean_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">mean_data</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_agg_data_layers</span><span class="p">(</span><span class="n">data_layers</span><span class="p">,</span> <span class="n">summary</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Agg categorical offshore data layers using NN to onshore points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        summary : DataFrame</span>
+<span class="sd">            Summary of the SC points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : DataFrame</span>
+<span class="sd">            Summary of the SC points with aggregated offshore data layers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="n">summary</span> <span class="ow">and</span> <span class="n">data_layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cat_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_layers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                          <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;mode&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">])</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">cat_layers</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Aggregating the following columns for offshore &#39;</span>
+                            <span class="s1">&#39;wind sites based on NN onshore sites: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cat_layers</span><span class="p">))</span>
+                <span class="n">offshore_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">offshore_summary</span> <span class="o">=</span> <span class="n">summary</span><span class="p">[</span><span class="n">offshore_mask</span><span class="p">]</span>
+                <span class="n">onshore_summary</span> <span class="o">=</span> <span class="n">summary</span><span class="p">[</span><span class="o">~</span><span class="n">offshore_mask</span><span class="p">]</span>
+
+                <span class="c1"># pylint: disable=not-callable</span>
+                <span class="n">tree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">onshore_summary</span><span class="p">[[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]])</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">nn</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">offshore_summary</span><span class="p">[[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]])</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">off_gid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">offshore_summary</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                    <span class="n">on_gid</span> <span class="o">=</span> <span class="n">onshore_summary</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">nn</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Offshore gid </span><span class="si">{}</span><span class="s1"> is closest to onshore gid </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">off_gid</span><span class="p">,</span> <span class="n">on_gid</span><span class="p">))</span>
+
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat_layers</span><span class="p">:</span>
+                        <span class="n">summary</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">off_gid</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">onshore_summary</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">on_gid</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">summary</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_meta_cols</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">,</span> <span class="n">gen_meta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the offshore meta columns and return a validated list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from original offshore data file that were passed</span>
+<span class="sd">            through to the offshore module output meta data. None will use</span>
+<span class="sd">            Offshore class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+<span class="sd">        gen_meta : pd.DataFrame</span>
+<span class="sd">            Meta data from the offshore generation output h5 file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        offshore_meta_cols : list</span>
+<span class="sd">            List of offshore meta columns to include in aggregation summary,</span>
+<span class="sd">            validated for columns that are present in gen_meta.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">offshore_meta_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OffshoreClass</span><span class="o">.</span><span class="n">DEFAULT_META_COLS</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">)</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OffshoreClass</span><span class="o">.</span><span class="n">DEFAULT_META_COLS</span><span class="p">)</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">))</span>
+
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">offshore_meta_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gen_meta</span><span class="p">]</span>
+        <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">offshore_meta_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">gen_meta</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Requested offshore columns </span><span class="si">{}</span><span class="s1"> not found in &#39;</span>
+                   <span class="s1">&#39;generation meta data. Not including in &#39;</span>
+                   <span class="s1">&#39;aggregation output table.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">offshore_meta_cols</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_nearest_sc_points</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">lat_lons</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get nearest sc_points to offshore farms</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        resolution : int</span>
+<span class="sd">            SC resolution</span>
+<span class="sd">        lat_lons : ndarray</span>
+<span class="sd">            Offshore wind farm coordinates (lat, lon) pairs</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        points : pandas.DataFrame</span>
+<span class="sd">            Nearest SC points (gid, row_ind, and col_ind)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">SupplyCurveExtent</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">points</span>
+            <span class="n">sc_lat_lons</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">lat_lon</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">sc_lat_lons</span><span class="p">)</span>  <span class="c1"># pylint: disable=not-callable</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">lat_lons</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+<div class="viewcode-block" id="OffshoreAggregation.run"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.OffshoreAggregation.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">summary</span><span class="p">,</span> <span class="n">handler</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">res_data</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span>
+            <span class="n">cf_data</span><span class="p">,</span> <span class="n">lcoe_data</span><span class="p">,</span> <span class="n">offshore_flag</span><span class="p">,</span> <span class="n">h5_dsets_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">offshore_capacity</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="mi">494</span><span class="p">,</span>
+            <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the offshore supply curve point summary. Each offshore resource</span>
+<span class="sd">        pixel will be summarized in its own supply curve point which will be</span>
+<span class="sd">        added to the summary list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an onshore SC point summary.</span>
+<span class="sd">        handler : SupplyCurveAggFileHandler</span>
+<span class="sd">            Instantiated SupplyCurveAggFileHandler.</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        res_data : np.ndarray | None</span>
+<span class="sd">            Extracted resource data from res_class_dset</span>
+<span class="sd">        res_class_bins : list</span>
+<span class="sd">            List of resouce class bin ranges.</span>
+<span class="sd">        cf_data : np.ndarray | None</span>
+<span class="sd">            Capacity factor data extracted from cf_dset in gen</span>
+<span class="sd">        lcoe_data : np.ndarray | None</span>
+<span class="sd">            LCOE data extracted from lcoe_dset in gen</span>
+<span class="sd">        offshore_flag : np.ndarray</span>
+<span class="sd">            Array of offshore boolean flags if available from wind generation</span>
+<span class="sd">            data. If this is input as None, this method has been called</span>
+<span class="sd">            without offshore data in error and summary will be passed</span>
+<span class="sd">            through un manipulated.</span>
+<span class="sd">        h5_dsets_data : dict | None</span>
+<span class="sd">            If additional h5_dsets are requested, this will be a dictionary</span>
+<span class="sd">            keyed by the h5 dataset names. The corresponding values will be</span>
+<span class="sd">            the extracted arrays from the h5 files.</span>
+<span class="sd">        resolution : int, optional</span>
+<span class="sd">            SC resolution, by default 64</span>
+<span class="sd">        offshore_capacity : int | float</span>
+<span class="sd">            Offshore resource pixel generation capacity in MW.</span>
+<span class="sd">        offshore_gid_counts : int</span>
+<span class="sd">            Approximate number of exclusion pixels that would fall into an</span>
+<span class="sd">            offshore pixel area.</span>
+<span class="sd">        offshore_pixel_area : int | float</span>
+<span class="sd">            Approximate area of offshore resource pixels in km2.</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from original offshore data file that were passed</span>
+<span class="sd">            through to the offshore module output meta data. None will use</span>
+<span class="sd">            Offshore class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary, includng SC</span>
+<span class="sd">            points for single offshore resource pixels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">offshore_flag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">summary</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">summary</span><span class="p">):</span>
+            <span class="n">summary</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_meta_cols</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">,</span>
+                                                  <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+
+        <span class="n">gen_gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">offshore_flag</span><span class="p">)))</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]</span>
+        <span class="n">lat_lon</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gids</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_nearest_sc_points</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">lat_lon</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">gen_gid</span><span class="p">,</span> <span class="n">offshore</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">offshore_flag</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">offshore</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;offshore_res_gids&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
+                    <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore sites found in wind data, but &#39;</span>
+                         <span class="s1">&#39;&quot;offshore_res_gids&quot; not found in the &#39;</span>
+                         <span class="s1">&#39;meta data. You must run the offshore wind &#39;</span>
+                         <span class="s1">&#39;farm module before offshore supply curve.&#39;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+                <span class="c1"># pylint: disable-msg=E1101</span>
+                <span class="n">farm_gid</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;gid&#39;</span><span class="p">]</span>
+                <span class="n">latitude</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;latitude&#39;</span><span class="p">]</span>
+                <span class="n">longitude</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]</span>
+                <span class="n">timezone</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;timezone&#39;</span><span class="p">]</span>
+                <span class="n">res_gids</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span>\
+                    <span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;offshore_res_gids&#39;</span><span class="p">]</span>
+
+                <span class="n">res_class</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_res_class</span><span class="p">(</span><span class="n">res_class_bins</span><span class="p">,</span> <span class="n">res_data</span><span class="p">,</span>
+                                               <span class="n">gen_gid</span><span class="p">)</span>
+                <span class="n">cf</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_means</span><span class="p">(</span><span class="n">cf_data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">)</span>
+                <span class="n">lcoe</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_means</span><span class="p">(</span><span class="n">lcoe_data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_means</span><span class="p">(</span><span class="n">res_data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">)</span>
+
+                <span class="n">pointsum</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">:</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;gid&#39;</span><span class="p">],</span>
+                            <span class="s1">&#39;sc_row_ind&#39;</span><span class="p">:</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;row_ind&#39;</span><span class="p">],</span>
+                            <span class="s1">&#39;sc_col_ind&#39;</span><span class="p">:</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="s1">&#39;col_ind&#39;</span><span class="p">],</span>
+                            <span class="s1">&#39;farm_gid&#39;</span><span class="p">:</span> <span class="n">farm_gid</span><span class="p">,</span>
+                            <span class="s1">&#39;res_gids&#39;</span><span class="p">:</span> <span class="n">res_gids</span><span class="p">,</span>
+                            <span class="s1">&#39;gen_gids&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">gen_gid</span><span class="p">],</span>
+                            <span class="s1">&#39;gid_counts&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">offshore_gid_counts</span><span class="p">)],</span>
+                            <span class="s1">&#39;mean_cf&#39;</span><span class="p">:</span> <span class="n">cf</span><span class="p">,</span>
+                            <span class="s1">&#39;mean_lcoe&#39;</span><span class="p">:</span> <span class="n">lcoe</span><span class="p">,</span>
+                            <span class="s1">&#39;mean_res&#39;</span><span class="p">:</span> <span class="n">res</span><span class="p">,</span>
+                            <span class="s1">&#39;capacity&#39;</span><span class="p">:</span> <span class="n">offshore_capacity</span><span class="p">,</span>
+                            <span class="s1">&#39;area_sq_km&#39;</span><span class="p">:</span> <span class="n">offshore_pixel_area</span><span class="p">,</span>
+                            <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">latitude</span><span class="p">,</span>
+                            <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">longitude</span><span class="p">,</span>
+                            <span class="s1">&#39;res_class&#39;</span><span class="p">:</span> <span class="n">res_class</span><span class="p">,</span>
+                            <span class="s1">&#39;timezone&#39;</span><span class="p">:</span> <span class="n">timezone</span><span class="p">,</span>
+                            <span class="s1">&#39;elevation&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                            <span class="s1">&#39;offshore&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="p">}</span>
+
+                <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">offshore_meta_cols</span><span class="p">:</span>
+                    <span class="n">pointsum</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gen_gid</span><span class="p">,</span> <span class="n">label</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">h5_dsets_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">dset</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">h5_dsets_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;mean_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+                        <span class="n">pointsum</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_means</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">gen_gid</span><span class="p">)</span>
+
+                <span class="n">summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pointsum</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div></div>
+
+
+<div class="viewcode-block" id="SupplyCurveAggregation"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurveAggregation</span><span class="p">(</span><span class="n">AbstractAggregation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Supply curve points aggregation framework.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Standard outputs:</span>
+
+<span class="sd">    sc_gid : int</span>
+<span class="sd">        Unique supply curve gid. This is the enumerated supply curve points,</span>
+<span class="sd">        which can have overlapping geographic locations due to different</span>
+<span class="sd">        resource bins at the same geographic SC point.</span>
+<span class="sd">    res_gids : list</span>
+<span class="sd">        Stringified list of resource gids (e.g. original WTK or NSRDB resource</span>
+<span class="sd">        GIDs) corresponding to each SC point.</span>
+<span class="sd">    gen_gids : list</span>
+<span class="sd">        Stringified list of generation gids (e.g. GID in the reV generation</span>
+<span class="sd">        output, which corresponds to the reV project points and not</span>
+<span class="sd">        necessarily the resource GIDs).</span>
+<span class="sd">    gid_counts : list</span>
+<span class="sd">        Stringified list of the sum of inclusion scalar values corresponding</span>
+<span class="sd">        to each gen_gid and res_gid, where 1 is included, 0 is excluded, and</span>
+<span class="sd">        0.7 is included with 70 percent of available land. Each entry in this</span>
+<span class="sd">        list is associated with the corresponding entry in the gen_gids and</span>
+<span class="sd">        res_gids lists.</span>
+<span class="sd">    n_gids : int</span>
+<span class="sd">        Total number of included pixels. This is a boolean sum and considers</span>
+<span class="sd">        partial inclusions to be included (e.g. 1).</span>
+<span class="sd">    mean_cf : float</span>
+<span class="sd">        Mean capacity factor of each supply curve point (the arithmetic mean is</span>
+<span class="sd">        weighted by the inclusion layer) (unitless).</span>
+<span class="sd">    mean_lcoe : float</span>
+<span class="sd">        Mean LCOE of each supply curve point (the arithmetic mean is weighted</span>
+<span class="sd">        by the inclusion layer). Units match the reV econ output ($/MWh).</span>
+<span class="sd">    mean_res : float</span>
+<span class="sd">        Mean resource, the resource dataset to average is provided by the user</span>
+<span class="sd">        in &#39;res_class_dset&#39;. The arithmetic mean is weighted by the inclusion</span>
+<span class="sd">        layer.</span>
+<span class="sd">    capacity : float</span>
+<span class="sd">        Total capacity of each supply curve point (MW). Units are contingent on</span>
+<span class="sd">        the &#39;power_density&#39; input units of MW/km2.</span>
+<span class="sd">    area_sq_km : float</span>
+<span class="sd">        Total included area for each supply curve point in km2. This is based</span>
+<span class="sd">        on the nominal area of each exclusion pixel which by default is</span>
+<span class="sd">        calculated from the exclusion profile attributes. The NREL reV default</span>
+<span class="sd">        is 0.0081 km2 pixels (90m x 90m). The area sum considers partial</span>
+<span class="sd">        inclusions.</span>
+<span class="sd">    latitude : float</span>
+<span class="sd">        Supply curve point centroid latitude coordinate, in degrees</span>
+<span class="sd">        (does not consider exclusions).</span>
+<span class="sd">    longitude : float</span>
+<span class="sd">        Supply curve point centroid longitude coordinate, in degrees</span>
+<span class="sd">        (does not consider exclusions).</span>
+<span class="sd">    country : str</span>
+<span class="sd">        Country of the supply curve point based on the most common country</span>
+<span class="sd">        of the associated resource meta data. Does not consider exclusions.</span>
+<span class="sd">    state : str</span>
+<span class="sd">        State of the supply curve point based on the most common state</span>
+<span class="sd">        of the associated resource meta data. Does not consider exclusions.</span>
+<span class="sd">    county : str</span>
+<span class="sd">        County of the supply curve point based on the most common county</span>
+<span class="sd">        of the associated resource meta data. Does not consider exclusions.</span>
+<span class="sd">    elevation : float</span>
+<span class="sd">        Mean elevation of the supply curve point based on the mean elevation</span>
+<span class="sd">        of the associated resource meta data. Does not consider exclusions.</span>
+<span class="sd">    timezone : int</span>
+<span class="sd">        UTC offset of local timezone based on the most common timezone of the</span>
+<span class="sd">        associated resource meta data. Does not consider exclusions.</span>
+<span class="sd">    sc_point_gid : int</span>
+<span class="sd">        Spatially deterministic supply curve point gid. Duplicate sc_point_gid</span>
+<span class="sd">        values can exist due to resource binning.</span>
+<span class="sd">    sc_row_ind : int</span>
+<span class="sd">        Row index of the supply curve point in the aggregated exclusion grid.</span>
+<span class="sd">    sc_col_ind : int</span>
+<span class="sd">        Column index of the supply curve point in the aggregated exclusion grid</span>
+<span class="sd">    res_class : int</span>
+<span class="sd">        Resource class for the supply curve gid. Each geographic supply curve</span>
+<span class="sd">        point (sc_point_gid) can have multiple resource classes associated with</span>
+<span class="sd">        it, resulting in multiple supply curve gids (sc_gid) associated with</span>
+<span class="sd">        the same spatially deterministic supply curve point.</span>
+
+
+<span class="sd">    Optional outputs:</span>
+
+<span class="sd">    mean_friction : float</span>
+<span class="sd">        Mean of the friction data provided in &#39;friction_fpath&#39; and</span>
+<span class="sd">        &#39;friction_dset&#39;. The arithmetic mean is weighted by boolean</span>
+<span class="sd">        inclusions and considers partial inclusions to be included.</span>
+<span class="sd">    mean_lcoe_friction : float</span>
+<span class="sd">        Mean of the nominal LCOE multiplied by mean_friction value.</span>
+<span class="sd">    mean_{dset} : float</span>
+<span class="sd">        Mean input h5 dataset(s) provided by the user in &#39;h5_dsets&#39;. These</span>
+<span class="sd">        mean calculations are weighted by the partial inclusion layer.</span>
+<span class="sd">    data_layers : float | int | str | dict</span>
+<span class="sd">        Requested data layer aggregations, each data layer must be the same</span>
+<span class="sd">        shape as the exclusion layers.</span>
+<span class="sd">        - mode: int | str</span>
+<span class="sd">            Most common value of a given data layer after applying the</span>
+<span class="sd">            boolean inclusion mask.</span>
+<span class="sd">        - mean : float</span>
+<span class="sd">            Arithmetic mean value of a given data layer weighted by the</span>
+<span class="sd">            scalar inclusion mask (considers partial inclusions).</span>
+<span class="sd">        - min : float | int</span>
+<span class="sd">            Minimum value of a given data layer after applying the</span>
+<span class="sd">            boolean inclusion mask.</span>
+<span class="sd">        - max : float | int</span>
+<span class="sd">            Maximum value of a given data layer after applying the</span>
+<span class="sd">            boolean inclusion mask.</span>
+<span class="sd">        - sum : float</span>
+<span class="sd">            Sum of a given data layer weighted by the scalar inclusion mask</span>
+<span class="sd">            (considers partial inclusions).</span>
+<span class="sd">        - category : dict</span>
+<span class="sd">            Dictionary mapping the unique values in the data_layer to the</span>
+<span class="sd">            sum of inclusion scalar values associated with all pixels with that</span>
+<span class="sd">            unique value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">excl_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">check_excl_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_class_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_mean-means&#39;</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr-means&#39;</span><span class="p">,</span>
+                 <span class="n">h5_dsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">power_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">friction_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">friction_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cap_cost_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        tm_dset : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        econ_fpath : str | None</span>
+<span class="sd">            Filepath to .h5 reV econ output results. This is optional and only</span>
+<span class="sd">            used if the lcoe_dset is not present in the gen_fpath file.</span>
+<span class="sd">        excl_dict : dict | None</span>
+<span class="sd">            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        area_filter_kernel : str</span>
+<span class="sd">            Contiguous area filter method to use on final exclusions mask</span>
+<span class="sd">        min_area : float | None</span>
+<span class="sd">            Minimum required contiguous area filter in sq-km</span>
+<span class="sd">        check_excl_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each exclusion layer to ensure they</span>
+<span class="sd">            contain un-excluded values</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid. Prefered</span>
+<span class="sd">            option is to use the row/col slices to define the SC point instead.</span>
+<span class="sd">        excl_area : float | None</span>
+<span class="sd">            Area of an exclusion pixel in km2. None will try to infer the area</span>
+<span class="sd">            from the profile transform attribute in excl_fpath.</span>
+<span class="sd">        gids : list | None</span>
+<span class="sd">            List of gids to get summary for (can use to subset if running in</span>
+<span class="sd">            parallel), or None for all gids in the SC extent.</span>
+<span class="sd">        res_class_dset : str | None</span>
+<span class="sd">            Dataset in the generation file dictating resource classes.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        res_class_bins : list | None</span>
+<span class="sd">            List of floats or ints (bin edges) to convert to list of two-entry</span>
+<span class="sd">            bin boundaries or list of two-entry bind boundaries in final format</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing capacity factor mean values.</span>
+<span class="sd">        lcoe_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing LCOE mean values.</span>
+<span class="sd">        h5_dsets : list | None</span>
+<span class="sd">            Optional list of additional datasets from the source h5 gen/econ</span>
+<span class="sd">            files to aggregate.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        power_density : float | str | None</span>
+<span class="sd">            Power density in MW/km2 or filepath to variable power</span>
+<span class="sd">            density file. None will attempt to infer a constant</span>
+<span class="sd">            power density from the generation meta data technology.</span>
+<span class="sd">            Variable power density csvs must have &quot;gid&quot; and &quot;power_density&quot;</span>
+<span class="sd">            columns where gid is the resource gid (typically wtk or nsrdb gid)</span>
+<span class="sd">            and the power_density column is in MW/km2.</span>
+<span class="sd">        friction_fpath : str | None</span>
+<span class="sd">            Filepath to friction surface data (cost based exclusions).</span>
+<span class="sd">            Must be paired with friction_dset. The friction data must be the</span>
+<span class="sd">            same shape as the exclusions. Friction input creates a new output</span>
+<span class="sd">            &quot;mean_lcoe_friction&quot; which is the nominal LCOE multiplied by the</span>
+<span class="sd">            friction data.</span>
+<span class="sd">        friction_dset : str | None</span>
+<span class="sd">            Dataset name in friction_fpath for the friction surface data.</span>
+<span class="sd">            Must be paired with friction_fpath. Must be same shape as</span>
+<span class="sd">            exclusions.</span>
+<span class="sd">        cap_cost_scale : str | None</span>
+<span class="sd">            Optional LCOE scaling equation to implement &quot;economies of scale&quot;.</span>
+<span class="sd">            Equations must be in python string format and return a scalar</span>
+<span class="sd">            value to multiply the capital cost by. Independent variables in</span>
+<span class="sd">            the equation should match the names of the columns in the reV</span>
+<span class="sd">            supply curve aggregation table. This will not affect offshore</span>
+<span class="sd">            wind LCOE.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span> <span class="n">excl_dict</span><span class="o">=</span><span class="n">excl_dict</span><span class="p">,</span>
+                         <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">area_filter_kernel</span><span class="p">,</span>
+                         <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                         <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">check_excl_layers</span><span class="p">,</span>
+                         <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">gids</span><span class="o">=</span><span class="n">gids</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span> <span class="o">=</span> <span class="n">gen_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span> <span class="o">=</span> <span class="n">econ_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span> <span class="o">=</span> <span class="n">res_class_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_bins</span><span class="p">(</span><span class="n">res_class_bins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span> <span class="o">=</span> <span class="n">cf_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_dset</span> <span class="o">=</span> <span class="n">lcoe_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span> <span class="o">=</span> <span class="n">h5_dsets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cap_cost_scale</span> <span class="o">=</span> <span class="n">cap_cost_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="n">power_density</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_friction_fpath</span> <span class="o">=</span> <span class="n">friction_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_friction_dset</span> <span class="o">=</span> <span class="n">friction_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span> <span class="o">=</span> <span class="n">data_layers</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Resource class bins: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bins</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cap_cost_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">BaseGen</span><span class="o">.</span><span class="n">LCOE_ARGS</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Supply curve aggregation power density not specified. &#39;</span>
+                   <span class="s1">&#39;Will try to infer based on lookup table: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SupplyCurvePointSummary</span><span class="o">.</span><span class="n">POWER_DENSITY</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">InputWarning</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_data_layers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="n">Aggregation</span><span class="o">.</span><span class="n">_parse_gen_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">excl_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">ExclusionLayers</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">excl</span><span class="p">:</span>
+                <span class="n">excl_area</span> <span class="o">=</span> <span class="n">excl</span><span class="o">.</span><span class="n">pixel_area</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excl_area</span> <span class="o">=</span> <span class="n">excl_area</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;No exclusion pixel area was input and could not parse &#39;</span>
+                 <span class="s1">&#39;area from the exclusion file attributes!&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do a preflight check on input files&quot;&quot;&quot;</span>
+
+        <span class="n">check_exists</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check_exists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">check_exists</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Could not find input file: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fpath</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tm_dset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="s1">&#39;Could not find techmap dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                                     <span class="s1">&#39;in exclusions file: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tm_dset</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_check_data_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;mode&#39;</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Run pre-flight checks on requested aggregation data layers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        methods : list | tuple</span>
+<span class="sd">            Data layer aggregation methods that are available to the user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">with</span> <span class="n">ExclusionLayers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">shape_base</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;dset&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Data aggregation &quot;dset&quot; data layer &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                                   <span class="s1">&#39;must be specified.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+                <span class="k">if</span> <span class="s1">&#39;method&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Data aggregation &quot;method&quot; data layer &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                                   <span class="s1">&#39;must be specified.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cannot recognize data layer agg method: &#39;</span>
+                                     <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;. Can only do: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">],</span> <span class="n">methods</span><span class="p">))</span>
+                <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">ExclusionLayers</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape_base</span><span class="p">):</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Data shape of data layer &quot;</span><span class="si">{}</span><span class="s1">&quot; is </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                                   <span class="s1">&#39;which does not match the baseline &#39;</span>
+                                   <span class="s1">&#39;exclusions shape </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape_base</span><span class="p">))</span>
+                            <span class="k">raise</span> <span class="n">FileInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_input_data</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span> <span class="n">res_class_dset</span><span class="p">,</span>
+                        <span class="n">res_class_bins</span><span class="p">,</span> <span class="n">cf_dset</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract SC point agg input data args from higher level inputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen : Resource | MultiFileResource</span>
+<span class="sd">            Open rex resource handler initialized from gen_fpath and</span>
+<span class="sd">            (optionally) econ_fpath.</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        econ_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV econ output results (optional argument if</span>
+<span class="sd">            lcoe_dset is not found in gen_fpath).</span>
+<span class="sd">        res_class_dset : str | None</span>
+<span class="sd">            Dataset in the generation file dictating resource classes.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        res_class_bins : list | None</span>
+<span class="sd">            List of two-entry lists dictating the resource class bins.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing capacity factor mean values.</span>
+<span class="sd">        lcoe_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing LCOE mean values.</span>
+<span class="sd">        h5_dsets : list | None</span>
+<span class="sd">            Optional list of additional datasets from the source h5 gen/econ</span>
+<span class="sd">            files to aggregate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_data : np.ndarray | None</span>
+<span class="sd">            Extracted resource data from res_class_dset</span>
+<span class="sd">        res_class_bins : list</span>
+<span class="sd">            List of resouce class bin ranges.</span>
+<span class="sd">        cf_data : np.ndarray | None</span>
+<span class="sd">            Capacity factor data extracted from cf_dset in gen</span>
+<span class="sd">        lcoe_data : np.ndarray | None</span>
+<span class="sd">            LCOE data extracted from lcoe_dset in gen</span>
+<span class="sd">        offshore_flags : np.ndarray | None</span>
+<span class="sd">            Array of offshore boolean flags if available from wind generation</span>
+<span class="sd">            data. None if offshore flag is not available.</span>
+<span class="sd">        h5_dsets_data : dict | None</span>
+<span class="sd">            If additional h5_dsets are requested, this will be a dictionary</span>
+<span class="sd">            keyed by the h5 dataset names. The corresponding values will be</span>
+<span class="sd">            the extracted arrays from the h5 files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">res_class_dset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">res_class_bins</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res_data</span> <span class="o">=</span> <span class="n">gen</span><span class="p">[</span><span class="n">res_class_dset</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">res_class_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res_class_bins</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">cf_dset</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+            <span class="n">cf_data</span> <span class="o">=</span> <span class="n">gen</span><span class="p">[</span><span class="n">cf_dset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cf_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not find cf dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; in &#39;</span>
+                 <span class="s1">&#39;generation file: </span><span class="si">{}</span><span class="s1">. Available datasets: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cf_dset</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">OutputWarning</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lcoe_dset</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+            <span class="n">lcoe_data</span> <span class="o">=</span> <span class="n">gen</span><span class="p">[</span><span class="n">lcoe_dset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lcoe_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not find lcoe dataset &quot;</span><span class="si">{}</span><span class="s1">&quot; in generation file: </span><span class="si">{}</span><span class="s1"> or &#39;</span>
+                 <span class="s1">&#39;econ file: </span><span class="si">{}</span><span class="s1">. Available datasets: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">OutputWarning</span><span class="p">)</span>
+
+        <span class="n">h5_dsets_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">h5_dsets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5_dsets_data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_dsets</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Additional h5_dsets argument must be a list or tuple &#39;</span>
+                     <span class="s1">&#39;but received: </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">h5_dsets</span><span class="p">),</span> <span class="n">h5_dsets</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">h5_dsets</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">dset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                        <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not find additional h5_dset &quot;</span><span class="si">{}</span><span class="s1">&quot; in &#39;</span>
+                             <span class="s1">&#39;generation file: </span><span class="si">{}</span><span class="s1"> or econ file: </span><span class="si">{}</span><span class="s1">. &#39;</span>
+                             <span class="s1">&#39;Available datasets: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span>
+                                     <span class="n">gen</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                        <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">OutputWarning</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">h5_dsets_data</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
+            <span class="n">offshore_flag</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offshore_flag</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">res_data</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span> <span class="n">cf_data</span><span class="p">,</span> <span class="n">lcoe_data</span><span class="p">,</span> <span class="n">offshore_flag</span><span class="p">,</span>
+                <span class="n">h5_dsets_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SupplyCurveAggregation.run_serial"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_serial">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run_serial</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span> <span class="n">gen_index</span><span class="p">,</span>
+                   <span class="n">econ_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excl_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span>
+                   <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_excl_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                   <span class="n">gids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_class_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">res_class_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_mean-means&#39;</span><span class="p">,</span>
+                   <span class="n">lcoe_dset</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr-means&#39;</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">power_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">friction_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">friction_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">excl_area</span><span class="o">=</span><span class="mf">0.0081</span><span class="p">,</span> <span class="n">cap_cost_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Standalone method to create agg summary - can be parallelized.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        tm_dset : str</span>
+<span class="sd">            Dataset name in the exclusions file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        gen_index : np.ndarray</span>
+<span class="sd">            Array of generation gids with array index equal to resource gid.</span>
+<span class="sd">            Array value is -1 if the resource index was not used in the</span>
+<span class="sd">            generation run.</span>
+<span class="sd">        econ_fpath : str | None</span>
+<span class="sd">            Filepath to .h5 reV econ output results. This is optional and only</span>
+<span class="sd">            used if the lcoe_dset is not present in the gen_fpath file.</span>
+<span class="sd">        excl_dict : dict | None</span>
+<span class="sd">            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        area_filter_kernel : str</span>
+<span class="sd">            Contiguous area filter method to use on final exclusions mask</span>
+<span class="sd">        min_area : float | None</span>
+<span class="sd">            Minimum required contiguous area filter in sq-km</span>
+<span class="sd">        check_excl_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each exclusion layer to ensure they</span>
+<span class="sd">            contain un-excluded values</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid. Prefered</span>
+<span class="sd">            option is to use the row/col slices to define the SC point instead.</span>
+<span class="sd">        gids : list | None</span>
+<span class="sd">            List of gids to get summary for (can use to subset if running in</span>
+<span class="sd">            parallel), or None for all gids in the SC extent.</span>
+<span class="sd">        args : list | None</span>
+<span class="sd">            List of positional args for sc_point_method</span>
+<span class="sd">        res_class_dset : str | None</span>
+<span class="sd">            Dataset in the generation file dictating resource classes.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        res_class_bins : list | None</span>
+<span class="sd">            List of two-entry lists dictating the resource class bins.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing capacity factor mean values.</span>
+<span class="sd">        lcoe_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing LCOE mean values.</span>
+<span class="sd">        h5_dsets : list | None</span>
+<span class="sd">            Optional list of additional datasets from the source h5 gen/econ</span>
+<span class="sd">            files to aggregate.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        power_density : float | str | None</span>
+<span class="sd">            Power density in MW/km2 or filepath to variable power</span>
+<span class="sd">            density file. None will attempt to infer a constant</span>
+<span class="sd">            power density from the generation meta data technology.</span>
+<span class="sd">            Variable power density csvs must have &quot;gid&quot; and &quot;power_density&quot;</span>
+<span class="sd">            columns where gid is the resource gid (typically wtk or nsrdb gid)</span>
+<span class="sd">            and the power_density column is in MW/km2.</span>
+<span class="sd">        friction_fpath : str | None</span>
+<span class="sd">            Filepath to friction surface data (cost based exclusions).</span>
+<span class="sd">            Must be paired with friction_dset. The friction data must be the</span>
+<span class="sd">            same shape as the exclusions. Friction input creates a new output</span>
+<span class="sd">            &quot;mean_lcoe_friction&quot; which is the nominal LCOE multiplied by the</span>
+<span class="sd">            friction data.</span>
+<span class="sd">        friction_dset : str | None</span>
+<span class="sd">            Dataset name in friction_fpath for the friction surface data.</span>
+<span class="sd">            Must be paired with friction_fpath. Must be same shape as</span>
+<span class="sd">            exclusions.</span>
+<span class="sd">        excl_area : float</span>
+<span class="sd">            Area of an exclusion cell (square km).</span>
+<span class="sd">        cap_cost_scale : str | None</span>
+<span class="sd">            Optional LCOE scaling equation to implement &quot;economies of scale&quot;.</span>
+<span class="sd">            Equations must be in python string format and return a scalar</span>
+<span class="sd">            value to multiply the capital cost by. Independent variables in</span>
+<span class="sd">            the equation should match the names of the columns in the reV</span>
+<span class="sd">            supply curve aggregation table. This will not affect offshore</span>
+<span class="sd">            wind LCOE.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">with</span> <span class="n">SupplyCurveExtent</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span> <span class="k">as</span> <span class="n">sc</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">points</span>
+            <span class="n">exclusion_shape</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">gids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gids</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">valid_sc_points</span><span class="p">(</span><span class="n">tm_dset</span><span class="p">)</span>
+
+        <span class="c1"># pre-extract handlers so they are not repeatedly initialized</span>
+        <span class="n">file_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;econ_fpath&#39;</span><span class="p">:</span> <span class="n">econ_fpath</span><span class="p">,</span>
+                       <span class="s1">&#39;data_layers&#39;</span><span class="p">:</span> <span class="n">data_layers</span><span class="p">,</span>
+                       <span class="s1">&#39;power_density&#39;</span><span class="p">:</span> <span class="n">power_density</span><span class="p">,</span>
+                       <span class="s1">&#39;excl_dict&#39;</span><span class="p">:</span> <span class="n">excl_dict</span><span class="p">,</span>
+                       <span class="s1">&#39;area_filter_kernel&#39;</span><span class="p">:</span> <span class="n">area_filter_kernel</span><span class="p">,</span>
+                       <span class="s1">&#39;min_area&#39;</span><span class="p">:</span> <span class="n">min_area</span><span class="p">,</span>
+                       <span class="s1">&#39;friction_fpath&#39;</span><span class="p">:</span> <span class="n">friction_fpath</span><span class="p">,</span>
+                       <span class="s1">&#39;friction_dset&#39;</span><span class="p">:</span> <span class="n">friction_dset</span><span class="p">,</span>
+                       <span class="s1">&#39;check_excl_layers&#39;</span><span class="p">:</span> <span class="n">check_excl_layers</span><span class="p">}</span>
+        <span class="k">with</span> <span class="n">SupplyCurveAggFileHandler</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span>
+                                       <span class="o">**</span><span class="n">file_kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_input_data</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span>
+                                         <span class="n">res_class_dset</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span>
+                                         <span class="n">cf_dset</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="p">)</span>
+
+            <span class="n">n_finished</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="n">gids</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ri</span><span class="p">,</span> <span class="n">res_bin</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">pointsum</span> <span class="o">=</span> <span class="n">SupplyCurvePointSummary</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span>
+                            <span class="n">gid</span><span class="p">,</span>
+                            <span class="n">fh</span><span class="o">.</span><span class="n">exclusions</span><span class="p">,</span>
+                            <span class="n">fh</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span>
+                            <span class="n">tm_dset</span><span class="p">,</span>
+                            <span class="n">gen_index</span><span class="p">,</span>
+                            <span class="n">res_class_dset</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">res_class_bin</span><span class="o">=</span><span class="n">res_bin</span><span class="p">,</span>
+                            <span class="n">cf_dset</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                            <span class="n">lcoe_dset</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                            <span class="n">h5_dsets</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+                            <span class="n">data_layers</span><span class="o">=</span><span class="n">fh</span><span class="o">.</span><span class="n">data_layers</span><span class="p">,</span>
+                            <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+                            <span class="n">exclusion_shape</span><span class="o">=</span><span class="n">exclusion_shape</span><span class="p">,</span>
+                            <span class="n">power_density</span><span class="o">=</span><span class="n">fh</span><span class="o">.</span><span class="n">power_density</span><span class="p">,</span>
+                            <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                            <span class="n">excl_dict</span><span class="o">=</span><span class="n">excl_dict</span><span class="p">,</span>
+                            <span class="n">excl_area</span><span class="o">=</span><span class="n">excl_area</span><span class="p">,</span>
+                            <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">offshore_flags</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+                            <span class="n">friction_layer</span><span class="o">=</span><span class="n">fh</span><span class="o">.</span><span class="n">friction_layer</span><span class="p">,</span>
+                            <span class="n">cap_cost_scale</span><span class="o">=</span><span class="n">cap_cost_scale</span><span class="p">)</span>
+
+                    <span class="k">except</span> <span class="n">EmptySupplyCurvePointError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;SC gid </span><span class="si">{}</span><span class="s1"> failed!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">))</span>
+                        <span class="k">raise</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">pointsum</span><span class="p">[</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gid</span>
+                        <span class="n">pointsum</span><span class="p">[</span><span class="s1">&#39;sc_row_ind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gid</span><span class="p">,</span> <span class="s1">&#39;row_ind&#39;</span><span class="p">]</span>
+                        <span class="n">pointsum</span><span class="p">[</span><span class="s1">&#39;sc_col_ind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gid</span><span class="p">,</span> <span class="s1">&#39;col_ind&#39;</span><span class="p">]</span>
+                        <span class="n">pointsum</span><span class="p">[</span><span class="s1">&#39;res_class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ri</span>
+
+                        <span class="n">summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pointsum</span><span class="p">)</span>
+                        <span class="n">n_finished</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Serial aggregation: &#39;</span>
+                                     <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> points complete&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_finished</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gids</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+<div class="viewcode-block" id="SupplyCurveAggregation.run_parallel"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">run_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="mf">0.0081</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the supply curve points aggregation summary using futures.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : tuple | list | None</span>
+<span class="sd">            List of summary arguments to include. None defaults to all</span>
+<span class="sd">            available args defined in the class attr.</span>
+<span class="sd">        excl_area : float</span>
+<span class="sd">            Area of an exclusion cell (square km).</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of cores to run summary on. None is all</span>
+<span class="sd">            available cpus.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">chunks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">,</span>
+                                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)))</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running supply curve point aggregation for &#39;</span>
+                    <span class="s1">&#39;points </span><span class="si">{}</span><span class="s1"> through </span><span class="si">{}</span><span class="s1"> at a resolution of </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                    <span class="s1">&#39;on </span><span class="si">{}</span><span class="s1"> cores in </span><span class="si">{}</span><span class="s1"> chunks.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolution</span><span class="p">,</span>
+                            <span class="n">max_workers</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)))</span>
+
+        <span class="n">n_finished</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;reV.supply_curve.point_summary&#39;</span><span class="p">,</span> <span class="s1">&#39;reV&#39;</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">SpawnProcessPool</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span> <span class="n">loggers</span><span class="o">=</span><span class="n">loggers</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe</span><span class="p">:</span>
+
+            <span class="c1"># iterate through split executions, submitting each to worker</span>
+            <span class="k">for</span> <span class="n">gid_set</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+                <span class="c1"># submit executions and append to futures list</span>
+                <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exe</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">run_serial</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_tm_dset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span>
+                    <span class="n">econ_fpath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span><span class="p">,</span>
+                    <span class="n">excl_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_dict</span><span class="p">,</span>
+                    <span class="n">res_class_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span><span class="p">,</span>
+                    <span class="n">res_class_bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bins</span><span class="p">,</span>
+                    <span class="n">cf_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                    <span class="n">lcoe_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_dset</span><span class="p">,</span>
+                    <span class="n">h5_dsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span><span class="p">,</span>
+                    <span class="n">data_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="p">,</span>
+                    <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolution</span><span class="p">,</span>
+                    <span class="n">power_density</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="p">,</span>
+                    <span class="n">friction_fpath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_fpath</span><span class="p">,</span>
+                    <span class="n">friction_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_dset</span><span class="p">,</span>
+                    <span class="n">area_filter_kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_area_filter_kernel</span><span class="p">,</span>
+                    <span class="n">min_area</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span><span class="p">,</span>
+                    <span class="n">gids</span><span class="o">=</span><span class="n">gid_set</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="n">excl_area</span><span class="p">,</span>
+                    <span class="n">check_excl_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_check_excl_layers</span><span class="p">,</span>
+                    <span class="n">cap_cost_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cap_cost_scale</span><span class="p">))</span>
+
+            <span class="c1"># gather results</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                <span class="n">n_finished</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Parallel aggregation futures collected: &#39;</span>
+                            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_finished</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)))</span>
+                <span class="n">summary</span> <span class="o">+=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+<div class="viewcode-block" id="SupplyCurveAggregation.run_offshore"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.run_offshore">[docs]</a>    <span class="k">def</span> <span class="nf">run_offshore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summary</span><span class="p">,</span> <span class="n">offshore_capacity</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                     <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="mi">494</span><span class="p">,</span> <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                     <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the offshore supply curve point summary. Each offshore resource</span>
+<span class="sd">        pixel will be summarized in its own supply curve point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an onshore SC point summary.</span>
+<span class="sd">        offshore_capacity : int | float</span>
+<span class="sd">            Offshore resource pixel generation capacity in MW.</span>
+<span class="sd">        offshore_gid_counts : int</span>
+<span class="sd">            Approximate number of exclusion pixels that would fall into an</span>
+<span class="sd">            offshore pixel area.</span>
+<span class="sd">        offshore_pixel_area : int | float</span>
+<span class="sd">            Approximate area of offshore resource pixels in km2.</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from original offshore data file that were passed</span>
+<span class="sd">            through to the offshore module output meta data. None will use</span>
+<span class="sd">            Offshore class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary, includng SC</span>
+<span class="sd">            points for single offshore resource pixels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">file_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;data_layers&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="p">,</span>
+                       <span class="s1">&#39;econ_fpath&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span><span class="p">,</span>
+                       <span class="s1">&#39;power_density&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="p">,</span>
+                       <span class="s1">&#39;excl_dict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_dict</span><span class="p">}</span>
+        <span class="k">with</span> <span class="n">SupplyCurveAggFileHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span>
+                                       <span class="o">**</span><span class="n">file_kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_data</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_dset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span><span class="p">)</span>
+
+            <span class="n">res</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">lcoe</span><span class="p">,</span> <span class="n">offshore_flag</span><span class="p">,</span> <span class="n">h5_dsets_data</span> <span class="o">=</span> <span class="n">inp</span>
+
+            <span class="k">if</span> <span class="n">offshore_flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">offshore_flag</span><span class="p">):</span>
+                    <span class="n">summary</span> <span class="o">=</span> <span class="n">OffshoreAggregation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                        <span class="n">summary</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span>
+                        <span class="n">cf</span><span class="p">,</span> <span class="n">lcoe</span><span class="p">,</span> <span class="n">offshore_flag</span><span class="p">,</span>
+                        <span class="n">h5_dsets_data</span><span class="o">=</span><span class="n">h5_dsets_data</span><span class="p">,</span>
+                        <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolution</span><span class="p">,</span>
+                        <span class="n">offshore_capacity</span><span class="o">=</span><span class="n">offshore_capacity</span><span class="p">,</span>
+                        <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="n">offshore_gid_counts</span><span class="p">,</span>
+                        <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="n">offshore_pixel_area</span><span class="p">,</span>
+                        <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="n">offshore_meta_cols</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_convert_bins</span><span class="p">(</span><span class="n">bins</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a list of floats or ints to a list of two-entry bin bounds.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bins : list | None</span>
+<span class="sd">            List of floats or ints (bin edges) to convert to list of two-entry</span>
+<span class="sd">            bin boundaries or list of two-entry bind boundaries in final format</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bins : list</span>
+<span class="sd">            List of two-entry bin boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">type_check</span> <span class="o">=</span> <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">type_check</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">bins</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">type_check</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Resource class bins has inconsistent &#39;</span>
+                            <span class="s1">&#39;entry type: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bbins</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bins</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">bbins</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">b</span><span class="p">,</span> <span class="n">bins</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]])</span>
+
+            <span class="k">return</span> <span class="n">bbins</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_summary_to_df</span><span class="p">(</span><span class="n">summary</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert the agg summary list to a DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : DataFrame</span>
+<span class="sd">            Summary of the SC points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">summary</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sc_gid&#39;</span>
+
+        <span class="k">return</span> <span class="n">summary</span>
+
+<div class="viewcode-block" id="SupplyCurveAggregation.summarize"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summarize">[docs]</a>    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">offshore_capacity</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="mi">494</span><span class="p">,</span>
+                  <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the supply curve points aggregation summary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : tuple | list | None</span>
+<span class="sd">            List of summary arguments to include. None defaults to all</span>
+<span class="sd">            available args defined in the class attr.</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of cores to run summary on. None is all</span>
+<span class="sd">            available cpus.</span>
+<span class="sd">        offshore_capacity : int | float</span>
+<span class="sd">            Offshore resource pixel generation capacity in MW.</span>
+<span class="sd">        offshore_gid_counts : int</span>
+<span class="sd">            Approximate number of exclusion pixels that would fall into an</span>
+<span class="sd">            offshore pixel area.</span>
+<span class="sd">        offshore_pixel_area : int | float</span>
+<span class="sd">            Approximate area of offshore resource pixels in km2.</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from original offshore data file that were passed</span>
+<span class="sd">            through to the offshore module output meta data. None will use</span>
+<span class="sd">            Offshore class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : list</span>
+<span class="sd">            List of dictionaries, each being an SC point summary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_workers</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">afk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_filter_kernel</span>
+            <span class="n">chk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_excl_layers</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_serial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">_tm_dset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span>
+                                      <span class="n">econ_fpath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_econ_fpath</span><span class="p">,</span>
+                                      <span class="n">excl_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_dict</span><span class="p">,</span>
+                                      <span class="n">res_class_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span><span class="p">,</span>
+                                      <span class="n">res_class_bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bins</span><span class="p">,</span>
+                                      <span class="n">cf_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_dset</span><span class="p">,</span>
+                                      <span class="n">lcoe_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_dset</span><span class="p">,</span>
+                                      <span class="n">h5_dsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_dsets</span><span class="p">,</span>
+                                      <span class="n">data_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="p">,</span>
+                                      <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolution</span><span class="p">,</span>
+                                      <span class="n">power_density</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span><span class="p">,</span>
+                                      <span class="n">friction_fpath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_fpath</span><span class="p">,</span>
+                                      <span class="n">friction_dset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_dset</span><span class="p">,</span>
+                                      <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">afk</span><span class="p">,</span>
+                                      <span class="n">min_area</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span><span class="p">,</span>
+                                      <span class="n">gids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gids</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                                      <span class="n">excl_area</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_area</span><span class="p">,</span>
+                                      <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">chk</span><span class="p">,</span>
+                                      <span class="n">cap_cost_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cap_cost_scale</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_parallel</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_excl_area</span><span class="p">,</span>
+                                        <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_offshore</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span>
+                                    <span class="n">offshore_capacity</span><span class="o">=</span><span class="n">offshore_capacity</span><span class="p">,</span>
+                                    <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="n">offshore_gid_counts</span><span class="p">,</span>
+                                    <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="n">offshore_pixel_area</span><span class="p">,</span>
+                                    <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="n">offshore_meta_cols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">summary</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Supply curve aggregation found no non-excluded SC points. &#39;</span>
+                 <span class="s1">&#39;Please check your exclusions or subset SC GID selection.&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">EmptySupplyCurvePointError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_summary_to_df</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">OffshoreAggregation</span><span class="o">.</span><span class="n">_agg_data_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_layers</span><span class="p">,</span>
+                                                       <span class="n">summary</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+<div class="viewcode-block" id="SupplyCurveAggregation.summary"><a class="viewcode-back" href="../../../reV/reV.supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.SupplyCurveAggregation.summary">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">excl_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">check_excl_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">gids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">res_class_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">cf_dset</span><span class="o">=</span><span class="s1">&#39;cf_mean-means&#39;</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr-means&#39;</span><span class="p">,</span>
+                <span class="n">h5_dsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">power_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">friction_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">friction_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">cap_cost_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offshore_capacity</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="mi">494</span><span class="p">,</span> <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the supply curve points aggregation summary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_fpath : str</span>
+<span class="sd">            Filepath to exclusions h5 with techmap dataset.</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        tm_dset : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        econ_fpath : str | None</span>
+<span class="sd">            Filepath to .h5 reV econ output results. This is optional and only</span>
+<span class="sd">            used if the lcoe_dset is not present in the gen_fpath file.</span>
+<span class="sd">        excl_dict : dict | None</span>
+<span class="sd">            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        area_filter_kernel : str</span>
+<span class="sd">            Contiguous area filter method to use on final exclusions mask</span>
+<span class="sd">        min_area : float | None</span>
+<span class="sd">            Minimum required contiguous area filter in sq-km</span>
+<span class="sd">        check_excl_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each exclusion layer to ensure they</span>
+<span class="sd">            contain un-excluded values</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid. Prefered</span>
+<span class="sd">            option is to use the row/col slices to define the SC point instead.</span>
+<span class="sd">        gids : list | None</span>
+<span class="sd">            List of gids to get summary for (can use to subset if running in</span>
+<span class="sd">            parallel), or None for all gids in the SC extent.</span>
+<span class="sd">        res_class_dset : str | None</span>
+<span class="sd">            Dataset in the generation file dictating resource classes.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        res_class_bins : list | None</span>
+<span class="sd">            List of floats or ints (bin edges) to convert to list of two-entry</span>
+<span class="sd">            bin boundaries or list of two-entry bind boundaries in final format</span>
+<span class="sd">        cf_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing capacity factor mean values.</span>
+<span class="sd">        lcoe_dset : str</span>
+<span class="sd">            Dataset name from f_gen containing LCOE mean values.</span>
+<span class="sd">        h5_dsets : list | None</span>
+<span class="sd">            Optional list of additional datasets from the source h5 gen/econ</span>
+<span class="sd">            files to aggregate.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;dset&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        power_density : float | str | None</span>
+<span class="sd">            Power density in MW/km2 or filepath to variable power</span>
+<span class="sd">            density file. None will attempt to infer a constant</span>
+<span class="sd">            power density from the generation meta data technology.</span>
+<span class="sd">            Variable power density csvs must have &quot;gid&quot; and &quot;power_density&quot;</span>
+<span class="sd">            columns where gid is the resource gid (typically wtk or nsrdb gid)</span>
+<span class="sd">            and the power_density column is in MW/km2.</span>
+<span class="sd">        friction_fpath : str | None</span>
+<span class="sd">            Filepath to friction surface data (cost based exclusions).</span>
+<span class="sd">            Must be paired with friction_dset. The friction data must be the</span>
+<span class="sd">            same shape as the exclusions. Friction input creates a new output</span>
+<span class="sd">            &quot;mean_lcoe_friction&quot; which is the nominal LCOE multiplied by the</span>
+<span class="sd">            friction data.</span>
+<span class="sd">        friction_dset : str | None</span>
+<span class="sd">            Dataset name in friction_fpath for the friction surface data.</span>
+<span class="sd">            Must be paired with friction_fpath. Must be same shape as</span>
+<span class="sd">            exclusions.</span>
+<span class="sd">        args : tuple | list | None</span>
+<span class="sd">            List of summary arguments to include. None defaults to all</span>
+<span class="sd">            available args defined in the class attr.</span>
+<span class="sd">        excl_area : float | None</span>
+<span class="sd">            Area of an exclusion pixel in km2. None will try to infer the area</span>
+<span class="sd">            from the profile transform attribute in excl_fpath.</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of cores to run summary on. None is all</span>
+<span class="sd">            available cpus.</span>
+<span class="sd">        cap_cost_scale : str | None</span>
+<span class="sd">            Optional LCOE scaling equation to implement &quot;economies of scale&quot;.</span>
+<span class="sd">            Equations must be in python string format and return a scalar</span>
+<span class="sd">            value to multiply the capital cost by. Independent variables in</span>
+<span class="sd">            the equation should match the names of the columns in the reV</span>
+<span class="sd">            supply curve aggregation table. This will not affect offshore</span>
+<span class="sd">            wind LCOE.</span>
+<span class="sd">        offshore_capacity : int | float</span>
+<span class="sd">            Offshore resource pixel generation capacity in MW.</span>
+<span class="sd">        offshore_gid_counts : int</span>
+<span class="sd">            Approximate number of exclusion pixels that would fall into an</span>
+<span class="sd">            offshore pixel area.</span>
+<span class="sd">        offshore_pixel_area : int | float</span>
+<span class="sd">            Approximate area of offshore resource pixels in km2.</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from original offshore data file that were passed</span>
+<span class="sd">            through to the offshore module output meta data. None will use</span>
+<span class="sd">            Offshore class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : DataFrame</span>
+<span class="sd">            Summary of the SC points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">agg</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span>
+                  <span class="n">econ_fpath</span><span class="o">=</span><span class="n">econ_fpath</span><span class="p">,</span>
+                  <span class="n">excl_dict</span><span class="o">=</span><span class="n">excl_dict</span><span class="p">,</span>
+                  <span class="n">res_class_dset</span><span class="o">=</span><span class="n">res_class_dset</span><span class="p">,</span>
+                  <span class="n">res_class_bins</span><span class="o">=</span><span class="n">res_class_bins</span><span class="p">,</span>
+                  <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                  <span class="n">lcoe_dset</span><span class="o">=</span><span class="n">lcoe_dset</span><span class="p">,</span>
+                  <span class="n">h5_dsets</span><span class="o">=</span><span class="n">h5_dsets</span><span class="p">,</span>
+                  <span class="n">data_layers</span><span class="o">=</span><span class="n">data_layers</span><span class="p">,</span>
+                  <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+                  <span class="n">power_density</span><span class="o">=</span><span class="n">power_density</span><span class="p">,</span>
+                  <span class="n">gids</span><span class="o">=</span><span class="n">gids</span><span class="p">,</span>
+                  <span class="n">friction_fpath</span><span class="o">=</span><span class="n">friction_fpath</span><span class="p">,</span>
+                  <span class="n">friction_dset</span><span class="o">=</span><span class="n">friction_dset</span><span class="p">,</span>
+                  <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">area_filter_kernel</span><span class="p">,</span>
+                  <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                  <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">check_excl_layers</span><span class="p">,</span>
+                  <span class="n">excl_area</span><span class="o">=</span><span class="n">excl_area</span><span class="p">,</span>
+                  <span class="n">cap_cost_scale</span><span class="o">=</span><span class="n">cap_cost_scale</span><span class="p">)</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">agg</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                                <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                <span class="n">offshore_capacity</span><span class="o">=</span><span class="n">offshore_capacity</span><span class="p">,</span>
+                                <span class="n">offshore_gid_counts</span><span class="o">=</span><span class="n">offshore_gid_counts</span><span class="p">,</span>
+                                <span class="n">offshore_pixel_area</span><span class="o">=</span><span class="n">offshore_pixel_area</span><span class="p">,</span>
+                                <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="n">offshore_meta_cols</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,557 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.SAM.windbos &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.SAM.windbos</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.SAM.windbos</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SAM Wind Balance of System Cost Model</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PySAM.PySSC</span> <span class="kn">import</span> <span class="n">ssc_sim_from_dict</span>
+
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SAMInputError</span>
+
+
+<div class="viewcode-block" id="WindBos"><a class="viewcode-back" href="../../../reV/reV.SAM.windbos.html#reV.SAM.windbos.WindBos">[docs]</a><span class="k">class</span> <span class="nc">WindBos</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Wind Balance of System Cost Model.&quot;&quot;&quot;</span>
+
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;windbos&#39;</span>
+
+    <span class="c1"># keys for the windbos input data dictionary.</span>
+    <span class="c1"># Some keys may not be found explicitly in the SAM input.</span>
+    <span class="n">KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;tech_model&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;financial_model&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;machine_rating&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;rotor_diameter&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;hub_height&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_turbines&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;interconnect_voltage&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;distance_to_interconnect&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;site_terrain&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;turbine_layout&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;soil_condition&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;construction_time&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;om_building_size&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;quantity_test_met_towers&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;quantity_permanent_met_towers&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;weather_delay_days&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;crane_breakdowns&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;access_road_entrances&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;turbine_capital_cost&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;turbine_cost_per_kw&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;tower_top_mass&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;delivery_assist_required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pad_mount_transformer_required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;new_switchyard_required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;rock_trenching_required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;mv_thermal_backfill&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;mv_overhead_collector&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;performance_bond&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;contingency&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;warranty_management&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;sales_and_use_tax&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;overhead&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;profit_margin&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;development_fee&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;turbine_transportation&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            SAM key value pair inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_turbine_capital_cost</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_datadict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_special</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tech_model&#39;</span><span class="p">:</span> <span class="s1">&#39;windbos&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;financial_model&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;machine_rating&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine_rating</span><span class="p">,</span>
+                         <span class="s1">&#39;hub_height&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hub_height</span><span class="p">,</span>
+                         <span class="s1">&#39;rotor_diameter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotor_diameter</span><span class="p">,</span>
+                         <span class="s1">&#39;number_of_turbines&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_turbines</span><span class="p">,</span>
+                         <span class="s1">&#39;turbine_capital_cost&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capital_cost</span><span class="p">,</span>
+                         <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_inputs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="n">ssc_sim_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_datadict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse SAM inputs into a windbos input dict and perform any</span>
+<span class="sd">        required special operations.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_special</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_datadict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_special</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SAMInputError</span><span class="p">(</span><span class="s1">&#39;Windbos requires input key: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_datadict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">machine_rating</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Single turbine machine rating either from input or power curve.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;machine_rating&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;machine_rating&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_powercurve_powerout&#39;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hub_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turbine hub height.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;wind_turbine_hub_ht&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_hub_ht&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;hub_height&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rotor_diameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turbine rotor diameter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;wind_turbine_rotor_diameter&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_rotor_diameter&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;rotor_diameter&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_turbines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of turbines either based on input or system (farm) capacity</span>
+<span class="sd">        and machine rating&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;number_of_turbines&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;number_of_turbines&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;system_capacity&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine_rating</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">turbine_capital_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns zero (no turbine capital cost for WindBOS input,</span>
+<span class="sd">        and assigns any input turbine_capital_cost to an attr&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;turbine_capital_cost&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_turbine_capital_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;turbine_capital_cost&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_turbine_capital_cost</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bos_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the balance of system cost ($).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="s1">&#39;project_total_budgeted_cost&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">turbine_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the turbine cost ($).&quot;&quot;&quot;</span>
+        <span class="n">tcost</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;turbine_cost_per_kw&#39;</span><span class="p">]</span>
+                  <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine_rating</span>
+                  <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_turbines</span><span class="p">)</span>
+                 <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_turbine_capital_cost</span>
+                    <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_turbines</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tcost</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sales_tax_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a sales tax multiplier (frac of the total installed cost).&quot;&quot;&quot;</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sales_tax_basis&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="n">tax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datadict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sales_and_use_tax&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="k">return</span> <span class="n">basis</span> <span class="o">*</span> <span class="n">tax</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sales_tax_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the cost of sales tax ($).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bos_cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_cost</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sales_tax_mult</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">total_installed_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the total installed cost ($) (bos + turbine).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bos_cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sales_tax_cost</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dictionary containing the cost breakdown.&quot;&quot;&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;total_installed_cost&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_installed_cost</span><span class="p">,</span>
+                  <span class="s1">&#39;turbine_cost&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_cost</span><span class="p">,</span>
+                  <span class="s1">&#39;sales_tax_cost&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sales_tax_cost</span><span class="p">,</span>
+                  <span class="s1">&#39;bos_cost&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bos_cost</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="c1"># pylint: disable-msg=W0613</span>
+<div class="viewcode-block" id="WindBos.reV_run"><a class="viewcode-back" href="../../../reV/reV.SAM.windbos.html#reV.SAM.windbos.WindBos.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span>
+                <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;total_installed_cost&#39;</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute SAM SingleOwner simulations based on reV points control.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : config.PointsControl</span>
+<span class="sd">            PointsControl instance containing project points site and SAM</span>
+<span class="sd">            config info.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        output_request : list | tuple | str</span>
+<span class="sd">            Output(s) to retrieve from SAM.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Not used but maintained for polymorphic calls with other</span>
+<span class="sd">            SAM econ reV_run() methods (lcoe and single owner).</span>
+<span class="sd">            Breaks pylint error W0613: unused argument.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Nested dictionaries where the top level key is the site index,</span>
+<span class="sd">            the second level key is the variable name, second level value is</span>
+<span class="sd">            the output variable value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">points_control</span><span class="o">.</span><span class="n">sites</span><span class="p">:</span>
+            <span class="c1"># get SAM inputs from project_points based on the current site</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="p">[</span><span class="n">site</span><span class="p">]</span>
+
+            <span class="c1"># ensure that site-specific data is not persisted to other sites</span>
+            <span class="n">site_inputs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+            <span class="n">site_inputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="p">:]))</span>
+
+            <span class="n">wb</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">site_inputs</span><span class="p">)</span>
+
+            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wb</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                         <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output_request</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">out</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,813 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.competitive_wind_farms &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.competitive_wind_farms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.competitive_wind_farms</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Competitive Wind Farms exclusion handler</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">parse_table</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CompetitiveWindFarms"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms">[docs]</a><span class="k">class</span> <span class="nc">CompetitiveWindFarms</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle competitive wind farm exclusion during supply curve sorting</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">offshore</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        sc_points : pandas.DataFrame | str</span>
+<span class="sd">            Supply curve point summary table</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        offshore : bool</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_wind_dirs</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sc_points</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">offshore</span><span class="o">=</span><span class="n">offshore</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offshore</span> <span class="o">=</span> <span class="n">offshore</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sc_point_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&#39;sc_points contains sc_point_gid values that do not &quot;</span>
+                   <span class="s2">&quot;correspond to valid &#39;wind_dirs&#39; sc_point_gids:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sc_point_gids</span><span class="p">[</span><span class="o">~</span><span class="n">valid</span><span class="p">]))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_upwind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downwind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wind_dirs</span><span class="p">,</span>
+                                                           <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_upwind</span><span class="p">)</span>
+        <span class="c1"># pylint: disable=unsubscriptable-object</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_upwind</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> sc_point_gids and </span><span class="si">{}</span><span class="s2"> prominent directions&quot;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">gids</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map gid for given mapping</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        keys : tuple</span>
+<span class="sd">            (gid(s) to extract, gid) pair</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gid(s) : int | list</span>
+<span class="sd">            Mapped gid(s) for given mapping</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> must be a tuple of form (source, gid) where source is: &quot;</span>
+                   <span class="s2">&quot;&#39;sc_gid&#39;, &#39;sc_point_gid&#39;,  or &#39;upwind&#39;, &#39;downwind&#39;&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">source</span><span class="p">,</span> <span class="n">gid</span> <span class="o">=</span> <span class="n">keys</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s1">&#39;sc_point_gid&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_sc_gid_to_sc_point_gid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">source</span> <span class="o">==</span> <span class="s1">&#39;sc_gid&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_sc_point_gid_to_sc_gid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">source</span> <span class="o">==</span> <span class="s1">&#39;upwind&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_upwind</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">source</span> <span class="o">==</span> <span class="s1">&#39;downwind&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_downwind</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> must be: &#39;sc_gid&#39;, &#39;sc_point_gid&#39;,  or &#39;upwind&#39;, &quot;</span>
+                   <span class="s2">&quot;&#39;downwind&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Supply curve point boolean mask, used for efficient exclusion</span>
+<span class="sd">        False == excluded sc_point_gid</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sc_point_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Un-masked sc_point_gids</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_point_gids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">sc_point_gids</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">sc_point_gids</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sc_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Un-masked sc_gids</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sc_point_gids</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">sc_gids</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_table</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract features and their capacity from supply curve transmission</span>
+<span class="sd">        mapping table</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        table : str | pd.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame to parse</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        table : pandas.DataFrame</span>
+<span class="sd">            DataFrame extracted from file path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">parse_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">return</span> <span class="n">table</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_wind_dirs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse prominent direction neighbors</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            Neighboring supply curve point gids and power-rose value at each</span>
+<span class="sd">            cardinal direction</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wind_dirs : pandas.DataFrame</span>
+<span class="sd">            Neighboring supply curve point gids and power-rose value at each</span>
+<span class="sd">            cardinal direction for each sc point gid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wind_dirs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_table</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">)</span>
+
+        <span class="n">wind_dirs</span> <span class="o">=</span> <span class="n">wind_dirs</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">)</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wind_dirs</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;_pr&#39;</span><span class="p">))]</span>
+        <span class="n">wind_dirs</span> <span class="o">=</span> <span class="n">wind_dirs</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">wind_dirs</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_sc_points</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">offshore</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse supply curve point summary table into sc_gid to sc_point_gid</span>
+<span class="sd">        mapping and vis-versa.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : pandas.DataFrame | str</span>
+<span class="sd">            Supply curve point summary table</span>
+<span class="sd">        offshore : bool</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sc_gids : pandas.DataFrame</span>
+<span class="sd">            sc_gid to sc_point_gid mapping</span>
+<span class="sd">        sc_point_gids : pandas.DataFrame</span>
+<span class="sd">            sc_point_gid to sc_gid mapping</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Mask array to mask excluded sc_point_gids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_table</span><span class="p">(</span><span class="n">sc_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="n">sc_points</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">offshore</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Not including offshore supply curve points in &#39;</span>
+                         <span class="s1">&#39;CompetitiveWindFarm&#39;</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]]</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sc_gids</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()}</span>
+
+        <span class="n">sc_point_gids</span> <span class="o">=</span> \
+            <span class="n">sc_points</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">)[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+        <span class="n">sc_point_gids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span>
+                         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sc_point_gids</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()}</span>
+
+        <span class="k">return</span> <span class="n">sc_gids</span><span class="p">,</span> <span class="n">sc_point_gids</span><span class="p">,</span> <span class="n">mask</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_neighbors</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse prominent direction neighbors</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            Neighboring supply curve point gids and power-rose value at each</span>
+<span class="sd">            cardinal direction for each available sc point gid</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        upwind : pandas.DataFrame</span>
+<span class="sd">            Upwind neighbor gids for n prominent wind directions</span>
+<span class="sd">        downwind : pandas.DataFrame</span>
+<span class="sd">            Downwind neighbor gids for n prominent wind directions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wind_dirs</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_gid&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;sc&#39;</span><span class="p">))]</span>
+        <span class="n">directions</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">]</span>
+        <span class="n">upwind_gids</span> <span class="o">=</span> <span class="n">wind_dirs</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_pr&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">]</span>
+        <span class="n">neighbor_pr</span> <span class="o">=</span> <span class="n">wind_dirs</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">neighbor_pr</span><span class="p">)[:,</span> <span class="p">:</span><span class="n">n_dirs</span><span class="p">]</span>
+        <span class="n">upwind_gids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take_along_axis</span><span class="p">(</span><span class="n">upwind_gids</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">downwind_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;NE&#39;</span><span class="p">:</span> <span class="s1">&#39;SW&#39;</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="s1">&#39;W&#39;</span><span class="p">,</span> <span class="s1">&#39;SE&#39;</span><span class="p">:</span> <span class="s1">&#39;NW&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;SW&#39;</span><span class="p">:</span> <span class="s1">&#39;NE&#39;</span><span class="p">,</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="s1">&#39;NW&#39;</span><span class="p">:</span> <span class="s1">&#39;SE&#39;</span><span class="p">}</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_gid&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">downwind_map</span><span class="p">[</span><span class="n">d</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">]</span>
+        <span class="n">downwind_gids</span> <span class="o">=</span> <span class="n">wind_dirs</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">downwind_gids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take_along_axis</span><span class="p">(</span><span class="n">downwind_gids</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">downwind</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">upwind</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wind_dirs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">downwind</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">downwind_gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">upwind</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">upwind_gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">upwind</span><span class="p">,</span> <span class="n">downwind</span>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.map_sc_point_gid_to_sc_gid"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.map_sc_point_gid_to_sc_gid">[docs]</a>    <span class="k">def</span> <span class="nf">map_sc_point_gid_to_sc_gid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_point_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map given sc_point_gid to equivalent sc_gid(s)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_point_gid : int</span>
+<span class="sd">            Supply curve point gid to map to equivalent supply curve gid(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int | list</span>
+<span class="sd">            Equivalent supply curve gid(s)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="p">[</span><span class="n">sc_point_gid</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.map_sc_gid_to_sc_point_gid"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.map_sc_gid_to_sc_point_gid">[docs]</a>    <span class="k">def</span> <span class="nf">map_sc_gid_to_sc_point_gid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map given sc_gid to equivalent sc_point_gid</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_gid : int</span>
+<span class="sd">            Supply curve gid to map to equivalent supply point curve gid</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Equivalent supply point curve gid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">[</span><span class="n">sc_gid</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.check_sc_gid"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.check_sc_gid">[docs]</a>    <span class="k">def</span> <span class="nf">check_sc_gid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check to see if sc_gid is valid, if so return associated</span>
+<span class="sd">        sc_point_gids</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_gid : int</span>
+<span class="sd">            Supply curve gid to map to equivalent supply point curve gid</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int | None</span>
+<span class="sd">            Equivalent supply point curve gid or None if sc_gid is invalid</span>
+<span class="sd">            (offshore)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_point_gid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">sc_gid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">:</span>
+            <span class="n">sc_point_gid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">[</span><span class="n">sc_gid</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">sc_point_gid</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.map_upwind"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.map_upwind">[docs]</a>    <span class="k">def</span> <span class="nf">map_upwind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_point_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map given sc_point_gid to upwind neighbors</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_point_gid : int</span>
+<span class="sd">            Supply point curve gid to get upwind neighbors</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int | list</span>
+<span class="sd">            upwind neighborings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upwind</span><span class="p">[</span><span class="n">sc_point_gid</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.map_downwind"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.map_downwind">[docs]</a>    <span class="k">def</span> <span class="nf">map_downwind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_point_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map given sc_point_gid to downwind neighbors</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_point_gid : int</span>
+<span class="sd">            Supply point curve gid to get downwind neighbors</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int | list</span>
+<span class="sd">            downwind neighborings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downwind</span><span class="p">[</span><span class="n">sc_point_gid</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.exclude_sc_point_gid"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.exclude_sc_point_gid">[docs]</a>    <span class="k">def</span> <span class="nf">exclude_sc_point_gid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_point_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exclude supply curve point gid, return False if gid is not present</span>
+<span class="sd">        in list of available gids to avoid key errors elsewhere</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_point_gid : int</span>
+<span class="sd">            supply curve point gid to mask</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Flag if gid is valid and was masked</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sc_point_gid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_point_gids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">sc_point_gid</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.remove_noncompetitive_farm"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.remove_noncompetitive_farm">[docs]</a>    <span class="k">def</span> <span class="nf">remove_noncompetitive_farm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                                   <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove neighboring sc points for given number of prominent wind</span>
+<span class="sd">        directions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : pandas.DataFrame | str</span>
+<span class="sd">            Supply curve point summary table</span>
+<span class="sd">        sort_on : str, optional</span>
+<span class="sd">            column to sort on before excluding neighbors,</span>
+<span class="sd">            by default &#39;total_lcoe&#39;</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors,</span>
+<span class="sd">            by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sc_points : pandas.DataFrame</span>
+<span class="sd">            Updated supply curve points after removing non-competative</span>
+<span class="sd">            wind farms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_table</span><span class="p">(</span><span class="n">sc_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="n">sc_points</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">sort_on</span><span class="p">)</span>
+
+        <span class="n">sc_point_gids</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sc_points</span><span class="p">)):</span>
+            <span class="n">gid</span> <span class="o">=</span> <span class="n">sc_point_gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">gid</span><span class="p">]:</span>
+                <span class="n">upwind_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;upwind&#39;</span><span class="p">,</span> <span class="n">gid</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">upwind_gids</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">exclude_sc_point_gid</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">downwind</span><span class="p">:</span>
+                    <span class="n">downwind_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;downwind&#39;</span><span class="p">,</span> <span class="n">gid</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">downwind_gids</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_sc_point_gid</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sc_gids</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompetitiveWindFarms.run"><a class="viewcode-back" href="../../../reV/reV.supply_curve.competitive_wind_farms.html#reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">offshore</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">out_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exclude given number of neighboring Supply Point gids based on most</span>
+<span class="sd">        prominent wind directions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        sc_points : pandas.DataFrame | str</span>
+<span class="sd">            Supply curve point summary table</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        offshore : bool</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms</span>
+<span class="sd">        sort_on : str, optional</span>
+<span class="sd">            column to sort on before excluding neighbors,</span>
+<span class="sd">            by default &#39;total_lcoe&#39;</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        out_fpath : str, optional</span>
+<span class="sd">            Path to .csv file to save updated sc_points to,</span>
+<span class="sd">            by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sc_points : pandas.DataFrame</span>
+<span class="sd">            Updated supply curve points after removing non-competative</span>
+<span class="sd">            wind farms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cwf</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span> <span class="n">offshore</span><span class="o">=</span><span class="n">offshore</span><span class="p">)</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">cwf</span><span class="o">.</span><span class="n">remove_noncompetitive_farm</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span>
+                                                   <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">out_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sc_points</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sc_points</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

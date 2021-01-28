@@ -1,0 +1,1194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.offshore.offshore &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.offshore.offshore</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.offshore.offshore</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV offshore wind farm aggregation  module. This module aggregates offshore</span>
+<span class="sd">generation data from high res wind resource data to coarse wind farm sites</span>
+<span class="sd">and then calculates the ORCA econ data.</span>
+
+<span class="sd">Offshore resource / generation data refers to WTK 2km (fine resolution)</span>
+<span class="sd">Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">as_completed</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.generation.generation</span> <span class="kn">import</span> <span class="n">Gen</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.collection</span> <span class="kn">import</span> <span class="n">DatasetCollector</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="kn">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.offshore.orca</span> <span class="kn">import</span> <span class="n">ORCA_LCOE</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OffshoreWindInputWarning</span><span class="p">,</span>
+                                      <span class="n">NearestNeighborError</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities.execution</span> <span class="kn">import</span> <span class="n">SpawnProcessPool</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Offshore"><a class="viewcode-back" href="../../../reV/reV.offshore.offshore.html#reV.offshore.offshore.Offshore">[docs]</a><span class="k">class</span> <span class="nc">Offshore</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Framework to handle offshore wind analysis.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Default columns from the offshore wind farm data to join to the</span>
+    <span class="c1"># offshore meta data</span>
+    <span class="n">DEFAULT_META_COLS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;min_sub_tech&#39;</span><span class="p">,</span> <span class="s1">&#39;sub_type&#39;</span><span class="p">,</span> <span class="s1">&#39;array_cable_CAPEX&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;export_cable_CAPEX&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">offshore_fpath</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span>
+                 <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offshore_gid_adder</span><span class="o">=</span><span class="mf">1e7</span><span class="p">,</span>
+                 <span class="n">farm_gid_label</span><span class="o">=</span><span class="s1">&#39;wfarm_id&#39;</span><span class="p">,</span> <span class="n">small_farm_limit</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                 <span class="n">offshore_meta_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Full filepath to reV gen h5 output file.</span>
+<span class="sd">        offshore_fpath : str</span>
+<span class="sd">            Full filepath to offshore wind farm data file.</span>
+<span class="sd">        project_points : reV.config.project_points.ProjectPoints</span>
+<span class="sd">            Instantiated project points instance.</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of workers for process pool executor. 1 will run in serial.</span>
+<span class="sd">        offshore_gid_adder : int | float</span>
+<span class="sd">            The offshore Supply Curve gids will be set equal to the respective</span>
+<span class="sd">            resource gids plus this number.</span>
+<span class="sd">        farm_gid_label : str</span>
+<span class="sd">            Label in offshore_fpath for the wind farm gid unique identifier.</span>
+<span class="sd">        small_farm_limit : int</span>
+<span class="sd">            Wind farms with less than this number of neighboring resource</span>
+<span class="sd">            pixels will not be included in the output. Default is 7 based on</span>
+<span class="sd">            median number of farm resource neighbors in a small test case.</span>
+<span class="sd">        offshore_meta_cols : list | tuple | None</span>
+<span class="sd">            Column labels from offshore_fpath to preserve in the output</span>
+<span class="sd">            meta data. None will use class variable DEFAULT_META_COLS, and any</span>
+<span class="sd">            additional requested cols will be added to DEFAULT_META_COLS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span> <span class="o">=</span> <span class="n">gen_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_fpath</span> <span class="o">=</span> <span class="n">offshore_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_project_points</span> <span class="o">=</span> <span class="n">project_points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_gid_adder</span> <span class="o">=</span> <span class="n">offshore_gid_adder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warned</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="o">=</span> <span class="n">max_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_farm_gid_label</span> <span class="o">=</span> <span class="n">farm_gid_label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_small_farm_limit</span> <span class="o">=</span> <span class="n">small_farm_limit</span>
+
+        <span class="k">if</span> <span class="n">offshore_meta_cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_META_COLS</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">)</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_META_COLS</span><span class="p">)</span>
+            <span class="n">offshore_meta_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">offshore_meta_cols</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_meta_cols</span> <span class="o">=</span> <span class="n">offshore_meta_cols</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_onshore_mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_mask</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_cf_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_farm_coords</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_offshore_fpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_fpath</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d_lim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_nn</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_offshore_out_arrays</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialized offshore wind farm aggregation module with &#39;</span>
+                    <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> onshore resource points, </span><span class="si">{}</span><span class="s1"> offshore resource points, &#39;</span>
+                    <span class="s1">&#39;and </span><span class="si">{}</span><span class="s1"> output wind farms.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_source_onshore</span><span class="p">),</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="p">),</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_init_offshore_out_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dictionary of initialized output arrays for offshore outputs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out_arrays : dict</span>
+<span class="sd">            Dictionary of output arrays filled with zeros for offshore data.</span>
+<span class="sd">            Has keys for all datasets present in gen_fpath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out_arrays</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">datasets</span>
+                     <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;time_index&#39;</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">)]</span>
+
+            <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">dset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">dset_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="p">),</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dset_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="p">))</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing offshore output data array for &#39;</span>
+                             <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; with shape </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">dset_shape</span><span class="p">))</span>
+                <span class="n">out_arrays</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dset_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out_arrays</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_cf_meta</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse cf meta dataframe and get masks for onshore/offshore points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Full filepath to reV gen h5 output file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Full meta data from gen_fpath with &quot;offshore&quot; column.</span>
+<span class="sd">        onshore_mask : pd.Series</span>
+<span class="sd">            Boolean series indicating where onshore sites are.</span>
+<span class="sd">        offshore_mask : pd.Series</span>
+<span class="sd">            Boolean series indicating where offshore sites are.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">meta</span>
+
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore module cannot run without &quot;offshore&quot; flag in meta &#39;</span>
+                 <span class="s1">&#39;data of gen_fpath: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="n">onshore_mask</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">offshore_mask</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">meta</span><span class="p">,</span> <span class="n">onshore_mask</span><span class="p">,</span> <span class="n">offshore_mask</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_offshore_fpath</span><span class="p">(</span><span class="n">offshore_fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the offshore data file for offshore farm site data and coords.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        offshore_fpath : str</span>
+<span class="sd">            Full filepath to offshore wind farm data file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        offshore_data : pd.DataFrame</span>
+<span class="sd">            Dataframe of extracted offshore farm data. Each row is a farm and</span>
+<span class="sd">            columns are farm data attributes.</span>
+<span class="sd">        farm_coords : pd.DataFrame</span>
+<span class="sd">            Latitude/longitude coordinates for each offshore farm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">offshore_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">offshore_fpath</span><span class="p">)</span>
+
+        <span class="n">lat_label</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">offshore_data</span><span class="o">.</span><span class="n">columns</span>
+                     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">)]</span>
+        <span class="n">lon_label</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">offshore_data</span><span class="o">.</span><span class="n">columns</span>
+                     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;longitude&#39;</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat_label</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon_label</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Found multiple lat/lon columns: </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lat_label</span><span class="p">,</span> <span class="n">lon_label</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">lat_label</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lon_label</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;dist_l_to_ts&#39;</span> <span class="ow">in</span> <span class="n">offshore_data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">offshore_data</span><span class="p">[</span><span class="s1">&#39;dist_l_to_ts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Possible incorrect ORCA input! &quot;dist_l_to_ts&quot; &#39;</span>
+                     <span class="s1">&#39;(distance land to transmission) input is non-zero. &#39;</span>
+                     <span class="s1">&#39;Most reV runs set this to zero and input the cost &#39;</span>
+                     <span class="s1">&#39;of transmission from landfall tie-in to &#39;</span>
+                     <span class="s1">&#39;transmission feature in the supply curve module.&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">OffshoreWindInputWarning</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">offshore_data</span><span class="p">,</span> <span class="n">offshore_data</span><span class="p">[</span><span class="n">c_labels</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_run_nn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run a spatial NN on the offshore resource points and the offshore</span>
+<span class="sd">        wind farm data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        d : np.ndarray</span>
+<span class="sd">            Distance between offshore resource pixel and offshore wind farm.</span>
+<span class="sd">        i : np.ndarray</span>
+<span class="sd">            Offshore farm row numbers corresponding to resource pixels</span>
+<span class="sd">            (length is number of offshore resource pixels in gen_fpath).</span>
+<span class="sd">        d_lim : float</span>
+<span class="sd">            Maximum distance limit between wind farm points and resouce pixels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_farm_coords</span><span class="p">)</span>  <span class="c1"># pylint: disable=not-callable</span>
+        <span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="p">[[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]])</span>
+
+        <span class="n">d_lim</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_farm_coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">d_lim</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_farm_coords</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">d_lim</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">d_lim</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">i</span><span class="p">[(</span><span class="n">d</span> <span class="o">&gt;</span> <span class="n">d_lim</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">d_lim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the source time index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">time_index</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_source_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the full meta data (onshore + offshore)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_source</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_source_onshore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the onshore only meta data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_source</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_onshore_mask</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_source_offshore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the offshore only meta data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_source</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_mask</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the combined onshore and offshore meta data.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">onshore_gids</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_onshore</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="p">,</span>
+                                                <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">onshore_gids</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_onshore</span>
+
+        <span class="k">return</span> <span class="n">meta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_out_onshore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the onshore only meta data.&quot;&quot;&quot;</span>
+        <span class="n">meta_out_onshore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_source</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_onshore_mask</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">meta_out_onshore</span><span class="p">[</span><span class="s1">&#39;offshore_res_gids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[-1]&#39;</span>
+
+        <span class="k">return</span> <span class="n">meta_out_onshore</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_out_offshore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the output offshore meta data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta_out_offshore : pd.DataFrame</span>
+<span class="sd">            Offshore farm meta data. Offshore farms without resource</span>
+<span class="sd">            neighbors are dropped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_farm_coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="n">new_offshore_gids</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">new_agg_gids</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">misc_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;county&#39;</span><span class="p">,</span> <span class="s1">&#39;timezone&#39;</span><span class="p">]</span>
+            <span class="n">new_misc</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">misc_cols</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_full</span><span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">farm_gid</span><span class="p">,</span> <span class="n">res_gid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_farm_gid</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+                <span class="n">agg_gids</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">misc</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_misc</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+
+                <span class="k">if</span> <span class="n">res_gid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ilocs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ilocs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_small_farm_limit</span><span class="p">:</span>
+                        <span class="n">meta_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">ilocs</span><span class="p">]</span>
+                        <span class="n">agg_gids</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">meta_sub</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+                        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">res_gid</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">misc</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">misc</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>\
+                                <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">new_offshore_gids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">farm_gid</span><span class="p">)</span>
+                <span class="n">new_agg_gids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agg_gids</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">misc</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">new_misc</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_misc</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;elevation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_offshore_gids</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;offshore_res_gids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_agg_gids</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;reV_tech&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;offshore_wind&#39;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+                <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">,</span> <span class="s1">&#39;offshore_res_gids&#39;</span><span class="p">])</span>
+
+            <span class="c1"># Index must not be re-ordered because it corresponds to index in</span>
+            <span class="c1"># self._offshore_data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">)</span>
+
+            <span class="c1"># add additional columns from the offshore input data to the meta</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_meta_cols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span>
+                           <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_meta_cols</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                    <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not find the requested columns </span><span class="si">{}</span><span class="s1"> in the &#39;</span>
+                         <span class="s1">&#39;offshore data input. The following are available: &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_meta_cols</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_meta_cols</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">meta</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_out_offshore</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">onshore_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of gids for the onshore sites.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_onshore</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">offshore_gids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of gids for the offshore sites.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Output data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Output data keyed by reV dataset names. Each dataset will have a</span>
+<span class="sd">            spatial dimension (for all the offshore wind farms) and maybe a</span>
+<span class="sd">            time dimension if the dataset is profiles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out</span>
+
+<div class="viewcode-block" id="Offshore.save_output"><a class="viewcode-back" href="../../../reV/reV.offshore.offshore.html#reV.offshore.offshore.Offshore.save_output">[docs]</a>    <span class="k">def</span> <span class="nf">save_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save all onshore and offshore data to offshore output file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath_out : str</span>
+<span class="sd">            Output filepath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Writing offshore output data to: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_fout</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_onshore</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_offshore</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_init_fout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the offshore aggregated output file and collect</span>
+<span class="sd">        non-aggregated onshore data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath_out : str</span>
+<span class="sd">            Output filepath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing offshore output file: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
+            <span class="n">meta_attrs</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="n">dset</span><span class="o">=</span><span class="s1">&#39;meta&#39;</span><span class="p">)</span>
+            <span class="n">ti_attrs</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="n">dset</span><span class="o">=</span><span class="s1">&#39;time_index&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">_set_meta</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">meta_attrs</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">_set_time_index</span><span class="p">(</span><span class="s1">&#39;time_index&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span>
+                                <span class="n">attrs</span><span class="o">=</span><span class="n">ti_attrs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_collect_onshore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect non-aggregated onshore data to initialized file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath_out : str</span>
+<span class="sd">            Output filepath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
+            <span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">datasets</span>
+                     <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;time_index&#39;</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">onshore_gids</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Collecting onshore data for &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">))</span>
+                <span class="n">DatasetCollector</span><span class="o">.</span><span class="n">collect_dset</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">],</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">onshore_gids</span><span class="p">,</span> <span class="n">dset</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;No onshore data in source file to collect.&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing offshore dataset &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">))</span>
+                <span class="n">DatasetCollector</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">],</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">,</span> <span class="n">dset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_collect_offshore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect aggregated offshore data to initialized file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath_out : str</span>
+<span class="sd">            Output filepath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">):</span>
+            <span class="n">offshore_bool</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">)</span>
+            <span class="n">offshore_locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">offshore_bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">offshore_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">offshore_locs</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                                   <span class="n">offshore_locs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
+                <span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">datasets</span>
+                         <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;time_index&#39;</span><span class="p">)]</span>
+
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+                <span class="n">shapes</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">d</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">}</span>
+                <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Writing offshore output data for &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">[</span><span class="n">dset</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="n">offshore_slice</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="p">:,</span> <span class="n">offshore_slice</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Offshore.move_input_file"><a class="viewcode-back" href="../../../reV/reV.offshore.offshore.html#reV.offshore.offshore.Offshore.move_input_file">[docs]</a>    <span class="k">def</span> <span class="nf">move_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Move the generation input file to a sub dir (after offshore agg).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sub_dir : str | None</span>
+<span class="sd">            Sub directory name to move chunks to. None to not move files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sub_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_dir</span><span class="p">,</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">)</span>
+            <span class="n">new_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_dir</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">new_dir</span><span class="p">)</span>
+            <span class="n">new_fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">new_fpath</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_farm_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span>
+                       <span class="n">site_gid</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the offshore farm aggregated cf data and calculate LCOE.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Full filepath to reV gen h5 output file.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Offshore resource meta data for resource pixels belonging to the</span>
+<span class="sd">            single wind farm. The meta index should correspond to the gids in</span>
+<span class="sd">            the gen_fpath.</span>
+<span class="sd">        system_inputs : dict</span>
+<span class="sd">            Wind farm system inputs.</span>
+<span class="sd">        site_data : dict</span>
+<span class="sd">            Wind-farm site-specific data inputs.</span>
+<span class="sd">        site_gid : int</span>
+<span class="sd">            Optional site gid (farm index) for logging and debugging.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gen_data : dict</span>
+<span class="sd">            Dictionary of all available generation datasets. Keys are reV gen</span>
+<span class="sd">            output dataset names, values are spatial averages - scalar resource</span>
+<span class="sd">            data (cf_mean) gets averaged to one offshore farm value (float),</span>
+<span class="sd">            profiles (cf_profile) gets averaged to one offshore farm profile</span>
+<span class="sd">            (1D arrays). Added ORCA lcoe as &quot;lcoe_fcr&quot; with wind farm site</span>
+<span class="sd">            LCOE value with units: $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">gen_data</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_farm_gen_data</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+        <span class="n">cf</span> <span class="o">=</span> <span class="n">gen_data</span><span class="p">[</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">cf</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore wind aggregated mean capacity factor (</span><span class="si">{}</span><span class="s1">) for &#39;</span>
+                 <span class="s1">&#39;wind farm gid </span><span class="si">{}</span><span class="s1"> is greater than 1, maybe the data is &#39;</span>
+                 <span class="s1">&#39;still integer scaled.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">site_gid</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">OffshoreWindInputWarning</span><span class="p">)</span>
+
+        <span class="n">lcoe</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_run_orca</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span>
+                             <span class="n">site_gid</span><span class="o">=</span><span class="n">site_gid</span><span class="p">)</span>
+        <span class="n">gen_data</span><span class="p">[</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lcoe</span>
+
+        <span class="k">return</span> <span class="n">gen_data</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_farm_gen_data</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;time_index&#39;</span><span class="p">,</span>
+                                                    <span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Get the aggregated generation data for a single wind farm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Full filepath to reV gen h5 output file.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Offshore resource meta data for resource pixels belonging to the</span>
+<span class="sd">            single wind farm. The meta index should correspond to the gids in</span>
+<span class="sd">            the gen_fpath.</span>
+<span class="sd">        ignore : list | tuple</span>
+<span class="sd">            List of datasets to ignore and not retrieve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gen_data : dict</span>
+<span class="sd">            Dictionary of all available generation datasets. Keys are reV gen</span>
+<span class="sd">            output dataset names, values are spatial averages - scalar resource</span>
+<span class="sd">            data (cf_mean) gets averaged to one offshore farm value (float),</span>
+<span class="sd">            profiles (cf_profile) gets averaged to one offshore farm profile</span>
+<span class="sd">            (1D arrays).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">gen_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+
+            <span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">datasets</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;cf_mean&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore wind data aggregation needs cf_mean but reV &#39;</span>
+                     <span class="s1">&#39;gen output file only had: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">dset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">gen_data</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="p">:,</span> <span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+                    <span class="n">gen_data</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gen_data</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_run_orca</span><span class="p">(</span><span class="n">cf_mean</span><span class="p">,</span> <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span> <span class="n">site_gid</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run an ORCA LCOE compute for a wind farm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cf_mean : float</span>
+<span class="sd">            Annual mean capacity factor for wind farm site.</span>
+<span class="sd">        system_inputs : dict</span>
+<span class="sd">            Wind farm system inputs.</span>
+<span class="sd">        site_data : dict</span>
+<span class="sd">            Wind-farm site-specific data inputs.</span>
+<span class="sd">        site_gid : int</span>
+<span class="sd">            Optional site gid for logging and debugging.</span>
+
+<span class="sd">        Results</span>
+<span class="sd">        -------</span>
+<span class="sd">        orca.lcoe : float</span>
+<span class="sd">            Site LCOE value with units: $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">site_data</span><span class="p">[</span><span class="s1">&#39;gcf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cf_mean</span>
+        <span class="n">orca</span> <span class="o">=</span> <span class="n">ORCA_LCOE</span><span class="p">(</span><span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span> <span class="n">site_gid</span><span class="o">=</span><span class="n">site_gid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">orca</span><span class="o">.</span><span class="n">lcoe</span>
+
+    <span class="k">def</span> <span class="nf">_get_farm_gid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ifarm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a unique resource gid for a wind farm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ifarm : int</span>
+<span class="sd">            Row number in offshore_data DataFrame for farm of interest.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        farm_gid : int | None</span>
+<span class="sd">            Unique GID for the offshore farm. This is the offshore</span>
+<span class="sd">            gid adder plus the farm gid (from self._offshore_data).</span>
+<span class="sd">            None will be returned if the farm is not close to any</span>
+<span class="sd">            resource sites in gen_fpath.</span>
+<span class="sd">        res_gid : int | None</span>
+<span class="sd">            Resource gid of the closest resource pixel to ifarm. None if farm</span>
+<span class="sd">            is not close to any resource sites in gen_fpath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res_gid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">farm_gid</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">ifarm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i</span><span class="p">:</span>
+            <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">==</span> <span class="n">ifarm</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+            <span class="n">ind_min</span> <span class="o">=</span> <span class="n">inds</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dists</span><span class="p">)]</span>
+            <span class="n">res_site</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">ind_min</span><span class="p">]</span>
+            <span class="n">res_gid</span> <span class="o">=</span> <span class="n">res_site</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span>
+
+            <span class="n">farm_gid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">ifarm</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">_farm_gid_label</span><span class="p">]</span>
+            <span class="n">farm_gid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_gid_adder</span> <span class="o">+</span> <span class="n">farm_gid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">farm_gid</span><span class="p">,</span> <span class="n">res_gid</span>
+
+    <span class="k">def</span> <span class="nf">_get_system_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res_gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the system inputs dict (SAM tech inputs) from project points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_gid : int</span>
+<span class="sd">            WTK resource gid for wind farm (nearest neighbor).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        system_inputs : dict</span>
+<span class="sd">            Dictionary of SAM system inputs for wtk resource gid input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">system_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_points</span><span class="p">[</span><span class="n">res_gid</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;turbine_capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">system_inputs</span><span class="p">:</span>
+            <span class="c1"># convert from SAM kw powercurve to MW.</span>
+            <span class="n">cap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">system_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_powercurve_powerout&#39;</span><span class="p">])</span>
+            <span class="n">cap_mw</span> <span class="o">=</span> <span class="n">cap</span> <span class="o">/</span> <span class="mi">1000</span>
+            <span class="n">system_inputs</span><span class="p">[</span><span class="s1">&#39;turbine_capacity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cap_mw</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore wind farm system input key &quot;turbine_capacity&quot; not &#39;</span>
+                 <span class="s1">&#39;specified for res_gid </span><span class="si">{}</span><span class="s1">. Setting to 1/1000 the max of the &#39;</span>
+                 <span class="s1">&#39;SAM power curve: </span><span class="si">{}</span><span class="s1"> MW&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res_gid</span><span class="p">,</span> <span class="n">cap_mw</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">OffshoreWindInputWarning</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">system_inputs</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_dist</span><span class="p">(</span><span class="n">meta_out_row</span><span class="p">,</span> <span class="n">farm_data_row</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check that the offshore meta data and farm input data match.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta_out_row : pd.Series</span>
+<span class="sd">            Output meta data for farm.</span>
+<span class="sd">        farm_data_row : pd.Series</span>
+<span class="sd">            Farm input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">lat_label</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">farm_data_row</span><span class="o">.</span><span class="n">index</span>
+                     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">lon_label</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">farm_data_row</span><span class="o">.</span><span class="n">index</span>
+                     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;longitude&#39;</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="p">(</span><span class="n">meta_out_row</span><span class="p">[[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]]</span>
+                <span class="o">-</span> <span class="n">farm_data_row</span><span class="p">[[</span><span class="n">lat_label</span><span class="p">,</span> <span class="n">lon_label</span><span class="p">]])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore farm NN failed, output meta:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">farm data &#39;</span>
+                 <span class="s1">&#39;input:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">meta_out_row</span><span class="p">,</span> <span class="n">farm_data_row</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">NearestNeighborError</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_sys_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check system inputs and site data for duplicates and print warning.</span>
+
+<span class="sd">        system_inputs : dict</span>
+<span class="sd">            System (non-site-specific) inputs.</span>
+<span class="sd">        site_data : dict</span>
+<span class="sd">            Site specific inputs (will overwrite system_inputs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">site_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">system_inputs</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_warned</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Offshore site inputs (from </span><span class="si">{}</span><span class="s1">) will overwrite system &#39;</span>
+                 <span class="s1">&#39;json inputs for the following columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offshore_fpath</span><span class="p">),</span> <span class="n">overlap</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">OffshoreWindInputWarning</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_warned</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_run_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run offshore gen aggregation and ORCA econ compute in serial.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ifarm</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()):</span>
+
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ifarm</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">farm_gid</span><span class="p">,</span> <span class="n">res_gid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_farm_gid</span><span class="p">(</span><span class="n">ifarm</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_dist</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">farm_gid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cf_ilocs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">==</span> <span class="n">ifarm</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cf_ilocs</span><span class="p">]</span>
+                <span class="n">system_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_system_inputs</span><span class="p">(</span><span class="n">res_gid</span><span class="p">)</span>
+                <span class="n">site_data</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running offshore gen aggregation and ORCA econ &#39;</span>
+                             <span class="s1">&#39;compute for ifarm </span><span class="si">{}</span><span class="s1">, farm gid </span><span class="si">{}</span><span class="s1">, res gid </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ifarm</span><span class="p">,</span> <span class="n">farm_gid</span><span class="p">,</span> <span class="n">res_gid</span><span class="p">))</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_sys_inputs</span><span class="p">(</span><span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">)</span>
+
+                <span class="n">gen_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_farm_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span>
+                                               <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span>
+                                               <span class="n">site_gid</span><span class="o">=</span><span class="n">farm_gid</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">gen_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="n">k</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">def</span> <span class="nf">_run_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run offshore gen aggregation and ORCA econ compute in parallel.&quot;&quot;&quot;</span>
+
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;reV&#39;</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">SpawnProcessPool</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span><span class="p">,</span>
+                              <span class="n">loggers</span><span class="o">=</span><span class="n">loggers</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe</span><span class="p">:</span>
+
+            <span class="n">iterator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_out_offshore</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ifarm</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">iterator</span><span class="p">):</span>
+
+                <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offshore_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ifarm</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">farm_gid</span><span class="p">,</span> <span class="n">res_gid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_farm_gid</span><span class="p">(</span><span class="n">ifarm</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_dist</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">farm_gid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cf_ilocs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">==</span> <span class="n">ifarm</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_source_offshore</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cf_ilocs</span><span class="p">]</span>
+                    <span class="n">system_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_system_inputs</span><span class="p">(</span><span class="n">res_gid</span><span class="p">)</span>
+                    <span class="n">site_data</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_check_sys_inputs</span><span class="p">(</span><span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">)</span>
+
+                    <span class="n">future</span> <span class="o">=</span> <span class="n">exe</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_farm_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_fpath</span><span class="p">,</span>
+                                        <span class="n">meta</span><span class="p">,</span> <span class="n">system_inputs</span><span class="p">,</span> <span class="n">site_data</span><span class="p">,</span>
+                                        <span class="n">site_gid</span><span class="o">=</span><span class="n">farm_gid</span><span class="p">)</span>
+
+                    <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+
+            <span class="k">for</span> <span class="n">fi</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">)):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Completed </span><span class="si">{}</span><span class="s1"> out of </span><span class="si">{}</span><span class="s1"> offshore compute futures.&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">futures</span><span class="p">)))</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+                <span class="n">gen_data</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">gen_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="n">k</span><span class="p">][:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run offshore gen aggregation and ORCA econ compute&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_serial</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_parallel</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Offshore.run"><a class="viewcode-back" href="../../../reV/reV.offshore.offshore.html#reV.offshore.offshore.Offshore.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">offshore_fpath</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="n">fpath_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offshore_gid_adder</span><span class="o">=</span><span class="mf">1e7</span><span class="p">,</span> <span class="n">small_farm_limit</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+            <span class="n">farm_gid_label</span><span class="o">=</span><span class="s1">&#39;wfarm_id&#39;</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s1">&#39;chunk_files&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the offshore aggregation methods.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gen_fpath : str</span>
+<span class="sd">            Full filepath to reV gen h5 output file.</span>
+<span class="sd">        offshore_fpath : str</span>
+<span class="sd">            Full filepath to offshore wind farm data file.</span>
+<span class="sd">        points : slice | list | str | reV.config.project_points.PointsControl</span>
+<span class="sd">            Slice specifying project points, or string pointing to a project</span>
+<span class="sd">            points csv, or a fully instantiated PointsControl object.</span>
+<span class="sd">        sam_files : dict | str | list</span>
+<span class="sd">            Dict contains SAM input configuration ID(s) and file path(s).</span>
+<span class="sd">            Keys are the SAM config ID(s), top level value is the SAM path.</span>
+<span class="sd">            Can also be a single config file str. If it&#39;s a list, it is mapped</span>
+<span class="sd">            to the sorted list of unique configs requested by points csv.</span>
+<span class="sd">        fpath_out : str | NoneType</span>
+<span class="sd">            Optional output filepath.</span>
+<span class="sd">        max_workers : int | None</span>
+<span class="sd">            Number of workers for process pool executor. 1 will run in serial.</span>
+<span class="sd">        offshore_gid_adder : int | float</span>
+<span class="sd">            The offshore Supply Curve gids will be set equal to the respective</span>
+<span class="sd">            resource gids plus this number.</span>
+<span class="sd">        small_farm_limit : int</span>
+<span class="sd">            Wind farms with less than this number of neighboring resource</span>
+<span class="sd">            pixels will not be included in the output. Default is 7 based on</span>
+<span class="sd">            median number of farm resource neighbors in a small test case.</span>
+<span class="sd">        farm_gid_label : str</span>
+<span class="sd">            Label in offshore_fpath for the wind farm gid unique identifier.</span>
+<span class="sd">        sub_dir : str | None</span>
+<span class="sd">            Sub directory name to move chunks to. None to not move files.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        offshore : Offshore</span>
+<span class="sd">            Offshore aggregation object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">points_range</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">Gen</span><span class="o">.</span><span class="n">get_pc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points_range</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="s1">&#39;windpower&#39;</span><span class="p">,</span>
+                        <span class="n">sites_per_worker</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">offshore</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">,</span> <span class="n">offshore_fpath</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">project_points</span><span class="p">,</span>
+                       <span class="n">offshore_gid_adder</span><span class="o">=</span><span class="n">offshore_gid_adder</span><span class="p">,</span>
+                       <span class="n">small_farm_limit</span><span class="o">=</span><span class="n">small_farm_limit</span><span class="p">,</span>
+                       <span class="n">farm_gid_label</span><span class="o">=</span><span class="n">farm_gid_label</span><span class="p">,</span>
+                       <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">offshore</span><span class="o">.</span><span class="n">offshore_gids</span><span class="p">):</span>
+            <span class="n">offshore</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">fpath_out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">offshore</span><span class="o">.</span><span class="n">save_output</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">)</span>
+
+        <span class="n">offshore</span><span class="o">.</span><span class="n">move_input_file</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Offshore wind gen/econ module complete!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">offshore</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

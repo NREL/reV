@@ -1,0 +1,1059 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.SAM.SAM &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.SAM.SAM</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.SAM.SAM</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV-to-SAM interface module.</span>
+
+<span class="sd">Wraps the NREL-PySAM library with additional reV features.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">PySAM.GenericSystem</span> <span class="k">as</span> <span class="nn">generic</span>
+
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">SAMInputWarning</span><span class="p">,</span> <span class="n">SAMInputError</span><span class="p">,</span>
+                                      <span class="n">SAMExecutionError</span><span class="p">,</span> <span class="n">ResourceError</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">rex.multi_file_resource</span> <span class="kn">import</span> <span class="p">(</span><span class="n">MultiFileResource</span><span class="p">,</span> <span class="n">MultiFileNSRDB</span><span class="p">,</span>
+                                     <span class="n">MultiFileWTK</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rex.renewable_resource</span> <span class="kn">import</span> <span class="n">WindResource</span><span class="p">,</span> <span class="n">SolarResource</span><span class="p">,</span> <span class="n">NSRDB</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">check_res_file</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SamResourceRetriever"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.SamResourceRetriever">[docs]</a><span class="k">class</span> <span class="nc">SamResourceRetriever</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Factory utility to get the SAM resource handler.&quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_base_handler</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the base SAM resource handler, raise error if module not found.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Single resource file (with full path) to retrieve.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            SAM module name or reV technology to force interpretation</span>
+<span class="sd">            of the resource file type.</span>
+<span class="sd">            Example: module set to &#39;pvwatts&#39; or &#39;tcsmolten&#39; means that this</span>
+<span class="sd">            expects a SolarResource file. If &#39;nsrdb&#39; is in the res_file name,</span>
+<span class="sd">            the NSRDB handler will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_handler : SolarResource | WindResource | NSRDB</span>
+<span class="sd">            Solar or Wind resource handler based on input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res_handler</span> <span class="o">=</span> <span class="n">RevPySam</span><span class="o">.</span><span class="n">RESOURCE_TYPES</span><span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot interpret what kind of resource handler the SAM &#39;</span>
+                   <span class="s1">&#39;module or reV technology &quot;</span><span class="si">{}</span><span class="s1">&quot; requires. Expecting one of &#39;</span>
+                   <span class="s1">&#39;the following SAM modules or reV technologies: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">RevPySam</span><span class="o">.</span><span class="n">RESOURCE_TYPES</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SAMExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">res_handler</span> <span class="o">==</span> <span class="n">SolarResource</span> <span class="ow">and</span> <span class="s1">&#39;nsrdb&#39;</span> <span class="ow">in</span> <span class="n">res_file</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="c1"># Use NSRDB handler if definitely an NSRDB file</span>
+            <span class="n">res_handler</span> <span class="o">=</span> <span class="n">NSRDB</span>
+
+        <span class="k">return</span> <span class="n">res_handler</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_make_solar_kwargs</span><span class="p">(</span><span class="n">res_handler</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">output_request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make kwargs dict for Solar | NSRDB resource handler initialization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_handler : SolarResource | NSRDB</span>
+<span class="sd">            Solar resource handler.</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            reV Project Points instance used to retrieve resource data at a</span>
+<span class="sd">            specific set of sites.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Outputs to retrieve from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra input args to preload sam resource.</span>
+<span class="sd">        args : tuple</span>
+<span class="sd">            Args for res_handler.preload_SAM class method</span>
+<span class="sd">        res_handler : SolarResource | NSRDB</span>
+<span class="sd">            Solar resource handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">,)</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># check for clearsky irradiation analysis for NSRDB</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;clearsky&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">clearsky</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;bifacial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">bifacial</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;tech&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">tech</span>
+        <span class="c1"># Check for resource means:</span>
+        <span class="n">mean_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dni_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;ghi_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;dhi_mean&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">x</span> <span class="ow">in</span> <span class="n">output_request</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mean_keys</span><span class="p">]):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;means&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">downscale</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">downscale</span>
+        <span class="c1"># check for downscaling request</span>
+        <span class="k">if</span> <span class="n">downscale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># make sure that downscaling is only requested for NSRDB resource</span>
+            <span class="k">if</span> <span class="n">res_handler</span> <span class="o">!=</span> <span class="n">NSRDB</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Downscaling was requested for a non-NSRDB &#39;</span>
+                       <span class="s1">&#39;resource file. reV does not have this capability at &#39;</span>
+                       <span class="s1">&#39;the current time. Please contact a developer for &#39;</span>
+                       <span class="s1">&#39;more information on this feature.&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">SAMInputWarning</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># pass through the downscaling request</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;downscale&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">downscale</span>
+
+        <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">res_handler</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_make_wind_kwargs</span><span class="p">(</span><span class="n">res_handler</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">output_request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make kwargs dict for Wind resource handler initialization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_handler : SolarResource | NSRDB</span>
+<span class="sd">            Wind resource handler.</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            reV Project Points instance used to retrieve resource data at a</span>
+<span class="sd">            specific set of sites.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Outputs to retrieve from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Extra input args to preload sam resource.</span>
+<span class="sd">        args : tuple</span>
+<span class="sd">            Args for res_handler.preload_SAM class method</span>
+<span class="sd">        res_handler : WindResource | MultiFileWTK</span>
+<span class="sd">            Wind resource handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">,</span> <span class="n">project_points</span><span class="o">.</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;icing&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">icing</span>
+        <span class="k">if</span> <span class="n">project_points</span><span class="o">.</span><span class="n">curtailment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">project_points</span><span class="o">.</span><span class="n">curtailment</span><span class="o">.</span><span class="n">precipitation</span><span class="p">:</span>
+                <span class="c1"># make precip rate available for curtailment analysis</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;precip_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Check for resource means:</span>
+        <span class="k">if</span> <span class="s1">&#39;ws_mean&#39;</span> <span class="ow">in</span> <span class="n">output_request</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;means&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">res_handler</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_multi_file_mods</span><span class="p">(</span><span class="n">res_handler</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">res_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if res_file is a multi-file resource dir and update handler</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_handler : Resource</span>
+<span class="sd">            Resource handler.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Key word arguments for resource init.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Single resource file (with full path) or multi h5 dir.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_handler : Resource | MultiFileResource</span>
+<span class="sd">            Resource handler, replaced by the multi file resource handler if</span>
+<span class="sd">            necessary.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Key word arguments for resource init with h5_dir, prefix,</span>
+<span class="sd">            and suffix.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Single resource file (with full path) or multi h5 dir.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">res_handler</span> <span class="o">==</span> <span class="n">WindResource</span><span class="p">:</span>
+            <span class="n">res_handler</span> <span class="o">=</span> <span class="n">MultiFileWTK</span>
+        <span class="k">elif</span> <span class="n">res_handler</span> <span class="o">==</span> <span class="n">NSRDB</span><span class="p">:</span>
+            <span class="n">res_handler</span> <span class="o">=</span> <span class="n">MultiFileNSRDB</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res_handler</span> <span class="o">=</span> <span class="n">MultiFileResource</span>
+
+        <span class="k">return</span> <span class="n">res_handler</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">res_file</span>
+
+<div class="viewcode-block" id="SamResourceRetriever.get"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.SamResourceRetriever.get">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span>
+            <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span> <span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SAM resource iterator object (single year, single file).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Single resource file (with full path) to retrieve.</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            reV Project Points instance used to retrieve resource data at a</span>
+<span class="sd">            specific set of sites.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            SAM module name or reV technology to force interpretation</span>
+<span class="sd">            of the resource file type.</span>
+<span class="sd">            Example: module set to &#39;pvwatts&#39; or &#39;tcsmolten&#39; means that this</span>
+<span class="sd">            expects a SolarResource file. If &#39;nsrdb&#39; is in the res_file name,</span>
+<span class="sd">            the NSRDB handler will be used.</span>
+<span class="sd">        output_request : list | tuple, optional</span>
+<span class="sd">            Outputs to retrieve from SAM, by default (&#39;cf_mean&#39;, )</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res : reV.resource.SAMResource</span>
+<span class="sd">            Resource iterator object to pass to SAM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">res_handler</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_base_handler</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">res_handler</span> <span class="ow">in</span> <span class="p">(</span><span class="n">SolarResource</span><span class="p">,</span> <span class="n">NSRDB</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">res_handler</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_make_solar_kwargs</span><span class="p">(</span>
+                <span class="n">res_handler</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">output_request</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">res_handler</span> <span class="o">==</span> <span class="n">WindResource</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">res_handler</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_make_wind_kwargs</span><span class="p">(</span>
+                <span class="n">res_handler</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">output_request</span><span class="p">)</span>
+
+        <span class="n">multi_h5_res</span><span class="p">,</span> <span class="n">hsds</span> <span class="o">=</span> <span class="n">check_res_file</span><span class="p">(</span><span class="n">res_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multi_h5_res</span><span class="p">:</span>
+            <span class="n">res_handler</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">res_file</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_multi_file_mods</span><span class="p">(</span><span class="n">res_handler</span><span class="p">,</span>
+                                                                 <span class="n">kwargs</span><span class="p">,</span>
+                                                                 <span class="n">res_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;hsds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hsds</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;time_index_step&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">time_index_step</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res_handler</span><span class="o">.</span><span class="n">preload_SAM</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span></div></div>
+
+
+<div class="viewcode-block" id="Sam"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.Sam">[docs]</a><span class="k">class</span> <span class="nc">Sam</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;reV wrapper on the PySAM framework.&quot;&quot;&quot;</span>
+
+    <span class="c1"># PySAM object wrapped by this class</span>
+    <span class="n">PYSAM</span> <span class="o">=</span> <span class="n">generic</span>
+
+    <span class="c1"># callable attributes to be ignored in the get/set logic</span>
+    <span class="n">IGNORE_ATTRS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;assign&#39;</span><span class="p">,</span> <span class="s1">&#39;execute&#39;</span><span class="p">,</span> <span class="s1">&#39;export&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pysam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PYSAM</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attr_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;constant&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the value of a PySAM attribute (either input or output).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Lowest level attribute name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : object</span>
+<span class="sd">            PySAM data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_group</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set a PySAM input data attribute.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Lowest level attribute name.</span>
+<span class="sd">        value : object</span>
+<span class="sd">            Data to set to the key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_list</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not set input key &quot;</span><span class="si">{}</span><span class="s1">&quot;. Attribute not &#39;</span>
+                   <span class="s1">&#39;found in PySAM object: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SAMInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_group</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not set input key &quot;</span><span class="si">{}</span><span class="s1">&quot; to &#39;</span>
+                       <span class="s1">&#39;group &quot;</span><span class="si">{}</span><span class="s1">&quot; in &quot;</span><span class="si">{}</span><span class="s1">&quot;.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                       <span class="s1">&#39;Data is: </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">)</span><span class="se">\n</span><span class="s1">&#39;</span>
+                       <span class="s1">&#39;Received the following error: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">e</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">SAMInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pysam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the pysam object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pysam</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the executed default pysam object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _default : PySAM.GenericSystem</span>
+<span class="sd">            Executed generic system pysam object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PYSAM</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="s1">&#39;GenericSystemNone&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attr_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the heirarchical PySAM object attribute dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _attr_dict : dict</span>
+<span class="sd">            Dictionary with:</span>
+<span class="sd">               keys: variable groups</span>
+<span class="sd">               values: lowest level attribute/variable names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pysam_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attr_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pysam_attrs</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+                               <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr_dict</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the list of lowest level input attribute/variable names.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _inputs : list</span>
+<span class="sd">            List of lowest level input attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;outputs&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span> <span class="o">+=</span> <span class="n">v</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span>
+
+    <span class="k">def</span> <span class="nf">_get_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the group that the input key belongs to.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Lowest level PySAM attribute/variable name.</span>
+<span class="sd">        outputs : bool</span>
+<span class="sd">            Flag if this key might be in outputs group. False ignores the</span>
+<span class="sd">            outputs group (looks for inputs only).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        group : str | None</span>
+<span class="sd">            PySAM attribute group that key belongs to. None if not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_dict</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">temp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;outputs&#39;</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">temp</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="n">k</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">group</span>
+
+    <span class="k">def</span> <span class="nf">_get_pysam_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of attributes from obj with ignore logic.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj : PySAM object</span>
+<span class="sd">            PySAM object to get attribute list from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        attrs : list</span>
+<span class="sd">            List of attrs belonging to obj with dunder attrs and IGNORE_ATTRS</span>
+<span class="sd">            not included.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+                 <span class="ow">and</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IGNORE_ATTRS</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">attrs</span>
+
+<div class="viewcode-block" id="Sam.execute"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.Sam.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the PySAM execute method. Raise SAMExecutionError if error.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;PySAM raised an error while executing: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SAMExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_filter_inputs</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform any necessary filtering of input keys and values for PySAM.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            SAM input key.</span>
+<span class="sd">        value : str | int | float | list | np.ndarray</span>
+<span class="sd">            Input value associated with key.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Filtered SAM input key.</span>
+<span class="sd">        value : str | int | float | list | np.ndarray</span>
+<span class="sd">            Filtered Input value associated with key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;:constant&#39;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="s1">&#39;adjust:&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;adjust:&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;[&#39;</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">and</span> <span class="s1">&#39;]&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Sam.assign_inputs"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.Sam.assign_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">assign_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">raise_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assign a flat dictionary of inputs to the PySAM object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Flat (single-level) dictionary of PySAM inputs.</span>
+<span class="sd">        raise_warning : bool</span>
+<span class="sd">            Flag to raise a warning for inputs that are not set because they</span>
+<span class="sd">            are not found in the PySAM object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_inputs</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_list</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">elif</span> <span class="n">raise_warning</span><span class="p">:</span>
+                <span class="n">wmsg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Not setting input &quot;</span><span class="si">{}</span><span class="s1">&quot; to: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">wmsg</span><span class="p">,</span> <span class="n">SAMInputWarning</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">wmsg</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RevPySam"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam">[docs]</a><span class="k">class</span> <span class="nc">RevPySam</span><span class="p">(</span><span class="n">Sam</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for reV-SAM simulations (generation and econ).&quot;&quot;&quot;</span>
+
+    <span class="n">DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Mapping for reV technology and SAM module to h5 resource handler type</span>
+    <span class="c1"># SolarResource is swapped for NSRDB if the res_file contains &quot;nsrdb&quot;</span>
+    <span class="n">RESOURCE_TYPES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pvwattsv5&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;pvwattsv7&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;tcsmoltensalt&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;solarwaterheat&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;troughphysicalheat&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;lineardirectsteam&#39;</span><span class="p">:</span> <span class="n">SolarResource</span><span class="p">,</span>
+                      <span class="s1">&#39;windpower&#39;</span><span class="p">:</span> <span class="n">WindResource</span><span class="p">,</span>
+                      <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">sam_sys_inputs</span><span class="p">,</span> <span class="n">output_request</span><span class="p">,</span>
+                 <span class="n">site_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+<span class="sd">        sam_sys_inputs : dict</span>
+<span class="sd">            Site-agnostic SAM system model inputs arguments.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Requested SAM outputs (e.g., &#39;cf_mean&#39;, &#39;annual_energy&#39;,</span>
+<span class="sd">            &#39;cf_profile&#39;, &#39;gen_profile&#39;, &#39;energy_yield&#39;, &#39;ppa_price&#39;,</span>
+<span class="sd">            &#39;lcoe_fcr&#39;).</span>
+<span class="sd">        site_sys_inputs : dict</span>
+<span class="sd">            Optional set of site-specific SAM system inputs to complement the</span>
+<span class="sd">            site-agnostic inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">meta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span> <span class="o">=</span> <span class="n">sam_sys_inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_sys_inputs</span> <span class="o">=</span> <span class="n">site_sys_inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span> <span class="o">=</span> <span class="n">output_request</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_site_sys_inputs</span><span class="p">(</span><span class="n">site_sys_inputs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get meta data property.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get module property.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">MODULE</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the site number for this SAM simulation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site</span>
+
+<div class="viewcode-block" id="RevPySam.get_sam_res"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.get_sam_res">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_sam_res</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SAM resource iterator object (single year, single file).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SamResourceRetriever</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RevPySam.drop_leap"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.drop_leap">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">drop_leap</span><span class="p">(</span><span class="n">resource</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Drop Feb 29th from resource df with time index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            Resource dataframe with an index containing a pandas</span>
+<span class="sd">            time index object with month and day attributes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            Resource dataframe with all February 29th timesteps removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">)):</span>
+                <span class="n">leap_day</span> <span class="o">=</span> <span class="p">((</span><span class="n">resource</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+                            <span class="o">&amp;</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="mi">29</span><span class="p">))</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">leap_day</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">resource</span></div>
+
+<div class="viewcode-block" id="RevPySam.ensure_res_len"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.ensure_res_len">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ensure_res_len</span><span class="p">(</span><span class="n">res_arr</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">8760</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that the length of resource array is a multiple of base.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_arr : np.ndarray</span>
+<span class="sd">            Array of resource data.</span>
+<span class="sd">        base : int</span>
+<span class="sd">            Ensure that length of resource array is a multiple of this value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_arr : array-like</span>
+<span class="sd">            Truncated array of resource data such that length(res_arr)%base=0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_arr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Received timeseries of length </span><span class="si">{}</span><span class="s1">, expected timeseries to&#39;</span>
+                   <span class="s1">&#39;be at least </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res_arr</span><span class="p">),</span> <span class="n">base</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ResourceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_arr</span><span class="p">)</span> <span class="o">%</span> <span class="n">base</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">div</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res_arr</span><span class="p">)</span> <span class="o">/</span> <span class="n">base</span><span class="p">)</span>
+            <span class="n">target_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">div</span> <span class="o">*</span> <span class="n">base</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">res_arr</span> <span class="o">=</span> <span class="n">res_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">target_len</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res_arr</span> <span class="o">=</span> <span class="n">res_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">target_len</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">res_arr</span></div>
+
+<div class="viewcode-block" id="RevPySam.make_datetime"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.make_datetime">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_datetime</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that pd series is a datetime series with dt accessor&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">):</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">series</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">series</span></div>
+
+<div class="viewcode-block" id="RevPySam.get_time_interval"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.get_time_interval">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_time_interval</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">time_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the time interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : pd.series</span>
+<span class="sd">            Datetime series. Must have a dt attribute to access datetime</span>
+<span class="sd">            properties (added using make_datetime method).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_interval : int:</span>
+<span class="sd">            This value is the number of indices over which an hour is counted.</span>
+<span class="sd">            So if the timestep is 0.5 hours, time_interval is 2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">time_index</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_datetime</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">time_index</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>
+        <span class="n">time_interval</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># iterate through the hourly time diffs and count indices between flips</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">time_interval</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">time_interval</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_interval</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_site_sys_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse site-specific parameters and add to parameter dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site_sys_inputs : dict</span>
+<span class="sd">            Optional set of site-specific SAM system inputs to complement the</span>
+<span class="sd">            site-agnostic inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">site_sys_inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">site_sys_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_arr_like</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if SAM data is array-like. False if scalar.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_is_hourly</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if SAM data is hourly or sub-hourly. False otherise.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_is_arr_like</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">L</span> <span class="o">&gt;=</span> <span class="mi">8760</span>
+
+<div class="viewcode-block" id="RevPySam.outputs_to_utc_arr"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.outputs_to_utc_arr">[docs]</a>    <span class="k">def</span> <span class="nf">outputs_to_utc_arr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert array-like SAM outputs to UTC np.ndarrays&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_arr_like</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">output</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_hourly</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span>
+                                                     <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">))</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="RevPySam.collect_outputs"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.collect_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">collect_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_lookup</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect SAM output_request.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        output_lookup : dict</span>
+<span class="sd">            Lookup dictionary mapping output keys to special output methods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bad_requests</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">output_lookup</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">req</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_lookup</span><span class="p">[</span><span class="n">req</span><span class="p">]()</span>
+            <span class="k">elif</span> <span class="n">req</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">req</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">[</span><span class="n">req</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">req</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">bad_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bad_requests</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not retrieve outputs &quot;</span><span class="si">{}</span><span class="s1">&quot; from PySAM object &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bad_requests</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SAMExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RevPySam.assign_inputs"><a class="viewcode-back" href="../../../reV/reV.SAM.SAM.html#reV.SAM.SAM.RevPySam.assign_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">assign_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assign the self.sam_sys_inputs attribute to the PySAM object.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">assign_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

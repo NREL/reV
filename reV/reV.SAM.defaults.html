@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.SAM.defaults module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.SAM.econ module" href="reV.SAM.econ.html" />
+    <link rel="prev" title="reV.SAM.SAM module" href="reV.SAM.SAM.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.SAM.html">reV.SAM package</a> &raquo;</li>
+        
+      <li>reV.SAM.defaults module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.SAM.defaults.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.SAM.defaults">
+<span id="rev-sam-defaults-module"></span><h1>reV.SAM.defaults module<a class="headerlink" href="#module-reV.SAM.defaults" title="Permalink to this headline">¶</a></h1>
+<p>PySAM default implementations.</p>
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultPvwattsv5">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultPvwattsv5</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultPvwattsv5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultPvwattsv5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default PVWattsv5</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultPvwattsv5.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultPvwattsv5.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultPvwattsv5.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM pvwattsv5 object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultPvwattsv7">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultPvwattsv7</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultPvwattsv7"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultPvwattsv7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>class for default PVWattsv7</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultPvwattsv7.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultPvwattsv7.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultPvwattsv7.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM pvwattsv7 object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultTcsMoltenSalt">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultTcsMoltenSalt</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultTcsMoltenSalt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultTcsMoltenSalt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default CSP</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultTcsMoltenSalt.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultTcsMoltenSalt.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultTcsMoltenSalt.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultWindPower">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultWindPower</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultWindPower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultWindPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default windpower</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultWindPower.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultWindPower.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultWindPower.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultSwh">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultSwh</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultSwh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultSwh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default solar water heating</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultSwh.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultSwh.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultSwh.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultTroughPhysicalProcessHeat">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultTroughPhysicalProcessHeat</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultTroughPhysicalProcessHeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultTroughPhysicalProcessHeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default parabolic trough process heat</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultTroughPhysicalProcessHeat.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultTroughPhysicalProcessHeat.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultTroughPhysicalProcessHeat.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultLinearFresnelDsgIph">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultLinearFresnelDsgIph</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultLinearFresnelDsgIph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultLinearFresnelDsgIph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default linear direct steam heat</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultLinearFresnelDsgIph.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultLinearFresnelDsgIph.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultLinearFresnelDsgIph.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultLCOE">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultLCOE</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultLCOE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultLCOE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for default LCOE calculator</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultLCOE.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultLCOE.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultLCOE.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.SAM.defaults.DefaultSingleOwner">
+<em class="property">class </em><code class="sig-prename descclassname">reV.SAM.defaults.</code><code class="sig-name descname">DefaultSingleOwner</code><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultSingleOwner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultSingleOwner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>class for default Single Owner (PPA) calculator</p>
+<dl class="py method">
+<dt id="reV.SAM.defaults.DefaultSingleOwner.default">
+<em class="property">static </em><code class="sig-name descname">default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/SAM/defaults.html#DefaultSingleOwner.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.SAM.defaults.DefaultSingleOwner.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default PySAM object</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.SAM.econ.html" class="btn btn-neutral float-right" title="reV.SAM.econ module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.SAM.SAM.html" class="btn btn-neutral float-left" title="reV.SAM.SAM module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

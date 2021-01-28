@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.cli_sc_aggregation &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.cli_sc_aggregation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.cli_sc_aggregation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># pylint: disable=all</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV Supply Curve Aggregation command line interface (cli).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="kn">from</span> <span class="nn">reV.config.supply_curve_configs</span> <span class="kn">import</span> <span class="n">SupplyCurveAggregationConfig</span>
+<span class="kn">from</span> <span class="nn">reV.pipeline.status</span> <span class="kn">import</span> <span class="n">Status</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.tech_mapping</span> <span class="kn">import</span> <span class="n">TechMapping</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.sc_aggregation</span> <span class="kn">import</span> <span class="n">SupplyCurveAggregation</span>
+<span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities.hpc</span> <span class="kn">import</span> <span class="n">SLURM</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.cli_dtypes</span> <span class="kn">import</span> <span class="p">(</span><span class="n">STR</span><span class="p">,</span> <span class="n">INT</span><span class="p">,</span> <span class="n">FLOAT</span><span class="p">,</span> <span class="n">STRLIST</span><span class="p">,</span> <span class="n">FLOATLIST</span><span class="p">,</span>
+                                      <span class="n">STRFLOAT</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.loggers</span> <span class="kn">import</span> <span class="n">init_mult</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">dict_str_load</span><span class="p">,</span> <span class="n">get_class_properties</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--name&#39;</span><span class="p">,</span> <span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;reV-agg&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Job name. Default is &quot;reV-agg&quot;.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reV Supply Curve Aggregation Command Line Interface&quot;&quot;&quot;</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">ensure_object</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    print version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">valid_config_keys</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Echo the valid SupplyCurveAggregation config keys</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">get_class_properties</span><span class="p">(</span><span class="n">SupplyCurveAggregationConfig</span><span class="p">)))</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--config_file&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;reV aggregation configuration json file.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run reV SC aggregation from a config file.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Instantiate the config object</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SupplyCurveAggregationConfig</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
+    <span class="c1"># take name from config if not default</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;rev&#39;</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="c1"># Enforce verbosity if logging level is specified in the config</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">log_level</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># initialize loggers</span>
+    <span class="n">init_mult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="s1">&#39;rex&#39;</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Initial log statements</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running reV supply curve aggregation from config &#39;</span>
+                <span class="s1">&#39;file: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_file</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Target output directory: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Target logging directory: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The full configuration input is as follows:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;local&#39;</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">retrieve_job_status</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                                            <span class="s1">&#39;supply-curve-aggregation&#39;</span><span class="p">,</span>
+                                            <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+            <span class="n">Status</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span> <span class="s1">&#39;supply-curve-aggregation&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">job_attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hardware&#39;</span><span class="p">:</span> <span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                           <span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">})</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">direct</span><span class="p">,</span>
+                       <span class="n">excl_fpath</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">excl_fpath</span><span class="p">,</span>
+                       <span class="n">gen_fpath</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">gen_fpath</span><span class="p">,</span>
+                       <span class="n">econ_fpath</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">econ_fpath</span><span class="p">,</span>
+                       <span class="n">res_fpath</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">res_fpath</span><span class="p">,</span>
+                       <span class="n">tm_dset</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">tm_dset</span><span class="p">,</span>
+                       <span class="n">excl_dict</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">excl_dict</span><span class="p">,</span>
+                       <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">check_excl_layers</span><span class="p">,</span>
+                       <span class="n">res_class_dset</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">res_class_dset</span><span class="p">,</span>
+                       <span class="n">res_class_bins</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">res_class_bins</span><span class="p">,</span>
+                       <span class="n">cf_dset</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">cf_dset</span><span class="p">,</span>
+                       <span class="n">lcoe_dset</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">lcoe_dset</span><span class="p">,</span>
+                       <span class="n">h5_dsets</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">h5_dsets</span><span class="p">,</span>
+                       <span class="n">data_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_layers</span><span class="p">,</span>
+                       <span class="n">resolution</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
+                       <span class="n">excl_area</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">excl_area</span><span class="p">,</span>
+                       <span class="n">power_density</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">power_density</span><span class="p">,</span>
+                       <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">area_filter_kernel</span><span class="p">,</span>
+                       <span class="n">min_area</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_area</span><span class="p">,</span>
+                       <span class="n">friction_fpath</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">friction_fpath</span><span class="p">,</span>
+                       <span class="n">friction_dset</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">friction_dset</span><span class="p">,</span>
+                       <span class="n">cap_cost_scale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">cap_cost_scale</span><span class="p">,</span>
+                       <span class="n">out_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                       <span class="n">log_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
+                       <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;eagle&#39;</span><span class="p">,</span> <span class="s1">&#39;slurm&#39;</span><span class="p">):</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">excl_fpath</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;GEN_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">gen_fpath</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;ECON_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">econ_fpath</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">res_fpath</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TM_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">tm_dset</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_DICT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">excl_dict</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CHECK_LAYERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">check_excl_layers</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">res_class_dset</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_BINS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">res_class_bins</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CF_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">cf_dset</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LCOE_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">lcoe_dset</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;H5_DSETS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">h5_dsets</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DATA_LAYERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">data_layers</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RESOLUTION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">resolution</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_AREA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">excl_area</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;POWER_DENSITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">power_density</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;AREA_FILTER_KERNEL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">area_filter_kernel</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MIN_AREA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">min_area</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">friction_fpath</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">friction_dset</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CAP_COST_SCALE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">cap_cost_scale</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">dirout</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">logdir</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">slurm</span><span class="p">,</span>
+                   <span class="n">alloc</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">allocation</span><span class="p">,</span>
+                   <span class="n">memory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span>
+                   <span class="n">feature</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">feature</span><span class="p">,</span>
+                   <span class="n">walltime</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">walltime</span><span class="p">,</span>
+                   <span class="n">conda_env</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">conda_env</span><span class="p">,</span>
+                   <span class="n">module</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">invoke_without_command</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--excl_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;-exf&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Exclusions file (.h5).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--gen_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;-gf&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;reV generation/econ output file.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--econ_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;-ef&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;reV econ output file (optional argument that can be &#39;</span>
+              <span class="s1">&#39;included if reV gen and econ data are being used from &#39;</span>
+              <span class="s1">&#39;different files.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--res_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;-rf&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Resource file, required if techmap dset is to be created.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--tm_dset&#39;</span><span class="p">,</span> <span class="s1">&#39;-tm&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Dataset in the exclusions file that maps the exclusions &#39;</span>
+              <span class="s1">&#39;to the resource being analyzed.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--excl_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;-exd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;String representation of a dictionary of exclusion &#39;</span>
+                    <span class="s1">&#39;LayerMask arguments {layer: {kwarg: value}} where layer &#39;</span>
+                    <span class="s1">&#39;is a dataset in excl_fpath and kwarg can be &#39;</span>
+                    <span class="s1">&#39;&quot;inclusion_range&quot;, &quot;exclude_values&quot;, &quot;include_values&quot;, &#39;</span>
+                    <span class="s1">&#39;&quot;inclusion_weights&quot;, &quot;force_inclusion_values&quot;, &#39;</span>
+                    <span class="s1">&#39;&quot;use_as_weights&quot;, &quot;exclude_nodata&quot;, and/or &quot;weight&quot;.&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--check_excl_layers&#39;</span><span class="p">,</span> <span class="s1">&#39;-cl&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;run a pre-flight check on each exclusion layer to &#39;</span>
+                    <span class="s1">&#39;ensure they contain un-excluded values&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--res_class_dset&#39;</span><span class="p">,</span> <span class="s1">&#39;-cd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Dataset to determine the resource class &#39;</span>
+              <span class="s1">&#39;(must be in gen_fpath).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--res_class_bins&#39;</span><span class="p">,</span> <span class="s1">&#39;-cb&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">FLOATLIST</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List of resource class bin edges.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--cf_dset&#39;</span><span class="p">,</span> <span class="s1">&#39;-cf&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;cf_mean-means&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Dataset containing capacity factor values to aggregate.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--lcoe_dset&#39;</span><span class="p">,</span> <span class="s1">&#39;-lc&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr-means&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Dataset containing lcoe values to aggregate.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--h5_dsets&#39;</span><span class="p">,</span> <span class="s1">&#39;-hd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STRLIST</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Additional datasets from the source gen/econ h5 files to &#39;</span>
+              <span class="s1">&#39;aggregate.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--data_layers&#39;</span><span class="p">,</span> <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;String representation of a dictionary of additional data &#39;</span>
+              <span class="s1">&#39;layers to include in the aggregation e.g. &#39;</span>
+              <span class="s1">&#39;{&quot;slope&quot;: {&quot;dset&quot;: &quot;srtm_slope&quot;, &quot;method&quot;: &quot;mean&quot;}}&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--resolution&#39;</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">INT</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of exclusion points along a squares edge to &#39;</span>
+              <span class="s1">&#39;include in an aggregated supply curve point.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--excl_area&#39;</span><span class="p">,</span> <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0081</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Area of an exclusion pixel in km2. None will try to &#39;</span>
+              <span class="s1">&#39;infer the area from the profile transform attribute in &#39;</span>
+              <span class="s1">&#39;excl_fpath.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--power_density&#39;</span><span class="p">,</span> <span class="s1">&#39;-pd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STRFLOAT</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Power density in MW/km2 or filepath to variable power &#39;</span>
+              <span class="s1">&#39;density csv file. None will attempt to infer a constant &#39;</span>
+              <span class="s1">&#39;power density from the generation meta data technology. &#39;</span>
+              <span class="s1">&#39;Variable power density csvs must have &quot;gid&quot; and &#39;</span>
+              <span class="s1">&#39;&quot;power_density&quot; columns where gid is the resource gid &#39;</span>
+              <span class="s1">&#39;(typically wtk or nsrdb gid). and the power_density column &#39;</span>
+              <span class="s1">&#39;is in MW/km2.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--area_filter_kernel&#39;</span><span class="p">,</span> <span class="s1">&#39;-afk&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Contiguous area filter kernel name (&quot;queen&quot;, &quot;rook&quot;).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--min_area&#39;</span><span class="p">,</span> <span class="s1">&#39;-ma&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Contiguous area filter minimum area, default is None &#39;</span>
+              <span class="s1">&#39;(No minimum area filter).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--friction_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;-ff&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Optional h5 filepath to friction surface data. &#39;</span>
+              <span class="s1">&#39;Must match the exclusion shape/resolution and be &#39;</span>
+              <span class="s1">&#39;paired with the --friction_dset input arg. The friction data &#39;</span>
+              <span class="s1">&#39;creates a &quot;mean_lcoe_friction&quot; output which is the nominal &#39;</span>
+              <span class="s1">&#39;LCOE multiplied by the friction data.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--friction_dset&#39;</span><span class="p">,</span> <span class="s1">&#39;-fd&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Optional friction surface dataset in friction_fpath.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--cap_cost_scale&#39;</span><span class="p">,</span> <span class="s1">&#39;-cs&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Optional LCOE scaling equation to implement &quot;economies &#39;</span>
+              <span class="s1">&#39;of scale&quot;. Equations must be in python string format and &#39;</span>
+              <span class="s1">&#39;return a scalar value to multiply the capital cost by. &#39;</span>
+              <span class="s1">&#39;Independent variables in the equation should match the names &#39;</span>
+              <span class="s1">&#39;of the columns in the reV supply curve aggregation table. &#39;</span>
+              <span class="s1">&#39;This will not affect offshore wind LCOE.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--out_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save aggregation summary output.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--log_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;-ld&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./logs/&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save aggregation logs.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Flag to turn on debug logging. Default is not verbose.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">direct</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span> <span class="n">res_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span>
+           <span class="n">excl_dict</span><span class="p">,</span> <span class="n">check_excl_layers</span><span class="p">,</span> <span class="n">res_class_dset</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span>
+           <span class="n">cf_dset</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">excl_area</span><span class="p">,</span>
+           <span class="n">power_density</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span> <span class="n">friction_fpath</span><span class="p">,</span>
+           <span class="n">friction_dset</span><span class="p">,</span> <span class="n">cap_cost_scale</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reV Supply Curve Aggregation Summary CLI.&quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">excl_fpath</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;GEN_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen_fpath</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;ECON_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">econ_fpath</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_fpath</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TM_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm_dset</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_DICT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">excl_dict</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CHECK_LAYERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_excl_layers</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_class_dset</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_BINS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_class_bins</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CF_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cf_dset</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LCOE_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lcoe_dset</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;H5_DSETS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_dsets</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DATA_LAYERS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_layers</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RESOLUTION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolution</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_AREA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">excl_area</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;POWER_DENSITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">power_density</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;AREA_FILTER_KERNEL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">area_filter_kernel</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MIN_AREA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_area</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_FPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">friction_fpath</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_DSET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">friction_dset</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CAP_COST_SCALE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cap_cost_scale</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_dir</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log_dir</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
+
+    <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">invoked_subcommand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">init_mult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="s1">&#39;rex&#39;</span><span class="p">],</span>
+                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">dsets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tm_dset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">TechMapping</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">res_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;TechMapping process failed. Received the &#39;</span>
+                                 <span class="s1">&#39;following error:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">excl_dict</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">excl_dict</span> <span class="o">=</span> <span class="n">dict_str_load</span><span class="p">(</span><span class="n">excl_dict</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">data_layers</span> <span class="o">=</span> <span class="n">dict_str_load</span><span class="p">(</span><span class="n">data_layers</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">SupplyCurveAggregation</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span>
+                <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span>
+                <span class="n">econ_fpath</span><span class="o">=</span><span class="n">econ_fpath</span><span class="p">,</span>
+                <span class="n">excl_dict</span><span class="o">=</span><span class="n">excl_dict</span><span class="p">,</span>
+                <span class="n">res_class_dset</span><span class="o">=</span><span class="n">res_class_dset</span><span class="p">,</span>
+                <span class="n">res_class_bins</span><span class="o">=</span><span class="n">res_class_bins</span><span class="p">,</span>
+                <span class="n">cf_dset</span><span class="o">=</span><span class="n">cf_dset</span><span class="p">,</span>
+                <span class="n">lcoe_dset</span><span class="o">=</span><span class="n">lcoe_dset</span><span class="p">,</span>
+                <span class="n">h5_dsets</span><span class="o">=</span><span class="n">h5_dsets</span><span class="p">,</span>
+                <span class="n">data_layers</span><span class="o">=</span><span class="n">data_layers</span><span class="p">,</span>
+                <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+                <span class="n">excl_area</span><span class="o">=</span><span class="n">excl_area</span><span class="p">,</span>
+                <span class="n">power_density</span><span class="o">=</span><span class="n">power_density</span><span class="p">,</span>
+                <span class="n">area_filter_kernel</span><span class="o">=</span><span class="n">area_filter_kernel</span><span class="p">,</span>
+                <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                <span class="n">friction_fpath</span><span class="o">=</span><span class="n">friction_fpath</span><span class="p">,</span>
+                <span class="n">friction_dset</span><span class="o">=</span><span class="n">friction_dset</span><span class="p">,</span>
+                <span class="n">check_excl_layers</span><span class="o">=</span><span class="n">check_excl_layers</span><span class="p">,</span>
+                <span class="n">cap_cost_scale</span><span class="o">=</span><span class="n">cap_cost_scale</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Supply curve Aggregation failed. Received the &#39;</span>
+                             <span class="s1">&#39;following error:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="n">fn_out</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">fpath_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">fn_out</span><span class="p">)</span>
+        <span class="n">summary</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fpath_out</span><span class="p">)</span>
+
+        <span class="n">runtime</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Supply curve aggregation complete. &#39;</span>
+                    <span class="s1">&#39;Time elapsed: </span><span class="si">{:.2f}</span><span class="s1"> min. Target output dir: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">))</span>
+
+        <span class="n">finput</span> <span class="o">=</span> <span class="p">[</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">res_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">finput</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res_fpath</span><span class="p">)</span>
+
+        <span class="c1"># add job to reV status file.</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">out_dir</span><span class="p">,</span>
+                  <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="n">fn_out</span><span class="p">,</span>
+                  <span class="s1">&#39;job_status&#39;</span><span class="p">:</span> <span class="s1">&#39;successful&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="n">runtime</span><span class="p">,</span>
+                  <span class="s1">&#39;finput&#39;</span><span class="p">:</span> <span class="n">finput</span><span class="p">,</span>
+                  <span class="s1">&#39;excl_fpath&#39;</span><span class="p">:</span> <span class="n">excl_fpath</span><span class="p">,</span>
+                  <span class="s1">&#39;excl_dict&#39;</span><span class="p">:</span> <span class="n">excl_dict</span><span class="p">,</span>
+                  <span class="s1">&#39;area_filter_kernel&#39;</span><span class="p">:</span> <span class="n">area_filter_kernel</span><span class="p">,</span>
+                  <span class="s1">&#39;min_area&#39;</span><span class="p">:</span> <span class="n">min_area</span><span class="p">}</span>
+        <span class="n">Status</span><span class="o">.</span><span class="n">make_job_file</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve-aggregation&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_node_cmd"><a class="viewcode-back" href="../../../reV/reV.supply_curve.cli_sc_aggregation.html#reV.supply_curve.cli_sc_aggregation.get_node_cmd">[docs]</a><span class="k">def</span> <span class="nf">get_node_cmd</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span> <span class="n">res_fpath</span><span class="p">,</span> <span class="n">tm_dset</span><span class="p">,</span>
+                 <span class="n">excl_dict</span><span class="p">,</span> <span class="n">check_excl_layers</span><span class="p">,</span> <span class="n">res_class_dset</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span>
+                 <span class="n">cf_dset</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span>
+                 <span class="n">excl_area</span><span class="p">,</span> <span class="n">power_density</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span>
+                 <span class="n">friction_fpath</span><span class="p">,</span> <span class="n">friction_dset</span><span class="p">,</span> <span class="n">cap_cost_scale</span><span class="p">,</span>
+                 <span class="n">out_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a CLI call command for the SC aggregation cli.&quot;&quot;&quot;</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-exf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">)),</span>
+            <span class="s1">&#39;-gf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">gen_fpath</span><span class="p">)),</span>
+            <span class="s1">&#39;-ef </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">econ_fpath</span><span class="p">)),</span>
+            <span class="s1">&#39;-rf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">res_fpath</span><span class="p">)),</span>
+            <span class="s1">&#39;-tm </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">tm_dset</span><span class="p">)),</span>
+            <span class="s1">&#39;-exd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">excl_dict</span><span class="p">)),</span>
+            <span class="s1">&#39;-cd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">res_class_dset</span><span class="p">)),</span>
+            <span class="s1">&#39;-cb </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">res_class_bins</span><span class="p">)),</span>
+            <span class="s1">&#39;-cf </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">cf_dset</span><span class="p">)),</span>
+            <span class="s1">&#39;-lc </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">lcoe_dset</span><span class="p">)),</span>
+            <span class="s1">&#39;-hd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">h5_dsets</span><span class="p">)),</span>
+            <span class="s1">&#39;-d </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">data_layers</span><span class="p">)),</span>
+            <span class="s1">&#39;-r </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">resolution</span><span class="p">)),</span>
+            <span class="s1">&#39;-ea </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">excl_area</span><span class="p">)),</span>
+            <span class="s1">&#39;-pd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">power_density</span><span class="p">)),</span>
+            <span class="s1">&#39;-afk </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">area_filter_kernel</span><span class="p">)),</span>
+            <span class="s1">&#39;-ma </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">min_area</span><span class="p">)),</span>
+            <span class="s1">&#39;-ff </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">friction_fpath</span><span class="p">)),</span>
+            <span class="s1">&#39;-fd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">friction_dset</span><span class="p">)),</span>
+            <span class="s1">&#39;-cs </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">cap_cost_scale</span><span class="p">)),</span>
+            <span class="s1">&#39;-o </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)),</span>
+            <span class="s1">&#39;-ld </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)),</span>
+            <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">check_excl_layers</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-cl&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;python -m reV.supply_curve.cli_sc_aggregation -n </span><span class="si">{}</span><span class="s1"> direct </span><span class="si">{}</span><span class="s1">&#39;</span>
+           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SLURM</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Creating the following command line call:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cmd</span></div>
+
+
+<span class="nd">@direct</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--alloc&#39;</span><span class="p">,</span> <span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM allocation account name.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--walltime&#39;</span><span class="p">,</span> <span class="s1">&#39;-wt&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM walltime request in hours. Default is 1.0&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--feature&#39;</span><span class="p">,</span> <span class="s1">&#39;-l&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Additional flags for SLURM job. Format is &quot;--qos=high&quot; &#39;</span>
+                    <span class="s1">&#39;or &quot;--depend=[state:job_id]&quot;. Default is None.&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--memory&#39;</span><span class="p">,</span> <span class="s1">&#39;-mem&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">INT</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;SLURM node memory request in GB. Default is None&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--module&#39;</span><span class="p">,</span> <span class="s1">&#39;-mod&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Module to load&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--conda_env&#39;</span><span class="p">,</span> <span class="s1">&#39;-env&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Conda env to activate&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--stdout_path&#39;</span><span class="p">,</span> <span class="s1">&#39;-sout&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">STR</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Subprocess standard output path. Default is in out_dir.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">slurm</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">memory</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">conda_env</span><span class="p">,</span>
+          <span class="n">stdout_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;slurm (Eagle) submission tool for reV supply curve aggregation.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span>
+    <span class="n">excl_fpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_FPATH&#39;</span><span class="p">]</span>
+    <span class="n">gen_fpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;GEN_FPATH&#39;</span><span class="p">]</span>
+    <span class="n">econ_fpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;ECON_FPATH&#39;</span><span class="p">]</span>
+    <span class="n">res_fpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_FPATH&#39;</span><span class="p">]</span>
+    <span class="n">tm_dset</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;TM_DSET&#39;</span><span class="p">]</span>
+    <span class="n">excl_dict</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_DICT&#39;</span><span class="p">]</span>
+    <span class="n">check_excl_layers</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CHECK_LAYERS&#39;</span><span class="p">]</span>
+    <span class="n">res_class_dset</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_DSET&#39;</span><span class="p">]</span>
+    <span class="n">res_class_bins</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RES_CLASS_BINS&#39;</span><span class="p">]</span>
+    <span class="n">cf_dset</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CF_DSET&#39;</span><span class="p">]</span>
+    <span class="n">lcoe_dset</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LCOE_DSET&#39;</span><span class="p">]</span>
+    <span class="n">h5_dsets</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;H5_DSETS&#39;</span><span class="p">]</span>
+    <span class="n">data_layers</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;DATA_LAYERS&#39;</span><span class="p">]</span>
+    <span class="n">resolution</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;RESOLUTION&#39;</span><span class="p">]</span>
+    <span class="n">excl_area</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;EXCL_AREA&#39;</span><span class="p">]</span>
+    <span class="n">power_density</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;POWER_DENSITY&#39;</span><span class="p">]</span>
+    <span class="n">area_filter_kernel</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;AREA_FILTER_KERNEL&#39;</span><span class="p">]</span>
+    <span class="n">min_area</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;MIN_AREA&#39;</span><span class="p">]</span>
+    <span class="n">friction_fpath</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_FPATH&#39;</span><span class="p">]</span>
+    <span class="n">friction_dset</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;FRICTION_DSET&#39;</span><span class="p">]</span>
+    <span class="n">cap_cost_scale</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;CAP_COST_SCALE&#39;</span><span class="p">]</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;OUT_DIR&#39;</span><span class="p">]</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;LOG_DIR&#39;</span><span class="p">]</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;VERBOSE&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">stdout_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stdout_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="s1">&#39;stdout/&#39;</span><span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_node_cmd</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">excl_fpath</span><span class="p">,</span> <span class="n">gen_fpath</span><span class="p">,</span> <span class="n">econ_fpath</span><span class="p">,</span> <span class="n">res_fpath</span><span class="p">,</span>
+                       <span class="n">tm_dset</span><span class="p">,</span> <span class="n">excl_dict</span><span class="p">,</span> <span class="n">check_excl_layers</span><span class="p">,</span>
+                       <span class="n">res_class_dset</span><span class="p">,</span> <span class="n">res_class_bins</span><span class="p">,</span>
+                       <span class="n">cf_dset</span><span class="p">,</span> <span class="n">lcoe_dset</span><span class="p">,</span> <span class="n">h5_dsets</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">,</span>
+                       <span class="n">resolution</span><span class="p">,</span> <span class="n">excl_area</span><span class="p">,</span>
+                       <span class="n">power_density</span><span class="p">,</span> <span class="n">area_filter_kernel</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span>
+                       <span class="n">friction_fpath</span><span class="p">,</span> <span class="n">friction_dset</span><span class="p">,</span> <span class="n">cap_cost_scale</span><span class="p">,</span>
+                       <span class="n">out_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">slurm_manager</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SLURM_MANAGER&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">slurm_manager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">slurm_manager</span> <span class="o">=</span> <span class="n">SLURM</span><span class="p">()</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;SLURM_MANAGER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slurm_manager</span>
+
+    <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">retrieve_job_status</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve-aggregation&#39;</span><span class="p">,</span>
+                                        <span class="n">name</span><span class="p">,</span> <span class="n">hardware</span><span class="o">=</span><span class="s1">&#39;eagle&#39;</span><span class="p">,</span>
+                                        <span class="n">subprocess_manager</span><span class="o">=</span><span class="n">slurm_manager</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Job &quot;</span><span class="si">{}</span><span class="s1">&quot; is successful in status json found in &quot;</span><span class="si">{}</span><span class="s1">&quot;, &#39;</span>
+               <span class="s1">&#39;not re-running.&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="s1">&#39;fail&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Job &quot;</span><span class="si">{}</span><span class="s1">&quot; was found with status &quot;</span><span class="si">{}</span><span class="s1">&quot;, not resubmitting&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running reV SC aggregation on SLURM with &#39;</span>
+                    <span class="s1">&#39;node name &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">slurm_manager</span><span class="o">.</span><span class="n">sbatch</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span> <span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">,</span>
+                                   <span class="n">walltime</span><span class="o">=</span><span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="n">feature</span><span class="p">,</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">stdout_path</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">,</span>
+                                   <span class="n">conda_env</span><span class="o">=</span><span class="n">conda_env</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Kicked off reV SC aggregation job &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                   <span class="s1">&#39;(SLURM jobid #</span><span class="si">{}</span><span class="s1">).&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+            <span class="n">Status</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span>
+                <span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;supply-curve-aggregation&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">job_attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="n">out</span><span class="p">,</span> <span class="s1">&#39;hardware&#39;</span><span class="p">:</span> <span class="s1">&#39;eagle&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;fout&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39;dirout&#39;</span><span class="p">:</span> <span class="n">out_dir</span><span class="p">})</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="p">{})</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Error running reV SC Aggregation CLI.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.offshore.cli_offshore module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.offshore.offshore module" href="reV.offshore.offshore.html" />
+    <link rel="prev" title="reV.offshore package" href="reV.offshore.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.offshore.html">reV.offshore package</a> &raquo;</li>
+        
+      <li>reV.offshore.cli_offshore module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.offshore.cli_offshore.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-offshore-cli-offshore-module">
+<h1>reV.offshore.cli_offshore module<a class="headerlink" href="#rev-offshore-cli-offshore-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rev-offshore">
+<h2>reV-offshore<a class="headerlink" href="#rev-offshore" title="Permalink to this headline">¶</a></h2>
+<p>reV Offshore Command Line Interface</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-n">
+<span id="cmdoption-rev-offshore-n"></span><span id="cmdoption-reV-offshore-name"></span><span id="cmdoption-rev-offshore-name"></span><code class="sig-name descname">-n</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--name</code><code class="sig-prename descclassname"> &lt;name&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Job name. Default is “reV-off”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-v">
+<span id="cmdoption-rev-offshore-v"></span><span id="cmdoption-reV-offshore-verbose"></span><span id="cmdoption-rev-offshore-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-offshore-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-offshore-direct">
+<h3>direct<a class="headerlink" href="#rev-offshore-direct" title="Permalink to this headline">¶</a></h3>
+<p>Main entry point to run offshore wind aggregation</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore direct <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-gf">
+<span id="cmdoption-rev-offshore-direct-gf"></span><span id="cmdoption-reV-offshore-direct-gen_fpath"></span><span id="cmdoption-rev-offshore-direct-gen-fpath"></span><code class="sig-name descname">-gf</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--gen_fpath</code><code class="sig-prename descclassname"> &lt;gen_fpath&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-gf" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV wind generation/econ output file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-of">
+<span id="cmdoption-rev-offshore-direct-of"></span><span id="cmdoption-reV-offshore-direct-offshore_fpath"></span><span id="cmdoption-rev-offshore-direct-offshore-fpath"></span><code class="sig-name descname">-of</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--offshore_fpath</code><code class="sig-prename descclassname"> &lt;offshore_fpath&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-of" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV wind farm meta and ORCA cost data inputs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-pp">
+<span id="cmdoption-rev-offshore-direct-pp"></span><span id="cmdoption-reV-offshore-direct-points"></span><span id="cmdoption-rev-offshore-direct-points"></span><code class="sig-name descname">-pp</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--points</code><code class="sig-prename descclassname"> &lt;points&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-pp" title="Permalink to this definition">¶</a></dt>
+<dd><p>reV project points to analyze (slice, list, or file string). Default is slice(0, 100)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-sf">
+<span id="cmdoption-rev-offshore-direct-sf"></span><span id="cmdoption-reV-offshore-direct-sam_files"></span><span id="cmdoption-rev-offshore-direct-sam-files"></span><code class="sig-name descname">-sf</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sam_files</code><code class="sig-prename descclassname"> &lt;sam_files&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-sf" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> SAM config files (required) (str, dict, or list).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-ld">
+<span id="cmdoption-rev-offshore-direct-ld"></span><span id="cmdoption-reV-offshore-direct-log_dir"></span><span id="cmdoption-rev-offshore-direct-log-dir"></span><code class="sig-name descname">-ld</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_dir</code><code class="sig-prename descclassname"> &lt;log_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-ld" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory to save offshore logs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-v">
+<span id="cmdoption-rev-offshore-direct-v"></span><span id="cmdoption-reV-offshore-direct-verbose"></span><span id="cmdoption-rev-offshore-direct-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-offshore-direct-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-offshore-direct-slurm">
+<h4>slurm<a class="headerlink" href="#rev-offshore-direct-slurm" title="Permalink to this headline">¶</a></h4>
+<p>slurm (Eagle) submission tool for reV supply curve aggregation.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore direct slurm <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-a">
+<span id="cmdoption-rev-offshore-direct-slurm-a"></span><span id="cmdoption-reV-offshore-direct-slurm-alloc"></span><span id="cmdoption-rev-offshore-direct-slurm-alloc"></span><code class="sig-name descname">-a</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--alloc</code><code class="sig-prename descclassname"> &lt;alloc&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-a" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> SLURM allocation account name.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-l">
+<span id="cmdoption-rev-offshore-direct-slurm-l"></span><span id="cmdoption-reV-offshore-direct-slurm-feature"></span><span id="cmdoption-rev-offshore-direct-slurm-feature"></span><code class="sig-name descname">-l</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--feature</code><code class="sig-prename descclassname"> &lt;feature&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-l" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional flags for SLURM job. Format is “–qos=high” or “–depend=[state:job_id]”. Default is None.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-mem">
+<span id="cmdoption-rev-offshore-direct-slurm-mem"></span><span id="cmdoption-reV-offshore-direct-slurm-memory"></span><span id="cmdoption-rev-offshore-direct-slurm-memory"></span><code class="sig-name descname">-mem</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--memory</code><code class="sig-prename descclassname"> &lt;memory&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-mem" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM node memory request in GB. Default is None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-wt">
+<span id="cmdoption-rev-offshore-direct-slurm-wt"></span><span id="cmdoption-reV-offshore-direct-slurm-walltime"></span><span id="cmdoption-rev-offshore-direct-slurm-walltime"></span><code class="sig-name descname">-wt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--walltime</code><code class="sig-prename descclassname"> &lt;walltime&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-wt" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM walltime request in hours. Default is 1.0</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-mod">
+<span id="cmdoption-rev-offshore-direct-slurm-mod"></span><span id="cmdoption-reV-offshore-direct-slurm-module"></span><span id="cmdoption-rev-offshore-direct-slurm-module"></span><code class="sig-name descname">-mod</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--module</code><code class="sig-prename descclassname"> &lt;module&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-mod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module to load</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-env">
+<span id="cmdoption-rev-offshore-direct-slurm-env"></span><span id="cmdoption-reV-offshore-direct-slurm-conda_env"></span><span id="cmdoption-rev-offshore-direct-slurm-conda-env"></span><code class="sig-name descname">-env</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--conda_env</code><code class="sig-prename descclassname"> &lt;conda_env&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conda env to activate</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-direct-slurm-sout">
+<span id="cmdoption-rev-offshore-direct-slurm-sout"></span><span id="cmdoption-reV-offshore-direct-slurm-stdout_path"></span><span id="cmdoption-rev-offshore-direct-slurm-stdout-path"></span><code class="sig-name descname">-sout</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--stdout_path</code><code class="sig-prename descclassname"> &lt;stdout_path&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-direct-slurm-sout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subprocess standard output path. Default is in out_dir.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="rev-offshore-from-config">
+<h3>from-config<a class="headerlink" href="#rev-offshore-from-config" title="Permalink to this headline">¶</a></h3>
+<p>Run reV offshore aggregation from a config file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore from-config <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-from-config-c">
+<span id="cmdoption-rev-offshore-from-config-c"></span><span id="cmdoption-reV-offshore-from-config-config_file"></span><span id="cmdoption-rev-offshore-from-config-config-file"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--config_file</code><code class="sig-prename descclassname"> &lt;config_file&gt;</code><a class="headerlink" href="#cmdoption-reV-offshore-from-config-c" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV offshore configuration json file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-offshore-from-config-v">
+<span id="cmdoption-rev-offshore-from-config-v"></span><span id="cmdoption-reV-offshore-from-config-verbose"></span><span id="cmdoption-rev-offshore-from-config-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-offshore-from-config-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-offshore-valid-config-keys">
+<h3>valid-config-keys<a class="headerlink" href="#rev-offshore-valid-config-keys" title="Permalink to this headline">¶</a></h3>
+<p>Echo the valid Offshore config keys</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore valid-config-keys <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rev-offshore-version">
+<h3>version<a class="headerlink" href="#rev-offshore-version" title="Permalink to this headline">¶</a></h3>
+<p>print version</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-offshore version <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span class="target" id="module-reV.offshore.cli_offshore"></span><p>reV offshore wind farm aggregation module command line interface (CLI).</p>
+<p>This module aggregates offshore data from high res wind resource data to
+coarse wind farm sites and then calculates the ORCA econ data.</p>
+<p>Offshore resource / generation data refers to WTK 2km (fine resolution)
+Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)</p>
+<dl class="py function">
+<dt id="reV.offshore.cli_offshore.get_node_cmd">
+<code class="sig-prename descclassname">reV.offshore.cli_offshore.</code><code class="sig-name descname">get_node_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">gen_fpath</span></em>, <em class="sig-param"><span class="n">offshore_fpath</span></em>, <em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">sam_files</span></em>, <em class="sig-param"><span class="n">log_dir</span></em>, <em class="sig-param"><span class="n">verbose</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/offshore/cli_offshore.html#get_node_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.offshore.cli_offshore.get_node_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a CLI call command for the offshore aggregation cli.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.offshore.offshore.html" class="btn btn-neutral float-right" title="reV.offshore.offshore module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.offshore.html" class="btn btn-neutral float-left" title="reV.offshore package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

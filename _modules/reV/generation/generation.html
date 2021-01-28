@@ -1,0 +1,751 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.generation.generation &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.generation.generation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.generation.generation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV generation module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">reV.generation.base</span> <span class="kn">import</span> <span class="n">BaseGen</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">ProjectPointsValueError</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.generation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Pvwattsv5</span><span class="p">,</span> <span class="n">Pvwattsv7</span><span class="p">,</span> <span class="n">TcsMoltenSalt</span><span class="p">,</span> <span class="n">WindPower</span><span class="p">,</span>
+                                <span class="n">SolarWaterHeat</span><span class="p">,</span> <span class="n">TroughPhysicalHeat</span><span class="p">,</span>
+                                <span class="n">LinearDirectSteam</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">rex.resource</span> <span class="kn">import</span> <span class="n">Resource</span>
+<span class="kn">from</span> <span class="nn">rex.multi_file_resource</span> <span class="kn">import</span> <span class="n">MultiFileResource</span>
+<span class="kn">from</span> <span class="nn">rex.utilities.utilities</span> <span class="kn">import</span> <span class="n">check_res_file</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">ATTR_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">ATTR_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;output_attributes&#39;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;other.json&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">OTHER_ATTRS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;generation.json&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">GEN_ATTRS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;linear_fresnel.json&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">LIN_ATTRS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;solar_water_heat.json&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">SWH_ATTRS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ATTR_DIR</span><span class="p">,</span> <span class="s1">&#39;trough_heat.json&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">TPPH_ATTRS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Gen"><a class="viewcode-back" href="../../../reV/reV.generation.generation.html#reV.generation.generation.Gen">[docs]</a><span class="k">class</span> <span class="nc">Gen</span><span class="p">(</span><span class="n">BaseGen</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reV generation analysis class to run SAM simulations&quot;&quot;&quot;</span>
+
+    <span class="c1"># Mapping of reV technology strings to SAM generation objects</span>
+    <span class="n">OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pvwattsv5&#39;</span><span class="p">:</span> <span class="n">Pvwattsv5</span><span class="p">,</span>
+               <span class="s1">&#39;pvwattsv7&#39;</span><span class="p">:</span> <span class="n">Pvwattsv7</span><span class="p">,</span>
+               <span class="s1">&#39;tcsmoltensalt&#39;</span><span class="p">:</span> <span class="n">TcsMoltenSalt</span><span class="p">,</span>
+               <span class="s1">&#39;solarwaterheat&#39;</span><span class="p">:</span> <span class="n">SolarWaterHeat</span><span class="p">,</span>
+               <span class="s1">&#39;troughphysicalheat&#39;</span><span class="p">:</span> <span class="n">TroughPhysicalHeat</span><span class="p">,</span>
+               <span class="s1">&#39;lineardirectsteam&#39;</span><span class="p">:</span> <span class="n">LinearDirectSteam</span><span class="p">,</span>
+               <span class="s1">&#39;windpower&#39;</span><span class="p">:</span> <span class="n">WindPower</span><span class="p">,</span>
+               <span class="p">}</span>
+
+    <span class="c1"># Mapping of reV generation outputs to scale factors and units.</span>
+    <span class="c1"># Type is scalar or array and corresponds to the SAM single-site output</span>
+    <span class="n">OUT_ATTRS</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">OTHER_ATTRS</span><span class="p">)</span>
+    <span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">GEN_ATTRS</span><span class="p">)</span>
+    <span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">LIN_ATTRS</span><span class="p">)</span>
+    <span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">SWH_ATTRS</span><span class="p">)</span>
+    <span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">TPPH_ATTRS</span><span class="p">)</span>
+    <span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">BaseGen</span><span class="o">.</span><span class="n">ECON_ATTRS</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,),</span>
+                 <span class="n">site_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="s1">&#39;./gen_out&#39;</span><span class="p">,</span>
+                 <span class="n">drop_leap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.4</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : reV.config.project_points.PointsControl</span>
+<span class="sd">            Project points control instance for site and SAM config spec.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Filepath to single resource file, multi-h5 directory,</span>
+<span class="sd">            or /h5_dir/prefix*suffix</span>
+<span class="sd">        output_request : list | tuple</span>
+<span class="sd">            Output variables requested from SAM.</span>
+<span class="sd">        site_data : str | pd.DataFrame | None</span>
+<span class="sd">            Site-specific input data for SAM calculation. String should be a</span>
+<span class="sd">            filepath that points to a csv, DataFrame is pre-extracted data.</span>
+<span class="sd">            Rows match sites, columns are input keys. Need a &quot;gid&quot; column.</span>
+<span class="sd">            Input as None if no site-specific data.</span>
+<span class="sd">        fout : str | None</span>
+<span class="sd">            Optional .h5 output file specification.</span>
+<span class="sd">        dirout : str | None</span>
+<span class="sd">            Optional output directory specification. The directory will be</span>
+<span class="sd">            created if it does not already exist.</span>
+<span class="sd">        drop_leap : bool</span>
+<span class="sd">            Drop leap day instead of final day of year during leap years</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This sets how many site</span>
+<span class="sd">            results will be stored in-memory at any given time before flushing</span>
+<span class="sd">            to disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">points_control</span><span class="p">,</span> <span class="n">output_request</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="n">site_data</span><span class="p">,</span>
+                         <span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="n">dirout</span><span class="p">,</span> <span class="n">drop_leap</span><span class="o">=</span><span class="n">drop_leap</span><span class="p">,</span>
+                         <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_file</span> <span class="o">=</span> <span class="n">res_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sam_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tech</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_attrs</span><span class="p">[</span><span class="s1">&#39;sam_module&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sam_module</span><span class="o">.</span><span class="n">MODULE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_attrs</span><span class="p">[</span><span class="s1">&#39;res_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_file</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multi_h5_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hsds</span> <span class="o">=</span> <span class="n">check_res_file</span><span class="p">(</span><span class="n">res_file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tech</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Requested technology &quot;</span><span class="si">{}</span><span class="s1">&quot; is not available. &#39;</span>
+                   <span class="s1">&#39;reV generation can analyze the following &#39;</span>
+                   <span class="s1">&#39;SAM technologies: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tech</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># initialize output file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_fpath</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_h5</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_out_arrays</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">res_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the resource filename and path.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Filepath to single resource file, multi-h5 directory,</span>
+<span class="sd">            or /h5_dir/prefix*suffix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get resource meta for all sites in project points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            Meta data df for sites in project points. Column names are meta</span>
+<span class="sd">            data variables, rows are different sites. The row index</span>
+<span class="sd">            does not indicate the site number if the project points are</span>
+<span class="sd">            non-sequential or do not start from 0, so a &#39;gid&#39; column is added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multi_h5_res</span><span class="p">:</span>
+                <span class="n">res_cls</span> <span class="o">=</span> <span class="n">Resource</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hsds&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hsds</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res_cls</span> <span class="o">=</span> <span class="n">MultiFileResource</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">with</span> <span class="n">res_cls</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">res_meta</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">meta</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">res_meta</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ProjectPoints has a max site gid of </span><span class="si">{}</span><span class="s1"> which is &#39;</span>
+                       <span class="s1">&#39;out of bounds for the meta data of size </span><span class="si">{}</span><span class="s1"> from &#39;</span>
+                       <span class="s1">&#39;resource file: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">),</span>
+                               <span class="n">res_meta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_file</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ProjectPointsValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">res_meta</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;gid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;reV_tech&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">tech</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the generation resource time index data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Time-series datetime index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multi_h5_res</span><span class="p">:</span>
+                <span class="n">res_cls</span> <span class="o">=</span> <span class="n">Resource</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hsds&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hsds</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res_cls</span> <span class="o">=</span> <span class="n">MultiFileResource</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">with</span> <span class="n">res_cls</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">time_index</span>
+
+            <span class="n">downscale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">downscale</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sam_config_obj</span><span class="o">.</span><span class="n">time_index_step</span>
+            <span class="k">if</span> <span class="n">downscale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">rex.utilities.downscale</span> <span class="kn">import</span> <span class="n">make_time_index</span>
+                <span class="n">year</span> <span class="o">=</span> <span class="n">time_index</span><span class="o">.</span><span class="n">year</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ds_freq</span> <span class="o">=</span> <span class="n">downscale</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">]</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="n">make_time_index</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">ds_freq</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;reV solar generation running with temporal &#39;</span>
+                            <span class="s1">&#39;downscaling frequency &quot;</span><span class="si">{}</span><span class="s1">&quot; with final &#39;</span>
+                            <span class="s1">&#39;time_index length </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_freq</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_index</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="n">time_index</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_leap_ti</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span>
+                                                   <span class="n">drop_leap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_drop_leap</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+<div class="viewcode-block" id="Gen.run"><a class="viewcode-back" href="../../../reV/reV.generation.generation.html#reV.generation.generation.Gen.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">tech</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">scale_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run a SAM generation analysis based on the points_control iterator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : reV.config.PointsControl</span>
+<span class="sd">            A PointsControl instance dictating what sites and configs are run.</span>
+<span class="sd">        tech : str</span>
+<span class="sd">            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,</span>
+<span class="sd">            solarwaterheat, troughphysicalheat, lineardirectsteam)</span>
+<span class="sd">            The string should be lower-cased with spaces and _ removed.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Filepath to single resource file, multi-h5 directory,</span>
+<span class="sd">            or /h5_dir/prefix*suffix</span>
+<span class="sd">        output_request : list | tuple</span>
+<span class="sd">            Output variables requested from SAM.</span>
+<span class="sd">        scale_outputs : bool</span>
+<span class="sd">            Flag to scale outputs in-place immediately upon Gen returning data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Output dictionary from the SAM reV_run function. Data is scaled</span>
+<span class="sd">            within this function to the datatype specified in Gen.OUT_ATTRS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Extract the site df from the project points df.</span>
+        <span class="n">site_df</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">site_df</span> <span class="o">=</span> <span class="n">site_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># run generation method for specified technology</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">tech</span><span class="p">]</span><span class="o">.</span><span class="n">reV_run</span><span class="p">(</span><span class="n">points_control</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span>
+                                            <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Worker failed for PC: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">points_control</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="k">if</span> <span class="n">scale_outputs</span><span class="p">:</span>
+            <span class="c1"># dtype convert in-place so no float data is stored unnecessarily</span>
+            <span class="k">for</span> <span class="n">site</span><span class="p">,</span> <span class="n">site_output</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">site_output</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># iterate through variable names in each site&#39;s output dict</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="p">:</span>
+                        <span class="c1"># get dtype and scale for output variable name</span>
+                        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+                        <span class="n">scale_factor</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                        <span class="c1"># apply scale factor and dtype</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale_factor</span>
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                            <span class="c1"># round after scaling if integer dtype</span>
+                            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                            <span class="c1"># simple astype for arrays</span>
+                            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># use numpy array conversion for scalar values</span>
+                            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">][</span><span class="n">k</span><span class="p">]],</span>
+                                                    <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_output_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the output variables requested from generation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        req : list | tuple</span>
+<span class="sd">            Output variables requested from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Output variables requested from SAM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">output_request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_request_type_check</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+        <span class="c1"># ensure that cf_mean is requested from output</span>
+        <span class="k">if</span> <span class="s1">&#39;cf_mean&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output_request</span><span class="p">:</span>
+            <span class="n">output_request</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">output_request</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;User output request &quot;</span><span class="si">{}</span><span class="s1">&quot; not recognized. &#39;</span>
+                       <span class="s1">&#39;Will attempt to extract from PySAM.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">output_request</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Gen.reV_run"><a class="viewcode-back" href="../../../reV/reV.generation.generation.html#reV.generation.generation.Gen.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tech</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span>
+                <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,),</span> <span class="n">site_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curtailment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sites_per_worker</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1800</span><span class="p">,</span>
+                <span class="n">points_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">dirout</span><span class="o">=</span><span class="s1">&#39;./gen_out&#39;</span><span class="p">,</span> <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">scale_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a parallel reV generation run with smart data flushing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tech : str</span>
+<span class="sd">            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,</span>
+<span class="sd">            solarwaterheat, troughphysicalheat, lineardirectsteam)</span>
+<span class="sd">            The string should be lower-cased with spaces and _ removed.</span>
+<span class="sd">        points : slice | list | str | reV.config.project_points.PointsControl</span>
+<span class="sd">            Slice specifying project points, or string pointing to a project</span>
+<span class="sd">            points csv, or a fully instantiated PointsControl object.</span>
+<span class="sd">        sam_files : dict | str | list | SAMConfig</span>
+<span class="sd">            SAM input configuration ID(s) and file path(s). Keys are the SAM</span>
+<span class="sd">            config ID(s), top level value is the SAM path. Can also be a single</span>
+<span class="sd">            config file str. If it&#39;s a list, it is mapped to the sorted list</span>
+<span class="sd">            of unique configs requested by points csv. Can also be a</span>
+<span class="sd">            pre loaded SAMConfig object.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Filepath to single resource file, multi-h5 directory,</span>
+<span class="sd">            or /h5_dir/prefix*suffix</span>
+<span class="sd">        output_request : list | tuple</span>
+<span class="sd">            Output variables requested from SAM.</span>
+<span class="sd">        site_data : str | pd.DataFrame | None</span>
+<span class="sd">            Site-specific input data for SAM calculation. String should be a</span>
+<span class="sd">            filepath that points to a csv, DataFrame is pre-extracted data.</span>
+<span class="sd">            Rows match sites, columns are input keys. Need a &quot;gid&quot; column.</span>
+<span class="sd">            Input as None if no site-specific data.</span>
+<span class="sd">        curtailment : NoneType | dict | str | config.curtailment.Curtailment</span>
+<span class="sd">            Inputs for curtailment parameters. If not None, curtailment inputs</span>
+<span class="sd">            are expected. Can be:</span>
+<span class="sd">                - Explicit namespace of curtailment variables (dict)</span>
+<span class="sd">                - Pointer to curtailment config json file with path (str)</span>
+<span class="sd">                - Instance of curtailment config object</span>
+<span class="sd">                  (config.curtailment.Curtailment)</span>
+<span class="sd">        max_workers : int</span>
+<span class="sd">            Number of local workers to run on.</span>
+<span class="sd">        sites_per_worker : int | None</span>
+<span class="sd">            Number of sites to run in series on a worker. None defaults to the</span>
+<span class="sd">            resource file chunk size.</span>
+<span class="sd">        pool_size : int</span>
+<span class="sd">            Number of futures to submit to a single process pool for</span>
+<span class="sd">            parallel futures.</span>
+<span class="sd">        timeout : int | float</span>
+<span class="sd">            Number of seconds to wait for parallel run iteration to complete</span>
+<span class="sd">            before returning zeros. Default is 1800 seconds.</span>
+<span class="sd">        points_range : list | None</span>
+<span class="sd">            Optional two-entry list specifying the index range of the sites to</span>
+<span class="sd">            analyze. To be taken from the reV.config.PointsControl.split_range</span>
+<span class="sd">            property.</span>
+<span class="sd">        fout : str | None</span>
+<span class="sd">            Optional .h5 output file specification. Object will be returned</span>
+<span class="sd">            if None.</span>
+<span class="sd">        dirout : str | None</span>
+<span class="sd">            Optional output directory specification. The directory will be</span>
+<span class="sd">            created if it does not already exist.</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). This will determine how many</span>
+<span class="sd">            site results are stored in memory at any given time.</span>
+<span class="sd">        scale_outputs : bool</span>
+<span class="sd">            Flag to scale outputs in-place immediately upon Gen returning data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gen : Gen</span>
+<span class="sd">            Gen instance with outputs saved to gen.out dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get a points control instance</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_pc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points_range</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="n">tech</span><span class="p">,</span>
+                        <span class="n">sites_per_worker</span><span class="o">=</span><span class="n">sites_per_worker</span><span class="p">,</span> <span class="n">res_file</span><span class="o">=</span><span class="n">res_file</span><span class="p">,</span>
+                        <span class="n">curtailment</span><span class="o">=</span><span class="n">curtailment</span><span class="p">)</span>
+
+        <span class="c1"># make a Gen class instance to operate with</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span>
+                  <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">,</span>
+                  <span class="n">site_data</span><span class="o">=</span><span class="n">site_data</span><span class="p">,</span>
+                  <span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span>
+                  <span class="n">dirout</span><span class="o">=</span><span class="n">dirout</span><span class="p">,</span>
+                  <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tech&#39;</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">tech</span><span class="p">,</span>
+                  <span class="s1">&#39;res_file&#39;</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">res_file</span><span class="p">,</span>
+                  <span class="s1">&#39;output_request&#39;</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">output_request</span><span class="p">,</span>
+                  <span class="s1">&#39;scale_outputs&#39;</span><span class="p">:</span> <span class="n">scale_outputs</span><span class="p">}</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running reV generation for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The following project points were specified: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The following SAM configs are available to this run:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">sam_files</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The SAM output variables have been requested:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_request</span><span class="p">))</span>
+
+        <span class="c1"># use serial or parallel execution control based on max_workers</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running serial generation for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">pc_sub</span> <span class="ow">in</span> <span class="n">pc</span><span class="p">:</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">pc_sub</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="n">gen</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running parallel generation for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">_parallel_run</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">,</span>
+                                  <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;reV generation failed!&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="k">return</span> <span class="n">gen</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

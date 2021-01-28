@@ -1,0 +1,749 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.handlers.outputs module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.handlers.transmission module" href="reV.handlers.transmission.html" />
+    <link rel="prev" title="reV.handlers.multi_year module" href="reV.handlers.multi_year.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.handlers.html">reV.handlers package</a> &raquo;</li>
+        
+      <li>reV.handlers.outputs module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.handlers.outputs.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.handlers.outputs">
+<span id="rev-handlers-outputs-module"></span><h1>reV.handlers.outputs module<a class="headerlink" href="#module-reV.handlers.outputs" title="Permalink to this headline">¶</a></h1>
+<p>Classes to handle reV h5 output files.</p>
+<dl class="py class">
+<dt id="reV.handlers.outputs.Outputs">
+<em class="property">class </em><code class="sig-prename descclassname">reV.handlers.outputs.</code><code class="sig-name descname">Outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">unscale</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">str_decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rex.resource.Resource</span></code></p>
+<p>Base class to handle reV output data in .h5 format</p>
+<p class="rubric">Examples</p>
+<p>The reV Outputs handler can be used to initialize h5 files in the standard
+reV/rex resource data format.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">reV</span> <span class="kn">import</span> <span class="n">Outputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>                     <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">100</span><span class="p">)})</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s1">&#39;20210101&#39;</span><span class="p">,</span> <span class="s1">&#39;20220101&#39;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s1">&#39;1h&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                           <span class="n">closed</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">f</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">f</span><span class="o">.</span><span class="n">time_index</span> <span class="o">=</span> <span class="n">time_index</span>
+</pre></div>
+</div>
+<p>You can also use the Outputs handler to read output h5 files from disk.
+The Outputs handler will automatically parse the meta data and time index
+into the expected pandas objects (DataFrame and DatetimeIndex,
+respectively).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="s1">&#39;test.h5&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">     latitude  longitude</span>
+<span class="go">gid</span>
+<span class="go">0         1.0        1.0</span>
+<span class="go">1         1.0        1.0</span>
+<span class="go">2         1.0        1.0</span>
+<span class="go">3         1.0        1.0</span>
+<span class="go">4         1.0        1.0</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="s1">&#39;test.h5&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">time_index</span><span class="p">)</span>
+<span class="go">DatetimeIndex([&#39;2021-01-01 01:00:00+00:00&#39;, &#39;2021-01-01 02:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-01-01 03:00:00+00:00&#39;, &#39;2021-01-01 04:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-01-01 05:00:00+00:00&#39;, &#39;2021-01-01 06:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-01-01 07:00:00+00:00&#39;, &#39;2021-01-01 08:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-01-01 09:00:00+00:00&#39;, &#39;2021-01-01 10:00:00+00:00&#39;,</span>
+<span class="go">               ...</span>
+<span class="go">               &#39;2021-12-31 15:00:00+00:00&#39;, &#39;2021-12-31 16:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-12-31 17:00:00+00:00&#39;, &#39;2021-12-31 18:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-12-31 19:00:00+00:00&#39;, &#39;2021-12-31 20:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-12-31 21:00:00+00:00&#39;, &#39;2021-12-31 22:00:00+00:00&#39;,</span>
+<span class="go">               &#39;2021-12-31 23:00:00+00:00&#39;, &#39;2022-01-01 00:00:00+00:00&#39;],</span>
+<span class="go">              dtype=&#39;datetime64[ns, UTC]&#39;, length=8760, freq=None)</span>
+</pre></div>
+</div>
+<p>There are a few ways to use the Outputs handler to write data to a file.
+Here is one example using the pre-initialized file we created earlier.
+Note that the Outputs handler will automatically scale float data using
+the “scale_factor” attribute. The Outputs handler will unscale the data
+while being read unless the unscale kwarg is explicityly set to False.
+This behavior is intended to reduce disk storage requirements for big
+data and can be disabled by setting dtype=np.float32 or dtype=np.float64
+when writing data.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Outputs</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="o">=</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="n">dset_name</span><span class="o">=</span><span class="s1">&#39;dset1&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                    <span class="n">dset_data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">8760</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span> <span class="o">*</span> <span class="mf">42.42</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                    <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="s1">&#39;test.h5&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;dset1&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;dset1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="go">[[42.42 42.42 42.42 ... 42.42 42.42 42.42]</span>
+<span class="go"> [42.42 42.42 42.42 ... 42.42 42.42 42.42]</span>
+<span class="go"> [42.42 42.42 42.42 ... 42.42 42.42 42.42]</span>
+<span class="go"> ...</span>
+<span class="go"> [42.42 42.42 42.42 ... 42.42 42.42 42.42]</span>
+<span class="go"> [42.42 42.42 42.42 ... 42.42 42.42 42.42]</span>
+<span class="go"> [42.42 42.42 42.42 ... 42.42 42.42 42.42]]</span>
+<span class="go">float32</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;dset1&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;dset1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="go">[[4242 4242 4242 ... 4242 4242 4242]</span>
+<span class="go"> [4242 4242 4242 ... 4242 4242 4242]</span>
+<span class="go"> [4242 4242 4242 ... 4242 4242 4242]</span>
+<span class="go"> ...</span>
+<span class="go"> [4242 4242 4242 ... 4242 4242 4242]</span>
+<span class="go"> [4242 4242 4242 ... 4242 4242 4242]</span>
+<span class="go"> [4242 4242 4242 ... 4242 4242 4242]]</span>
+<span class="go">int32</span>
+</pre></div>
+</div>
+<p>Note that the reV Outputs handler is specifically designed to read and
+write spatiotemporal data. It is therefore important to intialize the meta
+data and time index objects even if your data is only spatial or only
+temporal. Furthermore, the Outputs handler will always assume that 1D
+datasets represent scalar data (non-timeseries) that corresponds to the
+meta data shape, and that 2D datasets represent spatiotemporal data whose
+shape corresponds to (len(time_index), len(meta)). You can see these
+constraints here:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Outputs</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="o">=</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="n">dset_name</span><span class="o">=</span><span class="s1">&#39;bad_shape&#39;</span><span class="p">,</span>
+<span class="go">                        dset_data=np.ones((1, 100)) * 42.42,</span>
+<span class="go">                        attrs={&#39;scale_factor&#39;: 100}, dtype=np.int32)</span>
+<span class="go">HandlerValueError: 2D data with shape (1, 100) is not of the proper</span>
+<span class="go">spatiotemporal shape: (8760, 100)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Outputs</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="o">=</span><span class="s1">&#39;test.h5&#39;</span><span class="p">,</span> <span class="n">dset_name</span><span class="o">=</span><span class="s1">&#39;bad_shape&#39;</span><span class="p">,</span>
+<span class="go">                        dset_data=np.ones((8760,)) * 42.42,</span>
+<span class="go">                        attrs={&#39;scale_factor&#39;: 100}, dtype=np.int32)</span>
+<span class="go">HandlerValueError: 1D data with shape (8760,) is not of the proper</span>
+<span class="go">spatial shape: (100,)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 resource file</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Mode to instantiate h5py.File instance</p></li>
+<li><p><strong>unscale</strong> (<em>bool</em>) – Boolean flag to automatically unscale variables on extraction</p></li>
+<li><p><strong>str_decode</strong> (<em>bool</em>) – Boolean flag to decode the bytestring meta data into normal
+strings. Setting this to False will speed up the meta data read.</p></li>
+<li><p><strong>group</strong> (<em>str</em>) – Group within .h5 resource file to open</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.set_version_attr">
+<code class="sig-name descname">set_version_attr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.set_version_attr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.set_version_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the version attribute to the h5 file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.version">
+<em class="property">property </em><code class="sig-name descname">version</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Version of package used to create file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.package">
+<em class="property">property </em><code class="sig-name descname">package</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Package used to create file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.source">
+<em class="property">property </em><code class="sig-name descname">source</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Package and version used to create file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variable array shape from time_index and meta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>tuple</em> – shape of variables arrays == (time, locations)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.writable">
+<em class="property">property </em><code class="sig-name descname">writable</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to see if h5py.File instance is writable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>is_writable</strong> (<em>bool</em>) – Flag if mode is writable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.meta">
+<em class="property">property </em><code class="sig-name descname">meta</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource meta data DataFrame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>meta</strong> (<em>pandas.DataFrame</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.time_index">
+<em class="property">property </em><code class="sig-name descname">time_index</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.time_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource DatetimeIndex</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>time_index</strong> (<em>pandas.DatetimeIndex</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.SAM_configs">
+<em class="property">property </em><code class="sig-name descname">SAM_configs</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.SAM_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>SAM configuration JSONs used to create CF profiles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>configs</strong> (<em>dict</em>) – Dictionary of SAM configuration JSONs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.run_attrs">
+<em class="property">property </em><code class="sig-name descname">run_attrs</code><a class="headerlink" href="#reV.handlers.outputs.Outputs.run_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runtime attributes stored at the global (file) level</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>global_attrs</strong> (<em>dict</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.get_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get SAM config</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config_name</strong> (<em>str</em>) – Name of config</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>config</strong> (<em>dict</em>) – SAM config JSON as a dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.set_configs">
+<code class="sig-name descname">set_configs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">SAM_configs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.set_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.set_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set SAM configuration JSONs as attributes of ‘meta’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SAM_configs</strong> (<em>dict</em>) – Dictionary of SAM configuration JSONs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.update_dset">
+<code class="sig-name descname">update_dset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dset</span></em>, <em class="sig-param"><span class="n">dset_array</span></em>, <em class="sig-param"><span class="n">dset_slice</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.update_dset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.update_dset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to see if dset needs to be updated on disk
+If so write dset_array to disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dset</strong> (<em>str</em>) – dataset to update</p></li>
+<li><p><strong>dset_array</strong> (<em>ndarray</em>) – dataset array</p></li>
+<li><p><strong>dset_slice</strong> (<em>tuple</em>) – slice of dataset to update, it None update all</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.write_dataset">
+<code class="sig-name descname">write_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">chunks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attrs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.write_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.write_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write dataset to disk. Dataset it created in .h5 file and data is
+scaled if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dset_name</strong> (<em>str</em>) – Name of dataset to be added to h5 file.</p></li>
+<li><p><strong>data</strong> (<em>ndarray</em>) – Data to be added to h5 file.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – Intended dataset datatype after scaling.</p></li>
+<li><p><strong>chunks</strong> (<em>tuple</em>) – Chunk size for capacity factor means dataset.</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Attributes to be set. May include ‘scale_factor’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.write_profiles">
+<em class="property">classmethod </em><code class="sig-name descname">write_profiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">meta</span></em>, <em class="sig-param"><span class="n">time_index</span></em>, <em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">profiles</span></em>, <em class="sig-param"><span class="n">attrs</span></em>, <em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">SAM_configs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">chunks</span><span class="o">=</span><span class="default_value">(None, 100)</span></em>, <em class="sig-param"><span class="n">unscale</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'w-'</span></em>, <em class="sig-param"><span class="n">str_decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.write_profiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.write_profiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write profiles to disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 resource file</p></li>
+<li><p><strong>meta</strong> (<em>pandas.Dataframe</em>) – Locational meta data</p></li>
+<li><p><strong>time_index</strong> (<em>pandas.DatetimeIndex</em>) – Temporal timesteps</p></li>
+<li><p><strong>dset_name</strong> (<em>str</em>) – Name of the target dataset (should identify the profiles).</p></li>
+<li><p><strong>profiles</strong> (<em>ndarray</em>) – reV output result timeseries profiles</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Attributes to be set. May include ‘scale_factor’.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – Intended dataset datatype after scaling.</p></li>
+<li><p><strong>SAM_configs</strong> (<em>dict</em>) – Dictionary of SAM configuration JSONs used to compute cf profiles</p></li>
+<li><p><strong>chunks</strong> (<em>tuple</em>) – Chunk size for profiles dataset</p></li>
+<li><p><strong>unscale</strong> (<em>bool</em>) – Boolean flag to automatically unscale variables on extraction</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Mode to instantiate h5py.File instance</p></li>
+<li><p><strong>str_decode</strong> (<em>bool</em>) – Boolean flag to decode the bytestring meta data into normal
+strings. Setting this to False will speed up the meta data read.</p></li>
+<li><p><strong>group</strong> (<em>str</em>) – Group within .h5 resource file to open</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.write_means">
+<em class="property">classmethod </em><code class="sig-name descname">write_means</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">meta</span></em>, <em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">means</span></em>, <em class="sig-param"><span class="n">attrs</span></em>, <em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">SAM_configs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">chunks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unscale</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'w-'</span></em>, <em class="sig-param"><span class="n">str_decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.write_means"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.write_means" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write means array to disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 resource file</p></li>
+<li><p><strong>meta</strong> (<em>pandas.Dataframe</em>) – Locational meta data</p></li>
+<li><p><strong>dset_name</strong> (<em>str</em>) – Name of the target dataset (should identify the means).</p></li>
+<li><p><strong>means</strong> (<em>ndarray</em>) – reV output means array.</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Attributes to be set. May include ‘scale_factor’.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – Intended dataset datatype after scaling.</p></li>
+<li><p><strong>SAM_configs</strong> (<em>dict</em>) – Dictionary of SAM configuration JSONs used to compute cf means</p></li>
+<li><p><strong>chunks</strong> (<em>tuple</em>) – Chunk size for capacity factor means dataset</p></li>
+<li><p><strong>unscale</strong> (<em>bool</em>) – Boolean flag to automatically unscale variables on extraction</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Mode to instantiate h5py.File instance</p></li>
+<li><p><strong>str_decode</strong> (<em>bool</em>) – Boolean flag to decode the bytestring meta data into normal
+strings. Setting this to False will speed up the meta data read.</p></li>
+<li><p><strong>group</strong> (<em>str</em>) – Group within .h5 resource file to open</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.add_dataset">
+<em class="property">classmethod </em><code class="sig-name descname">add_dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">dset_name</span></em>, <em class="sig-param"><span class="n">dset_data</span></em>, <em class="sig-param"><span class="n">attrs</span></em>, <em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">chunks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unscale</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'a'</span></em>, <em class="sig-param"><span class="n">str_decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.add_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.add_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add dataset to h5_file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 resource file</p></li>
+<li><p><strong>dset_name</strong> (<em>str</em>) – Name of dataset to be added to h5 file</p></li>
+<li><p><strong>dset_data</strong> (<em>ndarray</em>) – Data to be added to h5 file</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Attributes to be set. May include ‘scale_factor’.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – Intended dataset datatype after scaling.</p></li>
+<li><p><strong>unscale</strong> (<em>bool</em>) – Boolean flag to automatically unscale variables on extraction</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Mode to instantiate h5py.File instance</p></li>
+<li><p><strong>str_decode</strong> (<em>bool</em>) – Boolean flag to decode the bytestring meta data into normal
+strings. Setting this to False will speed up the meta data read.</p></li>
+<li><p><strong>group</strong> (<em>str</em>) – Group within .h5 resource file to open</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.handlers.outputs.Outputs.init_h5">
+<em class="property">classmethod </em><code class="sig-name descname">init_h5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">dsets</span></em>, <em class="sig-param"><span class="n">shapes</span></em>, <em class="sig-param"><span class="n">attrs</span></em>, <em class="sig-param"><span class="n">chunks</span></em>, <em class="sig-param"><span class="n">dtypes</span></em>, <em class="sig-param"><span class="n">meta</span></em>, <em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">configs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unscale</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'w'</span></em>, <em class="sig-param"><span class="n">str_decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">run_attrs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/handlers/outputs.html#Outputs.init_h5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.handlers.outputs.Outputs.init_h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Init a full output file with the final intended shape without data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Full h5 output filepath.</p></li>
+<li><p><strong>dsets</strong> (<em>list</em>) – List of strings of dataset names to initialize (does not include
+meta or time_index).</p></li>
+<li><p><strong>shapes</strong> (<em>dict</em>) – Dictionary of dataset shapes (keys correspond to dsets).</p></li>
+<li><p><strong>attrs</strong> (<em>dict</em>) – Dictionary of dataset attributes (keys correspond to dsets).</p></li>
+<li><p><strong>chunks</strong> (<em>dict</em>) – Dictionary of chunk tuples (keys correspond to dsets).</p></li>
+<li><p><strong>dtypes</strong> (<em>dict</em>) – dictionary of numpy datatypes (keys correspond to dsets).</p></li>
+<li><p><strong>meta</strong> (<em>pd.DataFrame</em>) – Full meta data.</p></li>
+<li><p><strong>time_index</strong> (<em>pd.datetimeindex | None</em>) – Full pandas datetime index. None implies that only 1D results
+(no site profiles) are being written.</p></li>
+<li><p><strong>configs</strong> (<em>dict | None</em>) – Optional input configs to set as attr on meta.</p></li>
+<li><p><strong>unscale</strong> (<em>bool</em>) – Boolean flag to automatically unscale variables on extraction</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Mode to instantiate h5py.File instance</p></li>
+<li><p><strong>str_decode</strong> (<em>bool</em>) – Boolean flag to decode the bytestring meta data into normal
+strings. Setting this to False will speed up the meta data read.</p></li>
+<li><p><strong>group</strong> (<em>str</em>) – Group within .h5 resource file to open</p></li>
+<li><p><strong>run_attrs</strong> (<em>dict | NoneType</em>) – Runtime attributes (args, kwargs) to add as global (file)
+attributes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.handlers.transmission.html" class="btn btn-neutral float-right" title="reV.handlers.transmission module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.handlers.multi_year.html" class="btn btn-neutral float-left" title="reV.handlers.multi_year module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

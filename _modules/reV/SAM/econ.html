@@ -1,0 +1,926 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.SAM.econ &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.SAM.econ</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.SAM.econ</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV-to-SAM econ interface module.</span>
+
+<span class="sd">Wraps the NREL-PySAM lcoefcr and singleowner modules with</span>
+<span class="sd">additional reV features.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">PySAM.Lcoefcr</span> <span class="k">as</span> <span class="nn">PySamLCOE</span>
+<span class="kn">import</span> <span class="nn">PySAM.Singleowner</span> <span class="k">as</span> <span class="nn">PySamSingleOwner</span>
+
+<span class="kn">from</span> <span class="nn">reV.SAM.defaults</span> <span class="kn">import</span> <span class="n">DefaultSingleOwner</span><span class="p">,</span> <span class="n">DefaultLCOE</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="kn">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.windbos</span> <span class="kn">import</span> <span class="n">WindBos</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.SAM</span> <span class="kn">import</span> <span class="n">RevPySam</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SAMExecutionError</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Economic"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic">[docs]</a><span class="k">class</span> <span class="nc">Economic</span><span class="p">(</span><span class="n">RevPySam</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for SAM economic models.&quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sam_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM economic model object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sam_sys_inputs : dict</span>
+<span class="sd">            Site-agnostic SAM system model inputs arguments.</span>
+<span class="sd">        site_sys_inputs : dict</span>
+<span class="sd">            Optional set of site-specific SAM system inputs to complement the</span>
+<span class="sd">            site-agnostic inputs.</span>
+<span class="sd">        output_request : list | tuple | str</span>
+<span class="sd">            Requested SAM output(s) (e.g., &#39;ppa_price&#39;, &#39;lcoe_fcr&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_request</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span> <span class="o">=</span> <span class="n">output_request</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_request</span><span class="p">,)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sam_sys_inputs</span><span class="o">=</span><span class="n">sam_sys_inputs</span><span class="p">,</span>
+                         <span class="n">site_sys_inputs</span><span class="o">=</span><span class="n">site_sys_inputs</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_sys_cap</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">site_df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the system capacity variable in either inputs or df.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site gid.</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Generic system inputs (not site-specific).</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Site-specific inputs table with index = site gid&#39;s</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sys_cap : int | float</span>
+<span class="sd">            System nameplate capacity in native units (SAM is kW).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;system_capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inputs</span>
+                <span class="ow">and</span> <span class="s1">&#39;turbine_capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inputs</span>
+                <span class="ow">and</span> <span class="s1">&#39;system_capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_df</span>
+                <span class="ow">and</span> <span class="s1">&#39;turbine_capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SAMExecutionError</span><span class="p">(</span><span class="s1">&#39;Input parameter &quot;system_capacity&quot; &#39;</span>
+                                    <span class="s1">&#39;or &quot;turbine_capacity&quot; &#39;</span>
+                                    <span class="s1">&#39;must be included in the SAM config &#39;</span>
+                                    <span class="s1">&#39;inputs or site-specific inputs in &#39;</span>
+                                    <span class="s1">&#39;order to calculate annual energy &#39;</span>
+                                    <span class="s1">&#39;yield for LCOE. Received the following &#39;</span>
+                                    <span class="s1">&#39;inputs, site_df:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">site_df</span><span class="o">.</span><span class="n">head</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="s1">&#39;system_capacity&#39;</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="n">sys_cap</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;system_capacity&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;turbine_capacity&#39;</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="n">sys_cap</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;turbine_capacity&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;system_capacity&#39;</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">:</span>
+            <span class="n">sys_cap</span> <span class="o">=</span> <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s1">&#39;system_capacity&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;turbine_capacity&#39;</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">:</span>
+            <span class="n">sys_cap</span> <span class="o">=</span> <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s1">&#39;turbine_capacity&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">sys_cap</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_annual_energy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">site_gids</span><span class="p">,</span> <span class="n">cf_arr</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span>
+                           <span class="n">calc_aey</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the single-site cf and annual energy and add to site_df.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site gid.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        site_gids : list</span>
+<span class="sd">            List of all site gid values from the cf_file.</span>
+<span class="sd">        cf_arr : np.ndarray</span>
+<span class="sd">            Array of cf_mean values for all sites in the cf_file for the</span>
+<span class="sd">            given year.</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM input parameters.</span>
+<span class="sd">        calc_aey : bool</span>
+<span class="sd">            Flag to add annual_energy to df.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Same as input but with added labels &quot;capacity_factor&quot; and</span>
+<span class="sd">            &quot;annual_energy&quot; (latter is dependent on calc_aey flag).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get the index location of the site in question</span>
+        <span class="n">isite</span> <span class="o">=</span> <span class="n">site_gids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+
+        <span class="c1"># calculate the capacity factor</span>
+        <span class="n">cf</span> <span class="o">=</span> <span class="n">cf_arr</span><span class="p">[</span><span class="n">isite</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cf</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Capacity factor &gt; 1. Dividing by 100.&#39;</span><span class="p">)</span>
+            <span class="n">cf</span> <span class="o">/=</span> <span class="mi">100</span>
+        <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s1">&#39;capacity_factor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cf</span>
+
+        <span class="c1"># calculate the annual energy yield if not input;</span>
+        <span class="k">if</span> <span class="n">calc_aey</span><span class="p">:</span>
+            <span class="c1"># get the system capacity</span>
+            <span class="n">sys_cap</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_sys_cap</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">site_df</span><span class="p">)</span>
+
+            <span class="c1"># Calc annual energy, mult by 8760 to convert kW to kWh</span>
+            <span class="n">aey</span> <span class="o">=</span> <span class="n">sys_cap</span> <span class="o">*</span> <span class="n">cf</span> <span class="o">*</span> <span class="mi">8760</span>
+
+            <span class="c1"># add aey to site-specific inputs</span>
+            <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s1">&#39;annual_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aey</span>
+
+        <span class="k">return</span> <span class="n">site_df</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_cf_profiles</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the multi-site capacity factor time series profiles.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sites : list</span>
+<span class="sd">            List of all site GID&#39;s to get gen profiles for.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            2D array (time, n_sites) of all capacity factor profiles for all</span>
+<span class="sd">            the requested sites.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Retrieve the generation profile for single owner input</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">cf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cfh</span><span class="p">:</span>
+
+            <span class="c1"># get the index location of the site in question</span>
+            <span class="n">site_gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cfh</span><span class="o">.</span><span class="n">get_meta_arr</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">))</span>
+            <span class="n">isites</span> <span class="o">=</span> <span class="p">[</span><span class="n">site_gids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">]</span>
+
+            <span class="c1"># look for the cf_profile dataset</span>
+            <span class="k">if</span> <span class="s1">&#39;cf_profile&#39;</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;cf_profile&#39;</span>
+            <span class="k">elif</span> <span class="s1">&#39;cf_profile-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;cf_profile-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s1">&#39;cf_profile_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;cf_profile_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not find cf_profile values for &#39;</span>
+                       <span class="s1">&#39;input to SingleOwner. Available datasets: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">profiles</span> <span class="o">=</span> <span class="n">cfh</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="p">:,</span> <span class="n">isites</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">profiles</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_make_gen_profile</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">isite</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the single-site generation time series and add to inputs dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        isite : int</span>
+<span class="sd">            Site index in the profiles array.</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site resource GID.</span>
+<span class="sd">        profiles : np.ndarray</span>
+<span class="sd">            2D array (time, n_sites) of all capacity factor profiles for all</span>
+<span class="sd">            the requested sites.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM input parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM input parameters with the generation profile</span>
+<span class="sd">            added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sys_cap</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_sys_cap</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">site_df</span><span class="p">)</span>
+        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;gen&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="p">[:,</span> <span class="n">isite</span><span class="p">]</span> <span class="o">*</span> <span class="n">sys_cap</span>
+
+        <span class="k">return</span> <span class="n">inputs</span>
+
+<div class="viewcode-block" id="Economic.ppa_price"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.ppa_price">[docs]</a>    <span class="k">def</span> <span class="nf">ppa_price</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get PPA price ($/MWh).</span>
+
+<span class="sd">        Native units are cents/kWh, mult by 10 for $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;ppa&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span></div>
+
+<div class="viewcode-block" id="Economic.npv"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.npv">[docs]</a>    <span class="k">def</span> <span class="nf">npv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get net present value (NPV) ($).</span>
+
+<span class="sd">        Native units are dollars.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Economic.lcoe_fcr"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.lcoe_fcr">[docs]</a>    <span class="k">def</span> <span class="nf">lcoe_fcr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get LCOE ($/MWh).</span>
+
+<span class="sd">        Native units are $/kWh, mult by 1000 for $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;lcoe_fcr&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="n">lcoe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lcoe</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">lcoe</span></div>
+
+<div class="viewcode-block" id="Economic.lcoe_nom"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.lcoe_nom">[docs]</a>    <span class="k">def</span> <span class="nf">lcoe_nom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get nominal LCOE ($/MWh) (from PPA/SingleOwner model).</span>
+
+<span class="sd">        Native units are cents/kWh, mult by 10 for $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;lcoe_nom&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span></div>
+
+<div class="viewcode-block" id="Economic.lcoe_real"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.lcoe_real">[docs]</a>    <span class="k">def</span> <span class="nf">lcoe_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get real LCOE ($/MWh) (from PPA/SingleOwner model).</span>
+
+<span class="sd">        Native units are cents/kWh, mult by 10 for $/MWh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;lcoe_real&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span></div>
+
+<div class="viewcode-block" id="Economic.flip_actual_irr"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.flip_actual_irr">[docs]</a>    <span class="k">def</span> <span class="nf">flip_actual_irr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get actual IRR (from PPA/SingleOwner model).</span>
+
+<span class="sd">        Native units are %.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Economic.gross_revenue"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.gross_revenue">[docs]</a>    <span class="k">def</span> <span class="nf">gross_revenue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get cash flow total revenue (from PPA/SingleOwner model).</span>
+
+<span class="sd">        Native units are $.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cf_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;cf_total_revenue&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">cf_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cf_tr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cf_tr</span></div>
+
+<div class="viewcode-block" id="Economic.collect_outputs"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.collect_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">collect_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect SAM econ output_request.&quot;&quot;&quot;</span>
+
+        <span class="n">output_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ppa_price&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppa_price</span><span class="p">,</span>
+                         <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">npv</span><span class="p">,</span>
+                         <span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcoe_fcr</span><span class="p">,</span>
+                         <span class="s1">&#39;lcoe_nom&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcoe_nom</span><span class="p">,</span>
+                         <span class="s1">&#39;lcoe_real&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcoe_real</span><span class="p">,</span>
+                         <span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flip_actual_irr</span><span class="p">,</span>
+                         <span class="s1">&#39;gross_revenue&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">gross_revenue</span><span class="p">,</span>
+                         <span class="p">}</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">collect_outputs</span><span class="p">(</span><span class="n">output_lookup</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Economic.reV_run"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.Economic.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">output_request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the SAM econ model for a single site.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site gid.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM system input parameters.</span>
+<span class="sd">        output_request : list | tuple | str</span>
+<span class="sd">            Requested SAM output(s) (e.g., &#39;ppa_price&#39;, &#39;lcoe_fcr&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim.outputs : dict</span>
+<span class="sd">            Dictionary keyed by SAM variable names with SAM numerical results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create SAM econ instance and calculate requested output.</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">sam_sys_inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                  <span class="n">site_sys_inputs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="p">:]),</span>
+                  <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+        <span class="n">sim</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="n">site</span>
+
+        <span class="n">sim</span><span class="o">.</span><span class="n">assign_inputs</span><span class="p">()</span>
+        <span class="n">sim</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+        <span class="n">sim</span><span class="o">.</span><span class="n">collect_outputs</span><span class="p">()</span>
+        <span class="n">sim</span><span class="o">.</span><span class="n">outputs_to_utc_arr</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">sim</span><span class="o">.</span><span class="n">outputs</span></div></div>
+
+
+<div class="viewcode-block" id="LCOE"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.LCOE">[docs]</a><span class="k">class</span> <span class="nc">LCOE</span><span class="p">(</span><span class="n">Economic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SAM LCOE model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;lcoefcr&#39;</span>
+    <span class="n">PYSAM</span> <span class="o">=</span> <span class="n">PySamLCOE</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sam_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,)):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM LCOE economic model object.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sam_sys_inputs</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="o">=</span><span class="n">site_sys_inputs</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_lcoe_inputs</span><span class="p">(</span><span class="n">site_df</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse for non-site-specific LCOE inputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        site_gids : list</span>
+<span class="sd">            List of all site gid values from the cf_file.</span>
+<span class="sd">        calc_aey : bool</span>
+<span class="sd">            Flag to require calculation of the annual energy yield before</span>
+<span class="sd">            running LCOE.</span>
+<span class="sd">        cf_arr : np.ndarray</span>
+<span class="sd">            Array of cf_mean values for all sites in the cf_file for the</span>
+<span class="sd">            given year.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get the cf_file meta data gid&#39;s to use as indexing tools</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">cf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cfh</span><span class="p">:</span>
+            <span class="n">site_gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cfh</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">])</span>
+
+        <span class="n">calc_aey</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s1">&#39;annual_energy&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">:</span>
+            <span class="c1"># annual energy yield has not been input, flag to calculate</span>
+            <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;annual_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">calc_aey</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># make sure capacity factor is present in site-specific data</span>
+        <span class="k">if</span> <span class="s1">&#39;capacity_factor&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">:</span>
+            <span class="n">site_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;capacity_factor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># pull all cf mean values for LCOE calc</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">cf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cfh</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;cf_mean&#39;</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">cf_arr</span> <span class="o">=</span> <span class="n">cfh</span><span class="p">[</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="s1">&#39;cf_mean-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">cf_arr</span> <span class="o">=</span> <span class="n">cfh</span><span class="p">[</span><span class="s1">&#39;cf_mean-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="s1">&#39;cf_mean_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">cf_arr</span> <span class="o">=</span> <span class="n">cfh</span><span class="p">[</span><span class="s1">&#39;cf_mean_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="s1">&#39;cf&#39;</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">:</span>
+                <span class="n">cf_arr</span> <span class="o">=</span> <span class="n">cfh</span><span class="p">[</span><span class="s1">&#39;cf&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Could not find cf_mean values for LCOE. &#39;</span>
+                               <span class="s1">&#39;Available datasets: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfh</span><span class="o">.</span><span class="n">datasets</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">site_gids</span><span class="p">,</span> <span class="n">calc_aey</span><span class="p">,</span> <span class="n">cf_arr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the executed default pysam LCOE FCR object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _default : PySAM.Lcoefcr</span>
+<span class="sd">            Executed Lcoefcr pysam object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="n">DefaultLCOE</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span>
+
+<div class="viewcode-block" id="LCOE.reV_run"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.LCOE.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span>
+                <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,)):</span>
+        <span class="sd">&quot;&quot;&quot;Execute SAM LCOE simulations based on a reV points control instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : config.PointsControl</span>
+<span class="sd">            PointsControl instance containing project points site and SAM</span>
+<span class="sd">            config info.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+<span class="sd">        output_request : list | tuple | str</span>
+<span class="sd">            Output(s) to retrieve from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Nested dictionaries where the top level key is the site index,</span>
+<span class="sd">            the second level key is the variable name, second level value is</span>
+<span class="sd">            the output variable value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">site_gids</span><span class="p">,</span> <span class="n">calc_aey</span><span class="p">,</span> <span class="n">cf_arr</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_lcoe_inputs</span><span class="p">(</span><span class="n">site_df</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span>
+                                                             <span class="n">year</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">points_control</span><span class="o">.</span><span class="n">sites</span><span class="p">:</span>
+            <span class="c1"># get SAM inputs from project_points based on the current site</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="p">[</span><span class="n">site</span><span class="p">]</span>
+
+            <span class="n">site_df</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_annual_energy</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">site_gids</span><span class="p">,</span> <span class="n">cf_arr</span><span class="p">,</span>
+                                             <span class="n">inputs</span><span class="p">,</span> <span class="n">calc_aey</span><span class="p">)</span>
+
+            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">]</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reV_run</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">output_request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<div class="viewcode-block" id="SingleOwner"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.SingleOwner">[docs]</a><span class="k">class</span> <span class="nc">SingleOwner</span><span class="p">(</span><span class="n">Economic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SAM single owner economic model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;singleowner&#39;</span>
+    <span class="n">PYSAM</span> <span class="o">=</span> <span class="n">PySamSingleOwner</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sam_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;ppa_price&#39;</span><span class="p">,)):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM single owner economic model object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sam_sys_inputs</span><span class="p">,</span> <span class="n">site_sys_inputs</span><span class="o">=</span><span class="n">site_sys_inputs</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+        <span class="c1"># run balance of system cost model if required</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">windbos_outputs</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_windbos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_windbos</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run SAM Wind Balance of System cost model if requested.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM key-value pair inputs.</span>
+<span class="sd">            &quot;total_installed_cost&quot;: &quot;windbos&quot; will trigger the windbos method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inputs : dict</span>
+<span class="sd">            Dictionary of SAM key-value pair inputs with the total installed</span>
+<span class="sd">            cost replaced with WindBOS values if requested.</span>
+<span class="sd">        output : dict</span>
+<span class="sd">            Dictionary of windbos cost breakdowns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;total_installed_cost&#39;</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;total_installed_cost&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;total_installed_cost&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;windbos&#39;</span><span class="p">:</span>
+                        <span class="n">wb</span> <span class="o">=</span> <span class="n">WindBos</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+                        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;total_installed_cost&#39;</span><span class="p">]</span> <span class="o">=</span> \
+                            <span class="n">wb</span><span class="o">.</span><span class="n">total_installed_cost</span>
+                        <span class="n">outputs</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">output</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the executed default pysam Single Owner object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _default : PySAM.Singleowner</span>
+<span class="sd">            Executed Singleowner pysam object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="n">DefaultSingleOwner</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span>
+
+<div class="viewcode-block" id="SingleOwner.collect_outputs"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.SingleOwner.collect_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">collect_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect SAM output_request, including windbos results.&quot;&quot;&quot;</span>
+
+        <span class="n">windbos_out_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span>
+                            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">windbos_outputs</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span>
+                               <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">windbos_out_vars</span><span class="p">]</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">collect_outputs</span><span class="p">()</span>
+
+        <span class="n">windbos_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">windbos_out_vars</span><span class="p">:</span>
+            <span class="n">windbos_results</span><span class="p">[</span><span class="n">request</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windbos_outputs</span><span class="p">[</span><span class="n">request</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">windbos_results</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SingleOwner.reV_run"><a class="viewcode-back" href="../../../reV/reV.SAM.econ.html#reV.SAM.econ.SingleOwner.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span>
+                <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;ppa_price&#39;</span><span class="p">,)):</span>
+        <span class="sd">&quot;&quot;&quot;Execute SAM SingleOwner simulations based on reV points control.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : config.PointsControl</span>
+<span class="sd">            PointsControl instance containing project points site and SAM</span>
+<span class="sd">            config info.</span>
+<span class="sd">        site_df : pd.DataFrame</span>
+<span class="sd">            Dataframe of site-specific input variables. Row index corresponds</span>
+<span class="sd">            to site number/gid (via df.loc not df.iloc), column labels are the</span>
+<span class="sd">            variable keys that will be passed forward as SAM parameters.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+<span class="sd">        output_request : list | tuple | str</span>
+<span class="sd">            Output(s) to retrieve from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Nested dictionaries where the top level key is the site index,</span>
+<span class="sd">            the second level key is the variable name, second level value is</span>
+<span class="sd">            the output variable value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">profiles</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_cf_profiles</span><span class="p">(</span><span class="n">points_control</span><span class="o">.</span><span class="n">sites</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">site</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points_control</span><span class="o">.</span><span class="n">sites</span><span class="p">):</span>
+            <span class="c1"># get SAM inputs from project_points based on the current site</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="p">[</span><span class="n">site</span><span class="p">]</span>
+
+            <span class="c1"># ensure that site-specific data is not persisted to other sites</span>
+            <span class="n">site_inputs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+            <span class="c1"># set the generation profile as an input.</span>
+            <span class="n">site_inputs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_make_gen_profile</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span>
+                                                <span class="n">site_inputs</span><span class="p">)</span>
+
+            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">]</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reV_run</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span> <span class="n">site_inputs</span><span class="p">,</span>
+                                        <span class="n">output_request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

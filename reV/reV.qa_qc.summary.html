@@ -1,0 +1,803 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.qa_qc.summary module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.rep_profiles package" href="reV.rep_profiles.html" />
+    <link rel="prev" title="reV.qa_qc.qa_qc module" href="reV.qa_qc.qa_qc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.qa_qc.html">reV.qa_qc package</a> &raquo;</li>
+        
+      <li>reV.qa_qc.summary module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.qa_qc.summary.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-reV.qa_qc.summary">
+<span id="rev-qa-qc-summary-module"></span><h1>reV.qa_qc.summary module<a class="headerlink" href="#module-reV.qa_qc.summary" title="Permalink to this headline">¶</a></h1>
+<p>Compute and plot summary data</p>
+<dl class="py class">
+<dt id="reV.qa_qc.summary.SummarizeH5">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">SummarizeH5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeH5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeH5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>reV Summary data for QA/QC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file to summarize data from</p></li>
+<li><p><strong>group</strong> (<em>str, optional</em>) – Group within h5_file to summarize datasets for, by default None</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeH5.h5_file">
+<em class="property">property </em><code class="sig-name descname">h5_file</code><a class="headerlink" href="#reV.qa_qc.summary.SummarizeH5.h5_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>.h5 file path</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeH5.summarize_dset">
+<code class="sig-name descname">summarize_dset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ds_name</span></em>, <em class="sig-param"><span class="n">process_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeH5.summarize_dset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeH5.summarize_dset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dataset summary. If dataset is 2D compute temporal statistics
+for each site</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds_name</strong> (<em>str</em>) – Dataset name of interest</p></li>
+<li><p><strong>process_size</strong> (<em>int, optional</em>) – Number of sites to process at a time, by default None</p></li>
+<li><p><strong>max_workers</strong> (<em>int, optional</em>) – Number of workers to use in parallel, if 1 run in serial,
+if None use all available cores, by default None</p></li>
+<li><p><strong>out_path</strong> (<em>str</em>) – File path to save summary to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>summary</strong> (<em>pandas.DataFrame</em>) – Summary summary for dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeH5.summarize_means">
+<code class="sig-name descname">summarize_means</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeH5.summarize_means"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeH5.summarize_means" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add means datasets to meta data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>out_path</strong> (<em>str, optional</em>) – Path to .csv file to save update meta data to, by default None</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>meta</strong> (<em>pandas.DataFrame</em>) – Meta data with means datasets added</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeH5.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5_file</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">group</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dsets</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">process_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_workers</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeH5.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeH5.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summarize all datasets in h5_file and dump to out_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_file</strong> (<em>str</em>) – Path to .h5 file to summarize data from</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Directory to dump summary .csv files to</p></li>
+<li><p><strong>group</strong> (<em>str, optional</em>) – Group within h5_file to summarize datasets for, by default None</p></li>
+<li><p><strong>dsets</strong> (<em>str | list, optional</em>) – Datasets to summarize, by default None</p></li>
+<li><p><strong>process_size</strong> (<em>int, optional</em>) – Number of sites to process at a time, by default None</p></li>
+<li><p><strong>max_workers</strong> (<em>int, optional</em>) – Number of workers to use when summarizing 2D datasets,
+by default None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.qa_qc.summary.SummarizeSupplyCurve">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">SummarizeSupplyCurve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sc_table</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeSupplyCurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeSupplyCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Summarize Supply Curve table</p>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeSupplyCurve.sc_table">
+<em class="property">property </em><code class="sig-name descname">sc_table</code><a class="headerlink" href="#reV.qa_qc.summary.SummarizeSupplyCurve.sc_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supply Curve table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeSupplyCurve.supply_curve_summary">
+<code class="sig-name descname">supply_curve_summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeSupplyCurve.supply_curve_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeSupplyCurve.supply_curve_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summarize Supply Curve Table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc_table</strong> (<em>str | pandas.DataFrame</em>) – Supply curve table or .csv containing table</p></li>
+<li><p><strong>columns</strong> (<em>str | list, optional</em>) – Column(s) to summarize, if None summarize all numeric columns,
+by default None</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – Path to .csv to save summary to, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sc_summary</strong> (<em>pandas.DataFrame</em>) – Summary statistics (mean, stdev, median, min, max, sum) for
+Supply Curve table columns</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummarizeSupplyCurve.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sc_table</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummarizeSupplyCurve.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummarizeSupplyCurve.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summarize Supply Curve Table and save to disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc_table</strong> (<em>str | pandas.DataFrame</em>) – Path to .csv containing Supply Curve table</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Directory to dump summary .csv files to</p></li>
+<li><p><strong>columns</strong> (<em>str | list, optional</em>) – Column(s) to summarize, if None summarize all numeric columns,
+by default None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.qa_qc.summary.PlotBase">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">PlotBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#PlotBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.PlotBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.5/library/functions.html#object" title="(in Python v3.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>QA/QC Plotting base class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>str | pandas.DataFrame | ndarray</em>) – data to plot or file containing data to plot</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.PlotBase.data">
+<em class="property">property </em><code class="sig-name descname">data</code><a class="headerlink" href="#reV.qa_qc.summary.PlotBase.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data to plot</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pandas.DataFrame | ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.qa_qc.summary.SummaryPlots">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">SummaryPlots</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.qa_qc.summary.PlotBase" title="reV.qa_qc.summary.PlotBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.qa_qc.summary.PlotBase</span></code></a></p>
+<p>Plot summary data for QA/QC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>summary</strong> (<em>str | pandas.DataFrame</em>) – Summary DataFrame or path to summary .csv</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.summary">
+<em class="property">property </em><code class="sig-name descname">summary</code><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pandas.DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.columns">
+<em class="property">property </em><code class="sig-name descname">columns</code><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Available columns in summary table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.scatter_plot">
+<code class="sig-name descname">scatter_plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'viridis'</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.scatter_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.scatter_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot scatter plot of value versus longitude and latitude using
+pandas.plot.scatter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em>) – Column name to plot as color</p></li>
+<li><p><strong>cmap</strong> (<em>str, optional</em>) – Matplotlib colormap name, by default ‘viridis’</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotting.dataframes.df_scatter</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.scatter_plotly">
+<code class="sig-name descname">scatter_plotly</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'Viridis'</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.scatter_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.scatter_plotly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot scatter plot of value versus longitude and latitude using
+plotly</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em>) – Column name to plot as color</p></li>
+<li><p><strong>cmap</strong> (<em>str | px.color, optional</em>) – Continuous color scale to use, by default ‘Viridis’</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, can be a .html or static image,
+by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotly.express.scatter</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.dist_plot">
+<code class="sig-name descname">dist_plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.dist_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.dist_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot distribution plot of value using seaborn.distplot</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em>) – Column name to plot</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotting.dataframes.dist_plot</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.dist_plotly">
+<code class="sig-name descname">dist_plotly</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.dist_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.dist_plotly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot histogram of value using plotly</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em>) – Column name to plot</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotly.express.histogram</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.scatter">
+<em class="property">classmethod </em><code class="sig-name descname">scatter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary_csv</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">plot_type</span><span class="o">=</span><span class="default_value">'plotly'</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'viridis'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create scatter plot for given value in summary table and save to
+out_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary_csv</strong> (<em>str</em>) – Path to .csv file containing summary table</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Output directory to save plots to</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – Column name to plot as color</p></li>
+<li><p><strong>plot_type</strong> (<em>str, optional</em>) – plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plotly’</p></li>
+<li><p><strong>cmap</strong> (<em>str, optional</em>) – Colormap name, by default ‘viridis’</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional plotting kwargs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SummaryPlots.scatter_all">
+<em class="property">classmethod </em><code class="sig-name descname">scatter_all</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">summary_csv</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">plot_type</span><span class="o">=</span><span class="default_value">'plotly'</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'viridis'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SummaryPlots.scatter_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SummaryPlots.scatter_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create scatter plot for all summary stats in summary table and save to
+out_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary_csv</strong> (<em>str</em>) – Path to .csv file containing summary table</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Output directory to save plots to</p></li>
+<li><p><strong>plot_type</strong> (<em>str, optional</em>) – plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plotly’</p></li>
+<li><p><strong>cmap</strong> (<em>str, optional</em>) – Colormap name, by default ‘viridis’</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional plotting kwargs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">SupplyCurvePlot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sc_table</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SupplyCurvePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.qa_qc.summary.PlotBase" title="reV.qa_qc.summary.PlotBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.qa_qc.summary.PlotBase</span></code></a></p>
+<p>Plot supply curve data for QA/QC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sc_table</strong> (<em>str | pandas.DataFrame</em>) – Supply curve table or path to supply curve .csv</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot.sc_table">
+<em class="property">property </em><code class="sig-name descname">sc_table</code><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot.sc_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supply curve table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pandas.DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot.columns">
+<em class="property">property </em><code class="sig-name descname">columns</code><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot.columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Available columns in supply curve table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot.supply_curve_plot">
+<code class="sig-name descname">supply_curve_plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lcoe</span><span class="o">=</span><span class="default_value">'mean_lcoe'</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SupplyCurvePlot.supply_curve_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot.supply_curve_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot supply curve (cumulative capacity vs lcoe) using seaborn.scatter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lcoe</strong> (<em>str, optional</em>) – LCOE value to plot, by default ‘mean_lcoe’</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotting.dataframes.df_scatter</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot.supply_curve_plotly">
+<code class="sig-name descname">supply_curve_plotly</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lcoe</span><span class="o">=</span><span class="default_value">'mean_lcoe'</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SupplyCurvePlot.supply_curve_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot.supply_curve_plotly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot supply curve (cumulative capacity vs lcoe) using plotly</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lcoe</strong> (<em>str, optional</em>) – LCOE value to plot, by default ‘mean_lcoe’</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, can be a .html or static image,
+by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotly.express.scatter</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.SupplyCurvePlot.plot">
+<em class="property">classmethod </em><code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sc_table</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">plot_type</span><span class="o">=</span><span class="default_value">'plotly'</span></em>, <em class="sig-param"><span class="n">lcoe</span><span class="o">=</span><span class="default_value">'mean_lcoe'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#SupplyCurvePlot.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.SupplyCurvePlot.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create supply curve plot from supply curve table using lcoe value
+and save to out_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc_table</strong> (<em>str</em>) – Path to .csv file containing Supply Curve table</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Output directory to save plots to</p></li>
+<li><p><strong>plot_type</strong> (<em>str, optional</em>) – plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plotly’</p></li>
+<li><p><strong>lcoe</strong> (<em>str, optional</em>) – LCOE value to plot, by default ‘mean_lcoe’</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional plotting kwargs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="reV.qa_qc.summary.ExclusionsMask">
+<em class="property">class </em><code class="sig-prename descclassname">reV.qa_qc.summary.</code><code class="sig-name descname">ExclusionsMask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excl_mask</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#ExclusionsMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.ExclusionsMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.qa_qc.summary.PlotBase" title="reV.qa_qc.summary.PlotBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.qa_qc.summary.PlotBase</span></code></a></p>
+<p>Plot Exclusions mask as a heat map data for QA/QC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>excl_mask</strong> (<em>str | ndarray</em>) – Exclusions mask or path to .npy file containing final mask</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="reV.qa_qc.summary.ExclusionsMask.mask">
+<em class="property">property </em><code class="sig-name descname">mask</code><a class="headerlink" href="#reV.qa_qc.summary.ExclusionsMask.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final Exclusions mask</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.ExclusionsMask.exclusions_plot">
+<code class="sig-name descname">exclusions_plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'Viridis'</span></em>, <em class="sig-param"><span class="n">plot_step</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#ExclusionsMask.exclusions_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.ExclusionsMask.exclusions_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot exclusions mask as a seaborn heatmap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cmap</strong> (<em>str | px.color, optional</em>) – Continuous color scale to use, by default ‘Viridis’</p></li>
+<li><p><strong>plot_step</strong> (<em>int</em>) – Step between points to plot</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, can be a .html or static image,
+by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotting.colormaps.heatmap_plot</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.ExclusionsMask.exclusions_plotly">
+<code class="sig-name descname">exclusions_plotly</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'Viridis'</span></em>, <em class="sig-param"><span class="n">plot_step</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#ExclusionsMask.exclusions_plotly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.ExclusionsMask.exclusions_plotly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot exclusions mask as a plotly heatmap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cmap</strong> (<em>str | px.color, optional</em>) – Continuous color scale to use, by default ‘Viridis’</p></li>
+<li><p><strong>plot_step</strong> (<em>int</em>) – Step between points to plot</p></li>
+<li><p><strong>out_path</strong> (<em>str, optional</em>) – File path to save plot to, can be a .html or static image,
+by default None</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional kwargs for plotly.express.imshow</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="reV.qa_qc.summary.ExclusionsMask.plot">
+<em class="property">classmethod </em><code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mask</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">plot_type</span><span class="o">=</span><span class="default_value">'plotly'</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'Viridis'</span></em>, <em class="sig-param"><span class="n">plot_step</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/qa_qc/summary.html#ExclusionsMask.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.qa_qc.summary.ExclusionsMask.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot exclusions mask and save to out_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>ndarray</em>) – ndarray of final exclusions mask</p></li>
+<li><p><strong>out_dir</strong> (<em>str</em>) – Output directory to save plots to</p></li>
+<li><p><strong>plot_type</strong> (<em>str, optional</em>) – plot_type of plot to create ‘plot’ or ‘plotly’, by default ‘plotly’</p></li>
+<li><p><strong>cmap</strong> (<em>str, optional</em>) – Colormap name, by default ‘viridis’</p></li>
+<li><p><strong>plot_step</strong> (<em>int</em>) – Step between points to plot</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Additional plotting kwargs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.rep_profiles.html" class="btn btn-neutral float-right" title="reV.rep_profiles package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.qa_qc.qa_qc.html" class="btn btn-neutral float-left" title="reV.qa_qc.qa_qc module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

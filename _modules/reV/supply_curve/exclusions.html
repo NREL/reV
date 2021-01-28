@@ -1,0 +1,1319 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.exclusions &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.exclusions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.exclusions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate reV inclusion mask from exclusion layers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.exclusions</span> <span class="kn">import</span> <span class="n">ExclusionLayers</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">ExclusionLayerError</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LayerMask"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.LayerMask">[docs]</a><span class="k">class</span> <span class="nc">LayerMask</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to convert exclusion layer to inclusion layer mask</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">inclusion_range</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                 <span class="n">exclude_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">inclusion_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_include_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">use_as_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">exclude_nodata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nodata_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer : str</span>
+<span class="sd">            Layer name</span>
+<span class="sd">        inclusion_range : tuple</span>
+<span class="sd">            (min threshold, max threshold) for values to include</span>
+<span class="sd">        exclude_values : list</span>
+<span class="sd">            list of values to exclude</span>
+<span class="sd">            Note: Only supply exclusions OR inclusions</span>
+<span class="sd">        include_values : list</span>
+<span class="sd">            List of values to include</span>
+<span class="sd">            Note: Only supply inclusions OR exclusions</span>
+<span class="sd">        inclusions_weights : dict</span>
+<span class="sd">            Include given values with given weights</span>
+<span class="sd">        force_include_values : list</span>
+<span class="sd">            Force the inclusion of the given values</span>
+<span class="sd">        use_as_weights : bool</span>
+<span class="sd">            Use layer as final inclusion weights</span>
+<span class="sd">        weight : float</span>
+<span class="sd">            How much to weight the inclusion of each pixel, Default = 1</span>
+<span class="sd">        exclude_nodata : bool</span>
+<span class="sd">            Flag to exclude nodata values (nodata_value). If nodata_value=None</span>
+<span class="sd">            the nodata_value is infered by ExclusionMask</span>
+<span class="sd">        nodata_value : int | float | None</span>
+<span class="sd">            Nodata value for the layer. If None, it will be infered when</span>
+<span class="sd">            LayerMask is added to ExclusionMask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span> <span class="o">=</span> <span class="n">layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_range</span> <span class="o">=</span> <span class="n">inclusion_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_values</span> <span class="o">=</span> <span class="n">exclude_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_weights</span> <span class="o">=</span> <span class="n">inclusion_weights</span>
+        <span class="k">if</span> <span class="n">force_include_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_include_values</span> <span class="o">=</span> <span class="n">force_include_values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_include</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_include_values</span> <span class="o">=</span> <span class="n">include_values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_include</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_as_weights</span> <span class="o">=</span> <span class="n">use_as_weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_nodata</span> <span class="o">=</span> <span class="n">exclude_nodata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodata_value</span> <span class="o">=</span> <span class="n">nodata_value</span>
+
+        <span class="k">if</span> <span class="n">weight</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">weight</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Invalide weight (</span><span class="si">{}</span><span class="s1">) provided for layer </span><span class="si">{}</span><span class="s1">:&#39;</span>
+                   <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Weight must fall between 0 and 1!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">layer</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="o">=</span> <span class="n">weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mask_type</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> for </span><span class="si">{}</span><span class="s2"> exclusion, of type </span><span class="si">{}</span><span class="s2">&quot;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the multiplicative inclusion mask.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Masked exclusion data with weights applied such that 1 is included,</span>
+<span class="sd">            0 is excluded, 0.5 is half included.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_mask</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Layer name to extract from exclusions .h5 file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _layer : str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Minimum value to include</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Maximum value to include</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exclude_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Values to exclude</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _exclude_values : list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">include_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Values to include</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _include_values : list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inclusion_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mapping of values to include and at what weights</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _inclusion_weights : dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_weights</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">force_include</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flag to force include mask</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _force_include : bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_include</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Type of exclusion mask for this layer</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_type</span>
+
+    <span class="k">def</span> <span class="nf">_apply_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply mask function</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Masked exclusion data with weights applied such that 1 is included,</span>
+<span class="sd">            0 is excluded, 0.5 is half included.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_weights</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">==</span> <span class="s1">&#39;range&#39;</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_range_mask</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">==</span> <span class="s1">&#39;exclude&#39;</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusion_mask</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">==</span> <span class="s1">&#39;include&#39;</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_mask</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">==</span> <span class="s1">&#39;inclusion_weights&#39;</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights_mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is an invalid mask type: expecting &#39;</span>
+                       <span class="s1">&#39;&quot;range&quot;, &quot;exclude&quot;, &quot;include&quot;, or &quot;inclusion_weights&quot;&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span>
+
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_check_mask_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure that the initialization arguments are valid and not</span>
+<span class="sd">        contradictory</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------</span>
+<span class="sd">        mask : str</span>
+<span class="sd">            Mask type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_weights</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;range&#39;</span><span class="p">:</span> <span class="nb">any</span><span class="p">(</span><span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_range</span><span class="p">),</span>
+                     <span class="s1">&#39;exclude&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="s1">&#39;include&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="s1">&#39;inclusion_weights&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inclusion_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="n">k</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Only one approach can be used to create the &#39;</span>
+                               <span class="s1">&#39;inclusion mask, but you supplied </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">&#39;</span>
+                               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">ExclusionLayerError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mask</span> <span class="o">==</span> <span class="s1">&#39;inclusion_weights&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Values are individually weighted when using &quot;</span>
+                   <span class="s2">&quot;&#39;inclusion_weights&#39;, the supplied weight of </span><span class="si">{}</span><span class="s2"> will be &quot;</span>
+                   <span class="s2">&quot;ignored!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_range_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mask exclusion layer based on value range</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Boolean mask of which values to include (True is include).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">data</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_value</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">*=</span> <span class="n">data</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_nodata</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodata_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodata_value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_value_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mask exclusion layer based on values to include or exclude</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+<span class="sd">        values : list</span>
+<span class="sd">            Values to include or exclude.</span>
+<span class="sd">        include : boolean</span>
+<span class="sd">            Flag as to whether values should be included or excluded.</span>
+<span class="sd">            If True, output mask will be True where data == values.</span>
+<span class="sd">            If False, output mask will be True where data != values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Boolean mask of which values to include (True is include)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">mask</span>
+
+        <span class="c1"># only include if not nodata</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_nodata</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodata_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodata_value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_exclusion_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mask exclusion layer based on values to exclude</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Boolean mask of which values to include (True is include)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude_values</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_inclusion_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mask exclusion layer based on values to include</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Boolean mask of which values to include (True is include)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_values</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_weights_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mask exclusion layer based on the weights for each inclusion value</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : ndarray</span>
+<span class="sd">            Exclusions data to create mask from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Percentage of value to include</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inclusion_weights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weight</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="n">value</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="n">weight</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="n">value</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="n">weight</span>
+
+        <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="ExclusionMask"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMask">[docs]</a><span class="k">class</span> <span class="nc">ExclusionMask</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to create final exclusion mask</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FILTER_KERNELS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;queen&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]),</span>
+        <span class="s1">&#39;rook&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_h5 : str</span>
+<span class="sd">            Path to exclusions .h5 file</span>
+<span class="sd">        layers : list | NoneType</span>
+<span class="sd">            list of LayerMask instances for each exclusion layer to combine</span>
+<span class="sd">        min_area : float | NoneType</span>
+<span class="sd">            Minimum required contiguous area in sq-km</span>
+<span class="sd">        kernel : str</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+<span class="sd">        check_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each layer to ensure they contain</span>
+<span class="sd">            un-excluded values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excl_h5</span> <span class="o">=</span> <span class="n">ExclusionLayers</span><span class="p">(</span><span class="n">excl_h5</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excl_layers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_layers</span> <span class="o">=</span> <span class="n">check_layers</span>
+
+        <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">kernel</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;queen&quot;</span><span class="p">,</span> <span class="s2">&quot;rook&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span> <span class="o">=</span> <span class="n">min_area</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Exclusions mask with min area of </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                         <span class="s1">&#39;km2 and filter kernel &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;kernel must be &quot;queen&quot; or &quot;rook&quot;&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> input layers&quot;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">h5_file</span><span class="p">,</span>
+                       <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the multiplicative inclusion mask.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : int | slice | list | ndarray</span>
+<span class="sd">            What to extract from ds, each arg is for a sequential axis.</span>
+<span class="sd">            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64</span>
+<span class="sd">            exclusions mask.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Multiplicative inclusion mask with all layers multiplied together</span>
+<span class="sd">            (&quot;and&quot; operation) such that 1 is included, 0 is excluded,</span>
+<span class="sd">            0.5 is half.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExclusionMask.close"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMask.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Close h5 instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the exclusions shape.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            (rows, cols) shape tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">excl_h5</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open ExclusionLayers instance</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _excl_h5 : ExclusionLayers</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_h5</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">excl_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of available exclusion layers in exclusions .h5</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _excl_layers : list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_layers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_excl_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">layers</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_layers</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layer_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of layers to combines</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of LayerMask instances for each exclusion layer to combine</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">         list</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inclusion mask for entire exclusion domain</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Latitude coordinates array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">longitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Longitude coordinates array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExclusionMask.add_layer"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMask.add_layer">[docs]</a>    <span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add layer to be combined</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer : LayerMask</span>
+<span class="sd">            LayerMask instance to add to set of layers to be combined</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layer_name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">layer</span>
+
+        <span class="k">if</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_layers</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> does not existin in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_h5</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_names</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is already in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">replace</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; replacing existing layer&quot;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExclusionLayerError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">layer</span><span class="o">.</span><span class="n">nodata_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">get_nodata_value</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]]</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Layer </span><span class="si">{}</span><span class="s2"> does not have any un-excluded pixels!&quot;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer_name</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExclusionLayerError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodata_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a dictionary lookup of the nodata values for each layer name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nodata : dict</span>
+<span class="sd">            Lookup keyed by layer name and values are nodata values for the</span>
+<span class="sd">            respective layers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nodata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_names</span><span class="p">:</span>
+            <span class="n">nodata</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="o">.</span><span class="n">get_nodata_value</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">nodata</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_area_filter</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">excl_area</span><span class="o">=</span><span class="mf">0.0081</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure the contiguous area of included pixels is greater than</span>
+<span class="sd">        prescribed minimum in sq-km</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Inclusion mask</span>
+<span class="sd">        min_area : float</span>
+<span class="sd">            Minimum required contiguous area in sq-km</span>
+<span class="sd">        kernel : str</span>
+<span class="sd">            Kernel type, either &#39;queen&#39; or &#39;rook&#39;</span>
+<span class="sd">        excl_area : float</span>
+<span class="sd">            Area of each exclusion pixel in km^2, assumes 90m resolution</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Updated inclusion mask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">FILTER_KERNELS</span><span class="p">[</span><span class="n">kernel</span><span class="p">]</span>
+        <span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">l</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">min_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_area</span> <span class="o">/</span> <span class="n">excl_area</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">&lt;</span> <span class="n">min_counts</span>
+        <span class="n">bad_labels</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">:][</span><span class="n">pos</span><span class="p">]</span>
+
+        <span class="n">mask</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">bad_labels</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_increase_mask_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_slice</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Increase the mask slice, e.g. from 64x64 to 192x192, to help the</span>
+<span class="sd">        contiguous area filter be more accurate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : tuple</span>
+<span class="sd">            Two entry tuple with x and y slices. Anything else will be passed</span>
+<span class="sd">            through unaffected.</span>
+<span class="sd">        n : int</span>
+<span class="sd">            Number of blocks to increase in each direction. For example,</span>
+<span class="sd">            a 64x64 slice with n=1 will increase to 192x192</span>
+<span class="sd">            (increases by 64xn in each direction).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_slice : tuple</span>
+<span class="sd">            Two entry tuple with x and y slices with increased dimensions.</span>
+<span class="sd">        sub_slice : tuple</span>
+<span class="sd">            Two entry tuple with x and y slices to retrieve the original</span>
+<span class="sd">            slice out of the bigger slice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_slice</span> <span class="o">=</span> <span class="n">ds_slice</span>
+        <span class="n">sub_slice</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">y_slice</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">x_slice</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_slice</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_slice</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+                <span class="n">y_diff</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_slice</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">y_slice</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="n">x_diff</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x_slice</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">x_slice</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+
+                <span class="n">y_new_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">y_slice</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">y_diff</span><span class="p">))))</span>
+                <span class="n">x_new_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">x_slice</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">x_diff</span><span class="p">))))</span>
+
+                <span class="n">y_new_stop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="p">(</span><span class="n">y_slice</span><span class="o">.</span><span class="n">stop</span> <span class="o">+</span> <span class="n">y_diff</span><span class="p">))))</span>
+                <span class="n">x_new_stop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="p">(</span><span class="n">x_slice</span><span class="o">.</span><span class="n">stop</span> <span class="o">+</span> <span class="n">x_diff</span><span class="p">))))</span>
+
+                <span class="n">new_slice</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">y_new_start</span><span class="p">,</span> <span class="n">y_new_stop</span><span class="p">),</span>
+                             <span class="nb">slice</span><span class="p">(</span><span class="n">x_new_start</span><span class="p">,</span> <span class="n">x_new_stop</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">y_new_start</span> <span class="o">==</span> <span class="n">y_slice</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                    <span class="n">y_sub_start</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">y_sub_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">y_diff</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">x_new_start</span> <span class="o">==</span> <span class="n">x_slice</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                    <span class="n">x_sub_start</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x_sub_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">x_diff</span><span class="p">)</span>
+
+                <span class="n">y_sub_stop</span> <span class="o">=</span> <span class="n">y_sub_start</span> <span class="o">+</span> <span class="n">y_diff</span>
+                <span class="n">x_sub_stop</span> <span class="o">=</span> <span class="n">x_sub_start</span> <span class="o">+</span> <span class="n">x_diff</span>
+
+                <span class="n">sub_slice</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">y_sub_start</span><span class="p">,</span> <span class="n">y_sub_stop</span><span class="p">),</span>
+                             <span class="nb">slice</span><span class="p">(</span><span class="n">x_sub_start</span><span class="p">,</span> <span class="n">x_sub_stop</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">new_slice</span><span class="p">,</span> <span class="n">sub_slice</span>
+
+    <span class="k">def</span> <span class="nf">_generate_ones_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate mask of all ones</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : tuple</span>
+<span class="sd">            dataset slice of interest along axis 0 and 1</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Array of ones slices down by ds_slice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)[</span><span class="n">ds_slice</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_force_include</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply force inclusion layers</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : ndarray | None</span>
+<span class="sd">            Mask to apply force inclusion layers to</span>
+<span class="sd">        layers : list</span>
+<span class="sd">            List of force inclusion layers</span>
+<span class="sd">        ds_slice : int | slice | list | ndarray</span>
+<span class="sd">            What to extract from ds, each arg is for a sequential axis.</span>
+<span class="sd">            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64</span>
+<span class="sd">            exclusions mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="n">layer_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ds_slice</span>
+            <span class="n">layer_mask</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="n">layer_slice</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">layer_mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">layer_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_generate_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate multiplicative inclusion mask from exclusion layers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : int | slice | list | ndarray</span>
+<span class="sd">            What to extract from ds, each arg is for a sequential axis.</span>
+<span class="sd">            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64</span>
+<span class="sd">            exclusions mask.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Multiplicative inclusion mask with all layers multiplied together</span>
+<span class="sd">            (&quot;and&quot; operation) such that 1 is included, 0 is excluded,</span>
+<span class="sd">            0.5 is half.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">&amp;</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">ds_slice</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ds_slice</span><span class="p">,</span> <span class="n">sub_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_increase_mask_slice</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">force_include</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">force_include</span><span class="p">:</span>
+                    <span class="n">force_include</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">layer_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ds_slice</span>
+                    <span class="n">layer_mask</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="n">layer_slice</span><span class="p">]]</span>
+                    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="n">layer_mask</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">layer_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_include</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">force_include</span><span class="p">,</span> <span class="n">ds_slice</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_filter</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span><span class="p">,</span>
+                                         <span class="n">kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="n">sub_slice</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ds_slice</span> <span class="o">=</span> <span class="n">sub_slice</span>
+
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_ones_mask</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+<div class="viewcode-block" id="ExclusionMask.run"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMask.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create inclusion mask from given layers</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_h5 : str</span>
+<span class="sd">            Path to exclusions .h5 file</span>
+<span class="sd">        layers : list | NoneType</span>
+<span class="sd">            list of LayerMask instances for each exclusion layer to combine</span>
+<span class="sd">        min_area : float | NoneType</span>
+<span class="sd">            Minimum required contiguous area in sq-km</span>
+<span class="sd">        kernel : str</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Full inclusion mask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="n">layers</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                 <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">mask</span></div></div>
+
+
+<div class="viewcode-block" id="ExclusionMaskFromDict"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMaskFromDict">[docs]</a><span class="k">class</span> <span class="nc">ExclusionMaskFromDict</span><span class="p">(</span><span class="n">ExclusionMask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to initialize ExclusionMask from a dictionary defining layers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_h5 : str</span>
+<span class="sd">            Path to exclusions .h5 file</span>
+<span class="sd">        layers_dict : dict | NoneType</span>
+<span class="sd">            Dictionary of LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        min_area : float | NoneType</span>
+<span class="sd">            Minimum required contiguous area in sq-km</span>
+<span class="sd">        kernel : str</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+<span class="sd">        check_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each layer to ensure they contain</span>
+<span class="sd">            un-excluded values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">layers_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">layers_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LayerMask</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="n">layers</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                         <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">,</span> <span class="n">check_layers</span><span class="o">=</span><span class="n">check_layers</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExclusionMaskFromDict.run"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.ExclusionMaskFromDict.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;queen&#39;</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create inclusion mask from given layers dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excl_h5 : str</span>
+<span class="sd">            Path to exclusions .h5 file</span>
+<span class="sd">        layers_dict : dict | NoneType</span>
+<span class="sd">            Dictionary of LayerMask arugments {layer: {kwarg: value}}</span>
+<span class="sd">        min_area : float | NoneType</span>
+<span class="sd">            Minimum required contiguous area in sq-km</span>
+<span class="sd">        kernel : str</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Full inclusion mask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">excl_h5</span><span class="p">,</span> <span class="n">layers_dict</span><span class="o">=</span><span class="n">layers_dict</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span>
+                 <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">mask</span></div></div>
+
+
+<div class="viewcode-block" id="FrictionMask"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.FrictionMask">[docs]</a><span class="k">class</span> <span class="nc">FrictionMask</span><span class="p">(</span><span class="n">ExclusionMask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to handle exclusion-style friction layer.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fric_h5</span><span class="p">,</span> <span class="n">fric_dset</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fric_h5 : str</span>
+<span class="sd">            Path to friction layer .h5 file (same format as exclusions file)</span>
+<span class="sd">        fric_dset : str</span>
+<span class="sd">            Friction layer dataset in fric_h5</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+<span class="sd">        check_layers : bool</span>
+<span class="sd">            Run a pre-flight check on each layer to ensure they contain</span>
+<span class="sd">            un-excluded values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fric_dset</span> <span class="o">=</span> <span class="n">fric_dset</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerMask</span><span class="p">(</span><span class="n">fric_dset</span><span class="p">,</span> <span class="n">use_as_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_nodata</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fric_h5</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="n">L</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">,</span>
+                         <span class="n">check_layers</span><span class="o">=</span><span class="n">check_layers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate multiplicative friction layer mask.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : int | slice | list | ndarray</span>
+<span class="sd">            What to extract from ds, each arg is for a sequential axis.</span>
+<span class="sd">            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64</span>
+<span class="sd">            exclusions mask.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Multiplicative friction layer mask with nodata values set to 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">&amp;</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">ds_slice</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">layer_slice</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fric_dset</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ds_slice</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fric_dset</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_h5</span><span class="p">[</span><span class="n">layer_slice</span><span class="p">]]</span>
+        <span class="n">mask</span><span class="p">[(</span><span class="n">mask</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fric_dset</span><span class="p">]</span><span class="o">.</span><span class="n">nodata_value</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">mask</span>
+
+<div class="viewcode-block" id="FrictionMask.run"><a class="viewcode-back" href="../../../reV/reV.supply_curve.exclusions.html#reV.supply_curve.exclusions.FrictionMask.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">excl_h5</span><span class="p">,</span> <span class="n">fric_dset</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create inclusion mask from given layers dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fric_h5 : str</span>
+<span class="sd">            Path to friction layer .h5 file (same format as exclusions file)</span>
+<span class="sd">        fric_dset : str</span>
+<span class="sd">            Friction layer dataset in fric_h5</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : ndarray</span>
+<span class="sd">            Full inclusion mask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerMask</span><span class="p">(</span><span class="n">fric_dset</span><span class="p">,</span> <span class="n">use_as_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_nodata</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">excl_h5</span><span class="p">,</span> <span class="o">*</span><span class="n">L</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="n">hsds</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">mask</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,1445 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.supply_curve &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.supply_curve</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.supply_curve</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV supply curve module</span>
+<span class="sd">- Calculation of LCOT</span>
+<span class="sd">- Supply Curve creation</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.transmission</span> <span class="kn">import</span> <span class="n">TransmissionCosts</span> <span class="k">as</span> <span class="n">TC</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.transmission</span> <span class="kn">import</span> <span class="n">TransmissionFeatures</span> <span class="k">as</span> <span class="n">TF</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.competitive_wind_farms</span> <span class="kn">import</span> <span class="n">CompetitiveWindFarms</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SupplyCurveInputError</span><span class="p">,</span> <span class="n">SupplyCurveError</span>
+
+<span class="kn">from</span> <span class="nn">rex.utilities</span> <span class="kn">import</span> <span class="n">parse_table</span><span class="p">,</span> <span class="n">SpawnProcessPool</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SupplyCurve"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurve</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle LCOT calcuation and SupplyCurve sorting</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Standard outputs in addition to the values provided in sc_points,</span>
+<span class="sd">    produced by `SupplyCurveAggregation &lt;https://nrel.github.io/reV/reV/reV.</span>
+<span class="sd">    supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.</span>
+<span class="sd">    SupplyCurveAggregation&gt;`_:</span>
+
+<span class="sd">    transmission_multiplier : int | float</span>
+<span class="sd">        Transmission cost multiplier that scales the line cost but not the</span>
+<span class="sd">        tie-in cost in the calculation of LCOT.</span>
+<span class="sd">    trans_gid : int</span>
+<span class="sd">        Unique transmission feature identifier that each supply curve point</span>
+<span class="sd">        was connected to.</span>
+<span class="sd">    trans_capacity : float</span>
+<span class="sd">        Total capacity (not available capacity) of the transmission feature</span>
+<span class="sd">        that each supply curve point was connected to. Default units are MW.</span>
+<span class="sd">    trans_type : str</span>
+<span class="sd">        Tranmission feature type that each supply curve point was connected to</span>
+<span class="sd">        (e.g. Transline, Substation).</span>
+<span class="sd">    trans_cap_cost : float</span>
+<span class="sd">        Capital cost of connecting each supply curve point to their respective</span>
+<span class="sd">        transmission feature. This value includes line cost with</span>
+<span class="sd">        transmission_multiplier and the tie-in cost. Default units are $/MW.</span>
+<span class="sd">    dist_mi : float</span>
+<span class="sd">        Distance in miles from supply curve point to transmission connection.</span>
+<span class="sd">    lcot : float</span>
+<span class="sd">        Levelized cost of connecting to transmission ($/MWh).</span>
+<span class="sd">    total_lcoe : float</span>
+<span class="sd">        Total LCOE of each supply curve point (mean_lcoe + lcot) ($/MWh).</span>
+<span class="sd">    total_lcoe_friction : float</span>
+<span class="sd">        Total LCOE of each supply curve point considering the LCOE friction</span>
+<span class="sd">        scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">transmission_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_limited</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">connectable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">consider_friction</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">offshore_trans_table</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">            point summary</span>
+<span class="sd">        trans_table : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">            transmission mapping</span>
+<span class="sd">        fcr : float</span>
+<span class="sd">            Fixed charge rate, used to compute LCOT</span>
+<span class="sd">        sc_features : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing additional supply</span>
+<span class="sd">            curve features, e.g. transmission multipliers, regions</span>
+<span class="sd">        transmission_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+<span class="sd">        line_limited : bool</span>
+<span class="sd">            Substation connection is limited by maximum capacity of the</span>
+<span class="sd">            attached lines, legacy method</span>
+<span class="sd">        connectable : bool</span>
+<span class="sd">            Determine if connection is possible</span>
+<span class="sd">        max_workers : int | NoneType</span>
+<span class="sd">            Number of workers to use to compute lcot, if &gt; 1 run in parallel.</span>
+<span class="sd">            None uses all available cpu&#39;s.</span>
+<span class="sd">        consider_friction : bool</span>
+<span class="sd">            Flag to consider friction layer on LCOE.</span>
+<span class="sd">        offshore_trans_table : str, optional</span>
+<span class="sd">            Path to offshore transmission table, if None offshore sc points</span>
+<span class="sd">            will not be included, by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Supply curve points input: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_points</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Transmission table input: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trans_table</span><span class="p">))</span>
+
+        <span class="n">trans_costs</span> <span class="o">=</span> <span class="n">transmission_costs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sc_points</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span>
+                                                <span class="n">sc_features</span><span class="o">=</span><span class="n">sc_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_merge_sc_trans_tables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span>
+                                        <span class="n">offshore_table</span><span class="o">=</span><span class="n">offshore_trans_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_sc_trans_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_trans_lcot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span>
+                                                 <span class="n">trans_costs</span><span class="o">=</span><span class="n">trans_costs</span><span class="p">,</span>
+                                                 <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span>
+                                                 <span class="n">connectable</span><span class="o">=</span><span class="n">connectable</span><span class="p">,</span>
+                                                 <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trans_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">,</span>
+                                                    <span class="n">trans_costs</span><span class="o">=</span><span class="n">trans_costs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_consider_friction</span> <span class="o">=</span> <span class="n">consider_friction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_total_lcoe_friction</span><span class="p">()</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sc_gids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> points&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">gid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid supply curve gid </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_sc_points</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import supply curve point summary and add any additional features</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">        sc_features : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing additional supply</span>
+<span class="sd">            curve features, e.g. transmission multipliers, regions</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sc_points : pandas.DataFrame</span>
+<span class="sd">            DataFrame of supply curve point summary with additional features</span>
+<span class="sd">            added if supplied</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">parse_table</span><span class="p">(</span><span class="n">sc_points</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Supply curve points table imported with columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_points</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="n">sc_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sc_features</span> <span class="o">=</span> <span class="n">parse_table</span><span class="p">(</span><span class="n">sc_features</span><span class="p">)</span>
+            <span class="n">merge_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sc_features</span>
+                          <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sc_points</span><span class="p">]</span>
+            <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">sc_features</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">merge_cols</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Adding Supply Curve Features table with columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_features</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="s1">&#39;transmission_multiplier&#39;</span> <span class="ow">in</span> <span class="n">sc_points</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="s1">&#39;transmission_multiplier&#39;</span>
+            <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Final supply curve points table has columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_points</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+        <span class="k">return</span> <span class="n">sc_points</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_merge_cols</span><span class="p">(</span><span class="n">sc_columns</span><span class="p">,</span> <span class="n">trans_columns</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get columns with &#39;row&#39; or &#39;col&#39; in them to use for merging</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_columns : list</span>
+<span class="sd">            Columns to search</span>
+<span class="sd">        trans_cols</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        merge_cols : dict</span>
+<span class="sd">            Columns to merge on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sc_columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;sc_&#39;</span><span class="p">)]</span>
+        <span class="n">trans_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">trans_columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;sc_&#39;</span><span class="p">)]</span>
+        <span class="n">merge_cols</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="s1">&#39;col&#39;</span><span class="p">]:</span>
+            <span class="n">trans_col</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">trans_columns</span> <span class="k">if</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="n">c</span><span class="p">]</span>
+            <span class="n">sc_col</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sc_columns</span> <span class="k">if</span> <span class="n">c_val</span> <span class="ow">in</span> <span class="n">c</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">trans_col</span> <span class="ow">and</span> <span class="n">sc_col</span><span class="p">:</span>
+                <span class="n">merge_cols</span><span class="p">[</span><span class="n">sc_col</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">trans_col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">merge_cols</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Did not find a unique set of sc row and column ids to &#39;</span>
+                   <span class="s1">&#39;merge on: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">merge_cols</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">merge_cols</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_trans_table</span><span class="p">(</span><span class="n">trans_table</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import transmission features table</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pd.DataFrame | str</span>
+<span class="sd">            Table mapping supply curve points to transmission features</span>
+<span class="sd">            (either str filepath to table file or pre-loaded dataframe).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Loaded transmission feature table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">parse_table</span><span class="p">(</span><span class="n">trans_table</span><span class="p">)</span>
+
+        <span class="n">drop_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;cap_left&#39;</span><span class="p">,</span> <span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span>
+        <span class="n">drop_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">drop_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">trans_table</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">drop_cols</span><span class="p">:</span>
+            <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">drop_cols</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trans_table</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_merge_sc_trans_tables</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span>
+                               <span class="n">offshore_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">sc_cols</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="s1">&#39;sc_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_cf&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;mean_lcoe&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Merge the supply curve table with the transmission features table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : pd.DataFrame</span>
+<span class="sd">            Table of supply curve point summary</span>
+<span class="sd">        trans_table : pd.DataFrame | str</span>
+<span class="sd">            Table mapping supply curve points to transmission features</span>
+<span class="sd">            (either str filepath to table file or pre-loaded dataframe).</span>
+<span class="sd">        offshore_table : str | pd.DataFrame, optional</span>
+<span class="sd">            Offshore transmission table (either str filepath or pre-loaded</span>
+<span class="sd">            dataframe), if None offshore sc points will not be included,</span>
+<span class="sd">            by default None</span>
+<span class="sd">        sc_cols : tuple | list, optional</span>
+<span class="sd">            List of column from sc_points to transfer into the trans table,</span>
+<span class="sd">            by default (&#39;capacity&#39;, &#39;sc_gid&#39;, &#39;mean_cf&#39;, &#39;mean_lcoe&#39;)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Updated table mapping supply curve points to transmission features.</span>
+<span class="sd">            This is performed by merging left with trans_table, so there may be</span>
+<span class="sd">            rows with nan sc_gid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_trans_table</span><span class="p">(</span><span class="n">trans_table</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sc_cols</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">sc_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sc_cols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;mean_lcoe_friction&#39;</span> <span class="ow">in</span> <span class="n">sc_points</span><span class="p">:</span>
+            <span class="n">sc_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;mean_lcoe_friction&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;transmission_multiplier&#39;</span> <span class="ow">in</span> <span class="n">sc_points</span><span class="p">:</span>
+            <span class="n">sc_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;transmission_multiplier&#39;</span><span class="p">)</span>
+
+        <span class="n">merge_cols</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_merge_cols</span><span class="p">(</span><span class="n">sc_points</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+                                         <span class="n">trans_table</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Merging SC table and Trans Table on: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">merge_cols</span><span class="p">))</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">merge_cols</span><span class="p">)</span>
+        <span class="n">merge_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">merge_cols</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">offshore_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Merging in offshore transmission table on primary &#39;</span>
+                        <span class="s1">&#39;key &quot;farm_gid&quot;: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offshore_table</span><span class="p">))</span>
+            <span class="n">offshore_table</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_trans_table</span><span class="p">(</span><span class="n">offshore_table</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Offshore transmission table has columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">offshore_table</span><span class="o">.</span><span class="n">columns</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Merging offshore transmission table with supply &#39;</span>
+                         <span class="s1">&#39;curve point summary table that has columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sc_points</span><span class="o">.</span><span class="n">columns</span><span class="p">)))</span>
+            <span class="n">sc_offshore_cols</span> <span class="o">=</span> <span class="n">merge_cols</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;farm_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span>
+
+            <span class="n">column_diff</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">offshore_table</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+                               <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">sc_points</span><span class="p">[</span><span class="n">sc_offshore_cols</span><span class="p">]))</span>
+            <span class="n">offshore_cols</span> <span class="o">=</span> <span class="n">column_diff</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;farm_gid&#39;</span><span class="p">]</span>
+            <span class="n">ignore_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">offshore_table</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+                               <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">offshore_cols</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Offshore transmission table has column diff: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_diff</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Keeping offshore trans table columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offshore_cols</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Dropping offshore trans table columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ignore_cols</span><span class="p">))</span>
+
+            <span class="n">offshore_table</span> <span class="o">=</span> <span class="n">offshore_table</span><span class="p">[</span><span class="n">offshore_cols</span><span class="p">]</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="n">sc_points</span><span class="p">[</span><span class="n">sc_offshore_cols</span><span class="p">],</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;farm_gid&#39;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Offshore transmission table merged with sc points &#39;</span>
+                         <span class="s1">&#39;has columns: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offshore_table</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">offshore_table</span><span class="p">[</span><span class="n">merge_cols</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
+                <span class="n">missing</span> <span class="o">=</span> <span class="n">offshore_table</span><span class="p">[</span><span class="s1">&#39;sc_point_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> offshore Wind Farms are missing valid &#39;</span>
+                       <span class="s1">&#39;sc_points:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">offshore_table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">missing</span><span class="p">]))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">offshore_table</span> <span class="o">=</span> <span class="n">offshore_table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">missing</span><span class="p">]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Concatenating offshore transmission table to &#39;</span>
+                         <span class="s1">&#39;onshore transmission table...&#39;</span><span class="p">)</span>
+            <span class="n">trans_table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">offshore_table</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Concatenated transmission table:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trans_table</span><span class="p">))</span>
+
+        <span class="n">sc_cols</span> <span class="o">=</span> <span class="n">sc_cols</span> <span class="o">+</span> <span class="n">merge_cols</span>
+        <span class="n">sc_points</span> <span class="o">=</span> <span class="n">sc_points</span><span class="p">[</span><span class="n">sc_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">merge_cols</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trans_table</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_sc_trans_table</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run self checks on sc_points table and the merged trans_table</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : pd.DataFrame</span>
+<span class="sd">            Table of supply curve point summary</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Table mapping supply curve points to transmission features</span>
+<span class="sd">            (should already be merged with SC points).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sc_points</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+        <span class="n">trans_sc_gids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sc_gids</span> <span class="o">-</span> <span class="n">trans_sc_gids</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;There are </span><span class="si">{}</span><span class="s2"> Supply Curve points with missing &quot;</span>
+                   <span class="s2">&quot;transmission mappings. Supply curve points with no &quot;</span>
+                   <span class="s2">&quot;transmission features will not be connected! &quot;</span>
+                   <span class="s2">&quot;Missing sc_gid&#39;s: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">),</span> <span class="n">missing</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">trans_sc_gids</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Merging of sc points table and transmission features &#39;</span>
+                   <span class="s1">&#39;table failed with </span><span class="si">{}</span><span class="s1"> original sc gids and </span><span class="si">{}</span><span class="s1"> transmission &#39;</span>
+                   <span class="s1">&#39;sc gids after table merge.&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">trans_sc_gids</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;There are </span><span class="si">{}</span><span class="s1"> original SC gids and </span><span class="si">{}</span><span class="s1"> sc gids in the &#39;</span>
+                     <span class="s1">&#39;merged transmission table.&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">trans_sc_gids</span><span class="p">)))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Transmission Table created with columns: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trans_table</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_feature_capacity</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">trans_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the transmission connection feature capacity to the trans table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Table mapping supply curve points to transmission features</span>
+<span class="sd">        trans_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Table mapping supply curve points to transmission features with</span>
+<span class="sd">            &#39;avail_cap&#39; column.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">avc</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="k">if</span> <span class="n">trans_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;available_capacity&#39;</span> <span class="ow">in</span> <span class="n">trans_costs</span><span class="p">:</span>
+                <span class="n">avc</span> <span class="o">=</span> <span class="n">trans_costs</span><span class="p">[</span><span class="s1">&#39;available_capacity&#39;</span><span class="p">]</span>
+
+        <span class="n">feature_cap</span> <span class="o">=</span> <span class="n">TF</span><span class="o">.</span><span class="n">feature_capacity</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">available_capacity</span><span class="o">=</span><span class="n">avc</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">feature_cap</span><span class="p">[</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">feature_cap</span><span class="p">[</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">feature_cap</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trans_table</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_add_trans_lcot</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">trans_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">line_limited</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">connectable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute LCOT for possible connections and add to the trans_table</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Table mapping supply curve points to transmission features.</span>
+<span class="sd">        fcr : float</span>
+<span class="sd">            Fixed charge rate, used to compute LCOT</span>
+<span class="sd">        trans_costs : str | dict | None</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+<span class="sd">        line_limited : bool</span>
+<span class="sd">            Substation connection is limited by maximum capacity of the</span>
+<span class="sd">            attached lines, legacy method</span>
+<span class="sd">        connectable : bool</span>
+<span class="sd">            Determine if connection is possible</span>
+<span class="sd">        max_workers : int | NoneType</span>
+<span class="sd">            Number of workers to use to compute lcot, if &gt; 1 run in parallel.</span>
+<span class="sd">            None uses all available cpu&#39;s.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Same as input table but with new columns for trans_cap_cost, lcot,</span>
+<span class="sd">            and total_lcoe.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_feature_capacity</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span>
+                                            <span class="n">trans_costs</span><span class="o">=</span><span class="n">trans_costs</span><span class="p">)</span>
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+        <span class="n">lcot</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_compute_lcot</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span>
+                                       <span class="n">trans_costs</span><span class="o">=</span><span class="n">trans_costs</span><span class="p">,</span>
+                                       <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span>
+                                       <span class="n">connectable</span><span class="o">=</span><span class="n">connectable</span><span class="p">,</span>
+                                       <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span>
+
+        <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cost</span>
+        <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lcot</span>
+        <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">]</span>
+                                     <span class="o">+</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;mean_lcoe&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">trans_table</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_create_handler</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">trans_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create TransmissionFeatures handler from supply curve transmission</span>
+<span class="sd">        mapping table.  Update connection costs if given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">            transmission mapping</span>
+<span class="sd">        trans_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_features : TransmissionFeatures</span>
+<span class="sd">            TransmissionFeatures or TransmissionCosts instance initilized</span>
+<span class="sd">            with specified transmission costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">trans_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="n">TF</span><span class="o">.</span><span class="n">_parse_dictionary</span><span class="p">(</span><span class="n">trans_costs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">trans_features</span> <span class="o">=</span> <span class="n">TF</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trans_features</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_sc_gids</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">gid_key</span><span class="o">=</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filter the trans table, extract unique sc gids, make bool mask.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            reV Supply Curve table joined with transmission features table.</span>
+<span class="sd">        gid_key : str</span>
+<span class="sd">            Column label in trans_table containing the supply curve points</span>
+<span class="sd">            primary key.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Same as input but filtered to only include non-nan</span>
+<span class="sd">            supply curve gids.</span>
+<span class="sd">        sc_gids : list</span>
+<span class="sd">            List of unique integer supply curve gids (non-nan)</span>
+<span class="sd">        mask : np.ndarray</span>
+<span class="sd">            Boolean array initialized as true. Length is equal to the maximum</span>
+<span class="sd">            SC gid so that the SC gids can be used to index the mask directly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">filter_mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">trans_table</span><span class="p">[</span><span class="n">gid_key</span><span class="p">])</span>
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="n">filter_mask</span><span class="p">]</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">trans_table</span><span class="p">[</span><span class="n">gid_key</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()))</span>
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="n">sc_gids</span><span class="p">]</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">sc_gids</span><span class="p">,</span> <span class="n">mask</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_lcot</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">trans_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">connectable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">line_limited</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute levelized cost of transmission for all combinations of</span>
+<span class="sd">        supply curve points and tranmission features in trans_table</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pd.DataFrame</span>
+<span class="sd">            Table mapping supply curve points to transmission features</span>
+<span class="sd">            MUST contain supply curve point capacity</span>
+<span class="sd">        fcr : float</span>
+<span class="sd">            Fixed charge rate needed to compute LCOT</span>
+<span class="sd">        trans_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+<span class="sd">        max_workers : int | NoneType</span>
+<span class="sd">            Number of workers to use to compute lcot, if &gt; 1 run in parallel.</span>
+<span class="sd">            None uses all available cpu&#39;s.</span>
+<span class="sd">        connectable : bool</span>
+<span class="sd">            Determine if connection is possible</span>
+<span class="sd">        line_limited : bool</span>
+<span class="sd">            Substation connection is limited by maximum capacity of the</span>
+<span class="sd">            attached lines, legacy method</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lcot : list</span>
+<span class="sd">            Levelized cost of transmission for all supply curve -</span>
+<span class="sd">            tranmission feature connections</span>
+<span class="sd">        cost : list</span>
+<span class="sd">            Capital cost of tramsmission for all supply curve - transmission</span>
+<span class="sd">            feature connections</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;capacity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">trans_table</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;Supply curve table must have &#39;</span>
+                                        <span class="s1">&#39;supply curve point capacity &#39;</span>
+                                        <span class="s1">&#39;to compute lcot&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">trans_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">trans_costs</span> <span class="o">=</span> <span class="n">TF</span><span class="o">.</span><span class="n">_parse_dictionary</span><span class="p">(</span><span class="n">trans_costs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trans_costs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_workers</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Computing LCOT costs for all possible connections...&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_workers</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+            <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;reV.handlers.transmission&#39;</span><span class="p">,</span> <span class="s1">&#39;reV&#39;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">SpawnProcessPool</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                                  <span class="n">loggers</span><span class="o">=</span><span class="n">loggers</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe</span><span class="p">:</span>
+                <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">sc_gid</span><span class="p">,</span> <span class="n">sc_table</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">connectable</span><span class="p">:</span>
+                        <span class="n">capacity</span> <span class="o">=</span> <span class="n">sc_table</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Each supply curve point should only have &#39;</span>
+                                   <span class="s1">&#39;a single capacity, but </span><span class="si">{}</span><span class="s1"> has </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_gid</span><span class="p">,</span> <span class="n">capacity</span><span class="p">))</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">capacity</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exe</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">TC</span><span class="o">.</span><span class="n">feature_costs</span><span class="p">,</span> <span class="n">sc_table</span><span class="p">,</span>
+                                              <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                                              <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="n">trans_costs</span><span class="p">))</span>
+
+                <span class="n">cost</span> <span class="o">=</span> <span class="p">[</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">]</span>
+                <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feature</span> <span class="o">=</span> <span class="n">TC</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span> <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">trans_costs</span><span class="p">)</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">connectable</span><span class="p">:</span>
+                    <span class="n">capacity</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">capacity</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">tm</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;transmission_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;dist_mi&#39;</span><span class="p">],</span>
+                                         <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                                         <span class="n">transmission_multiplier</span><span class="o">=</span><span class="n">tm</span><span class="p">))</span>
+
+            <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+        <span class="n">cf_mean_arr</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;mean_cf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">lcot</span> <span class="o">=</span> <span class="p">(</span><span class="n">cost</span> <span class="o">*</span> <span class="n">fcr</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cf_mean_arr</span> <span class="o">*</span> <span class="mi">8760</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;LCOT cost calculation is complete.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lcot</span><span class="p">,</span> <span class="n">cost</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_total_lcoe_friction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Look for site mean LCOE with friction in the trans table and if</span>
+<span class="sd">        found make a total LCOE column with friction.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;mean_lcoe_friction&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consider_friction</span><span class="p">):</span>
+            <span class="n">lcoe_friction</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">]</span>
+                             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">[</span><span class="s1">&#39;mean_lcoe_friction&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span><span class="p">[</span><span class="s1">&#39;total_lcoe_friction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lcoe_friction</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Found mean LCOE with friction. Adding key &#39;</span>
+                        <span class="s1">&#39;&quot;total_lcoe_friction&quot; to trans table.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_exclude_noncompetitive_wind_farms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comp_wind_dirs</span><span class="p">,</span> <span class="n">sc_gid</span><span class="p">,</span>
+                                           <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exclude non-competitive wind farms for given sc_gid</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp_wind_dirs : CompetitiveWindFarms</span>
+<span class="sd">            Pre-initilized CompetitiveWindFarms instance</span>
+<span class="sd">        sc_gid : int</span>
+<span class="sd">            Supply curve gid to exclude non-competitive wind farms around</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors,</span>
+<span class="sd">            by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        comp_wind_dirs : CompetitiveWindFarms</span>
+<span class="sd">            updated CompetitiveWindFarms instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">comp_wind_dirs</span><span class="o">.</span><span class="n">check_sc_gid</span><span class="p">(</span><span class="n">sc_gid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">comp_wind_dirs</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">gid</span><span class="p">]:</span>
+                <span class="n">exclude_gids</span> <span class="o">=</span> <span class="n">comp_wind_dirs</span><span class="p">[</span><span class="s1">&#39;upwind&#39;</span><span class="p">,</span> <span class="n">gid</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">downwind</span><span class="p">:</span>
+                    <span class="n">exclude_gids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exclude_gids</span><span class="p">,</span>
+                                             <span class="n">comp_wind_dirs</span><span class="p">[</span><span class="s1">&#39;downwind&#39;</span><span class="p">,</span> <span class="n">gid</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">exclude_gids</span><span class="p">:</span>
+                    <span class="n">check</span> <span class="o">=</span> <span class="n">comp_wind_dirs</span><span class="o">.</span><span class="n">exclude_sc_point_gid</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+                        <span class="n">sc_gids</span> <span class="o">=</span> <span class="n">comp_wind_dirs</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">sc_id</span> <span class="ow">in</span> <span class="n">sc_gids</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">sc_id</span><span class="p">]:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Excluding sc_gid </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_id</span><span class="p">))</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">sc_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">comp_wind_dirs</span>
+
+<div class="viewcode-block" id="SupplyCurve.add_sum_cols"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve.add_sum_cols">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">add_sum_cols</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">sum_cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a summation column to table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        table : pd.DataFrame</span>
+<span class="sd">            Supply curve table.</span>
+<span class="sd">        sum_cols : dict</span>
+<span class="sd">            Mapping of new column label(s) to multiple column labels to sum.</span>
+<span class="sd">            Example: sum_col={&#39;total_cap_cost&#39;: [&#39;cap_cost1&#39;, &#39;cap_cost2&#39;]}</span>
+<span class="sd">            Which would add a new &#39;total_cap_cost&#39; column which would be the</span>
+<span class="sd">            sum of &#39;cap_cost1&#39; and &#39;cap_cost2&#39; if they are present in table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        table : pd.DataFrame</span>
+<span class="sd">            Supply curve table with additional summation columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">new_label</span><span class="p">,</span> <span class="n">sum_labels</span> <span class="ow">in</span> <span class="n">sum_cols</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sum_labels</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">table</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Could not make sum column &quot;</span><span class="si">{}</span><span class="s1">&quot;, missing: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_label</span><span class="p">,</span> <span class="n">missing</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sum_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sum_labels</span><span class="p">:</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                    <span class="n">temp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">temp</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">sum_arr</span> <span class="o">+=</span> <span class="n">temp</span>
+
+                <span class="n">table</span><span class="p">[</span><span class="n">new_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_arr</span>
+
+        <span class="k">return</span> <span class="n">table</span></div>
+
+    <span class="k">def</span> <span class="nf">_full_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">comp_wind_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">total_lcoe_fric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                   <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_capacity&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_mi&#39;</span><span class="p">,</span> <span class="s1">&#39;lcot&#39;</span><span class="p">,</span> <span class="s1">&#39;total_lcoe&#39;</span><span class="p">),</span>
+                   <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal method to handle full supply curve sorting</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pandas.DataFrame</span>
+<span class="sd">            Supply Curve Tranmission table to sort on</span>
+<span class="sd">        comp_wind_dirs : CompetitiveWindFarms, optional</span>
+<span class="sd">            Pre-initilized CompetitiveWindFarms instance, by default None</span>
+<span class="sd">        total_lcoe_fric : ndarray, optional</span>
+<span class="sd">            Vector of lcoe friction values, by default None</span>
+<span class="sd">        sort_on : str, optional</span>
+<span class="sd">            Column label to sort the Supply Curve table on. This affects the</span>
+<span class="sd">            build priority - connections with the lowest value in this column</span>
+<span class="sd">            will be built first, by default &#39;total_lcoe&#39;</span>
+<span class="sd">        columns : tuple, optional</span>
+<span class="sd">            Columns to preserve in output connections dataframe,</span>
+<span class="sd">            by default (&#39;trans_gid&#39;, &#39;trans_capacity&#39;, &#39;trans_type&#39;,</span>
+<span class="sd">                        &#39;trans_cap_cost&#39;, &#39;dist_mi&#39;, &#39;lcot&#39;, &#39;total_lcoe&#39;)</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors,</span>
+<span class="sd">            by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        supply_curve : pandas.DataFrame</span>
+<span class="sd">            Updated sc_points table with transmission connections, LCOT</span>
+<span class="sd">            and LCOE+LCOT based on full supply curve connections</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">init_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">))</span>
+        <span class="n">conn_lists</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">init_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">}</span>
+
+        <span class="n">trans_sc_gids</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">trans_gids</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">trans_cap</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;avail_cap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">capacities</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;dist_mi&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">trans_cap_costs</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">lcots</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">total_lcoes</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">connected</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trans_table</span><span class="p">)):</span>
+            <span class="n">sc_gid</span> <span class="o">=</span> <span class="n">trans_sc_gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">sc_gid</span><span class="p">]:</span>
+                <span class="n">trans_gid</span> <span class="o">=</span> <span class="n">trans_gids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">connect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_features</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">trans_gid</span><span class="p">,</span>
+                                                       <span class="n">capacities</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">connect</span><span class="p">:</span>
+                    <span class="n">connected</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Connecting sc gid </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sc_gid</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">trans_gid</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;trans_capacity&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">trans_cap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;trans_type&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">trans_cap_costs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;dist_mi&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">dists</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">lcots</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_lcoes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">total_lcoe_fric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">conn_lists</span><span class="p">[</span><span class="s1">&#39;total_lcoe_friction&#39;</span><span class="p">][</span><span class="n">sc_gid</span><span class="p">]</span> <span class="o">=</span> \
+                            <span class="n">total_lcoe_fric</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="n">current_prog</span> <span class="o">=</span> <span class="n">connected</span> <span class="o">//</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">current_prog</span> <span class="o">&gt;</span> <span class="n">progress</span><span class="p">:</span>
+                        <span class="n">progress</span> <span class="o">=</span> <span class="n">current_prog</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">% o</span><span class="s1">f supply curve points connected&#39;</span>
+                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">progress</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">comp_wind_dirs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">comp_wind_dirs</span> <span class="o">=</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_exclude_noncompetitive_wind_farms</span><span class="p">(</span>
+                                <span class="n">comp_wind_dirs</span><span class="p">,</span> <span class="n">sc_gid</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">)</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc_gids</span><span class="p">)))</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">conn_lists</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">connections</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sc_gid&#39;</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">sort_on</span><span class="p">])</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="n">sc_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">connected</span> <span class="o">=</span> <span class="n">connections</span><span class="p">[</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Connected gids </span><span class="si">{}</span><span class="s1"> out of total supply curve gids </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connected</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">)))</span>
+        <span class="n">unconnected</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sc_gids</span><span class="p">,</span> <span class="n">connected</span><span class="p">)</span>
+        <span class="n">unconnected</span> <span class="o">=</span> <span class="n">sc_gids</span><span class="p">[</span><span class="n">unconnected</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">unconnected</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> supply curve points were not connected to tranmission! &quot;</span>
+                   <span class="s2">&quot;Unconnected sc_gid&#39;s: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unconnected</span><span class="p">),</span> <span class="n">unconnected</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">connections</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">supply_curve</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SupplyCurve.full_sort"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve.full_sort">[docs]</a>    <span class="k">def</span> <span class="nf">full_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trans_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                  <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_capacity&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_mi&#39;</span><span class="p">,</span> <span class="s1">&#39;lcot&#39;</span><span class="p">,</span> <span class="s1">&#39;total_lcoe&#39;</span><span class="p">),</span>
+                  <span class="n">wind_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">offshore_compete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        run full supply curve sorting</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pandas.DataFrame | NoneType</span>
+<span class="sd">            Supply Curve Tranmission table to sort on</span>
+<span class="sd">            If none use self._trans_table</span>
+<span class="sd">        sort_on : str</span>
+<span class="sd">            Column label to sort the Supply Curve table on. This affects the</span>
+<span class="sd">            build priority - connections with the lowest value in this column</span>
+<span class="sd">            will be built first.</span>
+<span class="sd">        columns : list | tuple</span>
+<span class="sd">            Columns to preserve in output connections dataframe.</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors,</span>
+<span class="sd">            by default False</span>
+<span class="sd">        offshore_compete : bool, default</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms, by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        supply_curve : pandas.DataFrame</span>
+<span class="sd">            Updated sc_points table with transmission connections, LCOT</span>
+<span class="sd">            and LCOE+LCOT based on full supply curve connections</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">trans_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">trans_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;lcot&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span>
+        <span class="n">trans_table</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">sort_on</span><span class="p">)</span>
+
+        <span class="n">total_lcoe_fric</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consider_friction</span> <span class="ow">and</span> <span class="s1">&#39;mean_lcoe_friction&#39;</span> <span class="ow">in</span> <span class="n">trans_table</span><span class="p">:</span>
+            <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;total_lcoe_friction&#39;</span><span class="p">)</span>
+            <span class="n">total_lcoe_fric</span> <span class="o">=</span> <span class="n">trans_table</span><span class="p">[</span><span class="s1">&#39;total_lcoe_friction&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">comp_wind_dirs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">wind_dirs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Excluding </span><span class="si">{}</span><span class="s2"> upwind&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_dirs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">downwind</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; and downwind&quot;</span>
+
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; onshore&quot;</span>
+            <span class="k">if</span> <span class="n">offshore_compete</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; and offshore&quot;</span>
+
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; windfarms&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">comp_wind_dirs</span> <span class="o">=</span> <span class="n">CompetitiveWindFarms</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="p">,</span>
+                                                  <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span>
+                                                  <span class="n">offshore</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">)</span>
+
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_sort</span><span class="p">(</span><span class="n">trans_table</span><span class="p">,</span>
+                                       <span class="n">comp_wind_dirs</span><span class="o">=</span><span class="n">comp_wind_dirs</span><span class="p">,</span>
+                                       <span class="n">total_lcoe_fric</span><span class="o">=</span><span class="n">total_lcoe_fric</span><span class="p">,</span>
+                                       <span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span>
+                                       <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">)</span>
+
+        <span class="n">sum_cols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;combined_cap_cost&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;array_cable_CAPEX&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;export_cable_CAPEX&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">]}</span>
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_sum_cols</span><span class="p">(</span><span class="n">supply_curve</span><span class="p">,</span> <span class="n">sum_cols</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">supply_curve</span></div>
+
+<div class="viewcode-block" id="SupplyCurve.simple_sort"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve.simple_sort">[docs]</a>    <span class="k">def</span> <span class="nf">simple_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trans_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                    <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">,</span> <span class="s1">&#39;lcot&#39;</span><span class="p">,</span> <span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">),</span>
+                    <span class="n">wind_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">offshore_compete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run simple supply curve sorting that does not take into account</span>
+<span class="sd">        available capacity</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trans_table : pandas.DataFrame | NoneType</span>
+<span class="sd">            Supply Curve Tranmission table to sort on</span>
+<span class="sd">            If none use self._trans_table</span>
+<span class="sd">        sort_on : str</span>
+<span class="sd">            Column label to sort the Supply Curve table on. This affects the</span>
+<span class="sd">            build priority - connections with the lowest value in this column</span>
+<span class="sd">            will be built first.</span>
+<span class="sd">        columns : list | tuple</span>
+<span class="sd">            Columns to preserve in output connections dataframe.</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors</span>
+<span class="sd">        offshore_compete : bool, default</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms, by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        supply_curve : pandas.DataFrame</span>
+<span class="sd">            Updated sc_points table with transmission connections, LCOT</span>
+<span class="sd">            and LCOE+LCOT based on simple supply curve connections</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">trans_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">trans_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trans_table</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consider_friction</span> <span class="ow">and</span> <span class="s1">&#39;total_lcoe_friction&#39;</span> <span class="ow">in</span> <span class="n">trans_table</span><span class="p">:</span>
+            <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;total_lcoe_friction&#39;</span><span class="p">)</span>
+
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">trans_table</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">sort_on</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">rename</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trans_line_gid&#39;</span><span class="p">:</span> <span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">}</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename</span><span class="p">)</span>
+        <span class="n">connections</span> <span class="o">=</span> <span class="n">connections</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_points</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">connections</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;sc_gid&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wind_dirs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">supply_curve</span> <span class="o">=</span> \
+                <span class="n">CompetitiveWindFarms</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">wind_dirs</span><span class="p">,</span>
+                                         <span class="n">supply_curve</span><span class="p">,</span>
+                                         <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span>
+                                         <span class="n">offshore</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">,</span>
+                                         <span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span>
+                                         <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">)</span>
+
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="n">supply_curve</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sum_cols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;combined_cap_cost&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;array_cable_CAPEX&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;export_cable_CAPEX&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">]}</span>
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_sum_cols</span><span class="p">(</span><span class="n">supply_curve</span><span class="p">,</span> <span class="n">sum_cols</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">supply_curve</span></div>
+
+<div class="viewcode-block" id="SupplyCurve.full"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve.full">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">full</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">transmission_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_limited</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+             <span class="n">offshore_trans_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_capacity&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_mi&#39;</span><span class="p">,</span> <span class="s1">&#39;lcot&#39;</span><span class="p">,</span> <span class="s1">&#39;total_lcoe&#39;</span><span class="p">),</span>
+             <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">offshore_compete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run full supply curve taking into account available capacity of</span>
+<span class="sd">        tranmission features when making connections.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supplcy curve</span>
+<span class="sd">            point summary</span>
+<span class="sd">        trans_table : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">            transmission mapping</span>
+<span class="sd">        fcr : float</span>
+<span class="sd">            Fixed charge rate, used to compute LCOT</span>
+<span class="sd">        sc_features : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing additional supply</span>
+<span class="sd">            curve features, e.g. transmission multipliers, regions</span>
+<span class="sd">        transmission_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+<span class="sd">        line_limited : bool</span>
+<span class="sd">            Substation connection is limited by maximum capacity of the</span>
+<span class="sd">            attached lines, legacy method</span>
+<span class="sd">        sort_on : str</span>
+<span class="sd">            Column label to sort the Supply Curve table on. This affects the</span>
+<span class="sd">            build priority - connections with the lowest value in this column</span>
+<span class="sd">            will be built first.</span>
+<span class="sd">        offshore_trans_table : str, optional</span>
+<span class="sd">            Path to offshore transmission table, if None offshore sc points</span>
+<span class="sd">            will not be included, by default None</span>
+<span class="sd">        columns : list | tuple</span>
+<span class="sd">            Columns to preserve in output supply curve dataframe.</span>
+<span class="sd">        max_workers : int | NoneType</span>
+<span class="sd">            Number of workers to use to compute lcot, if &gt; 1 run in parallel.</span>
+<span class="sd">            None uses all available cpu&#39;s.</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors</span>
+<span class="sd">        offshore_compete : bool, default</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms, by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        supply_curve : pandas.DataFrame</span>
+<span class="sd">            Updated sc_points table with transmission connections, LCOT</span>
+<span class="sd">            and LCOE+LCOT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="n">sc_features</span><span class="p">,</span>
+                 <span class="n">transmission_costs</span><span class="o">=</span><span class="n">transmission_costs</span><span class="p">,</span>
+                 <span class="n">line_limited</span><span class="o">=</span><span class="n">line_limited</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                 <span class="n">offshore_trans_table</span><span class="o">=</span><span class="n">offshore_trans_table</span><span class="p">)</span>
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">full_sort</span><span class="p">(</span><span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span>
+                                    <span class="n">wind_dirs</span><span class="o">=</span><span class="n">wind_dirs</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span>
+                                    <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">,</span>
+                                    <span class="n">offshore_compete</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">supply_curve</span></div>
+
+<div class="viewcode-block" id="SupplyCurve.simple"><a class="viewcode-back" href="../../../reV/reV.supply_curve.supply_curve.html#reV.supply_curve.supply_curve.SupplyCurve.simple">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">simple</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">transmission_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort_on</span><span class="o">=</span><span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+               <span class="n">offshore_trans_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;trans_gid&#39;</span><span class="p">,</span> <span class="s1">&#39;trans_type&#39;</span><span class="p">,</span> <span class="s1">&#39;lcot&#39;</span><span class="p">,</span> <span class="s1">&#39;total_lcoe&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;trans_cap_cost&#39;</span><span class="p">),</span>
+               <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wind_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">downwind</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">offshore_compete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run simple supply curve by connecting to the cheapest tranmission</span>
+<span class="sd">        feature.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sc_points : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supplcy curve</span>
+<span class="sd">            point summary</span>
+<span class="sd">        trans_table : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing supply curve</span>
+<span class="sd">            transmission mapping</span>
+<span class="sd">        fcr : float</span>
+<span class="sd">            Fixed charge rate, used to compute LCOT</span>
+<span class="sd">        sc_features : str | pandas.DataFrame</span>
+<span class="sd">            Path to .csv or .json or DataFrame containing additional supply</span>
+<span class="sd">            curve features, e.g. transmission multipliers, regions</span>
+<span class="sd">        transmission_costs : str | dict</span>
+<span class="sd">            Transmission feature costs to use with TransmissionFeatures</span>
+<span class="sd">            handler: line_tie_in_cost, line_cost, station_tie_in_cost,</span>
+<span class="sd">            center_tie_in_cost, sink_tie_in_cost</span>
+<span class="sd">        sort_on : str</span>
+<span class="sd">            Column label to sort the Supply Curve table on. This affects the</span>
+<span class="sd">            build priority - connections with the lowest value in this column</span>
+<span class="sd">            will be built first.</span>
+<span class="sd">        offshore_trans_table : str, optional</span>
+<span class="sd">            Path to offshore transmission table, if None offshore sc points</span>
+<span class="sd">            will not be included, by default None</span>
+<span class="sd">        columns : list | tuple</span>
+<span class="sd">            Columns to preserve in output supply curve dataframe.</span>
+<span class="sd">        max_workers : int | NoneType</span>
+<span class="sd">            Number of workers to use to compute lcot, if &gt; 1 run in parallel.</span>
+<span class="sd">            None uses all available cpu&#39;s.</span>
+<span class="sd">        wind_dirs : pandas.DataFrame | str</span>
+<span class="sd">            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with</span>
+<span class="sd">            the neighboring supply curve point gids and power-rose value at</span>
+<span class="sd">            each cardinal direction</span>
+<span class="sd">        n_dirs : int, optional</span>
+<span class="sd">            Number of prominent directions to use, by default 2</span>
+<span class="sd">        downwind : bool, optional</span>
+<span class="sd">            Flag to remove downwind neighbors as well as upwind neighbors</span>
+<span class="sd">        offshore_compete : bool, default</span>
+<span class="sd">            Flag as to whether offshore farms should be included during</span>
+<span class="sd">            CompetitiveWindFarms, by default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        supply_curve : pandas.DataFrame</span>
+<span class="sd">            Updated sc_points table with transmission connections, LCOT</span>
+<span class="sd">            and LCOE+LCOT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">sc_points</span><span class="p">,</span> <span class="n">trans_table</span><span class="p">,</span> <span class="n">fcr</span><span class="p">,</span> <span class="n">sc_features</span><span class="o">=</span><span class="n">sc_features</span><span class="p">,</span>
+                 <span class="n">transmission_costs</span><span class="o">=</span><span class="n">transmission_costs</span><span class="p">,</span> <span class="n">connectable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
+                 <span class="n">offshore_trans_table</span><span class="o">=</span><span class="n">offshore_trans_table</span><span class="p">)</span>
+        <span class="n">supply_curve</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">simple_sort</span><span class="p">(</span><span class="n">sort_on</span><span class="o">=</span><span class="n">sort_on</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span>
+                                      <span class="n">wind_dirs</span><span class="o">=</span><span class="n">wind_dirs</span><span class="p">,</span> <span class="n">n_dirs</span><span class="o">=</span><span class="n">n_dirs</span><span class="p">,</span>
+                                      <span class="n">downwind</span><span class="o">=</span><span class="n">downwind</span><span class="p">,</span>
+                                      <span class="n">offshore_compete</span><span class="o">=</span><span class="n">offshore_compete</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">supply_curve</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

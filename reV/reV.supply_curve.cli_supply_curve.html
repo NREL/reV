@@ -1,0 +1,572 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>reV.supply_curve.cli_supply_curve module &mdash; reV 0.4.44 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve.competitive_wind_farms module" href="reV.supply_curve.competitive_wind_farms.html" />
+    <link rel="prev" title="reV.supply_curve.cli_sc_aggregation module" href="reV.supply_curve.cli_sc_aggregation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-or-conda-recommended-for-analysts">Option 1: Install from PIP or Conda (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#usage-on-eagle">Usage on Eagle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/misc.html#examples">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id3">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#id4">pvwatts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.batch.html">reV.batch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.html">reV.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.html">reV.econ package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.html">reV.generation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.offshore.html">reV.offshore package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.offshore.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.supply_curve.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.cli.html">reV.cli module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.cli.html#rev">reV</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.version.html">reV.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+          <li><a href="reV.supply_curve.html">reV.supply_curve package</a> &raquo;</li>
+        
+      <li>reV.supply_curve.cli_supply_curve module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/nrel/reV/blob/master/docs/source/reV/reV.supply_curve.cli_supply_curve.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-supply-curve-cli-supply-curve-module">
+<h1>reV.supply_curve.cli_supply_curve module<a class="headerlink" href="#rev-supply-curve-cli-supply-curve-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rev-supply-curve">
+<h2>reV-supply-curve<a class="headerlink" href="#rev-supply-curve" title="Permalink to this headline">¶</a></h2>
+<p>reV Supply Curve Command Line Interface</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-n">
+<span id="cmdoption-rev-supply-curve-n"></span><span id="cmdoption-reV-supply-curve-name"></span><span id="cmdoption-rev-supply-curve-name"></span><code class="sig-name descname">-n</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--name</code><code class="sig-prename descclassname"> &lt;name&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Job name. Default is “reV-sc”.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-v">
+<span id="cmdoption-rev-supply-curve-v"></span><span id="cmdoption-reV-supply-curve-verbose"></span><span id="cmdoption-rev-supply-curve-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-supply-curve-direct">
+<h3>direct<a class="headerlink" href="#rev-supply-curve-direct" title="Permalink to this headline">¶</a></h3>
+<p>reV Supply Curve CLI.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve direct <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-sc">
+<span id="cmdoption-rev-supply-curve-direct-sc"></span><span id="cmdoption-reV-supply-curve-direct-sc_points"></span><span id="cmdoption-rev-supply-curve-direct-sc-points"></span><code class="sig-name descname">-sc</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sc_points</code><code class="sig-prename descclassname"> &lt;sc_points&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-sc" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Supply curve point summary table (.csv or .json).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-tt">
+<span id="cmdoption-rev-supply-curve-direct-tt"></span><span id="cmdoption-reV-supply-curve-direct-trans_table"></span><span id="cmdoption-rev-supply-curve-direct-trans-table"></span><code class="sig-name descname">-tt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--trans_table</code><code class="sig-prename descclassname"> &lt;trans_table&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-tt" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Supply curve transmission mapping table (.csv or .json).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-fcr">
+<span id="cmdoption-rev-supply-curve-direct-fcr"></span><span id="cmdoption-reV-supply-curve-direct-fixed_charge_rate"></span><span id="cmdoption-rev-supply-curve-direct-fixed-charge-rate"></span><code class="sig-name descname">-fcr</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--fixed_charge_rate</code><code class="sig-prename descclassname"> &lt;fixed_charge_rate&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-fcr" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Fixed charge rate used to compute LCOT</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-scf">
+<span id="cmdoption-rev-supply-curve-direct-scf"></span><span id="cmdoption-reV-supply-curve-direct-sc_features"></span><span id="cmdoption-rev-supply-curve-direct-sc-features"></span><code class="sig-name descname">-scf</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sc_features</code><code class="sig-prename descclassname"> &lt;sc_features&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-scf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table containing additional supply curve features (.csv or .json)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-tc">
+<span id="cmdoption-rev-supply-curve-direct-tc"></span><span id="cmdoption-reV-supply-curve-direct-transmission_costs"></span><span id="cmdoption-rev-supply-curve-direct-transmission-costs"></span><code class="sig-name descname">-tc</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--transmission_costs</code><code class="sig-prename descclassname"> &lt;transmission_costs&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-tc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table or serialized dict of transmission cost inputs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-so">
+<span id="cmdoption-rev-supply-curve-direct-so"></span><span id="cmdoption-reV-supply-curve-direct-sort_on"></span><span id="cmdoption-rev-supply-curve-direct-sort-on"></span><code class="sig-name descname">-so</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--sort_on</code><code class="sig-prename descclassname"> &lt;sort_on&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-so" title="Permalink to this definition">¶</a></dt>
+<dd><p>The supply curve table column label to sort on. This determines the ordering of the SC buildout algorithm.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-ott">
+<span id="cmdoption-rev-supply-curve-direct-ott"></span><span id="cmdoption-reV-supply-curve-direct-offshore_trans_table"></span><span id="cmdoption-rev-supply-curve-direct-offshore-trans-table"></span><code class="sig-name descname">-ott</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--offshore_trans_table</code><code class="sig-prename descclassname"> &lt;offshore_trans_table&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-ott" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to offshore transmission table, if None offshore sc points will not be included, by default None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-wd">
+<span id="cmdoption-rev-supply-curve-direct-wd"></span><span id="cmdoption-reV-supply-curve-direct-wind_dirs"></span><span id="cmdoption-rev-supply-curve-direct-wind-dirs"></span><code class="sig-name descname">-wd</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--wind_dirs</code><code class="sig-prename descclassname"> &lt;wind_dirs&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-wd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs output with the neighboring supply curve point gids and power-rose value at each cardinal direction</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-dirs">
+<span id="cmdoption-rev-supply-curve-direct-dirs"></span><span id="cmdoption-reV-supply-curve-direct-n_dirs"></span><span id="cmdoption-rev-supply-curve-direct-n-dirs"></span><code class="sig-name descname">-dirs</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--n_dirs</code><code class="sig-prename descclassname"> &lt;n_dirs&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of prominent directions to use</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-dw">
+<span id="cmdoption-rev-supply-curve-direct-dw"></span><span id="cmdoption-reV-supply-curve-direct-downwind"></span><span id="cmdoption-rev-supply-curve-direct-downwind"></span><code class="sig-name descname">-dw</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--downwind</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-dw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to remove downwind neighbors as well as upwind neighbors</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-oc">
+<span id="cmdoption-rev-supply-curve-direct-oc"></span><span id="cmdoption-reV-supply-curve-direct-offshore_compete"></span><span id="cmdoption-rev-supply-curve-direct-offshore-compete"></span><code class="sig-name descname">-oc</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--offshore_compete</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-oc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag as to whether offshore farms should be included during CompetitiveWindFarms, by default False</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-mw">
+<span id="cmdoption-rev-supply-curve-direct-mw"></span><span id="cmdoption-reV-supply-curve-direct-max_workers"></span><span id="cmdoption-rev-supply-curve-direct-max-workers"></span><code class="sig-name descname">-mw</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--max_workers</code><code class="sig-prename descclassname"> &lt;max_workers&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-mw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of workers to use to compute lcot, if &gt; 1 run in parallel. None uses all available cpus.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-o">
+<span id="cmdoption-rev-supply-curve-direct-o"></span><span id="cmdoption-reV-supply-curve-direct-out_dir"></span><span id="cmdoption-rev-supply-curve-direct-out-dir"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--out_dir</code><code class="sig-prename descclassname"> &lt;out_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-o" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory to save aggregation summary output.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-ld">
+<span id="cmdoption-rev-supply-curve-direct-ld"></span><span id="cmdoption-reV-supply-curve-direct-log_dir"></span><span id="cmdoption-rev-supply-curve-direct-log-dir"></span><code class="sig-name descname">-ld</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--log_dir</code><code class="sig-prename descclassname"> &lt;log_dir&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-ld" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory to save aggregation logs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-s">
+<span id="cmdoption-rev-supply-curve-direct-s"></span><span id="cmdoption-reV-supply-curve-direct-simple"></span><span id="cmdoption-rev-supply-curve-direct-simple"></span><code class="sig-name descname">-s</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--simple</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on simple supply curve calculation.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-ll">
+<span id="cmdoption-rev-supply-curve-direct-ll"></span><span id="cmdoption-reV-supply-curve-direct-line_limited"></span><span id="cmdoption-rev-supply-curve-direct-line-limited"></span><code class="sig-name descname">-ll</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--line_limited</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-ll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on line-limited substation capacity calculation (legacy methodology). Alternative is multi-line spread capacity.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-v">
+<span id="cmdoption-rev-supply-curve-direct-v"></span><span id="cmdoption-reV-supply-curve-direct-verbose"></span><span id="cmdoption-rev-supply-curve-direct-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+<div class="section" id="rev-supply-curve-direct-slurm">
+<h4>slurm<a class="headerlink" href="#rev-supply-curve-direct-slurm" title="Permalink to this headline">¶</a></h4>
+<p>slurm (eagle) submission tool for reV supply curve.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve direct slurm <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-a">
+<span id="cmdoption-rev-supply-curve-direct-slurm-a"></span><span id="cmdoption-reV-supply-curve-direct-slurm-alloc"></span><span id="cmdoption-rev-supply-curve-direct-slurm-alloc"></span><code class="sig-name descname">-a</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--alloc</code><code class="sig-prename descclassname"> &lt;alloc&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-a" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> SLURM allocation account name.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-mem">
+<span id="cmdoption-rev-supply-curve-direct-slurm-mem"></span><span id="cmdoption-reV-supply-curve-direct-slurm-memory"></span><span id="cmdoption-rev-supply-curve-direct-slurm-memory"></span><code class="sig-name descname">-mem</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--memory</code><code class="sig-prename descclassname"> &lt;memory&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-mem" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM node memory request in GB. Default is None</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-wt">
+<span id="cmdoption-rev-supply-curve-direct-slurm-wt"></span><span id="cmdoption-reV-supply-curve-direct-slurm-walltime"></span><span id="cmdoption-rev-supply-curve-direct-slurm-walltime"></span><code class="sig-name descname">-wt</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--walltime</code><code class="sig-prename descclassname"> &lt;walltime&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-wt" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLURM walltime request in hours. Default is 1.0</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-l">
+<span id="cmdoption-rev-supply-curve-direct-slurm-l"></span><span id="cmdoption-reV-supply-curve-direct-slurm-feature"></span><span id="cmdoption-rev-supply-curve-direct-slurm-feature"></span><code class="sig-name descname">-l</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--feature</code><code class="sig-prename descclassname"> &lt;feature&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-l" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional flags for SLURM job. Format is “–qos=high” or “–depend=[state:job_id]”. Default is None.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-mod">
+<span id="cmdoption-rev-supply-curve-direct-slurm-mod"></span><span id="cmdoption-reV-supply-curve-direct-slurm-module"></span><span id="cmdoption-rev-supply-curve-direct-slurm-module"></span><code class="sig-name descname">-mod</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--module</code><code class="sig-prename descclassname"> &lt;module&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-mod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module to load</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-env">
+<span id="cmdoption-rev-supply-curve-direct-slurm-env"></span><span id="cmdoption-reV-supply-curve-direct-slurm-conda_env"></span><span id="cmdoption-rev-supply-curve-direct-slurm-conda-env"></span><code class="sig-name descname">-env</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--conda_env</code><code class="sig-prename descclassname"> &lt;conda_env&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conda env to activate</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-direct-slurm-sout">
+<span id="cmdoption-rev-supply-curve-direct-slurm-sout"></span><span id="cmdoption-reV-supply-curve-direct-slurm-stdout_path"></span><span id="cmdoption-rev-supply-curve-direct-slurm-stdout-path"></span><code class="sig-name descname">-sout</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--stdout_path</code><code class="sig-prename descclassname"> &lt;stdout_path&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-direct-slurm-sout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subprocess standard output path. Default is in out_dir.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="rev-supply-curve-from-config">
+<h3>from-config<a class="headerlink" href="#rev-supply-curve-from-config" title="Permalink to this headline">¶</a></h3>
+<p>Run reV supply curve compute from a config file.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve from-config <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-from-config-c">
+<span id="cmdoption-rev-supply-curve-from-config-c"></span><span id="cmdoption-reV-supply-curve-from-config-config_file"></span><span id="cmdoption-rev-supply-curve-from-config-config-file"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--config_file</code><code class="sig-prename descclassname"> &lt;config_file&gt;</code><a class="headerlink" href="#cmdoption-reV-supply-curve-from-config-c" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> reV supply curve configuration json file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-reV-supply-curve-from-config-v">
+<span id="cmdoption-rev-supply-curve-from-config-v"></span><span id="cmdoption-reV-supply-curve-from-config-verbose"></span><span id="cmdoption-rev-supply-curve-from-config-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-reV-supply-curve-from-config-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to turn on debug logging. Default is not verbose.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rev-supply-curve-valid-config-keys">
+<h3>valid-config-keys<a class="headerlink" href="#rev-supply-curve-valid-config-keys" title="Permalink to this headline">¶</a></h3>
+<p>Echo the valid SupplyCurve config keys</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve valid-config-keys <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rev-supply-curve-version">
+<h3>version<a class="headerlink" href="#rev-supply-curve-version" title="Permalink to this headline">¶</a></h3>
+<p>print version</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>reV-supply-curve version <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span class="target" id="module-reV.supply_curve.cli_supply_curve"></span><p>reV Supply Curve command line interface (cli).</p>
+<dl class="py function">
+<dt id="reV.supply_curve.cli_supply_curve.get_node_cmd">
+<code class="sig-prename descclassname">reV.supply_curve.cli_supply_curve.</code><code class="sig-name descname">get_node_cmd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">sc_points</span></em>, <em class="sig-param"><span class="n">trans_table</span></em>, <em class="sig-param"><span class="n">fixed_charge_rate</span></em>, <em class="sig-param"><span class="n">sc_features</span></em>, <em class="sig-param"><span class="n">transmission_costs</span></em>, <em class="sig-param"><span class="n">sort_on</span></em>, <em class="sig-param"><span class="n">offshore_trans_table</span></em>, <em class="sig-param"><span class="n">wind_dirs</span></em>, <em class="sig-param"><span class="n">n_dirs</span></em>, <em class="sig-param"><span class="n">downwind</span></em>, <em class="sig-param"><span class="n">offshore_compete</span></em>, <em class="sig-param"><span class="n">max_workers</span></em>, <em class="sig-param"><span class="n">out_dir</span></em>, <em class="sig-param"><span class="n">log_dir</span></em>, <em class="sig-param"><span class="n">simple</span></em>, <em class="sig-param"><span class="n">line_limited</span></em>, <em class="sig-param"><span class="n">verbose</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/supply_curve/cli_supply_curve.html#get_node_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.supply_curve.cli_supply_curve.get_node_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a CLI call command for the Supply Curve cli.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="reV.supply_curve.competitive_wind_farms.html" class="btn btn-neutral float-right" title="reV.supply_curve.competitive_wind_farms module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="reV.supply_curve.cli_sc_aggregation.html" class="btn btn-neutral float-left" title="reV.supply_curve.cli_sc_aggregation module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018, Alliance for Sustainable Energy, LLC.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
