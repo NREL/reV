@@ -11,7 +11,7 @@ import tempfile
 
 from reV.version import __version__
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import HandlerRuntimeError
+from reV.utilities.exceptions import HandlerRuntimeError, HandlerValueError
 
 
 arr1 = np.ones(100)
@@ -99,6 +99,23 @@ def test_add_dset():
             assert f['dset3'].attrs['scale_factor'] == 100
             assert f['dset3'].dtype == np.int32
             assert np.allclose(f['dset3'][...], arr3 * 100)
+
+
+def test_bad_shape():
+    """Negative test for bad data shapes"""
+
+    with tempfile.TemporaryDirectory() as td:
+        fp = os.path.join(td, 'outputs.h5')
+
+        with Outputs(fp, 'w') as f:
+            f.meta = meta
+            f.time_index = time_index
+
+        with pytest.raises(HandlerValueError):
+            Outputs.add_dataset(fp, 'dset3', np.ones(10), None, float)
+
+        with pytest.raises(HandlerValueError):
+            Outputs.add_dataset(fp, 'dset3', np.ones((10, 10)), None, float)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

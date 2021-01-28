@@ -124,12 +124,14 @@ class Outputs(Resource):
     >>> Outputs.add_dataset(h5_file='test.h5', dset_name='bad_shape',
                             dset_data=np.ones((1, 100)) * 42.42,
                             attrs={'scale_factor': 100}, dtype=np.int32)
-    HandlerValueError: data is not of the proper shape: (8760, 100)
+    HandlerValueError: 2D data with shape (1, 100) is not of the proper
+    spatiotemporal shape: (8760, 100)
 
     >>> Outputs.add_dataset(h5_file='test.h5', dset_name='bad_shape',
                             dset_data=np.ones((8760,)) * 42.42,
                             attrs={'scale_factor': 100}, dtype=np.int32)
-    HandlerValueError: data is not of the proper shape: (100,)
+    HandlerValueError: 1D data with shape (8760,) is not of the proper
+    spatial shape: (100,)
     """
 
     def __init__(self, h5_file, mode='r', unscale=True, str_decode=True,
@@ -609,16 +611,18 @@ class Outputs(Resource):
             if shape:
                 shape = (shape,)
                 if dset_shape != shape:
-                    raise HandlerValueError("data is not of the proper shape:"
-                                            " {}".format(shape))
+                    raise HandlerValueError("1D data with shape {} is not of "
+                                            "the proper spatial shape:"
+                                            " {}".format(dset_shape, shape))
             else:
                 raise HandlerRuntimeError("'meta' has not been loaded")
         else:
             shape = self.shape
             if shape:
                 if dset_shape != shape:
-                    raise HandlerValueError("data is not of the proper shape:"
-                                            " {}".format(shape))
+                    raise HandlerValueError("2D data with shape {} is not of "
+                                            "the proper spatiotemporal shape:"
+                                            " {}".format(dset_shape, shape))
             else:
                 raise HandlerRuntimeError("'meta' and 'time_index' have not "
                                           "been loaded")
