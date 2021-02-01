@@ -7,6 +7,7 @@ import numpy as np
 from scipy import ndimage
 from warnings import warn
 
+from rex.utilities.loggers import log_mem
 from reV.handlers.exclusions import ExclusionLayers
 from reV.utilities.exceptions import ExclusionLayerError
 
@@ -788,6 +789,8 @@ class ExclusionMask:
                 if layer.force_include:
                     force_include.append(layer)
                 else:
+                    logger.debug('Computing exclusions {}'.format(layer))
+                    log_mem(logger, log_level='DEBUG')
                     layer_slice = (layer.layer, ) + ds_slice
                     layer_mask = layer[self.excl_h5[layer_slice]]
                     if mask is None:
@@ -795,7 +798,10 @@ class ExclusionMask:
                     else:
                         mask = np.minimum(mask, layer_mask, dtype='float32')
 
-            mask = self._force_include(mask, force_include, ds_slice)
+            if force_include:
+                logger.debug('Computing forced inclusions')
+                log_mem(logger, log_level='DEBUG')
+                mask = self._force_include(mask, force_include, ds_slice)
 
             if self._min_area is not None:
                 mask = self._area_filter(mask, min_area=self._min_area,
