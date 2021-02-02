@@ -27,7 +27,7 @@ reV
     :target: https://codecov.io/gh/nrel/reV
 
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/NREL/reV/master
+    :target: https://mybinder.org/v2/gh/NREL/reV/master
 
 The Renewable Energy Potential (reV) Model
 
