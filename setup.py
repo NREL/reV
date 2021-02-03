@@ -80,8 +80,8 @@ setup(
     include_package_data=True,
     license="BSD 3-Clause",
     zip_safe=False,
-    keywords="rev",
-    python_requires='>=3.7',
+    keywords="reV",
+    python_requires='>=3.7,<3.9',
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
