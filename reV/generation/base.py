@@ -667,7 +667,8 @@ class BaseGen(ABC):
                 # take nominal NSRDB chunks from dni
                 _, _, chunks = res.get_dset_properties('dni')
             else:
-                warn('Expected "nsrdb" or "wtk" to be in resource filename: {}'
+                warn('Could not infer dataset chunk size as the resource type '
+                     'could not be determined from the filename: {}'
                      .format(res_file))
                 chunks = None
 
