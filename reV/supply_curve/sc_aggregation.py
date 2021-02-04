@@ -30,6 +30,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.utilities import get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -355,8 +356,10 @@ class OffshoreAggregation:
                 onshore_summary = summary[~offshore_mask]
 
                 # pylint: disable=not-callable
-                tree = cKDTree(onshore_summary[['latitude', 'longitude']])
-                _, nn = tree.query(offshore_summary[['latitude', 'longitude']])
+                lat_lon_cols = get_lat_lon_cols(onshore_summary)
+                tree = cKDTree(onshore_summary[lat_lon_cols])
+                lat_lon_cols = get_lat_lon_cols(offshore_summary)
+                _, nn = tree.query(offshore_summary[lat_lon_cols])
 
                 for i, off_gid in enumerate(offshore_summary.index):
                     on_gid = onshore_summary.index.values[nn[i]]
@@ -502,8 +505,8 @@ class OffshoreAggregation:
                                                   handler.gen.meta)
 
         gen_gids = list(range(len(offshore_flag)))
-        cols = ['latitude', 'longitude']
-        lat_lon = handler.gen.meta.loc[gen_gids, cols].values
+        lat_lon_cols = get_lat_lon_cols(handler.gen.meta)
+        lat_lon = handler.gen.meta.loc[gen_gids, lat_lon_cols].values
         sc_points = cls._nearest_sc_points(excl_fpath, resolution, lat_lon)
 
         for gen_gid, offshore in enumerate(offshore_flag):
@@ -518,8 +521,8 @@ class OffshoreAggregation:
 
                 # pylint: disable-msg=E1101
                 farm_gid = handler.gen.meta.loc[gen_gid, 'gid']
-                latitude = handler.gen.meta.loc[gen_gid, 'latitude']
-                longitude = handler.gen.meta.loc[gen_gid, 'longitude']
+                latitude = handler.gen.meta.loc[gen_gid, lat_lon_cols[0]]
+                longitude = handler.gen.meta.loc[gen_gid, lat_lon_cols[1]]
                 timezone = handler.gen.meta.loc[gen_gid, 'timezone']
                 res_gids = handler.gen.meta\
                     .loc[gen_gid, 'offshore_res_gids']

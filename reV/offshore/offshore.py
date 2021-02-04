@@ -24,6 +24,7 @@ from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       NearestNeighborError)
 
 from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.utilities import get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -184,11 +185,7 @@ class Offshore:
         """
 
         offshore_data = pd.read_csv(offshore_fpath)
-
-        lat_label = [c for c in offshore_data.columns
-                     if c.lower().startswith('latitude')]
-        lon_label = [c for c in offshore_data.columns
-                     if c.lower().startswith('longitude')]
+        lat_label, lon_label = get_lat_lon_cols(offshore_data)
 
         if len(lat_label) > 1 or len(lon_label) > 1:
             e = ('Found multiple lat/lon columns: {} {}'
@@ -224,9 +221,10 @@ class Offshore:
         d_lim : float
             Maximum distance limit between wind farm points and resouce pixels.
         """
-
-        tree = cKDTree(self._farm_coords)  # pylint: disable=not-callable
-        d, i = tree.query(self.meta_source_offshore[['latitude', 'longitude']])
+        # pylint: disable=not-callable
+        tree = cKDTree(self._farm_coords)
+        lat_lon_cols = get_lat_lon_cols(self.meta_source_offshore)
+        d, i = tree.query(self.meta_source_offshore[lat_lon_cols])
 
         d_lim = 0
         if len(self._farm_coords) > 1:
