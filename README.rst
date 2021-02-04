@@ -1,6 +1,6 @@
-***
-reV
-***
+******************************************************
+Welcome to the Renewable Energy Potential (reV) Model!
+******************************************************
 
 .. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
@@ -28,8 +28,6 @@ reV
 
 .. image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/NREL/reV/master
-
-The Renewable Energy Potential (reV) Model
 
 .. inclusion-intro
 

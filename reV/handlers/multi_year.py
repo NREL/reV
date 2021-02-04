@@ -10,7 +10,7 @@ import pandas as pd
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import HandlerRuntimeError
 
-from rex.utilities.utilities import parse_year
+from rex.utilities.utilities import parse_year, get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class MultiYear(Outputs):
                          .format(dset, os.path.basename(source_h5)))
             with Outputs(source_h5, unscale=False, mode='r') as f_in:
                 if meta is not None:
-                    cols = ['latitude', 'longitude']
+                    cols = get_lat_lon_cols(meta)
                     source_meta = f_in.meta
                     if not meta[cols].equals(source_meta[cols]):
                         raise HandlerRuntimeError('Coordinates do not match')

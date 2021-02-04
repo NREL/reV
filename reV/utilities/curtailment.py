@@ -14,7 +14,7 @@ from warnings import warn
 from reV.utilities.exceptions import HandlerWarning
 
 from rex.utilities.solar_position import SolarPosition
-from rex.utilities.utilities import check_tz
+from rex.utilities.utilities import check_tz, get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +74,10 @@ def curtail(resource, curtailment, random_seed=0):
         raise KeyError(msg)
 
     # Curtail resource when curtailment is possible and is nighttime
+    lat_lon_cols = get_lat_lon_cols(resource.meta)
     solar_zenith_angle = SolarPosition(
         resource.time_index,
-        resource.meta[['latitude', 'longitude']].values).zenith
+        resource.meta[lat_lon_cols].values).zenith
     mask = (solar_zenith_angle > curtailment.dawn_dusk)
     curtail_mult = np.where(mask, curtail_mult, 1)
 
