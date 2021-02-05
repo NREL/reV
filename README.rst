@@ -28,8 +28,22 @@ Welcome to the Renewable Energy Potential (reV) Model!
 
 .. image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/NREL/reV/master
+    
+.. image:: https://zenodo.org/badge/201343076.svg
+   :target: https://zenodo.org/badge/latestdoi/201343076
 
 .. inclusion-intro
+
+
+Recommended Citation
+====================
+
+Please cite both the technical paper and the software with the version and DOI you used:
+
+Maclaurin, Galen J., Nicholas W. Grue, Anthony J. Lopez, and Donna M. Heimiller. 2019. “The Renewable Energy Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply Curve Modeling.” Golden, Colorado, United States: National Renewable Energy Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
+
+Michael Rossol, Grant Buster, and Mike Bannister. The Renewable Energy Potential Model (reV). https://github.com/NREL/reV (version v0.4.46), 2021. https://doi.org/10.5281/zenodo.4501717.
+
 
 reV command line tools
 ======================
