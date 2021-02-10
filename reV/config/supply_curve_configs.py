@@ -237,7 +237,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def points_per_worker(self):
         """Get the number of sc points to summarize on each worker"""
-        return self.get('max_workers', None)
+        return self.get('points_per_worker', None)
 
 
 class SupplyCurveConfig(AnalysisConfig):
