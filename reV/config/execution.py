@@ -22,11 +22,9 @@ class BaseExecutionConfig(BaseConfig):
         """
         super().__init__(config_dict)
 
-        self._option = 'local'
-        self._nodes = 1
-        self._max_workers = None
-        self._sites_per_worker = None
-        self._mem_util_lim = 0.4
+        self._default_option = 'local'
+        self._default_nodes = 1
+        self._default_mem_util_lim = 0.4
 
     @property
     def option(self):
@@ -37,8 +35,7 @@ class BaseExecutionConfig(BaseConfig):
         option : str
             Execution control option, e.g. local, peregrine, eagle...
         """
-        self._option = str(self.get('option', self._option)).lower()
-        return self._option
+        return str(self.get('option', self._default_option)).lower()
 
     @property
     def nodes(self):
@@ -49,8 +46,7 @@ class BaseExecutionConfig(BaseConfig):
         nodes : int
             Number of available nodes. Default is 1 node.
         """
-        self._nodes = int(self.get('nodes', self._nodes))
-        return self._nodes
+        return int(self.get('nodes', self._default_nodes))
 
     @property
     def max_workers(self):
@@ -61,8 +57,7 @@ class BaseExecutionConfig(BaseConfig):
         max_workers : int | None
             Processes per node. Default is None max_workers (all available).
         """
-        self._max_workers = self.get('max_workers', self._max_workers)
-        return self._max_workers
+        return self.get('max_workers', None)
 
     @property
     def sites_per_worker(self):
@@ -73,9 +68,7 @@ class BaseExecutionConfig(BaseConfig):
         sites_per_worker : int | None
             Number of sites to run per worker in a parallel scheme.
         """
-        self._sites_per_worker = self.get('sites_per_worker',
-                                          self._sites_per_worker)
-        return self._sites_per_worker
+        return self.get('sites_per_worker', None)
 
     @property
     def memory_utilization_limit(self):
@@ -88,29 +81,15 @@ class BaseExecutionConfig(BaseConfig):
             Memory utilization limit (fractional). Key in the config json is
             "memory_utilization_limit".
         """
-        self._mem_util_lim = self.get('memory_utilization_limit',
-                                      self._mem_util_lim)
-        return self._mem_util_lim
+        mem_util_lim = self.get('memory_utilization_limit',
+                                self._default_mem_util_lim)
+
+        return mem_util_lim
 
 
 class HPCConfig(BaseExecutionConfig):
     """Class to handle HPC configuration inputs."""
-
-    def __init__(self, config_dict):
-        """
-        Parameters
-        ----------
-        config_dict : str | dict
-            File path to config json (str), serialized json object (str),
-            or dictionary with pre-extracted config.
-        """
-
-        super().__init__(config_dict)
-
-        self._hpc_alloc = 'rev'
-        self._feature = None
-        self._module = None
-        self._conda_env = None
+    REQUIREMENTS = ('allocation')
 
     @property
     def allocation(self):
@@ -121,8 +100,8 @@ class HPCConfig(BaseExecutionConfig):
         hpc_alloc : str
             Name of the HPC allocation account for the specified job.
         """
-        self._hpc_alloc = self.get('allocation', self._hpc_alloc)
-        return self._hpc_alloc
+
+        return self['allocation']
 
     @property
     def feature(self):
@@ -138,8 +117,7 @@ class HPCConfig(BaseExecutionConfig):
                 "feature": "--qos=high"
                 "feature": "--depend=[state:job_id]"
         """
-        self._feature = self.get('feature', self._feature)
-        return self._feature
+        return self.get('feature', None)
 
     @property
     def module(self):
@@ -151,8 +129,7 @@ class HPCConfig(BaseExecutionConfig):
         module : str
             Module to load on node
         """
-        self._module = self.get('module', self._module)
-        return self._module
+        return self.get('module', None)
 
     @property
     def conda_env(self):
@@ -164,8 +141,7 @@ class HPCConfig(BaseExecutionConfig):
         conda_env : str
             Conda environment to activate
         """
-        self._conda_env = self.get('conda_env', self._conda_env)
-        return self._conda_env
+        return self.get('conda_env', None)
 
 
 class SlurmConfig(HPCConfig):
@@ -182,8 +158,7 @@ class SlurmConfig(HPCConfig):
 
         super().__init__(config_dict)
 
-        self._hpc_node_mem = None
-        self._hpc_walltime = 1
+        self._default_hpc_walltime = 1
 
     @property
     def memory(self):
@@ -194,8 +169,7 @@ class SlurmConfig(HPCConfig):
         _hpc_node_mem : int | None
             Requested node memory in GB.
         """
-        self._hpc_node_mem = self.get('memory', self._hpc_node_mem)
-        return self._hpc_node_mem
+        return self.get('memory', None)
 
     @property
     def walltime(self):
@@ -206,5 +180,4 @@ class SlurmConfig(HPCConfig):
         _hpc_walltime : int
             Requested single node job time in hours.
         """
-        self._hpc_walltime = float(self.get('walltime', self._hpc_walltime))
-        return self._hpc_walltime
+        return float(self.get('walltime', self._default_hpc_walltime))

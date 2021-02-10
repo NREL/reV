@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-econ', type=STR,
+              show_default=True,
               help='reV Economics job name, by default "reV-econ".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -195,30 +196,39 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files (required) (str, dict, or list).')
 @click.option('--cf_file', '-cf', default=None, type=click.Path(exists=True),
+              show_default=True,
               help='Single generation results file (str).')
 @click.option('--year', '-y', default=None, type=INT,
+              show_default=True,
               help='Year of generation results to analyze (if multiple years '
               'in cf_file). Default is None (use the only cf_mean dataset in '
               'cf_file).')
 @click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
+              show_default=True,
               help=('reV project points to analyze (slice, list, or file '
                     'string). Default is slice(0, 100)'))
 @click.option('--site_data', '-sd', default=None, type=click.Path(exists=True),
+              show_default=True,
               help='Site-specific data file for econ calculation. Input '
               'should be a filepath that points to a csv. Rows match sites, '
               'columns are input keys. Needs a "gid" column. Input as None '
               'if no site-specific data.')
 @click.option('--sites_per_worker', '-spw', default=None, type=INT,
+              show_default=True,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
 @click.option('--fout', '-fo', default='econ_output.h5', type=STR,
+              show_default=True,
               help=('Filename output specification (should be .h5). '
                     'Default is "econ_output.h5"'))
 @click.option('--dirout', '-do', default='./out/econ_out', type=STR,
+              show_default=True,
               help='Output directory specification. Default is ./out/econ_out')
 @click.option('--logdir', '-lo', default='./out/log_econ', type=STR,
+              show_default=True,
               help='Econ log file directory. Default is ./out/log_econ')
 @click.option('-or', '--output_request', type=STRLIST, default=['lcoe_fcr'],
+              show_default=True,
               help=('Requested output variable name(s). '
                     'Default is ["lcoe_fcr"].'))
 @click.option('-ap', '--append', is_flag=True,
@@ -248,12 +258,15 @@ def direct(ctx, sam_files, cf_file, year, points, site_data,
 
 @direct.command()
 @click.option('--max_workers', '-mw', type=INT, default=None,
+              show_default=True,
               help='Number of workers. Use 1 for serial, None for all cores.')
 @click.option('--timeout', '-to', type=INT, default=1800,
+              show_default=True,
               help='Number of seconds to wait for econ parallel run '
               'iterations to complete before returning zeros. '
               'Default is 1800 seconds.')
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
+              show_default=True,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
@@ -451,27 +464,34 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
 
 
 @direct.command()
+@click.option('--alloc', '-a', required=True, type=STR,
+              help='SLURM allocation account name.')
 @click.option('--nodes', '-no', default=1, type=INT,
+              show_default=True,
               help='Number of SLURM nodes for econ job. Default is 1.')
-@click.option('--alloc', '-a', default='rev', type=STR,
-              help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=0.5, type=float,
+              show_default=True,
               help='SLURM walltime request in hours. Default is 0.5')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--module', '-mod', default=None, type=STR,
+              show_default=True,
               help='Module to load')
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
+              show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
+def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
           stdout_path, verbose):
     """Run econ on HPC via SLURM job submission."""
 

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-rep_profiles', type=STR,
+              show_default=True,
               help='Job name. Default is "reV-rep_profiles".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -157,27 +158,36 @@ def from_config(ctx, config_file, verbose):
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
               required=True, help='Filepath to reV SC summary (agg) file.')
 @click.option('--reg_cols', '-rc', type=STRLIST, default=None,
+              show_default=True,
               help='List of column rev summary column labels to define '
               'regions to get rep profiles for.')
 @click.option('--cf_dset', '-cf', type=str, default='cf_profile',
+              show_default=True,
               help='Capacity factor dataset in gen_fpath to get profiles from')
 @click.option('--rep_method', '-rm', type=STR, default='meanoid',
+              show_default=True,
               help='String identifier for representative method '
               '(e.g. meanoid, medianoid).')
 @click.option('--err_method', '-em', type=STR, default='rmse',
+              show_default=True,
               help='String identifier for error method '
               '(e.g. rmse, mae, mbe).')
 @click.option('--weight', '-w', type=STR, default='gid_counts',
+              show_default=True,
               help='The supply curve column to use for a weighted average in '
               'the representative profile meanoid algorithm. '
               'Default weighting factor is "gid_counts".')
 @click.option('--n_profiles', '-np', type=INT, default=1,
+              show_default=True,
               help='Number of representative profiles to save.')
 @click.option('--out_dir', '-od', type=STR, default='./',
+              show_default=True,
               help='Directory to save rep profile output h5.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
+              show_default=True,
               help='Directory to save rep profile logs.')
 @click.option('--max_workers', '-mw', type=INT, default=None,
+              show_default=True,
               help='Number of parallel workers. 1 will run in serial. '
               'None will use all available.')
 @click.option('-agg', '--aggregate_profiles', is_flag=True,
@@ -272,18 +282,24 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
+              show_default=True,
               help='SLURM walltime request in hours for single year '
               'rep_profiles run. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
 @click.option('--module', '-mod', default=None, type=STR,
+              show_default=True,
               help='Module to load')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
+              show_default=True,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
 def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,

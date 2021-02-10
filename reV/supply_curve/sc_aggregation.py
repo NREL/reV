@@ -1136,7 +1136,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None):
+    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None,
+                     points_per_worker=10):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -1144,20 +1145,21 @@ class SupplyCurveAggregation(AbstractAggregation):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        excl_area : float
-            Area of an exclusion cell (square km).
-        max_workers : int | None
+        excl_area : float, optional
+            Area of an exclusion cell (square km), by default 0.0081
+        max_workers : int | None, optional
             Number of cores to run summary on. None is all
-            available cpus.
+            available cpus, by default None
+        points_per_worker : int
+            Number of sc_points to summarize on each worker, by default 10
 
         Returns
         -------
         summary : list
             List of dictionaries, each being an SC point summary.
         """
-
-        chunks = np.array_split(self._gids,
-                                int(np.ceil(len(self._gids) / 1000)))
+        chunks = len(self._gids) // points_per_worker
+        chunks = np.array_split(self._gids, chunks)
 
         logger.info('Running supply curve point aggregation for '
                     'points {} through {} at a resolution of {} '
@@ -1320,7 +1322,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, max_workers=None,
+    def summarize(self, args=None, max_workers=None, points_per_worker=10,
                   offshore_capacity=600, offshore_gid_counts=494,
                   offshore_pixel_area=4, offshore_meta_cols=None):
         """
@@ -1331,9 +1333,11 @@ class SupplyCurveAggregation(AbstractAggregation):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        max_workers : int | None
+        max_workers : int | None, optional
             Number of cores to run summary on. None is all
-            available cpus.
+            available cpus, by default None
+        points_per_worker : int
+            Number of sc_points to summarize on each worker, by default 10
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         offshore_gid_counts : int
@@ -1380,7 +1384,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       cap_cost_scale=self._cap_cost_scale)
         else:
             summary = self.run_parallel(args=args, excl_area=self._excl_area,
-                                        max_workers=max_workers)
+                                        max_workers=max_workers,
+                                        points_per_worker=points_per_worker)
 
         summary = self.run_offshore(summary,
                                     offshore_capacity=offshore_capacity,
@@ -1409,6 +1414,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
+                points_per_worker=10,
                 cap_cost_scale=None, offshore_capacity=600,
                 offshore_gid_counts=494, offshore_pixel_area=4,
                 offshore_meta_cols=None):
@@ -1481,9 +1487,11 @@ class SupplyCurveAggregation(AbstractAggregation):
         excl_area : float | None
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath.
-        max_workers : int | None
+        max_workers : int | None, optional
             Number of cores to run summary on. None is all
-            available cpus.
+            available cpus, by default None
+        points_per_worker : int
+            Number of sc_points to summarize on each worker, by default 10
         cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
@@ -1532,6 +1540,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
+                                points_per_worker=points_per_worker,
                                 offshore_capacity=offshore_capacity,
                                 offshore_gid_counts=offshore_gid_counts,
                                 offshore_pixel_area=offshore_pixel_area,

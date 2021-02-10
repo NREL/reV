@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-agg', type=STR,
+              show_default=True,
               help='Job name. Default is "reV-agg".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -121,6 +122,8 @@ def from_config(ctx, config_file, verbose):
                        friction_dset=config.friction_dset,
                        cap_cost_scale=config.cap_cost_scale,
                        out_dir=config.dirout,
+                       max_workers=config.max_workers,
+                       points_per_worker=config.points_per_worker,
                        log_dir=config.logdir,
                        verbose=verbose)
 
@@ -149,6 +152,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FRICTION_DSET'] = config.friction_dset
         ctx.obj['CAP_COST_SCALE'] = config.cap_cost_scale
         ctx.obj['OUT_DIR'] = config.dirout
+        ctx.obj['MAX_WORKERS'] = config.max_workers
+        ctx.obj['POINTS_PER_WORKER'] = config.points_per_worker
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
 
@@ -166,16 +171,19 @@ def from_config(ctx, config_file, verbose):
               help='Exclusions file (.h5).')
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV generation/econ output file.')
+@click.option('--tm_dset', '-tm', type=STR, required=True,
+              help='Dataset in the exclusions file that maps the exclusions '
+              'to the resource being analyzed.')
 @click.option('--econ_fpath', '-ef', type=STR, default=None,
+              show_default=True,
               help='reV econ output file (optional argument that can be '
               'included if reV gen and econ data are being used from '
               'different files.')
 @click.option('--res_fpath', '-rf', type=STR, default=None,
+              show_default=True,
               help='Resource file, required if techmap dset is to be created.')
-@click.option('--tm_dset', '-tm', type=STR, required=True,
-              help='Dataset in the exclusions file that maps the exclusions '
-              'to the resource being analyzed.')
 @click.option('--excl_dict', '-exd', type=STR, default=None,
+              show_default=True,
               help=('String representation of a dictionary of exclusion '
                     'LayerMask arguments {layer: {kwarg: value}} where layer '
                     'is a dataset in excl_fpath and kwarg can be '
@@ -186,29 +194,38 @@ def from_config(ctx, config_file, verbose):
               help=('run a pre-flight check on each exclusion layer to '
                     'ensure they contain un-excluded values'))
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
+              show_default=True,
               help='Dataset to determine the resource class '
               '(must be in gen_fpath).')
 @click.option('--res_class_bins', '-cb', type=FLOATLIST, default=None,
+              show_default=True,
               help='List of resource class bin edges.')
 @click.option('--cf_dset', '-cf', type=STR, default='cf_mean-means',
+              show_default=True,
               help='Dataset containing capacity factor values to aggregate.')
 @click.option('--lcoe_dset', '-lc', type=STR, default='lcoe_fcr-means',
+              show_default=True,
               help='Dataset containing lcoe values to aggregate.')
 @click.option('--h5_dsets', '-hd', type=STRLIST, default=None,
+              show_default=True,
               help='Additional datasets from the source gen/econ h5 files to '
               'aggregate.')
 @click.option('--data_layers', '-d', type=STR, default=None,
+              show_default=True,
               help='String representation of a dictionary of additional data '
               'layers to include in the aggregation e.g. '
               '{"slope": {"dset": "srtm_slope", "method": "mean"}}')
 @click.option('--resolution', '-r', type=INT, default=64,
+              show_default=True,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
 @click.option('--excl_area', '-ea', type=FLOAT, default=0.0081,
+              show_default=True,
               help='Area of an exclusion pixel in km2. None will try to '
               'infer the area from the profile transform attribute in '
               'excl_fpath.')
 @click.option('--power_density', '-pd', type=STRFLOAT, default=None,
+              show_default=True,
               help='Power density in MW/km2 or filepath to variable power '
               'density csv file. None will attempt to infer a constant '
               'power density from the generation meta data technology. '
@@ -217,19 +234,24 @@ def from_config(ctx, config_file, verbose):
               '(typically wtk or nsrdb gid). and the power_density column '
               'is in MW/km2.')
 @click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
+              show_default=True,
               help='Contiguous area filter kernel name ("queen", "rook").')
 @click.option('--min_area', '-ma', type=FLOAT, default=None,
+              show_default=True,
               help='Contiguous area filter minimum area, default is None '
               '(No minimum area filter).')
 @click.option('--friction_fpath', '-ff', type=STR, default=None,
+              show_default=True,
               help='Optional h5 filepath to friction surface data. '
               'Must match the exclusion shape/resolution and be '
               'paired with the --friction_dset input arg. The friction data '
               'creates a "mean_lcoe_friction" output which is the nominal '
               'LCOE multiplied by the friction data.')
 @click.option('--friction_dset', '-fd', type=STR, default=None,
+              show_default=True,
               help='Optional friction surface dataset in friction_fpath.')
 @click.option('--cap_cost_scale', '-cs', type=STR, default=None,
+              show_default=True,
               help='Optional LCOE scaling equation to implement "economies '
               'of scale". Equations must be in python string format and '
               'return a scalar value to multiply the capital cost by. '
@@ -237,17 +259,27 @@ def from_config(ctx, config_file, verbose):
               'of the columns in the reV supply curve aggregation table. '
               'This will not affect offshore wind LCOE.')
 @click.option('--out_dir', '-o', type=STR, default='./',
+              show_default=True,
               help='Directory to save aggregation summary output.')
+@click.option('--max_workers', '-mw', type=INT, default=None,
+              show_default=True,
+              help=("Number of cores to run summary on. None is all "
+                    "available cpus"))
+@click.option('--points_per_worker', '-ppw', type=int, default=10,
+              show_default=True,
+              help="Number of sc_points to summarize on each worker")
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
+              show_default=True,
               help='Directory to save aggregation logs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
+def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            excl_dict, check_excl_layers, res_class_dset, res_class_bins,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
-           friction_dset, cap_cost_scale, out_dir, log_dir, verbose):
+           friction_dset, cap_cost_scale, out_dir, max_workers,
+           points_per_worker, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     name = ctx.obj['NAME']
@@ -273,6 +305,8 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
     ctx.obj['FRICTION_DSET'] = friction_dset
     ctx.obj['CAP_COST_SCALE'] = cap_cost_scale
     ctx.obj['OUT_DIR'] = out_dir
+    ctx.obj['MAX_WORKERS'] = max_workers
+    ctx.obj['POINTS_PER_WORKER'] = points_per_worker
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
 
@@ -316,7 +350,9 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                 friction_fpath=friction_fpath,
                 friction_dset=friction_dset,
                 check_excl_layers=check_excl_layers,
-                cap_cost_scale=cap_cost_scale)
+                cap_cost_scale=cap_cost_scale,
+                max_workers=max_workers,
+                points_per_worker=points_per_worker)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -354,7 +390,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
                  friction_fpath, friction_dset, cap_cost_scale,
-                 out_dir, log_dir, verbose):
+                 out_dir, max_workers, points_per_worker, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -378,6 +414,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-fd {}'.format(SLURM.s(friction_dset)),
             '-cs {}'.format(SLURM.s(cap_cost_scale)),
             '-o {}'.format(SLURM.s(out_dir)),
+            '-mw {}'.format(SLURM.s(max_workers)),
+            '-ppw {}'.format(SLURM.s(points_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -398,17 +436,23 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--walltime', '-wt', default=1.0, type=float,
+              show_default=True,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--module', '-mod', default=None, type=STR,
+              show_default=True,
               help='Module to load')
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
+              show_default=True,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
 def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
@@ -437,6 +481,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     friction_dset = ctx.obj['FRICTION_DSET']
     cap_cost_scale = ctx.obj['CAP_COST_SCALE']
     out_dir = ctx.obj['OUT_DIR']
+    max_workers = ctx.obj['MAX_WORKERS']
+    points_per_worker = ctx.obj['POINTS_PER_WORKER']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
 
@@ -450,7 +496,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset, cap_cost_scale,
-                       out_dir, log_dir, verbose)
+                       out_dir, max_workers, points_per_worker, log_dir,
+                       verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

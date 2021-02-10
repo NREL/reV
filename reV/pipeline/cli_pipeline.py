@@ -16,6 +16,7 @@ from rex.utilities.execution import SubprocessManager
 
 @click.group()
 @click.option('--name', '-n', default='reV-pipeline', type=STR,
+              show_default=True,
               help='reV pipeline name, by default "reV-pipeline".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')

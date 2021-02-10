@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV_collect', type=str,
+              show_default=True,
               help='Collection job name. Default is "reV_collect".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -134,14 +135,16 @@ def from_config(ctx, config_file, verbose):
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
               help='Directory containing h5 files to collect.')
-@click.option('--project_points', '-pp', type=STR,
+@click.option('--project_points', '-pp', type=STR, required=True,
               help='Project points file representing the full '
               'collection scope.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected.')
 @click.option('--file_prefix', '-fp', type=STR, default=None,
+              show_default=True,
               help='File prefix found in the h5 file names to be collected.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs',
+              show_default=True,
               help='Directory to put log files.')
 @click.option('-p', '--purge_chunks', is_flag=True,
               help='Flag to delete chunked files after collection.')
@@ -276,20 +279,25 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 
 
 @direct.command()
-@click.option('--alloc', '-a', default='rev', type=str,
-              help='SLURM allocation account name. Default is "rev".')
+@click.option('--alloc', '-a', required=True, type=STR,
+              help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
+              show_default=True,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
-@click.option('--module', '-mod', default=None, type=STR,
+@click.option('--module', '-mod', default=None, type=STR, show_default=True,
               help='Module to load')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
+              show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
