@@ -33,17 +33,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         """
         super().__init__(config)
 
-        self._default_res_fpath = None
-        self._default_econ_fpath = None
-        self._default_res_class_dset = None
-        self._default_res_class_bins = None
         self._default_cf_dset = 'cf_mean-means'
         self._default_lcoe_dset = 'lcoe_fcr-means'
-        self._default_data_layers = None
         self._default_resolution = 64
         self._default_area_filter_kernel = 'queen'
-        self._default_min_area = None
-        self._default_excl_dict = None
+        self._default_points_per_worker = 10
 
         self._sc_agg_preflight()
 
@@ -104,7 +98,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         """Get the econ data filepath. This is an optional argument only used
         if reV gen and econ outputs are being used from different files."""
 
-        fpath = self.get('econ_fpath', self._default_econ_fpath)
+        fpath = self.get('econ_fpath', None)
 
         if fpath == 'PIPELINE':
             target_modules = ['multi-year', 'collect', 'econ']
@@ -131,7 +125,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def res_fpath(self):
         """Get the resource data filepath"""
-        res_fpath = self.get('res_fpath', self._default_res_fpath)
+        res_fpath = self.get('res_fpath', None)
         if isinstance(res_fpath, str):
             if '{}' in res_fpath:
                 for year in range(1998, 2018):
@@ -150,17 +144,17 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def excl_dict(self):
         """Get the exclusions dictionary"""
-        return self.get('excl_dict', self._default_excl_dict)
+        return self.get('excl_dict', None)
 
     @property
     def res_class_dset(self):
         """Get the resource class dataset"""
-        return self.get('res_class_dset', self._default_res_class_dset)
+        return self.get('res_class_dset', None)
 
     @property
     def res_class_bins(self):
         """Get the resource class bins"""
-        return self.get('res_class_bins', self._default_res_class_bins)
+        return self.get('res_class_bins', None)
 
     @property
     def cf_dset(self):
@@ -180,7 +174,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def data_layers(self):
         """Get the data layers dict"""
-        return self.get('data_layers', self._default_data_layers)
+        return self.get('data_layers', None)
 
     @property
     def resolution(self):
@@ -206,7 +200,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def min_area(self):
         """Get the minimum area filter minimum area in km2."""
-        return self.get('min_area', self._default_min_area)
+        return self.get('min_area', None)
 
     @property
     def friction_fpath(self):
@@ -235,6 +229,16 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         """
         return self.get('cap_cost_scale', None)
 
+    @property
+    def max_workers(self):
+        """Get the number of workers to use during computation"""
+        return self.get('max_workers', None)
+
+    @property
+    def points_per_worker(self):
+        """Get the number of sc points to summarize on each worker"""
+        return self.get('max_workers', None)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
@@ -252,8 +256,6 @@ class SupplyCurveConfig(AnalysisConfig):
         """
         super().__init__(config)
 
-        self._default_sc_features = None
-        self._default_transmission_costs = None
         self._default_sort_on = 'total_lcoe'
         self._default_n_dirs = 2
 
@@ -297,12 +299,12 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def sc_features(self):
         """Get the supply curve features input."""
-        return self.get('sc_features', self._default_sc_features)
+        return self.get('sc_features', None)
 
     @property
     def transmission_costs(self):
         """Get the transmission costs input."""
-        return self.get('transmission_costs', self._default_transmission_costs)
+        return self.get('transmission_costs', None)
 
     @property
     def simple(self):

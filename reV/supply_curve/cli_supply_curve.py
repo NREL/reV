@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-sc', type=STR,
+              show_default=True,
               help='Job name. Default is "reV-sc".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -149,21 +150,27 @@ def from_config(ctx, config_file, verbose):
 @click.option('--fixed_charge_rate', '-fcr', type=float, required=True,
               help='Fixed charge rate used to compute LCOT')
 @click.option('--sc_features', '-scf', type=STR, default=None,
+              show_default=True,
               help='Table containing additional supply curve features '
                    '(.csv or .json)')
 @click.option('--transmission_costs', '-tc', type=STR, default=None,
+              show_default=True,
               help='Table or serialized dict of transmission cost inputs.')
 @click.option('--sort_on', '-so', type=str, default='total_lcoe',
+              show_default=True,
               help='The supply curve table column label to sort on. '
               'This determines the ordering of the SC buildout algorithm.')
 @click.option('--offshore_trans_table', '-ott', type=STR, default=None,
+              show_default=True,
               help=('Path to offshore transmission table, if None offshore sc '
                     'points will not be included, by default None'))
 @click.option('--wind_dirs', '-wd', type=click.Path(exists=True), default=None,
+              show_default=True,
               help=('Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs'
                     ' output with the neighboring supply curve point gids and '
                     'power-rose value at each cardinal direction'))
 @click.option('--n_dirs', '-dirs', type=int, default=2,
+              show_default=True,
               help='Number of prominent directions to use')
 @click.option('--downwind', '-dw', is_flag=True,
               help=('Flag to remove downwind neighbors as well as upwind '
@@ -172,11 +179,14 @@ def from_config(ctx, config_file, verbose):
               help=('Flag as to whether offshore farms should be included '
                     'during CompetitiveWindFarms, by default False'))
 @click.option('--max_workers', '-mw', type=INT, default=None,
+              show_default=True,
               help=('Number of workers to use to compute lcot, if > 1 run in '
                     'parallel. None uses all available cpus.'))
 @click.option('--out_dir', '-o', type=STR, default='./',
+              show_default=True,
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
+              show_default=True,
               help='Directory to save aggregation logs.')
 @click.option('-s', '--simple', is_flag=True,
               help='Flag to turn on simple supply curve calculation.')
@@ -316,18 +326,24 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
-@click.option('--memory', '-mem', default=None, type=INT, help='SLURM node '
-              'memory request in GB. Default is None')
+@click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
+              help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
+              show_default=True,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--module', '-mod', default=None, type=STR,
+              show_default=True,
               help='Module to load')
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
+              show_default=True,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
 def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,

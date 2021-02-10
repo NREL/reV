@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-gen', type=STR,
+              show_default=True,
               help='reV generation job name, by default "reV-gen".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -237,44 +238,55 @@ def make_fout(name, year):
               help='Filepath to single resource file, multi-h5 directory, '
               'or /h5_dir/prefix*suffix.')
 @click.option('--points', '-p', default=None, type=PROJECTPOINTS,
+              show_default=True,
               help=('reV project points to analyze '
                     '(slice, list, or file string). '
                     'Default is slice(0, 100)'))
 @click.option('--lat_lon_fpath', '-llf', type=click.Path(exists=True),
-              default=None,
+              default=None, show_default=True,
               help=('File path to .csv or .json containing latitude, '
                     'longitude coordinates of interest'))
 @click.option('--lat_lon_coords', '--llc', nargs=2, type=float, default=None,
+              show_default=True,
               help='(lat, lon) coordinates of interest')
 @click.option('--regions', '-regs', type=STR, default=None,
+              show_default=True,
               help='File path to .json containing regions of interest')
 @click.option('--region', '-r', type=STR, default=None,
+              show_default=True,
               help='Region to extract')
 @click.option('--region_col', '-col', type=STR, default='state',
+              show_default=True,
               help='Meta column to search for region')
 @click.option('--sites_per_worker', '-spw', default=None, type=INT,
+              show_default=True,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
 @click.option('--fout', '-fo', default='gen_output.h5', type=STR,
+              show_default=True,
               help=('Filename output specification (should be .h5). '
                     'Default is "gen_output.h5"'))
 @click.option('--dirout', '-do', default='./out/gen_out', type=STR,
+              show_default=True,
               help='Output directory specification. Default is ./out/gen_out')
 @click.option('--logdir', '-lo', default='./out/log_gen', type=STR,
               help='Generation log file directory. Default is ./out/log_gen')
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
+              show_default=True,
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
 @click.option('--site_data', '-sd', default=None, type=click.Path(exists=True),
+              show_default=True,
               help='Site-specific data file for gen calculation. Input '
               'should be a filepath that points to a csv. Rows match sites, '
               'columns are input keys. Needs a "gid" column. Input as None '
               'if no site-specific data.')
 @click.option('-mem', '--mem_util_lim', type=float, default=0.4,
+              show_default=True,
               help='Fractional node memory utilization limit. Default is 0.4 '
               'to account for numpy memory spikes and memory bloat.')
 @click.option('-curt', '--curtailment', type=click.Path(exists=True),
-              default=None,
+              default=None, show_default=True,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
 @click.option('-v', '--verbose', is_flag=True,
@@ -370,12 +382,15 @@ def _parse_points(ctx):
 
 @direct.command()
 @click.option('--max_workers', '-mw', type=INT, default=None,
+              show_default=True,
               help='Number of workers. Use 1 for serial, None for all cores.')
 @click.option('--timeout', '-to', type=INT, default=1800,
+              show_default=True,
               help='Number of seconds to wait for parallel generation run '
               'iterations to complete before returning zeros. '
               'Default is 1800 seconds.')
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
+              show_default=True,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
@@ -634,27 +649,34 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
 
 @direct.command()
+@click.option('--alloc', '-a', required=True, type=STR,
+              help='SLURM allocation account name.')
 @click.option('--nodes', '-no', default=1, type=INT,
+              show_default=True,
               help='Number of SLURM nodes for gen job. Default is 1.')
-@click.option('--alloc', '-a', default='rev', type=STR,
-              help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
               help='Single node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
+              show_default=True,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
               help='Conda env to activate')
 @click.option('--module', '-mod', default=None, type=STR,
+              show_default=True,
               help='Module to load')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
+              show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
+def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
           stdout_path, verbose):
     """Run generation on HPC via SLURM job submission."""
 

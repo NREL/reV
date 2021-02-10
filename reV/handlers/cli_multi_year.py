@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV_multi-year', type=str,
+              show_default=True,
               help='Multi-year job name. Default is "reV_multi-year".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -129,15 +130,17 @@ def direct(ctx, my_file, verbose):
 
 
 @direct.command()
-@click.option('--group', '-g', type=STR, default=None,
-              help='Group to collect into. Useful for collecting multiple '
-              'scenarios into a single file.')
 @click.option('--source_files', '-sf', required=True, type=PATHLIST,
               help='List of files to collect from.')
+@click.option('--group', '-g', type=STR, default=None,
+              show_default=True,
+              help='Group to collect into. Useful for collecting multiple '
+              'scenarios into a single file.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected. If means, multi-year '
               'means will be computed.')
 @click.option('--pass_through_dsets', '-pt', default=None, type=STRLIST,
+              show_default=True,
               help='Optional list of datasets that are identical in the '
               'multi-year files (e.g. input datasets that dont vary '
               'from year to year) that should be copied to the output '
@@ -146,7 +149,7 @@ def direct(ctx, my_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def multi_year(ctx, group, source_files, dsets, pass_through_dsets, verbose):
+def multi_year(ctx, source_files, group, dsets, pass_through_dsets, verbose):
     """Run multi year collection and means on local worker."""
 
     name = ctx.obj['NAME']
@@ -299,30 +302,35 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
 
 @direct.command()
-@click.option('--alloc', '-a', default='rev', type=str,
-              help='SLURM allocation account name. Default is "rev".')
-@click.option('--walltime', '-wt', default=4.0, type=float,
-              help='SLURM walltime request in hours. Default is 1.0')
-@click.option('--feature', '-l', default=None, type=STR,
-              help='Additional flags for SLURM job. Format is "--qos=high" '
-              'or "--depend=[state:job_id]". Default is None.')
-@click.option('--memory', '-mem', default=None, type=INT,
-              help='SLURM node memory request in GB. Default is None')
-@click.option('--conda_env', '-env', default=None, type=STR,
-              help='Conda env to activate')
-@click.option('--module', '-mod', default=None, type=STR,
-              help='Module to load')
-@click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
-              help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('--group_params', '-gp', required=True, type=str,
               help='Stringified dictionary of collection groups and their '
               'parameters, e.g.: '
               '{group1: {group: null, source_files: [], dsets: []}}')
+@click.option('--alloc', '-a', required=True, type=STR,
+              help='SLURM allocation account name.')
+@click.option('--walltime', '-wt', default=4.0, type=float,
+              show_default=True,
+              help='SLURM walltime request in hours. Default is 1.0')
+@click.option('--feature', '-l', default=None, type=STR,
+              show_default=True,
+              help='Additional flags for SLURM job. Format is "--qos=high" '
+              'or "--depend=[state:job_id]". Default is None.')
+@click.option('--memory', '-mem', default=None, type=INT,
+              show_default=True,
+              help='SLURM node memory request in GB. Default is None')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              show_default=True,
+              help='Conda env to activate')
+@click.option('--module', '-mod', default=None, type=STR, show_default=True,
+              help='Module to load')
+@click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
+              show_default=True,
+              help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
-                     module, stdout_path, group_params, verbose):
+def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
+                     conda_env, module, stdout_path, verbose):
     """
     Run multi year collection and means on HPC via SLURM job submission.
     """

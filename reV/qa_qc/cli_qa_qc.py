@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV-QA_QC', type=STR,
+              show_default=True,
               help='reV QA/QC name, by default "reV-QA/QC".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -57,6 +58,7 @@ def valid_config_keys():
 @click.option('--out_dir', '-o', type=click.Path(), required=True,
               help="Directory path to save summary tables and plots too")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
+              show_default=True,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
@@ -78,13 +80,17 @@ def summarize(ctx, out_dir, log_file, verbose):
 @click.option('--h5_file', '-h5', type=click.Path(exists=True), required=True,
               help='Path to .h5 file to summarize')
 @click.option('--dsets', '-ds', type=STRLIST, default=None,
+              show_default=True,
               help='Datasets to summarize, by default None')
 @click.option('--group', '-grp', type=STR, default=None,
+              show_default=True,
               help=('Group within h5_file to summarize datasets for, by '
                     'default None'))
 @click.option('--process_size', '-ps', type=INT, default=None,
+              show_default=True,
               help='Number of sites to process at a time, by default None')
 @click.option('--max_workers', '-w', type=INT, default=None,
+              show_default=True,
               help=('Number of workers to use when summarizing 2D datasets,'
                     ' by default None'))
 @click.pass_context
@@ -99,9 +105,11 @@ def h5(ctx, h5_file, dsets, group, process_size, max_workers):
 @summarize.command()
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
+              show_default=True,
               help="Colormap name, by default 'viridis'")
 @click.pass_context
 def scatter_plots(ctx, plot_type, cmap):
@@ -115,6 +123,7 @@ def scatter_plots(ctx, plot_type, cmap):
 @click.option('--sc_table', '-sct', type=click.Path(exists=True),
               required=True, help='Path to .csv containing Supply Curve table')
 @click.option('--columns', '-cols', type=STRLIST, default=None,
+              show_default=True,
               help=('Column(s) to summarize, if None summarize all numeric '
                     'columns, by default None'))
 @click.pass_context
@@ -128,10 +137,12 @@ def supply_curve_table(ctx, sc_table, columns):
 
 @summarize.command()
 @click.option('--sc_table', '-sct', type=click.Path(exists=True), default=None,
+              show_default=True,
               help=("Path to .csv containing Supply Curve table, can be "
                     "supplied in 'supply-curve-table'"))
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--lcoe', '-lcoe', type=STR, default='mean_lcoe',
@@ -154,11 +165,14 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
               help='Path to .npy file containing final exclusions mask')
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
+              show_default=True,
               help="Colormap name, by default 'viridis'")
 @click.option('--plot_step', '-step', type=int, default=100,
+              show_default=True,
               help="Step between points to plot")
 @click.pass_context
 def exclusions_mask(ctx, excl_mask, plot_type, cmap, plot_step):
@@ -179,22 +193,29 @@ def exclusions_mask(ctx, excl_mask, plot_type, cmap, plot_step):
 @click.option('--sub_dir', '-sd', type=STR, required=True,
               help="Sub directory to save summary tables and plots too")
 @click.option('--dsets', '-ds', type=STRLIST, default=None,
+              show_default=True,
               help='Datasets to summarize, by default None')
 @click.option('--group', '-grp', type=STR, default=None,
+              show_default=True,
               help=('Group within h5_file to summarize datasets for, by '
                     'default None'))
 @click.option('--process_size', '-ps', type=INT, default=None,
+              show_default=True,
               help='Number of sites to process at a time, by default None')
 @click.option('--max_workers', '-w', type=INT, default=None,
+              show_default=True,
               help=('Number of workers to use when summarizing 2D datasets,'
                     ' by default None'))
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
+              show_default=True,
               help="Colormap name, by default 'viridis'")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
+              show_default=True,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
@@ -237,17 +258,22 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
 @click.option('--sub_dir', '-sd', type=STR, required=True,
               help="Sub directory to save summary tables and plots too")
 @click.option('--columns', '-cols', type=STRLIST, default=None,
+              show_default=True,
               help=('Column(s) to summarize, if None summarize all numeric '
                     'columns, by default None'))
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
+              show_default=True,
               help="Colormap name, by default 'viridis'")
 @click.option('--lcoe', '-lcoe', type=STR, default='mean_lcoe',
+              show_default=True,
               help="LCOE column label to plot, by default 'mean_lcoe'")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
+              show_default=True,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
@@ -290,25 +316,32 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
 @click.option('--sub_dir', '-sd', type=STR, required=True,
               help="Sub directory to save summary tables and plots too")
 @click.option('--excl_dict', '-exd', type=STR, default=None,
+              show_default=True,
               help='String representation of a dictionary of exclusions '
               'LayerMask arguments {layer: {kwarg: value}} where layer is a '
               'dataset in excl_fpath and kwarg can be "inclusion_range", '
               '"exclude_values", "include_values", "use_as_weights", '
               '"exclude_nodata", and/or "weight".')
 @click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
+              show_default=True,
               help='Contiguous area filter kernel name ("queen", "rook").')
 @click.option('--min_area', '-ma', type=FLOAT, default=None,
+              show_default=True,
               help='Contiguous area filter minimum area, default is None '
               '(No minimum area filter).')
 @click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
+              show_default=True,
               help="Colormap name, by default 'viridis'")
 @click.option('--plot_step', '-step', type=int, default=100,
+              show_default=True,
               help="Step between points to plot")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
+              show_default=True,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
