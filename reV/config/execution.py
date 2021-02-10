@@ -89,7 +89,7 @@ class BaseExecutionConfig(BaseConfig):
 
 class HPCConfig(BaseExecutionConfig):
     """Class to handle HPC configuration inputs."""
-    REQUIREMENTS = ('allocation')
+    REQUIREMENTS = ('allocation', )
 
     @property
     def allocation(self):
