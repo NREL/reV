@@ -1,0 +1,31 @@
+{
+  "analysis_years": [
+    2010,
+    2011
+  ],
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "nodes": 2,
+    "option": "eagle",
+    "sites_per_worker": 100,
+    "walltime": 0.5
+  },
+  "log_level": "INFO",
+  "name": "gen",
+  "output_request": [
+    "cf_mean",
+    "lcoe_fcr"
+  ],
+  "project_points": "./ri_offshore_proj_points.csv",
+  "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
+  "sam_files": {
+    "onshore": "./onshore.json",
+    "offshore": "./offshore.json"
+  },
+  "technology": "windpower"
+}
