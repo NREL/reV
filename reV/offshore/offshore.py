@@ -18,7 +18,6 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       OffshoreWindInputError)
 
-from rex.utilities.utilities import get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -76,21 +75,17 @@ class Offshore:
         self._meta_source, self._onshore_mask, self._offshore_mask = \
             self._parse_cf_meta(self._gen_fpath)
 
-        self._offshore_data, self._farm_coords = self._parse_offshore_data(
-            self._offshore_fpath, self._project_points)
-
-        self._system_inputs = {gid: self._get_system_inputs(gid)
-                               for gid in self.offshore_res_gids}
-        self._system_inputs = pd.DataFrame(self._system_inputs)
-        print(self._system_inputs)
+        self._offshore_data = self._parse_offshore_data(self._offshore_fpath)
+        self._system_inputs = self._parse_system_inputs()
+        self._preflight_checks()
 
         logger.info('Initialized offshore wind farm aggregation module with '
                     '{} onshore resource points, {} offshore resource points.'
                     .format(len(self.meta_source_onshore),
                             len(self.meta_source_offshore)))
 
-        self._out = {'lcoe_fcr': np.full(len(self._offshore_data), np.nan),
-                     'losses': np.full(len(self._offshore_data), np.nan)}
+        self._out = {'lcoe': np.full(len(self._offshore_data), np.nan),
+                     'total_losses': np.full(len(self._offshore_data), np.nan)}
 
     @staticmethod
     def _parse_cf_meta(gen_fpath):
@@ -118,6 +113,7 @@ class Offshore:
                'capacity factor meta data!')
         assert 'gid' in meta, msg
 
+        # currently an assumption of sorted gids in the reV gen output
         msg = ('Source capacity factor meta data is not ordered!')
         assert list(meta['gid']) == sorted(list(meta['gid'])), msg
 
@@ -132,17 +128,14 @@ class Offshore:
 
         return meta, onshore_mask, offshore_mask
 
-    @staticmethod
-    def _parse_offshore_data(offshore_fpath, project_points,
-                              required_columns=('gid', 'config')):
+    def _parse_offshore_data(self, offshore_fpath,
+                             required_columns=('gid', 'config')):
         """Parse the offshore data file for offshore farm site data and coords.
 
         Parameters
         ----------
         offshore_fpath : str
             Full filepath to offshore wind farm data file.
-        project_points : reV.config.project_points.ProjectPoints
-            Instantiated project points instance.
         required_columns : tuple | list
             List of column names that must be in the offshore data in
             order to run the reV offshore module.
@@ -152,20 +145,9 @@ class Offshore:
         offshore_data : pd.DataFrame
             Dataframe of extracted offshore farm data. Each row is a farm and
             columns are farm data attributes.
-        farm_coords : pd.DataFrame
-            Latitude/longitude coordinates for each offshore farm.
         """
 
         offshore_data = pd.read_csv(offshore_fpath)
-        lat_label, lon_label = get_lat_lon_cols(offshore_data)
-
-        if len(lat_label) > 1 or len(lon_label) > 1:
-            e = ('Found multiple lat/lon columns: {} {}'
-                 .format(lat_label, lon_label))
-            logger.error(e)
-            raise KeyError(e)
-        else:
-            c_labels = [lat_label[0], lon_label[0]]
 
         if 'dist_l_to_ts' in offshore_data:
             if offshore_data['dist_l_to_ts'].sum() > 0:
@@ -184,9 +166,8 @@ class Offshore:
                 logger.error(msg)
                 raise KeyError(msg)
 
-        requested_gids = list(project_points.gids)
         available_gids = list(offshore_data['gid'].values)
-        missing = set(requested_gids) - set(available_gids)
+        missing = set(self.offshore_res_gids) - set(available_gids)
         if any(missing):
             msg = ('The following gids were requested in the reV project '
                    'points input but were not available in the offshore data '
@@ -195,38 +176,93 @@ class Offshore:
             raise OffshoreWindInputError(msg)
 
         # only keep the offshore data corresponding to relevant project points
-        mask = offshore_data['gid'].isin(project_points.gids)
+        mask = offshore_data['gid'].isin(self.offshore_res_gids)
         offshore_data = offshore_data[mask]
 
-        return offshore_data, offshore_data[c_labels]
+        return offshore_data
 
-    def _get_system_inputs(self, res_gid):
+    def _parse_system_inputs(self):
         """Get the system inputs dict (SAM tech inputs) from project points.
-
-        Parameters
-        ----------
-        res_gid : int
-            WTK resource gid for wind farm (nearest neighbor).
 
         Returns
         -------
-        system_inputs : dict
-            Dictionary of SAM system inputs for wtk resource gid input.
+        system_inputs : pd.DataFrame
+            DataFrame of SAM config inputs (columns) for every offshore
+            resource gid (row). Index is resource gids and there is also
+            a column "gid" with the copied gids.
         """
-        system_inputs = self._project_points[res_gid][1]
 
-        if 'turbine_capacity' not in system_inputs:
-            # convert from SAM kw powercurve to MW.
-            cap = np.max(system_inputs['wind_turbine_powercurve_powerout'])
-            cap_mw = cap / 1000
-            system_inputs['turbine_capacity'] = cap_mw
-            m = ('Offshore wind farm system input key "turbine_capacity" not '
-                 'specified for res_gid {}. Setting to 1/1000 the max of the '
-                 'SAM power curve: {} MW'.format(res_gid, cap_mw))
-            logger.warning(m)
-            warn(m, OffshoreWindInputWarning)
+        system_inputs = {}
+
+        for gid in self.offshore_res_gids:
+            system_inputs[gid] = self._project_points[gid][1]
+
+            if 'turbine_capacity' not in system_inputs[gid]:
+                # convert from SAM kw powercurve to MW.
+                arr = system_inputs[gid]['wind_turbine_powercurve_powerout']
+                cap_kw = np.max(arr)
+                cap_mw = cap_kw / 1000
+                system_inputs[gid]['turbine_capacity'] = cap_mw
+
+        system_inputs = pd.DataFrame(system_inputs).T
+        system_inputs = system_inputs.sort_index()
+        system_inputs['gid'] = system_inputs.index.values
+        system_inputs.index.name = 'gid'
 
         return system_inputs
+
+    def _preflight_checks(self):
+        """Run some preflight checks on the offshore inputs"""
+        offshore_configs = {k: v for k, v in
+                            self._project_points.sam_configs.items()
+                            if k in self._nrwal_configs}
+        for cid, sys_in in offshore_configs.items():
+            if 'turbine_capacity' not in sys_in:
+                msg = ('System input key "turbine_capacity" not found in '
+                       'system inputs for "{}". Calculating from turbine '
+                       'power curves.'.format(cid))
+                logger.warning(msg)
+                warn(msg, OffshoreWindInputWarning)
+
+            loss1 = sys_in.get('wind_farm_losses_percent', 0)
+            loss2 = sys_in.get('turb_generic_loss', 0)
+            if loss1 != 0 or loss2 != 0:
+                msg = ('Wind farm loss for config "{}" is not 0. The offshore '
+                       'module uses gross capacity factors from reV '
+                       'generation and applies losses from the NRWAL equations'
+                       .format(cid))
+                logger.warning(msg)
+                warn(msg, OffshoreWindInputWarning)
+
+        available_ids = list(self._nrwal_configs.keys())
+        requested_ids = list(self._offshore_data['config'].values)
+        missing = set(requested_ids) - set(available_ids)
+        if any(missing):
+            msg = ('The following config ids were requested in the offshore '
+                   'data input but were not available in the NRWAL config '
+                   'input dict: {}'.format(missing))
+            logger.error(msg)
+            raise OffshoreWindInputError(msg)
+
+        check_gid_order = (self._offshore_data['gid'].values
+                           == self._system_inputs['gid'].values)
+        msg = 'Offshore and system input dataframes had bad order'
+        assert (check_gid_order).all(), msg
+
+        for config_id in self._nrwal_configs.keys():
+            nrwal_config = self._nrwal_configs[config_id]
+            for var in nrwal_config.required_inputs:
+                if var not in self._offshore_data:
+                    if var in self._system_inputs:
+                        sys_data_arr = self._system_inputs[var].values
+                        self._offshore_data[var] = sys_data_arr
+                    else:
+                        msg = ('Could not find required input variable "{}" '
+                               'for NRWAL config "{}" in either the offshore '
+                               'data or the SAM system data!'
+                               .format(var, config_id))
+                        logger.error(msg)
+                        raise OffshoreWindInputError(msg)
 
     @property
     def time_index(self):
@@ -256,7 +292,7 @@ class Offshore:
     def meta_out(self):
         """Get the combined onshore and offshore meta data."""
         if self._meta_out is None:
-            pass
+            self._meta_out = self.meta_source_full.copy()
         return self._meta_out
 
     @property
@@ -279,43 +315,29 @@ class Offshore:
         """Get a list of resource gids for the offshore sites."""
         return self.meta_out_offshore['gid'].values.tolist()
 
+    @property
+    def outputs(self):
+        """Get a dict of offshore outputs"""
+        return self._out
+
     def run(self):
         """Run offshore analysis"""
-        available_ids = list(self._nrwal_configs.keys())
-        requested_ids = list(self._offshore_data['config'].values)
-        missing = set(requested_ids) - set(available_ids)
-        if any(missing):
-            msg = ('The following config ids were requested in the offshore '
-                   'data input but were not available in the NRWAL config '
-                   'input dict: {}'.format(missing))
-            logger.error(msg)
-            raise OffshoreWindInputError(msg)
 
-        check_gid_order = (self._offshore_data['gid']
-                           == self._system_inputs['gid'])
-        msg = 'Offshore and system input dataframes had bad order'
-        assert (check_gid_order).all(), msg
-
-        for config_id in requested_ids:
-            nrwal_config = self._nrwal_configs[config_id]
-            for var in nrwal_config.required_inputs:
-                if var not in self._offshore_data:
-                    if var in self._system_inputs:
-                        self._offshore_data[var] = self._system_inputs[var]
-                    else:
-                        msg = ('Could not find required input variable "{}" '
-                               'for NRWAL config "{}" in either the offshore '
-                               'data or the SAM system data!'
-                               .format(var, config_id))
-                        logger.error(msg)
-                        raise OffshoreWindInputError(msg)
+        for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
+            logger.info('Running offshore config {} of {}: "{}"'
+                        .format(i + 1, len(self._nrwal_configs), cid))
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
-            mask = self._offshore_data['config'].values == config_id
+            mask = self._offshore_data['config'].values == cid
 
+            # pylint: disable=C0201
             for name in self._out.keys():
                 msg = ('Could not find "{}" in the output dict of NRWAL '
-                       'config {}'.format(name, config_id))
+                       'config {}'.format(name, cid))
                 assert name in outs, msg
 
                 self._out[name][mask] = outs[name][mask]
+
+        for name, arr in self._out.items():
+            msg = 'NaN values persist in offshore outputs!'
+            assert not np.isnan(arr).any(), msg
