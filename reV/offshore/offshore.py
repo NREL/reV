@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-reV offshore wind farm aggregation  module. This module aggregates offshore
-generation data from high res wind resource data to coarse wind farm sites
-and then calculates the ORCA econ data.
-
-Offshore resource / generation data refers to WTK 2km (fine resolution)
-Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
+reV offshore wind analysis module. This module uses the NRWAL library to
+assess offshore losses and LCOE to complement the simple SAM windpower module.
 """
 import numpy as np
 import pandas as pd
 import logging
 from warnings import warn
 
-from NRWAL import NrwalConfig
-
+from reV.generation.base import BaseGen
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       OffshoreWindInputError)
@@ -35,7 +30,8 @@ class Offshore:
 
     def __init__(self, gen_fpath, offshore_fpath, nrwal_configs,
                  project_points, offshore_meta_cols=None,
-                 offshore_nrwal_keys=None):
+                 offshore_nrwal_keys=None, nrwal_lcoe_key='lcoe',
+                 nrwal_loss_key='total_losses'):
         """
         Parameters
         ----------
@@ -57,13 +53,28 @@ class Offshore:
             Column labels from the NRWAL configs to pass through to the output
             h5 file. None will use class variable DEFAULT_NRWAL_KEYS, and any
             additional cols requested here will be added to DEFAULT_NRWAL_KEYS.
+        nrwal_lcoe_key : str
+            Key in the NRWAL config for final LCOE output value. Can be
+            changed and runtime for different NRWAL configs using this kwarg.
+        nrwal_loss_key : str
+            Key in the NRWAL config for final capacity factor losses output
+            value. Can be changed and runtime for different NRWAL configs
+            using this kwarg.
         """
+
         log_versions(logger)
+
+        # delayed NRWAL import to cause less errors with old reV installs
+        # if not running offshore.
+        from NRWAL import NrwalConfig
+
         self._gen_fpath = gen_fpath
         self._offshore_fpath = offshore_fpath
         self._project_points = project_points
         self._meta_out = None
         self._time_index = None
+        self._lcoe_key = nrwal_lcoe_key
+        self._loss_key = nrwal_loss_key
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
@@ -97,8 +108,8 @@ class Offshore:
                     .format(len(self.meta_source_onshore),
                             len(self.meta_source_offshore)))
 
-        self._out = {'lcoe': np.full(len(self._offshore_data), np.nan),
-                     'total_losses': np.full(len(self._offshore_data), np.nan)}
+        self._out = {self._lcoe_key: np.full(len(self._offshore_data), np.nan),
+                     self._loss_key: np.full(len(self._offshore_data), np.nan)}
         for key in self._offshore_nrwal_keys:
             self._out[key] = np.full(len(self._offshore_data), np.nan)
 
@@ -368,9 +379,8 @@ class Offshore:
         """Get a dict of offshore outputs"""
         return self._out
 
-    def run(self):
-        """Run offshore analysis"""
-
+    def run_nrwal(self):
+        """Run offshore analysis via the NRWAL analysis library"""
         for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
             logger.info('Running offshore config {} of {}: "{}"'
                         .format(i + 1, len(self._nrwal_configs), cid))
@@ -394,7 +404,7 @@ class Offshore:
         """Save offshore outputs to input generation fpath file. This will
         overwrite data!"""
 
-        loss_mult = 1 - self._out['total_losses']
+        loss_mult = 1 - self._out[self._loss_key]
 
         with Outputs(self._gen_fpath, 'a') as f:
             meta_attrs = f.get_attrs('meta')
@@ -402,7 +412,7 @@ class Offshore:
             f._set_meta('meta', self.meta_out, attrs=meta_attrs)
 
             lcoe = f['lcoe_fcr']
-            lcoe[self._offshore_mask] = self._out['lcoe']
+            lcoe[self._offshore_mask] = self._out[self._lcoe_key]
             f['lcoe_fcr'] = lcoe
 
             cf_mean = f['cf_mean']
@@ -415,8 +425,73 @@ class Offshore:
                 f['cf_profile'] = profiles
 
             for key, arr in self._out.items():
-                if key not in ('lcoe', ):
+                if key not in (self._lcoe_key, ):
                     data = np.full(len(f.meta), np.nan).astype(np.float32)
                     data[self._offshore_mask] = arr
                     f._add_dset(key, data, np.float32,
                                 attrs={'scale_factor': 1})
+
+    @classmethod
+    def run(cls, gen_fpath, offshore_fpath, sam_files, nrwal_configs,
+            points, offshore_meta_cols=None, offshore_nrwal_keys=None,
+            nrwal_lcoe_key='lcoe', nrwal_loss_key='total_losses'):
+        """
+        Parameters
+        ----------
+        gen_fpath : str
+            Full filepath to reV gen h5 output file.
+        offshore_fpath : str
+            Full filepath to offshore wind farm data file.
+        sam_files : dict
+            Dictionary lookup of config_id values mapped to config filepaths.
+            The same config_id values will be used from the nrwal_configs
+            lookup input.
+        nrwal_configs : dict
+            Dictionary lookup of config_id values mapped to config filepaths.
+            The same config_id values will be used from the sam_files lookup
+            in project_points
+        points : reV.config.project_points.ProjectPoints
+            reV project points to analyze. Can be a slice, list of integers,
+            or a string file path to a project points csv with "gid" and
+            "config" columns. The config column maps to the sam_files and
+            nrwal_configs inputs.
+        offshore_meta_cols : list | tuple | None
+            Column labels from offshore_fpath to pass through to the output
+            meta data. None will use class variable DEFAULT_META_COLS, and any
+            additional cols requested here will be added to DEFAULT_META_COLS.
+        offshore_nrwal_keys : list | tuple | None
+            Column labels from the NRWAL configs to pass through to the output
+            h5 file. None will use class variable DEFAULT_NRWAL_KEYS, and any
+            additional cols requested here will be added to DEFAULT_NRWAL_KEYS.
+        nrwal_lcoe_key : str
+            Key in the NRWAL config for final LCOE output value. Can be
+            changed and runtime for different NRWAL configs using this kwarg.
+        nrwal_loss_key : str
+            Key in the NRWAL config for final capacity factor losses output
+            value. Can be changed and runtime for different NRWAL configs
+            using this kwarg.
+
+        Returns
+        -------
+        offshore : Offshore
+            Instantiated Offshore analysis object.
+        """
+
+        points_range = None
+        pc = BaseGen.get_pc(points, points_range, sam_files, 'windpower',
+                            sites_per_worker=100)
+
+        offshore = cls(gen_fpath, offshore_fpath, nrwal_configs,
+                       pc.project_points,
+                       offshore_meta_cols=offshore_meta_cols,
+                       offshore_nrwal_keys=offshore_nrwal_keys,
+                       nrwal_lcoe_key=nrwal_lcoe_key,
+                       nrwal_loss_key=nrwal_loss_key)
+
+        if any(offshore.offshore_res_gids):
+            offshore.run_nrwal()
+            offshore.write_to_gen_fpath()
+
+        logger.info('Offshore wind gen/econ module complete!')
+
+        return offshore

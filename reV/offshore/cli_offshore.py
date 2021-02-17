@@ -136,10 +136,11 @@ def from_config(ctx, config_file, verbose):
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
               help='reV wind farm meta and ORCA cost data inputs.')
-@click.option('--points', '-pp', default=slice(0, 100), type=PROJECTPOINTS,
-              help=('reV project points to analyze '
-                    '(slice, list, or file string). '
-                    'Default is slice(0, 100)'))
+@click.option('--points', '-pp', required=True, type=PROJECTPOINTS,
+              help='reV project points to analyze. Can be a slice, list of '
+              'integers, or a string file path to a project points csv with '
+              '"gid" and "config" columns. The config column maps to the '
+              'sam_files and nrwal_configs inputs.')
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files lookup mapping config keys to config '
               'filepaths. (required) (dict). Should have the same config '
@@ -179,13 +180,10 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
         init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose, node=True)
 
-        fpath_out = gen_fpath.replace('.h5', '_offshore.h5')
-
         try:
             Offshore.run(gen_fpath, offshore_fpath, sam_files, nrwal_configs,
                          points, offshore_meta_cols=offshore_meta_cols,
-                         offshore_nrwal_keys=offshore_nrwal_keys,
-                         fpath_out=fpath_out)
+                         offshore_nrwal_keys=offshore_nrwal_keys)
         except Exception as e:
             logger.exception('Offshore module failed, received the '
                              'following exception:\n{}'.format(e))
@@ -193,11 +191,11 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
 
         runtime = (time.time() - t0) / 60
 
-        status = {'dirout': os.path.dirname(fpath_out),
-                  'fout': os.path.basename(fpath_out),
+        status = {'dirout': os.path.dirname(gen_fpath),
+                  'fout': os.path.basename(gen_fpath),
                   'job_status': 'successful',
                   'runtime': runtime, 'finput': gen_fpath}
-        Status.make_job_file(os.path.dirname(fpath_out), 'offshore',
+        Status.make_job_file(os.path.dirname(gen_fpath), 'offshore',
                              name, status)
 
 
