@@ -135,7 +135,8 @@ def from_config(ctx, config_file, verbose):
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
               help='Offshore wind geospatial inputs such as depth and '
-              'distance to port.')
+              'distance to port. Needs "gid" and "config" columns matching '
+              'the project points input.')
 @click.option('--points', '-pp', required=True, type=PROJECTPOINTS,
               help='reV project points to analyze. Has to be a string file '
               'path to a project points csv with "gid" and "config" columns. '

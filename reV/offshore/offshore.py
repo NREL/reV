@@ -24,7 +24,7 @@ class Offshore:
 
     # Default columns from the offshore wind data table to join to the
     # offshore meta data
-    DEFAULT_META_COLS = ('nrwal_config', )
+    DEFAULT_META_COLS = ('config', )
 
     # Default keys from the NRWAL config to export as new datasets
     # in the reV output h5
@@ -40,7 +40,8 @@ class Offshore:
         gen_fpath : str
             Full filepath to reV gen h5 output file.
         offshore_fpath : str
-            Full filepath to offshore wind farm data file.
+            Full filepath to offshore wind farm data file. Needs "gid" and
+            "config" columns matching the project points input.
         nrwal_configs : dict
             Dictionary lookup of config_id values mapped to config filepaths.
             The same config_id values will be used from the sam_files lookup
@@ -167,7 +168,7 @@ class Offshore:
         return meta, onshore_mask, offshore_mask, cf_mean
 
     def _parse_offshore_data(self, offshore_fpath,
-                             required_columns=('gid', 'nrwal_config')):
+                             required_columns=('gid', 'config')):
         """Parse the offshore data file for offshore farm site data and coords.
 
         Parameters
@@ -273,7 +274,7 @@ class Offshore:
                 warn(msg, OffshoreWindInputWarning)
 
         available_ids = list(self._nrwal_configs.keys())
-        requested_ids = list(self._offshore_data['nrwal_config'].values)
+        requested_ids = list(self._offshore_data['config'].values)
         missing = set(requested_ids) - set(available_ids)
         if any(missing):
             msg = ('The following config ids were requested in the offshore '
@@ -388,7 +389,7 @@ class Offshore:
                         .format(i + 1, len(self._nrwal_configs), cid))
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
-            mask = self._offshore_data['nrwal_config'].values == cid
+            mask = self._offshore_data['config'].values == cid
 
             # pylint: disable=C0201
             for name in self._out.keys():
@@ -443,7 +444,8 @@ class Offshore:
         gen_fpath : str
             Full filepath to reV gen h5 output file.
         offshore_fpath : str
-            Full filepath to offshore wind farm data file.
+            Full filepath to offshore wind farm data file. Needs "gid" and
+            "config" columns matching the project points input.
         sam_files : dict
             Dictionary lookup of config_id values mapped to config filepaths.
             The same config_id values will be used from the nrwal_configs
