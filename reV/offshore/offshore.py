@@ -8,7 +8,7 @@ import pandas as pd
 import logging
 from warnings import warn
 
-from reV.generation.base import BaseGen
+from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       OffshoreWindInputError)
@@ -478,8 +478,7 @@ class Offshore:
         """
 
         points_range = None
-        pc = BaseGen.get_pc(points, points_range, sam_files, 'windpower',
-                            sites_per_worker=100)
+        pc = Gen.get_pc(points, points_range, sam_files, 'windpower')
 
         offshore = cls(gen_fpath, offshore_fpath, nrwal_configs,
                        pc.project_points,

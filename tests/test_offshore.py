@@ -15,7 +15,6 @@ import pytest
 import tempfile
 
 from reV.handlers.outputs import Outputs
-from reV.config.project_points import ProjectPoints
 from reV.offshore.offshore import Offshore
 from reV import TESTDATADIR
 
@@ -23,28 +22,9 @@ from reV import TESTDATADIR
 SOURCE_DIR = os.path.join(TESTDATADIR, 'offshore/')
 
 
-def execute_pytest(capture='all', flags='-rapP'):
-    """Execute module as pytest with detailed summary report.
-
-    Parameters
-    ----------
-    capture : str
-        Log or stdout/stderr capture option. ex: log (only logger),
-        all (includes stdout/stderr)
-    flags : str
-        Which tests to show logs and results for.
-    """
-
-    fname = os.path.basename(__file__)
-    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
-
-
-if __name__ == '__main__':
-    #    execute_pytest()
-    from rex import init_logger
-    init_logger('NRWAL')
-    init_logger('reV.offshore')
-
+def test_offshore():
+    """Test the reV offshore module, calculating offshore wind lcoe and losses
+    from reV generation outputs and using the NRWAL library"""
     with tempfile.TemporaryDirectory() as td:
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
@@ -56,8 +36,7 @@ if __name__ == '__main__':
         sam_configs = {'onshore': onshore_config,
                        'offshore': offshore_config}
         nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
-        project_points = os.path.join(td, 'ri_offshore_proj_points.csv')
-        project_points = ProjectPoints(project_points, sam_configs)
+        points = os.path.join(td, 'ri_offshore_proj_points.csv')
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd.date_range('20100101', '20110101',
@@ -73,11 +52,8 @@ if __name__ == '__main__':
             cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
-        off = Offshore(gen_fpath, offshore_fpath, nrwal_configs,
-                       project_points, max_workers=1)
-
-        off.run()
-        off.write_to_gen_fpath()
+        off = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
+                           nrwal_configs, points)
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
@@ -99,3 +75,23 @@ if __name__ == '__main__':
         assert (cf_mean_new[~mask] == cf_mean_raw[~mask]).all()
         assert (cf_profile_new[:, mask] <= cf_profile_raw[:, mask]).all()
         assert (cf_profile_new[:, ~mask] == cf_profile_raw[:, ~mask]).all()
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()
