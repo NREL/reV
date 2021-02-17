@@ -31,11 +31,11 @@ class Offshore:
 
     # Default keys from the NRWAL config to export as new datasets
     # in the reV output h5
-    DEFAULT_NRWAL_KEYS = ('array', 'export')
+    DEFAULT_NRWAL_KEYS = ('total_losses', 'array', 'export')
 
     def __init__(self, gen_fpath, offshore_fpath, nrwal_configs,
-                 project_points, max_workers=None,
-                 offshore_meta_cols=None, offshore_nrwal_keys=None):
+                 project_points, offshore_meta_cols=None,
+                 offshore_nrwal_keys=None):
         """
         Parameters
         ----------
@@ -49,8 +49,6 @@ class Offshore:
             in project_points
         project_points : reV.config.project_points.ProjectPoints
             Instantiated project points instance.
-        max_workers : int | None
-            Number of workers for process pool executor. 1 will run in serial.
         offshore_meta_cols : list | tuple | None
             Column labels from offshore_fpath to pass through to the output
             meta data. None will use class variable DEFAULT_META_COLS, and any
@@ -66,7 +64,6 @@ class Offshore:
         self._project_points = project_points
         self._meta_out = None
         self._time_index = None
-        self._max_workers = max_workers
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
@@ -418,7 +415,7 @@ class Offshore:
                 f['cf_profile'] = profiles
 
             for key, arr in self._out.items():
-                if key not in ('lcoe', 'total_losses'):
+                if key not in ('lcoe', ):
                     data = np.full(len(f.meta), np.nan).astype(np.float32)
                     data[self._offshore_mask] = arr
                     f._add_dset(key, data, np.float32,

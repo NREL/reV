@@ -17,7 +17,7 @@ class OffshoreConfig(AnalysisConfig):
 
     NAME = 'offshore'
     REQUIREMENTS = ('gen_fpath', 'offshore_fpath', 'project_points',
-                    'sam_files')
+                    'sam_files', 'nrwal_configs')
 
     def __init__(self, config):
         """
@@ -50,6 +50,23 @@ class OffshoreConfig(AnalysisConfig):
     def sam_files(self):
         """Get the sam files dict"""
         return self['sam_files']
+
+    @property
+    def nrwal_configs(self):
+        """Get the nrwal configs dict"""
+        return self['nrwal_configs']
+
+    @property
+    def offshore_meta_cols(self):
+        """Get columns from the offshore data fpath to pass through as new
+        columns in the reV output meta data."""
+        return self.get('offshore_meta_cols', None)
+
+    @property
+    def offshore_nrwal_keys(self):
+        """Get keys from the offshore nrwal configs to pass through as new
+        datasets in the reV output h5"""
+        return self.get('offshore_nrwal_keys', None)
 
     def parse_gen_fpaths(self):
         """

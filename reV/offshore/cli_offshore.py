@@ -21,7 +21,7 @@ from reV.offshore.offshore import Offshore
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from reV import __version__
 
-from rex.utilities.cli_dtypes import STR, INT
+from rex.utilities.cli_dtypes import STR, INT, STRLIST
 from rex.utilities.loggers import init_mult
 from rex.utilities.hpc import SLURM
 from rex.utilities.utilities import get_class_properties
@@ -103,16 +103,21 @@ def from_config(ctx, config_file, verbose):
                            offshore_fpath=config.offshore_fpath,
                            points=config.project_points,
                            sam_files=config.sam_files,
+                           nrwal_configs=config.nrwal_configs,
+                           offshore_meta_cols=config.offshore_meta_cols,
+                           offshore_nrwal_keys=config.offshore_nrwal_keys,
                            logdir=config.logdir,
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-
             ctx.obj['NAME'] = job_name
             ctx.obj['GEN_FPATH'] = gen_fpath
             ctx.obj['OFFSHORE_FPATH'] = config.offshore_fpath
             ctx.obj['PROJECT_POINTS'] = config.project_points
             ctx.obj['SAM_FILES'] = config.sam_files
+            ctx.obj['NRWAL_CONFIGS'] = config.nrwal_configs
+            ctx.obj['OFFSHORE_META_COLS'] = config.offshore_meta_cols
+            ctx.obj['OFFSHORE_NRWAL_KEYS'] = config.offshore_nrwal_keys
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -136,20 +141,35 @@ def from_config(ctx, config_file, verbose):
                     '(slice, list, or file string). '
                     'Default is slice(0, 100)'))
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
-              help='SAM config files (required) (str, dict, or list).')
+              help='SAM config files lookup mapping config keys to config '
+              'filepaths. (required) (dict). Should have the same config '
+              'keys as the nrwal_configs input.')
+@click.option('--nrwal_configs', '-nc', required=True, type=SAMFILES,
+              help='NRWAL config files lookup mapping config keys to config '
+              'filepaths. (required) (dict). Should have the same config '
+              'keys as the sam_files input.')
+@click.option('--offshore_meta_cols', '-mc', default=None, type=STRLIST,
+              help='Columns from the offshore data fpath to pass through as '
+              'new columns in the reV output meta data.')
+@click.option('--offshore_nrwal_keys', '-nk', default=None, type=STRLIST,
+              help='Keys from the offshore nrwal configs to pass through as '
+              'new datasets in the reV output h5.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               help='Directory to save offshore logs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
-           log_dir, verbose):
+def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
+           offshore_meta_cols, offshore_nrwal_keys, log_dir, verbose):
     """Main entry point to run offshore wind aggregation"""
     name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['OFFSHORE_FPATH'] = offshore_fpath
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
+    ctx.obj['NRWAL_CONFIGS'] = nrwal_configs
+    ctx.obj['OFFSHORE_META_COLS'] = offshore_meta_cols
+    ctx.obj['OFFSHORE_NRWAL_KEYS'] = offshore_nrwal_keys
     ctx.obj['OUT_DIR'] = os.path.dirname(gen_fpath)
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -162,7 +182,9 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
         fpath_out = gen_fpath.replace('.h5', '_offshore.h5')
 
         try:
-            Offshore.run(gen_fpath, offshore_fpath, points, sam_files,
+            Offshore.run(gen_fpath, offshore_fpath, sam_files, nrwal_configs,
+                         points, offshore_meta_cols=offshore_meta_cols,
+                         offshore_nrwal_keys=offshore_nrwal_keys,
                          fpath_out=fpath_out)
         except Exception as e:
             logger.exception('Offshore module failed, received the '
@@ -180,6 +202,7 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
 
 
 def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
+                 nrwal_configs, offshore_meta_cols, offshore_nrwal_keys,
                  log_dir, verbose):
     """Get a CLI call command for the offshore aggregation cli."""
 
@@ -187,6 +210,9 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
             '-of {}'.format(SLURM.s(offshore_fpath)),
             '-pp {}'.format(SLURM.s(points)),
             '-sf {}'.format(SLURM.s(sam_files)),
+            '-nc {}'.format(SLURM.s(nrwal_configs)),
+            '-mc {}'.format(SLURM.s(offshore_meta_cols)),
+            '-nk {}'.format(SLURM.s(offshore_nrwal_keys)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -226,6 +252,9 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     offshore_fpath = ctx.obj['OFFSHORE_FPATH']
     project_points = ctx.obj['PROJECT_POINTS']
     sam_files = ctx.obj['SAM_FILES']
+    nrwal_configs = ctx.obj['NRWAL_CONFIGS']
+    offshore_meta_cols = ctx.obj['OFFSHORE_META_COLS']
+    offshore_nrwal_keys = ctx.obj['OFFSHORE_NRWAL_KEYS']
     log_dir = ctx.obj['LOG_DIR']
     out_dir = ctx.obj['OUT_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -234,7 +263,8 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
-                       sam_files, log_dir, verbose)
+                       sam_files, nrwal_configs, offshore_meta_cols,
+                       offshore_nrwal_keys, log_dir, verbose)
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()
