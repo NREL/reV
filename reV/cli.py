@@ -104,7 +104,7 @@ def valid_econ_keys(ctx):
               help='Flag to turn on debug logging.')
 @click.pass_context
 def offshore(ctx, verbose):
-    """Offshore gen/econ aggregation with ORCA."""
+    """Offshore gen/econ aggregation with NRWAL."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])

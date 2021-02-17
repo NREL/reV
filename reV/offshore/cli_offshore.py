@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=all
 """
-reV offshore wind farm aggregation module command line interface (CLI).
+reV offshore wind module command line interface (CLI).
 
-This module aggregates offshore data from high res wind resource data to
-coarse wind farm sites and then calculates the ORCA econ data.
+This module uses the NRWAL library to assess offshore losses and LCOE to
+complement the simple SAM windpower module.
 
-Offshore resource / generation data refers to WTK 2km (fine resolution)
-Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
+Everything in this module operates on the native wind resource resolution.
 """
 import pprint
 import os
@@ -135,12 +134,13 @@ def from_config(ctx, config_file, verbose):
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
-              help='reV wind farm meta and ORCA cost data inputs.')
+              help='Offshore wind geospatial inputs such as depth and '
+              'distance to port.')
 @click.option('--points', '-pp', required=True, type=PROJECTPOINTS,
-              help='reV project points to analyze. Can be a slice, list of '
-              'integers, or a string file path to a project points csv with '
-              '"gid" and "config" columns. The config column maps to the '
-              'sam_files and nrwal_configs inputs.')
+              help='reV project points to analyze. Has to be a string file '
+              'path to a project points csv with "gid" and "config" columns. '
+              'The config column maps to the sam_files and nrwal_configs '
+              'inputs.')
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files lookup mapping config keys to config '
               'filepaths. (required) (dict). Should have the same config '

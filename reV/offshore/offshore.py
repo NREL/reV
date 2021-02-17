@@ -2,6 +2,8 @@
 """
 reV offshore wind analysis module. This module uses the NRWAL library to
 assess offshore losses and LCOE to complement the simple SAM windpower module.
+
+Everything in this module operates on the native wind resource resolution.
 """
 import numpy as np
 import pandas as pd
@@ -187,7 +189,7 @@ class Offshore:
 
         if 'dist_l_to_ts' in offshore_data:
             if offshore_data['dist_l_to_ts'].sum() > 0:
-                w = ('Possible incorrect ORCA input! "dist_l_to_ts" '
+                w = ('Possible incorrect Offshore data input! "dist_l_to_ts" '
                      '(distance land to transmission) input is non-zero. '
                      'Most reV runs set this to zero and input the cost '
                      'of transmission from landfall tie-in to '
@@ -450,11 +452,10 @@ class Offshore:
             Dictionary lookup of config_id values mapped to config filepaths.
             The same config_id values will be used from the sam_files lookup
             in project_points
-        points : reV.config.project_points.ProjectPoints
-            reV project points to analyze. Can be a slice, list of integers,
-            or a string file path to a project points csv with "gid" and
-            "config" columns. The config column maps to the sam_files and
-            nrwal_configs inputs.
+        points : str
+            reV project points to analyze. Has to be a string file path to a
+            project points csv with "gid" and "config" columns. The config
+            column maps to the sam_files and nrwal_configs inputs.
         offshore_meta_cols : list | tuple | None
             Column labels from offshore_fpath to pass through to the output
             meta data. None will use class variable DEFAULT_META_COLS, and any

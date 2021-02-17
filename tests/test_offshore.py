@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PyTest file for offshore aggregation of reV generation results and ORCA econ.
+PyTest file for offshore econ and losses
 
 Created on Dec 16 2019
 

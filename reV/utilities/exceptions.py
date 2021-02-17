@@ -172,12 +172,6 @@ class OffshoreWindInputWarning(Warning):
     """
 
 
-class OrcaOutputWarning(Warning):
-    """
-    Warning for bad ORCA outputs.
-    """
-
-
 class ConfigWarning(Warning):
     """
     Warning for unclear or default configuration inputs
