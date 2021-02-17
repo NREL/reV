@@ -25,13 +25,17 @@ logger = logging.getLogger(__name__)
 class Offshore:
     """Framework to handle offshore wind analysis."""
 
-    # Default columns from the offshore wind farm data to join to the
+    # Default columns from the offshore wind data table to join to the
     # offshore meta data
-    DEFAULT_META_COLS = ('min_sub_tech', 'sub_type', 'array_cable_CAPEX',
-                         'export_cable_CAPEX')
+    DEFAULT_META_COLS = ('nrwal_config', )
+
+    # Default keys from the NRWAL config to export as new datasets
+    # in the reV output h5
+    DEFAULT_NRWAL_KEYS = ('array', 'export')
 
     def __init__(self, gen_fpath, offshore_fpath, nrwal_configs,
-                 project_points, max_workers=None, offshore_meta_cols=None):
+                 project_points, max_workers=None,
+                 offshore_meta_cols=None, offshore_nrwal_keys=None):
         """
         Parameters
         ----------
@@ -48,9 +52,13 @@ class Offshore:
         max_workers : int | None
             Number of workers for process pool executor. 1 will run in serial.
         offshore_meta_cols : list | tuple | None
-            Column labels from offshore_fpath to preserve in the output
+            Column labels from offshore_fpath to pass through to the output
             meta data. None will use class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
+            additional cols requested here will be added to DEFAULT_META_COLS.
+        offshore_nrwal_keys : list | tuple | None
+            Column labels from the NRWAL configs to pass through to the output
+            h5 file. None will use class variable DEFAULT_NRWAL_KEYS, and any
+            additional cols requested here will be added to DEFAULT_NRWAL_KEYS.
         """
         log_versions(logger)
         self._gen_fpath = gen_fpath
@@ -63,17 +71,25 @@ class Offshore:
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
 
-        if offshore_meta_cols is None:
-            offshore_meta_cols = list(self.DEFAULT_META_COLS)
-        else:
-            offshore_meta_cols = list(offshore_meta_cols)
-            offshore_meta_cols += list(self.DEFAULT_META_COLS)
-            offshore_meta_cols = list(set(offshore_meta_cols))
-
         self._offshore_meta_cols = offshore_meta_cols
+        if self._offshore_meta_cols is None:
+            self._offshore_meta_cols = list(self.DEFAULT_META_COLS)
+        else:
+            self._offshore_meta_cols = list(self._offshore_meta_cols)
+            self._offshore_meta_cols += list(self.DEFAULT_META_COLS)
+            self._offshore_meta_cols = list(set(self._offshore_meta_cols))
 
-        self._meta_source, self._onshore_mask, self._offshore_mask = \
-            self._parse_cf_meta(self._gen_fpath)
+        self._offshore_nrwal_keys = offshore_nrwal_keys
+        if self._offshore_nrwal_keys is None:
+            self._offshore_nrwal_keys = list(self.DEFAULT_NRWAL_KEYS)
+        else:
+            self._offshore_nrwal_keys = list(self._offshore_nrwal_keys)
+            self._offshore_nrwal_keys += list(self.DEFAULT_NRWAL_KEYS)
+            self._offshore_nrwal_keys = list(set(self._offshore_nrwal_keys))
+
+        out = self._parse_gen_data(self._gen_fpath)
+        self._meta_source, self._onshore_mask = out[:2]
+        self._offshore_mask, self._cf_mean = out[2:]
 
         self._offshore_data = self._parse_offshore_data(self._offshore_fpath)
         self._system_inputs = self._parse_system_inputs()
@@ -86,9 +102,11 @@ class Offshore:
 
         self._out = {'lcoe': np.full(len(self._offshore_data), np.nan),
                      'total_losses': np.full(len(self._offshore_data), np.nan)}
+        for key in self._offshore_nrwal_keys:
+            self._out[key] = np.full(len(self._offshore_data), np.nan)
 
     @staticmethod
-    def _parse_cf_meta(gen_fpath):
+    def _parse_gen_data(gen_fpath):
         """Parse cf meta dataframe and get masks for onshore/offshore points.
 
         Parameters
@@ -104,10 +122,20 @@ class Offshore:
             Boolean series indicating where onshore sites are.
         offshore_mask : pd.Series
             Boolean series indicating where offshore sites are.
+        cf_mean : np.ndarray
+            1D array of mean capacity factor values corresponding to the
+            un-masked meta data
         """
 
         with Outputs(gen_fpath, mode='r') as out:
+            if 'cf_mean' not in out.dsets:
+                msg = ('Could not find cf_mean (required) in file: {}'
+                       .format(gen_fpath))
+                logger.error(msg)
+                raise OffshoreWindInputError(msg)
+
             meta = out.meta
+            cf_mean = out['cf_mean']
 
         msg = ('Could not find "gid" column in source '
                'capacity factor meta data!')
@@ -126,10 +154,10 @@ class Offshore:
         onshore_mask = meta['offshore'] == 0
         offshore_mask = meta['offshore'] == 1
 
-        return meta, onshore_mask, offshore_mask
+        return meta, onshore_mask, offshore_mask, cf_mean
 
     def _parse_offshore_data(self, offshore_fpath,
-                             required_columns=('gid', 'config')):
+                             required_columns=('gid', 'nrwal_config')):
         """Parse the offshore data file for offshore farm site data and coords.
 
         Parameters
@@ -213,13 +241,13 @@ class Offshore:
 
     def _preflight_checks(self):
         """Run some preflight checks on the offshore inputs"""
-        offshore_configs = {k: v for k, v in
-                            self._project_points.sam_configs.items()
-                            if k in self._nrwal_configs}
-        for cid, sys_in in offshore_configs.items():
+        sam_configs = {k: v for k, v in
+                       self._project_points.sam_configs.items()
+                       if k in self._nrwal_configs}
+        for cid, sys_in in sam_configs.items():
             if 'turbine_capacity' not in sys_in:
                 msg = ('System input key "turbine_capacity" not found in '
-                       'system inputs for "{}". Calculating from turbine '
+                       'SAM system inputs for "{}". Calculating from turbine '
                        'power curves.'.format(cid))
                 logger.warning(msg)
                 warn(msg, OffshoreWindInputWarning)
@@ -235,7 +263,7 @@ class Offshore:
                 warn(msg, OffshoreWindInputWarning)
 
         available_ids = list(self._nrwal_configs.keys())
-        requested_ids = list(self._offshore_data['config'].values)
+        requested_ids = list(self._offshore_data['nrwal_config'].values)
         missing = set(requested_ids) - set(available_ids)
         if any(missing):
             msg = ('The following config ids were requested in the offshore '
@@ -249,20 +277,38 @@ class Offshore:
         msg = 'Offshore and system input dataframes had bad order'
         assert (check_gid_order).all(), msg
 
-        for config_id in self._nrwal_configs.keys():
-            nrwal_config = self._nrwal_configs[config_id]
-            for var in nrwal_config.required_inputs:
-                if var not in self._offshore_data:
-                    if var in self._system_inputs:
-                        sys_data_arr = self._system_inputs[var].values
-                        self._offshore_data[var] = sys_data_arr
-                    else:
-                        msg = ('Could not find required input variable "{}" '
-                               'for NRWAL config "{}" in either the offshore '
-                               'data or the SAM system data!'
-                               .format(var, config_id))
-                        logger.error(msg)
-                        raise OffshoreWindInputError(msg)
+        if 'gcf' in self._offshore_data:
+            msg = 'Offshore data input already had gross capacity factor!'
+            logger.error(msg)
+            raise OffshoreWindInputError(msg)
+        self._offshore_data['gcf'] = self._cf_mean[self._offshore_mask]
+
+        for config_id, nrwal_config in self._nrwal_configs.items():
+            system_vars = [var for var in nrwal_config.required_inputs
+                           if var not in self._offshore_data]
+            missing_vars = [var for var in nrwal_config.required_inputs
+                            if var not in self._offshore_data
+                            and var not in self._system_inputs]
+
+            if any(missing_vars):
+                msg = ('Could not find required input variables {} '
+                       'for NRWAL config "{}" in either the offshore '
+                       'data or the SAM system data!'
+                       .format(missing_vars, config_id))
+                logger.error(msg)
+                raise OffshoreWindInputError(msg)
+
+            for var in system_vars:
+                sys_data_arr = self._system_inputs[var].values
+                self._offshore_data[var] = sys_data_arr
+
+        missing = [c for c in self._offshore_meta_cols
+                   if c not in self._offshore_data]
+        if any(missing):
+            msg = ('Could not find requested offshore pass through columns '
+                   'in offshore input data: {}'.format(missing))
+            logger.error(msg)
+            raise OffshoreWindInputError(msg)
 
     @property
     def time_index(self):
@@ -293,6 +339,11 @@ class Offshore:
         """Get the combined onshore and offshore meta data."""
         if self._meta_out is None:
             self._meta_out = self.meta_source_full.copy()
+            for col in self._offshore_meta_cols:
+                self._meta_out[col] = np.nan
+                data = self._offshore_data[col]
+                self._meta_out.loc[self._offshore_mask, col] = data
+
         return self._meta_out
 
     @property
@@ -308,12 +359,12 @@ class Offshore:
     @property
     def onshore_res_gids(self):
         """Get a list of resource gids for the onshore sites."""
-        return self.meta_out_onshore['gid'].values.tolist()
+        return self.meta_source_onshore['gid'].values.tolist()
 
     @property
     def offshore_res_gids(self):
         """Get a list of resource gids for the offshore sites."""
-        return self.meta_out_offshore['gid'].values.tolist()
+        return self.meta_source_offshore['gid'].values.tolist()
 
     @property
     def outputs(self):
@@ -328,7 +379,7 @@ class Offshore:
                         .format(i + 1, len(self._nrwal_configs), cid))
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
-            mask = self._offshore_data['config'].values == cid
+            mask = self._offshore_data['nrwal_config'].values == cid
 
             # pylint: disable=C0201
             for name in self._out.keys():
@@ -341,3 +392,34 @@ class Offshore:
         for name, arr in self._out.items():
             msg = 'NaN values persist in offshore outputs!'
             assert not np.isnan(arr).any(), msg
+
+    def write_to_gen_fpath(self):
+        """Save offshore outputs to input generation fpath file. This will
+        overwrite data!"""
+
+        loss_mult = 1 - self._out['total_losses']
+
+        with Outputs(self._gen_fpath, 'a') as f:
+            meta_attrs = f.get_attrs('meta')
+            del f._h5['meta']
+            f._set_meta('meta', self.meta_out, attrs=meta_attrs)
+
+            lcoe = f['lcoe_fcr']
+            lcoe[self._offshore_mask] = self._out['lcoe']
+            f['lcoe_fcr'] = lcoe
+
+            cf_mean = f['cf_mean']
+            cf_mean[self._offshore_mask] *= loss_mult
+            f['cf_mean'] = cf_mean
+
+            if 'cf_profile' in f.dsets:
+                profiles = f['cf_profile']
+                profiles[:, self._offshore_mask] *= loss_mult
+                f['cf_profile'] = profiles
+
+            for key, arr in self._out.items():
+                if key not in ('lcoe', 'total_losses'):
+                    data = np.full(len(f.meta), np.nan).astype(np.float32)
+                    data[self._offshore_mask] = arr
+                    f._add_dset(key, data, np.float32,
+                                attrs={'scale_factor': 1})
