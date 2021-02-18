@@ -37,7 +37,8 @@ def test_pipeline_local():
         with h5py.File(fbaseline, 'r') as f_base:
             for dset in dsets:
                 msg = 'Local pipeline failed for "{}"'.format(dset)
-                assert np.allclose(f_new[dset][...], f_base[dset][...]), msg
+                assert np.allclose(f_new[dset][...],
+                                   f_base[dset][...], rtol=0.001), msg
 
     if PURGE_OUT:
         shutil.rmtree(log_dir)

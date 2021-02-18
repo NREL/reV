@@ -15,6 +15,8 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 BASELINE = os.path.join(TESTDATADIR, 'SAM/output_linear_direct_steam.json')
+RTOL = 0.001
+ATOL = 0.00
 
 
 def test_gen_linear():
@@ -69,7 +71,7 @@ def test_gen_linear():
         with open(BASELINE, 'r') as f:
             profiles = json.load(f)
         for k in profiles.keys():
-            assert np.allclose(profiles[k], gen.out[k])
+            assert np.allclose(profiles[k], gen.out[k], rtol=RTOL, atol=ATOL)
     else:
         with open(BASELINE, 'w') as f:
             out = {k: v.tolist() for k, v in gen.out.items()}

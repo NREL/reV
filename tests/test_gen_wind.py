@@ -19,7 +19,7 @@ from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 
 
-RTOL = 0.0
+RTOL = 0.001
 ATOL = 0.001
 PURGE_OUT = True
 
@@ -98,9 +98,8 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
         cf_mean_list = wind.get_cf_mean(pp.sites, year)
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
     msg = 'Wind cf_means results did not match reV 1.0 results!'
-    assert result is True, msg
+    assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL), msg
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):

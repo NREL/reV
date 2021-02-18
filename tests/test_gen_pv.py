@@ -21,7 +21,7 @@ from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 
 
-RTOL = 0.0
+RTOL = 0.001
 ATOL = 0.04
 PURGE_OUT = True
 
@@ -103,8 +103,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
         cf_mean_list = pv.get_cf_mean(pp.sites, year)
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
-    assert result is True
+    assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
 
 
 def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
@@ -128,8 +127,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
-    assert result is True
+    assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
 
 
 def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
@@ -153,8 +151,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
-    assert result is True
+    assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
@@ -185,14 +182,12 @@ def test_pv_gen_profiles(year):
     rev1_profiles = get_r1_profiles(year=year)
     rev1_profiles = rev1_profiles[:, points]
 
-    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result and PURGE_OUT:
+    assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:
             os.remove(os.path.join(rev2_out_dir, fname))
-
-    assert result is True
 
 
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
@@ -223,14 +218,12 @@ def test_smart(year):
     rev1_profiles = get_r1_profiles(year=year)
     rev1_profiles = rev1_profiles[:, points]
 
-    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result and PURGE_OUT:
+    assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:
             os.remove(os.path.join(rev2_out_dir, fname))
-
-    assert result is True
 
 
 def test_multi_file_nsrdb_2018():

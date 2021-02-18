@@ -59,7 +59,7 @@ def test_wind_generic_losses(loss):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, LOSS_BASELINE[loss])
+    assert np.allclose(gen_outs, LOSS_BASELINE[loss], rtol=0.001)
 
 
 @pytest.mark.parametrize('i', range(3))
@@ -78,7 +78,7 @@ def test_wind_icing_losses(i):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, ICING_BASELINE[i]['output'])
+    assert np.allclose(gen_outs, ICING_BASELINE[i]['output'], rtol=0.001)
 
 
 @pytest.mark.parametrize('i', range(2))
@@ -95,7 +95,7 @@ def test_wind_low_temp_cutoff(i):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'])
+    assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'], rtol=0.001)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

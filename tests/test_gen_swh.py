@@ -57,7 +57,7 @@ def test_gen_swh_non_leap_year():
         with open(BASELINE, 'r') as f:
             profiles = json.load(f)
         for k in profiles.keys():
-            assert np.array_equal(profiles[k], gen.out[k])
+            assert np.allclose(profiles[k], gen.out[k], rtol=0.001)
     else:
         with open(BASELINE, 'w') as f:
             out = {k: v.tolist() for k, v in gen.out.items()}
