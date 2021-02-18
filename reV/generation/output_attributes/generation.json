@@ -28,8 +28,8 @@
   },
   "cf_mean": {
     "chunks": null,
-    "dtype": "uint16",
-    "scale_factor": 1000,
+    "dtype": "float32",
+    "scale_factor": 1,
     "type": "scalar",
     "units": "unitless"
   },
@@ -194,7 +194,7 @@
   "ws_mean": {
     "chunks": null,
     "dtype": "uint16",
-    "scale_factor": 1000,
+    "scale_factor": 100,
     "type": "scalar",
     "units": "m/s"
   }
