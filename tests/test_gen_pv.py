@@ -21,7 +21,7 @@ from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 
 
-RTOL = 0.001
+RTOL = 0.0
 ATOL = 0.04
 PURGE_OUT = True
 

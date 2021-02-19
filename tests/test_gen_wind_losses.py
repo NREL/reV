@@ -19,8 +19,8 @@ YEAR = 2012
 REV2_POINTS = slice(0, 5)
 SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(YEAR)
-RTOL = 0.005
-ATOL = 0.0001
+RTOL = 0
+ATOL = 0.001
 
 LOSS_BASELINE = {0.0: [0.422, 0.429, 0.437, 0.431, 0.431],
                  16.7: [0.352, 0.357, 0.364, 0.359, 0.359],

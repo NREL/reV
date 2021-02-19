@@ -18,8 +18,7 @@ from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 
-
-RTOL = 0.001
+RTOL = 0
 ATOL = 0.001
 PURGE_OUT = True
 
