@@ -291,7 +291,8 @@ def test_pvwattsv7_baseline():
 
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
-    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean), msg
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=RTOL, atol=ATOL), msg
 
     for req in output_request:
         assert req in gen.out
@@ -442,7 +443,7 @@ def test_clipping():
     mask = ac < ac.max()
     dc_ac = dc[~mask] - ac[~mask]
     assert all(clipped[mask] == 0)
-    assert np.allclose(clipped[~mask], dc_ac)
+    assert np.allclose(clipped[~mask], dc_ac, rtol=RTOL, atol=ATOL)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

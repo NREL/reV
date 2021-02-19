@@ -119,7 +119,7 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     assert gen.out['cf_profile'].shape == (8760, 10)
     assert gen.out['monthly_energy'].shape == (12, 10)
 
-    assert gen._out['cf_mean'].dtype == np.uint16
+    assert gen._out['cf_mean'].dtype == np.float32
     assert gen._out['cf_profile'].dtype == np.uint16
     assert gen._out['monthly_energy'].dtype == np.float32
 

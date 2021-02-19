@@ -30,7 +30,7 @@ def test_gen_csp():
     cf_profile = gen.out['cf_profile']
     gen_profile = gen.out['gen_profile']
 
-    assert np.isclose(cf_mean, 0)
+    assert np.isclose(cf_mean, 0.2679, rtol=0.001)
     assert np.isclose(cf_profile.max(), 0.001)
     assert gen_profile.max() > 1e5
 
