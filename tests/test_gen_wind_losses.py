@@ -19,7 +19,8 @@ YEAR = 2012
 REV2_POINTS = slice(0, 5)
 SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(YEAR)
-
+RTOL = 0
+ATOL = 0.001
 
 LOSS_BASELINE = {0.0: [0.422, 0.429, 0.437, 0.431, 0.431],
                  16.7: [0.352, 0.357, 0.364, 0.359, 0.359],
@@ -59,7 +60,7 @@ def test_wind_generic_losses(loss):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, LOSS_BASELINE[loss], rtol=0.001)
+    assert np.allclose(gen_outs, LOSS_BASELINE[loss], rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize('i', range(3))
@@ -78,7 +79,8 @@ def test_wind_icing_losses(i):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, ICING_BASELINE[i]['output'], rtol=0.001)
+    assert np.allclose(gen_outs, ICING_BASELINE[i]['output'],
+                       rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize('i', range(2))
@@ -95,7 +97,8 @@ def test_wind_low_temp_cutoff(i):
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
-    assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'], rtol=0.001)
+    assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'],
+                       rtol=RTOL, atol=ATOL)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -15,8 +15,8 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 BASELINE = os.path.join(TESTDATADIR, 'SAM/output_linear_direct_steam.json')
-RTOL = 0.001
-ATOL = 0.00
+RTOL = 0
+ATOL = 0.001
 
 
 def test_gen_linear():

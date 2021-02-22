@@ -5,12 +5,12 @@ Created on Thu Oct  3 13:24:16 2019
 
 @author: gbuster
 """
-import h5py
 import os
 import pytest
 import numpy as np
 import shutil
 
+from rex import Resource
 from rex.utilities.loggers import LOGGERS
 from reV import TESTDATADIR
 from reV.pipeline.pipeline import Pipeline
@@ -33,12 +33,18 @@ def test_pipeline_local():
                                         target_module='multi-year')[0]
 
     dsets = ['generation/cf_mean-means', 'econ/lcoe_fcr-means']
-    with h5py.File(fpath_out, 'r') as f_new:
-        with h5py.File(fbaseline, 'r') as f_base:
+    with Resource(fpath_out, 'r') as f_new:
+        with Resource(fbaseline, 'r') as f_base:
             for dset in dsets:
+                if dset in ['meta', 'time_index']:
+                    test = f_new.h5[dset]
+                    truth = f_base.h5[dset]
+                else:
+                    test = f_new[dset]
+                    truth = f_base[dset]
+
                 msg = 'Local pipeline failed for "{}"'.format(dset)
-                assert np.allclose(f_new[dset][...],
-                                   f_base[dset][...], rtol=0.001), msg
+                assert np.allclose(truth, test, rtol=0.01, atol=0), msg
 
     if PURGE_OUT:
         shutil.rmtree(log_dir)
