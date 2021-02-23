@@ -265,7 +265,7 @@ def from_config(ctx, config_file, verbose):
               show_default=True,
               help=("Number of cores to run summary on. None is all "
                     "available cpus"))
-@click.option('--points_per_worker', '-ppw', type=int, default=10,
+@click.option('--points_per_worker', '-ppw', type=INT, default=10,
               show_default=True,
               help="Number of sc_points to summarize on each worker")
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
