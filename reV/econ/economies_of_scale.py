@@ -21,7 +21,7 @@ class EconomiesOfScale:
     Units
     -----
     capacity_factor : unitless
-    capacity : MW
+    capacity : kW
     annual_energy_production : kWh
     fixed_charge_rate : unitless
     fixed_operating_cost : $ (per year)
@@ -208,6 +208,18 @@ class EconomiesOfScale:
         return cc
 
     @property
+    def system_capacity(self):
+        """Get the system capacity in kW (SAM input, not the reV supply
+        curve capacity).
+
+        Returns
+        -------
+        out : float | np.ndarray
+        """
+        key_list = ['system_capacity', 'mean_system_capacity']
+        return self._get_prioritized_keys(self._data, key_list)
+
+    @property
     def fcr(self):
         """Fixed charge rate from input data arg
 
@@ -248,43 +260,29 @@ class EconomiesOfScale:
 
     @property
     def aep(self):
-        """Annual energy production from input data arg. If a valid key is not
-        found in the input data, aep is calculated as:
+        """Annual energy production back-calculated from the raw LCOE:
 
-        AEP = (System Capacity (MW) * mean capacity factor
-               * 8,760 hours/year * 1,000 kWh/MWh)
+        AEP = (fcr * raw_cap_cost + foc) / raw_lcoe
 
         Returns
         -------
         out : float | np.ndarray
-            Annual energy production from input data arg
         """
 
-        key_list = ['aep', 'annual_energy_production', 'mean_aep',
-                    'mean_annual_energy_production']
-        if any([k in self._data for k in key_list]):
-            aep = self._get_prioritized_keys(self._data, key_list)
-        else:
-            cap = self._get_prioritized_keys(self._data, ['capacity'])
-            cf = self._get_prioritized_keys(
-                self._data, ['mean_cf', 'capacity_factor'])
-            aep = cap * cf * 8760 * 1000
-
+        aep = (self.fcr * self.raw_capital_cost + self.foc) / self.raw_lcoe
+        aep *= 1000  # convert MWh to KWh
         return aep
 
     @property
     def raw_lcoe(self):
-        """LCOE calculated with the unscaled (raw) capital cost
-
-        LCOE = (FCR * raw_capital_cost + FOC) / AEP + VOC
+        """Raw LCOE taken from the input data
 
         Returns
         -------
         lcoe : float | np.ndarray
-            LCOE calculated with the unscaled (raw) capital cost
         """
-        return lcoe_fcr(self.fcr, self.raw_capital_cost, self.foc,
-                        self.aep, self.voc)
+        key_list = ['raw_lcoe', 'mean_lcoe']
+        return copy.deepcopy(self._get_prioritized_keys(self._data, key_list))
 
     @property
     def scaled_lcoe(self):

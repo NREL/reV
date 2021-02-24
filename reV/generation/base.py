@@ -61,6 +61,8 @@ class BaseGen(ABC):
     ECON_ATTRS.update(LCOE_IN_ATTRS)
 
     # SAM argument names used to calculate LCOE
+    # Note that system_capacity is not included here because it is never used
+    # downstream and could be confused with the supply_curve point capacity
     LCOE_ARGS = ('fixed_charge_rate', 'capital_cost', 'fixed_operating_cost',
                  'variable_operating_cost')
 
