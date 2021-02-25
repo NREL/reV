@@ -15,7 +15,7 @@ requirements:
     - python
     - pip
     - setuptools
-    - NREL-rex>=0.2.44
+    - NREL-rex>=0.2.47
     - NREL-PySAM==2.1.4
     - packaging
     - plotting
@@ -23,7 +23,7 @@ requirements:
   run:
     - python
     - pip
-    - NREL-rex>=0.2.44
+    - NREL-rex>=0.2.47
     - NREL-PySAM==2.1.4
     - packaging
     - plotting
