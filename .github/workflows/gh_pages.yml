@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   push:
-    branches: [main, master]
+    branches: [master, main]
 
 jobs:
   make-pages:
