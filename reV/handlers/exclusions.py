@@ -106,7 +106,7 @@ class ExclusionLayers:
         -------
         profile : dict
         """
-        return json.loads(self.h5.attrs['profile'])
+        return json.loads(self.h5.global_attrs['profile'])
 
     @property
     def crs(self):

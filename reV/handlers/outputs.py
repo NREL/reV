@@ -505,7 +505,7 @@ class Outputs(Resource):
             raise HandlerRuntimeError(msg)
 
         dtype = self.h5[ds_name].dtype
-        scale_factor = self.get_scale(ds_name)
+        scale_factor = self.get_scale_factor(ds_name)
         ds_slice = parse_slice(ds_slice)
         self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
                                                             scale_factor)
