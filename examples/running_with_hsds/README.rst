@@ -55,7 +55,13 @@ reV Gen
 -------
 
 reV generation (`reV.Gen <https://nrel.github.io/reV/reV/reV.generation.html>`_)
-will automatically infer if a file path is locally on disk or from HSDS:
+will automatically infer if a file path is locally on disk or from HSDS. 
+
+Note that for all of these examples, the ``sam_file`` input points to files in the 
+`reV test directory <https://github.com/NREL/reV/tree/master/tests/data/SAM>`_
+that may not be copied in your install. You may want to download the relevant SAM 
+system configs from that directory and point the ``sam_file`` variable to the correct 
+filepath on your computer. 
 
 windpower
 +++++++++
