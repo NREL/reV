@@ -419,8 +419,15 @@ class TechMapping:
         dset : str, optional
             Dataset name in excl_fpath to save mapping results to, if None
             do not save tech_map to excl_fpath, by default None
-        kwargs : dict
-            Keyword args to initialize the TechMapping object.
+        distance_upper_bound : float | None
+            Upper boundary distance for KNN lookup between exclusion points and
+            resource points. None will calculate a good distance based on the
+            resource meta data coordinates. 0.03 is a good value for a 4km
+            resource grid and finer.
+        map_chunk : int | None
+            Calculation chunk used for the tech mapping calc.
+        max_workers : int | None
+            Number of cores to run mapping on. None uses all available cpus.
 
         Returns
         -------
