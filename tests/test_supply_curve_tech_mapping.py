@@ -24,8 +24,7 @@ TM_DSET = 'techmap_nsrdb_ri_truth'
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    lats, lons, ind = TechMapping.run(EXCL, RES, TM_DSET, max_workers=2,
-                                      save_flag=False)
+    lats, lons, ind = TechMapping.run(EXCL, RES, dset=None, max_workers=2)
 
     with ExclusionLayers(EXCL) as ex:
         lat_truth = ex.latitude

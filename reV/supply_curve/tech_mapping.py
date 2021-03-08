@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
-    def __init__(self, excl_fpath, res_fpath, dset, distance_upper_bound=0.03,
+    def __init__(self, excl_fpath, res_fpath, distance_upper_bound=0.03,
                  map_chunk=2560, max_workers=None):
         """
         Parameters
@@ -38,8 +38,6 @@ class TechMapping:
             created in excl_fpath.
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
-        dset : str
-            Dataset name in excl_fpath to save mapping results to.
         distance_upper_bound : float | None
             Upper boundary distance for KNN lookup between exclusion points and
             resource points. None will calculate a good distance based on the
@@ -54,7 +52,6 @@ class TechMapping:
         self._distance_upper_bound = distance_upper_bound
         self._excl_fpath = excl_fpath
         self._res_fpath = res_fpath
-        self._dset = dset
         self._check_fout()
         self._map_chunk = map_chunk
 
@@ -408,7 +405,7 @@ class TechMapping:
                     .format(dset, fpath_out))
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, dset, save_flag=True,
+    def run(cls, excl_fpath, res_fpath, dset=None,
             distance_upper_bound=0.03, map_chunk=2560, max_workers=None):
         """Run parallel mapping and save to h5 file.
 
@@ -419,10 +416,9 @@ class TechMapping:
             created in excl_fpath.
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
-        dset : str
-            Dataset name in excl_fpath to save mapping results to.
-        save_flag : bool
-            Flag to write techmap to excl_fpath.
+        dset : str, optional
+            Dataset name in excl_fpath to save mapping results to, if None
+            do not save tech_map to excl_fpath, by default None
         kwargs : dict
             Keyword args to initialize the TechMapping object.
 
@@ -444,7 +440,7 @@ class TechMapping:
             lats, lons, ind = mapper._parallel_resource_map()
             distance_upper_bound = mapper._distance_upper_bound
 
-        if save_flag:
+        if dset:
             mapper.save_tech_map(lats, lons, ind, excl_fpath, res_fpath,
                                  dset, distance_upper_bound)
 
