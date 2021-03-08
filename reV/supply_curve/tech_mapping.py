@@ -436,7 +436,7 @@ class TechMapping:
         """
         kwargs = {"distance_upper_bound": distance_upper_bound,
                   "map_chunk": map_chunk, "max_workers": max_workers}
-        with cls(excl_fpath, res_fpath, dset, **kwargs) as mapper:
+        with cls(excl_fpath, res_fpath, **kwargs) as mapper:
             lats, lons, ind = mapper._parallel_resource_map()
             distance_upper_bound = mapper._distance_upper_bound
 
