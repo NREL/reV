@@ -319,7 +319,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
             dsets = list(f)
         if tm_dset not in dsets:
             try:
-                TechMapping.run(excl_fpath, res_fpath, tm_dset)
+                TechMapping.run(excl_fpath, res_fpath, dset=tm_dset)
             except Exception as e:
                 logger.exception('TechMapping process failed. Received the '
                                  'following error:\n{}'.format(e))

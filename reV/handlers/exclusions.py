@@ -62,6 +62,9 @@ class ExclusionLayers:
 
         return out
 
+    def __contains__(self, layer):
+        return layer in self.layers
+
     def close(self):
         """
         Close h5 instance
