@@ -8,12 +8,13 @@ Created on Fri Jun 21 16:05:47 2019
 
 @author: gbuster
 """
-import h5py
 from concurrent.futures import as_completed
+import h5py
+import logging
+from math import ceil
 import numpy as np
 import os
 from scipy.spatial import cKDTree
-import logging
 from warnings import warn
 
 from reV.supply_curve.points import SupplyCurveExtent
@@ -21,6 +22,7 @@ from reV.utilities.exceptions import FileInputWarning, FileInputError
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.utilities import res_dist_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -28,135 +30,167 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
-    def __init__(self, excl_fpath, res_fpath, distance_upper_bound=0.03,
-                 map_chunk=2560, max_workers=None):
+    def __init__(self, excl_fpath, res_fpath, map_chunk=2560,
+                 dist_margin=1.05):
         """
         Parameters
         ----------
         excl_fpath : str
-            Filepath to exclusions h5 (tech layer). dset will be
-            created in excl_fpath.
+            Filepath to exclusions h5 file, must contain latitude and longitude
+            arrays to allow for mapping to resource points
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
-        distance_upper_bound : float | None
-            Upper boundary distance for KNN lookup between exclusion points and
-            resource points. None will calculate a good distance based on the
-            resource meta data coordinates. 0.03 is a good value for a 4km
-            resource grid and finer.
         map_chunk : int | None
             Calculation chunk used for the tech mapping calc.
-        max_workers : int | None
-            Number of cores to run mapping on. None uses all available cpus.
+        dist_margin : float, optional
+            Extra margin to multiply times the computed distance between
+            neighboring resource points, by default 1.05
         """
-
-        self._distance_upper_bound = distance_upper_bound
         self._excl_fpath = excl_fpath
-        self._res_fpath = res_fpath
         self._check_fout()
-        self._map_chunk = map_chunk
 
-        if max_workers is None:
-            max_workers = os.cpu_count()
-        self._max_workers = max_workers
+        self._tree, self._dist_thresh = \
+            self._build_tree(res_fpath, dist_margin=dist_margin)
 
         with SupplyCurveExtent(self._excl_fpath,
-                               resolution=self._map_chunk) as sc:
-            self._map_chunk = sc._res
-            self._n_sc = len(sc)
+                               resolution=map_chunk) as sc:
+            self._map_chunk = sc.resolution
+            self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
-            self._n_excl = (self._excl_shape[0] * self._excl_shape[1])
+            self._n_excl = np.product(self._excl_shape)
+            self._points = sc.points
+            self._excl_row_slices = sc.excl_row_slices
+            self._excl_col_slices = sc.excl_col_slices
             logger.info('Initialized TechMapping object with {} calc chunks '
                         'for {} tech exclusion points'
-                        .format(len(sc), self._n_excl))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        if type is not None:
-            raise
-
-    def _check_fout(self):
-        """Check the TechMapping output file for cached data."""
-
-        emsg = None
-        wmsg = None
-        if os.path.exists(self._excl_fpath):
-            with h5py.File(self._excl_fpath, 'r') as f:
-
-                if 'latitude' not in f or 'longitude' not in f:
-                    emsg = ('Datasets "latitude" and/or "longitude" not in '
-                            'pre-existing Exclusions TechMapping file "{}". '
-                            'Cannot proceed.'
-                            .format(os.path.basename(self._excl_fpath)))
-
-        if wmsg is not None:
-            logger.warning(wmsg)
-            warn(wmsg, FileInputWarning)
-
-        if emsg is not None:
-            logger.exception(emsg)
-            raise FileInputError(emsg)
-
-    def _init_out_arrays(self):
-        """Initialize full sized output arrays.
-
-        Returns
-        -------
-        ind : np.ndarray
-            1D integer array filled with -1's with length equal to the number
-            of tech exclusion points in the supply curve extent.
-        coords : np.ndarray
-            2D integer array (N, 2) filled with 0's with length equal to the
-            number of tech exclusion points in the supply curve extent.
-        """
-
-        ind = -1 * np.ones((self._n_excl, ), dtype=np.int32)
-        coords = np.zeros((self._n_excl, 2), dtype=np.float32)
-
-        return ind, coords
+                        .format(len(self._gids), self._n_excl))
 
     @property
-    def distance_upper_bound(self):
+    def distance_threshold(self):
         """Get the upper bound on NN distance between excl and res points.
 
         Returns
         -------
-        distance_upper_bound : float
-            Estimate of the upper bound distance based on the distance between
-            resource points. Calculated as half of the diagonal between
-            closest resource points, with an extra 5% margin.
+        float
+            Estimate the distance between resource points. Calculated as half
+            of the diagonal between closest resource points, with desired
+            extra margin
         """
-
-        if self._distance_upper_bound is None:
-
-            with Resource(self._res_fpath, str_decode=False) as res:
-                lats = res.get_meta_arr('latitude')
-
-            dists = np.abs(lats - np.roll(lats, 1))
-            dists = dists[(dists != 0)]
-            self._distance_upper_bound = 1.05 * (2 ** 0.5) * (dists.min() / 2)
-
-            logger.info('Distance upper bound was infered to be: {}'
-                        .format(self._distance_upper_bound))
-
-        return self._distance_upper_bound
+        return self._dist_thresh
 
     @staticmethod
-    def _unpack_coords(gids, sc, excl_fpath,
-                       coord_labels=('latitude', 'longitude')):
-        """Unpack the exclusion layer coordinates for TechMapping.
+    def _build_tree(res_fpath, dist_margin=1.05):
+        """
+        Build cKDTree from resource lat, lon coordinates. Compute minimum
+        intra point distance between resource gids with provided extra margin.
+
+        Parameters
+        ----------
+        res_fpath : str
+            Filepath to .h5 resource file that we're mapping to.
+        dist_margin : float, optional
+            Extra margin to multiply times the computed distance between
+            neighboring resource points, by default 1.05
+
+        Returns
+        -------
+        tree : cKDTree
+            cKDTree built from resource lat, lon coordinates
+        dist_tresh : float
+            Estimate the distance between resource points. Calculated as half
+            of the diagonal between closest resource points, with desired
+            extra margin
+        """
+        with Resource(res_fpath) as f:
+            lat_lons = f.lat_lon
+
+        # pylint: disable=not-callable
+        tree = cKDTree(lat_lons)
+
+        dist_thresh = res_dist_threshold(lat_lons, tree=tree,
+                                         margin=dist_margin)
+
+        return tree, dist_thresh
+
+    @staticmethod
+    def _make_excl_iarr(shape):
+        """
+        Create 2D array of 1D index values for the flattened h5 excl extent
+
+        Parameters
+        ----------
+        shape : tuple
+            exclusion extent shape
+
+        Returns
+        -------
+        iarr : ndarray
+            2D array of 1D index values for the flattened h5 excl extent
+        """
+        iarr = np.arange(np.product(shape), dtype=np.uint32)
+
+        return iarr.reshape(shape)
+
+    @staticmethod
+    def _get_excl_slices(gid, points, excl_row_slices, excl_col_slices):
+        """
+        Get the row and column slices of the exclusions grid corresponding
+        to the supply curve point gid.
+
+        Parameters
+        ----------
+        gid : int
+            Supply curve point gid.
+        points : pandas.DataFrame
+            Mapping of supply curve point gids to row and column indices
+        excl_row_slices : list
+            List representing the supply curve points rows. Each list entry
+            contains the exclusion row slice that are included in the sc
+            point.
+        excl_col_slices : list
+            List representing the supply curve points columns. Each list entry
+            contains the exclusion columns slice that are included in the sc
+            point.
+
+        Returns
+        -------
+        row_slice : int
+            Exclusions grid row index slice corresponding to the sc point gid.
+        col_slice : int
+            Exclusions grid col index slice corresponding to the sc point gid.
+        """
+        sc_row_ind = points.loc[gid, 'row_ind']
+        sc_col_ind = points.loc[gid, 'col_ind']
+        row_slice = excl_row_slices[sc_row_ind]
+        col_slice = excl_col_slices[sc_col_ind]
+
+        return row_slice, col_slice
+
+    @classmethod
+    def _get_excl_coords(cls, excl_fpath, gids, points, excl_row_slices,
+                         excl_col_slices,
+                         coord_labels=('latitude', 'longitude')):
+        """
+        Extract the exclusion coordinates for teh desired gids for TechMapping.
 
         Parameters
         ----------
         gids : np.ndarray
             Supply curve gids with tech exclusion points to map to the
             resource meta points.
-        sc : SupplyCurveExtent
-            reV supply curve extent object
         excl_fpath : str
-            .h5 filepath to save exclusions tech mapping results to, or to
-            read from (if exists).
+            Filepath to exclusions h5 file, must contain latitude and longitude
+            arrays to allow for mapping to resource points
+        points : pandas.DataFrame
+            Mapping of supply curve point gids to row and column indices
+        excl_row_slices : list
+            List representing the supply curve points rows. Each list entry
+            contains the exclusion row slice that are included in the sc
+            point.
+        excl_col_slices : list
+            List representing the supply curve points columns. Each list entry
+            contains the exclusion columns slice that are included in the sc
+            point.
         coord_labels : tuple
             Labels for the coordinate datasets.
 
@@ -165,21 +199,13 @@ class TechMapping:
         coords_out : list
             List of arrays of the un-projected latitude, longitude array of
             tech exclusion points. List entries correspond to input gids.
-        lat_range : tuple
-            Latitude (min, max) values associated with the un-projected
-            coordinates of the input gids.
-        lon_range : tuple
-            Longitude (min, max) values associated with the un-projected
-            coordinates of the input gids.
         """
-
         coords_out = []
-        lat_range = None
-        lon_range = None
-
         with h5py.File(excl_fpath, 'r') as f:
             for gid in gids:
-                row_slice, col_slice = sc.get_excl_slices(gid)
+                row_slice, col_slice = cls._get_excl_slices(gid, points,
+                                                            excl_row_slices,
+                                                            excl_col_slices)
                 try:
                     lats = f[coord_labels[0]][row_slice, col_slice]
                     lons = f[coord_labels[1]][row_slice, col_slice]
@@ -193,43 +219,147 @@ class TechMapping:
 
                 coords_out.append(emeta)
 
-                if lat_range is None:
-                    lat_range = [np.min(emeta[:, 0]), np.max(emeta[:, 0])]
-                    lon_range = [np.min(emeta[:, 1]), np.max(emeta[:, 1])]
-                else:
-                    lat_range[0] = np.min((lat_range[0], np.min(emeta[:, 0])))
-                    lat_range[1] = np.max((lat_range[1], np.max(emeta[:, 0])))
-                    lon_range[0] = np.min((lon_range[0], np.min(emeta[:, 1])))
-                    lon_range[1] = np.max((lon_range[1], np.max(emeta[:, 1])))
+        return coords_out
 
-        return coords_out, lat_range, lon_range
+    @classmethod
+    def map_resource_gids(cls, gids, excl_fpath, points, excl_row_slices,
+                          excl_col_slices, tree, dist_thresh):
+        """Map exclusion gids to the resource meta.
 
-    def _parallel_resource_map(self):
-        """Map all resource gids to exclusion gids in parallel.
+        Parameters
+        ----------
+        gids : np.ndarray
+            Supply curve gids with tech exclusion points to map to the
+            resource meta points.
+        excl_fpath : str
+            Filepath to exclusions h5 file, must contain latitude and longitude
+            arrays to allow for mapping to resource points
+        points : pandas.DataFrame
+            Mapping of supply curve point gids to row and column indices
+        excl_row_slices : list
+            List representing the supply curve points rows. Each list entry
+            contains the exclusion row slice that are included in the sc
+            point.
+        excl_col_slices : list
+            List representing the supply curve points columns. Each list entry
+            contains the exclusion columns slice that are included in the sc
+            point.
+        tree : cKDTree
+            cKDTree built from resource lat, lon coordinates
+        dist_tresh : float
+            Estimate the distance between resource points. Calculated as half
+            of the diagonal between closest resource points, with an extra
+            5% margin
 
         Returns
         -------
-        lats : np.ndarray
-            2D un-projected latitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        lons : np.ndarray
-            2D un-projected longitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        ind_all : np.ndarray
+        ind : list
+            List of arrays of index values from the NN. List entries correspond
+            to input gids.
+        """
+        logger.debug('Getting tech map coordinates for chunks {} through {}'
+                     .format(gids[0], gids[-1]))
+        ind_out = []
+        coords_out = cls._get_excl_coords(excl_fpath, gids, points,
+                                          excl_row_slices, excl_col_slices)
+
+        logger.debug('Running tech mapping for chunks {} through {}'
+                     .format(gids[0], gids[-1]))
+        for i, _ in enumerate(gids):
+            dist, ind = tree.query(coords_out[i])
+            ind[(dist >= dist_thresh)] = -1
+            ind_out.append(ind)
+
+        return ind_out
+
+    @staticmethod
+    def save_tech_map(excl_fpath, dset, indices, distance_threshold=None,
+                      res_fpath=None, chunks=(128, 128)):
+        """Save tech mapping indices and coordinates to an h5 output file.
+
+        Parameters
+        ----------
+        excl_fpath : str
+            Filepath to exclusions h5 file to add techmap to as 'dset'
+        dset : str
+            Dataset name in fpath_out to save mapping results to.
+        indices : np.ndarray
+            Index values of the NN resource point. -1 if no res point found.
+            2D integer array with shape equal to the exclusions extent shape.
+        distance_threshold : float
+            Distance upper bound to save as attr.
+        res_fpath : str, optional
+            Filepath to .h5 resource file that we're mapping to,
+            by default None
+        chunks : tuple
+            Chunk shape of the 2D output datasets.
+        """
+        logger.info('Writing tech map "{}" to {}'.format(dset, excl_fpath))
+
+        shape = indices.shape
+        chunks = (np.min((shape[0], chunks[0])), np.min((shape[1], chunks[1])))
+
+        with h5py.File(excl_fpath, 'a') as f:
+            if dset in list(f):
+                wmsg = ('TechMap results dataset "{}" is being replaced '
+                        'in pre-existing Exclusions TechMapping file "{}"'
+                        .format(dset, excl_fpath))
+                logger.warning(wmsg)
+                warn(wmsg, FileInputWarning)
+                f[dset][...] = indices
+            else:
+                f.create_dataset(dset, shape=shape, dtype=indices.dtype,
+                                 data=indices, chunks=chunks)
+
+            if distance_threshold:
+                f[dset].attrs['distance_threshold'] = distance_threshold
+
+            if res_fpath:
+                f[dset].attrs['src_res_fpath'] = res_fpath
+
+        logger.info('Successfully saved tech map "{}" to {}'
+                    .format(dset, excl_fpath))
+
+    def _check_fout(self):
+        """Check the TechMapping output file for cached data."""
+        with h5py.File(self._excl_fpath, 'r') as f:
+            if 'latitude' not in f or 'longitude' not in f:
+                emsg = ('Datasets "latitude" and/or "longitude" not in '
+                        'pre-existing Exclusions TechMapping file "{}". '
+                        'Cannot proceed.'
+                        .format(os.path.basename(self._excl_fpath)))
+                logger.exception(emsg)
+                raise FileInputError(emsg)
+
+    def map_resource(self, max_workers=None, gids_per_worker=10):
+        """
+        Map all resource gids to exclusion gids
+
+        Parameters
+        ----------
+        max_workers : int, optional
+            Number of cores to run mapping on. None uses all available cpus,
+            by default None
+        gids_per_worker : int, optional
+            Number of supply curve point gids to map to resource gids on each
+            worker, by default 10
+
+        Returns
+        -------
+        indices : np.ndarray
             Index values of the NN resource point. -1 if no res point found.
             2D integer array with shape equal to the exclusions extent shape.
         """
-
-        gids = np.array(list(range(self._n_sc)), dtype=np.uint32)
-        gid_chunks = np.array_split(gids, int(np.ceil(len(gids) / 2)))
+        gid_chunks = ceil(len(self._gids) / gids_per_worker)
+        gid_chunks = np.array_split(self._gids, gid_chunks)
 
         # init full output arrays
-        ind_all, coords_all = self._init_out_arrays()
+        indices = -1 * np.ones((self._n_excl, ), dtype=np.int32)
+        iarr = self._make_excl_iarr(self._excl_shape)
 
-        n_finished = 0
         futures = {}
         loggers = [__name__, 'reV']
-        with SpawnProcessPool(max_workers=self._max_workers,
+        with SpawnProcessPool(max_workers=max_workers,
                               loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
@@ -238,10 +368,13 @@ class TechMapping:
                 futures[exe.submit(self.map_resource_gids,
                                    gid_set,
                                    self._excl_fpath,
-                                   self._res_fpath,
-                                   self.distance_upper_bound,
-                                   self._map_chunk)] = i
+                                   self._points,
+                                   self._excl_row_slices,
+                                   self._excl_col_slices,
+                                   self._tree,
+                                   self.distance_threshold)] = i
 
+            n_finished = 0
             for future in as_completed(futures):
                 n_finished += 1
                 logger.info('Parallel TechMapping futures collected: '
@@ -251,162 +384,21 @@ class TechMapping:
                 i = futures[future]
                 result = future.result()
 
-                res = self._map_chunk
-                with SupplyCurveExtent(self._excl_fpath, resolution=res) as sc:
-                    for j, gid in enumerate(gid_chunks[i]):
-                        i_out_arr = sc.get_flat_excl_ind(gid)
-                        ind_all[i_out_arr] = result[0][j]
-                        coords_all[i_out_arr, :] = result[1][j]
+                for j, gid in enumerate(gid_chunks[i]):
+                    row_slice, col_slice = \
+                        self._get_excl_slices(gid, self._points,
+                                              self._excl_row_slices,
+                                              self._excl_col_slices)
+                    ind_slice = iarr[row_slice, col_slice].flatten()
+                    indices[ind_slice] = result[j]
 
-        ind_all = ind_all.reshape(self._excl_shape)
-        lats = coords_all[:, 0].reshape(self._excl_shape)
-        lons = coords_all[:, 1].reshape(self._excl_shape)
+        indices = indices.reshape(self._excl_shape)
 
-        return lats, lons, ind_all
-
-    @classmethod
-    def map_resource_gids(cls, gids, excl_fpath, res_fpath,
-                          distance_upper_bound, map_chunk, margin=0.1):
-        """Map exclusion gids to the resource meta.
-
-        Parameters
-        ----------
-        gids : np.ndarray
-            Supply curve gids with tech exclusion points to map to the
-            resource meta points.
-        excl_fpath : str
-            Filepath to exclusions h5 (tech layer). dset will be
-            created in excl_fpath.
-        res_fpath : str
-            Filepath to .h5 resource file that we're mapping to.
-        distance_upper_bound : float | None
-            Upper boundary distance for KNN lookup between exclusion points and
-            resource points.
-        map_chunk : int
-            Calculation chunk used for the tech mapping calc.
-        margin : float
-            Margin when reducing the resource lat/lon.
-
-        Returns
-        -------
-        ind : list
-            List of arrays of index values from the NN. List entries correspond
-            to input gids.
-        coords : np.ndarray
-            List of arrays of the un-projected latitude, longitude array of
-            tech exclusion points. List entries correspond to input gids.
-        """
-
-        logger.debug('Getting tech layer coordinates for chunks {} through {}'
-                     .format(gids[0], gids[-1]))
-
-        ind_out = []
-        coord_labels = ['latitude', 'longitude']
-
-        with SupplyCurveExtent(excl_fpath, resolution=map_chunk) as sc:
-            coords_out, lat_range, lon_range = cls._unpack_coords(
-                gids, sc, excl_fpath, coord_labels=coord_labels)
-
-        with Resource(res_fpath, str_decode=False) as res:
-            res_meta = np.vstack((res.get_meta_arr(coord_labels[0]),
-                                  res.get_meta_arr(coord_labels[1]))).T
-
-        mask = ((res_meta[:, 0] > lat_range[0] - margin)
-                & (res_meta[:, 0] < lat_range[1] + margin)
-                & (res_meta[:, 1] > lon_range[0] - margin)
-                & (res_meta[:, 1] < lon_range[1] + margin))
-
-        # pylint: disable-msg=C0121
-        mask_ind = np.where(mask == True)[0]  # noqa: E712
-
-        if np.sum(mask) > 0:
-            # pylint: disable=not-callable
-            res_tree = cKDTree(res_meta[mask, :])
-
-            logger.debug('Running tech mapping for chunks {} through {}'
-                         .format(gids[0], gids[-1]))
-            for i, _ in enumerate(gids):
-                dist, ind = res_tree.query(coords_out[i])
-                ind = mask_ind[ind]
-                ind[(dist > distance_upper_bound)] = -1
-                ind_out.append(ind)
-        else:
-            logger.debug('No close res points for chunks {} through {}'
-                         .format(gids[0], gids[-1]))
-            for _ in gids:
-                ind_out.append(-1)
-
-        return ind_out, coords_out
-
-    @staticmethod
-    def save_tech_map(lats, lons, ind, fpath_out, res_fpath, dset,
-                      distance_upper_bound, chunks=(128, 128)):
-        """Save tech mapping indices and coordinates to an h5 output file.
-
-        Parameters
-        ----------
-        lats : np.ndarray
-            2D un-projected latitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        lons : np.ndarray
-            2D un-projected longitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        ind : np.ndarray
-            Index values of the NN resource point. -1 if no res point found.
-            2D integer array with shape equal to the exclusions extent shape.
-        fpath_out : str
-            .h5 filepath to save tech mapping results.
-        res_fpath : str
-            Filepath to .h5 resource file that we're mapping to.
-        dset : str
-            Dataset name in fpath_out to save mapping results to.
-        distance_upper_bound : float
-            Distance upper bound to save as attr.
-        chunks : tuple
-            Chunk shape of the 2D output datasets.
-        """
-
-        if not fpath_out.endswith('.h5'):
-            fpath_out += '.h5'
-
-        logger.info('Writing tech map "{}" to {}'.format(dset, fpath_out))
-
-        shape = ind.shape
-        chunks = (np.min((shape[0], chunks[0])), np.min((shape[1], chunks[1])))
-
-        if not os.path.exists(fpath_out):
-            if lats is not None and lons is None:
-                with h5py.File(fpath_out, 'w') as f:
-                    f.create_dataset('latitude', shape=shape,
-                                     dtype=lats.dtype,
-                                     data=lats,
-                                     chunks=chunks)
-                    f.create_dataset('longitude', shape=shape,
-                                     dtype=lons.dtype,
-                                     data=lons,
-                                     chunks=chunks)
-
-        with h5py.File(fpath_out, 'a') as f:
-            if dset in list(f):
-                wmsg = ('TechMap results dataset "{}" is being replaced '
-                        'in pre-existing Exclusions TechMapping file "{}"'
-                        .format(dset, fpath_out))
-                logger.warning(wmsg)
-                warn(wmsg, FileInputWarning)
-                f[dset][...] = ind
-            else:
-                f.create_dataset(dset, shape=shape, dtype=ind.dtype,
-                                 data=ind, chunks=chunks)
-
-            f[dset].attrs['fpath'] = res_fpath
-            f[dset].attrs['distance_upper_bound'] = distance_upper_bound
-
-        logger.info('Successfully saved tech map "{}" to {}'
-                    .format(dset, fpath_out))
+        return indices
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, dset=None,
-            distance_upper_bound=0.03, map_chunk=2560, max_workers=None):
+    def run(cls, excl_fpath, res_fpath, dset=None, map_chunk=2560,
+            dist_margin=1.05, max_workers=None, gids_per_worker=10):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -419,36 +411,33 @@ class TechMapping:
         dset : str, optional
             Dataset name in excl_fpath to save mapping results to, if None
             do not save tech_map to excl_fpath, by default None
-        distance_upper_bound : float | None
-            Upper boundary distance for KNN lookup between exclusion points and
-            resource points. None will calculate a good distance based on the
-            resource meta data coordinates. 0.03 is a good value for a 4km
-            resource grid and finer.
         map_chunk : int | None
             Calculation chunk used for the tech mapping calc.
-        max_workers : int | None
-            Number of cores to run mapping on. None uses all available cpus.
+        dist_margin : float, optional
+            Extra margin to multiply times the computed distance between
+            neighboring resource points, by default 1.05
+        max_workers : int, optional
+            Number of cores to run mapping on. None uses all available cpus,
+            by default None
+        gids_per_worker : int, optional
+            Number of supply curve point gids to map to resource gids on each
+            worker, by default 10
 
         Returns
         -------
-        lats : np.ndarray
-            2D un-projected latitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        lons : np.ndarray
-            2D un-projected longitude array of tech exclusion points.
-            0's if no res point found. Shape is equal to exclusions shape.
-        ind_all : np.ndarray
+        indices : np.ndarray
             Index values of the NN resource point. -1 if no res point found.
             2D integer array with shape equal to the exclusions extent shape.
         """
-        kwargs = {"distance_upper_bound": distance_upper_bound,
-                  "map_chunk": map_chunk, "max_workers": max_workers}
-        with cls(excl_fpath, res_fpath, **kwargs) as mapper:
-            lats, lons, ind = mapper._parallel_resource_map()
-            distance_upper_bound = mapper._distance_upper_bound
+        kwargs = {"dist_margin": dist_margin,
+                  "map_chunk": map_chunk}
+        mapper = cls(excl_fpath, res_fpath, **kwargs)
+        indices = mapper.map_resource(max_workers=max_workers,
+                                      gids_per_worker=gids_per_worker)
 
         if dset:
-            mapper.save_tech_map(lats, lons, ind, excl_fpath, res_fpath,
-                                 dset, distance_upper_bound)
+            mapper.save_tech_map(excl_fpath, dset, indices,
+                                 distance_threshold=mapper.distance_threshold,
+                                 res_fpath=res_fpath)
 
-        return lats, lons, ind
+        return indices
