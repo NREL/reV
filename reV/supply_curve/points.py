@@ -15,6 +15,7 @@ from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError, InputWarning)
 
 from rex.resource import Resource
+from rex.utilities.utilities import get_chunk_ranges
 
 logger = logging.getLogger(__name__)
 
@@ -1487,15 +1488,8 @@ class SupplyCurveExtent:
             (except for the last array in the list which is the remainder).
         """
 
-        chunks = []
-        i = 0
-        while True:
-            if i == len(arr):
-                break
-            else:
-                chunks.append(arr[i:i + resolution])
-
-            i = np.min((len(arr), i + resolution))
+        chunks = get_chunk_ranges(len(arr), resolution)
+        chunks = list(map(lambda i: np.arange(*i), chunks))
 
         return chunks
 
@@ -1517,16 +1511,8 @@ class SupplyCurveExtent:
             (except for the last array in the list which is the remainder).
         """
 
-        slices = []
-        i = 0
-        while True:
-            if i == len(arr):
-                break
-            else:
-                s, e = arr[i:i + resolution][[0, -1]]
-                slices.append(slice(s, e + 1))
-
-            i = np.min((len(arr), i + resolution))
+        slices = get_chunk_ranges(len(arr), resolution)
+        slices = list(map(lambda i: slice(*i), slices))
 
         return slices
 
