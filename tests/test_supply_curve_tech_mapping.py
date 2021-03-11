@@ -11,9 +11,9 @@ import pytest
 import os
 
 from reV import TESTDATADIR
+from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.handlers.exclusions import ExclusionLayers
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -23,24 +23,19 @@ TM_DSET = 'techmap_nsrdb_ri_truth'
 
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
-
-    lats, lons, ind = TechMapping.run(EXCL, RES, dset=None, max_workers=2)
+    ind = TechMapping.run(EXCL, RES, dset=None, max_workers=2)
 
     with ExclusionLayers(EXCL) as ex:
-        lat_truth = ex.latitude
-        lon_truth = ex.longitude
         ind_truth = ex[TM_DSET]
 
     msg = 'Tech mapping failed for {} vs. baseline results.'
-    assert np.allclose(lats, lat_truth), msg.format('latitudes')
-    assert np.allclose(lons, lon_truth), msg.format('longitudes')
     assert np.allclose(ind, ind_truth), msg.format('index mappings')
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
 
 
-def plot_tech_mapping():
+def plot_tech_mapping(dist_margin=1.05):
     """Run the supply curve technology mapping and plot the resulting mapped
     points."""
 
@@ -49,17 +44,21 @@ def plot_tech_mapping():
     with h5py.File(EXCL, 'r') as f:
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
-        ind = f[TM_DSET][...].flatten()
+        ind_truth = f[TM_DSET][...].flatten()
 
     with Outputs(GEN) as fgen:
         gen_meta = fgen.meta
 
+    ind_test = TechMapping.run(EXCL, RES, dset=None, max_workers=2,
+                               dist_margin=dist_margin)
+
     df = pd.DataFrame({'latitude': lats,
                        'longitude': lons,
-                       TM_DSET: ind})
+                       TM_DSET: ind_truth,
+                       'test': ind_test.flatten()})
 
     _, axs = plt.subplots(1, 1)
-    colors = ['b', 'g', 'c', 'm', 'k', 'y']
+    colors = ['b', 'g', 'c', 'm', 'y']
     colors *= 100
 
     for i, ind in enumerate(df[TM_DSET].unique()):
@@ -81,9 +80,20 @@ def plot_tech_mapping():
                         gen_meta.loc[ind, 'latitude'],
                         c='w', s=1)
 
+    for ind in df['test'].unique():
+        if ind != -1:
+            axs.scatter(gen_meta.loc[ind, 'longitude'],
+                        gen_meta.loc[ind, 'latitude'],
+                        c='r', s=1)
+
+    mask = df[TM_DSET].values != df['test']
+    axs.scatter(df.loc[mask, 'longitude'],
+                df.loc[mask, 'latitude'],
+                c='k', s=1)
+
     axs.axis('equal')
     plt.show()
-    return df
+    return df, df.loc[mask]
 
 
 def execute_pytest(capture='all', flags='-rapP'):

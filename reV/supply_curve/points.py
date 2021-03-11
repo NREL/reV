@@ -15,6 +15,7 @@ from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError, InputWarning)
 
 from rex.resource import Resource
+from rex.utilities.utilities import get_chunk_ranges
 
 logger = logging.getLogger(__name__)
 
@@ -1469,6 +1470,52 @@ class SupplyCurveExtent:
 
         return self._points
 
+    @staticmethod
+    def _chunk_excl(arr, resolution):
+        """Split an array into a list of arrays with len == resolution.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            1D array to be split into chunks.
+        resolution : int
+            Resolution of the chunks.
+
+        Returns
+        -------
+        chunks : list
+            List of arrays, each with length equal to self.resolution
+            (except for the last array in the list which is the remainder).
+        """
+
+        chunks = get_chunk_ranges(len(arr), resolution)
+        chunks = list(map(lambda i: np.arange(*i), chunks))
+
+        return chunks
+
+    @staticmethod
+    def _excl_slices(arr, resolution):
+        """Split row or col ind into slices of excl rows or slices
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            1D array to be split into slices
+        resolution : int
+            Resolution of the sc points
+
+        Returns
+        -------
+        slices : list
+            List of arr slices, each with length equal to self.resolution
+            (except for the last array in the list which is the remainder).
+        """
+
+        slices = get_chunk_ranges(len(arr), resolution)
+        slices = list(map(lambda i: slice(*i), slices))
+
+        return slices
+
     def get_excl_slices(self, gid):
         """Get the row and column slices of the exclusions grid corresponding
         to the supply curve point gid.
@@ -1559,67 +1606,6 @@ class SupplyCurveExtent:
         lon = self.longitude[gid]
 
         return (lat, lon)
-
-    @staticmethod
-    def _chunk_excl(arr, resolution):
-        """Split an array into a list of arrays with len == resolution.
-
-        Parameters
-        ----------
-        arr : np.ndarray
-            1D array to be split into chunks.
-        resolution : int
-            Resolution of the chunks.
-
-        Returns
-        -------
-        chunks : list
-            List of arrays, each with length equal to self.resolution
-            (except for the last array in the list which is the remainder).
-        """
-
-        chunks = []
-        i = 0
-        while True:
-            if i == len(arr):
-                break
-            else:
-                chunks.append(arr[i:i + resolution])
-
-            i = np.min((len(arr), i + resolution))
-
-        return chunks
-
-    @staticmethod
-    def _excl_slices(arr, resolution):
-        """Split row or col ind into slices of excl rows or slices
-
-        Parameters
-        ----------
-        arr : np.ndarray
-            1D array to be split into slices
-        resolution : int
-            Resolution of the sc points
-
-        Returns
-        -------
-        slices : list
-            List of arr slices, each with length equal to self.resolution
-            (except for the last array in the list which is the remainder).
-        """
-
-        slices = []
-        i = 0
-        while True:
-            if i == len(arr):
-                break
-            else:
-                s, e = arr[i:i + resolution][[0, -1]]
-                slices.append(slice(s, e + 1))
-
-            i = np.min((len(arr), i + resolution))
-
-        return slices
 
     def valid_sc_points(self, tm_dset):
         """
