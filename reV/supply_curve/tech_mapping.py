@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
-    def __init__(self, excl_fpath, res_fpath, map_chunk=2560,
+    def __init__(self, excl_fpath, res_fpath, sc_resolution=2560,
                  dist_margin=1.05):
         """
         Parameters
@@ -40,8 +40,10 @@ class TechMapping:
             arrays to allow for mapping to resource points
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
-        map_chunk : int | None
-            Calculation chunk used for the tech mapping calc.
+        sc_resolution : int | None, optional
+            Supply curve resolution, does not affect the exclusion to resource
+            (tech) mapping, but defines how many exclusion pixels are mapped
+            at a time, by default 2560
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between
             neighboring resource points, by default 1.05
@@ -53,8 +55,8 @@ class TechMapping:
             self._build_tree(res_fpath, dist_margin=dist_margin)
 
         with SupplyCurveExtent(self._excl_fpath,
-                               resolution=map_chunk) as sc:
-            self._map_chunk = sc.resolution
+                               resolution=sc_resolution) as sc:
+            self._sc_resolution = sc.resolution
             self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
             self._n_excl = np.product(self._excl_shape)
@@ -331,7 +333,7 @@ class TechMapping:
                 logger.exception(emsg)
                 raise FileInputError(emsg)
 
-    def map_resource(self, max_workers=None, gids_per_worker=10):
+    def map_resource(self, max_workers=None, points_per_worker=10):
         """
         Map all resource gids to exclusion gids
 
@@ -340,8 +342,8 @@ class TechMapping:
         max_workers : int, optional
             Number of cores to run mapping on. None uses all available cpus,
             by default None
-        gids_per_worker : int, optional
-            Number of supply curve point gids to map to resource gids on each
+        points_per_worker : int, optional
+            Number of supply curve points to map to resource gids on each
             worker, by default 10
 
         Returns
@@ -350,7 +352,7 @@ class TechMapping:
             Index values of the NN resource point. -1 if no res point found.
             2D integer array with shape equal to the exclusions extent shape.
         """
-        gid_chunks = ceil(len(self._gids) / gids_per_worker)
+        gid_chunks = ceil(len(self._gids) / points_per_worker)
         gid_chunks = np.array_split(self._gids, gid_chunks)
 
         # init full output arrays
@@ -397,8 +399,8 @@ class TechMapping:
         return indices
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, dset=None, map_chunk=2560,
-            dist_margin=1.05, max_workers=None, gids_per_worker=10):
+    def run(cls, excl_fpath, res_fpath, dset=None, sc_resolution=2560,
+            dist_margin=1.05, max_workers=None, points_per_worker=10):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -411,16 +413,18 @@ class TechMapping:
         dset : str, optional
             Dataset name in excl_fpath to save mapping results to, if None
             do not save tech_map to excl_fpath, by default None
-        map_chunk : int | None
-            Calculation chunk used for the tech mapping calc.
+        sc_resolution : int | None, optional
+            Supply curve resolution, does not affect the exclusion to resource
+            (tech) mapping, but defines how many exclusion pixels are mapped
+            at a time, by default 2560
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between
             neighboring resource points, by default 1.05
         max_workers : int, optional
             Number of cores to run mapping on. None uses all available cpus,
             by default None
-        gids_per_worker : int, optional
-            Number of supply curve point gids to map to resource gids on each
+        points_per_worker : int, optional
+            Number of supply curve points to map to resource gids on each
             worker, by default 10
 
         Returns
@@ -430,10 +434,10 @@ class TechMapping:
             2D integer array with shape equal to the exclusions extent shape.
         """
         kwargs = {"dist_margin": dist_margin,
-                  "map_chunk": map_chunk}
+                  "sc_resolution": sc_resolution}
         mapper = cls(excl_fpath, res_fpath, **kwargs)
         indices = mapper.map_resource(max_workers=max_workers,
-                                      gids_per_worker=gids_per_worker)
+                                      points_per_worker=points_per_worker)
 
         if dset:
             mapper.save_tech_map(excl_fpath, dset, indices,
