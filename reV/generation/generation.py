@@ -194,7 +194,7 @@ class Gen(BaseGen):
                             'time_index length {}'
                             .format(ds_freq, len(time_index)))
             elif step is not None:
-                time_index = time_index[::2]
+                time_index = time_index[::step]
 
             self._time_index = self.handle_leap_ti(time_index,
                                                    drop_leap=self._drop_leap)
