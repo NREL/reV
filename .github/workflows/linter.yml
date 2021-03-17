@@ -12,9 +12,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Lint Code Base
         uses: github/super-linter@v3
         env:
           VALIDATE_ALL_CODEBASE: false
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_ISORT: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
