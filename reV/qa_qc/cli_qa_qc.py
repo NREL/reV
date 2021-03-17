@@ -403,7 +403,8 @@ def from_config(ctx, config_file, verbose):
     verbose = config.log_level == logging.DEBUG
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
+    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+              verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '

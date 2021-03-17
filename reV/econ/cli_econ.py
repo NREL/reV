@@ -86,7 +86,8 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
+    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+              verbose=verbose)
     cf_files = config.parse_cf_files()
     # Initial log statements
     logger.info('Running reV Econ from config file: "{}"'
@@ -293,7 +294,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
         dirout = os.path.dirname(cf_file)
 
     # initialize loggers for multiple modules
-    init_mult(name, logdir, modules=['reV', 'rex'],
+    init_mult(name, logdir, modules=[__name__, 'reV', 'rex'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
