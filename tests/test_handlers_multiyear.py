@@ -190,7 +190,7 @@ def test_cli(runner):
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
 
-    LOGGERS.clear()
+        LOGGERS.clear()
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
