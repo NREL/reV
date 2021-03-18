@@ -12,10 +12,11 @@ import time
 from reV.version import __version__
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
+from reV.utilities import log_versions
 
-from rex.rechunk_h5 import to_records_array
 from rex.resource import Resource
 from rex.utilities.parse_keys import parse_keys, parse_slice
+from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 
@@ -151,6 +152,7 @@ class Outputs(Resource):
         group : str
             Group within .h5 resource file to open
         """
+        log_versions(logger)
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
         self._unscale = unscale

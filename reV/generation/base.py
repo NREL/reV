@@ -20,6 +20,7 @@ from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning,
                                       OffshoreWindInputWarning)
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -92,7 +93,7 @@ class BaseGen(ABC):
             results will be stored in-memory at any given time before flushing
             to disk.
         """
-
+        log_versions(logger)
         self._points_control = points_control
         self._year = None
         self._site_limit = None

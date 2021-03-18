@@ -17,6 +17,7 @@ from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError, SupplyCurveInputError)
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -166,7 +167,7 @@ class AbstractAggregation(ABC):
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
         """
-
+        log_versions(logger)
         self._excl_fpath = excl_fpath
         self._tm_dset = tm_dset
         self._excl_dict = excl_dict

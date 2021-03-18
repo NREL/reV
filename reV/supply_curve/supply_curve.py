@@ -15,6 +15,7 @@ from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
+from reV.utilities import log_versions
 
 from rex.utilities import parse_table, SpawnProcessPool
 
@@ -94,7 +95,7 @@ class SupplyCurve:
             Path to offshore transmission table, if None offshore sc points
             will not be included, by default None
         """
-
+        log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
         logger.info('Transmission table input: {}'.format(trans_table))
 
