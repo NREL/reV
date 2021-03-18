@@ -18,7 +18,7 @@ from reV.handlers.multi_year import MultiYear
 from reV import TESTDATADIR
 
 from rex import Resource
-from rex.utilities.loggers import init_logger
+from rex.utilities.loggers import init_logger, LOGGERS
 
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
@@ -189,6 +189,8 @@ def test_cli(runner):
                                1 * np.arange(len(res.meta)))
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
+
+    LOGGERS.clear()
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
