@@ -224,7 +224,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=['reV', 'rex'],
+        init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose)
 
         if isinstance(transmission_costs, str):
