@@ -453,6 +453,7 @@ def from_config(ctx, config_file, verbose):
                     log_file = os.path.join(
                         config.logdir,
                         os.path.basename(fpath).replace('.h5', '.log'))
+                    max_workers = config.execution_control.max_workers
                     ctx.invoke(reV_h5,
                                h5_file=fpath,
                                out_dir=config.dirout,
@@ -460,7 +461,7 @@ def from_config(ctx, config_file, verbose):
                                dsets=module_config.dsets,
                                group=module_config.group,
                                process_size=module_config.process_size,
-                               max_workers=module_config.max_workers,
+                               max_workers=max_workers,
                                plot_type=module_config.plot_type,
                                cmap=module_config.cmap,
                                log_file=log_file,
@@ -648,12 +649,13 @@ def get_multiple_cmds(config, out_dir, log_file, verbose):
                                              verbose,
                                              terminal))
             elif fpath.endswith('.h5'):
+                max_workers = config.execution_control.max_workers
                 node_cmd.append(get_h5_cmd(config.name, fpath, out_dir,
                                            module_config.sub_dir,
                                            module_config.dsets,
                                            module_config.group,
                                            module_config.process_size,
-                                           module_config.max_workers,
+                                           max_workers,
                                            module_config.plot_type,
                                            module_config.cmap,
                                            log_file,

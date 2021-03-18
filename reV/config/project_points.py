@@ -10,9 +10,10 @@ import os
 import pandas as pd
 from warnings import warn
 
-from reV.utilities.exceptions import ConfigError, ConfigWarning
-from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
+from reV.config.sam_config import SAMConfig
+from reV.utilities.exceptions import ConfigError, ConfigWarning
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -241,7 +242,7 @@ class ProjectPoints:
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
         """
-
+        log_versions(logger)
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_config)
@@ -271,10 +272,12 @@ class ProjectPoints:
         site_bool = (self.df['gid'] == site)
         try:
             config_id = self.df.loc[site_bool, 'config'].values[0]
-        except KeyError:
-            raise KeyError('Site {} not found in this instance of '
-                           'ProjectPoints. Available sites include: {}'
-                           .format(site, self.sites))
+        except KeyError as ex:
+            msg = ('Site {} not found in this instance of '
+                   'ProjectPoints. Available sites include: {}'
+                   .format(site, self.sites))
+            logger.exception(msg)
+            raise KeyError(msg) from ex
 
         return config_id, copy.deepcopy(self.sam_configs[config_id])
 

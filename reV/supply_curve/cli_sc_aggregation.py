@@ -123,8 +123,8 @@ def from_config(ctx, config_file, verbose):
                        friction_dset=config.friction_dset,
                        cap_cost_scale=config.cap_cost_scale,
                        out_dir=config.dirout,
-                       max_workers=config.max_workers,
-                       points_per_worker=config.points_per_worker,
+                       max_workers=config.execution_control.max_workers,
+                       points_per_worker=config.execution.sites_per_worker,
                        log_dir=config.logdir,
                        verbose=verbose)
 
@@ -153,8 +153,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FRICTION_DSET'] = config.friction_dset
         ctx.obj['CAP_COST_SCALE'] = config.cap_cost_scale
         ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['MAX_WORKERS'] = config.max_workers
-        ctx.obj['POINTS_PER_WORKER'] = config.points_per_worker
+        ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
+        ctx.obj['POINTS_PER_WORKER'] = config.execution.sites_per_worker
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
 
