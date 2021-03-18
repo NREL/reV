@@ -319,7 +319,11 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
 
         with h5py.File(excl_fpath, mode='r') as f:
             dsets = list(f)
-        if tm_dset not in dsets:
+        if tm_dset in dsets:
+            logger.info('Found techmap "{}".'.format(tm_dset))
+        else:
+            logger.info('Could not find techmap "{}". Running techmap module.'
+                        .format(tm_dset))
             try:
                 TechMapping.run(excl_fpath, res_fpath, dset=tm_dset)
             except Exception as e:

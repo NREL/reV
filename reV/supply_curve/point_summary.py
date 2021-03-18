@@ -29,7 +29,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     # technology-dependent power density estimates in MW/km2
     POWER_DENSITY = {'pv': 36, 'wind': 3}
 
-    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index,
+                 excl_dict=None, inclusion_mask=None,
                  res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
@@ -55,6 +56,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         res_class_dset : str | np.ndarray | None
             Dataset in the generation file dictating resource classes.
             Can be pre-extracted resource data in np.ndarray.
@@ -107,9 +112,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._friction_layer = friction_layer
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
-                         excl_dict=excl_dict, resolution=resolution,
-                         excl_area=excl_area, exclusion_shape=exclusion_shape,
-                         offshore_flags=offshore_flags, close=close)
+                         excl_dict=excl_dict,
+                         inclusion_mask=inclusion_mask,
+                         resolution=resolution,
+                         excl_area=excl_area,
+                         exclusion_shape=exclusion_shape,
+                         offshore_flags=offshore_flags,
+                         close=close)
 
         self._apply_exclusions()
 
@@ -483,7 +492,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         resource bin."""
 
         # exclusions mask is False where excluded
-        exclude = (self.excl_data == 0).flatten()
+        exclude = (self.include_mask == 0).flatten()
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1
@@ -491,8 +500,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         # ensure that excluded pixels (including resource exclusions!)
         # has an exclusions multiplier of 0
-        self._excl_data[exclude.reshape(self._excl_data.shape)] = 0.0
-        self._excl_data_flat = self._excl_data.flatten()
+        self._incl_mask[exclude.reshape(self._incl_mask.shape)] = 0.0
+        self._incl_mask_flat = self._incl_mask.flatten()
 
         if (self._gen_gids != -1).sum() == 0:
             msg = ('Supply curve point gid {} is completely excluded for res '
@@ -674,7 +683,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
     @classmethod
     def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
-                  excl_dict=None, res_class_dset=None, res_class_bin=None,
+                  excl_dict=None, inclusion_mask=None,
+                  res_class_dset=None, res_class_bin=None,
                   excl_area=0.0081, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
@@ -700,6 +710,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         res_class_dset : str | np.ndarray | None
             Dataset in the generation file dictating resource classes.
             Can be pre-extracted resource data in np.ndarray.
@@ -757,6 +771,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
         kwargs = {"excl_dict": excl_dict,
+                  "inclusion_mask": inclusion_mask,
                   "res_class_dset": res_class_dset,
                   "res_class_bin": res_class_bin,
                   "excl_area": excl_area,
