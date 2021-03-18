@@ -26,6 +26,7 @@ from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning, SupplyCurveInputError)
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -762,7 +763,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             supply curve aggregation table. This will not affect offshore
             wind LCOE.
         """
-
+        log_versions(logger)
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area,
