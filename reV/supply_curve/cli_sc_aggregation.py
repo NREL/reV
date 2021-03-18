@@ -100,6 +100,7 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
+            points_per_worker = config.execution_control.sites_per_worker
             ctx.invoke(direct,
                        excl_fpath=config.excl_fpath,
                        gen_fpath=config.gen_fpath,
@@ -124,7 +125,7 @@ def from_config(ctx, config_file, verbose):
                        cap_cost_scale=config.cap_cost_scale,
                        out_dir=config.dirout,
                        max_workers=config.execution_control.max_workers,
-                       points_per_worker=config.execution.sites_per_worker,
+                       points_per_worker=points_per_worker,
                        log_dir=config.logdir,
                        verbose=verbose)
 

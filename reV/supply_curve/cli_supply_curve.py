@@ -106,7 +106,7 @@ def from_config(ctx, config_file, verbose):
                        wind_dirs=config.wind_dirs,
                        n_dirs=config.n_dirs,
                        downwind=config.downwind,
-                       max_workers=config.execution.max_workers,
+                       max_workers=config.execution_control.max_workers,
                        out_dir=config.dirout,
                        log_dir=config.logdir,
                        simple=config.simple,
@@ -127,7 +127,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['N_DIRS'] = config.n_dirs
         ctx.obj['DOWNWIND'] = config.downwind
         ctx.obj['OFFSHORE_COMPETE'] = config.offshore_compete
-        ctx.obj['MAX_WORKERS'] = config.execution.max_workers
+        ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['SIMPLE'] = config.simple
