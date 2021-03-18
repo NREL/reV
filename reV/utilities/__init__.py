@@ -17,6 +17,6 @@ def log_versions(logger):
     logger : logging.Logger
         Logger object to log memory message to.
     """
-    logger.info('Running with rex version {}'.format(__version__))
+    logger.info('Running with reV version {}'.format(__version__))
     rex_log_versions(logger)
     logger.debug('- PySAM version {}'.format(PySAM.__version__))
