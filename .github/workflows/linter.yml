@@ -21,5 +21,8 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_ISORT: false
           VALIDATE_JSCPD: false
+          VALIDATE_JSON: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_YAML: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
