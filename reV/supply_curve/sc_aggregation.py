@@ -9,6 +9,7 @@ from concurrent.futures import as_completed
 import h5py
 import logging
 import numpy as np
+import psutil
 import os
 import pandas as pd
 from scipy.spatial import cKDTree
@@ -1103,6 +1104,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 gids = sc.valid_sc_points(tm_dset)
             elif np.issubdtype(type(gids), np.number):
                 gids = [gids]
+            logger.debug('Making slice lookup')
             slice_lookup = {g: sc.get_excl_slices(g) for g in gids}
 
         check1 = False
@@ -1177,7 +1179,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                             cap_cost_scale=cap_cost_scale)
 
                     except EmptySupplyCurvePointError:
-                        logger.debug('SC point {} was empty'.format(gid))
+                        logger.debug('SC point {} is empty'.format(gid))
+                        n_finished += 1
 
                     except Exception:
                         logger.exception('SC gid {} failed!'.format(gid))
@@ -1271,9 +1274,13 @@ class SupplyCurveAggregation(AbstractAggregation):
                 n_finished += 1
                 summary += future.result()
                 if n_finished % 100 == 0:
+                    mem = psutil.virtual_memory()
                     logger.info('Parallel aggregation futures collected: '
-                                '{} out of {}'
-                                .format(n_finished, len(self._gids)))
+                                '{} out of {}. Memory usage is {:.3f} GB out '
+                                'of {:.3f} GB ({:.2f}% utilized).'
+                                .format(n_finished, len(self._gids),
+                                        mem.used / 1e9, mem.total / 1e9,
+                                        100 * mem.used / mem.total))
 
         return summary
 
@@ -1433,6 +1440,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       self._tm_dset, self._gen_index,
                                       econ_fpath=self._econ_fpath,
                                       excl_dict=self._excl_dict,
+                                      inclusion_mask=self._inclusion_mask,
                                       res_class_dset=self._res_class_dset,
                                       res_class_bins=self._res_class_bins,
                                       cf_dset=self._cf_dset,

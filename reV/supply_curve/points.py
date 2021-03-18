@@ -1214,8 +1214,8 @@ class SupplyCurveExtent:
             SC point.
         """
 
-        logger.info('Initializing SupplyCurveExtent with res {} from: {}'
-                    .format(resolution, f_excl))
+        logger.debug('Initializing SupplyCurveExtent with res {} from: {}'
+                     .format(resolution, f_excl))
 
         if not isinstance(resolution, int):
             raise SupplyCurveInputError('Supply Curve resolution needs to be '
@@ -1246,9 +1246,14 @@ class SupplyCurveExtent:
         self._longitude = None
         self._points = None
 
-        logger.info('Initialized SupplyCurveExtent with shape {} from '
-                    'exclusions with shape {}'
-                    .format(self.shape, self.exclusions.shape))
+        self._sc_col_ind, self._sc_row_ind = np.meshgrid(
+            np.arange(self.n_cols), np.arange(self.n_rows))
+        self._sc_col_ind = self._sc_col_ind.flatten()
+        self._sc_row_ind = self._sc_row_ind.flatten()
+
+        logger.debug('Initialized SupplyCurveExtent with shape {} from '
+                     'exclusions with shape {}'
+                     .format(self.shape, self.exclusions.shape))
 
     def __len__(self):
         """Total number of supply curve points."""
@@ -1492,6 +1497,30 @@ class SupplyCurveExtent:
         return np.dstack((self.latitude, self.longitude))[0]
 
     @property
+    def row_indices(self):
+        """Get a 1D array of row indices for every gid. That is, this property
+        has length == len(gids) and row_indices[sc_gid] yields the row index of
+        the target supply curve gid
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._sc_row_ind
+
+    @property
+    def col_indices(self):
+        """Get a 1D array of col indices for every gid. That is, this property
+        has length == len(gids) and col_indices[sc_gid] yields the col index of
+        the target supply curve gid
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._sc_col_ind
+
+    @property
     def points(self):
         """Get the summary dataframe of supply curve points.
 
@@ -1502,10 +1531,8 @@ class SupplyCurveExtent:
         """
 
         if self._points is None:
-            sc_col_ind, sc_row_ind = np.meshgrid(np.arange(self.n_cols),
-                                                 np.arange(self.n_rows))
-            self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
-                                         'col_ind': sc_col_ind.flatten()})
+            self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
+                                         'col_ind': self.col_indices.copy()})
 
             self._points.index.name = 'gid'
 
@@ -1552,7 +1579,9 @@ class SupplyCurveExtent:
             (except for the last array in the list which is the remainder).
         """
 
+        logger.debug('Getting chunk ranges')
         slices = get_chunk_ranges(len(arr), resolution)
+        logger.debug('Getting chunk slices')
         slices = list(map(lambda i: slice(*i), slices))
 
         return slices
@@ -1579,10 +1608,9 @@ class SupplyCurveExtent:
                                    'supply curve points with length "{}".'
                                    .format(gid, len(self)))
 
-        sc_row_ind = self.points.loc[gid, 'row_ind']
-        sc_col_ind = self.points.loc[gid, 'col_ind']
-        row_slice = self.excl_row_slices[sc_row_ind]
-        col_slice = self.excl_col_slices[sc_col_ind]
+        logger.debug('Getting excl slices')
+        row_slice = self.excl_row_slices[self.row_indices[gid]]
+        col_slice = self.excl_col_slices[self.col_indices[gid]]
 
         return row_slice, col_slice
 
@@ -1680,9 +1708,6 @@ class SupplyCurveExtent:
                 if np.any(tm[r, c] != -1):
                     valid_bool[gid] = 1
                 gid += 1
-                if gid % 100 == 0:
-                    logger.debug('Completed {} out of {}'
-                                 .format(gid, len(valid_bool)))
 
         valid_gids = np.where(valid_bool == 1)[0].astype(np.uint32)
 
