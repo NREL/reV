@@ -267,9 +267,6 @@ def from_config(ctx, config_file, verbose):
               show_default=True,
               help=("Number of cores to run summary on. None is all "
                     "available cpus"))
-@click.option('--points_per_worker', '-ppw', type=INT, default=10,
-              show_default=True,
-              help="Number of sc_points to summarize on each worker")
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               show_default=True,
               help='Directory to save aggregation logs.')
@@ -281,7 +278,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
            friction_dset, cap_cost_scale, out_dir, max_workers,
-           points_per_worker, log_dir, verbose):
+           log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     name = ctx.obj['NAME']
@@ -308,7 +305,6 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
     ctx.obj['CAP_COST_SCALE'] = cap_cost_scale
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['MAX_WORKERS'] = max_workers
-    ctx.obj['POINTS_PER_WORKER'] = points_per_worker
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
 
@@ -357,8 +353,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                 friction_dset=friction_dset,
                 check_excl_layers=check_excl_layers,
                 cap_cost_scale=cap_cost_scale,
-                max_workers=max_workers,
-                points_per_worker=points_per_worker)
+                max_workers=max_workers)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -396,7 +391,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
                  friction_fpath, friction_dset, cap_cost_scale,
-                 out_dir, max_workers, points_per_worker, log_dir, verbose):
+                 out_dir, max_workers, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -421,7 +416,6 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-cs {}'.format(SLURM.s(cap_cost_scale)),
             '-o {}'.format(SLURM.s(out_dir)),
             '-mw {}'.format(SLURM.s(max_workers)),
-            '-ppw {}'.format(SLURM.s(points_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -488,7 +482,6 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     cap_cost_scale = ctx.obj['CAP_COST_SCALE']
     out_dir = ctx.obj['OUT_DIR']
     max_workers = ctx.obj['MAX_WORKERS']
-    points_per_worker = ctx.obj['POINTS_PER_WORKER']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
 
@@ -502,8 +495,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset, cap_cost_scale,
-                       out_dir, max_workers, points_per_worker, log_dir,
-                       verbose)
+                       out_dir, max_workers, log_dir, verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

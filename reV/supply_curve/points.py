@@ -201,13 +201,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         super().__init__(gid, exclusion_shape, resolution=resolution)
 
-        if inclusion_mask is not None:
-            msg = ('Bad inclusion mask input shape of {} with stated '
-                   'resolution of {}'.format(inclusion_mask.shape, resolution))
-            assert inclusion_mask.shape == 2, msg
-            assert inclusion_mask.shape[0] == resolution, msg
-            assert inclusion_mask.shape[1] == resolution, msg
-
         self._centroid = None
         self._incl_mask = inclusion_mask
         self._incl_mask_flat = None
@@ -215,6 +208,14 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         self._gids = self._parse_techmap(tm_dset)
         self._check_excl()
+
+        if inclusion_mask is not None:
+            msg = ('Bad inclusion mask input shape of {} with stated '
+                   'resolution of {}'.format(inclusion_mask.shape, resolution))
+            assert len(inclusion_mask.shape) == 2, msg
+            assert inclusion_mask.shape[0] <= resolution, msg
+            assert inclusion_mask.shape[1] <= resolution, msg
+            assert inclusion_mask.size == len(self._gids), msg
 
     @staticmethod
     def _parse_excl_file(excl):

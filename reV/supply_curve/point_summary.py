@@ -315,8 +315,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
                                    'power_density'].values
             pds = pds.astype(np.float32)
-            pds *= self.excl_data_flat[self.bool_mask]
-            denom = self.excl_data_flat[self.bool_mask].sum()
+            pds *= self.include_mask_flat[self.bool_mask]
+            denom = self.include_mask_flat[self.bool_mask].sum()
             self._power_density = pds.sum() / denom
 
         return self._power_density
@@ -406,7 +406,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return stats.mode(data).mode[0]
 
     @staticmethod
-    def _categorize(data, excl_mult):
+    def _categorize(data, incl_mult):
         """
         Extract the sum of inclusion scalar values (where 1 is
         included, 0 is excluded, and 0.7 is included with 70 percent of
@@ -416,7 +416,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         ----------
         data : ndarray
             Vector of categorical values
-        excl_mult : ndarray
+        incl_mult : ndarray
             Vector of inclusion values
 
         Returns
@@ -425,14 +425,14 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Jsonified string of the dictionary mapping categorical values to
             total inclusions
         """
-        data = {category: float(excl_mult[(data == category)].sum())
+        data = {category: float(incl_mult[(data == category)].sum())
                 for category in np.unique(data)}
         data = jsonify_dict(data)
 
         return data
 
     @classmethod
-    def _agg_data_layer_method(cls, data, excl_mult, method):
+    def _agg_data_layer_method(cls, data, incl_mult, method):
         """Aggregate the data array using specified method.
 
         Parameters
@@ -441,7 +441,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Data array that will be flattened and operated on using method.
             This must be the included data. Exclusions should be applied
             before this method.
-        excl_mult : np.ndarray | None
+        incl_mult : np.ndarray | None
             Scalar exclusion data for methods with exclusion-weighted
             aggregation methods. Shape must match input data.
         method : str
@@ -470,16 +470,16 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             if len(data.shape) > 1:
                 data = data.flatten()
 
-            if data.shape != excl_mult.shape:
+            if data.shape != incl_mult.shape:
                 e = ('Cannot aggregate data with shape that doesnt '
                      'match excl mult!')
                 logger.error(e)
                 raise DataShapeError(e)
 
             if method == 'category':
-                data = method_func['category'](data, excl_mult)
+                data = method_func['category'](data, incl_mult)
             elif method in ['mean', 'sum']:
-                data = data * excl_mult
+                data = data * incl_mult
                 data = method_func[method](data)
             else:
                 data = method_func[method](data)
@@ -569,7 +569,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
                 data = raw.flatten()[self.bool_mask]
-                excl_mult = self.excl_data_flat[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask]
 
                 if nodata is not None:
                     nodata_mask = (data == nodata)
@@ -578,21 +578,21 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     # Reset data from raw without exclusions.
                     if all(nodata_mask):
                         data = raw.flatten()
-                        excl_mult = self.excl_data_flat
+                        incl_mult = self.include_mask_flat
                         nodata_mask = (data == nodata)
 
                     data = data[~nodata_mask]
-                    excl_mult = excl_mult[~nodata_mask]
+                    incl_mult = incl_mult[~nodata_mask]
 
                     if not data.size:
                         data = None
-                        excl_mult = None
+                        incl_mult = None
                         m = ('Data layer "{}" has no valid data for '
                              'SC point gid {}!'
                              .format(name, self._gid))
                         logger.debug(m)
 
-                data = self._agg_data_layer_method(data, excl_mult,
+                data = self._agg_data_layer_method(data, incl_mult,
                                                    attrs['method'])
                 summary[name] = data
 

@@ -79,7 +79,7 @@ def test_weighted_means(gid, resolution, excl_dict, time_series):
 
         arr = np.random.random(shape)
         means = point.exclusion_weighted_mean(arr.copy())
-        excl = point.excl_data_flat[point.bool_mask]
+        excl = point.include_mask_flat[point.bool_mask]
         excl_sum = excl.sum()
         if len(arr.shape) == 2:
             assert means.shape[0] == shape[0]
@@ -117,7 +117,7 @@ def test_aggregate(gid, resolution, excl_dict, time_series):
 
         arr = np.random.random(shape)
         total = point.aggregate(arr.copy())
-        excl = point.excl_data_flat[point.bool_mask]
+        excl = point.include_mask_flat[point.bool_mask]
         if len(arr.shape) == 2:
             assert total.shape[0] == shape[0]
             x = arr[:, point._gids[point.bool_mask]]
