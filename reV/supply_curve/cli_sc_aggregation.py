@@ -100,34 +100,33 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
-            points_per_worker = config.execution_control.sites_per_worker
-            ctx.invoke(direct,
-                       excl_fpath=config.excl_fpath,
-                       gen_fpath=config.gen_fpath,
-                       econ_fpath=config.econ_fpath,
-                       res_fpath=config.res_fpath,
-                       tm_dset=config.tm_dset,
-                       excl_dict=config.excl_dict,
-                       check_excl_layers=config.check_excl_layers,
-                       res_class_dset=config.res_class_dset,
-                       res_class_bins=config.res_class_bins,
-                       cf_dset=config.cf_dset,
-                       lcoe_dset=config.lcoe_dset,
-                       h5_dsets=config.h5_dsets,
-                       data_layers=config.data_layers,
-                       resolution=config.resolution,
-                       excl_area=config.excl_area,
-                       power_density=config.power_density,
-                       area_filter_kernel=config.area_filter_kernel,
-                       min_area=config.min_area,
-                       friction_fpath=config.friction_fpath,
-                       friction_dset=config.friction_dset,
-                       cap_cost_scale=config.cap_cost_scale,
-                       out_dir=config.dirout,
-                       max_workers=config.execution_control.max_workers,
-                       points_per_worker=points_per_worker,
-                       log_dir=config.logdir,
-                       verbose=verbose)
+            ctx.invoke(
+                direct,
+                excl_fpath=config.excl_fpath,
+                gen_fpath=config.gen_fpath,
+                econ_fpath=config.econ_fpath,
+                res_fpath=config.res_fpath,
+                tm_dset=config.tm_dset,
+                excl_dict=config.excl_dict,
+                res_class_dset=config.res_class_dset,
+                res_class_bins=config.res_class_bins,
+                cf_dset=config.cf_dset,
+                lcoe_dset=config.lcoe_dset,
+                h5_dsets=config.h5_dsets,
+                data_layers=config.data_layers,
+                resolution=config.resolution,
+                excl_area=config.excl_area,
+                power_density=config.power_density,
+                area_filter_kernel=config.area_filter_kernel,
+                min_area=config.min_area,
+                friction_fpath=config.friction_fpath,
+                friction_dset=config.friction_dset,
+                cap_cost_scale=config.cap_cost_scale,
+                out_dir=config.dirout,
+                max_workers=config.execution_control.max_workers,
+                sites_per_worker=config.execution_control.sites_per_worker,
+                log_dir=config.logdir,
+                verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
         points_per_worker = config.execution_control.sites_per_worker
@@ -154,7 +153,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['CAP_COST_SCALE'] = config.cap_cost_scale
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
-        ctx.obj['POINTS_PER_WORKER'] = points_per_worker
+        ctx.obj['SITES_PER_WORKER'] = spw
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
 
@@ -263,6 +262,9 @@ def from_config(ctx, config_file, verbose):
               show_default=True,
               help=("Number of cores to run summary on. None is all "
                     "available cpus"))
+@click.option('--sites_per_worker', '-spw', type=INT, default=100,
+              show_default=True,
+              help="Number of sc_points to summarize on each worker")
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               show_default=True,
               help='Directory to save aggregation logs.')
@@ -274,7 +276,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
            friction_dset, cap_cost_scale, out_dir, max_workers,
-           log_dir, verbose):
+           sites_per_worker, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     name = ctx.obj['NAME']
@@ -300,6 +302,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
     ctx.obj['CAP_COST_SCALE'] = cap_cost_scale
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['MAX_WORKERS'] = max_workers
+    ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
 
@@ -347,7 +350,8 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                 friction_fpath=friction_fpath,
                 friction_dset=friction_dset,
                 cap_cost_scale=cap_cost_scale,
-                max_workers=max_workers)
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -385,7 +389,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
                  friction_fpath, friction_dset, cap_cost_scale,
-                 out_dir, max_workers, log_dir, verbose):
+                 out_dir, max_workers, sites_per_worker, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -410,6 +414,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-cs {}'.format(SLURM.s(cap_cost_scale)),
             '-o {}'.format(SLURM.s(out_dir)),
             '-mw {}'.format(SLURM.s(max_workers)),
+            '-spw {}'.format(SLURM.s(sites_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -472,6 +477,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     cap_cost_scale = ctx.obj['CAP_COST_SCALE']
     out_dir = ctx.obj['OUT_DIR']
     max_workers = ctx.obj['MAX_WORKERS']
+    sites_per_worker = ctx.obj['SITES_PER_WORKER']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
 
@@ -485,7 +491,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset, cap_cost_scale,
-                       out_dir, max_workers, log_dir, verbose)
+                       out_dir, max_workers, sites_per_worker,
+                       log_dir, verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

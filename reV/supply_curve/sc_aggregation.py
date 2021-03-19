@@ -1095,23 +1095,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                 gids = [gids]
             slice_lookup = {g: sc.get_excl_slices(g) for g in gids}
 
-        check1 = False
-        check2 = False
-        if inclusion_mask is not None:
-            check1 = (inclusion_mask.shape == exclusion_shape)
-            check2 = ((inclusion_mask.shape[0] <= resolution)
-                      & (inclusion_mask.shape[1] <= resolution)
-                      & (len(gids) == 1))
-            if not (check1 or check2):
-                msg = ('Inclusion mask shape {} must be input as either '
-                       'the full shape of the exclusion layers {} or '
-                       'a single sc gid resolution {} with gids input '
-                       'as a single value (received {} gids).'
-                       .format(inclusion_mask.shape, exclusion_shape,
-                               resolution, len(gids)))
-                logger.error(msg)
-                raise SupplyCurveInputError(msg)
-
         logger.debug('Starting SupplyCurveAggregation serial with '
                      'supply curve {} gids'.format(len(gids)))
 
@@ -1131,13 +1114,17 @@ class SupplyCurveAggregation(AbstractAggregation):
                                          cf_dset, lcoe_dset, h5_dsets)
 
             n_finished = 0
-            for gid in gids:
+            for i, gid in enumerate(gids):
                 gid_inclusions = None
-                if inclusion_mask is not None and check1:
+                if isinstance(inclusion_mask, list):
+                    gid_inclusions = inclusion_mask[i]
+                    assert len(inclusion_mask) == len(gids)
+                    assert gid_inclusions.shape[0] <= resolution
+                    assert gid_inclusions.shape[1] <= resolution
+                elif isinstance(inclusion_mask, np.ndarray):
                     row_slice, col_slice = slice_lookup[gid]
                     gid_inclusions = inclusion_mask[row_slice, col_slice]
-                elif inclusion_mask is not None and check2:
-                    gid_inclusions = inclusion_mask
+                    assert (inclusion_mask.shape == exclusion_shape)
 
                 for ri, res_bin in enumerate(inputs[1]):
                     try:
@@ -1187,7 +1174,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None):
+    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None,
+                     sites_per_worker=100):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -1200,12 +1188,17 @@ class SupplyCurveAggregation(AbstractAggregation):
         max_workers : int | None, optional
             Number of cores to run summary on. None is all
             available cpus, by default None
+        sites_per_worker : int
+            Number of sc_points to summarize on each worker, by default 100
 
         Returns
         -------
         summary : list
             List of dictionaries, each being an SC point summary.
         """
+
+        chunks = len(self._gids) // sites_per_worker
+        chunks = np.array_split(self._gids, chunks)
 
         with SupplyCurveExtent(self._excl_fpath,
                                resolution=self._resolution) as sc:
@@ -1214,9 +1207,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         logger.info('Running supply curve point aggregation for '
                     'points {} through {} at a resolution of {} '
-                    'on {} cores.'
+                    'on {} cores in {} chunks.'
                     .format(self._gids[0], self._gids[-1], self._resolution,
-                            max_workers))
+                            max_workers, len(chunks)))
 
         n_finished = 0
         futures = []
@@ -1225,46 +1218,47 @@ class SupplyCurveAggregation(AbstractAggregation):
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
-            for gid in self._gids:
+            for gid_set in chunks:
                 # submit executions and append to futures list
-                row_slice, col_slice = slice_lookup[gid]
-                gid_inclusions = self._inclusion_mask[row_slice, col_slice]
+                chunk_incl_masks = []
+                for gid in gid_set:
+                    rs, cs = slice_lookup[gid]
+                    chunk_incl_masks.append(self._inclusion_mask[rs, cs])
 
-                if gid_inclusions.sum() > 0:
-                    futures.append(exe.submit(
-                        self.run_serial,
-                        self._excl_fpath, self._gen_fpath,
-                        self._tm_dset, self._gen_index,
-                        econ_fpath=self._econ_fpath,
-                        excl_dict=self._excl_dict,
-                        inclusion_mask=gid_inclusions,
-                        res_class_dset=self._res_class_dset,
-                        res_class_bins=self._res_class_bins,
-                        cf_dset=self._cf_dset,
-                        lcoe_dset=self._lcoe_dset,
-                        h5_dsets=self._h5_dsets,
-                        data_layers=self._data_layers,
-                        resolution=self._resolution,
-                        power_density=self._power_density,
-                        friction_fpath=self._friction_fpath,
-                        friction_dset=self._friction_dset,
-                        area_filter_kernel=self._area_filter_kernel,
-                        min_area=self._min_area,
-                        gids=gid,
-                        args=args,
-                        excl_area=excl_area,
-                        cap_cost_scale=self._cap_cost_scale))
+                futures.append(exe.submit(
+                    self.run_serial,
+                    self._excl_fpath, self._gen_fpath,
+                    self._tm_dset, self._gen_index,
+                    econ_fpath=self._econ_fpath,
+                    excl_dict=self._excl_dict,
+                    inclusion_mask=chunk_incl_masks,
+                    res_class_dset=self._res_class_dset,
+                    res_class_bins=self._res_class_bins,
+                    cf_dset=self._cf_dset,
+                    lcoe_dset=self._lcoe_dset,
+                    h5_dsets=self._h5_dsets,
+                    data_layers=self._data_layers,
+                    resolution=self._resolution,
+                    power_density=self._power_density,
+                    friction_fpath=self._friction_fpath,
+                    friction_dset=self._friction_dset,
+                    area_filter_kernel=self._area_filter_kernel,
+                    min_area=self._min_area,
+                    gids=gid_set,
+                    args=args,
+                    excl_area=excl_area,
+                    cap_cost_scale=self._cap_cost_scale))
 
             # gather results
             for future in as_completed(futures):
                 n_finished += 1
                 summary += future.result()
-                if n_finished % 100 == 0:
+                if n_finished % 10 == 0:
                     mem = psutil.virtual_memory()
                     logger.info('Parallel aggregation futures collected: '
                                 '{} out of {}. Memory usage is {:.3f} GB out '
                                 'of {:.3f} GB ({:.2f}% utilized).'
-                                .format(n_finished, len(self._gids),
+                                .format(n_finished, len(chunks),
                                         mem.used / 1e9, mem.total / 1e9,
                                         100 * mem.used / mem.total))
 
@@ -1384,7 +1378,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, max_workers=None,
+    def summarize(self, args=None, max_workers=None, sites_per_worker=100,
                   offshore_capacity=600, offshore_gid_counts=494,
                   offshore_pixel_area=4, offshore_meta_cols=None):
         """
@@ -1398,6 +1392,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         max_workers : int | None, optional
             Number of cores to run summary on. None is all
             available cpus, by default None
+        sites_per_worker : int
+            Number of sc_points to summarize on each worker, by default 100
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         offshore_gid_counts : int
@@ -1444,7 +1440,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       cap_cost_scale=self._cap_cost_scale)
         else:
             summary = self.run_parallel(args=args, excl_area=self._excl_area,
-                                        max_workers=max_workers)
+                                        max_workers=max_workers,
+                                        sites_per_worker=sites_per_worker)
 
         summary = self.run_offshore(summary,
                                     offshore_capacity=offshore_capacity,
@@ -1467,7 +1464,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                 excl_dict=None, area_filter_kernel='queen', min_area=None,
-                resolution=64, gids=None,
+                resolution=64, gids=None, sites_per_worker=100,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 h5_dsets=None, data_layers=None, power_density=None,
@@ -1502,6 +1499,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        sites_per_worker : int
+            Number of sc_points to summarize on each worker, by default 100
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -1592,6 +1591,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
+                                sites_per_worker=sites_per_worker,
                                 offshore_capacity=offshore_capacity,
                                 offshore_gid_counts=offshore_gid_counts,
                                 offshore_pixel_area=offshore_pixel_area,
