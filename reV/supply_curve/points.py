@@ -1235,9 +1235,12 @@ class SupplyCurveExtent:
                                         'received: {}'
                                         .format(type(f_excl)))
 
+        self._excl_shape = self.exclusions.shape
         # limit the resolution to the exclusion shape.
-        self._res = int(np.min(list(self.exclusions.shape) + [resolution]))
+        self._res = int(np.min(list(self.excl_shape) + [resolution]))
 
+        self._n_rows = None
+        self._n_cols = None
         self._cols_of_excl = None
         self._rows_of_excl = None
         self._excl_row_slices = None
@@ -1253,8 +1256,7 @@ class SupplyCurveExtent:
 
         logger.debug('Initialized SupplyCurveExtent with shape {} from '
                      'exclusions with shape {}'
-                     .format(self.shape, self.exclusions.shape))
-
+                     .format(self.shape, self.excl_shape))
     def __len__(self):
         """Total number of supply curve points."""
         return self.n_rows * self.n_cols
@@ -1316,6 +1318,16 @@ class SupplyCurveExtent:
         return self._res
 
     @property
+    def excl_shape(self):
+        """Get the shape tuple of the exclusion file raster.
+
+        Returns
+        -------
+        tuple
+        """
+        return self._excl_shape
+
+    @property
     def excl_rows(self):
         """Get the unique row indices identifying the exclusion points.
 
@@ -1324,7 +1336,7 @@ class SupplyCurveExtent:
         excl_rows : np.ndarray
             Array of exclusion row indices.
         """
-        return np.arange(self.exclusions.shape[0])
+        return np.arange(self.excl_shape[0])
 
     @property
     def excl_cols(self):
@@ -1335,7 +1347,7 @@ class SupplyCurveExtent:
         excl_cols : np.ndarray
             Array of exclusion column indices.
         """
-        return np.arange(self.exclusions.shape[1])
+        return np.arange(self.excl_shape[1])
 
     @property
     def rows_of_excl(self):
@@ -1420,7 +1432,9 @@ class SupplyCurveExtent:
         n_rows : int
             Number of row entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.shape[0] / self.resolution))
+        if self._n_rows is None:
+            self._n_rows = int(np.ceil(self.excl_shape[0] / self.resolution))
+        return self._n_rows
 
     @property
     def n_cols(self):
@@ -1431,7 +1445,9 @@ class SupplyCurveExtent:
         n_cols : int
             Number of column entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.shape[1] / self.resolution))
+        if self._n_cols is None:
+            self._n_cols = int(np.ceil(self.excl_shape[1] / self.resolution))
+        return self._n_cols
 
     @property
     def latitude(self):
@@ -1579,11 +1595,8 @@ class SupplyCurveExtent:
             (except for the last array in the list which is the remainder).
         """
 
-        logger.debug('Getting chunk ranges')
         slices = get_chunk_ranges(len(arr), resolution)
-        logger.debug('Getting chunk slices')
         slices = list(map(lambda i: slice(*i), slices))
-
         return slices
 
     def get_excl_slices(self, gid):
@@ -1608,7 +1621,6 @@ class SupplyCurveExtent:
                                    'supply curve points with length "{}".'
                                    .format(gid, len(self)))
 
-        logger.debug('Getting excl slices')
         row_slice = self.excl_row_slices[self.row_indices[gid]]
         col_slice = self.excl_col_slices[self.col_indices[gid]]
 
@@ -1697,14 +1709,9 @@ class SupplyCurveExtent:
         valid_bool = np.zeros(self.n_rows * self.n_cols)
         tm = self._excls[tm_dset]
 
-        row_slices = [slice(r * self._res, (r + 1) * self._res)
-                      for r in range(self.n_rows)]
-        col_slices = [slice(c * self._res, (c + 1) * self._res)
-                      for c in range(self.n_cols)]
-
         gid = 0
-        for r in row_slices:
-            for c in col_slices:
+        for r in self.excl_row_slices:
+            for c in self.excl_col_slices:
                 if np.any(tm[r, c] != -1):
                     valid_bool[gid] = 1
                 gid += 1

@@ -50,8 +50,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     def __init__(self, excl_fpath, gen_fpath, econ_fpath=None,
                  data_layers=None, power_density=None, excl_dict=None,
                  friction_fpath=None, friction_dset=None,
-                 area_filter_kernel='queen', min_area=None,
-                 check_excl_layers=False):
+                 area_filter_kernel='queen', min_area=None):
         """
         Parameters
         ----------
@@ -89,14 +88,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
             Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
         """
         super().__init__(excl_fpath, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
-                         min_area=min_area,
-                         check_excl_layers=check_excl_layers)
+                         min_area=min_area)
 
         self._gen = self._open_gen_econ_resource(gen_fpath, econ_fpath)
         # pre-initialize any import attributes
@@ -687,7 +682,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
-                 check_excl_layers=False, resolution=64, excl_area=None,
+                 resolution=64, excl_area=None,
                  gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  h5_dsets=None, data_layers=None, power_density=None,
@@ -711,9 +706,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
             Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -773,7 +765,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area,
-                         check_excl_layers=check_excl_layers,
                          resolution=resolution, gids=gids)
 
         logger.debug('Finished AbstractAggregation initilization.')
@@ -819,7 +810,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             logger.error(e)
             raise SupplyCurveInputError(e)
 
-        logger.info('Pre-extracting full exclusion mask...')
+        logger.info('Pre-extracting full exclusion mask, this could take '
+                    'up to 30min for a large exclusion config...')
         self._inclusion_mask = ExclusionMaskFromDict.run(
             self._excl_fpath, layers_dict=self._excl_dict,
             min_area=self._min_area, kernel=self._area_filter_kernel)
@@ -999,7 +991,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     def run_serial(cls, excl_fpath, gen_fpath, tm_dset, gen_index,
                    econ_fpath=None, excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
-                   check_excl_layers=False, resolution=64,
+                   resolution=64,
                    gids=None, args=None, res_class_dset=None,
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
@@ -1034,9 +1026,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
             Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -1104,7 +1093,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                 gids = sc.valid_sc_points(tm_dset)
             elif np.issubdtype(type(gids), np.number):
                 gids = [gids]
-            logger.debug('Making slice lookup')
             slice_lookup = {g: sc.get_excl_slices(g) for g in gids}
 
         check1 = False
@@ -1135,8 +1123,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
                        'friction_fpath': friction_fpath,
-                       'friction_dset': friction_dset,
-                       'check_excl_layers': check_excl_layers}
+                       'friction_dset': friction_dset}
         with SupplyCurveAggFileHandler(excl_fpath, gen_fpath,
                                        **file_kwargs) as fh:
             inputs = cls._get_input_data(fh.gen, gen_fpath, econ_fpath,
@@ -1266,7 +1253,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                         gids=gid,
                         args=args,
                         excl_area=excl_area,
-                        check_excl_layers=self._check_excl_layers,
                         cap_cost_scale=self._cap_cost_scale))
 
             # gather results
@@ -1455,7 +1441,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       min_area=self._min_area,
                                       gids=self._gids, args=args,
                                       excl_area=self._excl_area,
-                                      check_excl_layers=chk,
                                       cap_cost_scale=self._cap_cost_scale)
         else:
             summary = self.run_parallel(args=args, excl_area=self._excl_area,
@@ -1482,7 +1467,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                 excl_dict=None, area_filter_kernel='queen', min_area=None,
-                check_excl_layers=False, resolution=64, gids=None,
+                resolution=64, gids=None,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 h5_dsets=None, data_layers=None, power_density=None,
@@ -1511,9 +1496,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
             Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -1605,7 +1587,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                   friction_dset=friction_dset,
                   area_filter_kernel=area_filter_kernel,
                   min_area=min_area,
-                  check_excl_layers=check_excl_layers,
                   excl_area=excl_area,
                   cap_cost_scale=cap_cost_scale)
 

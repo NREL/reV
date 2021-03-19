@@ -214,11 +214,6 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         return self.get('friction_dset', None)
 
     @property
-    def check_excl_layers(self):
-        """Get the check_excl_layers flag."""
-        return self.get('check_excl_layers', False)
-
-    @property
     def cap_cost_scale(self):
         """Optional LCOE scaling equation to implement "economies of scale".
         Equations must be in python string format and return a scalar
