@@ -492,7 +492,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         resource bin."""
 
         # exclusions mask is False where excluded
-        exclude = (self.include_mask == 0).flatten()
+        exclude = self.include_mask_flat == 0
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1

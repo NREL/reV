@@ -338,7 +338,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Non-excluded resource/generation area in square km.
         """
         mask = self._gids != -1
-        area = np.sum(self._incl_mask_flat[mask]) * self._excl_area
+        area = np.sum(self.include_mask_flat[mask]) * self._excl_area
 
         return area
 
@@ -363,7 +363,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         n_gids : list
         """
         mask = self._gids != -1
-        n_gids = np.sum(self._incl_mask_flat[mask] > 0)
+        n_gids = np.sum(self.include_mask_flat[mask] > 0)
 
         return n_gids
 
@@ -1257,6 +1257,7 @@ class SupplyCurveExtent:
         logger.debug('Initialized SupplyCurveExtent with shape {} from '
                      'exclusions with shape {}'
                      .format(self.shape, self.excl_shape))
+
     def __len__(self):
         """Total number of supply curve points."""
         return self.n_rows * self.n_cols
@@ -1434,6 +1435,7 @@ class SupplyCurveExtent:
         """
         if self._n_rows is None:
             self._n_rows = int(np.ceil(self.excl_shape[0] / self.resolution))
+
         return self._n_rows
 
     @property
@@ -1447,6 +1449,7 @@ class SupplyCurveExtent:
         """
         if self._n_cols is None:
             self._n_cols = int(np.ceil(self.excl_shape[1] / self.resolution))
+
         return self._n_cols
 
     @property
@@ -1597,6 +1600,7 @@ class SupplyCurveExtent:
 
         slices = get_chunk_ranges(len(arr), resolution)
         slices = list(map(lambda i: slice(*i), slices))
+
         return slices
 
     def get_excl_slices(self, gid):
@@ -1723,3 +1727,19 @@ class SupplyCurveExtent:
                     .format(len(valid_gids), len(valid_bool)))
 
         return valid_gids
+
+    def get_slice_lookup(self, sc_point_gids):
+        """
+        Get exclusion slices for all requested supply curve point gids
+
+        Parameters
+        ----------
+        sc_point_gids : list | ndarray
+            List or 1D array of sc_point_gids to get exclusion slices for
+
+        Returns
+        -------
+        dict
+            lookup mapping sc_point_gid to exclusion slice
+        """
+        return {g: self.get_excl_slices(g) for g in sc_point_gids}

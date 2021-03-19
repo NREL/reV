@@ -60,7 +60,8 @@ class TechMapping:
             self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
             self._n_excl = np.product(self._excl_shape)
-            self._points = sc.points
+            self._sc_row_indices = sc.row_indices
+            self._sc_col_indices = sc.col_indices
             self._excl_row_slices = sc.excl_row_slices
             self._excl_col_slices = sc.excl_col_slices
             logger.info('Initialized TechMapping object with {} calc chunks '
@@ -134,7 +135,8 @@ class TechMapping:
         return iarr.reshape(shape)
 
     @staticmethod
-    def _get_excl_slices(gid, points, excl_row_slices, excl_col_slices):
+    def _get_excl_slices(gid, sc_row_indices, sc_col_indices, excl_row_slices,
+                         excl_col_slices):
         """
         Get the row and column slices of the exclusions grid corresponding
         to the supply curve point gid.
@@ -143,8 +145,11 @@ class TechMapping:
         ----------
         gid : int
             Supply curve point gid.
-        points : pandas.DataFrame
-            Mapping of supply curve point gids to row and column indices
+        sc_row_indices : list
+            List of row indices in exclusion array for for every sc_point gid
+        sc_col_indices : list
+            List of column indices in exclusion array for for every sc_point
+            gid
         excl_row_slices : list
             List representing the supply curve points rows. Each list entry
             contains the exclusion row slice that are included in the sc
@@ -161,16 +166,15 @@ class TechMapping:
         col_slice : int
             Exclusions grid col index slice corresponding to the sc point gid.
         """
-        sc_row_ind = points.loc[gid, 'row_ind']
-        sc_col_ind = points.loc[gid, 'col_ind']
-        row_slice = excl_row_slices[sc_row_ind]
-        col_slice = excl_col_slices[sc_col_ind]
+
+        row_slice = excl_row_slices[sc_row_indices[gid]]
+        col_slice = excl_col_slices[sc_col_indices[gid]]
 
         return row_slice, col_slice
 
     @classmethod
-    def _get_excl_coords(cls, excl_fpath, gids, points, excl_row_slices,
-                         excl_col_slices,
+    def _get_excl_coords(cls, excl_fpath, gids, sc_row_indices, sc_col_indices,
+                         excl_row_slices, excl_col_slices,
                          coord_labels=('latitude', 'longitude')):
         """
         Extract the exclusion coordinates for teh desired gids for TechMapping.
@@ -183,8 +187,11 @@ class TechMapping:
         excl_fpath : str
             Filepath to exclusions h5 file, must contain latitude and longitude
             arrays to allow for mapping to resource points
-        points : pandas.DataFrame
-            Mapping of supply curve point gids to row and column indices
+        sc_row_indices : list
+            List of row indices in exclusion array for for every sc_point gid
+        sc_col_indices : list
+            List of column indices in exclusion array for for every sc_point
+            gid
         excl_row_slices : list
             List representing the supply curve points rows. Each list entry
             contains the exclusion row slice that are included in the sc
@@ -205,7 +212,9 @@ class TechMapping:
         coords_out = []
         with h5py.File(excl_fpath, 'r') as f:
             for gid in gids:
-                row_slice, col_slice = cls._get_excl_slices(gid, points,
+                row_slice, col_slice = cls._get_excl_slices(gid,
+                                                            sc_row_indices,
+                                                            sc_col_indices,
                                                             excl_row_slices,
                                                             excl_col_slices)
                 try:
@@ -224,8 +233,9 @@ class TechMapping:
         return coords_out
 
     @classmethod
-    def map_resource_gids(cls, gids, excl_fpath, points, excl_row_slices,
-                          excl_col_slices, tree, dist_thresh):
+    def map_resource_gids(cls, gids, excl_fpath, sc_row_indices,
+                          sc_col_indices, excl_row_slices, excl_col_slices,
+                          tree, dist_thresh):
         """Map exclusion gids to the resource meta.
 
         Parameters
@@ -236,8 +246,11 @@ class TechMapping:
         excl_fpath : str
             Filepath to exclusions h5 file, must contain latitude and longitude
             arrays to allow for mapping to resource points
-        points : pandas.DataFrame
-            Mapping of supply curve point gids to row and column indices
+        sc_row_indices : list
+            List of row indices in exclusion array for for every sc_point gid
+        sc_col_indices : list
+            List of column indices in exclusion array for for every sc_point
+            gid
         excl_row_slices : list
             List representing the supply curve points rows. Each list entry
             contains the exclusion row slice that are included in the sc
@@ -262,8 +275,9 @@ class TechMapping:
         logger.debug('Getting tech map coordinates for chunks {} through {}'
                      .format(gids[0], gids[-1]))
         ind_out = []
-        coords_out = cls._get_excl_coords(excl_fpath, gids, points,
-                                          excl_row_slices, excl_col_slices)
+        coords_out = cls._get_excl_coords(excl_fpath, gids, sc_row_indices,
+                                          sc_col_indices, excl_row_slices,
+                                          excl_col_slices)
 
         logger.debug('Running tech mapping for chunks {} through {}'
                      .format(gids[0], gids[-1]))
@@ -370,7 +384,8 @@ class TechMapping:
                 futures[exe.submit(self.map_resource_gids,
                                    gid_set,
                                    self._excl_fpath,
-                                   self._points,
+                                   self._sc_row_indices,
+                                   self._sc_col_indices,
                                    self._excl_row_slices,
                                    self._excl_col_slices,
                                    self._tree,
@@ -387,10 +402,12 @@ class TechMapping:
                 result = future.result()
 
                 for j, gid in enumerate(gid_chunks[i]):
-                    row_slice, col_slice = \
-                        self._get_excl_slices(gid, self._points,
-                                              self._excl_row_slices,
-                                              self._excl_col_slices)
+                    row_slice, col_slice = self._get_excl_slices(
+                        gid,
+                        self._sc_row_indices,
+                        self._sc_col_indices,
+                        self._excl_row_slices,
+                        self._excl_col_slices)
                     ind_slice = iarr[row_slice, col_slice].flatten()
                     indices[ind_slice] = result[j]
 
