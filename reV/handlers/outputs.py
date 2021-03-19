@@ -13,9 +13,9 @@ from reV.version import __version__
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
 
-from rex.rechunk_h5 import to_records_array
 from rex.resource import Resource
 from rex.utilities.parse_keys import parse_keys, parse_slice
+from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 

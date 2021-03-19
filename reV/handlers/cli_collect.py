@@ -80,7 +80,7 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV'],
+    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements

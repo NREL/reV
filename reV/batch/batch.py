@@ -18,10 +18,11 @@ import itertools
 import logging
 from warnings import warn
 
-from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
-from reV.utilities.exceptions import PipelineError
 from reV.pipeline.cli_pipeline import pipeline_monitor_background
+from reV.pipeline.pipeline import Pipeline
+from reV.utilities.exceptions import PipelineError
+from reV.utilities import log_versions
 
 from rex.utilities import safe_json_load, parse_year
 from rex.utilities.loggers import init_logger
@@ -42,7 +43,7 @@ class BatchJob:
         verbose : bool
             Flag to turn on debug logging.
         """
-
+        log_versions(logger)
         self._job_tags = None
 
         self._config = BatchConfig(config)

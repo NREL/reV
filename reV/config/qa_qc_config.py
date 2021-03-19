@@ -194,11 +194,6 @@ class QaQcModule:
         return self._config.get('process_size', None)
 
     @property
-    def max_workers(self):
-        """Get the reV_h5 max_workers for QA/QC"""
-        return self._config.get('max_workers', None)
-
-    @property
     def cmap(self):
         """Get the QA/QC plot colormap"""
         return self._config.get('cmap', self._default_cmap)

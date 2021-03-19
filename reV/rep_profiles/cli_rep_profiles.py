@@ -76,7 +76,8 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
+    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+              verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV representative profiles from config '
@@ -219,7 +220,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=['reV', 'rex'],
+        init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose)
 
         fn_out = '{}.h5'.format(name)

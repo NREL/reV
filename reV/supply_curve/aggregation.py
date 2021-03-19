@@ -166,7 +166,6 @@ class AbstractAggregation(ABC):
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
         """
-
         self._excl_fpath = excl_fpath
         self._tm_dset = tm_dset
         self._excl_dict = excl_dict

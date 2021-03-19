@@ -16,6 +16,7 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (CollectionRuntimeError,
                                       CollectionValueError,
                                       CollectionWarning)
+from reV.utilities import log_versions
 
 from rex.utilities.loggers import log_mem
 
@@ -346,6 +347,7 @@ class Collector:
         clobber : bool
             Flag to purge .h5 file if it already exists
         """
+        log_versions(logger)
         if clobber:
             if os.path.isfile(h5_file):
                 warn('{} already exists and is being replaced'.format(h5_file),

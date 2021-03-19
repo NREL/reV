@@ -9,6 +9,7 @@ import pandas as pd
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import HandlerRuntimeError
+from reV.utilities import log_versions
 
 from rex.utilities.utilities import parse_year, get_lat_lon_cols
 
@@ -41,6 +42,7 @@ class MultiYear(Outputs):
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
         """
+        log_versions(logger)
         super().__init__(h5_file, group=group, unscale=unscale, mode=mode,
                          str_decode=str_decode)
 

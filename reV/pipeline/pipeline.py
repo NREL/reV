@@ -12,11 +12,12 @@ from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.pipeline import PipelineConfig
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ExecutionError
+from reV.utilities import log_versions
 
-from rex.utilities import safe_json_load
 from rex.utilities.execution import SubprocessManager
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger
+from rex.utilities.utilities import safe_json_load
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ class Pipeline:
         verbose : bool
             Flag to submit pipeline steps with -v flag for debug logging
         """
+        log_versions(logger)
         self.monitor = monitor
         self.verbose = verbose
         self._config = PipelineConfig(pipeline)
@@ -61,7 +63,7 @@ class Pipeline:
 
         # init logger for pipeline module if requested in input config
         if 'logging' in self._config:
-            init_logger('reV.pipeline', **self._config['logging'])
+            init_logger('reV', **self._config['logging'])
 
     def _init_status(self):
         """Initialize the status json in the output directory."""

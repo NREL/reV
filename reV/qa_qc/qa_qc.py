@@ -10,6 +10,7 @@ import pandas as pd
 from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve, SummaryPlots,
                                SupplyCurvePlot, ExclusionsMask)
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
+from reV.utilities import log_versions
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class QaQc:
         out_dir : str
             Directory path to save summary data and plots too
         """
+        log_versions(logger)
         logger.info('QA/QC results to be saved to: {}'.format(out_dir))
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)

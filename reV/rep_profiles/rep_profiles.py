@@ -19,12 +19,12 @@ from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import FileInputError, DataShapeError
+from reV.utilities import log_versions
 
-from rex.rechunk_h5 import to_records_array
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
-from rex.utilities.utilities import parse_year
 from rex.utilities.loggers import log_mem
+from rex.utilities.utilities import parse_year, to_records_array
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class RepresentativeMethods:
             Method identifier for calculation of error from the representative
             profile.
         """
+        log_versions(logger)
         self._rep_method = self.rep_methods[rep_method]
         self._err_method = self.err_methods[err_method]
         self._profiles = profiles

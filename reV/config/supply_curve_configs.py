@@ -229,16 +229,6 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         """
         return self.get('cap_cost_scale', None)
 
-    @property
-    def max_workers(self):
-        """Get the number of workers to use during computation"""
-        return self.get('max_workers', None)
-
-    @property
-    def points_per_worker(self):
-        """Get the number of sc points to summarize on each worker"""
-        return self.get('points_per_worker', None)
-
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
@@ -355,8 +345,3 @@ class SupplyCurveConfig(AnalysisConfig):
         Get flag to execute competitive wind directions for offshore sites
         """
         return self.get('offshore_compete', False)
-
-    @property
-    def max_workers(self):
-        """Get the number of workers to use during computation"""
-        return self.get('max_workers', None)

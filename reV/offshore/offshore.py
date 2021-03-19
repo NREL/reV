@@ -22,6 +22,7 @@ from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       NearestNeighborError)
+from reV.utilities import log_versions
 
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.utilities import get_lat_lon_cols
@@ -66,7 +67,7 @@ class Offshore:
             meta data. None will use class variable DEFAULT_META_COLS, and any
             additional requested cols will be added to DEFAULT_META_COLS.
         """
-
+        log_versions(logger)
         self._gen_fpath = gen_fpath
         self._offshore_fpath = offshore_fpath
         self._project_points = project_points

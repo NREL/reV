@@ -79,7 +79,8 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
+    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+              verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve aggregation from config '
@@ -99,6 +100,7 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
+            points_per_worker = config.execution_control.sites_per_worker
             ctx.invoke(direct,
                        excl_fpath=config.excl_fpath,
                        gen_fpath=config.gen_fpath,
@@ -122,13 +124,13 @@ def from_config(ctx, config_file, verbose):
                        friction_dset=config.friction_dset,
                        cap_cost_scale=config.cap_cost_scale,
                        out_dir=config.dirout,
-                       max_workers=config.max_workers,
-                       points_per_worker=config.points_per_worker,
+                       max_workers=config.execution_control.max_workers,
+                       points_per_worker=points_per_worker,
                        log_dir=config.logdir,
                        verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
-
+        points_per_worker = config.execution_control.sites_per_worker
         ctx.obj['NAME'] = name
         ctx.obj['EXCL_FPATH'] = config.excl_fpath
         ctx.obj['GEN_FPATH'] = config.gen_fpath
@@ -152,8 +154,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FRICTION_DSET'] = config.friction_dset
         ctx.obj['CAP_COST_SCALE'] = config.cap_cost_scale
         ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['MAX_WORKERS'] = config.max_workers
-        ctx.obj['POINTS_PER_WORKER'] = config.points_per_worker
+        ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
+        ctx.obj['POINTS_PER_WORKER'] = points_per_worker
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
 
@@ -312,7 +314,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=['reV', 'rex'],
+        init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose)
 
         with h5py.File(excl_fpath, mode='r') as f:
