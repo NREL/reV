@@ -767,8 +767,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                          min_area=min_area,
                          resolution=resolution, gids=gids)
 
-        logger.debug('Finished AbstractAggregation initilization.')
-
         self._gen_fpath = gen_fpath
         self._econ_fpath = econ_fpath
         self._res_class_dset = res_class_dset
@@ -991,8 +989,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     def run_serial(cls, excl_fpath, gen_fpath, tm_dset, gen_index,
                    econ_fpath=None, excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
-                   resolution=64,
-                   gids=None, args=None, res_class_dset=None,
+                   resolution=64, gids=None, args=None, res_class_dset=None,
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
@@ -1020,8 +1017,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. This must be either match the full exclusion shape or
-            be a reduced shape for a single SC point with gids input with a
-            single value.
+            be a list of single-sc-point exclusion masks corresponding to the
+            gids input.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
@@ -1124,7 +1121,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 elif isinstance(inclusion_mask, np.ndarray):
                     row_slice, col_slice = slice_lookup[gid]
                     gid_inclusions = inclusion_mask[row_slice, col_slice]
-                    assert (inclusion_mask.shape == exclusion_shape)
+                    assert inclusion_mask.shape == exclusion_shape
 
                 for ri, res_bin in enumerate(inputs[1]):
                     try:
@@ -1168,9 +1165,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                         summary.append(pointsum)
                         n_finished += 1
-                        logger.debug('Serial aggregation: '
+                        logger.debug('Serial aggregation completed gid {}: '
                                      '{} out of {} points complete'
-                                     .format(n_finished, len(gids)))
+                                     .format(gid, n_finished, len(gids)))
 
         return summary
 
@@ -1197,7 +1194,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             List of dictionaries, each being an SC point summary.
         """
 
-        chunks = len(self._gids) // sites_per_worker
+        chunks = int(np.ceil(len(self._gids) / sites_per_worker))
         chunks = np.array_split(self._gids, chunks)
 
         with SupplyCurveExtent(self._excl_fpath,
@@ -1417,7 +1414,6 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         if max_workers == 1:
             afk = self._area_filter_kernel
-            chk = self._check_excl_layers
             summary = self.run_serial(self._excl_fpath, self._gen_fpath,
                                       self._tm_dset, self._gen_index,
                                       econ_fpath=self._econ_fpath,

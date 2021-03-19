@@ -180,6 +180,8 @@ class AbstractAggregation(ABC):
         if gids is None:
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
                 gids = sc.valid_sc_points(tm_dset)
+        elif np.issubdtype(type(gids), np.number):
+            gids = np.array([gids])
         elif not isinstance(gids, np.ndarray):
             gids = np.array(gids)
 
