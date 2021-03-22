@@ -716,6 +716,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        pre_extract_inclusions : bool, optional
+            Optional flag to pre-extract/compute the inclusion mask from the
+            provided excl_dict, by default True
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -993,11 +996,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        inclusion_mask : np.ndarray, optional
+        inclusion_mask : np.ndarray | dict | optional
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. This must be either match the full exclusion shape or
-            be a list of single-sc-point exclusion masks corresponding to the
-            gids input, by default None
+            be a dict lookup of single-sc-point exclusion masks corresponding
+            to the gids input and keyed by gids, by default None which will
+            calculate exclusions on the fly for each sc point.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
@@ -1465,6 +1469,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        pre_extract_inclusions : bool, optional
+            Optional flag to pre-extract/compute the inclusion mask from the
+            provided excl_dict, by default True
         sites_per_worker : int
             Number of sc_points to summarize on each worker, by default 100
         res_class_dset : str | None

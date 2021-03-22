@@ -313,17 +313,26 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        inclusion_mask : list | ndarray
-            List of inclusion masks for each gid or 2D inclusion mask
+        inclusion_mask : np.ndarray | dict | optional
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. This must be either match the full exclusion shape or
+            be a dict lookup of single-sc-point exclusion masks corresponding
+            to the gids input and keyed by gids, by default None which will
+            calculate exclusions on the fly for each sc point.
         gids : list | ndarray
             sc point gids corresponding to inclusion mask
         excl_shape : tuple
             Exclusion layers shape
         """
-        if isinstance(inclusion_mask, list):
+        if isinstance(inclusion_mask, dict):
             assert len(inclusion_mask) == len(gids)
         elif isinstance(inclusion_mask, np.ndarray):
             assert inclusion_mask.shape == excl_shape
+        else:
+            msg = ('Expected inclusion_mask to be dict or array but received '
+                   '{}'.format(type(inclusion_mask)))
+            logger.error(msg)
+            raise SupplyCurveInputError(msg)
 
     @staticmethod
     def _get_gid_inclusion_mask(inclusion_mask, gid, slice_lookup,
@@ -333,8 +342,12 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        inclusion_mask : dict | ndarray
-            Dictionary of inclusion masks for each gid or 2D inclusion mask
+        inclusion_mask : np.ndarray | dict | optional
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. This must be either match the full exclusion shape or
+            be a dict lookup of single-sc-point exclusion masks corresponding
+            to the gids input and keyed by gids, by default None which will
+            calculate exclusions on the fly for each sc point.
         gid : int
             sc_point_gid value, used to extract inclusion mask from 2D
             inclusion array
@@ -352,13 +365,18 @@ class AbstractAggregation(ABC):
             is None
         """
         gid_inclusions = None
-        if isinstance(inclusion_mask, list):
+        if isinstance(inclusion_mask, dict):
             gid_inclusions = inclusion_mask[gid]
             assert gid_inclusions.shape[0] <= resolution
             assert gid_inclusions.shape[1] <= resolution
         elif isinstance(inclusion_mask, np.ndarray):
             row_slice, col_slice = slice_lookup[gid]
             gid_inclusions = inclusion_mask[row_slice, col_slice]
+        else:
+            msg = ('Expected inclusion_mask to be dict or array but received '
+                   '{}'.format(type(inclusion_mask)))
+            logger.error(msg)
+            raise SupplyCurveInputError(msg)
 
         return gid_inclusions
 
