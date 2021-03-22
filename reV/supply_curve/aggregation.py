@@ -326,18 +326,15 @@ class AbstractAggregation(ABC):
             assert inclusion_mask.shape == excl_shape
 
     @staticmethod
-    def _get_gid_inclusion_mask(inclusion_mask, i, gid, slice_lookup,
+    def _get_gid_inclusion_mask(inclusion_mask, gid, slice_lookup,
                                 resolution=64):
         """
         Get inclusion mask for desired gid
 
         Parameters
         ----------
-        inclusion_mask : list | ndarray
-            List of inclusion masks for each gid or 2D inclusion mask
-        i : int
-            Gid index value value, used to extract inclusion mask from a list
-            of inclusion masks
+        inclusion_mask : dict | ndarray
+            Dictionary of inclusion masks for each gid or 2D inclusion mask
         gid : int
             sc_point_gid value, used to extract inclusion mask from 2D
             inclusion array
@@ -356,7 +353,7 @@ class AbstractAggregation(ABC):
         """
         gid_inclusions = None
         if isinstance(inclusion_mask, list):
-            gid_inclusions = inclusion_mask[i]
+            gid_inclusions = inclusion_mask[gid]
             assert gid_inclusions.shape[0] <= resolution
             assert gid_inclusions.shape[1] <= resolution
         elif isinstance(inclusion_mask, np.ndarray):
@@ -437,9 +434,9 @@ class AbstractAggregation(ABC):
         # pylint: disable=abstract-class-instantiated
         with AbstractAggFileHandler(excl_fpath, **file_kwargs) as fh:
 
-            for i, gid in enumerate(gids):
+            for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, i, gid, slice_lookup,
+                    inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
                 try:
                     gid_out = sc_point_method(
@@ -518,10 +515,10 @@ class AbstractAggregation(ABC):
                 # submit executions and append to futures list
                 chunk_incl_masks = None
                 if self._inclusion_mask is not None:
-                    chunk_incl_masks = []
+                    chunk_incl_masks = {}
                     for gid in gid_set:
                         rs, cs = slice_lookup[gid]
-                        chunk_incl_masks.append(self._inclusion_mask[rs, cs])
+                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
 
                 futures.append(exe.submit(
                     self.run_serial,
@@ -788,7 +785,7 @@ class Aggregation(AbstractAggregation):
     def run_serial(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
                    agg_method='mean', excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
-                   resolution=64, excl_area=None, gids=None,
+                   resolution=64, excl_area=0.0081, gids=None,
                    gen_index=None):
         """
         Standalone method to aggregate - can be parallelized.
@@ -818,7 +815,7 @@ class Aggregation(AbstractAggregation):
         resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead,
-            by default None
+            by default 0.0081
         excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath,
@@ -855,9 +852,9 @@ class Aggregation(AbstractAggregation):
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0
-            for i, gid in enumerate(gids):
+            for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, i, gid, slice_lookup,
+                    inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
                 try:
                     gid_out = AggregationSupplyCurvePoint.run(
@@ -941,10 +938,10 @@ class Aggregation(AbstractAggregation):
                 # submit executions and append to futures list
                 chunk_incl_masks = None
                 if self._inclusion_mask is not None:
-                    chunk_incl_masks = []
+                    chunk_incl_masks = {}
                     for gid in gid_set:
                         rs, cs = slice_lookup[gid]
-                        chunk_incl_masks.append(self._inclusion_mask[rs, cs])
+                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
 
                 # submit executions and append to futures list
                 futures.append(exe.submit(

@@ -526,10 +526,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
 
-            rex = ((self.res_data[self._gen_gids]
-                    < np.min(self._res_class_bin))
-                   | (self.res_data[self._gen_gids]
-                      >= np.max(self._res_class_bin)))
+            rex = self.res_data[self._gen_gids]
+            rex = ((rex < np.min(self._res_class_bin))
+                   | (rex >= np.max(self._res_class_bin)))
 
             boolean_exclude = (boolean_exclude | rex)
 
@@ -569,7 +568,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
                 data = raw.flatten()[self.bool_mask]
-                incl_mult = self.include_mask_flat[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask].copy()
 
                 if nodata is not None:
                     nodata_mask = (data == nodata)

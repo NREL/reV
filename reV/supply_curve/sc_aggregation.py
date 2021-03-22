@@ -1091,9 +1091,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                                          res_class_dset, res_class_bins,
                                          cf_dset, lcoe_dset, h5_dsets)
             n_finished = 0
-            for i, gid in enumerate(gids):
+            for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, i, gid, slice_lookup,
+                    inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
 
                 for ri, res_bin in enumerate(inputs[1]):
@@ -1124,12 +1124,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                     except EmptySupplyCurvePointError:
                         logger.debug('SC point {} is empty'.format(gid))
-                        n_finished += 1
-
                     except Exception:
                         logger.exception('SC gid {} failed!'.format(gid))
                         raise
-
                     else:
                         pointsum['sc_point_gid'] = gid
                         pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']
@@ -1137,10 +1134,11 @@ class SupplyCurveAggregation(AbstractAggregation):
                         pointsum['res_class'] = ri
 
                         summary.append(pointsum)
-                        n_finished += 1
                         logger.debug('Serial aggregation completed gid {}: '
                                      '{} out of {} points complete'
                                      .format(gid, n_finished, len(gids)))
+
+                n_finished += 1
 
         return summary
 
@@ -1189,10 +1187,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                 # submit executions and append to futures list
                 chunk_incl_masks = None
                 if self._inclusion_mask is not None:
-                    chunk_incl_masks = []
+                    chunk_incl_masks = {}
                     for gid in gid_set:
                         rs, cs = slice_lookup[gid]
-                        chunk_incl_masks.append(self._inclusion_mask[rs, cs])
+                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
 
                 futures.append(exe.submit(
                     self.run_serial,
