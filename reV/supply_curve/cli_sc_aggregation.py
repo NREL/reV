@@ -129,7 +129,7 @@ def from_config(ctx, config_file, verbose):
                 verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
-        points_per_worker = config.execution_control.sites_per_worker
+        spw = config.execution_control.sites_per_worker
         ctx.obj['NAME'] = name
         ctx.obj['EXCL_FPATH'] = config.excl_fpath
         ctx.obj['GEN_FPATH'] = config.gen_fpath
