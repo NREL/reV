@@ -380,6 +380,42 @@ class AbstractAggregation(ABC):
 
         return gid_inclusions
 
+    @staticmethod
+    def _parse_gen_index(h5_fpath):
+        """Parse gen outputs for an array of generation gids corresponding to
+        the resource gids.
+
+        Parameters
+        ----------
+        h5_fpath : str
+            Filepath to reV compliant .h5 file
+
+        Returns
+        -------
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        """
+
+        with Resource(h5_fpath) as f:
+            gen_index = f.meta
+
+        if 'gid' in gen_index:
+            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
+            gen_index['gen_gids'] = gen_index.index
+            gen_index = gen_index[['res_gids', 'gen_gids']]
+            gen_index = gen_index.set_index(keys='res_gids')
+            gen_index = \
+                gen_index.reindex(range(int(gen_index.index.max() + 1)))
+            gen_index = gen_index['gen_gids'].values
+            gen_index[np.isnan(gen_index)] = -1
+            gen_index = gen_index.astype(np.int32)
+        else:
+            gen_index = None
+
+        return gen_index
+
     @abstractclassmethod
     def run_serial(cls, sc_point_method, excl_fpath, tm_dset,
                    excl_dict=None, inclusion_mask=None,
@@ -762,42 +798,6 @@ class Aggregation(AbstractAggregation):
                     raise FileInputError('Could not find provided dataset "{}"'
                                          ' in h5 file: {}'
                                          .format(dset, self._h5_fpath))
-
-    @staticmethod
-    def _parse_gen_index(h5_fpath):
-        """Parse gen outputs for an array of generation gids corresponding to
-        the resource gids.
-
-        Parameters
-        ----------
-        h5_fpath : str
-            Filepath to reV compliant .h5 file
-
-        Returns
-        -------
-        gen_index : np.ndarray
-            Array of generation gids with array index equal to resource gid.
-            Array value is -1 if the resource index was not used in the
-            generation run.
-        """
-
-        with Resource(h5_fpath) as f:
-            gen_index = f.meta
-
-        if 'gid' in gen_index:
-            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
-            gen_index['gen_gids'] = gen_index.index
-            gen_index = gen_index[['res_gids', 'gen_gids']]
-            gen_index = gen_index.set_index(keys='res_gids')
-            gen_index = \
-                gen_index.reindex(range(int(gen_index.index.max() + 1)))
-            gen_index = gen_index['gen_gids'].values
-            gen_index[np.isnan(gen_index)] = -1
-            gen_index = gen_index.astype(np.int32)
-        else:
-            gen_index = None
-
-        return gen_index
 
     @classmethod
     def run_serial(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,

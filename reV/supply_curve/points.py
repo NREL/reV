@@ -201,14 +201,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         super().__init__(gid, exclusion_shape, resolution=resolution)
 
-        self._centroid = None
+        self._gids = self._parse_techmap(tm_dset)
+
         self._incl_mask = inclusion_mask
         self._incl_mask_flat = None
-        self._excl_area = excl_area
-
-        self._gids = self._parse_techmap(tm_dset)
-        self._check_excl()
-
         if inclusion_mask is not None:
             msg = ('Bad inclusion mask input shape of {} with stated '
                    'resolution of {}'.format(inclusion_mask.shape, resolution))
@@ -216,6 +212,11 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             assert inclusion_mask.shape[0] <= resolution, msg
             assert inclusion_mask.shape[1] <= resolution, msg
             assert inclusion_mask.size == len(self._gids), msg
+            self._incl_mask = inclusion_mask.copy()
+
+        self._centroid = None
+        self._excl_area = excl_area
+        self._check_excl()
 
     @staticmethod
     def _parse_excl_file(excl):
@@ -434,6 +435,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         Check to see if supply curve point is fully excluded
         """
+
         if all(self.include_mask_flat[self.bool_mask] == 0):
             msg = ('Supply curve point gid {} is completely excluded!'
                    .format(self._gid))
@@ -688,6 +690,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             self._gids, _ = self._map_gen_gids(self._gids, gen_index)
 
         self._h5_gids = self._gids
+
         if (self._h5_gids != -1).sum() == 0:
             emsg = ('Supply curve point gid {} has no viable exclusion '
                     'points based on exclusions file: "{}"'

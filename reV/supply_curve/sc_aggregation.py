@@ -19,8 +19,7 @@ from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.offshore.offshore import Offshore as OffshoreClass
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          AbstractAggregation,
-                                          Aggregation)
+                                          AbstractAggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
@@ -802,7 +801,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             warn(msg, InputWarning)
 
         self._check_data_layers()
-        self._gen_index = Aggregation._parse_gen_index(self._gen_fpath)
+        self._gen_index = self._parse_gen_index(self._gen_fpath)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -1128,9 +1127,6 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                     except EmptySupplyCurvePointError:
                         logger.debug('SC point {} is empty'.format(gid))
-                    except Exception:
-                        logger.exception('SC gid {} failed!'.format(gid))
-                        raise
                     else:
                         pointsum['sc_point_gid'] = gid
                         pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']
@@ -1343,7 +1339,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             Summary of the SC points.
         """
         summary = pd.DataFrame(summary)
-        summary = summary.sort_values('sc_point_gid')
+        sort_by = [x for x in ('sc_point_gid', 'res_class') if x in summary]
+        summary = summary.sort_values(sort_by)
         summary = summary.reset_index(drop=True)
         summary.index.name = 'sc_gid'
 

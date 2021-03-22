@@ -82,14 +82,15 @@ def test_parallel_agg(resolution=64):
     assert all(summary_serial == summary_parallel)
 
 
-def test_aggregation_summary():
+def test_aggregation_summary(max_workers=2):
     """Test the aggregation summary method against a baseline file."""
 
     s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
                                        excl_dict=EXCL_DICT,
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS)
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=max_workers)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)

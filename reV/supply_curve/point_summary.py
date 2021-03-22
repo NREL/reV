@@ -500,8 +500,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         # ensure that excluded pixels (including resource exclusions!)
         # has an exclusions multiplier of 0
-        self._incl_mask[exclude.reshape(self._incl_mask.shape)] = 0.0
-        self._incl_mask_flat = self._incl_mask.flatten()
+        exclude = exclude.reshape(self.include_mask.shape)
+        self._incl_mask[exclude] = 0.0
+        self._incl_mask = self._incl_mask.flatten()
 
         if (self._gen_gids != -1).sum() == 0:
             msg = ('Supply curve point gid {} is completely excluded for res '
