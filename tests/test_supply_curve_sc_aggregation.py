@@ -82,7 +82,7 @@ def test_parallel_agg(resolution=64):
     assert all(summary_serial == summary_parallel)
 
 
-def test_aggregation_summary(max_workers=2):
+def test_aggregation_summary():
     """Test the aggregation summary method against a baseline file."""
 
     s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
@@ -90,7 +90,7 @@ def test_aggregation_summary(max_workers=2):
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
                                        data_layers=DATA_LAYERS,
-                                       max_workers=max_workers)
+                                       max_workers=1)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)
@@ -106,12 +106,8 @@ def test_aggregation_summary(max_workers=2):
         assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
 
 
-@pytest.mark.parametrize(('pre_extract', 'max_workers'),
-                         [(True, 1),
-                          (True, None),
-                          (False, 1),
-                          (False, None)])
-def test_pre_extract_inclusions(pre_extract, max_workers):
+@pytest.mark.parametrize('pre_extract', (True, False))
+def test_pre_extract_inclusions(pre_extract):
     """Test the aggregation summary w/ and w/out pre-extracting inclusions"""
 
     s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
@@ -119,9 +115,8 @@ def test_pre_extract_inclusions(pre_extract, max_workers):
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
                                        data_layers=DATA_LAYERS,
-                                       max_workers=max_workers,
-                                       pre_extract_inclusions=pre_extract,
-                                       sites_per_worker=10)
+                                       max_workers=1,
+                                       pre_extract_inclusions=pre_extract)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)

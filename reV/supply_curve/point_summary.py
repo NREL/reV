@@ -403,7 +403,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         float | int
             Mode of data
         """
-        return stats.mode(data).mode[0]
+        if not data.size:
+            return None
+        else:
+            return stats.mode(data).mode[0]
 
     @staticmethod
     def _categorize(data, incl_mult):
