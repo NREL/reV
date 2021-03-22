@@ -180,7 +180,7 @@ class AbstractAggregation(ABC):
 
         if pre_extract_inclusions:
             self._inclusion_mask = self._extract_inclusion_mask(
-                excl_fpath,
+                excl_fpath, tm_dset,
                 excl_dict=excl_dict,
                 area_filter_kernel=area_filter_kernel,
                 min_area=min_area)
@@ -241,7 +241,7 @@ class AbstractAggregation(ABC):
         return excl_area
 
     @staticmethod
-    def _extract_inclusion_mask(excl_fpath, excl_dict=None,
+    def _extract_inclusion_mask(excl_fpath, tm_dset, excl_dict=None,
                                 area_filter_kernel='queen', min_area=None):
         """
         Extract the full inclusion mask from excl_fpath using the given
@@ -251,6 +251,9 @@ class AbstractAggregation(ABC):
         ----------
         excl_fpath : str
             Filepath to exclusions h5 with techmap dataset.
+        tm_dset : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -269,9 +272,13 @@ class AbstractAggregation(ABC):
         """
         logger.info('Pre-extracting full exclusion mask, this could take '
                     'up to 30min for a large exclusion config...')
-        inclusion_mask = ExclusionMaskFromDict.run(
-            excl_fpath, layers_dict=excl_dict,
-            min_area=min_area, kernel=area_filter_kernel)
+        with ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
+                                   min_area=min_area,
+                                   kernel=area_filter_kernel) as f:
+            inclusion_mask = f.mask
+            tm_mask = f._excl_h5[tm_dset] == -1
+            inclusion_mask[tm_mask] = 0
+
         logger.info('Finished extracting full exclusion mask.')
         logger.info('The full exclusion mask has {:.2f}% of area included.'
                     .format(100 * inclusion_mask.sum()
