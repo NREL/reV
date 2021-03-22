@@ -328,7 +328,7 @@ class AbstractAggregation(ABC):
             assert len(inclusion_mask) == len(gids)
         elif isinstance(inclusion_mask, np.ndarray):
             assert inclusion_mask.shape == excl_shape
-        else:
+        elif inclusion_mask is not None:
             msg = ('Expected inclusion_mask to be dict or array but received '
                    '{}'.format(type(inclusion_mask)))
             logger.error(msg)
@@ -372,7 +372,7 @@ class AbstractAggregation(ABC):
         elif isinstance(inclusion_mask, np.ndarray):
             row_slice, col_slice = slice_lookup[gid]
             gid_inclusions = inclusion_mask[row_slice, col_slice]
-        else:
+        elif inclusion_mask is not None:
             msg = ('Expected inclusion_mask to be dict or array but received '
                    '{}'.format(type(inclusion_mask)))
             logger.error(msg)
