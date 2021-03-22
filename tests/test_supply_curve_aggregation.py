@@ -80,6 +80,23 @@ def test_aggregation_parallel(excl_dict, baseline_name):
     check_agg(agg_out, baseline_h5)
 
 
+@pytest.mark.parametrize(('pre_extract_inclusions', 'max_workers'),
+                         [(True, 1),
+                          (True, None),
+                          (False, 1),
+                          (False, None)])
+def test_pre_extract_inclusions(pre_extract_inclusions, max_workers):
+    """
+    test aggregation w/ and w/out pre-extracting inclusions
+    """
+    agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
+                              excl_dict=EXCL_DICT, max_workers=max_workers,
+                              chunk_point_len=10,
+                              pre_extract_inclusions=pre_extract_inclusions)
+    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
+    check_agg(agg_out, baseline_h5)
+
+
 @pytest.mark.parametrize('excl_dict', [None, EXCL_DICT])
 def test_gid_counts(excl_dict):
     """

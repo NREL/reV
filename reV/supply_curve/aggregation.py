@@ -35,12 +35,15 @@ class AbstractAggFileHandler(ABC):
         ----------
         excl_fpath : str
             Filepath to exclusions h5 with techmap dataset.
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default 'queen'
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km,
+            by default None
         """
         self._excl_fpath = excl_fpath
         self._excl = ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
@@ -94,12 +97,14 @@ class AggFileHandler(AbstractAggFileHandler):
             Filepath to exclusions h5 with techmap dataset.
         h5_fpath : str
             Filepath to .h5 file to be aggregated
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default 'queen'
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km, by default None
         """
         super().__init__(excl_fpath, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -154,12 +159,15 @@ class AbstractAggregation(ABC):
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead,
             by default None
+        excl_area : float, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         gids : list, optional
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict
+            provided excl_dict, by default True
         """
         self._excl_fpath = excl_fpath
         self._tm_dset = tm_dset
@@ -209,7 +217,7 @@ class AbstractAggregation(ABC):
         ----------
         excl_fpath : str
             Filepath to exclusions h5 with techmap dataset.
-        excl_area : float | None, optional
+        excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath, by default None
 
@@ -366,27 +374,30 @@ class AbstractAggregation(ABC):
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            by default None
         inclusion_mask : np.ndarray, optional
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. This must be either match the full exclusion shape or
             be a list of single-sc-point exclusion masks corresponding to the
             gids input, by default None
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        resolution : int | None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km, by default None
+        resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
+            option is to use the row/col slices to define the SC point instead,
+            by default None
+        gids : list, optional
             List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
+            parallel), or None for all gids in the SC extent, by default None
+        args : list, optional
+            List of positional args for sc_point_method, by default None
+        kwargs : dict, optional
+            Dict of kwargs for sc_point_method, by default None
 
         Returns
         -------
@@ -456,15 +467,18 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
+        sc_point_method : function
+            Function to apply to each supply curve point
+        args : list, optional
+            List of positional args for sc_point_method, by default None
+        kwargs : dict, optional
+            Dict of kwargs for sc_point_method, by default None
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
 
         Returns
         -------
@@ -531,15 +545,18 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
+        sc_point_method : function
+            Function to apply to each supply curve point
+        args : list, optional
+            List of positional args for sc_point_method, by default None
+        kwargs : dict, optional
+            Dict of kwargs for sc_point_method, by default None
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
 
         Returns
         -------
@@ -576,8 +593,8 @@ class AbstractAggregation(ABC):
     def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             resolution=64, gids=None, excl_area=None,
-            pre_extract_inclusions=True,
-            args=None, kwargs=None, max_workers=None, chunk_point_len=1000):
+            pre_extract_inclusions=True, args=None, kwargs=None,
+            max_workers=None, chunk_point_len=1000):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -589,32 +606,38 @@ class AbstractAggregation(ABC):
             exclusions-to-resource mapping data.
         sc_point_method : method
             Supply Curve Point Method to operate on a single SC point.
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        resolution : int | None
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km, by default None
+        resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
+            option is to use the row/col slices to define the SC point instead,
+            by default 64
+        gids : list, optional
             List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
+            parallel), or None for all gids in the SC extent, by default None
+        excl_area : float, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath,
+            by default None
+        pre_extract_inclusions : bool, optional
+            Optional flag to pre-extract/compute the inclusion mask from the
+            provided excl_dict, by default True
+        args : list, optional
+            List of positional args for sc_point_method, by default None
+        kwargs : dict, optional
+            Dict of kwargs for sc_point_method, by default None
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
 
         Returns
         -------
@@ -654,24 +677,29 @@ class Aggregation(AbstractAggregation):
             exclusions-to-resource mapping data.
         agg_dset : str
             Dataset to aggreate, can supply multiple datasets
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        resolution : int | None
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km,
+            by default None
+        resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        excl_area : float | None
+            option is to use the row/col slices to define the SC point instead,
+            by default None
+        excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath.
-        gids : list | None
-            List of gids to get aggregation for (can use to subset if running
-            in parallel), or None for all gids in the SC extent.
+            from the profile transform attribute in excl_fpath,
+            by default None
+        gids : list, optional
+            List of gids to get summary for (can use to subset if running in
+            parallel), or None for all gids in the SC extent, by default None
+        pre_extract_inclusions : bool, optional
+            Optional flag to pre-extract/compute the inclusion mask from the
+            provided excl_dict, by default True
         """
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -753,7 +781,7 @@ class Aggregation(AbstractAggregation):
     def run_serial(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
                    agg_method='mean', excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
-                   resolution=64, excl_area=0.0081, gids=None,
+                   resolution=64, excl_area=None, gids=None,
                    gen_index=None):
         """
         Standalone method to aggregate - can be parallelized.
@@ -769,29 +797,32 @@ class Aggregation(AbstractAggregation):
             exclusions-to-resource mapping data.
         agg_dset : str
             Dataset to aggreate, can supply multiple datasets
-        agg_method : str
-            Aggregation method, either mean or sum/aggregate
-        excl_dict : dict | None
+        agg_method : str, optional
+            Aggregation method, either mean or sum/aggregate, by default "mean"
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        resolution : int | None
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km,
+            by default None
+        resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        excl_area : float
-            Area of an exclusion cell (square km).
-        gids : list | None
+            option is to use the row/col slices to define the SC point instead,
+            by default None
+        excl_area : float, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath,
+            by default None
+        gids : list, optional
             List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        gen_index : np.ndarray
+            parallel), or None for all gids in the SC extent, by default None
+        gen_index : np.ndarray, optional
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
-            generation run.
+            generation run, by default None
 
         Returns
         -------
@@ -854,22 +885,23 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def run_parallel(self, agg_method='mean', excl_area=0.0081,
+    def run_parallel(self, agg_method='mean', excl_area=None,
                      max_workers=None, chunk_point_len=1000):
         """
         Aggregate in parallel
 
         Parameters
         ----------
-        agg_method : str
-            Aggregation method, either mean or sum/aggregate
-        excl_area : float
-            Area of an exclusion cell (square km).
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
+        agg_method : str, optional
+            Aggregation method, either mean or sum/aggregate, by default "mean"
+        excl_area : float, optional
+            Area of an exclusion cell (square km), by default None
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
 
         Returns
         -------
@@ -943,13 +975,14 @@ class Aggregation(AbstractAggregation):
 
         Parameters
         ----------
-        agg_method : str
-            Aggregation method, either mean or sum/aggregate
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
+        agg_method : str, optional
+            Aggregation method, either mean or sum/aggregate, by default "mean"
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
 
         Returns
         -------
@@ -1050,8 +1083,8 @@ class Aggregation(AbstractAggregation):
     @classmethod
     def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
             excl_dict=None, area_filter_kernel='queen', min_area=None,
-            resolution=64, gids=None, pre_extract_inclusions=True,
-            agg_method='mean', excl_area=None, max_workers=None,
+            resolution=64, excl_area=None, gids=None,
+            pre_extract_inclusions=True, agg_method='mean', max_workers=None,
             chunk_point_len=1000, out_fpath=None):
         """Get the supply curve points aggregation summary.
 
@@ -1066,33 +1099,39 @@ class Aggregation(AbstractAggregation):
             exclusions-to-resource mapping data.
         agg_dset : str
             Dataset to aggreate, can supply multiple datasets
-        excl_dict : dict | None
+        excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        resolution : int | None
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km,
+            by default None
+        resolution : int, optional
             SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
-            List of gids to get aggregation for (can use to subset if running
-            in parallel), or None for all gids in the SC extent.
-        agg_method : str
-            Aggregation method, either mean or sum/aggregate
-        excl_area : float | None
+            option is to use the row/col slices to define the SC point instead,
+            by default None
+        excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath.
-        max_workers : int | None
-            Number of cores to run summary on. None is all
-            available cpus.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
-        out_fpath : str
-            Output .h5 file path
+            from the profile transform attribute in excl_fpath,
+            by default None
+        gids : list, optional
+            List of gids to get summary for (can use to subset if running in
+            parallel), or None for all gids in the SC extent, by default None
+        pre_extract_inclusions : bool, optional
+            Optional flag to pre-extract/compute the inclusion mask from the
+            provided excl_dict, by default True
+        agg_method : str, optional
+            Aggregation method, either mean or sum/aggregate, by default "mean"
+        max_workers : int, optional
+            Number of cores to run summary on. None is all available cpus,
+            by default None
+        chunk_point_len : int, optional
+            Number of SC points to process on a single parallel worker,
+            by default 1000
+        out_fpath : str, optional
+            Output .h5 file path, by default None
 
         Returns
         -------

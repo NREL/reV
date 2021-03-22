@@ -1144,8 +1144,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None,
-                     sites_per_worker=100):
+    def run_parallel(self, args=None, max_workers=None, sites_per_worker=100):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -1153,8 +1152,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        excl_area : float, optional
-            Area of an exclusion cell (square km), by default 0.0081
         max_workers : int | None, optional
             Number of cores to run summary on. None is all
             available cpus, by default None
@@ -1166,7 +1163,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary : list
             List of dictionaries, each being an SC point summary.
         """
-
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
         chunks = np.array_split(self.gids, chunks)
 
@@ -1219,7 +1215,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     min_area=self._min_area,
                     gids=gid_set,
                     args=args,
-                    excl_area=excl_area,
+                    excl_area=self._excl_area,
                     cap_cost_scale=self._cap_cost_scale))
 
             # gather results
@@ -1411,7 +1407,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       excl_area=self._excl_area,
                                       cap_cost_scale=self._cap_cost_scale)
         else:
-            summary = self.run_parallel(args=args, excl_area=self._excl_area,
+            summary = self.run_parallel(args=args,
                                         max_workers=max_workers,
                                         sites_per_worker=sites_per_worker)
 
