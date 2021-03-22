@@ -137,7 +137,7 @@ class AbstractAggregation(ABC):
     def __init__(self, excl_fpath, tm_dset, excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
-                 pre_extract_inclusions=True):
+                 pre_extract_inclusions=False):
         """
         Parameters
         ----------
@@ -167,7 +167,8 @@ class AbstractAggregation(ABC):
             parallel), or None for all gids in the SC extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         """
         self._excl_fpath = excl_fpath
         self._tm_dset = tm_dset
@@ -651,7 +652,7 @@ class AbstractAggregation(ABC):
     def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             resolution=64, gids=None, excl_area=None,
-            pre_extract_inclusions=True, args=None, kwargs=None,
+            pre_extract_inclusions=False, args=None, kwargs=None,
             max_workers=None, chunk_point_len=1000):
         """Get the supply curve points aggregation summary.
 
@@ -685,7 +686,8 @@ class AbstractAggregation(ABC):
             by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         args : list, optional
             List of positional args for sc_point_method, by default None
         kwargs : dict, optional
@@ -722,7 +724,7 @@ class Aggregation(AbstractAggregation):
     def __init__(self, excl_fpath, h5_fpath, tm_dset, *agg_dset,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
-                 pre_extract_inclusions=True):
+                 pre_extract_inclusions=False):
         """
         Parameters
         ----------
@@ -757,7 +759,8 @@ class Aggregation(AbstractAggregation):
             parallel), or None for all gids in the SC extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         """
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -1106,7 +1109,7 @@ class Aggregation(AbstractAggregation):
     def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
             excl_dict=None, area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, gids=None,
-            pre_extract_inclusions=True, agg_method='mean', max_workers=None,
+            pre_extract_inclusions=False, agg_method='mean', max_workers=None,
             chunk_point_len=1000, out_fpath=None):
         """Get the supply curve points aggregation summary.
 
@@ -1143,7 +1146,8 @@ class Aggregation(AbstractAggregation):
             parallel), or None for all gids in the SC extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
         max_workers : int, optional

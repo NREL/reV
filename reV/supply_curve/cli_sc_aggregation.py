@@ -126,6 +126,7 @@ def from_config(ctx, config_file, verbose):
                 max_workers=config.execution_control.max_workers,
                 sites_per_worker=config.execution_control.sites_per_worker,
                 log_dir=config.logdir,
+                pre_extract_inclusions=config.pre_extract_inclusions,
                 verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
@@ -155,6 +156,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['SITES_PER_WORKER'] = spw
         ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
         ctx.obj['VERBOSE'] = verbose
 
         ctx.invoke(slurm,
@@ -268,6 +270,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               show_default=True,
               help='Directory to save aggregation logs.')
+@click.option('-pre', '--pre_extract_inclusions', is_flag=True,
+              help='Optional flag to pre-extract/compute the inclusion mask '
+              'from the provided excl_dict, by default False. Typically '
+              'faster to compute the inclusion mask on the fly with parallel '
+              'workers.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -276,7 +283,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
            friction_dset, cap_cost_scale, out_dir, max_workers,
-           sites_per_worker, log_dir, verbose):
+           sites_per_worker, log_dir, pre_extract_inclusions, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     name = ctx.obj['NAME']
@@ -304,6 +311,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
     ctx.obj['MAX_WORKERS'] = max_workers
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['LOG_DIR'] = log_dir
+    ctx.obj['PRE_EXTRACT_INCLUSIONS'] = pre_extract_inclusions
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
@@ -350,6 +358,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                 friction_fpath=friction_fpath,
                 friction_dset=friction_dset,
                 cap_cost_scale=cap_cost_scale,
+                pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker)
 
@@ -389,7 +398,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
                  friction_fpath, friction_dset, cap_cost_scale,
-                 out_dir, max_workers, sites_per_worker, log_dir, verbose):
+                 out_dir, max_workers, sites_per_worker, log_dir,
+                 pre_extract_inclusions, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -417,6 +427,9 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-spw {}'.format(SLURM.s(sites_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
+
+    if pre_extract_inclusions:
+        args.append('-pre')
 
     if verbose:
         args.append('-v')
@@ -479,6 +492,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     max_workers = ctx.obj['MAX_WORKERS']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     log_dir = ctx.obj['LOG_DIR']
+    pre_extract_inclusions = ctx.obj['PRE_EXTRACT_INCLUSIONS']
     verbose = ctx.obj['VERBOSE']
 
     if stdout_path is None:
@@ -492,7 +506,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset, cap_cost_scale,
                        out_dir, max_workers, sites_per_worker,
-                       log_dir, verbose)
+                       log_dir, pre_extract_inclusions, verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

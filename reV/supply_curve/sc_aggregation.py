@@ -682,7 +682,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
-                 pre_extract_inclusions=True, res_class_dset=None,
+                 pre_extract_inclusions=False, res_class_dset=None,
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
@@ -717,7 +717,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             parallel), or None for all gids in the SC extent.
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -1431,7 +1432,7 @@ class SupplyCurveAggregation(AbstractAggregation):
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                 excl_dict=None, area_filter_kernel='queen', min_area=None,
-                resolution=64, gids=None, pre_extract_inclusions=True,
+                resolution=64, gids=None, pre_extract_inclusions=False,
                 sites_per_worker=100, res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 h5_dsets=None, data_layers=None, power_density=None,
@@ -1468,7 +1469,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             parallel), or None for all gids in the SC extent.
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default True
+            provided excl_dict, by default False. Typically faster to compute
+            the inclusion mask on the fly with parallel workers.
         sites_per_worker : int
             Number of sc_points to summarize on each worker, by default 100
         res_class_dset : str | None
