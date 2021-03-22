@@ -425,6 +425,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Jsonified string of the dictionary mapping categorical values to
             total inclusions
         """
+
         data = {category: float(incl_mult[(data == category)].sum())
                 for category in np.unique(data)}
         data = jsonify_dict(data)
@@ -572,23 +573,14 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 incl_mult = self.include_mask_flat[self.bool_mask].copy()
 
                 if nodata is not None:
-                    nodata_mask = (data == nodata)
-
-                    # All included extent is nodata.
-                    # Reset data from raw without exclusions.
-                    if all(nodata_mask):
-                        data = raw.flatten()
-                        incl_mult = self.include_mask_flat
-                        nodata_mask = (data == nodata)
-
-                    data = data[~nodata_mask]
-                    incl_mult = incl_mult[~nodata_mask]
+                    valid_data_mask = (data != nodata)
+                    data = data[valid_data_mask]
+                    incl_mult = incl_mult[valid_data_mask]
 
                     if not data.size:
-                        data = None
-                        incl_mult = None
                         m = ('Data layer "{}" has no valid data for '
-                             'SC point gid {}!'
+                             'SC point gid {} because of exclusions '
+                             'and/or nodata values in the data layer.'
                              .format(name, self._gid))
                         logger.debug(m)
 

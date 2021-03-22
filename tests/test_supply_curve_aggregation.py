@@ -75,7 +75,7 @@ def test_aggregation_parallel(excl_dict, baseline_name):
     """
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=None,
-                              chunk_point_len=10)
+                              sites_per_worker=10)
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     check_agg(agg_out, baseline_h5)
 
@@ -91,7 +91,7 @@ def test_pre_extract_inclusions(pre_extract_inclusions, max_workers):
     """
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=EXCL_DICT, max_workers=max_workers,
-                              chunk_point_len=10,
+                              sites_per_worker=10,
                               pre_extract_inclusions=pre_extract_inclusions)
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
     check_agg(agg_out, baseline_h5)
@@ -104,7 +104,7 @@ def test_gid_counts(excl_dict):
     """
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=None,
-                              chunk_point_len=10)
+                              sites_per_worker=10)
 
     for i, row in agg_out['meta'].iterrows():
         n_gids = row['n_gids']
@@ -144,7 +144,7 @@ def test_mean_wind_dirs(excl_dict):
     agg_out = Aggregation.run(EXCL, RES, TM_DSET, DSET,
                               agg_method='wind_dir',
                               excl_dict=excl_dict, max_workers=None,
-                              chunk_point_len=10)
+                              sites_per_worker=10)
 
     mean_wind_dirs = agg_out['winddirection_100m']
     out_meta = agg_out['meta']

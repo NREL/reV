@@ -520,7 +520,7 @@ class AbstractAggregation(ABC):
 
     @abstractmethod
     def run_parallel(self, sc_point_method, args=None, kwargs=None,
-                     max_workers=None, chunk_point_len=1000):
+                     max_workers=None, sites_per_worker=100):
         """
         Aggregate with sc_point_method in parallel
 
@@ -535,9 +535,9 @@ class AbstractAggregation(ABC):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
 
         Returns
         -------
@@ -545,7 +545,7 @@ class AbstractAggregation(ABC):
             List of outputs from sc_point_method.
         """
         chunks = np.array_split(
-            self.gids, int(np.ceil(len(self.gids) / chunk_point_len)))
+            self.gids, int(np.ceil(len(self.gids) / sites_per_worker)))
 
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
@@ -598,7 +598,7 @@ class AbstractAggregation(ABC):
         return output
 
     def aggregate(self, sc_point_method, args=None, kwargs=None,
-                  max_workers=None, chunk_point_len=1000):
+                  max_workers=None, sites_per_worker=100):
         """
         Aggregate with sc_point_method
 
@@ -613,9 +613,9 @@ class AbstractAggregation(ABC):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
 
         Returns
         -------
@@ -638,7 +638,7 @@ class AbstractAggregation(ABC):
         else:
             agg = self.run_parallel(sc_point_method, args=args,
                                     kwargs=kwargs, max_workers=max_workers,
-                                    chunk_point_len=chunk_point_len)
+                                    sites_per_worker=sites_per_worker)
 
         if not any(agg):
             e = ('Supply curve aggregation found no non-excluded SC points. '
@@ -653,7 +653,7 @@ class AbstractAggregation(ABC):
             area_filter_kernel='queen', min_area=None,
             resolution=64, gids=None, excl_area=None,
             pre_extract_inclusions=False, args=None, kwargs=None,
-            max_workers=None, chunk_point_len=1000):
+            max_workers=None, sites_per_worker=100):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -695,9 +695,9 @@ class AbstractAggregation(ABC):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
 
         Returns
         -------
@@ -712,7 +712,7 @@ class AbstractAggregation(ABC):
 
         aggregation = agg.aggregate(sc_point_method, args=args, kwargs=kwargs,
                                     max_workers=max_workers,
-                                    chunk_point_len=chunk_point_len)
+                                    sites_per_worker=sites_per_worker)
 
         return aggregation
 
@@ -911,7 +911,7 @@ class Aggregation(AbstractAggregation):
         return agg_out
 
     def run_parallel(self, agg_method='mean', excl_area=None,
-                     max_workers=None, chunk_point_len=1000):
+                     max_workers=None, sites_per_worker=100):
         """
         Aggregate in parallel
 
@@ -924,17 +924,18 @@ class Aggregation(AbstractAggregation):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
 
         Returns
         -------
         agg_out : dict
             Aggregated values for each aggregation dataset
         """
-        chunks = np.array_split(
-            self.gids, int(np.ceil(len(self.gids) / chunk_point_len)))
+
+        chunks = int(np.ceil(len(self.gids) / sites_per_worker))
+        chunks = np.array_split(self.gids, chunks)
 
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
@@ -994,7 +995,7 @@ class Aggregation(AbstractAggregation):
         return agg_out
 
     def aggregate(self, agg_method='mean', max_workers=None,
-                  chunk_point_len=1000):
+                  sites_per_worker=100):
         """
         Aggregate with given agg_method
 
@@ -1005,9 +1006,9 @@ class Aggregation(AbstractAggregation):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
 
         Returns
         -------
@@ -1034,7 +1035,7 @@ class Aggregation(AbstractAggregation):
             agg = self.run_parallel(agg_method=agg_method,
                                     excl_area=self._excl_area,
                                     max_workers=max_workers,
-                                    chunk_point_len=chunk_point_len)
+                                    sites_per_worker=sites_per_worker)
 
         if not agg['meta']:
             e = ('Supply curve aggregation found no non-excluded SC points. '
@@ -1110,7 +1111,7 @@ class Aggregation(AbstractAggregation):
             excl_dict=None, area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, gids=None,
             pre_extract_inclusions=False, agg_method='mean', max_workers=None,
-            chunk_point_len=1000, out_fpath=None):
+            sites_per_worker=100, out_fpath=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1153,9 +1154,9 @@ class Aggregation(AbstractAggregation):
         max_workers : int, optional
             Number of cores to run summary on. None is all available cpus,
             by default None
-        chunk_point_len : int, optional
+        sites_per_worker : int, optional
             Number of SC points to process on a single parallel worker,
-            by default 1000
+            by default 100
         out_fpath : str, optional
             Output .h5 file path, by default None
 
@@ -1173,7 +1174,7 @@ class Aggregation(AbstractAggregation):
 
         aggregation = agg.aggregate(agg_method=agg_method,
                                     max_workers=max_workers,
-                                    chunk_point_len=chunk_point_len)
+                                    sites_per_worker=sites_per_worker)
 
         if out_fpath is not None:
             agg.save_agg_to_h5(out_fpath, aggregation)
