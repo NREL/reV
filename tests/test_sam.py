@@ -34,7 +34,6 @@ def res():
 
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     res = NSRDB.preload_SAM(res_file, pp.sites)
-    return res
 
 
 def test_res_length(res):
@@ -44,8 +43,8 @@ def test_res_length(res):
             warnings.simplefilter("ignore")
             res_dropped = Pvwattsv5.ensure_res_len(res_df.values)
         break
+
     compare = np.allclose(res_dropped[:9000, :], res_df.values[:9000, :])
-    return compare
 
 
 def test_leap_year(res):

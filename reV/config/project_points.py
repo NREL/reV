@@ -448,12 +448,10 @@ class ProjectPoints:
 
         Parameters
         ----------
-        sam_config : dict | str | list | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
-            pre loaded SAMConfig object.
+        sam_config : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s) or SAM config
+            dict(s). Keys are the SAM config ID(s). Can also be a single
+            config file str. Can also be a pre loaded SAMConfig object.
 
         Returns
         -------
@@ -472,11 +470,6 @@ class ProjectPoints:
             else:
                 raise ValueError('Cannot parse SAM configs from {}'
                                  .format(type(sam_config)))
-
-            for key, value in config_dict.items():
-                if not os.path.isfile(value):
-                    raise ConfigError('Invalid SAM config {}: {} does not '
-                                      'exist'.format(key, value))
 
             return SAMConfig(config_dict)
 

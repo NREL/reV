@@ -167,20 +167,26 @@ class SAMConfig(BaseConfig):
         """
         if self._inputs is None:
             self._inputs = {}
-            for key, fname in self.items():
+            for key, config in self.items():
                 # key is ID (i.e. sam_param_0) that matches project points json
                 # fname is the actual SAM config file name (with path)
-                if fname.endswith('.json') is True:
-                    if os.path.exists(fname):
-                        config = safe_json_load(fname)
-                        SAMInputsChecker.check(config)
-                        self._inputs[key] = config
+                if isinstance(config, str):
+                    if not config.endswith('.json'):
+                        raise IOError('SAM config file must be a JSON: "{}"'
+                                      .format(config))
+                    elif not os.path.exists(config):
+                        raise IOError('SAM config file does not exist: "{}"'
+                                      .format(config))
                     else:
-                        raise IOError('SAM inputs file does not exist: "{}"'
-                                      .format(fname))
-                else:
-                    raise IOError('SAM inputs file must be a JSON: "{}"'
-                                  .format(fname))
+                        config = safe_json_load(config)
+
+                if not isinstance(config, dict):
+                    raise RuntimeError('SAM config must be a JSON file or a '
+                                       'pre-extracted dictionary, but got: {}'
+                                       .format(config))
+
+                SAMInputsChecker.check(config)
+                self._inputs[key] = config
 
         return self._inputs
 
