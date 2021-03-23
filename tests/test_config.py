@@ -266,24 +266,40 @@ def test_bad_sam_configs():
     fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
     sam_files = {'onshore': os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')}
+    # Assert ProjecPoints fails with unequal config entries in points
+    # vs sam_configs (as files)
     with pytest.raises(ConfigError):
         ProjectPoints(fpp, sam_files, 'windpower')
 
     sam_configs = {k: safe_json_load(v) for k, v in sam_files.items()}
+    # Assert ProjecPoints fails with unequal config entries in points
+    # vs sam_configs (as dicts)
     with pytest.raises(ConfigError):
         ProjectPoints(fpp, sam_configs, 'windpower')
 
     sites = slice(0, 100)
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.csv')
+    # Assert SAMConfig fails when the SAM config is not a json
     with pytest.raises(IOError):
-        pp = ProjectPoints(sites, sam_file, 'windpower')
-        pp.inputs
+        ProjectPoints(sites, sam_file, 'windpower')
 
     sites = slice(0, 100)
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
     sam_config = safe_json_load(sam_file)
+    # Assert SAMConfig fails when supplying a raw SAM config dictionary.
+    # The SAM config dict should be mapped to a config ID
     with pytest.raises(RuntimeError):
         ProjectPoints(sites, sam_config, 'windpower')
+
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = [os.path.join(TESTDATADIR,
+                              'SAM/wind_gen_standard_losses_0.json'),
+                 os.path.join(TESTDATADIR,
+                              'SAM/wind_gen_standard_losses_1.json')]
+    # Assert ProjecPoints fails with a list of configs is provided instead
+    # of a dictionary mapping the config files to config IDs
+    with pytest.raises(ValueError):
+        ProjectPoints(fpp, sam_files, 'windpower')
 
 
 def execute_pytest(capture='all', flags='-rapP'):
