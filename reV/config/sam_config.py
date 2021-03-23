@@ -221,7 +221,7 @@ class SAMInputsChecker:
 
     def _run_checks(self):
         """Infer config type and run applicable checks."""
-        if all([c in self._config for c in self.KEYS_PV]):
+        if all(c in self._config for c in self.KEYS_PV):
             self.check_pv()
 
     @classmethod
