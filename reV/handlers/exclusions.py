@@ -165,7 +165,7 @@ class ExclusionLayers:
         """
         shape = self.h5.attrs.get('shape', None)
         if shape is None:
-            shape = self.h5['latitude'].shape
+            shape = self.h5.shapes['latitude']
 
         return tuple(shape)
 
@@ -181,10 +181,7 @@ class ExclusionLayers:
         """
         chunks = self.h5.attrs.get('chunks', None)
         if chunks is None:
-            chunks = self.h5['latitude'].chunks
-
-        if isinstance(chunks, dict):
-            chunks = tuple(chunks.get('dims', None))
+            chunks = self.h5.chunks['latitude']
 
         return chunks
 

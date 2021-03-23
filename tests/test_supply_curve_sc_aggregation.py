@@ -75,7 +75,9 @@ def test_parallel_agg(resolution=64):
                                                       res_class_dset=None,
                                                       res_class_bins=None,
                                                       resolution=resolution,
-                                                      gids=gids, max_workers=3)
+                                                      gids=gids,
+                                                      max_workers=None,
+                                                      sites_per_worker=10)
 
     assert all(summary_serial == summary_parallel)
 
@@ -89,6 +91,32 @@ def test_aggregation_summary():
                                        res_class_bins=RES_CLASS_BINS,
                                        data_layers=DATA_LAYERS,
                                        max_workers=1)
+
+    if not os.path.exists(AGG_BASELINE):
+        s.to_csv(AGG_BASELINE)
+        raise Exception('Aggregation summary baseline file did not exist. '
+                        'Created: {}'.format(AGG_BASELINE))
+
+    else:
+        for c in ['res_gids', 'gen_gids', 'gid_counts']:
+            s[c] = s[c].astype(str)
+
+        s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+
+        assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
+
+
+@pytest.mark.parametrize('pre_extract', (True, False))
+def test_pre_extract_inclusions(pre_extract):
+    """Test the aggregation summary w/ and w/out pre-extracting inclusions"""
+
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1,
+                                       pre_extract_inclusions=pre_extract)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)

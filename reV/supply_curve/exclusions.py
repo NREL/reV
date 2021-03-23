@@ -789,7 +789,8 @@ class ExclusionMask:
                 if layer.force_include:
                     force_include.append(layer)
                 else:
-                    logger.debug('Computing exclusions {}'.format(layer))
+                    logger.debug('Computing exclusions {} for {}'
+                                 .format(layer, ds_slice))
                     log_mem(logger, log_level='DEBUG')
                     layer_slice = (layer.layer, ) + ds_slice
                     layer_mask = layer[self.excl_h5[layer_slice]]

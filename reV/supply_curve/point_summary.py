@@ -29,7 +29,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     # technology-dependent power density estimates in MW/km2
     POWER_DENSITY = {'pv': 36, 'wind': 3}
 
-    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index,
+                 excl_dict=None, inclusion_mask=None,
                  res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
@@ -55,6 +56,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         res_class_dset : str | np.ndarray | None
             Dataset in the generation file dictating resource classes.
             Can be pre-extracted resource data in np.ndarray.
@@ -107,9 +112,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._friction_layer = friction_layer
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
-                         excl_dict=excl_dict, resolution=resolution,
-                         excl_area=excl_area, exclusion_shape=exclusion_shape,
-                         offshore_flags=offshore_flags, close=close)
+                         excl_dict=excl_dict,
+                         inclusion_mask=inclusion_mask,
+                         resolution=resolution,
+                         excl_area=excl_area,
+                         exclusion_shape=exclusion_shape,
+                         offshore_flags=offshore_flags,
+                         close=close)
 
         self._apply_exclusions()
 
@@ -306,8 +315,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
                                    'power_density'].values
             pds = pds.astype(np.float32)
-            pds *= self.excl_data_flat[self.bool_mask]
-            denom = self.excl_data_flat[self.bool_mask].sum()
+            pds *= self.include_mask_flat[self.bool_mask]
+            denom = self.include_mask_flat[self.bool_mask].sum()
             self._power_density = pds.sum() / denom
 
         return self._power_density
@@ -394,10 +403,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         float | int
             Mode of data
         """
-        return stats.mode(data).mode[0]
+        if not data.size:
+            return None
+        else:
+            return stats.mode(data).mode[0]
 
     @staticmethod
-    def _categorize(data, excl_mult):
+    def _categorize(data, incl_mult):
         """
         Extract the sum of inclusion scalar values (where 1 is
         included, 0 is excluded, and 0.7 is included with 70 percent of
@@ -407,7 +419,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         ----------
         data : ndarray
             Vector of categorical values
-        excl_mult : ndarray
+        incl_mult : ndarray
             Vector of inclusion values
 
         Returns
@@ -416,14 +428,15 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Jsonified string of the dictionary mapping categorical values to
             total inclusions
         """
-        data = {category: float(excl_mult[(data == category)].sum())
+
+        data = {category: float(incl_mult[(data == category)].sum())
                 for category in np.unique(data)}
         data = jsonify_dict(data)
 
         return data
 
     @classmethod
-    def _agg_data_layer_method(cls, data, excl_mult, method):
+    def _agg_data_layer_method(cls, data, incl_mult, method):
         """Aggregate the data array using specified method.
 
         Parameters
@@ -432,7 +445,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Data array that will be flattened and operated on using method.
             This must be the included data. Exclusions should be applied
             before this method.
-        excl_mult : np.ndarray | None
+        incl_mult : np.ndarray | None
             Scalar exclusion data for methods with exclusion-weighted
             aggregation methods. Shape must match input data.
         method : str
@@ -461,16 +474,16 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             if len(data.shape) > 1:
                 data = data.flatten()
 
-            if data.shape != excl_mult.shape:
+            if data.shape != incl_mult.shape:
                 e = ('Cannot aggregate data with shape that doesnt '
                      'match excl mult!')
                 logger.error(e)
                 raise DataShapeError(e)
 
             if method == 'category':
-                data = method_func['category'](data, excl_mult)
+                data = method_func['category'](data, incl_mult)
             elif method in ['mean', 'sum']:
-                data = data * excl_mult
+                data = data * incl_mult
                 data = method_func[method](data)
             else:
                 data = method_func[method](data)
@@ -483,7 +496,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         resource bin."""
 
         # exclusions mask is False where excluded
-        exclude = (self.excl_data == 0).flatten()
+        exclude = self.include_mask_flat == 0
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1
@@ -491,8 +504,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         # ensure that excluded pixels (including resource exclusions!)
         # has an exclusions multiplier of 0
-        self._excl_data[exclude.reshape(self._excl_data.shape)] = 0.0
-        self._excl_data_flat = self._excl_data.flatten()
+        exclude = exclude.reshape(self.include_mask.shape)
+        self._incl_mask[exclude] = 0.0
+        self._incl_mask = self._incl_mask.flatten()
 
         if (self._gen_gids != -1).sum() == 0:
             msg = ('Supply curve point gid {} is completely excluded for res '
@@ -517,10 +531,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
 
-            rex = ((self.res_data[self._gen_gids]
-                    < np.min(self._res_class_bin))
-                   | (self.res_data[self._gen_gids]
-                      >= np.max(self._res_class_bin)))
+            rex = self.res_data[self._gen_gids]
+            rex = ((rex < np.min(self._res_class_bin))
+                   | (rex >= np.max(self._res_class_bin)))
 
             boolean_exclude = (boolean_exclude | rex)
 
@@ -560,30 +573,21 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
                 data = raw.flatten()[self.bool_mask]
-                excl_mult = self.excl_data_flat[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask].copy()
 
                 if nodata is not None:
-                    nodata_mask = (data == nodata)
-
-                    # All included extent is nodata.
-                    # Reset data from raw without exclusions.
-                    if all(nodata_mask):
-                        data = raw.flatten()
-                        excl_mult = self.excl_data_flat
-                        nodata_mask = (data == nodata)
-
-                    data = data[~nodata_mask]
-                    excl_mult = excl_mult[~nodata_mask]
+                    valid_data_mask = (data != nodata)
+                    data = data[valid_data_mask]
+                    incl_mult = incl_mult[valid_data_mask]
 
                     if not data.size:
-                        data = None
-                        excl_mult = None
                         m = ('Data layer "{}" has no valid data for '
-                             'SC point gid {}!'
+                             'SC point gid {} because of exclusions '
+                             'and/or nodata values in the data layer.'
                              .format(name, self._gid))
                         logger.debug(m)
 
-                data = self._agg_data_layer_method(data, excl_mult,
+                data = self._agg_data_layer_method(data, incl_mult,
                                                    attrs['method'])
                 summary[name] = data
 
@@ -674,7 +678,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
     @classmethod
     def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
-                  excl_dict=None, res_class_dset=None, res_class_bin=None,
+                  excl_dict=None, inclusion_mask=None,
+                  res_class_dset=None, res_class_bin=None,
                   excl_area=0.0081, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
@@ -700,6 +705,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         res_class_dset : str | np.ndarray | None
             Dataset in the generation file dictating resource classes.
             Can be pre-extracted resource data in np.ndarray.
@@ -757,6 +766,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
         kwargs = {"excl_dict": excl_dict,
+                  "inclusion_mask": inclusion_mask,
                   "res_class_dset": res_class_dset,
                   "res_class_bin": res_class_bin,
                   "excl_area": excl_area,

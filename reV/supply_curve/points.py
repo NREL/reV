@@ -156,7 +156,7 @@ class AbstractSupplyCurvePoint(ABC):
 class SupplyCurvePoint(AbstractSupplyCurvePoint):
     """Generic single SC point based on exclusions, resolution, and techmap"""
 
-    def __init__(self, gid, excl, tm_dset, excl_dict=None,
+    def __init__(self, gid, excl, tm_dset, excl_dict=None, inclusion_mask=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
                  close=True):
         """
@@ -172,6 +172,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -197,12 +201,21 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         super().__init__(gid, exclusion_shape, resolution=resolution)
 
-        self._centroid = None
-        self._excl_data = None
-        self._excl_data_flat = None
-        self._excl_area = excl_area
-
         self._gids = self._parse_techmap(tm_dset)
+
+        self._incl_mask = inclusion_mask
+        self._incl_mask_flat = None
+        if inclusion_mask is not None:
+            msg = ('Bad inclusion mask input shape of {} with stated '
+                   'resolution of {}'.format(inclusion_mask.shape, resolution))
+            assert len(inclusion_mask.shape) == 2, msg
+            assert inclusion_mask.shape[0] <= resolution, msg
+            assert inclusion_mask.shape[1] <= resolution, msg
+            assert inclusion_mask.size == len(self._gids), msg
+            self._incl_mask = inclusion_mask.copy()
+
+        self._centroid = None
+        self._excl_area = excl_area
         self._check_excl()
 
     @staticmethod
@@ -326,7 +339,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Non-excluded resource/generation area in square km.
         """
         mask = self._gids != -1
-        area = np.sum(self._excl_data_flat[mask]) * self._excl_area
+        area = np.sum(self.include_mask_flat[mask]) * self._excl_area
 
         return area
 
@@ -351,51 +364,49 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         n_gids : list
         """
         mask = self._gids != -1
-        n_gids = np.sum(self._excl_data_flat[mask] > 0)
+        n_gids = np.sum(self.include_mask_flat[mask] > 0)
 
         return n_gids
 
     @property
-    def excl_data(self):
-        """Get the exclusions mask (normalized with expected range: [0, 1]).
+    def include_mask(self):
+        """Get the 2D inclusion mask (normalized with expected range: [0, 1]
+        where 1 is included and 0 is excluded).
 
         Returns
         -------
-        _excl_data : np.ndarray
-            2D exclusions data mask corresponding to the exclusions grid in
-            the SC domain.
+        np.ndarray
         """
 
-        if self._excl_data is None:
-            self._excl_data = self.exclusions[self.rows, self.cols]
+        if self._incl_mask is None:
+            self._incl_mask = self.exclusions[self.rows, self.cols]
 
             # make sure exclusion pixels outside resource extent are excluded
-            out_of_extent = self._gids.reshape(self._excl_data.shape) == -1
-            self._excl_data[out_of_extent] = 0.0
+            out_of_extent = self._gids.reshape(self._incl_mask.shape) == -1
+            self._incl_mask[out_of_extent] = 0.0
 
-            if self._excl_data.max() > 1:
+            if self._incl_mask.max() > 1:
                 w = ('Exclusions data max value is > 1: {}'
-                     .format(self._excl_data.max()), InputWarning)
+                     .format(self._incl_mask.max()), InputWarning)
                 logger.warning(w)
                 warn(w)
 
-        return self._excl_data
+        return self._incl_mask
 
     @property
-    def excl_data_flat(self):
-        """Get the flattened exclusions mask (normalized with expected
-        range: [0, 1]).
+    def include_mask_flat(self):
+        """Get the flattened inclusion mask (normalized with expected
+        range: [0, 1] where 1 is included and 0 is excluded).
 
         Returns
         -------
-        _excl_data_flat : np.ndarray
-            1D flattened exclusions data mask.
+        np.ndarray
         """
 
-        if self._excl_data_flat is None:
-            self._excl_data_flat = self.excl_data.flatten()
+        if self._incl_mask_flat is None:
+            self._incl_mask_flat = self.include_mask.flatten()
 
-        return self._excl_data_flat
+        return self._incl_mask_flat
 
     @property
     def bool_mask(self):
@@ -424,7 +435,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         Check to see if supply curve point is fully excluded
         """
-        if all(self.excl_data_flat[self.bool_mask] == 0):
+
+        if all(self.include_mask_flat[self.bool_mask] == 0):
             msg = ('Supply curve point gid {} is completely excluded!'
                    .format(self._gid))
             raise EmptySupplyCurvePointError(msg)
@@ -451,23 +463,23 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         if len(arr.shape) == 2:
             x = arr[:, self._gids[self.bool_mask]].astype('float32')
-            excl = self.excl_data_flat[self.bool_mask]
-            x *= excl
-            mean = x.sum(axis=1) / excl.sum()
+            incl = self.include_mask_flat[self.bool_mask]
+            x *= incl
+            mean = x.sum(axis=1) / incl.sum()
 
         else:
             x = arr[self._gids[self.bool_mask]].astype('float32')
-            excl = self.excl_data_flat[self.bool_mask]
+            incl = self.include_mask_flat[self.bool_mask]
 
             if np.isnan(x).all():
                 return np.nan
             elif drop_nan and np.isnan(x).any():
                 nan_mask = np.isnan(x)
                 x = x[~nan_mask]
-                excl = excl[~nan_mask]
+                incl = incl[~nan_mask]
 
-            x *= excl
-            mean = x.sum() / excl.sum()
+            x *= incl
+            mean = x.sum() / incl.sum()
 
         return mean
 
@@ -484,7 +496,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         mean_wind_dirs : np.ndarray | float
             Mean wind direction of arr masked by the binary exclusions
         """
-        excl = self.excl_data_flat[self.bool_mask]
+        incl = self.include_mask_flat[self.bool_mask]
         gids = self._gids[self.bool_mask]
         if len(arr.shape) == 2:
             arr_slice = (slice(None), gids)
@@ -495,8 +507,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             ax = 0
 
         angle = np.radians(arr[arr_slice], dtype=np.float32)
-        sin = np.mean(np.sin(angle) * excl, axis=ax)
-        cos = np.mean(np.cos(angle) * excl, axis=ax)
+        sin = np.mean(np.sin(angle) * incl, axis=ax)
+        cos = np.mean(np.cos(angle) * incl, axis=ax)
 
         mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
         mask = mean_wind_dirs < 0
@@ -525,7 +537,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             x = arr[self._gids[self.bool_mask]].astype('float32')
             ax = 0
 
-        x *= self.excl_data_flat[self.bool_mask]
+        x *= self.include_mask_flat[self.bool_mask]
         agg = x.sum(axis=ax)
 
         return agg
@@ -624,7 +636,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 class AggregationSupplyCurvePoint(SupplyCurvePoint):
     """Generic single SC point to aggregate data from an h5 file."""
 
-    def __init__(self, gid, excl, agg_h5, tm_dset, excl_dict=None,
+    def __init__(self, gid, excl, agg_h5, tm_dset,
+                 excl_dict=None, inclusion_mask=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
                  close=True, gen_index=None):
         """
@@ -642,6 +655,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -658,8 +675,11 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Array value is -1 if the resource index was not used in the
             generation run.
         """
-        super().__init__(gid, excl, tm_dset, excl_dict=excl_dict,
-                         resolution=resolution, excl_area=excl_area,
+        super().__init__(gid, excl, tm_dset,
+                         excl_dict=excl_dict,
+                         inclusion_mask=inclusion_mask,
+                         resolution=resolution,
+                         excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
                          close=close)
 
@@ -670,6 +690,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             self._gids, _ = self._map_gen_gids(self._gids, gen_index)
 
         self._h5_gids = self._gids
+
         if (self._h5_gids != -1).sum() == 0:
             emsg = ('Supply curve point gid {} has no viable exclusion '
                     'points based on exclusions file: "{}"'
@@ -857,7 +878,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         -------
         gid_counts : list
         """
-        gid_counts = [self.excl_data_flat[(self._h5_gids == gid)].sum()
+        gid_counts = [self.include_mask_flat[(self._h5_gids == gid)].sum()
                       for gid in self.h5_gid_set]
 
         return gid_counts
@@ -891,7 +912,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
     @classmethod
     def run(cls, gid, excl, agg_h5, tm_dset, *agg_dset, agg_method='mean',
-            excl_dict=None, resolution=64, excl_area=0.0081,
+            excl_dict=None, inclusion_mask=None,
+            resolution=64, excl_area=0.0081,
             exclusion_shape=None, close=True, gen_index=None):
         """
         Compute exclusions weight mean for the sc point from data
@@ -914,6 +936,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -941,9 +967,14 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if isinstance(agg_dset, str):
             agg_dset = (agg_dset, )
 
-        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
-                  "excl_area": excl_area, "exclusion_shape": exclusion_shape,
-                  "close": close, "gen_index": gen_index}
+        kwargs = {"excl_dict": excl_dict,
+                  "inclusion_mask": inclusion_mask,
+                  "resolution": resolution,
+                  "excl_area": excl_area,
+                  "exclusion_shape": exclusion_shape,
+                  "close": close,
+                  "gen_index": gen_index}
+
         with cls(gid, excl, agg_h5, tm_dset, **kwargs) as point:
             if agg_method.lower().startswith('mean'):
                 agg_method = point.exclusion_weighted_mean
@@ -969,7 +1000,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     """Single supply curve point with associated reV generation"""
 
-    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index,
+                 excl_dict=None, inclusion_mask=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
                  offshore_flags=None, close=True):
         """
@@ -992,6 +1024,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -1010,6 +1046,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         super().__init__(gid, excl, gen, tm_dset,
                          excl_dict=excl_dict,
+                         inclusion_mask=inclusion_mask,
                          resolution=resolution,
                          excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
@@ -1084,9 +1121,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             the non-zero exclusions.
         """
         x = flat_arr[self._gen_gids[self.bool_mask]].astype('float32')
-        excl = self.excl_data_flat[self.bool_mask]
-        x *= excl
-        mean = x.sum() / excl.sum()
+        incl = self.include_mask_flat[self.bool_mask]
+        x *= incl
+        mean = x.sum() / incl.sum()
 
         return mean
 
@@ -1158,7 +1195,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         gid_counts : list
             List of exclusion pixels in each resource/generation gid.
         """
-        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
+        gid_counts = [self.include_mask_flat[(self._res_gids == gid)].sum()
                       for gid in self.res_gid_set]
 
         return gid_counts
@@ -1180,6 +1217,9 @@ class SupplyCurveExtent:
             SC point.
         """
 
+        logger.debug('Initializing SupplyCurveExtent with res {} from: {}'
+                     .format(resolution, f_excl))
+
         if not isinstance(resolution, int):
             raise SupplyCurveInputError('Supply Curve resolution needs to be '
                                         'an integer but received: {}'
@@ -1198,9 +1238,12 @@ class SupplyCurveExtent:
                                         'received: {}'
                                         .format(type(f_excl)))
 
+        self._excl_shape = self.exclusions.shape
         # limit the resolution to the exclusion shape.
-        self._res = int(np.min(list(self.exclusions.shape) + [resolution]))
+        self._res = int(np.min(list(self.excl_shape) + [resolution]))
 
+        self._n_rows = None
+        self._n_cols = None
         self._cols_of_excl = None
         self._rows_of_excl = None
         self._excl_row_slices = None
@@ -1208,6 +1251,15 @@ class SupplyCurveExtent:
         self._latitude = None
         self._longitude = None
         self._points = None
+
+        self._sc_col_ind, self._sc_row_ind = np.meshgrid(
+            np.arange(self.n_cols), np.arange(self.n_rows))
+        self._sc_col_ind = self._sc_col_ind.flatten()
+        self._sc_row_ind = self._sc_row_ind.flatten()
+
+        logger.debug('Initialized SupplyCurveExtent with shape {} from '
+                     'exclusions with shape {}'
+                     .format(self.shape, self.excl_shape))
 
     def __len__(self):
         """Total number of supply curve points."""
@@ -1270,6 +1322,16 @@ class SupplyCurveExtent:
         return self._res
 
     @property
+    def excl_shape(self):
+        """Get the shape tuple of the exclusion file raster.
+
+        Returns
+        -------
+        tuple
+        """
+        return self._excl_shape
+
+    @property
     def excl_rows(self):
         """Get the unique row indices identifying the exclusion points.
 
@@ -1278,7 +1340,7 @@ class SupplyCurveExtent:
         excl_rows : np.ndarray
             Array of exclusion row indices.
         """
-        return np.arange(self.exclusions.shape[0])
+        return np.arange(self.excl_shape[0])
 
     @property
     def excl_cols(self):
@@ -1289,7 +1351,7 @@ class SupplyCurveExtent:
         excl_cols : np.ndarray
             Array of exclusion column indices.
         """
-        return np.arange(self.exclusions.shape[1])
+        return np.arange(self.excl_shape[1])
 
     @property
     def rows_of_excl(self):
@@ -1374,7 +1436,10 @@ class SupplyCurveExtent:
         n_rows : int
             Number of row entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.shape[0] / self.resolution))
+        if self._n_rows is None:
+            self._n_rows = int(np.ceil(self.excl_shape[0] / self.resolution))
+
+        return self._n_rows
 
     @property
     def n_cols(self):
@@ -1385,7 +1450,10 @@ class SupplyCurveExtent:
         n_cols : int
             Number of column entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.shape[1] / self.resolution))
+        if self._n_cols is None:
+            self._n_cols = int(np.ceil(self.excl_shape[1] / self.resolution))
+
+        return self._n_cols
 
     @property
     def latitude(self):
@@ -1451,6 +1519,30 @@ class SupplyCurveExtent:
         return np.dstack((self.latitude, self.longitude))[0]
 
     @property
+    def row_indices(self):
+        """Get a 1D array of row indices for every gid. That is, this property
+        has length == len(gids) and row_indices[sc_gid] yields the row index of
+        the target supply curve gid
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._sc_row_ind
+
+    @property
+    def col_indices(self):
+        """Get a 1D array of col indices for every gid. That is, this property
+        has length == len(gids) and col_indices[sc_gid] yields the col index of
+        the target supply curve gid
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._sc_col_ind
+
+    @property
     def points(self):
         """Get the summary dataframe of supply curve points.
 
@@ -1461,10 +1553,8 @@ class SupplyCurveExtent:
         """
 
         if self._points is None:
-            sc_col_ind, sc_row_ind = np.meshgrid(np.arange(self.n_cols),
-                                                 np.arange(self.n_rows))
-            self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
-                                         'col_ind': sc_col_ind.flatten()})
+            self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
+                                         'col_ind': self.col_indices.copy()})
 
             self._points.index.name = 'gid'
 
@@ -1527,10 +1617,10 @@ class SupplyCurveExtent:
 
         Returns
         -------
-        row_slice : int
-            Exclusions grid row index slice corresponding to the sc point gid.
-        col_slice : int
-            Exclusions grid col index slice corresponding to the sc point gid.
+        row_slice : slice
+            Exclusions grid row slice corresponding to the sc point gid.
+        col_slice : slice
+            Exclusions grid col slice corresponding to the sc point gid.
         """
 
         if gid >= len(self):
@@ -1538,10 +1628,8 @@ class SupplyCurveExtent:
                                    'supply curve points with length "{}".'
                                    .format(gid, len(self)))
 
-        sc_row_ind = self.points.loc[gid, 'row_ind']
-        sc_col_ind = self.points.loc[gid, 'col_ind']
-        row_slice = self.excl_row_slices[sc_row_ind]
-        col_slice = self.excl_col_slices[sc_col_ind]
+        row_slice = self.excl_row_slices[self.row_indices[gid]]
+        col_slice = self.excl_col_slices[self.col_indices[gid]]
 
         return row_slice, col_slice
 
@@ -1622,16 +1710,39 @@ class SupplyCurveExtent:
         valid_gids : ndarray
             Vector of valid sc_point_gids that contain resource gis
         """
-        valid_gids = []
-        tm = self._excls[tm_dset]
-        gid = 0
-        for r in range(self.n_rows):
-            r = slice(r * self._res, (r + 1) * self._res)
-            for c in range(self.n_cols):
-                c = slice(c * self._res, (c + 1) * self._res)
-                if np.any(tm[r, c] != -1):
-                    valid_gids.append(gid)
 
+        logger.info('Getting valid SC points from "{}"...'.format(tm_dset))
+
+        valid_bool = np.zeros(self.n_rows * self.n_cols)
+        tm = self._excls[tm_dset]
+
+        gid = 0
+        for r in self.excl_row_slices:
+            for c in self.excl_col_slices:
+                if np.any(tm[r, c] != -1):
+                    valid_bool[gid] = 1
                 gid += 1
 
-        return np.array(valid_gids, dtype=np.uint32)
+        valid_gids = np.where(valid_bool == 1)[0].astype(np.uint32)
+
+        logger.info('Found {} valid SC points out of {} total possible '
+                    '(valid SC points that map to valid resource gids)'
+                    .format(len(valid_gids), len(valid_bool)))
+
+        return valid_gids
+
+    def get_slice_lookup(self, sc_point_gids):
+        """
+        Get exclusion slices for all requested supply curve point gids
+
+        Parameters
+        ----------
+        sc_point_gids : list | ndarray
+            List or 1D array of sc_point_gids to get exclusion slices for
+
+        Returns
+        -------
+        dict
+            lookup mapping sc_point_gid to exclusion slice
+        """
+        return {g: self.get_excl_slices(g) for g in sc_point_gids}
