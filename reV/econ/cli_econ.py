@@ -307,9 +307,9 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     t0 = time.time()
 
     # Execute the Generation module with smart data flushing.
-    Econ.reV_run(points=points,
-                 sam_files=sam_files,
-                 cf_file=cf_file,
+    Econ.reV_run(points,
+                 sam_files,
+                 cf_file,
                  year=year,
                  site_data=site_data,
                  output_request=output_request,

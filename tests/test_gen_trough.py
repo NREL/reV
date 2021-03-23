@@ -36,8 +36,8 @@ def test_gen_tph():
                       'annual_thermal_consumption', 'annual_energy')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='troughphysicalheat', points=points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('troughphysicalheat', points, sam_files, res_file,
+                      max_workers=1,
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
 

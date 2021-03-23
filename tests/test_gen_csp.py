@@ -21,8 +21,8 @@ def test_gen_csp():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='tcsmoltensalt', points=points, sam_files=sam_files,
-                      res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('tcsmoltensalt', points, sam_files, res_file,
+                      max_workers=1,
                       output_request=('cf_mean', 'cf_profile', 'gen_profile'),
                       sites_per_worker=1, fout=None, scale_outputs=False)
 

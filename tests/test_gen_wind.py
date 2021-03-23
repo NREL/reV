@@ -150,8 +150,8 @@ def test_multi_file_5min_wtk():
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='windpower', points=points, sam_files=sam_files,
-                      res_file=res_file, max_workers=max_workers,
+    gen = Gen.reV_run('windpower', points, sam_files, res_file,
+                      max_workers=max_workers,
                       sites_per_worker=3, fout=None)
     gen_outs = list(gen._out['cf_mean'])
     assert len(gen_outs) == 10

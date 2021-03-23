@@ -129,13 +129,12 @@ def test_sam_config(tech):
         points_config = pd.DataFrame({"gid": range(0, 100),
                                       "config": ['default'] * 100})
 
-        gen_json = Gen.reV_run('pvwattsv5', points, sam_file,
-                               res_file=res_file,
+        gen_json = Gen.reV_run('pvwattsv5', points, sam_file, res_file,
                                output_request=('cf_profile',),
                                max_workers=2, sites_per_worker=50)
 
         gen_dict = Gen.reV_run('pvwattsv5', points_config, sam_config,
-                               res_file=res_file,
+                               res_file,
                                output_request=('cf_profile',),
                                max_workers=2, sites_per_worker=50)
 
@@ -152,13 +151,12 @@ def test_sam_config(tech):
         points_config = pd.DataFrame({"gid": range(0, 10),
                                       "config": ['default'] * 10})
 
-        gen_json = Gen.reV_run('windpower', points, sam_file,
-                               res_file=res_file,
+        gen_json = Gen.reV_run('windpower', points, sam_file, res_file,
                                output_request=('cf_profile',),
                                max_workers=2, sites_per_worker=3)
 
         gen_dict = Gen.reV_run('windpower', points_config, sam_config,
-                               res_file=res_file,
+                               res_file,
                                output_request=('cf_profile',),
                                max_workers=2, sites_per_worker=3)
 

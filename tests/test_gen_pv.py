@@ -92,8 +92,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file,
+    gen = Gen.reV_run('pvwattsv5', rev2_points, sam_files, res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
@@ -117,8 +116,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, fout=None)
+    gen = Gen.reV_run('pvwattsv5', rev2_points, sam_files, res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -141,8 +139,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
     sam_files = {'sam_param_{}'.format(i): k for i, k in
                  enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
-    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, fout=None)
+    gen = Gen.reV_run('pvwattsv5', rev2_points, sam_files, res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -165,8 +162,7 @@ def test_pv_gen_profiles(year):
     points = slice(0, 100)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
-                res_file=res_file, fout=rev2_out,
+    Gen.reV_run('pvwattsv5', points, sam_files, res_file, fout=rev2_out,
                 output_request=('cf_profile',),
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir)
 
@@ -201,8 +197,7 @@ def test_smart(year):
     points = slice(0, 10)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
-                res_file=res_file, fout=rev2_out,
+    Gen.reV_run('pvwattsv5', points, sam_files, res_file, fout=rev2_out,
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir,
                 output_request=('cf_profile',))
 
@@ -233,8 +228,8 @@ def test_multi_file_nsrdb_2018():
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
-                      res_file=res_file, max_workers=max_workers,
+    gen = Gen.reV_run('pvwattsv5', points, sam_files, res_file,
+                      max_workers=max_workers,
                       sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'])
     assert len(gen_outs) == 10
@@ -263,8 +258,7 @@ def test_pv_name_error():
     with pytest.raises(KeyError) as record:
         pp = ProjectPoints(rev2_points, sam_files, 'pv',
                            res_file=res_file)
-        Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                    res_file=res_file, max_workers=1,
+        Gen.reV_run('pv', rev2_points, sam_files, res_file, max_workers=1,
                     sites_per_worker=1, fout=None)
         assert 'Did not recognize' in record[0].message
 
@@ -284,8 +278,8 @@ def test_pvwattsv7_baseline():
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None,
                       output_request=output_request)
 
@@ -309,13 +303,11 @@ def test_pvwatts_v5_v7():
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen7 = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                       sam_files=sam_files, res_file=res_file,
+    gen7 = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                        max_workers=1, sites_per_worker=1, fout=None)
 
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
-    gen5 = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
-                       sam_files=sam_files, res_file=res_file,
+    gen5 = Gen.reV_run('pvwattsv5', rev2_points, sam_files, res_file,
                        max_workers=1, sites_per_worker=1, fout=None)
 
     msg = 'PVwatts v5 and v7 did not match within test tolerance'
@@ -330,16 +322,16 @@ def test_bifacial():
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None)
 
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     output_request = ('cf_mean', 'cf_profile', 'surface_albedo')
-    gen_bi = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                         sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen_bi = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                         max_workers=1,
                          sites_per_worker=1, fout=None,
                          output_request=output_request)
 
@@ -359,8 +351,8 @@ def test_gen_input_mods():
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None)
     for i in range(5):
         inputs = gen.project_points[i][1]
@@ -377,8 +369,8 @@ def test_gen_input_pass_through():
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None,
                       output_request=output_request)
     assert 'gcr' in gen.out
@@ -386,8 +378,7 @@ def test_gen_input_pass_through():
 
     output_request = ('cf_mean', 'gcr', 'azimuth', 'tilt')
     with pytest.raises(ExecutionError):
-        gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                          sam_files=sam_files, res_file=res_file,
+        gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                           max_workers=1,
                           sites_per_worker=1, fout=None,
                           output_request=output_request)
@@ -402,15 +393,13 @@ def test_gen_pv_site_data():
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    baseline = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                           sam_files=sam_files, res_file=res_file,
+    baseline = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                            max_workers=1, sites_per_worker=1, fout=None,
                            output_request=output_request)
 
     site_data = pd.DataFrame({'gid': np.arange(2),
                               'losses': np.ones(2)})
-    test = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                       sam_files=sam_files, res_file=res_file,
+    test = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                        max_workers=1, sites_per_worker=1, fout=None,
                        output_request=output_request, site_data=site_data)
 
@@ -431,8 +420,8 @@ def test_clipping():
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
-    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None,
                       output_request=output_request)
 

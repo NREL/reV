@@ -44,7 +44,7 @@ def test_lcoe(year, max_workers, spw):
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
     points = slice(0, 100)
-    obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+    obj = Econ.reV_run(points, sam_files, cf_file,
                        year=year, output_request='lcoe_fcr',
                        max_workers=max_workers, sites_per_worker=25,
                        points_range=None, fout=None)
@@ -72,7 +72,7 @@ def test_fout(year):
     fout = 'lcoe_out_{}.h5'.format(year)
     fpath = os.path.join(dirout, fout)
     points = slice(0, 100)
-    Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+    Econ.reV_run(points, sam_files, cf_file,
                  year=year, output_request='lcoe_fcr',
                  max_workers=1, sites_per_worker=25,
                  points_range=None, fout=fout, dirout=dirout)
@@ -104,7 +104,7 @@ def test_append_data(year):
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
     points = slice(0, 100)
-    Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+    Econ.reV_run(points, sam_files, cf_file,
                  year=year, output_request='lcoe_fcr',
                  max_workers=1, sites_per_worker=25,
                  points_range=None, append=True)
@@ -153,8 +153,7 @@ def test_append_multi_node(node):
         TESTDATADIR, 'config/nsrdb_projpoints_atb2020_capcostmults_subset.csv')
     site_data = os.path.join(
         TESTDATADIR, 'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
-    econ = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
-                        year=year,
+    econ = Econ.reV_run(points, sam_files, cf_file, year=year,
                         output_request=('lcoe_fcr', 'capital_cost'),
                         max_workers=1, sites_per_worker=25,
                         points_range=None, append=True, site_data=site_data)

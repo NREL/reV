@@ -155,30 +155,30 @@ def test_sam_config_kw_replace():
     pc = PointsControl(pp, sites_per_split=100)
 
     gen = Gen(pc, res_file)
-    config_on = gen.project_points.sam_configs['onshore']
-    config_of = gen.project_points.sam_configs['offshore']
+    config_on = gen.project_points.sam_inputs['onshore']
+    config_of = gen.project_points.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pp_split = ProjectPoints.split(0, 10000, gen.project_points)
-    config_on = pp_split.sam_configs['onshore']
-    config_of = pp_split.sam_configs['offshore']
+    config_on = pp_split.sam_inputs['onshore']
+    config_of = pp_split.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pc_split = PointsControl.split(0, 10000, gen.project_points)
-    config_on = pc_split.project_points.sam_configs['onshore']
-    config_of = pc_split.project_points.sam_configs['offshore']
+    config_on = pc_split.project_points.sam_inputs['onshore']
+    config_of = pc_split.project_points.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     for ipc in pc_split:
-        if 'onshore' in ipc.project_points.sam_configs:
-            config = ipc.project_points.sam_configs['onshore']
+        if 'onshore' in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs['onshore']
             assert 'turb_generic_loss' in config
 
-        if 'offshore' in ipc.project_points.sam_configs:
-            config = ipc.project_points.sam_configs['offshore']
+        if 'offshore' in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs['offshore']
             assert 'turb_generic_loss' in config
 
 
