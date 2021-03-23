@@ -212,7 +212,7 @@ class ProjectPoints:
     >>> h_list = pp.h
     """
 
-    def __init__(self, points, sam_config, tech=None, res_file=None,
+    def __init__(self, points, sam_configs, tech=None, res_file=None,
                  curtailment=None):
         """
         Parameters
@@ -220,11 +220,11 @@ class ProjectPoints:
         points : slice | list | tuple | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
-        sam_config : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
@@ -245,7 +245,7 @@ class ProjectPoints:
         log_versions(logger)
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
-        self._sam_config_obj = self._parse_sam_config(sam_config)
+        self._sam_config_obj = self._parse_sam_config(sam_configs)
         self._check_points_config_mapping()
         self._tech = str(tech)
         self._h = None
@@ -279,7 +279,7 @@ class ProjectPoints:
             logger.exception(msg)
             raise KeyError(msg) from ex
 
-        return config_id, copy.deepcopy(self.sam_configs[config_id])
+        return config_id, copy.deepcopy(self.sam_inputs[config_id])
 
     def __repr__(self):
         msg = ("{} for sites {} through {}"
@@ -289,145 +289,6 @@ class ProjectPoints:
     def __len__(self):
         """Length of this object is the number of sites."""
         return len(self.sites)
-
-    @classmethod
-    def _parse_points(cls, points, res_file=None):
-        """Generate the project points df from inputs
-
-        Parameters
-        ----------
-        points : str | pd.DataFrame | slice | list | dict
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-        res_file : str | NoneType
-            Optional resource file to find maximum length of project points if
-            points slice stop is None.
-
-        Returns
-        -------
-        df : pd.DataFrame
-            DataFrame mapping sites (gids) to SAM technology (config)
-        """
-        if isinstance(points, str):
-            df = cls._parse_csv(points)
-        elif isinstance(points, dict):
-            df = pd.DataFrame(points)
-        elif isinstance(points, (slice, list, tuple)):
-            df = cls._parse_sites(points, res_file=res_file)
-        elif isinstance(points, pd.DataFrame):
-            df = points
-        else:
-            raise ValueError('Cannot parse Project points data from {}'
-                             .format(type(points)))
-
-        if ('gid' not in df.columns or 'config' not in df.columns):
-            raise KeyError('Project points data must contain "gid" and '
-                           '"config" column headers.')
-
-        gids = df['gid'].values
-        if not np.array_equal(np.sort(gids), gids):
-            msg = ('WARNING: points are not in sequential order and will be '
-                   'sorted! The original order is being preserved under '
-                   'column "points_order"')
-            logger.warning(msg)
-            warn(msg)
-            df['points_order'] = df.index.values
-            df = df.sort_values('gid').reset_index(drop=True)
-
-        return df
-
-    @staticmethod
-    def _parse_csv(fname):
-        """Import project points from .csv
-
-        Parameters
-        ----------
-        fname : str
-            Project points .csv file (with path). Must have 'gid' and 'config'
-            column names.
-
-        Returns
-        -------
-        df : pd.DataFrame
-            DataFrame mapping sites (gids) to SAM technology (config)
-        """
-        if fname.endswith('.csv'):
-            df = pd.read_csv(fname)
-        else:
-            raise ValueError('Config project points file must be '
-                             '.csv, but received: {}'
-                             .format(fname))
-        return df
-
-    @staticmethod
-    def _parse_sites(points, res_file=None):
-        """Parse project points from list or slice
-
-        Parameters
-        ----------
-        points : str | pd.DataFrame | slice | list
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-        res_file : str | NoneType
-            Optional resource file to find maximum length of project points if
-            points slice stop is None.
-
-        Returns
-        -------
-        df : pd.DataFrame
-            DataFrame mapping sites (gids) to SAM technology (config)
-        """
-        df = pd.DataFrame(columns=['gid', 'config'])
-        if isinstance(points, (list, tuple)):
-            # explicit site list, set directly
-            df['gid'] = points
-        elif isinstance(points, slice):
-            stop = points.stop
-            if stop is None:
-                if res_file is None:
-                    raise ValueError('Must supply a resource file if '
-                                     'points is a slice of type '
-                                     ' slice(*, None, *)')
-
-                multi_h5_res, _ = check_res_file(res_file)
-                if multi_h5_res:
-                    stop = MultiFileResource(res_file).shape[1]
-                else:
-                    stop = Resource(res_file).shape[1]
-
-            df['gid'] = list(range(*points.indices(stop)))
-        else:
-            raise TypeError('Project Points sites needs to be set as a list, '
-                            'tuple, or slice, but was set as: {}'
-                            .format(type(points)))
-
-        df['config'] = None
-
-        return df
-
-    def index(self, gid):
-        """Get the index location (iloc not loc) for a resource gid found in
-        the project points.
-
-        Parameters
-        ----------
-        gid : int
-            Resource GID found in the project points gid column.
-
-        Returns
-        -------
-        ind : int
-            Row index of gid in the project points dataframe.
-        """
-        if gid not in self._df['gid'].values:
-            e = ('Requested resource gid {} is not present in the project '
-                 'points dataframe. Cannot return row index.'.format(gid))
-            logger.error(e)
-            raise ConfigError(e)
-
-        ind = np.where(self._df['gid'] == gid)[0][0]
-
-        return ind
 
     @property
     def df(self):
@@ -441,57 +302,18 @@ class ProjectPoints:
         """
         return self._df
 
-    @staticmethod
-    def _parse_sam_config(sam_config):
-        """
-        Create SAM files dictionary.
-
-        Parameters
-        ----------
-        sam_config : dict | str | list | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
-            pre loaded SAMConfig object.
-
-        Returns
-        -------
-        _sam_config_obj : reV.config.sam_config.SAMConfig
-            SAM configuration object.
-        """
-
-        if isinstance(sam_config, SAMConfig):
-            return sam_config
-
-        else:
-            if isinstance(sam_config, dict):
-                config_dict = sam_config
-            elif isinstance(sam_config, str):
-                config_dict = {sam_config: sam_config}
-            else:
-                raise ValueError('Cannot parse SAM configs from {}'
-                                 .format(type(sam_config)))
-
-            for key, value in config_dict.items():
-                if not os.path.isfile(value):
-                    raise ConfigError('Invalid SAM config {}: {} does not '
-                                      'exist'.format(key, value))
-
-            return SAMConfig(config_dict)
-
     @property
-    def sam_files(self):
-        """Get the SAM files dictionary property.
+    def sam_config_ids(self):
+        """Get the SAM configs dictionary property.
 
         Returns
         -------
-        _sam_files: dict
+        dict
             Multi-level dictionary containing multiple SAM input config files.
             The top level key is the SAM config ID, top level value is the SAM
             config file path
         """
-        return dict(self._sam_config_obj.items())
+        return sorted(self._sam_config_obj)
 
     @property
     def sam_config_obj(self):
@@ -505,18 +327,17 @@ class ProjectPoints:
         return self._sam_config_obj
 
     @property
-    def sam_configs(self):
-        """Get the SAM configs dictionary property.
+    def sam_inputs(self):
+        """Get the SAM configuration inputs dictionary property.
 
         Returns
         -------
-        _sam_configs : dict
+        dict
             Multi-level dictionary containing multiple SAM input
             configurations. The top level key is the SAM config ID, top level
             value is the SAM config. Each SAM config is a dictionary with keys
             equal to input names, values equal to the actual inputs.
         """
-
         return self.sam_config_obj.inputs
 
     @property
@@ -531,61 +352,12 @@ class ProjectPoints:
             or "wind_turbine_hub_ht" for windpower.
         """
         keys = []
-        for sam_config in self.sam_configs.values():
+        for sam_config in self.sam_inputs.values():
             keys += list(sam_config.keys())
 
         keys = list(set(keys))
+
         return keys
-
-    def _check_points_config_mapping(self):
-        """
-        Check to ensure the project points (df) and SAM configs
-        (sam_config_obj) are compatible. Update as necessary or break
-        """
-        # Extract unique config refences from project_points DataFrame
-        df_configs = self.df['config'].unique()
-        sam_configs = self.sam_files
-
-        # Checks to make sure that the same number of SAM config .json files
-        # as references in project_points DataFrame
-        if len(df_configs) > len(sam_configs):
-            msg = ('Points references {} configs while only '
-                   '{} SAM configs were provided!'
-                   .format(len(df_configs), len(sam_configs)))
-            logger.error(msg)
-            raise ConfigError(msg)
-
-        # If project_points DataFrame was created from a list,
-        # config will be None and needs to be added to _df from sam_configs
-        if len(df_configs) == 1:
-            if df_configs[0] is None:
-                self._df['config'] = list(sam_configs.values())[0]
-
-                df_configs = self.df['config'].unique()
-
-        # Check to see if config references in project_points DataFrame
-        # are valid file paths, if compare with SAM configs
-        # and update as needed
-        configs = {}
-        for config in df_configs:
-            if os.path.isfile(config):
-                configs[config] = config
-            elif config in sam_configs:
-                configs[config] = sam_configs[config]
-            else:
-                msg = ('{} does not map to a valid configuration file'
-                       .format(config))
-                logger.error(msg)
-                raise ConfigError(msg)
-
-        # If configs has any keys that are not in sam_configs then
-        # something really weird happened so raise an error.
-        if any(set(configs) - set(sam_configs)):
-            msg = ('A wild config has appeared! Requested config keys for '
-                   'ProjectPoints are {} and previous config keys are {}'
-                   .format(list(configs.keys()), list(sam_configs.keys())))
-            logger.error(msg)
-            raise ConfigError(msg)
 
     @property
     def gids(self):
@@ -676,6 +448,166 @@ class ProjectPoints:
 
         return self._h
 
+    @property
+    def curtailment(self):
+        """Get the curtailment config object.
+
+        Returns
+        -------
+        _curtailment : NoneType | reV.config.curtailment.Curtailment
+            None if no curtailment, reV curtailment config object if
+            curtailment is being assessed.
+        """
+        return self._curtailment
+
+    @staticmethod
+    def _parse_csv(fname):
+        """Import project points from .csv
+
+        Parameters
+        ----------
+        fname : str
+            Project points .csv file (with path). Must have 'gid' and 'config'
+            column names.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            DataFrame mapping sites (gids) to SAM technology (config)
+        """
+        if fname.endswith('.csv'):
+            df = pd.read_csv(fname)
+        else:
+            raise ValueError('Config project points file must be '
+                             '.csv, but received: {}'
+                             .format(fname))
+
+        return df
+
+    @staticmethod
+    def _parse_sites(points, res_file=None):
+        """Parse project points from list or slice
+
+        Parameters
+        ----------
+        points : str | pd.DataFrame | slice | list
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
+        res_file : str | NoneType
+            Optional resource file to find maximum length of project points if
+            points slice stop is None.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            DataFrame mapping sites (gids) to SAM technology (config)
+        """
+        df = pd.DataFrame(columns=['gid', 'config'])
+        if isinstance(points, (list, tuple)):
+            # explicit site list, set directly
+            df['gid'] = points
+        elif isinstance(points, slice):
+            stop = points.stop
+            if stop is None:
+                if res_file is None:
+                    raise ValueError('Must supply a resource file if '
+                                     'points is a slice of type '
+                                     ' slice(*, None, *)')
+
+                multi_h5_res, _ = check_res_file(res_file)
+                if multi_h5_res:
+                    stop = MultiFileResource(res_file).shape[1]
+                else:
+                    stop = Resource(res_file).shape[1]
+
+            df['gid'] = list(range(*points.indices(stop)))
+        else:
+            raise TypeError('Project Points sites needs to be set as a list, '
+                            'tuple, or slice, but was set as: {}'
+                            .format(type(points)))
+
+        df['config'] = None
+
+        return df
+
+    @classmethod
+    def _parse_points(cls, points, res_file=None):
+        """Generate the project points df from inputs
+
+        Parameters
+        ----------
+        points : str | pd.DataFrame | slice | list | dict
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
+        res_file : str | NoneType
+            Optional resource file to find maximum length of project points if
+            points slice stop is None.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            DataFrame mapping sites (gids) to SAM technology (config)
+        """
+        if isinstance(points, str):
+            df = cls._parse_csv(points)
+        elif isinstance(points, dict):
+            df = pd.DataFrame(points)
+        elif isinstance(points, (slice, list, tuple)):
+            df = cls._parse_sites(points, res_file=res_file)
+        elif isinstance(points, pd.DataFrame):
+            df = points
+        else:
+            raise ValueError('Cannot parse Project points data from {}'
+                             .format(type(points)))
+
+        if ('gid' not in df.columns or 'config' not in df.columns):
+            raise KeyError('Project points data must contain "gid" and '
+                           '"config" column headers.')
+
+        gids = df['gid'].values
+        if not np.array_equal(np.sort(gids), gids):
+            msg = ('WARNING: points are not in sequential order and will be '
+                   'sorted! The original order is being preserved under '
+                   'column "points_order"')
+            logger.warning(msg)
+            warn(msg)
+            df['points_order'] = df.index.values
+            df = df.sort_values('gid').reset_index(drop=True)
+
+        return df
+
+    @staticmethod
+    def _parse_sam_config(sam_config):
+        """
+        Create SAM files dictionary.
+
+        Parameters
+        ----------
+        sam_config : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s) or SAM config
+            dict(s). Keys are the SAM config ID(s). Can also be a single
+            config file str. Can also be a pre loaded SAMConfig object.
+
+        Returns
+        -------
+        _sam_config_obj : reV.config.sam_config.SAMConfig
+            SAM configuration object.
+        """
+
+        if isinstance(sam_config, SAMConfig):
+            return sam_config
+
+        else:
+            if isinstance(sam_config, dict):
+                config_dict = sam_config
+            elif isinstance(sam_config, str):
+                config_dict = {sam_config: sam_config}
+            else:
+                raise ValueError('Cannot parse SAM configs from {}'
+                                 .format(type(sam_config)))
+
+            return SAMConfig(config_dict)
+
     @staticmethod
     def _parse_curtailment(curtailment_input):
         """Parse curtailment config object.
@@ -714,17 +646,75 @@ class ProjectPoints:
 
         return curtailment
 
-    @property
-    def curtailment(self):
-        """Get the curtailment config object.
+    def index(self, gid):
+        """Get the index location (iloc not loc) for a resource gid found in
+        the project points.
+
+        Parameters
+        ----------
+        gid : int
+            Resource GID found in the project points gid column.
 
         Returns
         -------
-        _curtailment : NoneType | reV.config.curtailment.Curtailment
-            None if no curtailment, reV curtailment config object if
-            curtailment is being assessed.
+        ind : int
+            Row index of gid in the project points dataframe.
         """
-        return self._curtailment
+        if gid not in self._df['gid'].values:
+            e = ('Requested resource gid {} is not present in the project '
+                 'points dataframe. Cannot return row index.'.format(gid))
+            logger.error(e)
+            raise ConfigError(e)
+
+        ind = np.where(self._df['gid'] == gid)[0][0]
+
+        return ind
+
+    def _check_points_config_mapping(self):
+        """
+        Check to ensure the project points (df) and SAM configs
+        (sam_config_obj) are compatible. Update as necessary or break
+        """
+        # Extract unique config refences from project_points DataFrame
+        df_configs = self.df['config'].unique()
+        sam_configs = self.sam_inputs
+
+        # Checks to make sure that the same number of SAM config .json files
+        # as references in project_points DataFrame
+        if len(df_configs) > len(sam_configs):
+            msg = ('Points references {} configs while only '
+                   '{} SAM configs were provided!'
+                   .format(len(df_configs), len(sam_configs)))
+            logger.error(msg)
+            raise ConfigError(msg)
+
+        if len(df_configs) == 1 and df_configs[0] is None:
+            self._df['config'] = list(sam_configs)[0]
+            df_configs = self.df['config'].unique()
+
+        # Check to see if config references in project_points DataFrame
+        # are valid file paths, if compare with SAM configs
+        # and update as needed
+        configs = {}
+        for config in df_configs:
+            if os.path.isfile(config):
+                configs[config] = config
+            elif config in sam_configs:
+                configs[config] = sam_configs[config]
+            else:
+                msg = ('{} does not map to a valid configuration file'
+                       .format(config))
+                logger.error(msg)
+                raise ConfigError(msg)
+
+        # If configs has any keys that are not in sam_configs then
+        # something really weird happened so raise an error.
+        if any(set(configs) - set(sam_configs)):
+            msg = ('A wild config has appeared! Requested config keys for '
+                   'ProjectPoints are {} and previous config keys are {}'
+                   .format(list(configs), list(sam_configs)))
+            logger.error(msg)
+            raise ConfigError(msg)
 
     def join_df(self, df2, key='gid'):
         """Join new df2 to the _df attribute using the _df's gid as pkey.
@@ -763,8 +753,8 @@ class ProjectPoints:
             List of sites associated with the requested configuration ID. If
             the configuration ID is not recognized, an empty list is returned.
         """
-
         sites = self.df.loc[(self.df['config'] == config), 'gid'].values
+
         return list(sites)
 
     @classmethod
@@ -835,7 +825,7 @@ class ProjectPoints:
         return lat_lons
 
     @classmethod
-    def lat_lon_coords(cls, lat_lons, res_file, sam_config, tech=None,
+    def lat_lon_coords(cls, lat_lons, res_file, sam_configs, tech=None,
                        curtailment=None):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
@@ -846,11 +836,11 @@ class ProjectPoints:
             Pair or pairs of latitude longitude coordinates
         res_file : str
             Resource file, needed to fine nearest neighbors
-        sam_config : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
@@ -908,7 +898,7 @@ class ProjectPoints:
 
         logger.debug('- Resource gids:\n{}'.format(gids))
 
-        pp = cls(gids, sam_config, tech=tech, res_file=res_file,
+        pp = cls(gids, sam_configs, tech=tech, res_file=res_file,
                  curtailment=curtailment)
 
         if 'points_order' in pp.df:
@@ -920,7 +910,7 @@ class ProjectPoints:
         return pp
 
     @classmethod
-    def regions(cls, regions, res_file, sam_config, tech=None,
+    def regions(cls, regions, res_file, sam_configs, tech=None,
                 curtailment=None):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
@@ -932,11 +922,11 @@ class ProjectPoints:
             {'region': 'region_column'}
         res_file : str
             Resource file, needed to fine nearest neighbors
-        sam_config : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
@@ -983,7 +973,7 @@ class ProjectPoints:
 
                 points.extend(gids.tolist())
 
-        pp = cls(points, sam_config, tech=tech, res_file=res_file,
+        pp = cls(points, sam_configs, tech=tech, res_file=res_file,
                  curtailment=curtailment)
 
         meta = meta.loc[pp.sites]

@@ -53,8 +53,8 @@ def test_wind_generic_losses(loss):
     pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
-    del pc.project_points.sam_configs[SAM_FILE]['wind_farm_losses_percent']
-    pc.project_points.sam_configs[SAM_FILE]['turb_generic_loss'] = loss
+    del pc.project_points.sam_inputs[SAM_FILE]['wind_farm_losses_percent']
+    pc.project_points.sam_inputs[SAM_FILE]['turb_generic_loss'] = loss
 
     gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
                       max_workers=1, sites_per_worker=3, fout=None)
@@ -69,10 +69,10 @@ def test_wind_icing_losses(i):
     pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
-    pc.project_points.sam_configs[SAM_FILE]['en_icing_cutoff'] = 1
-    pc.project_points.sam_configs[SAM_FILE]['icing_cutoff_temp'] = \
+    pc.project_points.sam_inputs[SAM_FILE]['en_icing_cutoff'] = 1
+    pc.project_points.sam_inputs[SAM_FILE]['icing_cutoff_temp'] = \
         ICING_BASELINE[i]['temp']
-    pc.project_points.sam_configs[SAM_FILE]['icing_cutoff_rh'] = \
+    pc.project_points.sam_inputs[SAM_FILE]['icing_cutoff_rh'] = \
         ICING_BASELINE[i]['rh']
 
     gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
@@ -89,8 +89,8 @@ def test_wind_low_temp_cutoff(i):
     pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
-    pc.project_points.sam_configs[SAM_FILE]['en_low_temp_cutoff'] = 1
-    pc.project_points.sam_configs[SAM_FILE]['low_temp_cutoff'] = \
+    pc.project_points.sam_inputs[SAM_FILE]['en_low_temp_cutoff'] = 1
+    pc.project_points.sam_inputs[SAM_FILE]['low_temp_cutoff'] = \
         LOW_TEMP_BASELINE[i]['temp']
 
     gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,

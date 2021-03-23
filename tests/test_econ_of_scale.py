@@ -52,8 +52,8 @@ def test_pass_through_lcoe_args():
                       'fixed_operating_cost')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='windpower', points=rev2_points,
-                      sam_files=sam_files, res_file=res_file, max_workers=1,
+    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
+                      max_workers=1,
                       sites_per_worker=1, fout=None,
                       output_request=output_request)
 

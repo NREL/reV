@@ -188,7 +188,7 @@ class Econ(BaseGen):
         return pc
 
     @classmethod
-    def get_pc(cls, points, points_range, sam_files, cf_file,
+    def get_pc(cls, points, points_range, sam_configs, cf_file,
                sites_per_worker=None, append=False):
         """
         Get a PointsControl instance.
@@ -202,11 +202,11 @@ class Econ(BaseGen):
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        sam_files : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         cf_file : str
             reV generation capacity factor output file with path.
@@ -222,7 +222,7 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = super().get_pc(points, points_range, sam_files, 'econ',
+        pc = super().get_pc(points, points_range, sam_configs, 'econ',
                             sites_per_worker=sites_per_worker,
                             res_file=cf_file)
 
@@ -367,7 +367,7 @@ class Econ(BaseGen):
         return data_shape
 
     @classmethod
-    def reV_run(cls, points, sam_files, cf_file,
+    def reV_run(cls, points, sam_configs, cf_file,
                 year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100,
                 pool_size=(os.cpu_count() * 2),
@@ -380,12 +380,12 @@ class Econ(BaseGen):
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list
-            Site-agnostic input data.
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
+        sam_configs : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
+            pre loaded SAMConfig object.
         cf_file : str
             reV generation capacity factor output file with path.
         year : int | str | None
@@ -429,7 +429,7 @@ class Econ(BaseGen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, cf_file,
+        pc = cls.get_pc(points, points_range, sam_configs, cf_file,
                         sites_per_worker=sites_per_worker, append=append)
 
         # make a class instance to operate with
@@ -458,7 +458,7 @@ class Econ(BaseGen):
         logger.debug('The following project points were specified: "{}"'
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_files, indent=4)))
+                     .format(pprint.pformat(sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
 

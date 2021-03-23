@@ -297,7 +297,7 @@ class Gen(BaseGen):
         return list(set(output_request))
 
     @classmethod
-    def reV_run(cls, tech, points, sam_files, res_file,
+    def reV_run(cls, tech, points, sam_configs, res_file,
                 output_request=('cf_mean',), site_data=None, curtailment=None,
                 max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
@@ -314,11 +314,11 @@ class Gen(BaseGen):
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
@@ -371,7 +371,7 @@ class Gen(BaseGen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech,
+        pc = cls.get_pc(points, points_range, sam_configs, tech,
                         sites_per_worker=sites_per_worker, res_file=res_file,
                         curtailment=curtailment)
 
@@ -392,7 +392,7 @@ class Gen(BaseGen):
         logger.debug('The following project points were specified: "{}"'
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_files, indent=4)))
+                     .format(pprint.pformat(sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
 

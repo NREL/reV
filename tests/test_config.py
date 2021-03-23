@@ -14,6 +14,7 @@ import pytest
 
 from rex import Resource
 from rex.utilities.exceptions import ResourceRuntimeError
+from rex.utilities.utilities import safe_json_load
 
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.rep_profiles_config import RepProfilesConfig
@@ -154,30 +155,30 @@ def test_sam_config_kw_replace():
     pc = PointsControl(pp, sites_per_split=100)
 
     gen = Gen(pc, res_file)
-    config_on = gen.project_points.sam_configs['onshore']
-    config_of = gen.project_points.sam_configs['offshore']
+    config_on = gen.project_points.sam_inputs['onshore']
+    config_of = gen.project_points.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pp_split = ProjectPoints.split(0, 10000, gen.project_points)
-    config_on = pp_split.sam_configs['onshore']
-    config_of = pp_split.sam_configs['offshore']
+    config_on = pp_split.sam_inputs['onshore']
+    config_of = pp_split.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pc_split = PointsControl.split(0, 10000, gen.project_points)
-    config_on = pc_split.project_points.sam_configs['onshore']
-    config_of = pc_split.project_points.sam_configs['offshore']
+    config_on = pc_split.project_points.sam_inputs['onshore']
+    config_of = pc_split.project_points.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     for ipc in pc_split:
-        if 'onshore' in ipc.project_points.sam_configs:
-            config = ipc.project_points.sam_configs['onshore']
+        if 'onshore' in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs['onshore']
             assert 'turb_generic_loss' in config
 
-        if 'offshore' in ipc.project_points.sam_configs:
-            config = ipc.project_points.sam_configs['offshore']
+        if 'offshore' in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs['offshore']
             assert 'turb_generic_loss' in config
 
 
@@ -239,6 +240,66 @@ def test_duplicate_coords():
     regions = {'Kent': 'county', 'Rhode Island': 'state'}
     with pytest.raises(RuntimeError):
         ProjectPoints.regions(regions, res_file, sam_files)
+
+
+def test_sam_configs():
+    """
+    Test supplying SAM config as a JSON or a dict
+    """
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
+                 'offshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
+    pp_json = ProjectPoints(fpp, sam_files, 'windpower')
+
+    sam_configs = {k: safe_json_load(v) for k, v in sam_files.items()}
+    pp_dict = ProjectPoints(fpp, sam_configs, 'windpower')
+
+    assert pp_json.sam_inputs == pp_dict.sam_inputs
+
+
+def test_bad_sam_configs():
+    """
+    Test supplying SAM config as a JSON or a dict
+    """
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')}
+    # Assert ProjecPoints fails with unequal config entries in points
+    # vs sam_configs (as files)
+    with pytest.raises(ConfigError):
+        ProjectPoints(fpp, sam_files, 'windpower')
+
+    sam_configs = {k: safe_json_load(v) for k, v in sam_files.items()}
+    # Assert ProjecPoints fails with unequal config entries in points
+    # vs sam_configs (as dicts)
+    with pytest.raises(ConfigError):
+        ProjectPoints(fpp, sam_configs, 'windpower')
+
+    sites = slice(0, 100)
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.csv')
+    # Assert SAMConfig fails when the SAM config is not a json
+    with pytest.raises(IOError):
+        ProjectPoints(sites, sam_file, 'windpower')
+
+    sites = slice(0, 100)
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    sam_config = safe_json_load(sam_file)
+    # Assert SAMConfig fails when supplying a raw SAM config dictionary.
+    # The SAM config dict should be mapped to a config ID
+    with pytest.raises(RuntimeError):
+        ProjectPoints(sites, sam_config, 'windpower')
+
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = [os.path.join(TESTDATADIR,
+                              'SAM/wind_gen_standard_losses_0.json'),
+                 os.path.join(TESTDATADIR,
+                              'SAM/wind_gen_standard_losses_1.json')]
+    # Assert ProjecPoints fails with a list of configs is provided instead
+    # of a dictionary mapping the config files to config IDs
+    with pytest.raises(ValueError):
+        ProjectPoints(fpp, sam_files, 'windpower')
 
 
 def execute_pytest(capture='all', flags='-rapP'):

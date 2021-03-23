@@ -430,10 +430,10 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     points = _parse_points(ctx)
 
     # Execute the Generation module with smart data flushing.
-    Gen.reV_run(tech=tech,
-                points=points,
-                sam_files=sam_files,
-                res_file=res_file,
+    Gen.reV_run(tech,
+                points,
+                sam_files,
+                res_file,
                 site_data=site_data,
                 output_request=output_request,
                 curtailment=curtailment,
