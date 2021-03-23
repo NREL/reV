@@ -566,9 +566,12 @@ class BaseGen(ABC):
 
         Parameters
         ----------
-        points : slice | list | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
+        points : slice | list | str | pandas.DataFrame
+                 | reV.config.project_points.PointsControl
+            Slice or list specifying project points,
+            or string pointing to a project points csv,
+            or a pre-loaded project points DataFrame,
+            or a fully instantiated PointsControl object.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -617,17 +620,13 @@ class BaseGen(ABC):
         logger.debug('Sites per worker being set to {} for Gen/Econ '
                      'PointsControl.'.format(sites_per_worker))
 
-        if isinstance(points, (slice, list, str, ProjectPoints)):
-            pc = cls._pp_to_pc(points, points_range, sam_configs, tech,
-                               sites_per_worker=sites_per_worker,
-                               res_file=res_file, curtailment=curtailment)
-
-        elif isinstance(points, PointsControl):
+        if isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol
             pc = points
         else:
-            raise TypeError('Points input type is unrecognized: '
-                            '"{}"'.format(type(points)))
+            pc = cls._pp_to_pc(points, points_range, sam_configs, tech,
+                               sites_per_worker=sites_per_worker,
+                               res_file=res_file, curtailment=curtailment)
 
         return pc
 
@@ -844,7 +843,7 @@ class BaseGen(ABC):
 
         elif dset in self.project_points.all_sam_input_keys:
             data_shape = (n_sites, )
-            data = list(self.project_points.sam_configs.values())[0][dset]
+            data = list(self.project_points.sam_inputs.values())[0][dset]
             if isinstance(data, (list, tuple, np.ndarray, str)):
                 msg = ('Cannot pass through non-scalar SAM input key "{}" '
                        'as an output_request!'.format(dset))
@@ -991,7 +990,7 @@ class BaseGen(ABC):
 
     def _check_sam_version_inputs(self):
         """Check the PySAM version and input keys. Fix where necessary."""
-        for key, parameters in self.project_points.sam_configs.items():
+        for key, parameters in self.project_points.sam_inputs.items():
             updated = PySamVersionChecker.run(self.tech, parameters)
             sam_obj = self._points_control._project_points._sam_config_obj
             sam_obj._inputs[key] = updated

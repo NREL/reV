@@ -688,6 +688,10 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
+        if len(df_configs) == 1 and df_configs[0] is None:
+            self._df['config'] = list(sam_configs)[0]
+            df_configs = self.df['config'].unique()
+
         # Check to see if config references in project_points DataFrame
         # are valid file paths, if compare with SAM configs
         # and update as needed

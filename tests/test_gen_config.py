@@ -10,14 +10,18 @@ Created on Thu Nov 29 09:54:51 2018
 from click.testing import CliRunner
 import numpy as np
 import os
+import pandas as pd
 import pytest
 import traceback
 
 from rex.utilities.loggers import LOGGERS
 from reV.cli import main
 from reV.config.sam_analysis_configs import GenConfig
+from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
+
+from rex.utilities.utilities import safe_json_load
 
 RTOL = 0.0
 ATOL = 0.04
@@ -109,6 +113,59 @@ def test_gen_from_config(runner, tech):  # noqa: C901
     msg = ('reV generation from config input failed for "{}" module!'
            .format(tech))
     assert result is True, msg
+
+
+@pytest.mark.parametrize('tech', ['pv', 'wind'])
+def test_sam_config(tech):
+    """
+    Test running generation from a SAM JSON file or SAM config dictionary
+    """
+    if tech == 'pv':
+        res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
+        sam_file = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+        sam_config = {'default': safe_json_load(sam_file)}
+
+        points = slice(0, 100)
+        points_config = pd.DataFrame({"gid": range(0, 100),
+                                      "config": ['default'] * 100})
+
+        gen_json = Gen.reV_run('pvwattsv5', points, sam_file,
+                               res_file=res_file,
+                               output_request=('cf_profile',),
+                               max_workers=2, sites_per_worker=50)
+
+        gen_dict = Gen.reV_run('pvwattsv5', points_config, sam_config,
+                               res_file=res_file,
+                               output_request=('cf_profile',),
+                               max_workers=2, sites_per_worker=50)
+
+        msg = ("reV {} generation run from JSON and SAM config dictionary do "
+               "not match".format(tech))
+        assert np.allclose(gen_json.out['cf_profile'],
+                           gen_dict.out['cf_profile']), msg
+    elif tech == 'wind':
+        sam_file = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+        res_file = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
+        sam_config = {'default': safe_json_load(sam_file)}
+
+        points = slice(0, 10)
+        points_config = pd.DataFrame({"gid": range(0, 10),
+                                      "config": ['default'] * 10})
+
+        gen_json = Gen.reV_run('windpower', points, sam_file,
+                               res_file=res_file,
+                               output_request=('cf_profile',),
+                               max_workers=2, sites_per_worker=3)
+
+        gen_dict = Gen.reV_run('windpower', points_config, sam_config,
+                               res_file=res_file,
+                               output_request=('cf_profile',),
+                               max_workers=2, sites_per_worker=3)
+
+        msg = ("reV {} generation run from JSON and SAM config dictionary do "
+               "not match".format(tech))
+        assert np.allclose(gen_json.out['cf_profile'],
+                           gen_dict.out['cf_profile']), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
