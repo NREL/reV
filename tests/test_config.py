@@ -14,6 +14,7 @@ import pytest
 
 from rex import Resource
 from rex.utilities.exceptions import ResourceRuntimeError
+from rex.utilities.utilities import safe_json_load
 
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.rep_profiles_config import RepProfilesConfig
@@ -239,6 +240,23 @@ def test_duplicate_coords():
     regions = {'Kent': 'county', 'Rhode Island': 'state'}
     with pytest.raises(RuntimeError):
         ProjectPoints.regions(regions, res_file, sam_files)
+
+
+def test_sam_configs():
+    """
+    Test supplying SAM config as a JSON or a dict
+    """
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
+                 'offshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
+    pp_json = ProjectPoints(fpp, sam_files, 'windpower')
+
+    sam_configs = {k: safe_json_load(v) for k, v in sam_files.items()}
+    pp_dict = ProjectPoints(fpp, sam_configs, 'windpower')
+
+    assert pp_json.sam_inputs == pp_dict.sam_inputs
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -248,7 +248,7 @@ class BaseGen(ABC):
         sam_configs : reV.config.sam.SAMGenConfig
             SAM config from the project points instance.
         """
-        return self.project_points.sam_configs
+        return self.project_points.sam_inputs
 
     @property
     def sam_metas(self):
@@ -495,8 +495,8 @@ class BaseGen(ABC):
         return ti
 
     @staticmethod
-    def _pp_to_pc(points, points_range, sam_files, tech, sites_per_worker=None,
-                  res_file=None, curtailment=None):
+    def _pp_to_pc(points, points_range, sam_configs, tech,
+                  sites_per_worker=None, res_file=None, curtailment=None):
         """
         Create ProjectControl from ProjectPoints
 
@@ -509,11 +509,11 @@ class BaseGen(ABC):
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        sam_files : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
@@ -540,10 +540,10 @@ class BaseGen(ABC):
         """
         if not isinstance(points, ProjectPoints):
             # make Project Points instance
-            pp = ProjectPoints(points, sam_files, tech=tech,
+            pp = ProjectPoints(points, sam_configs, tech=tech,
                                res_file=res_file, curtailment=curtailment)
         else:
-            pp = ProjectPoints(points.df, sam_files, tech=tech,
+            pp = ProjectPoints(points.df, sam_configs, tech=tech,
                                res_file=res_file, curtailment=curtailment)
 
         #  make Points Control instance
@@ -560,7 +560,7 @@ class BaseGen(ABC):
         return pc
 
     @classmethod
-    def get_pc(cls, points, points_range, sam_files, tech,
+    def get_pc(cls, points, points_range, sam_configs, tech,
                sites_per_worker=None, res_file=None, curtailment=None):
         """Get a PointsControl instance.
 
@@ -573,11 +573,11 @@ class BaseGen(ABC):
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        sam_files : dict | str | list | SAMConfig
+        sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv. Can also be a
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
@@ -618,7 +618,7 @@ class BaseGen(ABC):
                      'PointsControl.'.format(sites_per_worker))
 
         if isinstance(points, (slice, list, str, ProjectPoints)):
-            pc = cls._pp_to_pc(points, points_range, sam_files, tech,
+            pc = cls._pp_to_pc(points, points_range, sam_configs, tech,
                                sites_per_worker=sites_per_worker,
                                res_file=res_file, curtailment=curtailment)
 
