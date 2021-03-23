@@ -259,6 +259,33 @@ def test_sam_configs():
     assert pp_json.sam_inputs == pp_dict.sam_inputs
 
 
+def test_bad_sam_configs():
+    """
+    Test supplying SAM config as a JSON or a dict
+    """
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')}
+    with pytest.raises(ConfigError):
+        ProjectPoints(fpp, sam_files, 'windpower')
+
+    sam_configs = {k: safe_json_load(v) for k, v in sam_files.items()}
+    with pytest.raises(ConfigError):
+        ProjectPoints(fpp, sam_configs, 'windpower')
+
+    sites = slice(0, 100)
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.csv')
+    with pytest.raises(IOError):
+        pp = ProjectPoints(sites, sam_file, 'windpower')
+        pp.inputs
+
+    sites = slice(0, 100)
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    sam_config = safe_json_load(sam_file)
+    with pytest.raises(RuntimeError):
+        ProjectPoints(sites, sam_config, 'windpower')
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

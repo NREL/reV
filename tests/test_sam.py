@@ -35,6 +35,8 @@ def res():
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     res = NSRDB.preload_SAM(res_file, pp.sites)
 
+    return res
+
 
 def test_res_length(res):
     """Test the method to ensure resource array length with truncation."""
