@@ -12,12 +12,10 @@ import numpy as np
 import psutil
 import os
 import pandas as pd
-from scipy.spatial import cKDTree
 from warnings import warn
 
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
-from reV.offshore.offshore import Offshore as OffshoreClass
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
                                           AbstractAggregation)
 from reV.supply_curve.exclusions import FrictionMask
@@ -25,13 +23,12 @@ from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
-                                      InputWarning, SupplyCurveInputError)
+                                      InputWarning)
 from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
-from rex.utilities.utilities import get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
 
@@ -259,312 +256,6 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         return self._friction_layer
 
 
-class OffshoreAggregation:
-    """Offshore aggregation utility methods."""
-
-    @staticmethod
-    def _get_res_class(res_class_bins, res_data, gen_gid):
-        """Get the offshore resource class for one site if data is available.
-
-        Parameters
-        ----------
-        res_class_bins : list
-            List of resource class bins. Can be [None] if not resource
-            classes are requested (output will be 0).
-        res_data : np.ndarray | None
-            Generation output array of site resource data indexed by gen_gid.
-            None if no resource data was computed (output will be 0).
-        gen_gid : int
-            Generation gid (index) for site in question.
-            This is used to index res_data.
-
-        Returns
-        -------
-        res_class : int
-            Resource class integer. Zero if required data is not available.
-        """
-
-        res_class = 0
-        if (res_class_bins[0] is not None
-                and res_data is not None):
-            for ri, res_bin in enumerate(res_class_bins):
-
-                c1 = res_data[gen_gid] > np.min(res_bin)
-                c2 = res_data[gen_gid] < np.max(res_bin)
-
-                if c1 and c2:
-                    res_class = ri
-                    break
-
-        return res_class
-
-    @staticmethod
-    def _get_means(data, gen_gid):
-        """Get the mean point data from the data array for gen_gid.
-
-        Parameters
-        ----------
-        data : np.ndarray | None
-            Array of mean data values or None if no data is available.
-        gen_gid : int
-            location to get mean data for
-
-        Returns
-        -------
-        mean_data : float | None
-            Mean data value or None if no data available.
-        """
-
-        mean_data = None
-        if data is not None:
-            mean_data = data[gen_gid]
-
-        return mean_data
-
-    @staticmethod
-    def _agg_data_layers(data_layers, summary):
-        """Agg categorical offshore data layers using NN to onshore points.
-
-        Parameters
-        ----------
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-        summary : DataFrame
-            Summary of the SC points.
-
-        Returns
-        -------
-        summary : DataFrame
-            Summary of the SC points with aggregated offshore data layers.
-        """
-
-        if 'offshore' in summary and data_layers is not None:
-            cat_layers = [k for k, v in data_layers.items()
-                          if v['method'].lower() == 'mode']
-
-            if any(summary['offshore']) and any(cat_layers):
-                logger.info('Aggregating the following columns for offshore '
-                            'wind sites based on NN onshore sites: {}'
-                            .format(cat_layers))
-                offshore_mask = (summary['offshore'] == 1)
-                offshore_summary = summary[offshore_mask]
-                onshore_summary = summary[~offshore_mask]
-
-                # pylint: disable=not-callable
-                lat_lon_cols = get_lat_lon_cols(onshore_summary)
-                tree = cKDTree(onshore_summary[lat_lon_cols])
-                lat_lon_cols = get_lat_lon_cols(offshore_summary)
-                _, nn = tree.query(offshore_summary[lat_lon_cols])
-
-                for i, off_gid in enumerate(offshore_summary.index):
-                    on_gid = onshore_summary.index.values[nn[i]]
-                    logger.debug('Offshore gid {} is closest to onshore gid {}'
-                                 .format(off_gid, on_gid))
-
-                    for c in cat_layers:
-                        summary.at[off_gid, c] = onshore_summary.at[on_gid, c]
-
-        return summary
-
-    @staticmethod
-    def _parse_meta_cols(offshore_meta_cols, gen_meta):
-        """Parse the offshore meta columns and return a validated list.
-
-        Parameters
-        ----------
-        offshore_meta_cols : list | tuple | None
-            Column labels from original offshore data file that were passed
-            through to the offshore module output meta data. None will use
-            Offshore class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
-        gen_meta : pd.DataFrame
-            Meta data from the offshore generation output h5 file.
-
-        Returns
-        -------
-        offshore_meta_cols : list
-            List of offshore meta columns to include in aggregation summary,
-            validated for columns that are present in gen_meta.
-        """
-
-        if offshore_meta_cols is None:
-            offshore_meta_cols = list(OffshoreClass.DEFAULT_META_COLS)
-        else:
-            offshore_meta_cols = list(offshore_meta_cols)
-            offshore_meta_cols += list(OffshoreClass.DEFAULT_META_COLS)
-            offshore_meta_cols = list(set(offshore_meta_cols))
-
-        missing = [c for c in offshore_meta_cols if c not in gen_meta]
-        offshore_meta_cols = [c for c in offshore_meta_cols if c in gen_meta]
-
-        if any(missing):
-            msg = ('Requested offshore columns {} not found in '
-                   'generation meta data. Not including in '
-                   'aggregation output table.'.format(missing))
-            logger.warning(msg)
-            warn(msg)
-
-        return offshore_meta_cols
-
-    @staticmethod
-    def _nearest_sc_points(excl_fpath, resolution, lat_lons):
-        """
-        Get nearest sc_points to offshore farms
-
-        Parameters
-        ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        resolution : int
-            SC resolution
-        lat_lons : ndarray
-            Offshore wind farm coordinates (lat, lon) pairs
-
-        Returns
-        -------
-        points : pandas.DataFrame
-            Nearest SC points (gid, row_ind, and col_ind)
-        """
-        with SupplyCurveExtent(excl_fpath, resolution=resolution) as f:
-            points = f.points
-            sc_lat_lons = f.lat_lon
-
-        tree = cKDTree(sc_lat_lons)  # pylint: disable=not-callable
-        _, pos = tree.query(lat_lons)
-
-        return points.loc[pos].reset_index()
-
-    @classmethod
-    def run(cls, summary, handler, excl_fpath, res_data, res_class_bins,
-            cf_data, lcoe_data, offshore_flag, h5_dsets_data=None,
-            resolution=64, offshore_capacity=600, offshore_gid_counts=494,
-            offshore_pixel_area=4, offshore_meta_cols=None):
-        """Get the offshore supply curve point summary. Each offshore resource
-        pixel will be summarized in its own supply curve point which will be
-        added to the summary list.
-
-        Parameters
-        ----------
-        summary : list
-            List of dictionaries, each being an onshore SC point summary.
-        handler : SupplyCurveAggFileHandler
-            Instantiated SupplyCurveAggFileHandler.
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        res_data : np.ndarray | None
-            Extracted resource data from res_class_dset
-        res_class_bins : list
-            List of resouce class bin ranges.
-        cf_data : np.ndarray | None
-            Capacity factor data extracted from cf_dset in gen
-        lcoe_data : np.ndarray | None
-            LCOE data extracted from lcoe_dset in gen
-        offshore_flag : np.ndarray
-            Array of offshore boolean flags if available from wind generation
-            data. If this is input as None, this method has been called
-            without offshore data in error and summary will be passed
-            through un manipulated.
-        h5_dsets_data : dict | None
-            If additional h5_dsets are requested, this will be a dictionary
-            keyed by the h5 dataset names. The corresponding values will be
-            the extracted arrays from the h5 files.
-        resolution : int, optional
-            SC resolution, by default 64
-        offshore_capacity : int | float
-            Offshore resource pixel generation capacity in MW.
-        offshore_gid_counts : int
-            Approximate number of exclusion pixels that would fall into an
-            offshore pixel area.
-        offshore_pixel_area : int | float
-            Approximate area of offshore resource pixels in km2.
-        offshore_meta_cols : list | tuple | None
-            Column labels from original offshore data file that were passed
-            through to the offshore module output meta data. None will use
-            Offshore class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
-
-        Returns
-        -------
-        summary : list
-            List of dictionaries, each being an SC point summary, includng SC
-            points for single offshore resource pixels.
-        """
-
-        if offshore_flag is None:
-            return summary
-
-        for i, _ in enumerate(summary):
-            summary[i]['offshore'] = 0
-
-        offshore_meta_cols = cls._parse_meta_cols(offshore_meta_cols,
-                                                  handler.gen.meta)
-
-        gen_gids = list(range(len(offshore_flag)))
-        lat_lon_cols = get_lat_lon_cols(handler.gen.meta)
-        lat_lon = handler.gen.meta.loc[gen_gids, lat_lon_cols].values
-        sc_points = cls._nearest_sc_points(excl_fpath, resolution, lat_lon)
-
-        for gen_gid, offshore in enumerate(offshore_flag):
-            if offshore:
-                if 'offshore_res_gids' not in handler.gen.meta:
-                    e = ('Offshore sites found in wind data, but '
-                         '"offshore_res_gids" not found in the '
-                         'meta data. You must run the offshore wind '
-                         'farm module before offshore supply curve.')
-                    logger.error(e)
-                    raise SupplyCurveInputError(e)
-
-                # pylint: disable-msg=E1101
-                farm_gid = handler.gen.meta.loc[gen_gid, 'gid']
-                latitude = handler.gen.meta.loc[gen_gid, lat_lon_cols[0]]
-                longitude = handler.gen.meta.loc[gen_gid, lat_lon_cols[1]]
-                timezone = handler.gen.meta.loc[gen_gid, 'timezone']
-                res_gids = handler.gen.meta\
-                    .loc[gen_gid, 'offshore_res_gids']
-
-                res_class = cls._get_res_class(res_class_bins, res_data,
-                                               gen_gid)
-                cf = cls._get_means(cf_data, gen_gid)
-                lcoe = cls._get_means(lcoe_data, gen_gid)
-                res = cls._get_means(res_data, gen_gid)
-
-                pointsum = {'sc_point_gid': sc_points.loc[gen_gid, 'gid'],
-                            'sc_row_ind': sc_points.loc[gen_gid, 'row_ind'],
-                            'sc_col_ind': sc_points.loc[gen_gid, 'col_ind'],
-                            'farm_gid': farm_gid,
-                            'res_gids': res_gids,
-                            'gen_gids': [gen_gid],
-                            'gid_counts': [int(offshore_gid_counts)],
-                            'mean_cf': cf,
-                            'mean_lcoe': lcoe,
-                            'mean_res': res,
-                            'capacity': offshore_capacity,
-                            'area_sq_km': offshore_pixel_area,
-                            'latitude': latitude,
-                            'longitude': longitude,
-                            'res_class': res_class,
-                            'timezone': timezone,
-                            'elevation': 0,
-                            'offshore': 1,
-                            }
-
-                for label in offshore_meta_cols:
-                    pointsum[label] = handler.gen.meta.loc[gen_gid, label]
-
-                if h5_dsets_data is not None:
-                    for dset, data in h5_dsets_data.items():
-                        label = 'mean_{}'.format(dset)
-                        pointsum[label] = cls._get_means(data, gen_gid)
-
-                summary.append(pointsum)
-
-        return summary
-
-
 class SupplyCurveAggregation(AbstractAggregation):
     """
     Supply curve points aggregation framework.
@@ -762,8 +453,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
-            supply curve aggregation table. This will not affect offshore
-            wind LCOE.
+            supply curve aggregation table.
         """
         log_versions(logger)
         logger.info('Initializing SupplyCurveAggregation...')
@@ -1060,8 +750,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
-            supply curve aggregation table. This will not affect offshore
-            wind LCOE.
+            supply curve aggregation table.
 
         Returns
         -------
@@ -1127,7 +816,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                             inclusion_mask=gid_inclusions,
                             excl_area=excl_area,
                             close=False,
-                            offshore_flags=inputs[4],
                             friction_layer=fh.friction_layer,
                             cap_cost_scale=cap_cost_scale)
 
@@ -1237,63 +925,6 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_offshore(self, summary, offshore_capacity=600,
-                     offshore_gid_counts=494, offshore_pixel_area=4,
-                     offshore_meta_cols=None):
-        """Get the offshore supply curve point summary. Each offshore resource
-        pixel will be summarized in its own supply curve point.
-
-        Parameters
-        ----------
-        summary : list
-            List of dictionaries, each being an onshore SC point summary.
-        offshore_capacity : int | float
-            Offshore resource pixel generation capacity in MW.
-        offshore_gid_counts : int
-            Approximate number of exclusion pixels that would fall into an
-            offshore pixel area.
-        offshore_pixel_area : int | float
-            Approximate area of offshore resource pixels in km2.
-        offshore_meta_cols : list | tuple | None
-            Column labels from original offshore data file that were passed
-            through to the offshore module output meta data. None will use
-            Offshore class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
-
-        Returns
-        -------
-        summary : list
-            List of dictionaries, each being an SC point summary, includng SC
-            points for single offshore resource pixels.
-        """
-
-        file_kwargs = {'data_layers': self._data_layers,
-                       'econ_fpath': self._econ_fpath,
-                       'power_density': self._power_density,
-                       'excl_dict': self._excl_dict}
-        with SupplyCurveAggFileHandler(self._excl_fpath, self._gen_fpath,
-                                       **file_kwargs) as fh:
-            inp = self._get_input_data(fh.gen, self._gen_fpath,
-                                       self._econ_fpath, self._res_class_dset,
-                                       self._res_class_bins, self._cf_dset,
-                                       self._lcoe_dset, self._h5_dsets)
-
-            res, bins, cf, lcoe, offshore_flag, h5_dsets_data = inp
-
-            if offshore_flag is not None:
-                if any(offshore_flag):
-                    summary = OffshoreAggregation.run(
-                        summary, fh, self._excl_fpath, res, bins,
-                        cf, lcoe, offshore_flag,
-                        h5_dsets_data=h5_dsets_data,
-                        resolution=self._resolution,
-                        offshore_capacity=offshore_capacity,
-                        offshore_gid_counts=offshore_gid_counts,
-                        offshore_pixel_area=offshore_pixel_area,
-                        offshore_meta_cols=offshore_meta_cols)
-
-        return summary
-
     @staticmethod
     def _convert_bins(bins):
         """Convert a list of floats or ints to a list of two-entry bin bounds.
@@ -1352,9 +983,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, max_workers=None, sites_per_worker=100,
-                  offshore_capacity=600, offshore_gid_counts=494,
-                  offshore_pixel_area=4, offshore_meta_cols=None):
+    def summarize(self, args=None, max_workers=None, sites_per_worker=100):
         """
         Get the supply curve points aggregation summary
 
@@ -1368,18 +997,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             available cpus, by default None
         sites_per_worker : int
             Number of sc_points to summarize on each worker, by default 100
-        offshore_capacity : int | float
-            Offshore resource pixel generation capacity in MW.
-        offshore_gid_counts : int
-            Approximate number of exclusion pixels that would fall into an
-            offshore pixel area.
-        offshore_pixel_area : int | float
-            Approximate area of offshore resource pixels in km2.
-        offshore_meta_cols : list | tuple | None
-            Column labels from original offshore data file that were passed
-            through to the offshore module output meta data. None will use
-            Offshore class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
 
         Returns
         -------
@@ -1416,12 +1033,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                                         max_workers=max_workers,
                                         sites_per_worker=sites_per_worker)
 
-        summary = self.run_offshore(summary,
-                                    offshore_capacity=offshore_capacity,
-                                    offshore_gid_counts=offshore_gid_counts,
-                                    offshore_pixel_area=offshore_pixel_area,
-                                    offshore_meta_cols=offshore_meta_cols)
-
         if not any(summary):
             e = ('Supply curve aggregation found no non-excluded SC points. '
                  'Please check your exclusions or subset SC GID selection.')
@@ -1429,8 +1040,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             raise EmptySupplyCurvePointError(e)
 
         summary = self._summary_to_df(summary)
-        summary = OffshoreAggregation._agg_data_layers(self._data_layers,
-                                                       summary)
 
         return summary
 
@@ -1443,9 +1052,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
-                cap_cost_scale=None, offshore_capacity=600,
-                offshore_gid_counts=494, offshore_pixel_area=4,
-                offshore_meta_cols=None):
+                cap_cost_scale=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1527,20 +1134,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
-            supply curve aggregation table. This will not affect offshore
-            wind LCOE.
-        offshore_capacity : int | float
-            Offshore resource pixel generation capacity in MW.
-        offshore_gid_counts : int
-            Approximate number of exclusion pixels that would fall into an
-            offshore pixel area.
-        offshore_pixel_area : int | float
-            Approximate area of offshore resource pixels in km2.
-        offshore_meta_cols : list | tuple | None
-            Column labels from original offshore data file that were passed
-            through to the offshore module output meta data. None will use
-            Offshore class variable DEFAULT_META_COLS, and any
-            additional requested cols will be added to DEFAULT_META_COLS.
+            supply curve aggregation table.
 
         Returns
         -------
@@ -1570,10 +1164,6 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
-                                sites_per_worker=sites_per_worker,
-                                offshore_capacity=offshore_capacity,
-                                offshore_gid_counts=offshore_gid_counts,
-                                offshore_pixel_area=offshore_pixel_area,
-                                offshore_meta_cols=offshore_meta_cols)
+                                sites_per_worker=sites_per_worker)
 
         return summary
