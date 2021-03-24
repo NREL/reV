@@ -843,6 +843,17 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         return timezone
 
     @property
+    def offshore(self):
+        """Get the SC point offshore flag based on the resource meta data
+        (if offshore column is present)."""
+        offshore = None
+        if 'offshore' in self.h5.meta:
+            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].values
+            offshore = stats.mode(offshore).mode[0]
+
+        return offshore
+
+    @property
     def h5_gid_set(self):
         """Get list of unique h5 gids corresponding to this sc point.
 

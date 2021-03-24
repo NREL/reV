@@ -622,6 +622,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 'timezone': self.timezone,
                 }
 
+        if self.offshore is not None:
+            ARGS['offshore'] = self.offshore
+
         if self._friction_layer is not None:
             ARGS['mean_friction'] = self.mean_friction
             ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
