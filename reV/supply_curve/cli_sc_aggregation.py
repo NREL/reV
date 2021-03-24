@@ -285,6 +285,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            friction_dset, cap_cost_scale, out_dir, max_workers,
            sites_per_worker, log_dir, pre_extract_inclusions, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
+    sites_per_worker = sites_per_worker if sites_per_worker else 100
 
     name = ctx.obj['NAME']
     ctx.obj['EXCL_FPATH'] = excl_fpath
@@ -321,6 +322,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
 
         with h5py.File(excl_fpath, mode='r') as f:
             dsets = list(f)
+
         if tm_dset in dsets:
             logger.info('Found techmap "{}".'.format(tm_dset))
         else:
