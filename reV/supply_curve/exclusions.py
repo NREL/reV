@@ -789,11 +789,7 @@ class ExclusionMask:
         """
 
         mask = None
-        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
-            ds_slice = ds_slice[0]
-
-        if self._min_area is not None:
-            ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
+        ds_slice, sub_slice = self._parse_ds_slice(ds_slice)
 
         if self.layers:
             force_include = []
@@ -834,6 +830,36 @@ class ExclusionMask:
             mask = self._generate_ones_mask(ds_slice)
 
         return mask
+
+    def _parse_ds_slice(self, ds_slice):
+        """Parse a dataset slice to make it the proper dimensions and also
+        optionally increase the dataset slice to make the contiguous area
+        filter more accurate
+
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
+
+        Returns
+        -------
+        ds_slice : tuple
+            Two entry tuple with x and y slices with increased dimensions.
+        sub_slice : tuple
+            Two entry tuple with x and y slices to retrieve the original
+            slice out of the bigger slice.
+        """
+
+        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
+            ds_slice = ds_slice[0]
+
+        sub_slice = None
+        if self._min_area is not None:
+            ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
+
+        return ds_slice, sub_slice
 
     @classmethod
     def run(cls, excl_h5, layers=None, min_area=None,
