@@ -421,7 +421,7 @@ class ExclusionMask:
                 layers = [layers]
 
             missing = [layer.name for layer in layers
-                       if layer not in self.excl_layers]
+                       if layer.name not in self.excl_layers]
             if any(missing):
                 msg = ("ExclusionMask layers {} are missing from: {}"
                        .format(missing, self._excl_h5))

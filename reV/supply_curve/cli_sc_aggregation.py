@@ -321,11 +321,22 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
         init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose)
 
-        with h5py.File(excl_fpath, mode='r') as f:
-            dsets = list(f)
+        dsets = []
+        paths = excl_fpath
+        if isinstance(excl_fpath, str):
+            paths = [excl_fpath]
+        for fp in paths:
+            with h5py.File(fp, mode='r') as f:
+                dsets += list(f)
 
         if tm_dset in dsets:
             logger.info('Found techmap "{}".'.format(tm_dset))
+        elif tm_dset not in dsets and not isinstance(excl_fpath, str):
+            msg = ('Could not find techmap dataset "{}" and cannot run '
+                   'techmap with arbitrary multiple exclusion filepaths '
+                   'to write to: {}'.format(tm_dset, excl_fpath))
+            logger.error(msg)
+            raise RuntimeError(msg)
         else:
             logger.info('Could not find techmap "{}". Running techmap module.'
                         .format(tm_dset))
