@@ -94,6 +94,32 @@ class ExclusionLayers:
                 logger.error(msg)
                 raise MultiFileExclusionError(msg)
 
+        check_attrs = ('height', 'width', 'crs', 'transform')
+        base_profile = {}
+        for fp in self.h5_file:
+            with ExclusionLayers(fp) as f:
+                if not base_profile:
+                    base_profile = f.profile
+                else:
+                    for attr in check_attrs:
+                        if attr not in base_profile or attr not in f.profile:
+                            msg = ('Multi-file exclusion inputs from {} '
+                                   'dont have profiles with height, width, '
+                                   'crs, and transform: {} and {}'
+                                   .format(self.h5_file, base_profile,
+                                           f.profile))
+                            logger.error(msg)
+                            raise MultiFileExclusionError(msg)
+
+                        if base_profile[attr] != f.profile[attr]:
+                            msg = ('Multi-file exclusion inputs from {} '
+                                   'dont have matching "{}": {} and {}'
+                                   .format(self.h5_file, attr,
+                                           base_profile[attr],
+                                           f.profile[attr]))
+                            logger.error(msg)
+                            raise MultiFileExclusionError(msg)
+
     def close(self):
         """
         Close h5 instance

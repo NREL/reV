@@ -174,7 +174,7 @@ def test_multi_h5(layer, ds_slice):
         assert np.allclose(truth, test)
 
 
-def test_bad_multi_h5():
+def test_multi_h5_bad_shape():
     """Test the exclusion handler with multiple source files and a poorly
     shaped dataset"""
     excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
@@ -192,6 +192,28 @@ def test_bad_multi_h5():
             f.create_dataset(bad_dset, bad_shape, data=data)
             for k, v in attrs.items():
                 f[bad_dset].attrs[k] = v
+
+        with pytest.raises(MultiFileExclusionError):
+            ExclusionLayers([excl_temp_1, excl_temp_2])
+
+
+def test_multi_h5_bad_crs():
+    """Test the exclusion handler with multiple source files and one file
+    with a bad crs attribute"""
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp_1 = os.path.join(td, 'excl1.h5')
+        excl_temp_2 = os.path.join(td, 'excl2.h5')
+        shutil.copy(excl_h5, excl_temp_1)
+        shutil.copy(excl_h5, excl_temp_2)
+
+        with h5py.File(excl_temp_2, 'a') as f:
+            attrs = dict(f.attrs)
+            attrs['profile'] = json.loads(attrs['profile'])
+            attrs['profile']['crs'] = 'bad_crs'
+            attrs['profile'] = json.dumps(attrs['profile'])
+            for k, v in attrs.items():
+                f.attrs[k] = v
 
         with pytest.raises(MultiFileExclusionError):
             ExclusionLayers([excl_temp_1, excl_temp_2])
