@@ -783,6 +783,7 @@ class ExclusionMask:
             ("and" operation) such that 1 is included, 0 is excluded,
             0.5 is half.
         """
+
         mask = None
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
             ds_slice = ds_slice[0]

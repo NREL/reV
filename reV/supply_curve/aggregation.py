@@ -279,7 +279,7 @@ class AbstractAggregation(ABC):
         logger.info('Pre-extracting full exclusion mask, this could take '
                     'up to 30min for a large exclusion config...')
         with ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
-                                   check_layers=True, min_area=min_area,
+                                   check_layers=False, min_area=min_area,
                                    kernel=area_filter_kernel) as f:
             inclusion_mask = f.mask
             tm_mask = f._excl_h5[tm_dset] == -1
