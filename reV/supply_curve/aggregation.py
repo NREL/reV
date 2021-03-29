@@ -281,7 +281,7 @@ class AbstractAggregation(ABC):
         with ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
                                    check_layers=False, min_area=min_area,
                                    kernel=area_filter_kernel) as f:
-            inclusion_mask = f.mask
+            inclusion_mask = f._generate_mask(..., check_layers=True)
             tm_mask = f._excl_h5[tm_dset] == -1
             inclusion_mask[tm_mask] = 0
 

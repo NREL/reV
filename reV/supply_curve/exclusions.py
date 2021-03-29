@@ -605,8 +605,7 @@ class ExclusionMask:
         layer.nodata_value = self.excl_h5.get_nodata_value(layer.name)
         if self._check_layers:
             if not layer[self.excl_h5[layer.name]].any():
-                msg = ("Layer {} does not have any un-excluded pixels!"
-                       .format(layer.name))
+                msg = ("Layer {} is fully excluded!".format(layer.name))
                 logger.error(msg)
                 raise ExclusionLayerError(msg)
 
@@ -765,7 +764,7 @@ class ExclusionMask:
 
         return mask
 
-    def _generate_mask(self, *ds_slice):
+    def _generate_mask(self, *ds_slice, check_layers=False):
         """
         Generate multiplicative inclusion mask from exclusion layers.
 
@@ -775,6 +774,11 @@ class ExclusionMask:
             What to extract from ds, each arg is for a sequential axis.
             For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
             exclusions mask.
+        check_layers : bool
+            Check each layer as each layer is extracted to ensure they contain
+            un-excluded values. This should only really be True if ds_slice is
+            for the full inclusion mask. Otherwise, this could raise an error
+            for a fully excluded mask for just one excluded SC point.
 
         Returns
         -------
@@ -802,6 +806,13 @@ class ExclusionMask:
                     log_mem(logger, log_level='DEBUG')
                     layer_slice = (layer.name, ) + ds_slice
                     layer_mask = layer[self.excl_h5[layer_slice]]
+
+                    if check_layers and not layer_mask.any():
+                        msg = ("Layer {} is fully excluded!"
+                               .format(layer.name))
+                        logger.error(msg)
+                        raise ExclusionLayerError(msg)
+
                     if mask is None:
                         mask = layer_mask
                     else:
