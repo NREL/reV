@@ -53,8 +53,9 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         econ_fpath : str | None
@@ -414,8 +415,9 @@ class OffshoreAggregation:
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         resolution : int
             SC resolution
         lat_lons : ndarray
@@ -450,8 +452,9 @@ class OffshoreAggregation:
             List of dictionaries, each being an onshore SC point summary.
         handler : SupplyCurveAggFileHandler
             Instantiated SupplyCurveAggFileHandler.
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         res_data : np.ndarray | None
             Extracted resource data from res_class_dset
         res_class_bins : list
@@ -690,8 +693,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         tm_dset : str
@@ -980,8 +984,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         tm_dset : str
@@ -1445,8 +1450,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         tm_dset : str

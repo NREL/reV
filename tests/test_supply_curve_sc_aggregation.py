@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
+import tempfile
+import shutil
+import h5py
 
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
@@ -38,7 +41,7 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
 RTOL = 0.001
 
 
-def test_aggregation_extent(resolution=64):
+def test_agg_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all resource gids were found"""
 
@@ -82,7 +85,7 @@ def test_parallel_agg(resolution=64):
     assert all(summary_serial == summary_parallel)
 
 
-def test_aggregation_summary():
+def test_agg_summary():
     """Test the aggregation summary method against a baseline file."""
 
     s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
@@ -104,6 +107,46 @@ def test_aggregation_summary():
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
         assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
+
+
+def test_multi_file_excl():
+    """Test sc aggregation with multple exclusion file inputs."""
+
+    excl_dict = {'ri_srtm_slope': {'inclusion_range': (None, 5),
+                                   'exclude_nodata': True},
+                 'ri_padus': {'exclude_values': [1],
+                              'exclude_nodata': True},
+                 'excl_test': {'include_values': [1],
+                               'weight': 0.5},
+                 }
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp_1 = os.path.join(td, 'excl1.h5')
+        excl_temp_2 = os.path.join(td, 'excl2.h5')
+        excl_files = (excl_temp_1, excl_temp_2)
+        shutil.copy(EXCL, excl_temp_1)
+        shutil.copy(EXCL, excl_temp_2)
+
+        with h5py.File(excl_temp_1, 'a') as f:
+            shape = f['latitude'].shape
+            attrs = dict(f['ri_srtm_slope'].attrs)
+            data = np.ones(shape)
+            test_dset = 'excl_test'
+            f.create_dataset(test_dset, shape, data=data)
+            for k, v in attrs.items():
+                f[test_dset].attrs[k] = v
+            del f['ri_srtm_slope']
+
+        summary = SupplyCurveAggregation.summary((excl_temp_1, excl_temp_2),
+                                                 GEN, TM_DSET,
+                                                 excl_dict=excl_dict,
+                                                 res_class_dset=RES_CLASS_DSET,
+                                                 res_class_bins=RES_CLASS_BINS,
+                                                 )
+
+        s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+
+        assert np.allclose(summary['area_sq_km'] * 2, s_baseline['area_sq_km'])
 
 
 @pytest.mark.parametrize('pre_extract', (True, False))
@@ -132,7 +175,7 @@ def test_pre_extract_inclusions(pre_extract):
         assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
 
 
-def test_aggregation_gen_econ():
+def test_agg_gen_econ():
     """Test the aggregation summary method with separate gen and econ
     input files."""
 
@@ -152,7 +195,7 @@ def test_aggregation_gen_econ():
     assert_frame_equal(s1, s2)
 
 
-def test_aggregation_extra_dsets():
+def test_agg_extra_dsets():
     """Test aggregation with extra datasets to aggregate."""
     h5_dsets = ['lcoe_fcr-2012', 'lcoe_fcr-2013', 'lcoe_fcr-stdev']
     s = SupplyCurveAggregation.summary(EXCL, ONLY_GEN, TM_DSET,
@@ -176,7 +219,7 @@ def test_aggregation_extra_dsets():
     assert np.allclose(avg.values, s['mean_lcoe'].values)
 
 
-def test_aggregation_scalar_excl():
+def test_agg_scalar_excl():
     """Test the aggregation summary with exclusions of 0.5"""
 
     gids_subset = list(range(0, 20))
