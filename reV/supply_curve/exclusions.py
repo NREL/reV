@@ -965,7 +965,7 @@ class FrictionMask(ExclusionMask):
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
             ds_slice = ds_slice[0]
 
-        layer_slice = (self._layers[self._fric_dset].layer, ) + ds_slice
+        layer_slice = (self._layers[self._fric_dset].name, ) + ds_slice
         mask = self._layers[self._fric_dset][self.excl_h5[layer_slice]]
         mask[(mask == self._layers[self._fric_dset].nodata_value)] = 1
 
