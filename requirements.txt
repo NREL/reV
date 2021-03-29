@@ -1,5 +1,5 @@
 NREL-PySAM==2.1.4
-NREL-rex>=0.2.51
+NREL-rex>=0.2.52
 packaging>=20.3
 plotly>=4.7.1
 plotting>=0.0.6
