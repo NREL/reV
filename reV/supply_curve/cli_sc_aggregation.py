@@ -18,7 +18,7 @@ from reV import __version__
 
 from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
-                                      STRFLOAT)
+                                      STRFLOAT, STR_OR_LIST)
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
 
@@ -169,8 +169,9 @@ def from_config(ctx, config_file, verbose):
 
 
 @main.group(invoke_without_command=True)
-@click.option('--excl_fpath', '-exf', type=STR, required=True,
-              help='Exclusions file (.h5).')
+@click.option('--excl_fpath', '-exf', type=STR_OR_LIST, required=True,
+              help='Single exclusions file (.h5) or a '
+              'list of exclusion files (.h5, .h5).')
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV generation/econ output file.')
 @click.option('--tm_dset', '-tm', type=STR, required=True,

@@ -54,16 +54,8 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def excl_fpath(self):
-        """Get the exclusions filepath"""
-
-        fpath = self['excl_fpath']
-
-        if fpath == 'PIPELINE':
-            fpath = Pipeline.parse_previous(
-                self.dirout, 'aggregation', target='fpath',
-                target_module='exclusions')[0]
-
-        return fpath
+        """Get the exclusions filepath(s)"""
+        return self['excl_fpath']
 
     @property
     def gen_fpath(self):
