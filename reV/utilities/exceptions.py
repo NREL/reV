@@ -58,6 +58,12 @@ class HandlerValueError(Exception):
     """
 
 
+class MultiFileExclusionError(Exception):
+    """
+    Error for bad multi file exclusion inputs.
+    """
+
+
 class CollectionValueError(HandlerValueError):
     """
     ValueError for collection handler.

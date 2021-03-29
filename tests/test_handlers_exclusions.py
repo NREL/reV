@@ -9,6 +9,10 @@ import os
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
+import tempfile
+import shutil
+
+from reV.utilities.exceptions import MultiFileExclusionError
 
 from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
@@ -121,6 +125,76 @@ def test_shape():
         test = excl.shape
 
         assert np.allclose(truth, test)
+
+
+@pytest.mark.parametrize(('layer', 'ds_slice'), [
+    ('excl_test', None),
+    ('excl_test', (100, 100)),
+    ('excl_test', (slice(10, 100), slice(40, 50))),
+    ('ri_padus', (slice(None, 100), slice(None, 100))),
+    ('ri_srtm_slope', (100, 100)),
+    ('ri_srtm_slope', (slice(None, 100), slice(None, 100)))])
+def test_multi_h5(layer, ds_slice):
+    """Test the exclusion handler with multiple source files"""
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp_1 = os.path.join(td, 'excl1.h5')
+        excl_temp_2 = os.path.join(td, 'excl2.h5')
+        shutil.copy(excl_h5, excl_temp_1)
+        shutil.copy(excl_h5, excl_temp_2)
+
+        with h5py.File(excl_temp_1, 'a') as f:
+            shape = f['ri_srtm_slope'].shape
+            attrs = dict(f['ri_srtm_slope'].attrs)
+            test_dset = 'excl_test'
+            data = np.ones(shape) * 0.5
+            f.create_dataset(test_dset, shape, data=data)
+            for k, v in attrs.items():
+                f[test_dset].attrs[k] = v
+
+            # make sure ri_srtm_slope can be pulled from the other file
+            del f['ri_srtm_slope']
+
+        fp_temp = excl_temp_1
+        if layer == 'ri_srtm_slope':
+            fp_temp = excl_temp_2
+
+        with h5py.File(fp_temp, mode='r') as f:
+            truth = f[layer][0]
+            if ds_slice is not None:
+                truth = truth[ds_slice]
+
+        with ExclusionLayers([excl_temp_1, excl_temp_2]) as f:
+            if ds_slice is None:
+                test = f[layer]
+            else:
+                keys = (layer,) + ds_slice
+                test = f[keys]
+
+        assert np.allclose(truth, test)
+
+
+def test_bad_multi_h5():
+    """Test the exclusion handler with multiple source files and a poorly
+    shaped dataset"""
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp_1 = os.path.join(td, 'excl1.h5')
+        excl_temp_2 = os.path.join(td, 'excl2.h5')
+        shutil.copy(excl_h5, excl_temp_1)
+        shutil.copy(excl_h5, excl_temp_2)
+
+        with h5py.File(excl_temp_2, 'a') as f:
+            bad_dset = 'excl_test_bad'
+            bad_shape = (1, 100, 300)
+            attrs = dict(f['ri_srtm_slope'].attrs)
+            data = np.ones(bad_shape)
+            f.create_dataset(bad_dset, bad_shape, data=data)
+            for k, v in attrs.items():
+                f[bad_dset].attrs[k] = v
+
+        with pytest.raises(MultiFileExclusionError):
+            ExclusionLayers([excl_temp_1, excl_temp_2])
 
 
 def execute_pytest(capture='all', flags='-rapP'):

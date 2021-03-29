@@ -396,8 +396,8 @@ class ExclusionMask:
         """
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers : list | NoneType
             list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
@@ -824,8 +824,8 @@ class ExclusionMask:
 
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers : list | NoneType
             list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
@@ -857,8 +857,8 @@ class ExclusionMaskFromDict(ExclusionMask):
         """
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
@@ -890,8 +890,8 @@ class ExclusionMaskFromDict(ExclusionMask):
 
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
