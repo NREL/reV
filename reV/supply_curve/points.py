@@ -164,8 +164,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         ----------
         gid : int
             gid for supply curve point to analyze.
-        excl : str | ExclusionMask
-            Filepath to exclusions h5 or ExclusionMask file handler.
+        excl : str | list | tuple | ExclusionMask
+            Filepath(s) to exclusions h5 or ExclusionMask file handler.
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
@@ -229,14 +229,14 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         Returns
         -------
-        excl_fpath : str
-            Filepath for exclusions file
+        excl_fpath : str | list | tuple
+            Filepath(s) for exclusions file
         exclusions : ExclusionMask | None
             Exclusions mask if input is already an open handler or None if it
             is to be lazy instantiated.
         """
 
-        if isinstance(excl, str):
+        if isinstance(excl, (str, list, tuple)):
             excl_fpath = excl
             exclusions = None
         elif isinstance(excl, ExclusionMask):
@@ -1208,8 +1208,8 @@ class SupplyCurveExtent:
         """
         Parameters
         ----------
-        f_excl : str | ExclusionLayers
-            File path to the exclusions grid, or pre-initialized
+        f_excl : str | list | tuple | ExclusionLayers
+            File path(s) to the exclusions grid, or pre-initialized
             ExclusionLayers. The exclusions dictate the SC analysis extent.
         resolution : int
             Number of exclusion points per SC point along an axis.
@@ -1225,7 +1225,7 @@ class SupplyCurveExtent:
                                         'an integer but received: {}'
                                         .format(type(resolution)))
 
-        if isinstance(f_excl, str):
+        if isinstance(f_excl, (str, list, tuple)):
             self._excl_fpath = f_excl
             self._excls = ExclusionLayers(f_excl)
         elif isinstance(f_excl, ExclusionLayers):

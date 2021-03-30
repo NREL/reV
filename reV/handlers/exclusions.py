@@ -6,10 +6,11 @@ import logging
 import json
 import numpy as np
 
-from reV.utilities.exceptions import HandlerKeyError
+from reV.utilities.exceptions import HandlerKeyError, MultiFileExclusionError
 
 from rex.utilities.parse_keys import parse_keys
 from rex.resource import Resource
+from rex.multi_file_resource import MultiFileResource
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +23,26 @@ class ExclusionLayers:
         """
         Parameters
         ----------
-        h5_file : str
-            .h5 file containing exclusion layers and techmap
+        h5_file : str | list | tuple
+            .h5 file containing exclusion layers and techmap,
+            or a list of h5 files
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
         """
+
         self.h5_file = h5_file
-        self._h5 = Resource(h5_file, hsds=hsds)
+
+        if isinstance(h5_file, str):
+            self._h5 = Resource(h5_file, hsds=hsds)
+        elif isinstance(h5_file, (list, tuple)):
+            self._h5 = MultiFileResource(h5_file, check_files=False)
+            self._preflight_multi_file()
+        else:
+            msg = ('Expected str, list, or tuple for h5_file input but '
+                   'received {}'.format(type(h5_file)))
+            logger.error(msg)
+            raise TypeError(msg)
 
         self._iarr = None
 
@@ -65,6 +78,48 @@ class ExclusionLayers:
     def __contains__(self, layer):
         return layer in self.layers
 
+    def _preflight_multi_file(self):
+        """Run simple multi-file exclusion checks."""
+        lat_shape = self.h5.shapes['latitude']
+        lon_shape = self.h5.shapes['longitude']
+        for layer in self.layers:
+            lshape = self.h5.shapes[layer]
+            lshape = lshape[1:] if len(lshape) > 2 else lshape
+            if lshape != lon_shape or lshape != lat_shape:
+                msg = ('Shape of layer "{}" is {} which does not match '
+                       'latitude and longitude shapes of {} and {}. '
+                       'Check your exclusion file inputs: {}'
+                       .format(layer, self.h5.shapes[layer],
+                               lat_shape, lon_shape, self.h5._h5_files))
+                logger.error(msg)
+                raise MultiFileExclusionError(msg)
+
+        check_attrs = ('height', 'width', 'crs', 'transform')
+        base_profile = {}
+        for fp in self.h5_file:
+            with ExclusionLayers(fp) as f:
+                if not base_profile:
+                    base_profile = f.profile
+                else:
+                    for attr in check_attrs:
+                        if attr not in base_profile or attr not in f.profile:
+                            msg = ('Multi-file exclusion inputs from {} '
+                                   'dont have profiles with height, width, '
+                                   'crs, and transform: {} and {}'
+                                   .format(self.h5_file, base_profile,
+                                           f.profile))
+                            logger.error(msg)
+                            raise MultiFileExclusionError(msg)
+
+                        if base_profile[attr] != f.profile[attr]:
+                            msg = ('Multi-file exclusion inputs from {} '
+                                   'dont have matching "{}": {} and {}'
+                                   .format(self.h5_file, attr,
+                                           base_profile[attr],
+                                           f.profile[attr]))
+                            logger.error(msg)
+                            raise MultiFileExclusionError(msg)
+
     def close(self):
         """
         Close h5 instance
@@ -78,7 +133,7 @@ class ExclusionLayers:
 
         Returns
         -------
-        h5 : rex.Resource
+        h5 : rex.MultiFileResource | rex.Resource
         """
         return self._h5
 

@@ -33,8 +33,9 @@ class AbstractAggFileHandler(ABC):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -93,8 +94,9 @@ class AggFileHandler(AbstractAggFileHandler):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         h5_fpath : str
             Filepath to .h5 file to be aggregated
         excl_dict : dict, optional
@@ -141,8 +143,9 @@ class AbstractAggregation(ABC):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -216,8 +219,9 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath, by default None
@@ -250,8 +254,9 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -274,9 +279,9 @@ class AbstractAggregation(ABC):
         logger.info('Pre-extracting full exclusion mask, this could take '
                     'up to 30min for a large exclusion config...')
         with ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
-                                   check_layers=True, min_area=min_area,
+                                   check_layers=False, min_area=min_area,
                                    kernel=area_filter_kernel) as f:
-            inclusion_mask = f.mask
+            inclusion_mask = f._generate_mask(..., check_layers=True)
             tm_mask = f._excl_h5[tm_dset] == -1
             inclusion_mask[tm_mask] = 0
 
@@ -428,8 +433,9 @@ class AbstractAggregation(ABC):
         ----------
         sc_point_method : method
             Supply Curve Point Method to operate on a single SC point.
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
@@ -658,8 +664,9 @@ class AbstractAggregation(ABC):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -728,8 +735,9 @@ class Aggregation(AbstractAggregation):
         """
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         h5_fpath : str
             Filepath to .h5 file to aggregate
         tm_dset : str
@@ -813,8 +821,9 @@ class Aggregation(AbstractAggregation):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         h5_fpath : str
             Filepath to .h5 file to aggregate
         tm_dset : str
@@ -1116,8 +1125,9 @@ class Aggregation(AbstractAggregation):
 
         Parameters
         ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
         h5_fpath : str
             Filepath to .h5 file to aggregate
         tm_dset : str

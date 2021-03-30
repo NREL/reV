@@ -51,7 +51,7 @@ class LayerMask:
             Nodata value for the layer. If None, it will be infered when
             LayerMask is added to ExclusionMask
         """
-        self._layer = layer
+        self._name = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
         self._inclusion_weights = inclusion_weights
@@ -77,7 +77,7 @@ class LayerMask:
 
     def __repr__(self):
         msg = ("{} for {} exclusion, of type {}"
-               .format(self.__class__.__name__, self.layer, self.mask_type))
+               .format(self.__class__.__name__, self.name, self.mask_type))
 
         return msg
 
@@ -93,15 +93,15 @@ class LayerMask:
         return self._apply_mask(data)
 
     @property
-    def layer(self):
+    def name(self):
         """
         Layer name to extract from exclusions .h5 file
 
         Returns
         -------
-        _layer : str
+        _name : str
         """
-        return self._layer
+        return self._name
 
     @property
     def min_value(self):
@@ -396,8 +396,8 @@ class ExclusionMask:
         """
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers : list | NoneType
             list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
@@ -419,6 +419,14 @@ class ExclusionMask:
         if layers is not None:
             if not isinstance(layers, list):
                 layers = [layers]
+
+            missing = [layer.name for layer in layers
+                       if layer.name not in self.excl_layers]
+            if any(missing):
+                msg = ("ExclusionMask layers {} are missing from: {}"
+                       .format(missing, self._excl_h5))
+                logger.error(msg)
+                raise KeyError(msg)
 
             for layer in layers:
                 self.add_layer(layer)
@@ -578,15 +586,14 @@ class ExclusionMask:
         layer : LayerMask
             LayerMask instance to add to set of layers to be combined
         """
-        layer_name = layer.layer
 
-        if layer_name not in self.excl_layers:
-            msg = "{} does not existin in {}".format(layer_name, self._excl_h5)
+        if layer.name not in self.excl_layers:
+            msg = "{} does not exist in {}".format(layer.name, self._excl_h5)
             logger.error(msg)
-            raise KeyError(layer_name)
+            raise KeyError(msg)
 
-        if layer_name in self.layer_names:
-            msg = "{} is already in {}".format(layer_name, self)
+        if layer.name in self.layer_names:
+            msg = "{} is already in {}".format(layer.name, self)
             if replace:
                 msg += " replacing existing layer"
                 logger.warning(msg)
@@ -595,15 +602,14 @@ class ExclusionMask:
                 logger.error(msg)
                 raise ExclusionLayerError(msg)
 
-        layer.nodata_value = self.excl_h5.get_nodata_value(layer_name)
+        layer.nodata_value = self.excl_h5.get_nodata_value(layer.name)
         if self._check_layers:
-            if not layer[self.excl_h5[layer_name]].any():
-                msg = ("Layer {} does not have any un-excluded pixels!"
-                       .format(layer_name))
+            if not layer[self.excl_h5[layer.name]].any():
+                msg = ("Layer {} is fully excluded!".format(layer.name))
                 logger.error(msg)
                 raise ExclusionLayerError(msg)
 
-        self._layers[layer_name] = layer
+        self._layers[layer.name] = layer
 
     @property
     def nodata_lookup(self):
@@ -749,7 +755,7 @@ class ExclusionMask:
             exclusions mask.
         """
         for layer in layers:
-            layer_slice = (layer.layer, ) + ds_slice
+            layer_slice = (layer.name, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
             if mask is None:
                 mask = layer_mask
@@ -758,7 +764,7 @@ class ExclusionMask:
 
         return mask
 
-    def _generate_mask(self, *ds_slice):
+    def _generate_mask(self, *ds_slice, check_layers=False):
         """
         Generate multiplicative inclusion mask from exclusion layers.
 
@@ -768,6 +774,11 @@ class ExclusionMask:
             What to extract from ds, each arg is for a sequential axis.
             For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
             exclusions mask.
+        check_layers : bool
+            Check each layer as each layer is extracted to ensure they contain
+            un-excluded values. This should only really be True if ds_slice is
+            for the full inclusion mask. Otherwise, this could raise an error
+            for a fully excluded mask for just one excluded SC point.
 
         Returns
         -------
@@ -776,12 +787,9 @@ class ExclusionMask:
             ("and" operation) such that 1 is included, 0 is excluded,
             0.5 is half.
         """
-        mask = None
-        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
-            ds_slice = ds_slice[0]
 
-        if self._min_area is not None:
-            ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
+        mask = None
+        ds_slice, sub_slice = self._parse_ds_slice(ds_slice)
 
         if self.layers:
             force_include = []
@@ -792,8 +800,15 @@ class ExclusionMask:
                     logger.debug('Computing exclusions {} for {}'
                                  .format(layer, ds_slice))
                     log_mem(logger, log_level='DEBUG')
-                    layer_slice = (layer.layer, ) + ds_slice
+                    layer_slice = (layer.name, ) + ds_slice
                     layer_mask = layer[self.excl_h5[layer_slice]]
+
+                    if check_layers and not layer_mask.any():
+                        msg = ("Layer {} is fully excluded!"
+                               .format(layer.name))
+                        logger.error(msg)
+                        raise ExclusionLayerError(msg)
+
                     if mask is None:
                         mask = layer_mask
                     else:
@@ -816,6 +831,36 @@ class ExclusionMask:
 
         return mask
 
+    def _parse_ds_slice(self, ds_slice):
+        """Parse a dataset slice to make it the proper dimensions and also
+        optionally increase the dataset slice to make the contiguous area
+        filter more accurate
+
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
+
+        Returns
+        -------
+        ds_slice : tuple
+            Two entry tuple with x and y slices with increased dimensions.
+        sub_slice : tuple
+            Two entry tuple with x and y slices to retrieve the original
+            slice out of the bigger slice.
+        """
+
+        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
+            ds_slice = ds_slice[0]
+
+        sub_slice = None
+        if self._min_area is not None:
+            ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
+
+        return ds_slice, sub_slice
+
     @classmethod
     def run(cls, excl_h5, layers=None, min_area=None,
             kernel='queen', hsds=False):
@@ -824,8 +869,8 @@ class ExclusionMask:
 
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers : list | NoneType
             list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
@@ -857,8 +902,8 @@ class ExclusionMaskFromDict(ExclusionMask):
         """
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
@@ -890,8 +935,8 @@ class ExclusionMaskFromDict(ExclusionMask):
 
         Parameters
         ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
+        excl_h5 : str | list | tuple
+            Path to one or more exclusions .h5 files
         layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
@@ -958,7 +1003,7 @@ class FrictionMask(ExclusionMask):
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
             ds_slice = ds_slice[0]
 
-        layer_slice = (self._layers[self._fric_dset].layer, ) + ds_slice
+        layer_slice = (self._layers[self._fric_dset].name, ) + ds_slice
         mask = self._layers[self._fric_dset][self.excl_h5[layer_slice]]
         mask[(mask == self._layers[self._fric_dset].nodata_value)] = 1
 

@@ -6,13 +6,13 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
-import h5py
 import os
 import logging
 
 from reV.utilities.exceptions import ConfigError, PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
+from rex.multi_file_resource import MultiFileResource
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +43,13 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     def _sc_agg_preflight(self):
         """Perform pre-flight checks on the SC agg config inputs"""
-        with h5py.File(self.excl_fpath, mode='r') as f:
-            dsets = list(f)
+
+        paths = self.excl_fpath
+        if isinstance(self.excl_fpath, str):
+            paths = [self.excl_fpath]
+
+        with MultiFileResource(paths, check_files=False) as res:
+            dsets = res.datasets
 
         if self.tm_dset not in dsets and self.res_fpath is None:
             raise ConfigError('Techmap dataset "{}" not found in exclusions '
@@ -54,16 +59,8 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def excl_fpath(self):
-        """Get the exclusions filepath"""
-
-        fpath = self['excl_fpath']
-
-        if fpath == 'PIPELINE':
-            fpath = Pipeline.parse_previous(
-                self.dirout, 'aggregation', target='fpath',
-                target_module='exclusions')[0]
-
-        return fpath
+        """Get the exclusions filepath(s)"""
+        return self['excl_fpath']
 
     @property
     def gen_fpath(self):
