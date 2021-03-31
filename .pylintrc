@@ -136,6 +136,7 @@ disable=
         redefined-builtin,
         broad-except,
         logging-format-interpolation,
+        logging-fstring-interpolation,
         wrong-import-order,
         wrong-import-position,
         relative-beyond-top-level,
