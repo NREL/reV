@@ -7,10 +7,10 @@ import logging
 
 from reV.config.project_points import ProjectPoints
 from reV.utilities.exceptions import ProjectPointsValueError
+from reV.utilities import log_versions
 
 from rex.utilities.cli_dtypes import STR
 from rex.utilities.loggers import init_logger
-from reV.utilities import log_versions
 from rex.utilities.utilities import (dict_str_load, safe_json_load)
 
 logger = logging.getLogger(__name__)

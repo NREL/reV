@@ -45,10 +45,6 @@ class PySamVersionChecker:
                 logger.warning(m)
                 warn(m, PySAMVersionWarning)
 
-        else:
-            logger.info('reV is using PySAM version {}'
-                        .format(self.pysam_version))
-
     def _check_inputs(self, tech, parameters):
         """Check PySAM inputs and modify keys to reflect different
         PySAM versions. Currently set to only correct inputs for PySAM v2.
