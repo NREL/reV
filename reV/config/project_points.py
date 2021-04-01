@@ -13,7 +13,6 @@ from warnings import warn
 from reV.config.curtailment import Curtailment
 from reV.config.sam_config import SAMConfig
 from reV.utilities.exceptions import ConfigError, ConfigWarning
-from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -242,7 +241,6 @@ class ProjectPoints:
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
         """
-        log_versions(logger)
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_configs)

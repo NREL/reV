@@ -7,6 +7,7 @@ import logging
 
 from reV.config.project_points import ProjectPoints
 from reV.utilities.exceptions import ProjectPointsValueError
+from reV.utilities import log_versions
 
 from rex.utilities.cli_dtypes import STR
 from rex.utilities.loggers import init_logger
@@ -129,6 +130,7 @@ def main(ctx, fpath, res_file, sam_file, verbose):
         log_level = 'INFO'
 
     init_logger('reV.config.project_points', log_level=log_level)
+    log_versions(logger)
 
 
 @main.command()
