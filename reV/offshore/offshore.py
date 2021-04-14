@@ -166,6 +166,15 @@ class Offshore:
         onshore_mask = meta['offshore'] == 0
         offshore_mask = meta['offshore'] == 1
 
+        logger.info('Finished parsing reV gen output for resource gid '
+                    '{} through {} with {} offshore points.'
+                    .format(meta['gid'].values.min(),
+                            meta['gid'].values.max(), offshore_mask.sum()))
+        logger.info('Offshore capacity factor has min / median / mean / max: '
+                    '{:.3f} / {:.3f} / {:.3f} / {:.3f}'
+                    .format(cf_mean.min(), np.median(cf_mean),
+                            np.mean(cf_mean), cf_mean.max()))
+
         return meta, onshore_mask, offshore_mask, cf_mean
 
     def _parse_offshore_data(self, offshore_fpath,
@@ -385,24 +394,51 @@ class Offshore:
 
     def run_nrwal(self):
         """Run offshore analysis via the NRWAL analysis library"""
+        from NRWAL import Equation
         for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
-            logger.info('Running offshore config {} of {}: "{}"'
-                        .format(i + 1, len(self._nrwal_configs), cid))
+            mask = self._offshore_data['config'].values == cid
+            logger.info('Running offshore config {} of {}: "{}" and applying '
+                        'to {} out of {} offshore gids'
+                        .format(i + 1, len(self._nrwal_configs), cid,
+                                mask.sum(), len(mask)))
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
-            mask = self._offshore_data['config'].values == cid
 
             # pylint: disable=C0201
             for name in self._out.keys():
-                msg = ('Could not find "{}" in the output dict of NRWAL '
-                       'config {}'.format(name, cid))
-                assert name in outs, msg
+                if name in outs:
+                    value = outs[name]
+                    self._out[name][mask] = value[mask]
+                elif name in nrwal_config.keys():
+                    value = nrwal_config[name]
+                    if isinstance(value, Equation):
+                        msg = ('Cannot retrieve Equation "{}" from NRWAL. '
+                               'Must be a number!'.format(name))
+                        assert not any(value.variables), msg
+                        value = value.eval()
+                    if np.issubdtype(type(value), np.number):
+                        value *= np.ones(len(self._offshore_data))
+                    if not isinstance(value, np.ndarray):
+                        msg = ('NRWAL key "{}" returned bad type of "{}", '
+                               'needs to be numeric or an output array.'
+                               .format(name, type(value)))
+                        logger.error(msg)
+                        raise TypeError(msg)
+                    self._out[name][mask] = value[mask]
+                else:
+                    msg = ('Could not find "{}" in the output dict of NRWAL '
+                           'config {}'.format(name, cid))
+                    logger.error(msg)
+                    raise KeyError(msg)
 
-                self._out[name][mask] = outs[name][mask]
+                logger.debug('NRWAL output "{}": {}'.format(name, value))
 
         for name, arr in self._out.items():
-            msg = 'NaN values persist in offshore outputs!'
-            assert not np.isnan(arr).any(), msg
+            msg = ('NaN values ({} out of {}) persist in offshore output "{}"!'
+                   .format(np.isnan(arr).sum(), len(arr), name))
+            if np.isnan(arr).any():
+                logger.error(msg)
+                raise ValueError(msg)
 
     def write_to_gen_fpath(self):
         """Save offshore outputs to input generation fpath file. This will
