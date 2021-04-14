@@ -14,6 +14,7 @@ from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       OffshoreWindInputError)
+from reV.utilities import log_versions
 
 
 logger = logging.getLogger(__name__)
@@ -253,7 +254,7 @@ class Offshore:
     def _preflight_checks(self):
         """Run some preflight checks on the offshore inputs"""
         sam_configs = {k: v for k, v in
-                       self._project_points.sam_configs.items()
+                       self._project_points.sam_inputs.items()
                        if k in self._nrwal_configs}
         for cid, sys_in in sam_configs.items():
             if 'turbine_capacity' not in sys_in:
