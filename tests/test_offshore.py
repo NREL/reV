@@ -44,6 +44,10 @@ def test_offshore():
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
+            f._add_dset('fixed_charge_rate',
+                        0.09 * np.ones(f.shape[1], dtype=np.float32),
+                        np.float32, attrs={'scale_factor': 1},
+                        chunks=None)
 
         with Outputs(gen_fpath, 'r') as f:
             meta_raw = f.meta
@@ -53,13 +57,19 @@ def test_offshore():
             mask = meta_raw.offshore == 1
 
         off = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
-                           nrwal_configs, points)
+                           nrwal_configs, points,
+                           offshore_nrwal_keys=['fixed_charge_rate'])
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
             lcoe_new = f['lcoe_fcr']
             cf_mean_new = f['cf_mean']
             cf_profile_new = f['cf_profile']
+            fcr = f['fixed_charge_rate']
+
+            assert all(fcr[(meta_new.offshore == 1)] == 0.071)
+            assert all(fcr[(meta_new.offshore == 0)] == 0.09)
+            assert not any(np.isnan(fcr))
 
             for col in off._offshore_meta_cols:
                 assert col in meta_new
@@ -67,7 +77,8 @@ def test_offshore():
             for key in off._offshore_nrwal_keys:
                 assert key in f.dsets
                 assert np.isnan(f[key][mask]).sum() == 0
-                assert np.isnan(f[key][~mask]).all()
+                if key in ('total_losses', 'array', 'export'):
+                    assert np.isnan(f[key][~mask]).all()
 
         assert (lcoe_new[mask] != lcoe_raw[mask]).all()
         assert (lcoe_new[~mask] == lcoe_raw[~mask]).all()

@@ -474,7 +474,11 @@ class Offshore:
 
             for key, arr in self._out.items():
                 if key not in (self._lcoe_key, ):
-                    data = np.full(len(f.meta), np.nan).astype(np.float32)
+                    if key not in f.dsets:
+                        data = np.full(len(f.meta), np.nan).astype(np.float32)
+                    else:
+                        data = f[key]
+
                     data[self._offshore_mask] = arr
                     f._add_dset(key, data, np.float32,
                                 attrs={'scale_factor': 1})
