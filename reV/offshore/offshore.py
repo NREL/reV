@@ -434,10 +434,18 @@ class Offshore:
                 logger.debug('NRWAL output "{}": {}'.format(name, value))
 
         for name, arr in self._out.items():
-            msg = ('NaN values ({} out of {}) persist in offshore output "{}"!'
-                   .format(np.isnan(arr).sum(), len(arr), name))
             if np.isnan(arr).any():
+                mask = np.isnan(arr)
+                nan_meta = self.meta_out_offshore[mask]
+                nan_gids = nan_meta['gid'].values
+                msg = ('NaN values ({} out of {}) persist in offshore '
+                       'output "{}"!'
+                       .format(np.isnan(arr).sum(), len(arr), name))
                 logger.error(msg)
+                logger.error('This is the offshore meta that is causing NaN '
+                             'outputs: {}'.format(nan_meta))
+                logger.error('These are the resource gids causing NaN '
+                             'outputs: {}'.format(nan_gids))
                 raise ValueError(msg)
 
     def write_to_gen_fpath(self):
