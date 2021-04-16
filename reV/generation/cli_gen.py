@@ -116,7 +116,7 @@ def from_config(ctx, config_file, verbose):
         # pass through the curtailment file, not the curtailment object
         ctx.obj['CURTAILMENT'] = config['curtailment']
 
-    for i, year in enumerate(config.years):
+    for i, year in enumerate(config.analysis_years):
         submit_from_config(ctx, name, year, config, i, verbose=verbose)
 
 

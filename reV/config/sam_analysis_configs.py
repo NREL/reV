@@ -228,17 +228,18 @@ class GenConfig(SAMAnalysisConfig):
             fname = self.resource_file
             if '{}' in fname:
                 # need to make list of res files for each year
-                self._res_files = [fname.format(year) for year in self.years]
+                self._res_files = [fname.format(year)
+                                   for year in self.analysis_years]
             else:
                 # only one resource file request, still put in list
                 self._res_files = [fname]
 
-        if len(self._res_files) != len(self.years):
+        if len(self._res_files) != len(self.analysis_years):
             raise ConfigError('The number of resource files does not match '
                               'the number of analysis years!'
                               '\n\tResource files: \n\t\t{}'
                               '\n\tYears: \n\t\t{}'
-                              .format(self._res_files, self.years))
+                              .format(self._res_files, self.analysis_years))
 
         return self._res_files
 
@@ -312,7 +313,8 @@ class EconConfig(SAMAnalysisConfig):
             fname = self.cf_file
             if '{}' in fname:
                 # need to make list of res files for each year
-                self._cf_files = [fname.format(year) for year in self.years]
+                self._cf_files = [fname.format(year) for
+                                  year in self.analysis_years]
             elif 'PIPELINE' in fname:
                 self._cf_files = Pipeline.parse_previous(super().dirout,
                                                          'econ',
@@ -325,13 +327,14 @@ class EconConfig(SAMAnalysisConfig):
 
             # check year/cf_file matching if not a pipeline input
             if 'PIPELINE' not in fname:
-                if len(self._cf_files) != len(self.years):
+                if len(self._cf_files) != len(self.analysis_years):
                     raise ConfigError('The number of cf files does not match '
                                       'the number of analysis years!'
                                       '\n\tCF files: \n\t\t{}'
                                       '\n\tYears: \n\t\t{}'
-                                      .format(self._cf_files, self.years))
-                for year in self.years:
+                                      .format(self._cf_files,
+                                              self.analysis_years))
+                for year in self.analysis_years:
                     if str(year) not in str(self._cf_files):
                         raise ConfigError('Could not find year {} in cf '
                                           'files: {}'

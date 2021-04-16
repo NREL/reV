@@ -150,8 +150,8 @@ class BaseConfig(dict):
         Check on config keys to ensure they match available
         properties
         """
-        for key, value in self.items():
-            if isinstance(value, str) and key not in self._keys:
+        for key in self.keys():
+            if isinstance(key, str) and key not in self._keys:
                 msg = ('{} is not a valid config entry for {}! Must be one of:'
                        '\n{}'.format(key, self.__class__.__name__, self._keys))
                 logger.error(msg)
