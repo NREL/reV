@@ -115,7 +115,10 @@ class Offshore:
         self._out = {self._lcoe_key: np.full(len(self._offshore_data), np.nan),
                      self._loss_key: np.full(len(self._offshore_data), np.nan)}
         for key in self._offshore_nrwal_keys:
-            self._out[key] = np.full(len(self._offshore_data), np.nan)
+            if key in self._offshore_data:
+                self._out[key] = self._offshore_data[key].values
+            else:
+                self._out[key] = np.full(len(self._offshore_data), np.nan)
 
     @staticmethod
     def _parse_gen_data(gen_fpath):
@@ -227,6 +230,8 @@ class Offshore:
         # only keep the offshore data corresponding to relevant project points
         mask = offshore_data['gid'].isin(self.offshore_res_gids)
         offshore_data = offshore_data[mask]
+        offshore_data = offshore_data.sort_values('gid')
+        offshore_data = offshore_data.reset_index(drop=True)
 
         return offshore_data
 
@@ -361,9 +366,13 @@ class Offshore:
         if self._meta_out is None:
             self._meta_out = self.meta_source_full.copy()
             for col in self._offshore_meta_cols:
-                self._meta_out[col] = np.nan
+                if col not in self._meta_out:
+                    self._meta_out[col] = np.nan
+
+                # note that this assumes that offshore data has been reduced
+                # to only those rows with gids in meta_out and is sorted by gid
                 data = self._offshore_data[col]
-                self._meta_out.loc[self._offshore_mask, col] = data
+                self._meta_out.loc[self._offshore_mask, col] = data.values
 
         return self._meta_out
 
@@ -409,6 +418,7 @@ class Offshore:
                 if name in outs:
                     value = outs[name]
                     self._out[name][mask] = value[mask]
+
                 elif name in nrwal_config.keys():
                     value = nrwal_config[name]
                     if isinstance(value, Equation):
@@ -425,7 +435,8 @@ class Offshore:
                         logger.error(msg)
                         raise TypeError(msg)
                     self._out[name][mask] = value[mask]
-                else:
+
+                elif name not in self._offshore_data:
                     msg = ('Could not find "{}" in the output dict of NRWAL '
                            'config {}'.format(name, cid))
                     logger.error(msg)
@@ -433,6 +444,8 @@ class Offshore:
 
                 logger.debug('NRWAL output "{}": {}'.format(name, value))
 
+    def check_outputs(self):
+        """Check the nrwal outputs for nan values and raise errors if found."""
         for name, arr in self._out.items():
             if np.isnan(arr).any():
                 mask = np.isnan(arr)
@@ -541,6 +554,7 @@ class Offshore:
 
         if any(offshore.offshore_res_gids):
             offshore.run_nrwal()
+            offshore.check_outputs()
             offshore.write_to_gen_fpath()
 
         logger.info('Offshore wind gen/econ module complete!')

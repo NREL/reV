@@ -58,7 +58,8 @@ def test_offshore():
 
         off = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
                            nrwal_configs, points,
-                           offshore_nrwal_keys=['fixed_charge_rate'])
+                           offshore_meta_cols=['depth'],
+                           offshore_nrwal_keys=['fixed_charge_rate', 'depth'])
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
@@ -66,10 +67,19 @@ def test_offshore():
             cf_mean_new = f['cf_mean']
             cf_profile_new = f['cf_profile']
             fcr = f['fixed_charge_rate']
+            depth = f['depth']
+
+            assert 'depth' in meta_new
+            assert all(meta_new.loc[(meta_new.offshore == 1), 'depth'] >= 0)
+            assert all(np.isnan(
+                meta_new.loc[(meta_new.offshore == 0), 'depth']))
 
             assert all(fcr[(meta_new.offshore == 1)] == 0.071)
             assert all(fcr[(meta_new.offshore == 0)] == 0.09)
             assert not any(np.isnan(fcr))
+
+            assert all(depth[(meta_new.offshore == 1)] >= 0)
+            assert all(np.isnan(depth[(meta_new.offshore == 0)]))
 
             for col in off._offshore_meta_cols:
                 assert col in meta_new
