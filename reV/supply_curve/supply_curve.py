@@ -61,8 +61,7 @@ class SupplyCurve:
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
                  transmission_costs=None, line_limited=False,
-                 connectable=True, max_workers=None, consider_friction=True,
-                 offshore_trans_table=None):
+                 connectable=True, max_workers=None, consider_friction=True):
         """
         Parameters
         ----------
@@ -91,9 +90,6 @@ class SupplyCurve:
             None uses all available cpu's.
         consider_friction : bool
             Flag to consider friction layer on LCOE.
-        offshore_trans_table : str, optional
-            Path to offshore transmission table, if None offshore sc points
-            will not be included, by default None
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
@@ -103,8 +99,7 @@ class SupplyCurve:
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
         self._trans_table = \
-            self._merge_sc_trans_tables(self._sc_points, trans_table,
-                                        offshore_table=offshore_trans_table)
+            self._merge_sc_trans_tables(self._sc_points, trans_table)
         self._check_sc_trans_table(self._sc_points, self._trans_table)
         self._trans_table = self._add_trans_lcot(self._trans_table, fcr,
                                                  trans_costs=trans_costs,
@@ -239,7 +234,6 @@ class SupplyCurve:
 
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
-                               offshore_table=None,
                                sc_cols=('capacity', 'sc_gid', 'mean_cf',
                                         'mean_lcoe')):
         """Merge the supply curve table with the transmission features table.
@@ -251,10 +245,6 @@ class SupplyCurve:
         trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
             (either str filepath to table file or pre-loaded dataframe).
-        offshore_table : str | pd.DataFrame, optional
-            Offshore transmission table (either str filepath or pre-loaded
-            dataframe), if None offshore sc points will not be included,
-            by default None
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
@@ -283,49 +273,6 @@ class SupplyCurve:
                      .format(merge_cols))
         sc_points = sc_points.rename(columns=merge_cols)
         merge_cols = list(merge_cols.values())
-
-        if offshore_table is not None:
-            logger.info('Merging in offshore transmission table on primary '
-                        'key "farm_gid": {}'.format(offshore_table))
-            offshore_table = cls._parse_trans_table(offshore_table)
-            logger.debug('Offshore transmission table has columns: {}'
-                         .format(list(offshore_table.columns)))
-            logger.debug('Merging offshore transmission table with supply '
-                         'curve point summary table that has columns: {}'
-                         .format(list(sc_points.columns)))
-            sc_offshore_cols = merge_cols + ['farm_gid', 'sc_point_gid']
-
-            column_diff = list(set(offshore_table.columns)
-                               - set(sc_points[sc_offshore_cols]))
-            offshore_cols = column_diff + ['farm_gid']
-            ignore_cols = list(set(offshore_table.columns)
-                               - set(offshore_cols))
-            logger.debug('Offshore transmission table has column diff: {}'
-                         .format(column_diff))
-            logger.debug('Keeping offshore trans table columns: {}'
-                         .format(offshore_cols))
-            logger.debug('Dropping offshore trans table columns: {}'
-                         .format(ignore_cols))
-
-            offshore_table = offshore_table[offshore_cols].merge(
-                sc_points[sc_offshore_cols], on='farm_gid', how='left')
-            logger.debug('Offshore transmission table merged with sc points '
-                         'has columns: {}'.format(offshore_table.columns))
-
-            if np.any(offshore_table[merge_cols].isnull().values):
-                missing = offshore_table['sc_point_gid'].isnull().values
-                msg = ('{} offshore Wind Farms are missing valid '
-                       'sc_points:\n{}'
-                       .format(missing.sum(), offshore_table.loc[missing]))
-                logger.warning(msg)
-                warn(msg)
-                offshore_table = offshore_table.loc[~missing]
-
-            logger.debug('Concatenating offshore transmission table to '
-                         'onshore transmission table...')
-            trans_table = pd.concat((trans_table, offshore_table))
-            logger.debug('Concatenated transmission table:\n{}'
-                         .format(trans_table))
 
         sc_cols = sc_cols + merge_cols
         sc_points = sc_points[sc_cols].copy()
@@ -970,7 +917,6 @@ class SupplyCurve:
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
-             offshore_trans_table=None,
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
@@ -1003,9 +949,6 @@ class SupplyCurve:
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
             will be built first.
-        offshore_trans_table : str, optional
-            Path to offshore transmission table, if None offshore sc points
-            will not be included, by default None
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
@@ -1031,8 +974,7 @@ class SupplyCurve:
         """
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs,
-                 line_limited=line_limited, max_workers=max_workers,
-                 offshore_trans_table=offshore_trans_table)
+                 line_limited=line_limited, max_workers=max_workers)
         supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
                                     wind_dirs=wind_dirs, n_dirs=n_dirs,
                                     downwind=downwind,
@@ -1043,7 +985,6 @@ class SupplyCurve:
     @classmethod
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, sort_on='total_lcoe',
-               offshore_trans_table=None,
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                         'trans_cap_cost'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
@@ -1073,9 +1014,6 @@ class SupplyCurve:
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
             will be built first.
-        offshore_trans_table : str, optional
-            Path to offshore transmission table, if None offshore sc points
-            will not be included, by default None
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
@@ -1101,8 +1039,7 @@ class SupplyCurve:
         """
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs, connectable=False,
-                 max_workers=max_workers,
-                 offshore_trans_table=offshore_trans_table)
+                 max_workers=max_workers)
         supply_curve = sc.simple_sort(sort_on=sort_on, columns=columns,
                                       wind_dirs=wind_dirs, n_dirs=n_dirs,
                                       downwind=downwind,
