@@ -51,7 +51,7 @@ class BatchJob:
         os.chdir(self._base_dir)
 
         if 'logging' in self._config:
-            logging_kwargs = self._config.get('logging', {})
+            logging_kwargs = self._config.logging
             if verbose:
                 logging_kwargs['log_level'] = 'DEBUG'
 
@@ -395,7 +395,7 @@ class BatchJob:
         for source_dir, _, filenames in os.walk(self._base_dir):
 
             # do make additional copies of job sub directories.
-            skip = any([job_tag in source_dir for job_tag in self.job_tags])
+            skip = any(job_tag in source_dir for job_tag in self.job_tags)
 
             if not skip:
 

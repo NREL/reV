@@ -740,8 +740,11 @@ class ExclusionMask:
         for i, s in enumerate(self.shape):
             try:
                 ax_slice = ds_slice[i]
-                ax = np.arange(s, dtype=np.int32)
-                ones_shape += (len(ax[ax_slice]), )
+                if np.issubdtype(type(ax_slice), np.integer):
+                    ones_shape += (ax_slice,)
+                else:
+                    ax = np.arange(s, dtype=np.int32)
+                    ones_shape += (len(ax[ax_slice]), )
             except IndexError:
                 ones_shape += (s, )
 

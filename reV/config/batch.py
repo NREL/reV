@@ -107,6 +107,21 @@ class BatchConfig(BaseConfig):
                                       'jobs: {}'.format(fpath))
 
     @property
+    def logging(self):
+        """Get logging kwargs for the batch job.
+
+        Returns
+        -------
+        dict
+        """
+        return self.get('logging', {"log_file": None, "log_level": "INFO"})
+
+    @property
+    def sets(self):
+        """Get the list of batch job sets"""
+        return self['sets']
+
+    @property
     def pipeline_config(self):
         """Get the base pipeline config file with full file path."""
         return self['pipeline_config']
