@@ -5,12 +5,12 @@
   ],
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./conus_wind/"
+    "output_directory": "./"
   },
   "execution_control": {
     "allocation": "rev",
     "feature": "--qos=high",
-    "nodes": 20,
+    "nodes": 5,
     "option": "eagle",
     "sites_per_worker": 25,
     "walltime": 4
@@ -20,12 +20,17 @@
     "cf_mean",
     "cf_profile",
     "lcoe_fcr",
-    "ws_mean"
+    "ws_mean",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
   ],
-  "project_points": "./inputs/wtk_conus_project_points.csv",
+  "project_points": "./project_points_offshore_test.csv",
   "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
   "sam_files": {
-    "default": "./inputs/t205.json"
+    "offshore": "./offshore.json",
+    "onshore": "./onshore.json"
   },
   "technology": "windpower"
 }

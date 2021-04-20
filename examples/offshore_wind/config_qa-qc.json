@@ -1,0 +1,20 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "-p debug",
+    "option": "eagle",
+    "walltime": 1.0
+  },
+  "log_level": "DEBUG",
+  "modules": {
+    "supply-curve-aggregation": {
+      "fpath": "PIPELINE",
+      "plot_type": "plot",
+      "sub_dir": "qa_agg"
+    }
+  }
+}

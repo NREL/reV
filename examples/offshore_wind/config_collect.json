@@ -2,22 +2,36 @@
   "directories": {
     "collect_directory": "PIPELINE",
     "log_directory": "./logs/",
-    "output_directory": "./conus_wind/"
+    "output_directory": "./"
   },
   "dsets": [
     "cf_mean",
     "cf_profile",
     "lcoe_fcr",
-    "ws_mean"
+    "ws_mean",
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
   ],
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "feature": "-p debug",
     "option": "eagle",
-    "walltime": 4
+    "walltime": 1
   },
   "file_prefixes": "PIPELINE",
   "log_level": "INFO",
-  "project_points": null,
+  "project_points": "./project_points_offshore_test.csv",
   "purge_chunks": false
 }

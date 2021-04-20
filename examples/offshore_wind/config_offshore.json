@@ -1,7 +1,7 @@
 {
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./conus_wind/"
+    "output_directory": "./"
   },
   "execution_control": {
     "allocation": "rev",
@@ -10,10 +10,42 @@
     "walltime": 1
   },
   "gen_fpath": "PIPELINE",
-  "log_level": "INFO",
-  "offshore_fpath": "./inputs/preliminary_orca_results_09042019_JN_gcb.csv",
-  "project_points": "./inputs/wtk_conus_project_points.csv",
+  "log_level": "DEBUG",
+  "nrwal_configs": {
+    "offshore": "./semi_8MW_2017.yaml"
+  },
+  "offshore_fpath": "./offshore_test_data_inputs.csv",
+  "offshore_meta_cols": [
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime"
+  ],
+  "offshore_nrwal_keys": [
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
+  ],
+  "project_points": "./project_points_offshore_test.csv",
   "sam_files": {
-    "default": "./inputs/6MW_offshore.json"
+    "offshore": "./offshore.json",
+    "onshore": "./onshore.json"
   }
 }
