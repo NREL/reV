@@ -735,7 +735,17 @@ class ExclusionMask:
         mask : ndarray
             Array of ones slices down by ds_slice
         """
-        mask = np.ones(self.shape, dtype='float32')[ds_slice]
+
+        ones_shape = ()
+        for i, s in enumerate(self.shape):
+            try:
+                ax_slice = ds_slice[i]
+                ax = np.arange(s, dtype=np.int32)
+                ones_shape += (len(ax[ax_slice]), )
+            except IndexError:
+                ones_shape += (s, )
+
+        mask = np.ones(ones_shape, dtype='float32')
 
         return mask
 
