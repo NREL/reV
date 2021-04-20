@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--name', '-n', default='reV-econ', type=STR,
               show_default=True,
               help='reV Economics job name, by default "reV-econ".')
@@ -39,14 +40,6 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['NAME'] = name
-
-
-@main.command()
-def version():
-    """
-    print version
-    """
-    click.echo(__version__)
 
 
 @main.command()

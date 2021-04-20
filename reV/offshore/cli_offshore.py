@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--name', '-n', default='reV-off', type=STR,
               help='Job name. Default is "reV-off".')
 @click.option('-v', '--verbose', is_flag=True,
@@ -40,14 +41,6 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
-
-
-@main.command()
-def version():
-    """
-    print version
-    """
-    click.echo(__version__)
 
 
 @main.command()

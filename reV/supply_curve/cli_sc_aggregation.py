@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=all
+# flake8: noqa
 """
 reV Supply Curve Aggregation command line interface (cli).
 """
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--name', '-n', default='reV-agg', type=STR,
               show_default=True,
               help='Job name. Default is "reV-agg".')
@@ -37,14 +39,6 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
-
-
-@main.command()
-def version():
-    """
-    print version
-    """
-    click.echo(__version__)
 
 
 @main.command()
