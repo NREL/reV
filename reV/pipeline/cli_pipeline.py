@@ -15,6 +15,7 @@ from rex.utilities.execution import SubprocessManager
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--name', '-n', default='reV-pipeline', type=STR,
               show_default=True,
               help='reV pipeline name, by default "reV-pipeline".')
@@ -26,14 +27,6 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
-
-
-@main.command()
-def version():
-    """
-    print version
-    """
-    click.echo(__version__)
 
 
 @main.command()

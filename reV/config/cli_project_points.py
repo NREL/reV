@@ -8,6 +8,7 @@ import logging
 from reV.config.project_points import ProjectPoints
 from reV.utilities.exceptions import ProjectPointsValueError
 from reV.utilities import log_versions
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR
 from rex.utilities.loggers import init_logger
@@ -106,6 +107,7 @@ def _parse_regions(regions, region, region_col):
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--fpath', '-f', type=click.Path(), required=True,
               help='.csv file path to save project points to (required)')
 @click.option('--res_file', '-rf', required=True,

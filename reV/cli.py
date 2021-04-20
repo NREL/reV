@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option(version=__version__)
 @click.option('--name', '-n', default='reV', type=STR,
               help='Job name. Default is "reV".')
 @click.option('--config_file', '-c',
@@ -52,14 +53,6 @@ def main(ctx, name, config_file, verbose):
     ctx.obj['NAME'] = name
     ctx.obj['CONFIG_FILE'] = config_file
     ctx.obj['VERBOSE'] = verbose
-
-
-@main.command()
-def version():
-    """
-    print version
-    """
-    click.echo(__version__)
 
 
 @main.group(invoke_without_command=True)
