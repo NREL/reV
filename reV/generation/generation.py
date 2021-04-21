@@ -58,8 +58,8 @@ class Gen(BaseGen):
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 site_data=None, fout=None, dirout='./gen_out',
-                 drop_leap=False, mem_util_lim=0.4):
+                 site_data=None, out_fpath=None, drop_leap=False,
+                 mem_util_lim=0.4):
         """
         Parameters
         ----------
@@ -75,11 +75,8 @@ class Gen(BaseGen):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        fout : str | None
-            Optional .h5 output file specification.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
+        out_fpath : str, optional
+            Output .h5 file path, by default None
         drop_leap : bool
             Drop leap day instead of final day of year during leap years
         mem_util_lim : float
@@ -89,7 +86,7 @@ class Gen(BaseGen):
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
-                         fout=fout, dirout=dirout, drop_leap=drop_leap,
+                         out_fpath=out_fpath, drop_leap=drop_leap,
                          mem_util_lim=mem_util_lim)
 
         self._res_file = res_file
@@ -301,8 +298,8 @@ class Gen(BaseGen):
                 output_request=('cf_mean',), site_data=None, curtailment=None,
                 max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
-                points_range=None, fout=None,
-                dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
+                points_range=None, out_fpath=None, mem_util_lim=0.4,
+                scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -352,12 +349,8 @@ class Gen(BaseGen):
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        fout : str | None
-            Optional .h5 output file specification. Object will be returned
-            if None.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
+        out_fpath : str, optional
+            Output .h5 file path, by default None
         mem_util_lim : float
             Memory utilization limit (fractional). This will determine how many
             site results are stored in memory at any given time.
@@ -379,8 +372,7 @@ class Gen(BaseGen):
         gen = cls(pc, res_file,
                   output_request=output_request,
                   site_data=site_data,
-                  fout=fout,
-                  dirout=dirout,
+                  out_fpath=out_fpath,
                   mem_util_lim=mem_util_lim)
 
         kwargs = {'tech': gen.tech,

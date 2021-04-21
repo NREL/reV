@@ -49,7 +49,7 @@ def test_gen_linear():
     gen = Gen.reV_run('lineardirectsteam', points, sam_files, res_file,
                       max_workers=1,
                       output_request=output_request,
-                      sites_per_worker=1, fout=None, scale_outputs=True)
+                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
 
     with Resource(BASELINE) as f:
         for dset in output_request:

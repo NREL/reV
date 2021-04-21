@@ -48,7 +48,7 @@ def test_single_owner():
     obj = Econ.reV_run(slice(0, 10), sam_files, cf_file, year=2012,
                        output_request=output_request,
                        max_workers=1, sites_per_worker=10,
-                       points_range=None, fout=None)
+                       points_range=None, out_fpath=None)
 
     for k, v in obj.out.items():
         msg = 'Array for "{}" is bad!'.format(k)

@@ -47,7 +47,7 @@ def test_lcoe(year, max_workers, spw):
     obj = Econ.reV_run(points, sam_files, cf_file,
                        year=year, output_request='lcoe_fcr',
                        max_workers=max_workers, sites_per_worker=25,
-                       points_range=None, fout=None)
+                       points_range=None, out_fpath=None)
     lcoe = list(obj.out['lcoe_fcr'])
 
     with h5py.File(r1f, mode='r') as f:
@@ -75,7 +75,7 @@ def test_fout(year):
     Econ.reV_run(points, sam_files, cf_file,
                  year=year, output_request='lcoe_fcr',
                  max_workers=1, sites_per_worker=25,
-                 points_range=None, fout=fout, dirout=dirout)
+                 points_range=None, out_fpath=fpath)
 
     with Outputs(fpath) as f:
         lcoe = f['lcoe_fcr']
