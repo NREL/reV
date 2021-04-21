@@ -251,7 +251,8 @@ def from_config(ctx, config_file, verbose):
               'return a scalar value to multiply the capital cost by. '
               'Independent variables in the equation should match the names '
               'of the columns in the reV supply curve aggregation table. '
-              'This will not affect offshore wind LCOE.')
+              'This equation may use numpy functions with the package prefix '
+              '"np". This will not affect offshore wind LCOE.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               show_default=True,
               help='Directory to save aggregation summary output.')

@@ -6,7 +6,7 @@ have reduced capital cost.
 import logging
 import copy
 import re
-import numpy as np
+import numpy as np  # pylint: disable=unused-import
 import pandas as pd
 
 from reV.econ.utilities import lcoe_fcr
@@ -39,7 +39,7 @@ class EconomiesOfScale:
             Equation must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the keys in the data input arg. This
-            equation may use numpy functions with the package prefix 'np'.
+            equation may use numpy functions with the package prefix "np".
         data : dict | pd.DataFrame
             Namespace of econ data to use to calculate economies of scale. Keys
             in dict or column labels in dataframe should match the Independent
