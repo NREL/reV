@@ -67,7 +67,7 @@ def from_config(ctx, config_file, verbose):
     config = GenConfig(config_file)
 
     # take name from config if not default
-    if config.name.lower() != 'rev':
+    if config.name.lower() != 'reV-gen':
         name = config.name
         ctx.obj['NAME'] = name
 

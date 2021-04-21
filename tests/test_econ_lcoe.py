@@ -7,7 +7,9 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
+from click.testing import CliRunner
 import h5py
+import json
 import numpy as np
 import os
 import pandas as pd
@@ -15,7 +17,10 @@ import shutil
 from pandas.testing import assert_frame_equal
 import pytest
 import tempfile
+import traceback
 
+from rex.utilities.loggers import LOGGERS
+from reV.cli import main
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -170,6 +175,72 @@ def test_append_multi_node(node):
             site_data.loc[site_data.gid.isin(meta.gid), 'capital_cost']
         assert np.allclose(test_cap_cost, sd_cap_cost)
         assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
+
+
+@pytest.fixture(scope="module")
+def runner():
+    """
+    cli runner
+    """
+    return CliRunner()
+
+
+def test_econ_from_config(runner):
+    """Econ LCOE from config"""
+    cf_file = os.path.join(TESTDATADIR,
+                           'gen_out/gen_ri_pv_2012_x000.h5')
+    sam_file = os.path.join(TESTDATADIR,
+                            'SAM/i_lcoe_naris_pv_1axis_inv13.json')
+    project_points = os.path.join(TESTDATADIR, 'pipeline',
+                                  'project_points_10.csv')
+    r1f = os.path.join(TESTDATADIR,
+                       'ri_pv/scalar_outputs/project_outputs.h5')
+    with tempfile.TemporaryDirectory() as td:
+        config = {
+            "analysis_years": 2012,
+            "cf_file": cf_file,
+            "directories": {
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "nodes": 1,
+                "option": "local",
+                "sites_per_worker": 10
+            },
+            "log_level": "INFO",
+            "name": "econ-test",
+            "output_request": [
+                "lcoe_fcr"
+            ],
+            "project_points": project_points,
+            "sam_files": {
+                "sam_gen_pv_1": sam_file
+            },
+            "technology": "pvwattsv5"
+        }
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['-c', config_path,
+                                      'econ'])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        out_fpath = os.path.join(td, 'econ-test_2012.h5')
+        with Outputs(out_fpath, 'r') as f:
+            lcoe = f['lcoe_fcr']
+
+        with h5py.File(r1f, mode='r') as f:
+            r1_lcoe = f['pv']['lcoefcr'][0, 0:10] * 1000
+
+        result = np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
+
+        assert result
+
+        LOGGERS.clear()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

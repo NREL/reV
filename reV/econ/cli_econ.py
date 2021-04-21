@@ -66,7 +66,7 @@ def from_config(ctx, config_file, verbose):
     config = EconConfig(config_file)
 
     # take name from config if not default
-    if config.name.lower() != 'rev':
+    if config.name.lower() != 'reV-econ':
         name = config.name
         ctx.obj['NAME'] = name
 
@@ -193,8 +193,6 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @main.group()
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files (required) (str, dict, or list).')
-@click.option('--out_fpath', '-o', type=click.Path(), required=True,
-              help='Ouput .h5 file path')
 @click.option('--cf_file', '-cf', default=None, type=click.Path(exists=True),
               show_default=True,
               help='Single generation results file (str).')
@@ -217,13 +215,8 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
               show_default=True,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
-@click.option('--fout', '-fo', default='econ_output.h5', type=STR,
-              show_default=True,
-              help=('Filename output specification (should be .h5). '
-                    'Default is "econ_output.h5"'))
-@click.option('--dirout', '-do', default='./out/econ_out', type=STR,
-              show_default=True,
-              help='Output directory specification. Default is ./out/econ_out')
+@click.option('--out_fpath', '-o', type=STR, default=None, show_default=True,
+              help='Ouput .h5 file path')
 @click.option('--logdir', '-lo', default='./out/log_econ', type=STR,
               show_default=True,
               help='Econ log file directory. Default is ./out/log_econ')
@@ -237,8 +230,8 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, sam_files, out_fpath, cf_file, year, points, site_data,
-           sites_per_worker, logdir, output_request,
+def direct(ctx, sam_files, cf_file, year, points, site_data,
+           sites_per_worker, out_fpath, logdir, output_request,
            append, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
@@ -286,9 +279,17 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    if out_fpath is None:
+        msg = ('An output .h5 file path was not provided, LCOE values will be '
+               'appended to {}'.format(cf_file))
+        logger.warning(msg)
+        warn(msg)
+        append = True
+
     if append:
-        fout = os.path.basename(cf_file)
-        dirout = os.path.dirname(cf_file)
+        out_fpath = cf_file
+
+    dirout, fout = os.path.split(out_fpath)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV', 'rex'],
@@ -318,7 +319,6 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                  append=append)
 
     tmp_str = ' with points range {}'.format(points_range)
-    dirout, fout = os.path.split(out_fpath)
     runtime = (time.time() - t0) / 60
     logger.info('Econ compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'

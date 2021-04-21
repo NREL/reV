@@ -8,6 +8,7 @@ Created on Thu Nov 29 09:54:51 2018
 @author: gbuster
 """
 from click.testing import CliRunner
+import json
 import numpy as np
 import os
 import pandas as pd
@@ -65,12 +66,18 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         config = os.path.join(TESTDATADIR,
                               'config/{}'.format(fconfig)).replace('\\', '/')
-        config_obj = GenConfig(config)
-        config_obj['directories']['log_directory'] = td
-        config_obj['directories']['outpath_directory'] = td
+        config = safe_json_load(config)
+        config['directories']['log_directory'] = td
+        config['directories']['outpath_directory'] = td
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        config_obj = GenConfig(config_path)
 
         result = runner.invoke(main, ['-n', job_name,
-                                      '-c', config,
+                                      '-c', config_path,
                                       'generation'])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
