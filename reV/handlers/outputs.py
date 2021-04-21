@@ -151,7 +151,7 @@ class Outputs(Resource):
         group : str
             Group within .h5 resource file to open
         """
-        self._h5_file = h5_file
+        self.h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
         self._unscale = unscale
         self._mode = mode

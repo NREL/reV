@@ -16,8 +16,8 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from rex import Resource
 
-RTOL = 0
-ATOL = 0.001
+RTOL = 0.01
+ATOL = 0
 
 
 def test_gen_swh_non_leap_year():

@@ -17,8 +17,8 @@ from reV import TESTDATADIR
 from rex import Resource
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_linear_2012.h5')
-RTOL = 0
-ATOL = 0.001
+RTOL = 0.01
+ATOL = 0
 
 
 def test_gen_linear():

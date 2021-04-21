@@ -167,15 +167,10 @@ def test_pv_gen_profiles(year):
         Gen.reV_run('pvwattsv5', points, sam_files, res_file,
                     out_fpath=rev2_out,
                     output_request=('cf_profile',),
-                    max_workers=2, sites_per_worker=50, dirout=rev2_out)
+                    max_workers=2, sites_per_worker=50)
 
-        # get reV 2.0 generation profiles from disk
-        flist = os.listdir(td)
-        for fname in flist:
-            if rev2_out.strip('.h5') in fname:
-                with Outputs(os.path.join(td, fname), 'r') as cf:
-                    rev2_profiles = cf['cf_profile']
-                break
+        with Outputs(rev2_out, 'r') as cf:
+            rev2_profiles = cf['cf_profile']
 
         # get reV 1.0 generation profiles
         rev1_profiles = get_r1_profiles(year=year)
@@ -200,13 +195,8 @@ def test_smart(year):
                     max_workers=2, sites_per_worker=50,
                     output_request=('cf_profile',))
 
-        # get reV 2.0 generation profiles from disk
-        flist = os.listdir(td)
-        for fname in flist:
-            if rev2_out.strip('.h5') in fname:
-                with Outputs(os.path.join(td, fname), 'r') as cf:
-                    rev2_profiles = cf['cf_profile']
-                break
+        with Outputs(rev2_out, 'r') as cf:
+            rev2_profiles = cf['cf_profile']
 
         # get reV 1.0 generation profiles
         rev1_profiles = get_r1_profiles(year=year)

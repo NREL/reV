@@ -88,7 +88,7 @@ class Econ(BaseGen):
 
         # initialize output file or append econ data to gen file
         if append:
-            self._fpath = self._cf_file
+            self._out_fpath = self._cf_file
         else:
             self._init_fpath()
 

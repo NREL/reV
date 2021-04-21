@@ -139,8 +139,7 @@ def test_append_multi_node(node):
         original_file = os.path.join(
             TESTDATADIR, 'gen_out/pv_atb20_gen_1998_node0{}.h5'.format(node))
         cf_file = os.path.join(
-            dirout,
-            'gen_out/copy_pv_atb20_gen_1998_node0{}.h5'.format(node))
+            dirout, 'copy_pv_atb20_gen_1998_node0{}.h5'.format(node))
         shutil.copy(original_file, cf_file)
         sam_files = {'default': os.path.join(
             TESTDATADIR, 'SAM/pv_tracking_atb2020.json')}
