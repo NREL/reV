@@ -13,6 +13,7 @@ import h5py
 import pytest
 import pandas as pd
 import numpy as np
+import tempfile
 
 from reV.utilities.exceptions import ExecutionError
 from reV.generation.generation import Gen
@@ -20,10 +21,8 @@ from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 
-
 RTOL = 0.0
 ATOL = 0.04
-PURGE_OUT = True
 
 
 class pv_results:
@@ -157,71 +156,63 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
 def test_pv_gen_profiles(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
-    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
-    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
-    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
-    rev2_out = 'gen_ri_pv_{}.h5'.format(year)
+    with tempfile.TemporaryDirectory() as td:
+        res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+        sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+        rev2_out = os.path.join(td, 'gen_ri_pv_{}.h5'.format(year))
 
-    points = slice(0, 100)
+        points = slice(0, 100)
 
-    # run reV 2.0 generation and write to disk
-    Gen.reV_run('pvwattsv5', points, sam_files, res_file, out_fpath=rev2_out,
-                output_request=('cf_profile',),
-                max_workers=2, sites_per_worker=50, dirout=rev2_out_dir)
+        # run reV 2.0 generation and write to disk
+        Gen.reV_run('pvwattsv5', points, sam_files, res_file,
+                    out_fpath=rev2_out,
+                    output_request=('cf_profile',),
+                    max_workers=2, sites_per_worker=50, dirout=rev2_out)
 
-    # get reV 2.0 generation profiles from disk
-    flist = os.listdir(rev2_out_dir)
-    for fname in flist:
-        if rev2_out.strip('.h5') in fname:
-            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profile']
-            break
-
-    # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=year)
-    rev1_profiles = rev1_profiles[:, points]
-
-    assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if PURGE_OUT:
-        # remove output files if test passes.
-        flist = os.listdir(rev2_out_dir)
+        # get reV 2.0 generation profiles from disk
+        flist = os.listdir(td)
         for fname in flist:
-            os.remove(os.path.join(rev2_out_dir, fname))
+            if rev2_out.strip('.h5') in fname:
+                with Outputs(os.path.join(td, fname), 'r') as cf:
+                    rev2_profiles = cf['cf_profile']
+                break
+
+        # get reV 1.0 generation profiles
+        rev1_profiles = get_r1_profiles(year=year)
+        rev1_profiles = rev1_profiles[:, points]
+
+        assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
 def test_smart(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
-    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
-    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
-    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
-    rev2_out = 'gen_ri_pv_smart_{}.h5'.format(year)
+    with tempfile.TemporaryDirectory() as td:
+        res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+        sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+        rev2_out = os.path.join(td, 'gen_ri_pv_smart_{}.h5'.format(year))
 
-    points = slice(0, 10)
+        points = slice(0, 10)
 
-    # run reV 2.0 generation and write to disk
-    Gen.reV_run('pvwattsv5', points, sam_files, res_file, out_fpath=rev2_out,
-                max_workers=2, sites_per_worker=50, dirout=rev2_out_dir,
-                output_request=('cf_profile',))
+        # run reV 2.0 generation and write to disk
+        Gen.reV_run('pvwattsv5', points, sam_files, res_file,
+                    out_fpath=rev2_out,
+                    max_workers=2, sites_per_worker=50,
+                    output_request=('cf_profile',))
 
-    # get reV 2.0 generation profiles from disk
-    flist = os.listdir(rev2_out_dir)
-    for fname in flist:
-        if rev2_out.strip('.h5') in fname:
-            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profile']
-            break
-
-    # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=year)
-    rev1_profiles = rev1_profiles[:, points]
-
-    assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if PURGE_OUT:
-        # remove output files if test passes.
-        flist = os.listdir(rev2_out_dir)
+        # get reV 2.0 generation profiles from disk
+        flist = os.listdir(td)
         for fname in flist:
-            os.remove(os.path.join(rev2_out_dir, fname))
+            if rev2_out.strip('.h5') in fname:
+                with Outputs(os.path.join(td, fname), 'r') as cf:
+                    rev2_profiles = cf['cf_profile']
+                break
+
+        # get reV 1.0 generation profiles
+        rev1_profiles = get_r1_profiles(year=year)
+        rev1_profiles = rev1_profiles[:, points]
+
+        assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
 
 
 def test_multi_file_nsrdb_2018():

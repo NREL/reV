@@ -11,28 +11,17 @@ Created on Thu Nov 29 09:54:51 2018
 import os
 import pytest
 import json
+import tempfile
 
 from reV.pipeline.status import Status
 from reV import TESTDATADIR
 
 RTOL = 0.0
 ATOL = 0.04
-PURGE_OUT = True
-
-STATUS_DIR = os.path.join(TESTDATADIR, 'status/')
-if not os.path.exists(STATUS_DIR):
-    os.makedirs(STATUS_DIR)
 
 TEST_1_ATTRS_1 = {'job_name': 'test1', 'job_status': 'R', 'run_id': 1234}
 TEST_1_ATTRS_2 = {'job_name': 'test1', 'job_status': 'successful'}
 TEST_2_ATTRS_1 = {'job_name': 'test2', 'job_status': 'R'}
-
-
-def purge():
-    """Purge files in the status dir"""
-    if PURGE_OUT:
-        for fname in os.listdir(STATUS_DIR):
-            os.remove(os.path.join(STATUS_DIR, fname))
 
 
 def test_recursive_update():
@@ -47,68 +36,64 @@ def test_recursive_update():
 
 def test_file_collection():
     """Test file creation and collection"""
-    purge()
+    with tempfile.TemporaryDirectory() as STATUS_DIR:
+        Status.make_job_file(STATUS_DIR, 'generation', 'test1', TEST_1_ATTRS_1)
+        Status.make_job_file(STATUS_DIR, 'generation', 'test2', TEST_2_ATTRS_1)
 
-    Status.make_job_file(STATUS_DIR, 'generation', 'test1', TEST_1_ATTRS_1)
-    Status.make_job_file(STATUS_DIR, 'generation', 'test2', TEST_2_ATTRS_1)
-
-    Status.update(STATUS_DIR)
-    with open(os.path.join(STATUS_DIR, 'rev_status.json'), 'r') as f:
-        data = json.load(f)
-    assert str(TEST_1_ATTRS_1) in str(data)
-    assert str(TEST_2_ATTRS_1) in str(data)
-    purge()
+        Status.update(STATUS_DIR)
+        with open(os.path.join(STATUS_DIR, 'rev_status.json'), 'r') as f:
+            data = json.load(f)
+        assert str(TEST_1_ATTRS_1) in str(data)
+        assert str(TEST_2_ATTRS_1) in str(data)
 
 
 def test_make_file():
     """Test file creation and reading"""
-    purge()
-    Status.make_job_file(STATUS_DIR, 'generation', 'test1', TEST_1_ATTRS_1)
-    status = Status.retrieve_job_status(STATUS_DIR, 'generation', 'test1')
-    msg = 'Failed, status is "{}"'.format(status)
-    assert status == 'R', msg
-    purge()
+    with tempfile.TemporaryDirectory() as STATUS_DIR:
+        Status.make_job_file(STATUS_DIR, 'generation', 'test1', TEST_1_ATTRS_1)
+        status = Status.retrieve_job_status(STATUS_DIR, 'generation', 'test1')
+        msg = 'Failed, status is "{}"'.format(status)
+        assert status == 'R', msg
 
 
 def test_job_exists():
     """Test job addition and exist check"""
-    purge()
-    Status.add_job(STATUS_DIR, 'generation', 'test1',
-                   job_attrs={'job_status': 'submitted'})
-    exists = Status.job_exists(STATUS_DIR, 'test1')
-    assert exists
-    purge()
+    with tempfile.TemporaryDirectory() as STATUS_DIR:
+        Status.add_job(STATUS_DIR, 'generation', 'test1',
+                       job_attrs={'job_status': 'submitted'})
+        exists = Status.job_exists(STATUS_DIR, 'test1')
+        assert exists
 
 
 def test_job_addition():
     """Test job addition and exist check"""
-    purge()
-    Status.add_job(STATUS_DIR, 'generation', 'test1')
-    status1 = Status(STATUS_DIR).data['generation']['test1']['job_status']
+    with tempfile.TemporaryDirectory() as STATUS_DIR:
+        Status.add_job(STATUS_DIR, 'generation', 'test1')
+        status1 = Status(STATUS_DIR).data['generation']['test1']['job_status']
 
-    Status.add_job(STATUS_DIR, 'generation', 'test1',
-                   job_attrs={'job_status': 'finished', 'additional': 'test'})
-    status2 = Status(STATUS_DIR).data['generation']['test1']['job_status']
+        Status.add_job(STATUS_DIR, 'generation', 'test1',
+                       job_attrs={'job_status': 'finished',
+                                  'additional': 'test'})
+        status2 = Status(STATUS_DIR).data['generation']['test1']['job_status']
 
-    assert status2 == status1
-    purge()
+        assert status2 == status1
 
 
 def test_job_replacement():
     """Test job addition and replacement"""
-    purge()
-    Status.add_job(STATUS_DIR, 'generation', 'test1',
-                   job_attrs={'job_status': 'submitted'})
+    with tempfile.TemporaryDirectory() as STATUS_DIR:
+        Status.add_job(STATUS_DIR, 'generation', 'test1',
+                       job_attrs={'job_status': 'submitted'})
 
-    Status.add_job(STATUS_DIR, 'generation', 'test1',
-                   job_attrs={'addition': 'test', 'job_status': 'finished'},
-                   replace=True)
+        Status.add_job(STATUS_DIR, 'generation', 'test1',
+                       job_attrs={'addition': 'test',
+                                  'job_status': 'finished'},
+                       replace=True)
 
-    status = Status(STATUS_DIR).data['generation']['test1']['job_status']
-    addition = Status(STATUS_DIR).data['generation']['test1']['addition']
-    assert status == 'finished'
-    assert addition == 'test'
-    purge()
+        status = Status(STATUS_DIR).data['generation']['test1']['job_status']
+        addition = Status(STATUS_DIR).data['generation']['test1']['addition']
+        assert status == 'finished'
+        assert addition == 'test'
 
 
 def execute_pytest(capture='all', flags='-rapP'):

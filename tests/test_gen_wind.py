@@ -13,6 +13,7 @@ import h5py
 import pytest
 import pandas as pd
 import numpy as np
+import tempfile
 
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
@@ -20,7 +21,6 @@ from reV import TESTDATADIR
 
 RTOL = 0
 ATOL = 0.001
-PURGE_OUT = True
 
 
 class wind_results:

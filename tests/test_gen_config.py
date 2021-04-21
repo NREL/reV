@@ -12,6 +12,7 @@ import numpy as np
 import os
 import pandas as pd
 import pytest
+import tempfile
 import traceback
 
 from rex.utilities.loggers import LOGGERS
@@ -25,7 +26,6 @@ from rex.utilities.utilities import safe_json_load
 
 RTOL = 0.0
 ATOL = 0.04
-PURGE_OUT = True
 
 
 @pytest.fixture(scope="module")
@@ -55,64 +55,63 @@ def get_r1_profiles(year=2012, tech='pv'):
 @pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
 def test_gen_from_config(runner, tech):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
+    with tempfile.TemporaryDirectory() as td:
+        job_name = 'config_test_{}'.format(tech)
 
-    job_name = 'config_test_{}'.format(tech)
+        if tech == 'pv':
+            fconfig = 'local_pv.json'
+        elif tech == 'wind':
+            fconfig = 'local_wind.json'
 
-    if tech == 'pv':
-        fconfig = 'local_pv.json'
-    elif tech == 'wind':
-        fconfig = 'local_wind.json'
+        config = os.path.join(TESTDATADIR,
+                              'config/{}'.format(fconfig)).replace('\\', '/')
+        config_obj = GenConfig(config)
+        config_obj['directories']['log_directory'] = td
+        config_obj['directories']['outpath_directory'] = td
 
-    config = os.path.join(TESTDATADIR,
-                          'config/{}'.format(fconfig)).replace('\\', '/')
-    config_obj = GenConfig(config)
+        result = runner.invoke(main, ['-n', job_name,
+                                      '-c', config,
+                                      'generation'])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
 
-    result = runner.invoke(main, ['-n', job_name,
-                                  '-c', config,
-                                  'generation'])
-    msg = ('Failed with error {}'
-           .format(traceback.print_exception(*result.exc_info)))
-    assert result.exit_code == 0, msg
-
-    # get reV 2.0 generation profiles from disk
-    rev2_profiles = None
-    flist = os.listdir(config_obj.dirout)
-    for fname in flist:
-        if job_name in fname and fname.endswith('.h5'):
-            with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
-
-                msg = 'cf_profile not written to disk'
-                assert 'cf_profile' in cf.datasets, msg
-                rev2_profiles = cf['cf_profile']
-
-                msg = 'monthly_energy not written to disk'
-                assert 'monthly_energy' in cf.datasets, msg
-                monthly = cf['monthly_energy']
-                assert monthly.shape == (12, 10)
-
-            break
-
-    if rev2_profiles is None:
-        msg = ('reV gen from config failed for "{}"! Could not find '
-               'output file in flist: {}'.format(tech, flist))
-        raise RuntimeError(msg)
-
-    # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
-    rev1_profiles = rev1_profiles[:, config_obj.parse_points_control().sites]
-
-    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-
-    LOGGERS.clear()
-    if result and PURGE_OUT:
-        # remove output files if test passes.
+        # get reV 2.0 generation profiles from disk
+        rev2_profiles = None
         flist = os.listdir(config_obj.dirout)
         for fname in flist:
-            os.remove(os.path.join(config_obj.dirout, fname))
+            if job_name in fname and fname.endswith('.h5'):
+                path = os.path.join(config_obj.dirout, fname)
+                with Outputs(path, 'r') as cf:
 
-    msg = ('reV generation from config input failed for "{}" module!'
-           .format(tech))
-    assert result is True, msg
+                    msg = 'cf_profile not written to disk'
+                    assert 'cf_profile' in cf.datasets, msg
+                    rev2_profiles = cf['cf_profile']
+
+                    msg = 'monthly_energy not written to disk'
+                    assert 'monthly_energy' in cf.datasets, msg
+                    monthly = cf['monthly_energy']
+                    assert monthly.shape == (12, 10)
+
+                break
+
+        if rev2_profiles is None:
+            msg = ('reV gen from config failed for "{}"! Could not find '
+                   'output file in flist: {}'.format(tech, flist))
+            raise RuntimeError(msg)
+
+        # get reV 1.0 generation profiles
+        rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
+        rev1_profiles = \
+            rev1_profiles[:, config_obj.parse_points_control().sites]
+
+        result = np.allclose(rev1_profiles, rev2_profiles,
+                             rtol=RTOL, atol=ATOL)
+
+        LOGGERS.clear()
+        msg = ('reV generation from config input failed for "{}" module!'
+               .format(tech))
+        assert result is True, msg
 
 
 @pytest.mark.parametrize('tech', ['pv', 'wind'])
