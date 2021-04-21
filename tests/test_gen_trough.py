@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 PyTest file for trough physical heat
 This is intended to be run with PySAM 1.2.1
@@ -12,6 +13,11 @@ import pytest
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+from rex import Resource
+
+BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_trough_2012.h5')
+RTOL = 0
+ATOL = 0.001
 
 
 def test_gen_tph():
@@ -41,14 +47,12 @@ def test_gen_tph():
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
 
-    def my_assert(x, y, digits):
-        if isinstance(x, np.ndarray):
-            x = float(x.sum())
-        assert round(x, digits) == round(y, digits)
-
-    # Some results may be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['annual_thermal_consumption'], 16361.0, 0)
-    my_assert(gen.out['annual_gross_energy'], 14400000., -6)
+    with Resource(BASELINE) as f:
+        for dset in output_request:
+            truth = f[dset]
+            test = gen.out[dset]
+            msg = '{} outputs do not match baseline value!'.format(dset)
+            assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 PyTest file for CSP generation in Rhode Island (lol).
 
@@ -12,6 +13,11 @@ import pytest
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+from rex import Resource
+
+BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_csp_2012.h5')
+RTOL = 0
+ATOL = 0.001
 
 
 def test_gen_csp():
@@ -21,18 +27,18 @@ def test_gen_csp():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
 
     # run reV 2.0 generation
+    output_request = ('cf_mean', 'cf_profile', 'gen_profile')
     gen = Gen.reV_run('tcsmoltensalt', points, sam_files, res_file,
                       max_workers=1,
-                      output_request=('cf_mean', 'cf_profile', 'gen_profile'),
-                      sites_per_worker=1, fout=None, scale_outputs=False)
+                      output_request=output_request,
+                      sites_per_worker=1, fout=None, scale_outputs=True)
 
-    cf_mean = gen.out['cf_mean']
-    cf_profile = gen.out['cf_profile']
-    gen_profile = gen.out['gen_profile']
-
-    assert np.isclose(cf_mean, 0.2679, atol=0.001)
-    assert np.isclose(cf_profile.max(), 0.001)
-    assert gen_profile.max() > 1e5
+    with Resource(BASELINE) as f:
+        for dset in output_request:
+            truth = f[dset]
+            test = gen.out[dset]
+            msg = '{} outputs do not match baseline value!'.format(dset)
+            assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

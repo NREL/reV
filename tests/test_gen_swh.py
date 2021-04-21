@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 PyTest file for solar water heating generation
 This is intended to be run with PySAM 1.2.1
@@ -13,23 +14,15 @@ import json
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+from rex import Resource
 
-BASELINE = os.path.join(TESTDATADIR, 'SAM/output_swh.json')
-
-
-def my_assert(x, y, digits):
-    """
-    Sum time series data for comparison to rounded known value. This is an
-    arbitrary method of comparison but it's simple.
-    """
-    if isinstance(x, np.ndarray):
-        x = float(x.sum())
-    assert round(x, digits) == round(y, digits)
+RTOL = 0
+ATOL = 0.001
 
 
 def test_gen_swh_non_leap_year():
     """Test generation for solar water heating for non leap year (2013)"""
-
+    BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_swh_2013.h5')
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/swh_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2013)
@@ -45,28 +38,18 @@ def test_gen_swh_non_leap_year():
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
 
-    # Some results will be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['T_amb'], 180621, 0)
-    my_assert(gen.out['T_cold'], 410491.1066, 0)
-    my_assert(gen.out['T_deliv'], 813060.4364, 0)
-    my_assert(gen.out['T_hot'], 813419.981, 0)
-    my_assert(gen.out['Q_deliv'], 5390.47749, 1)
-
-    # Verify series are in correct order and have been rolled correctly
-    if os.path.exists(BASELINE):
-        with open(BASELINE, 'r') as f:
-            profiles = json.load(f)
-        for k in profiles.keys():
-            assert np.allclose(profiles[k], gen.out[k], rtol=0, atol=0.001)
-    else:
-        with open(BASELINE, 'w') as f:
-            out = {k: v.tolist() for k, v in gen.out.items()}
-            json.dump(out, f)
+    with Resource(BASELINE) as f:
+        for dset in output_request:
+            truth = f[dset]
+            test = gen.out[dset]
+            msg = '{} outputs do not match baseline value!'.format(dset)
+            assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
 def test_gen_swh_leap_year():
     """Test generation for solar water heating for a leap year (2012)"""
 
+    BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_swh_2012.h5')
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/swh_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
@@ -81,20 +64,12 @@ def test_gen_swh_leap_year():
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
 
-    # Some results will be different with PySAM 2 vs 1.2.1, in particular,
-    # solar_fraction and cf_mean
-    my_assert(gen.out['T_amb'], 204459, 0)
-    my_assert(gen.out['T_cold'], 433511.47, 0)
-    my_assert(gen.out['T_deliv'], 836763.3482, 0)
-    my_assert(gen.out['T_hot'], 836961.2498, 0)
-    my_assert(gen.out['draw'], 145999.90, 0)
-    my_assert(gen.out['beam'], 3047259, 0)
-    my_assert(gen.out['diffuse'], 1222013, 0)
-    my_assert(gen.out['I_incident'], 3279731.523, -1)
-    my_assert(gen.out['I_transmitted'], 2769482.776, -1)
-    my_assert(gen.out['annual_Q_deliv'], 2697.09, 1)
-    my_assert(gen.out['Q_deliv'], 5394.188339, 1)
-    my_assert(gen.out['solar_fraction'], 0.6772, 4)
+    with Resource(BASELINE) as f:
+        for dset in output_request:
+            truth = f[dset]
+            test = gen.out[dset]
+            msg = '{} outputs do not match baseline value!'.format(dset)
+            assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
