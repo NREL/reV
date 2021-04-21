@@ -6,6 +6,7 @@ have reduced capital cost.
 import logging
 import copy
 import re
+import numpy as np
 import pandas as pd
 
 from reV.econ.utilities import lcoe_fcr
@@ -37,7 +38,8 @@ class EconomiesOfScale:
             LCOE scaling equation to implement "economies of scale".
             Equation must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
-            the equation should match the keys in the data input arg.
+            the equation should match the keys in the data input arg. This
+            equation may use numpy functions with the package prefix 'np'.
         data : dict | pd.DataFrame
             Namespace of econ data to use to calculate economies of scale. Keys
             in dict or column labels in dataframe should match the Independent
@@ -104,12 +106,13 @@ class EconomiesOfScale:
         """
         var_names = []
         if self._eqn is not None:
-            delimiters = ('*', '/', '+', '-', ' ', '(', ')', '[', ']')
+            delimiters = ('*', '/', '+', '-', ' ', '(', ')', '[', ']', ',')
             regex_pattern = '|'.join(map(re.escape, delimiters))
-            var_names = [sub for sub in re.split(regex_pattern, str(self._eqn))
-                         if sub
-                         and not self.is_num(sub)
-                         and not self.is_method(sub)]
+            var_names = []
+            for sub in re.split(regex_pattern, str(self._eqn)):
+                if sub:
+                    if not self.is_num(sub) and not self.is_method(sub):
+                        var_names.append(sub)
             var_names = sorted(list(set(var_names)))
 
         return var_names
