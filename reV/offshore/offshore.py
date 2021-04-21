@@ -51,12 +51,14 @@ class Offshore:
             Instantiated project points instance.
         offshore_meta_cols : list | tuple | None
             Column labels from offshore_fpath to pass through to the output
-            meta data. None will use class variable DEFAULT_META_COLS, and any
-            additional cols requested here will be added to DEFAULT_META_COLS.
+            meta data. None (default) will use class variable
+            DEFAULT_META_COLS, and any additional cols requested here will be
+            added to DEFAULT_META_COLS.
         offshore_nrwal_keys : list | tuple | None
-            Column labels from the NRWAL configs to pass through to the output
-            h5 file. None will use class variable DEFAULT_NRWAL_KEYS, and any
-            additional cols requested here will be added to DEFAULT_NRWAL_KEYS.
+            Equation labels from the NRWAL configs to pass through to the
+            output h5 file. None will use class variable DEFAULT_NRWAL_KEYS,
+            and any additional cols requested here will be added to
+            DEFAULT_NRWAL_KEYS.
         nrwal_lcoe_key : str
             Key in the NRWAL config for final LCOE output value. Can be
             changed and runtime for different NRWAL configs using this kwarg.
@@ -522,12 +524,14 @@ class Offshore:
             column maps to the sam_files and nrwal_configs inputs.
         offshore_meta_cols : list | tuple | None
             Column labels from offshore_fpath to pass through to the output
-            meta data. None will use class variable DEFAULT_META_COLS, and any
-            additional cols requested here will be added to DEFAULT_META_COLS.
+            meta data. None (default) will use class variable
+            DEFAULT_META_COLS, and any additional cols requested here will be
+            added to DEFAULT_META_COLS.
         offshore_nrwal_keys : list | tuple | None
-            Column labels from the NRWAL configs to pass through to the output
-            h5 file. None will use class variable DEFAULT_NRWAL_KEYS, and any
-            additional cols requested here will be added to DEFAULT_NRWAL_KEYS.
+            Equation labels from the NRWAL configs to pass through to the
+            output h5 file. None will use class variable DEFAULT_NRWAL_KEYS,
+            and any additional cols requested here will be added to
+            DEFAULT_NRWAL_KEYS.
         nrwal_lcoe_key : str
             Key in the NRWAL config for final LCOE output value. Can be
             changed and runtime for different NRWAL configs using this kwarg.

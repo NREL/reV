@@ -58,8 +58,10 @@ class OffshoreConfig(AnalysisConfig):
 
     @property
     def offshore_meta_cols(self):
-        """Get columns from the offshore data fpath to pass through as new
-        columns in the reV output meta data."""
+        """Column labels from offshore_fpath to pass through to the output meta
+        data. None (default) will use the offshore class variable
+        DEFAULT_META_COLS, and any additional cols requested here will be added
+        to DEFAULT_META_COLS."""
         return self.get('offshore_meta_cols', None)
 
     @property

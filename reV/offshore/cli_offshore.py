@@ -151,8 +151,10 @@ def from_config(ctx, config_file, verbose):
               'filepaths. (required) (dict). Should have the same config '
               'keys as the sam_files input.')
 @click.option('--offshore_meta_cols', '-mc', default=None, type=STRLIST,
-              help='Columns from the offshore data fpath to pass through as '
-              'new columns in the reV output meta data.')
+              help='Column labels from offshore_fpath to pass through to the '
+              'output meta data. None (default) will use class variable '
+              'DEFAULT_META_COLS, and any additional cols requested here will '
+              'be added to DEFAULT_META_COLS.')
 @click.option('--offshore_nrwal_keys', '-nk', default=None, type=STRLIST,
               help='Keys from the offshore nrwal configs to pass through as '
               'new datasets in the reV output h5.')
