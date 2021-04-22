@@ -12,6 +12,7 @@ import pytest
 import numpy as np
 import pandas as pd
 import json
+import tempfile
 
 from reV.offshore.offshore import Offshore
 from reV import TESTDATADIR
@@ -26,14 +27,13 @@ OFFSHORE_FPATH = os.path.join(TESTDATADIR, 'offshore/',
                               'preliminary_orca_results_09042019_JN.csv')
 POINTS = os.path.join(TESTDATADIR, 'offshore/project_points.csv')
 SAM_FILE = {'default': os.path.join(TESTDATADIR, 'offshore/6MW_offshore.json')}
-OUTPUT_FILE = os.path.join(TESTDATADIR, 'offshore/out.h5')
 TRANS_TABLE = os.path.join(TESTDATADIR,
                            'trans_tables/ri_transmission_table.csv')
 OFFSHORE_TRANS_TABLE = os.path.join(TESTDATADIR, 'trans_tables/'
                                     'ri_transmission_table_offshore.csv')
 
 # this is an archived version of the test_offshore_module()
-# output file (OUTPUT_FILE) used for input to test_sc_agg_offshore()
+# output file (out_file) used for input to test_sc_agg_offshore()
 OFFSHORE_BASELINE = os.path.join(TESTDATADIR,
                                  'offshore/ri_offshore_baseline.h5')
 AGG_BASELINE = os.path.join(TESTDATADIR,
@@ -63,8 +63,6 @@ TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
 
 RTOL = 0.001
 
-PURGE_OUT = True
-
 
 @pytest.fixture
 def sc_points():
@@ -74,105 +72,107 @@ def sc_points():
     return sc_points
 
 
-@pytest.fixture
-def offshore():
+def run_offshore(out_file):
     """Offshore module object for tests and plotting."""
     pytest.importorskip("ORCA")  # skip tests with this fixture if no ORCA
     obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILE,
-                       fpath_out=OUTPUT_FILE, sub_dir=None)
+                       fpath_out=out_file, sub_dir=None)
 
     return obj
 
 
-def test_offshore_module(offshore):
+def test_offshore_module():
     """Run an offshore module test and validate a few outputs against
     the raw gen output."""
-    assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
-    assert all(offshore.meta_out['gid'] == sorted(offshore.meta_out['gid']))
-    assert len(offshore.meta_out['gid'].unique()) == len(offshore.meta_out)
+    with tempfile.TemporaryDirectory() as TEMP_DIR:
+        out_file = os.path.join(TEMP_DIR, 'out.h5')
+        offshore = run_offshore(out_file)
 
-    with Outputs(GEN_FPATH, mode='r') as source:
-        with Outputs(OUTPUT_FILE, mode='r') as out:
+        assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
+        test = all(offshore.meta_out['gid']
+                   == sorted(offshore.meta_out['gid']))
+        assert test
+        assert len(offshore.meta_out['gid'].unique()) == len(offshore.meta_out)
 
-            source_meta = source.meta
-            source_mean_data = source['cf_mean']
-            source_lcoe_data = source['lcoe_fcr']
-            source_ws_data = source['ws_mean']
-            source_profile_data = source['cf_profile']
+        with Outputs(GEN_FPATH, mode='r') as source:
+            with Outputs(out_file, mode='r') as out:
 
-            out_meta = out.meta
-            out_mean_data = out['cf_mean']
-            out_lcoe_data = out['lcoe_fcr']
-            out_ws_data = out['ws_mean']
-            out_profile_data = out['cf_profile']
+                source_meta = source.meta
+                source_mean_data = source['cf_mean']
+                source_lcoe_data = source['lcoe_fcr']
+                source_ws_data = source['ws_mean']
+                source_profile_data = source['cf_profile']
 
-    for col in Offshore.DEFAULT_META_COLS:
-        msg = ('Offshore data column "{}" was not passed through to meta'
-               .format(col))
-        assert col in out_meta, msg
+                out_meta = out.meta
+                out_mean_data = out['cf_mean']
+                out_lcoe_data = out['lcoe_fcr']
+                out_ws_data = out['ws_mean']
+                out_profile_data = out['cf_profile']
 
-    for gid in offshore.onshore_gids:
-        source_loc = np.where(source_meta['gid'] == gid)[0][0]
-        out_loc = np.where(out_meta['gid'] == gid)[0][0]
+        for col in Offshore.DEFAULT_META_COLS:
+            msg = ('Offshore data column "{}" was not passed through to meta'
+                   .format(col))
+            assert col in out_meta, msg
 
-        check_lcoe = (source_lcoe_data[source_loc]
-                      == out_lcoe_data[out_loc])
-        check_ws = (source_ws_data[source_loc]
-                    == out_ws_data[out_loc])
-        check_mean = (source_mean_data[source_loc]
-                      == out_mean_data[out_loc])
-        check_profile = np.allclose(source_profile_data[:, source_loc],
-                                    out_profile_data[:, out_loc])
-        m = ('Source onshore "{}" data for gid {} does not match '
-             'output file data.')
-        assert check_lcoe, m.format('lcoe', gid)
-        assert check_ws, m.format('ws_mean', gid)
-        assert check_mean, m.format('cf_mean', gid)
-        assert check_profile, m.format('cf_profile', gid)
+        for gid in offshore.onshore_gids:
+            source_loc = np.where(source_meta['gid'] == gid)[0][0]
+            out_loc = np.where(out_meta['gid'] == gid)[0][0]
 
-    for i in range(0, 20):
+            check_lcoe = (source_lcoe_data[source_loc]
+                          == out_lcoe_data[out_loc])
+            check_ws = (source_ws_data[source_loc]
+                        == out_ws_data[out_loc])
+            check_mean = (source_mean_data[source_loc]
+                          == out_mean_data[out_loc])
+            check_profile = np.allclose(source_profile_data[:, source_loc],
+                                        out_profile_data[:, out_loc])
+            m = ('Source onshore "{}" data for gid {} does not match '
+                 'output file data.')
+            assert check_lcoe, m.format('lcoe', gid)
+            assert check_ws, m.format('ws_mean', gid)
+            assert check_mean, m.format('cf_mean', gid)
+            assert check_profile, m.format('cf_profile', gid)
 
-        agg_gids = offshore.meta_out_offshore.iloc[i]['offshore_res_gids']
-        agg_gids = json.loads(agg_gids)
-        farm_gid = offshore.meta_out_offshore.iloc[i]['gid']
+        for i in range(0, 20):
 
-        mask = np.isin(offshore.meta_source_full['gid'].values, agg_gids)
-        gen_gids = np.where(mask)[0]
-        if not any(gen_gids):
-            raise ValueError('Could not find offshore farm gid {} resource '
-                             'gids in meta source: {}'
-                             .format(farm_gid, agg_gids))
+            agg_gids = offshore.meta_out_offshore.iloc[i]['offshore_res_gids']
+            agg_gids = json.loads(agg_gids)
+            farm_gid = offshore.meta_out_offshore.iloc[i]['gid']
 
-        ws_mean = source_ws_data[gen_gids]
-        lcoe_land = source_lcoe_data[gen_gids]
-        cf_mean = source_mean_data[gen_gids]
-        cf_profile = source_profile_data[:, gen_gids]
+            mask = np.isin(offshore.meta_source_full['gid'].values, agg_gids)
+            gen_gids = np.where(mask)[0]
+            if not any(gen_gids):
+                raise ValueError('Could not find offshore farm gid {} resource'
+                                 ' gids in meta source: {}'
+                                 .format(farm_gid, agg_gids))
 
-        m = 'Offshore lcoe was average aggregated instead of ORCA!'
-        assert offshore.out['lcoe_fcr'][i] != lcoe_land.mean(), m
+            ws_mean = source_ws_data[gen_gids]
+            lcoe_land = source_lcoe_data[gen_gids]
+            cf_mean = source_mean_data[gen_gids]
+            cf_profile = source_profile_data[:, gen_gids]
 
-        m = 'Offshore output data "{}" does not match average source data!'
-        check_cf_mean = offshore.out['cf_mean'][i] == cf_mean.mean()
-        check_ws_mean = offshore.out['ws_mean'][i] == ws_mean.mean()
-        check_profiles = np.allclose(offshore.out['cf_profile'][:, i],
-                                     cf_profile.mean(axis=1))
-        assert check_cf_mean, m.format('cf_mean')
-        assert check_ws_mean, m.format('ws_mean')
-        assert check_profiles, m.format('cf_profile')
+            m = 'Offshore lcoe was average aggregated instead of ORCA!'
+            assert offshore.out['lcoe_fcr'][i] != lcoe_land.mean(), m
 
-    for i, gid in enumerate(offshore.offshore_gids):
-        out_loc = np.where(out_meta['gid'] == gid)[0][0]
-        arr1 = offshore.out['cf_profile'][:, i]
-        arr2 = out_profile_data[:, out_loc]
-        arr1 = np.round(arr1, decimals=3)
-        diff = (arr1 - arr2)
-        diff /= arr2
-        m = ('Offshore cf profile data does not match output file data '
-             'for gid {}'.format(gid))
-        assert np.allclose(arr1, arr2), m
+            m = 'Offshore output data "{}" does not match average source data!'
+            check_cf_mean = offshore.out['cf_mean'][i] == cf_mean.mean()
+            check_ws_mean = offshore.out['ws_mean'][i] == ws_mean.mean()
+            check_profiles = np.allclose(offshore.out['cf_profile'][:, i],
+                                         cf_profile.mean(axis=1))
+            assert check_cf_mean, m.format('cf_mean')
+            assert check_ws_mean, m.format('ws_mean')
+            assert check_profiles, m.format('cf_profile')
 
-    if PURGE_OUT:
-        os.remove(OUTPUT_FILE)
+        for i, gid in enumerate(offshore.offshore_gids):
+            out_loc = np.where(out_meta['gid'] == gid)[0][0]
+            arr1 = offshore.out['cf_profile'][:, i]
+            arr2 = out_profile_data[:, out_loc]
+            arr1 = np.round(arr1, decimals=3)
+            diff = (arr1 - arr2)
+            diff /= arr2
+            m = ('Offshore cf profile data does not match output file data '
+                 'for gid {}'.format(gid))
+            assert np.allclose(arr1, arr2), m
 
 
 def test_sc_agg_offshore():

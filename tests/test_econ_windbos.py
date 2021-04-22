@@ -11,18 +11,16 @@ import os
 import pytest
 import numpy as np
 import pandas as pd
+import tempfile
 
 from reV.generation.generation import Gen
 from reV.econ.econ import Econ
 from reV.SAM.windbos import WindBos
 from reV import TESTDATADIR
 
-
 RTOL = 0.000001
 ATOL = 0.001
-PURGE_OUT = True
 OUT_DIR = os.path.join(TESTDATADIR, 'ri_wind_reV2/')
-
 
 DEFAULTS = {'tech_model': 'windbos',
             'financial_model': 'none',
@@ -181,34 +179,34 @@ def test_rev_windbos_sales():
 def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
+    with tempfile.TemporaryDirectory() as td:
+        # get full file paths.
+        sam_files = os.path.join(TESTDATADIR, 'SAM/i_singleowner_windbos.json')
+        res_file = os.path.join(TESTDATADIR,
+                                'wtk/ri_100_wtk_{}.h5'.format(year))
+        fn_gen = 'windbos_gen_{}.h5'.format(year)
+        cf_file = os.path.join(td, fn_gen)
 
-    # get full file paths.
-    sam_files = os.path.join(TESTDATADIR, 'SAM/i_singleowner_windbos.json')
-    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5'.format(year))
-    fn_gen = 'windbos_gen_{}.h5'.format(year)
-    cf_file = os.path.join(OUT_DIR, fn_gen)
+        # run reV 2.0 generation
+        Gen.reV_run('windpower', points, sam_files, res_file,
+                    output_request=('cf_mean', 'cf_profile'),
+                    max_workers=max_workers, sites_per_worker=3,
+                    out_fpath=cf_file)
 
-    # run reV 2.0 generation
-    Gen.reV_run('windpower', points, sam_files, res_file,
-                output_request=('cf_mean', 'cf_profile'),
-                max_workers=max_workers, sites_per_worker=3, fout=fn_gen,
-                dirout=OUT_DIR)
+        econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
+                     'project_return_aftertax_npv', 'total_installed_cost',
+                     'turbine_cost', 'sales_tax_cost', 'bos_cost')
+        e = Econ.reV_run(points, sam_files, cf_file,
+                         year=year, site_data=None, output_request=econ_outs,
+                         max_workers=max_workers, sites_per_worker=3,
+                         out_fpath=None)
 
-    econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
-                 'project_return_aftertax_npv', 'total_installed_cost',
-                 'turbine_cost', 'sales_tax_cost', 'bos_cost')
-    e = Econ.reV_run(points, sam_files, cf_file,
-                     year=year, site_data=None, output_request=econ_outs,
-                     max_workers=max_workers, sites_per_worker=3, fout=None)
+        for k in econ_outs:
+            msg = 'Failed for {}'.format(k)
+            test = np.allclose(e.out[k], BASELINE[k], atol=ATOL, rtol=RTOL)
+            assert test, msg
 
-    for k in econ_outs:
-        msg = 'Failed for {}'.format(k)
-        assert np.allclose(e.out[k], BASELINE[k], atol=ATOL, rtol=RTOL), msg
-
-    if PURGE_OUT:
-        for fn in os.listdir(OUT_DIR):
-            os.remove(os.path.join(OUT_DIR, fn))
-    return e
+        return e
 
 
 def test_rev_run_bos(points=slice(0, 5), max_workers=1):
@@ -225,7 +223,8 @@ def test_rev_run_bos(points=slice(0, 5), max_workers=1):
     e = Econ.reV_run(points, sam_files, None,
                      year=None, site_data=site_data,
                      output_request=econ_outs,
-                     max_workers=max_workers, sites_per_worker=3, fout=None)
+                     max_workers=max_workers, sites_per_worker=3,
+                     out_fpath=None)
 
     for k in econ_outs:
         check = np.allclose(e.out[k], BASELINE_SITE_BOS[k],

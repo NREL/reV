@@ -6,6 +6,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import json
+import tempfile
 
 from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
                                            RepresentativeMethods,
@@ -16,7 +17,6 @@ from rex.resource import Resource
 
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
-PURGE_OUT = True
 
 
 def test_rep_region_interval():
@@ -200,68 +200,64 @@ def test_many_regions():
 
 def test_write_to_file():
     """Test rep profiles with file write."""
+    with tempfile.TemporaryDirectory() as td:
+        sites = np.arange(100)
+        zeros = np.zeros((100,))
+        regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+        timezone = np.random.choice([-4, -5, -6, -7], 100)
+        rev_summary = pd.DataFrame({'gen_gids': sites,
+                                    'res_gids': sites,
+                                    'res_class': zeros,
+                                    'region': regions,
+                                    'timezone': timezone})
+        fout = os.path.join(td, 'temp_rep_profiles.h5')
+        p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                    fout=fout, n_profiles=3, weight=None)
+        with Resource(fout) as res:
+            disk_profiles = res['rep_profiles_0']
+            disk_meta = res.meta
+            assert 'rep_profiles_2' in res.datasets
+            test = np.array_equal(res['rep_profiles_0'],
+                                  res['rep_profiles_1'])
+            assert not test
 
-    sites = np.arange(100)
-    zeros = np.zeros((100,))
-    regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
-    timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
-                                'res_class': zeros,
-                                'region': regions,
-                                'timezone': timezone})
-    fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                fout=fout, n_profiles=3, weight=None)
-    with Resource(fout) as res:
-        disk_profiles = res['rep_profiles_0']
-        disk_meta = res.meta
-        assert 'rep_profiles_2' in res.datasets
-        assert not np.array_equal(res['rep_profiles_0'], res['rep_profiles_1'])
+        assert np.allclose(p1[0], disk_profiles)
+        assert len(disk_meta) == 3
 
-    assert np.allclose(p1[0], disk_profiles)
-    assert len(disk_meta) == 3
-
-    for i in m1.index:
-        v1 = json.loads(m1.loc[i, 'rep_gen_gid'])
-        v2 = json.loads(disk_meta.loc[i, 'rep_gen_gid'])
-        assert v1 == v2
-
-    if PURGE_OUT:
-        os.remove(fout)
+        for i in m1.index:
+            v1 = json.loads(m1.loc[i, 'rep_gen_gid'])
+            v2 = json.loads(disk_meta.loc[i, 'rep_gen_gid'])
+            assert v1 == v2
 
 
 def test_file_options():
     """Test rep profiles with file write."""
+    with tempfile.TemporaryDirectory() as td:
+        sites = np.arange(100)
+        zeros = np.zeros((100,))
+        regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+        timezone = np.random.choice([-4, -5, -6, -7], 100)
+        rev_summary = pd.DataFrame({'gen_gids': sites,
+                                    'res_gids': sites,
+                                    'res_class': zeros,
+                                    'region': regions,
+                                    'timezone': timezone})
+        fout = os.path.join(td, 'temp_rep_profiles.h5')
+        p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                   fout=fout, n_profiles=3,
+                                   save_rev_summary=False,
+                                   scaled_precision=True,
+                                   weight=None)
+        with Resource(fout) as res:
+            dtype = res.get_dset_properties('rep_profiles_0')[1]
+            attrs = res.get_attrs('rep_profiles_0')
+            disk_profiles = res['rep_profiles_0']
+            disk_dsets = res.datasets
 
-    sites = np.arange(100)
-    zeros = np.zeros((100,))
-    regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
-    timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
-                                'res_class': zeros,
-                                'region': regions,
-                                'timezone': timezone})
-    fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
-    p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                               fout=fout, n_profiles=3,
-                               save_rev_summary=False,
-                               scaled_precision=True,
-                               weight=None)
-    with Resource(fout) as res:
-        dtype = res.get_dset_properties('rep_profiles_0')[1]
-        attrs = res.get_attrs('rep_profiles_0')
-        disk_profiles = res['rep_profiles_0']
-        disk_dsets = res.datasets
-
-    assert np.issubdtype(dtype, np.integer)
-    assert attrs['scale_factor'] == 1000
-    assert np.allclose(p1[0], disk_profiles)
-    assert 'rev_summary' not in disk_dsets
-
-    if PURGE_OUT:
-        os.remove(fout)
+        assert np.issubdtype(dtype, np.integer)
+        assert attrs['scale_factor'] == 1000
+        assert np.allclose(p1[0], disk_profiles)
+        assert 'rev_summary' not in disk_dsets
 
 
 def execute_pytest(capture='all', flags='-rapP'):

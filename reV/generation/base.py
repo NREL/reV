@@ -68,7 +68,7 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 fout=None, dirout='./', drop_leap=False, mem_util_lim=0.4):
+                 out_fpath=None, drop_leap=False, mem_util_lim=0.4):
         """
         Parameters
         ----------
@@ -81,11 +81,8 @@ class BaseGen(ABC):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        fout : str | None
-            Optional .h5 output file specification.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
+        out_fpath : str, optional
+            Output .h5 file path, by default None
         drop_leap : bool
             Drop leap day instead of final day of year during leap years.
         mem_util_lim : float
@@ -98,9 +95,7 @@ class BaseGen(ABC):
         self._year = None
         self._site_limit = None
         self._site_mem = None
-        self._fout = fout
-        self._dirout = dirout
-        self._fpath = None
+        self._out_fpath = out_fpath
         self._meta = None
         self._time_index = None
         self._sam_module = None
@@ -110,8 +105,7 @@ class BaseGen(ABC):
 
         self._run_attrs = {'points_control': str(points_control),
                            'output_request': output_request,
-                           'fout': str(fout),
-                           'dirout': str(dirout),
+                           'out_fpath': str(out_fpath),
                            'site_data': str(site_data),
                            'drop_leap': str(drop_leap),
                            'mem_util_lim': mem_util_lim,
@@ -279,27 +273,14 @@ class BaseGen(ABC):
         return self._sam_module
 
     @property
-    def fout(self):
-        """Get the target file output.
+    def out_fpath(self):
+        """Get the output file path.
 
         Returns
         -------
-        fout : str | None
-            Optional .h5 output file specification.
+        out_fpath : str | None
         """
-        return self._fout
-
-    @property
-    def dirout(self):
-        """Get the target output directory.
-
-        Returns
-        -------
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
-        """
-        return self._dirout
+        return self._out_fpath
 
     @property
     def meta(self):
@@ -878,26 +859,22 @@ class BaseGen(ABC):
     def _init_fpath(self):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
 
-        if self._fout is not None:
+        if self._out_fpath is not None:
 
             # ensure output file is an h5
-            if not self._fout .endswith('.h5'):
-                self._fout += '.h5'
+            if not self._out_fpath .endswith('.h5'):
+                self._out_fpath += '.h5'
 
-            # ensure year is in fout
-            if str(self.year) not in self._fout:
-                self._fout = self._fout.replace('.h5',
-                                                '_{}.h5'.format(self.year))
+            # ensure year is in out_fpath
+            if str(self.year) not in self._out_fpath:
+                self._out_fpath = self._out_fpath.replace('.h5',
+                                                          '_{}.h5'
+                                                          .format(self.year))
 
             # create and use optional output dir
-            if self._dirout:
-                if not os.path.exists(self._dirout):
-                    os.makedirs(self._dirout)
-
-                # Add output dir to fout string
-                self._fpath = os.path.join(self._dirout, self._fout)
-            else:
-                self._fpath = self._fout
+            dirout = os.path.dirname(self._out_fpath)
+            if dirout and not os.path.exists(dirout):
+                os.makedirs(dirout)
 
     def _init_h5(self, mode='w'):
         """Initialize the single h5 output file with all output requests.
@@ -908,14 +885,14 @@ class BaseGen(ABC):
             Mode to instantiate h5py.File instance
         """
 
-        if self._fpath is not None:
+        if self._out_fpath is not None:
 
             if 'w' in mode:
                 logger.info('Initializing full output file: "{}" with mode: {}'
-                            .format(self._fpath, mode))
+                            .format(self._out_fpath, mode))
             elif 'a' in mode:
                 logger.info('Appending data to output file: "{}" with mode: {}'
-                            .format(self._fpath, mode))
+                            .format(self._out_fpath, mode))
 
             attrs = {d: {} for d in self.output_request}
             chunks = {}
@@ -947,8 +924,8 @@ class BaseGen(ABC):
             else:
                 ti = None
 
-            Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
-                            chunks, dtypes, self.meta, time_index=ti,
+            Outputs.init_h5(self._out_fpath, self.output_request, shapes,
+                            attrs, chunks, dtypes, self.meta, time_index=ti,
                             configs=self.sam_metas, run_attrs=self.run_attrs,
                             mode=mode)
 
@@ -1073,20 +1050,20 @@ class BaseGen(ABC):
 
         The data to be flushed is accessed from the instance attribute
         "self.out". The disk target is based on the instance attributes
-        "self._fpath". Data is not flushed if _fpath is None or if .out is
+        "self._out_fpath". Data is not flushed if _fpath is None or if .out is
         empty.
         """
 
         # handle output file request if file is specified and .out is not empty
-        if isinstance(self._fpath, str) and self._out:
+        if isinstance(self._out_fpath, str) and self._out:
             logger.info('Flushing outputs to disk, target file: "{}"'
-                        .format(self._fpath))
+                        .format(self._out_fpath))
 
             # get the slice of indices to write outputs to
             islice = slice(self.out_chunk[0], self.out_chunk[1] + 1)
 
             # open output file in append mode to add output results to
-            with Outputs(self._fpath, mode='a') as f:
+            with Outputs(self._out_fpath, mode='a') as f:
 
                 # iterate through all output requests writing each as a dataset
                 for dset, arr in self._out.items():

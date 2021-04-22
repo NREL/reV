@@ -102,7 +102,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['TECH'] = config.technology
     ctx.obj['POINTS'] = config.project_points
     ctx.obj['SAM_FILES'] = config.sam_files
-    ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITE_DATA'] = config.site_data
@@ -152,7 +151,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
              .format(year, res_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
-    ctx.obj['FOUT'] = make_fout(name, year)
+    fout = make_fout(name, year)
+    ctx.obj['OUT_FPATH'] = os.path.join(config.dirout, fout)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -164,7 +164,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
             Status.add_job(
                 config.dirout, 'generation', name_year, replace=True,
                 job_attrs={'hardware': 'local',
-                           'fout': ctx.obj['FOUT'],
+                           'fout': fout,
                            'dirout': config.dirout})
             ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
@@ -231,6 +231,8 @@ def make_fout(name, year):
 @click.option('--res_file', '-rf', required=True,
               help='Filepath to single resource file, multi-h5 directory, '
               'or /h5_dir/prefix*suffix.')
+@click.option('--out_fpath', '-o', type=click.Path(), required=True,
+              help='Ouput .h5 file path')
 @click.option('--points', '-p', default=None, type=PROJECTPOINTS,
               show_default=True,
               help=('reV project points to analyze '
@@ -256,16 +258,9 @@ def make_fout(name, year):
               show_default=True,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
-@click.option('--fout', '-fo', default='gen_output.h5', type=STR,
-              show_default=True,
-              help=('Filename output specification (should be .h5). '
-                    'Default is "gen_output.h5"'))
-@click.option('--dirout', '-do', default='./out/gen_out', type=STR,
-              show_default=True,
-              help='Output directory specification. Default is ./out/gen_out')
 @click.option('--logdir', '-lo', default='./out/log_gen', type=STR,
               help='Generation log file directory. Default is ./out/log_gen')
-@click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
+@click.option('--output_request', '-or', type=STRLIST, default=['cf_mean'],
               show_default=True,
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
@@ -275,20 +270,20 @@ def make_fout(name, year):
               'should be a filepath that points to a csv. Rows match sites, '
               'columns are input keys. Needs a "gid" column. Input as None '
               'if no site-specific data.')
-@click.option('-mem', '--mem_util_lim', type=float, default=0.4,
+@click.option('--mem_util_lim', '-mem', type=float, default=0.4,
               show_default=True,
               help='Fractional node memory utilization limit. Default is 0.4 '
               'to account for numpy memory spikes and memory bloat.')
-@click.option('-curt', '--curtailment', type=click.Path(exists=True),
+@click.option('--curtailment', '-curt', type=click.Path(exists=True),
               default=None, show_default=True,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
-@click.option('-v', '--verbose', is_flag=True,
+@click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
+def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
-           fout, dirout, logdir, output_request, site_data, mem_util_lim,
+           logdir, output_request, site_data, mem_util_lim,
            curtailment, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
@@ -296,8 +291,7 @@ def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['RES_FILE'] = res_file
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
-    ctx.obj['FOUT'] = fout
-    ctx.obj['DIROUT'] = dirout
+    ctx.obj['OUT_FPATH'] = out_fpath
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['SITE_DATA'] = site_data
@@ -398,8 +392,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
+    out_fpath = ctx.obj['OUT_FPATH']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     site_data = ctx.obj['SITE_DATA']
@@ -417,7 +410,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
 
     logger.info('Gen local is being run with with job name "{}" and resource '
                 'file: {}. Target output path is: {}'
-                .format(name, res_file, os.path.join(dirout, fout)))
+                .format(name, res_file, out_fpath))
     t0 = time.time()
 
     points = _parse_points(ctx)
@@ -433,12 +426,12 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker,
                 points_range=points_range,
-                fout=fout,
-                dirout=dirout,
+                out_fpath=out_fpath,
                 mem_util_lim=mem_util_lim,
                 timeout=timeout)
 
     tmp_str = ' with points range {}'.format(points_range)
+    dirout, fout = os.path.split(out_fpath)
     runtime = (time.time() - t0) / 60
     logger.info('Gen compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
@@ -539,9 +532,9 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     return node_name, fout_node
 
 
-def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
-                 points_range=None, sites_per_worker=None, max_workers=None,
-                 fout='reV.h5', dirout='./out/gen_out',
+def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
+                 points=slice(0, 100), points_range=None,
+                 sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
                  curtailment=None, verbose=False):
@@ -561,6 +554,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         of unique configs requested by points csv.
     res_file : str
         WTK or NSRDB resource file name + path.
+    out_fpath : str
+        Output .h5 file path
     points : slice | str | list | tuple
         Slice/list specifying project points, string pointing to a project
     points_range : list | None
@@ -570,10 +565,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     max_workers : int | None
         Number of workers to use on a node. None defaults to all available
         workers.
-    fout : str
-        Target filename to dump generation outputs.
-    dirout : str
-        Target directory to dump generation fout.
     logdir : str
         Target directory to save log files.
     output_request : list | tuple
@@ -609,9 +600,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-p {}'.format(SLURM.s(points)),
                   '-sf {}'.format(SLURM.s(sam_files)),
                   '-rf {}'.format(SLURM.s(res_file)),
+                  '-o {}'.format(SLURM.s(out_fpath)),
                   '-spw {}'.format(SLURM.s(sites_per_worker)),
-                  '-fo {}'.format(SLURM.s(fout)),
-                  '-do {}'.format(SLURM.s(dirout)),
                   '-lo {}'.format(SLURM.s(logdir)),
                   '-or {}'.format(SLURM.s(output_request)),
                   '-mem {}'.format(SLURM.s(mem_util_lim))]
@@ -702,13 +692,12 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
 
-        cmd = get_node_cmd(node_name, tech, sam_files, res_file,
+        node_fpath = os.path.join(dirout, fout_node)
+        cmd = get_node_cmd(node_name, tech, sam_files, res_file, node_fpath,
                            points=points, points_range=split.split_range,
                            sites_per_worker=sites_per_worker,
-                           max_workers=max_workers, fout=fout_node,
-                           dirout=dirout, logdir=logdir,
-                           output_request=output_request,
-                           site_data=site_data,
+                           max_workers=max_workers, logdir=logdir,
+                           output_request=output_request, site_data=site_data,
                            mem_util_lim=mem_util_lim, timeout=timeout,
                            curtailment=curtailment,
                            verbose=verbose)

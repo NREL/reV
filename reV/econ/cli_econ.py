@@ -150,11 +150,15 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
              .format(year, cf_file))
 
     # if the year isn't in the name, add it before setting the file output
-    ctx.obj['FOUT'] = make_fout(name, year)
     if config.append:
-        ctx.obj['FOUT'] = os.path.basename(cf_file)
+        ctx.obj['OUT_FPATH'] = cf_file
+        fout = os.path.basename(cf_file)
+    else:
+        fout = make_fout(name, year)
+        ctx.obj['OUT_FPATH'] = os.path.join(config.dirout, fout)
 
     # invoke direct methods based on the config execution option
+
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
         name_year = name_year.replace('gen', 'econ')
@@ -164,7 +168,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
             Status.add_job(
                 config.dirout, 'econ', name_year, replace=True,
                 job_attrs={'hardware': 'local',
-                           'fout': ctx.obj['FOUT'],
+                           'fout': fout,
                            'dirout': config.dirout})
             ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
@@ -211,13 +215,8 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
               show_default=True,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
-@click.option('--fout', '-fo', default='econ_output.h5', type=STR,
-              show_default=True,
-              help=('Filename output specification (should be .h5). '
-                    'Default is "econ_output.h5"'))
-@click.option('--dirout', '-do', default='./out/econ_out', type=STR,
-              show_default=True,
-              help='Output directory specification. Default is ./out/econ_out')
+@click.option('--out_fpath', '-o', type=STR, default=None, show_default=True,
+              help='Ouput .h5 file path')
 @click.option('--logdir', '-lo', default='./out/log_econ', type=STR,
               show_default=True,
               help='Econ log file directory. Default is ./out/log_econ')
@@ -232,7 +231,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sam_files, cf_file, year, points, site_data,
-           sites_per_worker, fout, dirout, logdir, output_request,
+           sites_per_worker, out_fpath, logdir, output_request,
            append, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
@@ -242,8 +241,7 @@ def direct(ctx, sam_files, cf_file, year, points, site_data,
     ctx.obj['YEAR'] = year
     ctx.obj['SITE_DATA'] = site_data
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
-    ctx.obj['FOUT'] = fout
-    ctx.obj['DIROUT'] = dirout
+    ctx.obj['OUT_FPATH'] = out_fpath
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['APPEND'] = append
@@ -275,16 +273,23 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     year = ctx.obj['YEAR']
     site_data = ctx.obj['SITE_DATA']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
+    out_fpath = ctx.obj['OUT_FPATH']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    if out_fpath is None:
+        msg = ('An output .h5 file path was not provided, LCOE values will be '
+               'appended to {}'.format(cf_file))
+        logger.warning(msg)
+        warn(msg)
+        append = True
+
     if append:
-        fout = os.path.basename(cf_file)
-        dirout = os.path.dirname(cf_file)
+        out_fpath = cf_file
+
+    dirout, fout = os.path.split(out_fpath)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV', 'rex'],
@@ -310,8 +315,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                  timeout=timeout,
                  sites_per_worker=sites_per_worker,
                  points_range=points_range,
-                 fout=fout,
-                 dirout=dirout,
+                 out_fpath=out_fpath,
                  append=append)
 
     tmp_str = ' with points range {}'.format(points_range)
@@ -360,10 +364,9 @@ def get_node_pc(points, sam_files, nodes):
     return pc
 
 
-def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
-                 points=slice(0, 100), points_range=None,
+def get_node_cmd(name, sam_files, cf_file, out_fpath, year=None,
+                 site_data=None, points=slice(0, 100), points_range=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
-                 fout='reV.h5', dirout='./out/econ_out',
                  logdir='./out/log_econ', output_request='lcoe_fcr',
                  append=False, verbose=False):
     """Made a reV econ direct-local command line interface call string.
@@ -379,6 +382,8 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
         of unique configs requested by points csv.
     cf_file : str
         reV generation results file name + path.
+    out_fpath : str
+        Output .h5 file path
     year : int | str
         reV generation year to calculate econ for. year='my' will look
         for the multi-year mean generation results.
@@ -396,10 +401,6 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
     timeout : int | float
         Number of seconds to wait for parallel run iteration to complete
         before returning zeros. Default is 1800 seconds.
-    fout : str
-        Target filename to dump econ outputs.
-    dirout : str
-        Target directory to dump econ fout.
     logdir : str
         Target directory to save log files.
     output_request : list | tuple
@@ -425,10 +426,9 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
         '-p {}'.format(SLURM.s(points)),
         '-sf {}'.format(SLURM.s(sam_files)),
         '-cf {}'.format(SLURM.s(cf_file)),
+        '-o {}'.format(SLURM.s(out_fpath)),
         '-y {}'.format(SLURM.s(year)),
         '-spw {}'.format(SLURM.s(sites_per_worker)),
-        '-fo {}'.format(SLURM.s(fout)),
-        '-do {}'.format(SLURM.s(dirout)),
         '-lo {}'.format(SLURM.s(logdir)),
         '-or {}'.format(SLURM.s(output_request))]
 
@@ -519,17 +519,15 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
         node_name = node_name.replace('gen', 'econ')
-
+        node_fpath = os.path.join(dirout, fout_node)
         points_range = split.split_range if split is not None else None
-        cmd = get_node_cmd(node_name, sam_files, cf_file, year=year,
-                           site_data=site_data, points=points,
+        cmd = get_node_cmd(node_name, sam_files, cf_file, node_fpath,
+                           year=year, site_data=site_data, points=points,
                            points_range=points_range,
                            sites_per_worker=sites_per_worker,
                            max_workers=max_workers, timeout=timeout,
-                           fout=fout_node,
-                           dirout=dirout, logdir=logdir,
-                           output_request=output_request, append=append,
-                           verbose=verbose)
+                           logdir=logdir, output_request=output_request,
+                           append=append, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name,
                                             hardware='eagle',

@@ -26,7 +26,7 @@ def test_time_index_step():
     gen = Gen.reV_run('pvwattsv5', slice(0, None), sam_files, res_file,
                       output_request=('cf_mean', 'cf_profile'),
                       max_workers=1, sites_per_worker=100,
-                      fout=None)
+                      out_fpath=None)
     gen_outs = gen.out['cf_profile'].astype(np.int32)
 
     if not os.path.exists(baseline):

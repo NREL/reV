@@ -50,7 +50,7 @@ class Econ(BaseGen):
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
     def __init__(self, points_control, cf_file, year, site_data=None,
-                 output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
+                 output_request=('lcoe_fcr',), out_fpath=None,
                  append=False, mem_util_lim=0.4):
         """Initialize an econ instance.
 
@@ -71,18 +71,15 @@ class Econ(BaseGen):
             Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
-        fout : str | None
-            Optional .h5 output file specification.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
+        out_fpath : str, optional
+            Output .h5 file path, by default None
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
-            over the fout and dirout inputs.
+            over the out_fpath and dirout inputs.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
-                         fout=fout, dirout=dirout, mem_util_lim=mem_util_lim)
+                         out_fpath=out_fpath, mem_util_lim=mem_util_lim)
 
         self._cf_file = cf_file
         self._year = year
@@ -91,7 +88,7 @@ class Econ(BaseGen):
 
         # initialize output file or append econ data to gen file
         if append:
-            self._fpath = self._cf_file
+            self._out_fpath = self._cf_file
         else:
             self._init_fpath()
 
@@ -215,7 +212,7 @@ class Econ(BaseGen):
             resource file chunk size.
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
-            over the fout and dirout inputs.
+            over the out_fpath and dirout inputs.
 
         Returns
         -------
@@ -371,8 +368,7 @@ class Econ(BaseGen):
                 year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100,
                 pool_size=(os.cpu_count() * 2),
-                timeout=1800, points_range=None, fout=None,
-                dirout='./econ_out', append=False):
+                timeout=1800, points_range=None, out_fpath=None, append=False):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -413,14 +409,11 @@ class Econ(BaseGen):
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        fout : str | None
-            Optional .h5 output file specification. None will return object.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
+        out_fpath : str, optional
+            Output .h5 file path, by default None
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
-            over the fout and dirout inputs.
+            over the out_fpath and dirout inputs.
 
         Returns
         -------
@@ -437,8 +430,7 @@ class Econ(BaseGen):
                    year=year,
                    site_data=site_data,
                    output_request=output_request,
-                   fout=fout,
-                   dirout=dirout,
+                   out_fpath=out_fpath,
                    append=append)
 
         diff = list(set(pc.sites) - set(econ.meta['gid'].values))

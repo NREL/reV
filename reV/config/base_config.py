@@ -108,6 +108,7 @@ class BaseConfig(dict):
 
         if self._name is None:
             self._name = self.get('name', 'rev')
+
         return self._name
 
     def _preflight(self):

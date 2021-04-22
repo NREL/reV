@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 PyTest file for linear Fresnel
 This is intended to be run with PySAM 1.2.1
@@ -13,10 +14,11 @@ import json
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+from rex import Resource
 
-BASELINE = os.path.join(TESTDATADIR, 'SAM/output_linear_direct_steam.json')
-RTOL = 0
-ATOL = 0.001
+BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_linear_2012.h5')
+RTOL = 0.01
+ATOL = 0
 
 
 def test_gen_linear():
@@ -47,35 +49,19 @@ def test_gen_linear():
     gen = Gen.reV_run('lineardirectsteam', points, sam_files, res_file,
                       max_workers=1,
                       output_request=output_request,
-                      sites_per_worker=1, fout=None, scale_outputs=True)
+                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
 
-    def my_assert(test, *truth, digits=0):
-        if isinstance(test, np.ndarray):
-            test = float(test.sum())
+    with Resource(BASELINE) as f:
+        for dset in output_request:
+            truth = f[dset]
+            test = gen.out[dset]
+            if len(test.shape) == 2:
+                truth = np.mean(truth, axis=0)
+                test = np.mean(test, axis=0)
 
-        check = any(round(test, digits) == round(true, digits)
-                    for true in truth)
-        assert check
-
-    # Some results may be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['q_dot_to_heat_sink'], 10874.82934, digits=0)
-    my_assert(gen.out['gen'], 10439836.56, digits=-2)
-    my_assert(gen.out['m_dot_field'], 15146.1688, digits=1)
-    my_assert(gen.out['q_dot_sf_out'], 10946.40988, digits=0)
-    my_assert(gen.out['W_dot_heat_sink_pump'], 0.173017451, digits=6)
-    my_assert(gen.out['annual_field_energy'], 5219916.0, 5219921.5, digits=0)
-    my_assert(gen.out['annual_thermal_consumption'], 3178, digits=0)
-
-    # Verify series are in correct order and have been rolled correctly
-    if os.path.exists(BASELINE):
-        with open(BASELINE, 'r') as f:
-            profiles = json.load(f)
-        for k in profiles.keys():
-            assert np.allclose(profiles[k], gen.out[k], rtol=RTOL, atol=ATOL)
-    else:
-        with open(BASELINE, 'w') as f:
-            out = {k: v.tolist() for k, v in gen.out.items()}
-            json.dump(out, f)
+            msg = ('{} outputs do not match baseline value! Values differ '
+                   'at most by: {}'.format(dset, np.max(np.abs(truth - test))))
+            assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

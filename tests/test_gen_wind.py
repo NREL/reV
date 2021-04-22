@@ -13,6 +13,7 @@ import h5py
 import pytest
 import pandas as pd
 import numpy as np
+import tempfile
 
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
@@ -20,7 +21,6 @@ from reV import TESTDATADIR
 
 RTOL = 0
 ATOL = 0.001
-PURGE_OUT = True
 
 
 class wind_results:
@@ -88,7 +88,8 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'windpower', res_file=res_file)
     gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3, fout=None)
+                      max_workers=max_workers, sites_per_worker=3,
+                      out_fpath=None)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -111,8 +112,8 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
 
     # run reV 2.0 generation
     gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3, fout=None,
-                      output_request=output_request)
+                      max_workers=max_workers, sites_per_worker=3,
+                      out_fpath=None, output_request=output_request)
 
     assert gen.out['cf_mean'].shape == (10, )
     assert gen.out['cf_profile'].shape == (8760, 10)
@@ -135,8 +136,8 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
 
     # run reV 2.0 generation
     gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3, fout=None,
-                      output_request=output_requests)
+                      max_workers=max_workers, sites_per_worker=3,
+                      out_fpath=None, output_request=output_requests)
     assert 'windspeed' in gen.out
     assert gen.out['windspeed'].shape == (8760, 10)
     assert gen._out['windspeed'].max() == 2597
@@ -152,7 +153,7 @@ def test_multi_file_5min_wtk():
     # run reV 2.0 generation
     gen = Gen.reV_run('windpower', points, sam_files, res_file,
                       max_workers=max_workers,
-                      sites_per_worker=3, fout=None)
+                      sites_per_worker=3, out_fpath=None)
     gen_outs = list(gen._out['cf_mean'])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
@@ -167,13 +168,13 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
 
     baseline = Gen.reV_run('windpower', points, sam_files, res_file,
                            max_workers=max_workers, sites_per_worker=3,
-                           fout=None, output_request=output_request)
+                           out_fpath=None, output_request=output_request)
 
     site_data = pd.DataFrame({'gid': np.arange(2),
                               'turb_generic_loss': np.zeros(2)})
     test = Gen.reV_run('windpower', points, sam_files, res_file,
                        max_workers=max_workers, sites_per_worker=3,
-                       fout=None, output_request=output_request,
+                       out_fpath=None, output_request=output_request,
                        site_data=site_data)
 
     assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])

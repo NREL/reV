@@ -60,7 +60,7 @@ def test_cf_curtailment(year, site):
     points = slice(site, site + 1)
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
+    gen = Gen.reV_run('windpower', points, sam_files, res_file, out_fpath=None,
                       output_request=('cf_profile',),
                       curtailment=curtailment,
                       max_workers=1, sites_per_worker=50,
@@ -108,7 +108,7 @@ def test_curtailment_res_mean(year):
     truth = resources['mean_windspeed']
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
+    gen = Gen.reV_run('windpower', points, sam_files, res_file, out_fpath=None,
                       output_request=output_request,
                       curtailment=curtailment,
                       max_workers=1, sites_per_worker=50,
@@ -145,7 +145,8 @@ def test_random(year, site):
         points = slice(site, site + 1)
 
         # run reV 2.0 generation and write to disk
-        gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
+        gen = Gen.reV_run('windpower', points, sam_files, res_file,
+                          out_fpath=None,
                           output_request=('cf_profile',),
                           curtailment=c,
                           max_workers=1, sites_per_worker=50,
