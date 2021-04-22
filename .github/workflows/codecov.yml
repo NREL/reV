@@ -2,7 +2,7 @@ name: Codecov
 
 on:
   push:
-    branches: [master, master]
+    branches: [main, master]
 
 jobs:
   run:
