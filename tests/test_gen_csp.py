@@ -16,8 +16,8 @@ from reV import TESTDATADIR
 from rex import Resource
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_csp_2012.h5')
-RTOL = 0
-ATOL = 0.5
+RTOL = 0.1
+ATOL = 0.0
 
 
 def test_gen_csp():
@@ -37,11 +37,10 @@ def test_gen_csp():
         for dset in output_request:
             truth = f[dset]
             test = gen.out[dset]
-            print('dset = ', dset)
-            print('mean values, 2.1.4 = {}, 2.2.2 = {}'
-                  .format(np.mean(truth), np.mean(test)))
-            print('mean difference = ', np.mean(np.abs(truth - test)))
-            print('max difference = ', np.max(np.abs(truth - test)))
+            if len(test.shape) == 2:
+                truth = np.mean(truth, axis=0)
+                test = np.mean(test, axis=0)
+
             msg = ('{} outputs do not match baseline value! Values differ '
                    'at most by: {}'.format(dset, np.max(np.abs(truth - test))))
             assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
