@@ -178,7 +178,7 @@ def test_sc_agg_econ_scale():
                 res.create_dataset(k, res['meta'].shape, data=arr)
                 res[k].attrs['scale_factor'] = 1.0
 
-        eqn = '2 * (1000 * capacity) ** -0.3'
+        eqn = '2 * np.multiply(1000, capacity) ** -0.3'
         base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
                                               excl_dict=EXCL_DICT,
                                               res_class_dset=RES_CLASS_DSET,
