@@ -55,7 +55,13 @@ def test_gen_linear():
         for dset in output_request:
             truth = f[dset]
             test = gen.out[dset]
-            msg = '{} outputs do not match baseline value!'.format(dset)
+            print('dset = ', dset)
+            print('mean values, 2.1.4 = {}, 2.2.2 = {}'.format(
+                np.mean(truth), np.mean(test)))
+            print('mean difference = ', np.mean(np.abs(truth - test)))
+            print('max difference = ', np.max(np.abs(truth - test)))
+            msg = ('{} outputs do not match baseline value! Values differ '
+                   'at most by: {}'.format(dset, np.max(np.abs(truth - test))))
             assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
