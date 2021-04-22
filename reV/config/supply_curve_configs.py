@@ -317,14 +317,6 @@ class SupplyCurveConfig(AnalysisConfig):
         return self.get('sort_on', self._default_sort_on)
 
     @property
-    def offshore_trans_table(self):
-        """
-        Get path to .csv containing offshore transmission table. If None,
-        exclude offshore supply curve points
-        """
-        return self.get('offshore_trans_table', None)
-
-    @property
     def wind_dirs(self):
         """Get the supply curve power-rose wind directions"""
         return self.get('wind_dirs', None)

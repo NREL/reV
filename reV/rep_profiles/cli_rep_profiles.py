@@ -80,15 +80,15 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.years[0] is not None and '{}' in config.cf_dset:
-        fpaths = [config.gen_fpath for _ in config.years]
-        names = [name + '_{}'.format(y) for y in config.years]
-        dsets = [config.cf_dset.format(y) for y in config.years]
+    if config.analysis_years[0] is not None and '{}' in config.cf_dset:
+        fpaths = [config.gen_fpath for _ in config.analysis_years]
+        names = [name + '_{}'.format(y) for y in config.analysis_years]
+        dsets = [config.cf_dset.format(y) for y in config.analysis_years]
 
-    elif config.years[0] is not None and '{}' in config.gen_fpath:
-        fpaths = [config.gen_fpath.format(y) for y in config.years]
-        names = [name + '_{}'.format(y) for y in config.years]
-        dsets = [config.cf_dset for _ in config.years]
+    elif config.analysis_years[0] is not None and '{}' in config.gen_fpath:
+        fpaths = [config.gen_fpath.format(y) for y in config.analysis_years]
+        names = [name + '_{}'.format(y) for y in config.analysis_years]
+        dsets = [config.cf_dset for _ in config.analysis_years]
 
     else:
         fpaths = [config.gen_fpath]

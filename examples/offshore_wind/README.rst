@@ -1,33 +1,47 @@
 reV Offshore Wind Execution
 ===========================
 
-This example includes configs to run a reV wind supply curve analysis for the
-full CONUS extent including offshore wind. A few simplifications are made, most
-notably that a single turbine is used for calculating generation at all sites.
+This example includes configs to run a reV wind analysis for a small test
+extent off the east coast. This example is only meant to demonstrate how to set
+up an offshore wind LCOE analysis using reV + NRWAL. Note that some inputs and
+configurations are purely fictitious and should not be used in a real analysis.
+For example, this test case models the same turbine onshore and offshore. The
+substructure for the offshore turbines are also assumed to always be a floating
+semi-submersible which is not realistic, especially for shallow waters.
 
 reV Offshore Module Description
 -------------------------------
 
 The pipeline includes the offshore module, which is run after the generation
-module. The offshore module aggregates generation data (on the WTK resource
-grid) to the offshore farm meta data (sparse). Offshore wind farms are
-therefore represented by the mean capacity factor and windspeed of their
-neighboring offshore resource pixels.
+module. The offshore module takes the gross generation (gross capacity factor,
+set offshore turbine losses to zero!) and uses NRWAL to calculate generation
+losses and LCOE.
 
-Offshore LCOE is calculated using ORCA. A seperate turbine technology input is
-used with a few simple inputs like system capacity and sub structure type. Any
-inputs in the turbine json are overwritten by the site-specific offshore data
-csv where there are overlapping column names. A warning is printed if data is
-overwritten in this way.
+Example NRWAL configs slightly modified for use with reV can be seen in this
+example. The primary modification for usage in reV is that NRWAL typically
+calculates the grid connection cost with the "grid" equations.  Currently, reV
+uses NRWAL to calculate the array and export (to shore) tranmission costs and
+then uses the supply curve transmission cost tables to calculate the grid
+connection costs.
 
 Treatment of Offshore Points in Supply Curve
 --------------------------------------------
 
-Each offshore wind farm point in the offshore data csv is assigned to its own
-600 MW supply curve point. Offshore wind farms will always be 1-to-1 with
-supply curve points.
+Offshore points are treated identically to onshore points in the supply curve
+(not run here). All resource pixels maintain their source resolution (usually
+the 2km WTK resolution) until the reV aggregation step, where exclusions are
+applied and the data is aggregated up to the supply curve grid. Supply curve
+tranmission cost tables must include transmission costs for offshore supply
+curve points. There is no seperate or special handling of offshore supply curve
+transmission connection.
 
-Offshore farms are assigned GID's that are 1e7 plus the wind farm id. The
-offshore farm GID's are the same as their respective supply curve points.
+Plots of the Example Offshore Output
+------------------------------------
 
-.. image:: sc_total_lcoe.png
+.. image:: mean_cf.png
+
+.. image:: mean_ws_mean-means.png
+
+.. image:: mean_lcoe.png
+
+.. image:: mean_depth.png

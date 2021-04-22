@@ -185,9 +185,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -569,9 +566,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit
 
@@ -614,9 +608,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
 
@@ -852,6 +843,17 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         return timezone
 
     @property
+    def offshore(self):
+        """Get the SC point offshore flag based on the resource meta data
+        (if offshore column is present)."""
+        offshore = None
+        if 'offshore' in self.h5.meta:
+            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].values
+            offshore = stats.mode(offshore).mode[0]
+
+        return offshore
+
+    @property
     def h5_gid_set(self):
         """Get list of unique h5 gids corresponding to this sc point.
 
@@ -949,9 +951,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
         gen_index : np.ndarray
@@ -1001,9 +1000,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     """Single supply curve point with associated reV generation"""
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index,
-                 excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=0.0081, exclusion_shape=None,
-                 offshore_flags=None, close=True):
+                 excl_dict=None, inclusion_mask=None, resolution=64,
+                 excl_area=0.0081, exclusion_shape=None, close=True):
         """
         Parameters
         ----------
@@ -1037,9 +1035,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -1066,43 +1061,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                     .format(self._gid, self._excl_fpath))
             raise EmptySupplyCurvePointError(emsg)
 
-        self._remove_offshore(self._gen_gids, self._res_gids,
-                              offshore_flags=offshore_flags)
-
         self._check_excl()
-
-    def _remove_offshore(self, gen_gids, res_gids, offshore_flags=None):
-        """If offshore flags are available, remove offshore gids from analysis,
-        raise EmptySupplyCurvePointError if there are no valid onshore points
-        in this SC point.
-
-        Parameters
-        ----------
-        gen_gids : np.ndarray
-            1D array with length == number of exclusion points. reV generation
-            gids (gen results index) from the gen_fpath file corresponding to
-            the tech exclusions.
-        res_gids : np.ndarray
-            1D array with length == number of exclusion points. reV resource
-            gids (native resource index) from the original resource data
-            corresponding to the tech exclusions.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
-        """
-
-        if offshore_flags is not None:
-            gen_offshore_flags = offshore_flags[gen_gids]
-            gen_offshore_flags[(gen_gids == -1)] = 0
-            offshore_mask = (gen_offshore_flags == 1)
-            gen_gids[offshore_mask] = -1
-            res_gids[offshore_mask] = -1
-
-            emsg = ('Supply curve point gid {} has no viable onshore '
-                    'exclusion points based on exclusions file: "{}"'
-                    .format(self._gid, self._excl_fpath))
-            if (gen_gids != -1).sum() == 0:
-                raise EmptySupplyCurvePointError(emsg)
 
     def exclusion_weighted_mean(self, flat_arr):
         """Calc the exclusions-weighted mean value of a flat array of gen data.

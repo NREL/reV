@@ -1,43 +1,39 @@
 {
   "cf_dset": "cf_mean-means",
-  "data_layers": {
-    "reeds_region": {
-      "dset": "reeds_regions",
-      "method": "mode"
-    },
-    "slope": {
-      "dset": "srtm_slope",
-      "method": "mean"
-    }
-  },
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./conus_wind/"
+    "output_directory": "./"
   },
-  "excl_dict": {
-    "naris_wind": {
-      "use_as_weights": true
-    }
-  },
+  "excl_dict": null,
   "excl_fpath": "/projects/rev/data/exclusions/CONUS_Exclusions.h5",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
-    "memory": 90,
-    "nodes": 1,
+    "feature": "-p debug",
     "option": "eagle",
-    "walltime": 4.0
+    "walltime": 1.0
   },
   "gen_fpath": "PIPELINE",
+  "h5_dsets": [
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate",
+    "ws_mean-means"
+  ],
   "lcoe_dset": "lcoe_fcr-means",
   "log_level": "INFO",
   "power_density": 3,
-  "res_class_bins": [
-    0,
-    8.0,
-    100
-  ],
-  "res_class_dset": "ws_mean-means",
-  "resolution": 64,
+  "pre_extract_inclusions": false,
+  "resolution": 128,
   "tm_dset": "techmap_wtk"
 }

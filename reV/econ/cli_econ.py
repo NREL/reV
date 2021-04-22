@@ -109,14 +109,14 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
 
-    if len(config.years) == len(cf_files):
-        for i, year in enumerate(config.years):
+    if len(config.analysis_years) == len(cf_files):
+        for i, year in enumerate(config.analysis_years):
             cf_file = cf_files[i]
             submit_from_config(ctx, name, cf_file, year, config, verbose)
     else:
         for i, cf_file in enumerate(cf_files):
             year = parse_year(cf_file)
-            if str(year) in [str(y) for y in config.years]:
+            if str(year) in [str(y) for y in config.analysis_years]:
                 submit_from_config(ctx, name, cf_file, year, config, verbose)
 
 

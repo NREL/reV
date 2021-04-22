@@ -124,7 +124,8 @@ def test_gen_from_config(runner, tech):  # noqa: C901
             raise RuntimeError(msg)
 
         # get reV 1.0 generation profiles
-        rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
+        rev1_profiles = \
+            get_r1_profiles(year=config_obj.analysis_years[0], tech=tech)
         rev1_profiles = \
             rev1_profiles[:, config_obj.parse_points_control().sites]
 

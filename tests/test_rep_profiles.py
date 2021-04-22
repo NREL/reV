@@ -141,31 +141,37 @@ def test_sc_points():
 def test_agg_profile():
     """Test aggregation of weighted meanoid profile for each SC point."""
 
-    gen_fpath = os.path.join(TESTDATADIR, 'offshore/ri_offshore_baseline.h5')
+    # make up a rev aggregation summary to pull profiles from GEN_FPATH
+    res_gids = [[0, 1, 2], [10, 11, 12], [54, 61]]
+    gid_counts = [[50, 3, 1], [123, 432, 452], [50, 50]]
+    res_gids = [json.dumps(x) for x in res_gids]
+    gid_counts = [json.dumps(x) for x in gid_counts]
+    timezone = np.random.choice([-4, -5, -6, -7], 3)
+    rev_summary = pd.DataFrame({'sc_gid': np.arange(3),
+                                'gen_gids': res_gids,
+                                'res_gids': res_gids,
+                                'gid_counts': gid_counts,
+                                'timezone': timezone})
 
-    rev_sc_fpath = os.path.join(TESTDATADIR, 'sc_out/ri_wind_farm_sc.csv')
-    rev_summary = pd.read_csv(rev_sc_fpath, index_col=0).iloc[0:2]
-
-    profiles = AggregatedRepProfiles.run(gen_fpath, rev_summary,
+    profiles = AggregatedRepProfiles.run(GEN_FPATH, rev_summary,
                                          cf_dset='cf_profile',
                                          scaled_precision=False,
                                          max_workers=None)[0]
 
     for index in rev_summary.index:
-
         gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
         weights = np.array(json.loads(rev_summary.loc[index, 'gid_counts']))
 
-        with Resource(gen_fpath) as res:
+        with Resource(GEN_FPATH) as res:
             raw_profiles = res['cf_profile', :, gen_gids]
             last = res['cf_profile', :, gen_gids[-1]]
 
         assert np.allclose(raw_profiles[:, -1], last)
 
         truth = raw_profiles * weights
-        assert len(truth) == 8760
+        assert len(truth) == len(raw_profiles)
         truth = truth.sum(axis=1)
-        assert len(truth) == 8760
+        assert len(truth) == len(raw_profiles)
         truth = truth / weights.sum()
 
         assert np.allclose(profiles[0][:, index], truth)

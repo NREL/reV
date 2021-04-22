@@ -36,12 +36,12 @@ class PipelineConfig(AnalysisConfig):
             raise ConfigError('Could not find required key "pipeline" in the '
                               'pipeline config.')
 
-        if not isinstance(self.pipeline_steps, list):
+        if not isinstance(self.pipeline, list):
             raise ConfigError('Config arg "pipeline" must be a list of '
                               '(command, f_config) pairs, but received "{}".'
-                              .format(type(self.pipeline_steps)))
+                              .format(type(self.pipeline)))
 
-        for di in self.pipeline_steps:
+        for di in self.pipeline:
             for f_config in di.values():
                 if not os.path.exists(f_config):
                     raise ConfigError('Pipeline step depends on non-existent '
@@ -52,7 +52,7 @@ class PipelineConfig(AnalysisConfig):
 
         dirouts = []
         names = []
-        for di in self.pipeline_steps:
+        for di in self.pipeline:
             for f_config in di.values():
                 config = AnalysisConfig(f_config, check_keys=False)
                 dirouts.append(config.dirout)
@@ -86,17 +86,27 @@ class PipelineConfig(AnalysisConfig):
                     raise PipelineError(msg)
 
     @property
-    def pipeline_steps(self):
+    def pipeline(self):
         """Get the pipeline steps.
 
         Returns
         -------
-        _pipeline_steps : list
+        pipeline : list
             reV pipeline run steps. Should be a list of (command, config)
             pairs.
         """
 
         return self['pipeline']
+
+    @property
+    def logging(self):
+        """Get logging kwargs for the pipeline.
+
+        Returns
+        -------
+        dict
+        """
+        return self.get('logging', {"log_file": None, "log_level": "INFO"})
 
     @property
     def hardware(self):

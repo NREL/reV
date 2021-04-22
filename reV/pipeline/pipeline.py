@@ -58,12 +58,12 @@ class Pipeline:
         self.monitor = monitor
         self.verbose = verbose
         self._config = PipelineConfig(pipeline)
-        self._run_list = self._config.pipeline_steps
+        self._run_list = self._config.pipeline
         self._init_status()
 
         # init logger for pipeline module if requested in input config
         if 'logging' in self._config:
-            init_logger('reV', **self._config['logging'])
+            init_logger('reV', **self._config.logging)
 
     def _init_status(self):
         """Initialize the status json in the output directory."""

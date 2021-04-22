@@ -1,0 +1,128 @@
+interp_extrap_power:
+  True
+interp_extrap_year:
+  True
+
+# Soft Cost Parameters
+fixed_charge_rate:
+  0.071
+development_factor:
+  0.04
+proj_mgmt_factor:
+  0.02
+construction_insurance:
+  .0115
+project_completion:
+  .0115
+decomissioning:
+  .1725
+procurement_contingency:
+  .0575
+install_contingency:
+  .345
+lease_price:
+  50000000
+
+# Construction Finance Parameters
+confin_factor:
+  1.043012405771711
+interest_during_construction:
+  0.044
+tax_rate:
+  0.26
+
+# CapEx Equations
+cost_reductions:
+  2019::cost_reductions::fixed
+turbine:
+  2019::turbine::tower + 2019::turbine::rna * (1 - cost_reductions::rna_2017)
+turbine_install:
+  2019::turbine_install::monopile_8MW * (1 - cost_reductions::turbine_install_2017)
+substructure:
+  (2015::monopile::transition_piece + 2015::fixed::outfitting_lt_8MW) * (1 - cost_reductions::substructure_2017)
+foundation:
+  2015::monopile::foundation * (1 - cost_reductions::foundation_2017)
+sub_install:
+  2015::monopile::install_8MW * (1 - cost_reductions::sub_and_found_install_2017)
+pslt:
+  2015::monopile::pslt_8MW
+array:
+  2015::array::fixed * (1 - cost_reductions::array_cable_2017)
+export:
+  2019::export::fixed * (1 - cost_reductions::export_cable_2017)
+grid:
+  2015::grid::grid_connection
+
+# CapEx Aggregation
+support:
+  substructure + foundation
+install:
+  turbine_install + sub_install + pslt
+electrical:
+  array + export + grid
+subcomponents:
+  support + install + electrical
+
+# BOS CapEx
+development:
+  (development_factor * (subcomponents + turbine)) * (1 - cost_reductions::development_2017)
+proj_mgmt:
+  proj_mgmt_factor * (subcomponents + turbine)
+bos:
+  lease_price + development + proj_mgmt + subcomponents
+
+# Soft CapEx
+constr_ins:
+  construction_insurance * (bos + turbine)
+decomm:
+  decomissioning * (install - pslt)
+proj_comp:
+  project_completion * (bos + turbine)
+test:
+  bos - install + pslt + turbine
+procurement_cont:
+  procurement_contingency * test
+install_cont:
+  install_contingency * (install - pslt)
+cons_financing:
+  (confin_factor - 1) * (constr_ins + decomm + proj_comp + procurement_cont + install_cont + bos + turbine)
+soft:
+  constr_ins + decomm + proj_comp + procurement_cont + install_cont + cons_financing
+
+# Total CapEx
+capex:
+  (bos + soft + turbine) * capex_multi * (1 - cost_reductions::capex_2017)
+
+# Total OpEx
+operations:
+  18880383 * (1 - cost_reductions::operations_2017)
+maintenance:
+  2015::maintenance::fixed * (1 - cost_reductions::maintenance_2017)
+opex:
+  (operations + maintenance) * (1 - cost_reductions::opex_2017)
+
+# NCF
+adjusted_gcf:
+  (gcf * (0.006 * turbine_capacity + 0.9691)) * (1 + cost_reductions::gross_aep_2017)
+wake:
+  2015::losses::wake
+elec:
+  2015::losses::electrical
+avail:
+  2015::losses::avail_fixed
+environmental:
+  0.0159
+  # 2015::losses::environmental
+technical:
+  0.01
+  # 2015::losses::technical_fixed
+site_specific:
+  1 - (1 - wake) * (1 - elec) * (1 - avail)
+total_losses:
+  (1 - (1 - environmental) * (1 - technical) * (1 - site_specific)) * (1 - cost_reductions::total_losses_2017)
+ncf:
+  adjusted_gcf * (1 - total_losses) * (1 - cost_reductions::ncf_2017)
+
+# LCOE
+lcoe:
+  (capex * fixed_charge_rate + opex) / (ncf * turbine_capacity * num_turbines * 8760)

@@ -43,10 +43,20 @@ class MultiYearConfig(AnalysisConfig):
         return my_file
 
     @property
+    def groups(self):
+        """Get the multi year collection groups
+
+        Returns
+        -------
+        dict
+        """
+        return self._groups
+
+    @property
     def group_names(self):
         """
         Returns
-        -------s
+        -------
         group_names : list
             List of group names
         """

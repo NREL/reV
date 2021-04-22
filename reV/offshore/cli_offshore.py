@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=all
 """
-reV offshore wind farm aggregation module command line interface (CLI).
+reV offshore wind module command line interface (CLI).
 
-This module aggregates offshore data from high res wind resource data to
-coarse wind farm sites and then calculates the ORCA econ data.
+This module uses the NRWAL library to assess offshore losses and LCOE to
+complement the simple SAM windpower module.
 
-Offshore resource / generation data refers to WTK 2km (fine resolution)
-Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
+Everything in this module operates on the native wind resource resolution.
 """
 import pprint
 import os
@@ -21,7 +20,7 @@ from reV.offshore.offshore import Offshore
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from reV import __version__
 
-from rex.utilities.cli_dtypes import STR, INT
+from rex.utilities.cli_dtypes import STR, INT, STRLIST
 from rex.utilities.loggers import init_mult
 from rex.utilities.hpc import SLURM
 from rex.utilities.utilities import get_class_properties
@@ -103,16 +102,21 @@ def from_config(ctx, config_file, verbose):
                            offshore_fpath=config.offshore_fpath,
                            points=config.project_points,
                            sam_files=config.sam_files,
+                           nrwal_configs=config.nrwal_configs,
+                           offshore_meta_cols=config.offshore_meta_cols,
+                           offshore_nrwal_keys=config.offshore_nrwal_keys,
                            logdir=config.logdir,
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-
             ctx.obj['NAME'] = job_name
             ctx.obj['GEN_FPATH'] = gen_fpath
             ctx.obj['OFFSHORE_FPATH'] = config.offshore_fpath
             ctx.obj['PROJECT_POINTS'] = config.project_points
             ctx.obj['SAM_FILES'] = config.sam_files
+            ctx.obj['NRWAL_CONFIGS'] = config.nrwal_configs
+            ctx.obj['OFFSHORE_META_COLS'] = config.offshore_meta_cols
+            ctx.obj['OFFSHORE_NRWAL_KEYS'] = config.offshore_nrwal_keys
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -130,26 +134,46 @@ def from_config(ctx, config_file, verbose):
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
-              help='reV wind farm meta and ORCA cost data inputs.')
-@click.option('--points', '-pp', default=slice(0, 100), type=PROJECTPOINTS,
-              help=('reV project points to analyze '
-                    '(slice, list, or file string). '
-                    'Default is slice(0, 100)'))
+              help='Offshore wind geospatial inputs such as depth and '
+              'distance to port. Needs "gid" and "config" columns matching '
+              'the project points input.')
+@click.option('--points', '-pp', required=True, type=PROJECTPOINTS,
+              help='reV project points to analyze. Has to be a string file '
+              'path to a project points csv with "gid" and "config" columns. '
+              'The config column maps to the sam_files and nrwal_configs '
+              'inputs.')
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
-              help='SAM config files (required) (str, dict, or list).')
+              help='SAM config files lookup mapping config keys to config '
+              'filepaths. (required) (dict). Should have the same config '
+              'keys as the nrwal_configs input.')
+@click.option('--nrwal_configs', '-nc', required=True, type=SAMFILES,
+              help='NRWAL config files lookup mapping config keys to config '
+              'filepaths. (required) (dict). Should have the same config '
+              'keys as the sam_files input.')
+@click.option('--offshore_meta_cols', '-mc', default=None, type=STRLIST,
+              help='Column labels from offshore_fpath to pass through to the '
+              'output meta data. None (default) will use class variable '
+              'DEFAULT_META_COLS, and any additional cols requested here will '
+              'be added to DEFAULT_META_COLS.')
+@click.option('--offshore_nrwal_keys', '-nk', default=None, type=STRLIST,
+              help='Keys from the offshore nrwal configs to pass through as '
+              'new datasets in the reV output h5.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               help='Directory to save offshore logs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
-           log_dir, verbose):
+def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
+           offshore_meta_cols, offshore_nrwal_keys, log_dir, verbose):
     """Main entry point to run offshore wind aggregation"""
     name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['OFFSHORE_FPATH'] = offshore_fpath
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
+    ctx.obj['NRWAL_CONFIGS'] = nrwal_configs
+    ctx.obj['OFFSHORE_META_COLS'] = offshore_meta_cols
+    ctx.obj['OFFSHORE_NRWAL_KEYS'] = offshore_nrwal_keys
     ctx.obj['OUT_DIR'] = os.path.dirname(gen_fpath)
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -159,11 +183,10 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
         init_mult(name, log_dir, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose, node=True)
 
-        fpath_out = gen_fpath.replace('.h5', '_offshore.h5')
-
         try:
-            Offshore.run(gen_fpath, offshore_fpath, points, sam_files,
-                         fpath_out=fpath_out)
+            Offshore.run(gen_fpath, offshore_fpath, sam_files, nrwal_configs,
+                         points, offshore_meta_cols=offshore_meta_cols,
+                         offshore_nrwal_keys=offshore_nrwal_keys)
         except Exception as e:
             logger.exception('Offshore module failed, received the '
                              'following exception:\n{}'.format(e))
@@ -171,15 +194,16 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
 
         runtime = (time.time() - t0) / 60
 
-        status = {'dirout': os.path.dirname(fpath_out),
-                  'fout': os.path.basename(fpath_out),
+        status = {'dirout': os.path.dirname(gen_fpath),
+                  'fout': os.path.basename(gen_fpath),
                   'job_status': 'successful',
                   'runtime': runtime, 'finput': gen_fpath}
-        Status.make_job_file(os.path.dirname(fpath_out), 'offshore',
+        Status.make_job_file(os.path.dirname(gen_fpath), 'offshore',
                              name, status)
 
 
 def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
+                 nrwal_configs, offshore_meta_cols, offshore_nrwal_keys,
                  log_dir, verbose):
     """Get a CLI call command for the offshore aggregation cli."""
 
@@ -187,6 +211,9 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
             '-of {}'.format(SLURM.s(offshore_fpath)),
             '-pp {}'.format(SLURM.s(points)),
             '-sf {}'.format(SLURM.s(sam_files)),
+            '-nc {}'.format(SLURM.s(nrwal_configs)),
+            '-mc {}'.format(SLURM.s(offshore_meta_cols)),
+            '-nk {}'.format(SLURM.s(offshore_nrwal_keys)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -226,6 +253,9 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     offshore_fpath = ctx.obj['OFFSHORE_FPATH']
     project_points = ctx.obj['PROJECT_POINTS']
     sam_files = ctx.obj['SAM_FILES']
+    nrwal_configs = ctx.obj['NRWAL_CONFIGS']
+    offshore_meta_cols = ctx.obj['OFFSHORE_META_COLS']
+    offshore_nrwal_keys = ctx.obj['OFFSHORE_NRWAL_KEYS']
     log_dir = ctx.obj['LOG_DIR']
     out_dir = ctx.obj['OUT_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -234,7 +264,8 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
-                       sam_files, log_dir, verbose)
+                       sam_files, nrwal_configs, offshore_meta_cols,
+                       offshore_nrwal_keys, log_dir, verbose)
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()

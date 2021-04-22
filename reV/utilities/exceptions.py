@@ -142,6 +142,12 @@ class ProjectPointsValueError(Exception):
     """
 
 
+class OffshoreWindInputError(Exception):
+    """
+    Error for bad offshore wind inputs
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
@@ -163,12 +169,6 @@ class InputWarning(Warning):
 class OffshoreWindInputWarning(Warning):
     """
     Warning for potentially dangerous offshore wind inputs
-    """
-
-
-class OrcaOutputWarning(Warning):
-    """
-    Warning for bad ORCA outputs.
     """
 
 

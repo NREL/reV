@@ -10,6 +10,7 @@ from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
+from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class AnalysisConfig(BaseConfig):
         """
         super().__init__(config, check_keys=check_keys)
 
-        self._years = None
+        self._analysis_years = None
         self._ec = None
         self._dirout = self.config_dir
         self._logdir = './logs/'
@@ -57,28 +58,44 @@ class AnalysisConfig(BaseConfig):
             logger.error(e)
             raise ConfigError(e)
 
+    @classmethod
+    def _get_properties(cls):
+        """
+        Get all class properties
+        Used to check against config keys
+
+        Returns
+        -------
+        properties : list
+            List of class properties, each of which should represent a valid
+            config key/entry
+        """
+        props = get_class_properties(cls)
+        props.append('directories')
+        return props
+
     @property
-    def years(self):
+    def analysis_years(self):
         """Get the analysis years.
 
         Returns
         -------
-        _years : list
+        analysis_years : list
             List of years to analyze. If this is a single year run, this return
             value is a single entry list. If no analysis_years are specified,
             the code will look anticipate a year in the input files.
         """
 
-        if self._years is None:
-            self._years = self.get('analysis_years', [None])
-            if not isinstance(self._years, list):
-                self._years = [self._years]
+        if self._analysis_years is None:
+            self._analysis_years = self.get('analysis_years', [None])
+            if not isinstance(self._analysis_years, list):
+                self._analysis_years = [self._analysis_years]
 
-            if self._years[0] is None:
-                warn('Analysis years may not have been specified, may default '
+            if self._analysis_years[0] is None:
+                warn('Years may not have been specified, may default '
                      'to available years in inputs files.', ConfigWarning)
 
-        return self._years
+        return self._analysis_years
 
     @property
     def dirout(self):

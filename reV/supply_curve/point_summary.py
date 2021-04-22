@@ -34,8 +34,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                  res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
-                 exclusion_shape=None, close=False, offshore_flags=None,
-                 friction_layer=None):
+                 exclusion_shape=None, close=False, friction_layer=None):
         """
         Parameters
         ----------
@@ -90,9 +89,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         friction_layer : None | FrictionMask
             Friction layer with scalar friction values if valid friction inputs
             were entered. Otherwise, None to not apply friction layer.
@@ -117,7 +113,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                          resolution=resolution,
                          excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
-                         offshore_flags=offshore_flags,
                          close=close)
 
         self._apply_exclusions()
@@ -627,6 +622,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 'timezone': self.timezone,
                 }
 
+        if self.offshore is not None:
+            ARGS['offshore'] = self.offshore
+
         if self._friction_layer is not None:
             ARGS['mean_friction'] = self.mean_friction
             ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
@@ -659,8 +657,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Equation must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
-            supply curve aggregation table. This will not affect offshore
-            wind LCOE.
+            supply curve aggregation table.
         summary : dict
             Dictionary of summary outputs for this sc point.
 
@@ -683,8 +680,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   excl_area=0.0081, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
-                  close=False, offshore_flags=None, friction_layer=None,
-                  args=None, data_layers=None, cap_cost_scale=None):
+                  close=False, friction_layer=None, args=None,
+                  data_layers=None, cap_cost_scale=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -739,9 +736,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         friction_layer : None | FrictionMask
             Friction layer with scalar friction values if valid friction inputs
             were entered. Otherwise, None to not apply friction layer.
@@ -757,8 +751,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
-            supply curve aggregation table. This will not affect offshore
-            wind LCOE.
+            supply curve aggregation table.
 
         Returns
         -------
@@ -777,7 +770,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   "resolution": resolution,
                   "exclusion_shape": exclusion_shape,
                   "close": close,
-                  "offshore_flags": offshore_flags,
                   'friction_layer': friction_layer}
 
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,

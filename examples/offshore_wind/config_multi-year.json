@@ -1,22 +1,36 @@
 {
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./conus_wind/"
+    "output_directory": "./"
   },
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
-    "memory": 90,
+    "feature": "-p debug",
     "option": "eagle",
-    "walltime": 0.5
+    "walltime": 1
   },
   "groups": {
     "none": {
       "dsets": [
         "cf_mean",
-        "cf_profile",
         "lcoe_fcr",
         "ws_mean"
+      ],
+      "pass_through_dsets": [
+        "depth",
+        "dist_p_to_a",
+        "dist_a_to_s",
+        "dist_op_to_s",
+        "dist_p_to_s",
+        "dist_p_to_s_nolimit",
+        "dist_s_to_l",
+        "hs_average",
+        "fixed_downtime",
+        "floating_downtime",
+        "capital_cost",
+        "fixed_operating_cost",
+        "variable_operating_cost",
+        "fixed_charge_rate"
       ],
       "source_dir": "./",
       "source_files": "PIPELINE",
