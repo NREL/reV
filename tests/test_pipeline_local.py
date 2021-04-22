@@ -8,6 +8,7 @@ Created on Thu Oct  3 13:24:16 2019
 import os
 import pytest
 import numpy as np
+import shutil
 import tempfile
 
 from rex import Resource
@@ -20,6 +21,8 @@ def test_pipeline_local():
     """Test the reV pipeline execution on a local machine."""
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         pipeline_dir = os.path.join(TESTDATADIR, 'pipeline/')
+        shutil.copytree(pipeline_dir, TEMP_DIR, dirs_exist_ok=True)
+
         out_dir = os.path.join(TEMP_DIR, 'outputs/')
         fpipeline = os.path.join(TEMP_DIR, 'config_pipeline.json')
         fbaseline = os.path.join(pipeline_dir,

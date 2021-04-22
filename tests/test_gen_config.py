@@ -61,14 +61,30 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         if tech == 'pv':
             fconfig = 'local_pv.json'
+            project_points = os.path.join(TESTDATADIR, 'config',
+                                          "project_points_10.csv")
+            resource_file = os.path.join(TESTDATADIR,
+                                         'nsrdb/ri_100_nsrdb_{}.h5')
+            sam_files = {"sam_gen_pv_1":
+                         os.path.join(TESTDATADIR,
+                                      "SAM/naris_pv_1axis_inv13.json")}
         elif tech == 'wind':
             fconfig = 'local_wind.json'
+            project_points = os.path.join(TESTDATADIR, 'config',
+                                          "wtk_pp_2012_10.csv")
+            resource_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
+            sam_files = {"wind0":
+                         os.path.join(TESTDATADIR,
+                                      "SAM/wind_gen_standard_losses_0.json")}
 
         config = os.path.join(TESTDATADIR,
                               'config/{}'.format(fconfig)).replace('\\', '/')
         config = safe_json_load(config)
+        config['project_points'] = project_points
+        config['resource_file'] = resource_file
+        config['sam_files'] = sam_files
         config['directories']['log_directory'] = td
-        config['directories']['outpath_directory'] = td
+        config['directories']['output_directory'] = td
 
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:

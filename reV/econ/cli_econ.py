@@ -66,7 +66,7 @@ def from_config(ctx, config_file, verbose):
     config = EconConfig(config_file)
 
     # take name from config if not default
-    if config.name.lower() != 'reV-econ':
+    if config.name.lower() != 'rev':
         name = config.name
         ctx.obj['NAME'] = name
 
