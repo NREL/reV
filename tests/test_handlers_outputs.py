@@ -58,46 +58,64 @@ def test_add_dset():
                                 str_decode=True, group=None)
 
         with pytest.raises(HandlerRuntimeError):
-            Outputs.add_dataset(fp, 'dset2', arr2, int,
-                                attrs={'scale_factor': 1},
-                                chunks=(None, 10), unscale=True, mode='a',
-                                str_decode=True, group=None)
-
-        with pytest.raises(HandlerRuntimeError):
-            Outputs.add_dataset(fp, 'dset1', arr2, float,
+            Outputs.add_dataset(fp, 'dset2', arr2, float,
                                 attrs={'scale_factor': 10},
                                 chunks=(None, 10), unscale=True, mode='a',
                                 str_decode=True, group=None)
 
-        Outputs.add_dataset(fp, 'dset1', arr1.astype(int), int, attrs=None,
-                            chunks=None, unscale=True, mode='a',
+        # Float to float
+        Outputs.add_dataset(fp, 'dset1', arr1, arr1.dtype,
+                            attrs=None,
+                            unscale=True, mode='a',
                             str_decode=True, group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             data = f['dset1'][...]
-            assert data.dtype == int
+            assert data.dtype == float
             assert np.allclose(arr1, data)
 
-        Outputs.add_dataset(fp, 'dset2', arr2.astype(np.int16),
+        # Float to float
+        Outputs.add_dataset(fp, 'dset1', arr1, arr1.dtype,
+                            attrs={'scale_factor': 1},
+                            unscale=True, mode='a',
+                            str_decode=True, group=None)
+        with h5py.File(fp, 'r') as f:
+            assert 'dset1' in f
+            data = f['dset1'][...]
+            assert data.dtype == float
+            assert np.allclose(arr1, data)
+
+        # int16 to in16
+        Outputs.add_dataset(fp, 'dset1', arr1.astype(np.int16), np.int16,
+                            attrs=None,
+                            chunks=None, unscale=True, mode='a',
+                            str_decode=True, group=None)
+        with h5py.File(fp, 'r') as f:
+            assert 'dset1' in f
+            data = f['dset1'][...]
+            assert np.issubdtype(data.dtype, np.integer)
+            assert np.allclose(arr1, data)
+
+        # float to in16
+        Outputs.add_dataset(fp, 'dset2', arr2,
                             np.int16, attrs={'scale_factor': 1},
                             chunks=(None, 10),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             assert 'dset2' in f
             assert f['dset1'].chunks is None
             assert f['dset2'].chunks == (8760, 10)
-            assert np.allclose(f['dset2'][...], arr2)
+            assert np.allclose(f['dset2'][...],
+                               np.round(arr2).astype(np.int16))
 
+        # scale to int32
         Outputs.add_dataset(fp, 'dset3', arr3, np.int32,
                             attrs={'scale_factor': 100},
                             chunks=(100, 25),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             assert 'dset2' in f

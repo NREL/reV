@@ -325,7 +325,7 @@ class Outputs(BaseResource):
                 self.h5.attrs[k] = v
 
     @staticmethod
-    def _check_data_dtype(data, dtype, scale_factor=1):
+    def _check_data_dtype(data, dtype, attrs=None):
         """
         Check data dtype and scale if needed
 
@@ -335,8 +335,9 @@ class Outputs(BaseResource):
             Data to be written to disc
         dtype : str
             dtype of data on disc
-        scale_factor : int
-            Scale factor to scale data to integer (if needed)
+        attrs : dict, optional
+            Attributes to be set. May include 'scale_factor',
+            by default None
 
         Returns
         -------
@@ -344,14 +345,23 @@ class Outputs(BaseResource):
             Data ready for writing to disc:
             - Scaled and converted to dtype
         """
-        if scale_factor != 1 and not np.issubdtype(data.dtype, np.integer):
-            if not np.issubdtype(dtype, np.integer):
+        if attrs is None:
+            attrs = {}
+
+        scale_factor = attrs.get('scale_factor', None)
+
+        scale = (scale_factor is not None
+                 and not np.issubdtype(data.dtype, np.integer))
+        if scale:
+            if scale_factor != 1 and not np.issubdtype(dtype, np.integer):
                 raise HandlerRuntimeError('Output dtype must be an integer in '
                                           'order to apply scale factor {}".'
                                           .format(scale_factor))
 
-            # apply scale factor and dtype
-            data = np.round(data * scale_factor).astype(dtype)
+            if not np.issubdtype(data.dtype, np.dtype(dtype)):
+                # apply scale factor and dtype
+                data = np.round(data * scale_factor).astype(dtype)
+
         elif not np.issubdtype(data.dtype, np.dtype(dtype)):
             raise HandlerRuntimeError('A scale_factor is needed to'
                                       'scale "{}" data to "{}".'
@@ -488,10 +498,10 @@ class Outputs(BaseResource):
             raise HandlerRuntimeError(msg)
 
         dtype = self.h5[ds_name].dtype
-        scale_factor = self.get_scale_factor(ds_name)
+        attrs = self.get_attrs(ds_name)
         ds_slice = parse_slice(ds_slice)
         self.h5[ds_name][ds_slice] = self._check_data_dtype(
-            arr, dtype, scale_factor=scale_factor)
+            arr, dtype, attrs=attrs)
 
     def _check_chunks(self, chunks, data=None):
         """
@@ -630,12 +640,7 @@ class Outputs(BaseResource):
         """
         self._check_dset_shape(data)
 
-        if attrs is not None:
-            scale_factor = attrs.get('scale_factor', 1)
-        else:
-            scale_factor = 1
-
-        data = self._check_data_dtype(data, dtype, scale_factor=scale_factor)
+        data = self._check_data_dtype(data, dtype, attrs=attrs)
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
