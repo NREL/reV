@@ -288,7 +288,6 @@ class DatasetCollector:
         with Outputs(self._h5_file, mode='a') as f_out:
             for fp in self._source_files:
                 with Outputs(fp, mode='r') as f_source:
-
                     x = self._get_source_gid_chunks(f_source)
                     all_source_gids, source_gid_chunks = x
 
@@ -482,7 +481,7 @@ class Collector:
             Dataset shape tuple.
         """
         with Outputs(self.h5_files[0], mode='r') as f:
-            shape, _, _ = f.get_dset_properties(dset_name)
+            shape = f.shapes[dset_name]
 
         return shape
 
@@ -570,6 +569,7 @@ class Collector:
 
         with Outputs(self._h5_out, mode='r') as out:
             dsets_collected = out.datasets
+
         with Outputs(self.h5_files[0], mode='r') as out:
             dsets_source = out.datasets
 

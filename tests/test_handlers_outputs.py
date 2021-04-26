@@ -53,16 +53,23 @@ def test_add_dset():
             f.time_index = time_index
 
         with pytest.raises(HandlerRuntimeError):
-            f.add_dataset(fp, 'dset1', arr1, None, int, chunks=None,
-                          unscale=True, mode='a', str_decode=True,
-                          group=None)
+            Outputs.add_dataset(fp, 'dset1', arr1, int, attrs=None,
+                                chunks=None, unscale=True, mode='a',
+                                str_decode=True, group=None)
 
         with pytest.raises(HandlerRuntimeError):
-            Outputs.add_dataset(fp, 'dset2', arr2, {'scale_factor': 1}, int,
+            Outputs.add_dataset(fp, 'dset2', arr2, int,
+                                attrs={'scale_factor': 1},
                                 chunks=(None, 10), unscale=True, mode='a',
                                 str_decode=True, group=None)
 
-        Outputs.add_dataset(fp, 'dset1', arr1.astype(int), None, int,
+        with pytest.raises(HandlerRuntimeError):
+            Outputs.add_dataset(fp, 'dset1', arr2, float,
+                                attrs={'scale_factor': 10},
+                                chunks=(None, 10), unscale=True, mode='a',
+                                str_decode=True, group=None)
+
+        Outputs.add_dataset(fp, 'dset1', arr1.astype(int), int, attrs=None,
                             chunks=None, unscale=True, mode='a',
                             str_decode=True, group=None)
 
@@ -73,7 +80,8 @@ def test_add_dset():
             assert np.allclose(arr1, data)
 
         Outputs.add_dataset(fp, 'dset2', arr2.astype(np.int16),
-                            {'scale_factor': 1}, np.int16, chunks=(None, 10),
+                            np.int16, attrs={'scale_factor': 1},
+                            chunks=(None, 10),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
 
@@ -84,7 +92,8 @@ def test_add_dset():
             assert f['dset2'].chunks == (8760, 10)
             assert np.allclose(f['dset2'][...], arr2)
 
-        Outputs.add_dataset(fp, 'dset3', arr3, {'scale_factor': 100}, np.int32,
+        Outputs.add_dataset(fp, 'dset3', arr3, np.int32,
+                            attrs={'scale_factor': 100},
                             chunks=(100, 25),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
@@ -112,10 +121,11 @@ def test_bad_shape():
             f.time_index = time_index
 
         with pytest.raises(HandlerValueError):
-            Outputs.add_dataset(fp, 'dset3', np.ones(10), None, float)
+            Outputs.add_dataset(fp, 'dset3', np.ones(10), float, attrs=None)
 
         with pytest.raises(HandlerValueError):
-            Outputs.add_dataset(fp, 'dset3', np.ones((10, 10)), None, float)
+            Outputs.add_dataset(fp, 'dset3', np.ones((10, 10)), float,
+                                attrs=None)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

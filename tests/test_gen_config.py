@@ -102,6 +102,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
         # get reV 2.0 generation profiles from disk
         rev2_profiles = None
         flist = os.listdir(config_obj.dirout)
+        print(flist)
         for fname in flist:
             if job_name in fname and fname.endswith('.h5'):
                 path = os.path.join(config_obj.dirout, fname)
@@ -109,6 +110,8 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
                     msg = 'cf_profile not written to disk'
                     assert 'cf_profile' in cf.datasets, msg
+                    print(cf.scale_factors['cf_profile'])
+                    print(cf.dtypes['cf_profile'])
                     rev2_profiles = cf['cf_profile']
 
                     msg = 'monthly_energy not written to disk'
@@ -131,6 +134,9 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         result = np.allclose(rev1_profiles, rev2_profiles,
                              rtol=RTOL, atol=ATOL)
+
+        print(rev1_profiles)
+        print(rev2_profiles)
 
         LOGGERS.clear()
         msg = ('reV generation from config input failed for "{}" module!'
