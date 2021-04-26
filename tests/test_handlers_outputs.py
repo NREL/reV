@@ -53,42 +53,69 @@ def test_add_dset():
             f.time_index = time_index
 
         with pytest.raises(HandlerRuntimeError):
-            f.add_dataset(fp, 'dset1', arr1, None, int, chunks=None,
-                          unscale=True, mode='a', str_decode=True,
-                          group=None)
+            Outputs.add_dataset(fp, 'dset1', arr1, int, attrs=None,
+                                chunks=None, unscale=True, mode='a',
+                                str_decode=True, group=None)
 
         with pytest.raises(HandlerRuntimeError):
-            Outputs.add_dataset(fp, 'dset2', arr2, {'scale_factor': 1}, int,
+            Outputs.add_dataset(fp, 'dset2', arr2, float,
+                                attrs={'scale_factor': 10},
                                 chunks=(None, 10), unscale=True, mode='a',
                                 str_decode=True, group=None)
 
-        Outputs.add_dataset(fp, 'dset1', arr1.astype(int), None, int,
-                            chunks=None, unscale=True, mode='a',
+        # Float to float
+        Outputs.add_dataset(fp, 'dset1', arr1, arr1.dtype,
+                            attrs=None,
+                            unscale=True, mode='a',
                             str_decode=True, group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             data = f['dset1'][...]
-            assert data.dtype == int
+            assert data.dtype == float
             assert np.allclose(arr1, data)
 
-        Outputs.add_dataset(fp, 'dset2', arr2.astype(np.int16),
-                            {'scale_factor': 1}, np.int16, chunks=(None, 10),
+        # Float to float
+        Outputs.add_dataset(fp, 'dset1', arr1, arr1.dtype,
+                            attrs={'scale_factor': 1},
+                            unscale=True, mode='a',
+                            str_decode=True, group=None)
+        with h5py.File(fp, 'r') as f:
+            assert 'dset1' in f
+            data = f['dset1'][...]
+            assert data.dtype == float
+            assert np.allclose(arr1, data)
+
+        # int16 to in16
+        Outputs.add_dataset(fp, 'dset1', arr1.astype(np.int16), np.int16,
+                            attrs=None,
+                            chunks=None, unscale=True, mode='a',
+                            str_decode=True, group=None)
+        with h5py.File(fp, 'r') as f:
+            assert 'dset1' in f
+            data = f['dset1'][...]
+            assert np.issubdtype(data.dtype, np.integer)
+            assert np.allclose(arr1, data)
+
+        # float to in16
+        Outputs.add_dataset(fp, 'dset2', arr2,
+                            np.int16, attrs={'scale_factor': 1},
+                            chunks=(None, 10),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             assert 'dset2' in f
             assert f['dset1'].chunks is None
             assert f['dset2'].chunks == (8760, 10)
-            assert np.allclose(f['dset2'][...], arr2)
+            assert np.allclose(f['dset2'][...],
+                               np.round(arr2).astype(np.int16))
 
-        Outputs.add_dataset(fp, 'dset3', arr3, {'scale_factor': 100}, np.int32,
+        # scale to int32
+        Outputs.add_dataset(fp, 'dset3', arr3, np.int32,
+                            attrs={'scale_factor': 100},
                             chunks=(100, 25),
                             unscale=True, mode='a', str_decode=True,
                             group=None)
-
         with h5py.File(fp, 'r') as f:
             assert 'dset1' in f
             assert 'dset2' in f
@@ -112,10 +139,11 @@ def test_bad_shape():
             f.time_index = time_index
 
         with pytest.raises(HandlerValueError):
-            Outputs.add_dataset(fp, 'dset3', np.ones(10), None, float)
+            Outputs.add_dataset(fp, 'dset3', np.ones(10), float, attrs=None)
 
         with pytest.raises(HandlerValueError):
-            Outputs.add_dataset(fp, 'dset3', np.ones((10, 10)), None, float)
+            Outputs.add_dataset(fp, 'dset3', np.ones((10, 10)), float,
+                                attrs=None)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

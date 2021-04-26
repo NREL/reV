@@ -2,7 +2,6 @@
 """
 Classes to handle reV h5 output files.
 """
-import h5py
 import json
 import logging
 import numpy as np
@@ -10,17 +9,16 @@ import pandas as pd
 import time
 
 from reV.version import __version__
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
-                                      HandlerValueError)
+from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError)
 
-from rex.resource import Resource
+from rex.resource import BaseResource
 from rex.utilities.parse_keys import parse_keys, parse_slice
 from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 
 
-class Outputs(Resource):
+class Outputs(BaseResource):
     """
     Base class to handle reV output data in .h5 format
 
@@ -141,23 +139,21 @@ class Outputs(Resource):
         ----------
         h5_file : str
             Path to .h5 resource file
-        mode : str
-            Mode to instantiate h5py.File instance
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        str_decode : bool
+        mode : str, optional
+            Mode to instantiate h5py.File instance, by default 'r'
+        unscale : bool, optional
+            Boolean flag to automatically unscale variables on extraction,
+            by default True
+        str_decode : bool, optional
             Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
+            strings. Setting this to False will speed up the meta data read,
+            by default True
+        group : str, optional
+            Group within .h5 resource file to open, by default None
         """
-        self.h5_file = h5_file
-        self._h5 = h5py.File(h5_file, mode=mode)
-        self._unscale = unscale
+        super().__init__(h5_file, unscale=unscale, hsds=False,
+                         str_decode=str_decode, group=group, mode=mode)
         self._mode = mode
-        self._meta = None
-        self._time_index = None
-        self._str_decode = str_decode
         self._group = self._check_group(group)
 
         if self.writable:
@@ -169,21 +165,6 @@ class Outputs(Resource):
             _len = self.h5['meta'].shape[0]
 
         return _len
-
-    def __getitem__(self, keys):
-        ds, ds_slice = parse_keys(keys)
-        if ds in self.datasets:
-            if ds.endswith('time_index'):
-                out = self._get_time_index(ds, ds_slice)
-            elif ds.endswith('meta'):
-                out = self._get_meta(ds, ds_slice)
-            else:
-                out = self._get_ds(ds, ds_slice)
-        else:
-            msg = '{} is not a valid Dataset'.format(ds)
-            raise HandlerKeyError(msg)
-
-        return out
 
     def __setitem__(self, keys, arr):
         if self.writable:
@@ -276,7 +257,7 @@ class Outputs(Resource):
 
         return is_writable
 
-    @Resource.meta.setter  # pylint: disable-msg=E1101
+    @BaseResource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
         """
         Write meta data to disk, convert type if neccessary
@@ -288,7 +269,7 @@ class Outputs(Resource):
         """
         self._set_meta('meta', meta)
 
-    @Resource.time_index.setter  # pylint: disable-msg=E1101
+    @BaseResource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
         """
         Write time_index to dics, convert type if neccessary
@@ -343,6 +324,51 @@ class Outputs(Resource):
             for k, v in run_attrs.items():
                 self.h5.attrs[k] = v
 
+    @staticmethod
+    def _check_data_dtype(data, dtype, attrs=None):
+        """
+        Check data dtype and scale if needed
+
+        Parameters
+        ----------
+        data : ndarray
+            Data to be written to disc
+        dtype : str
+            dtype of data on disc
+        attrs : dict, optional
+            Attributes to be set. May include 'scale_factor',
+            by default None
+
+        Returns
+        -------
+        data : ndarray
+            Data ready for writing to disc:
+            - Scaled and converted to dtype
+        """
+        if attrs is None:
+            attrs = {}
+
+        scale_factor = attrs.get('scale_factor', None)
+
+        scale = (scale_factor is not None
+                 and not np.issubdtype(data.dtype, np.integer))
+        if scale:
+            if scale_factor != 1 and not np.issubdtype(dtype, np.integer):
+                raise HandlerRuntimeError('Output dtype must be an integer in '
+                                          'order to apply scale factor {}".'
+                                          .format(scale_factor))
+
+            if not np.issubdtype(data.dtype, np.dtype(dtype)):
+                # apply scale factor and dtype
+                data = np.round(data * scale_factor).astype(dtype)
+
+        elif not np.issubdtype(data.dtype, np.dtype(dtype)):
+            raise HandlerRuntimeError('A scale_factor is needed to'
+                                      'scale "{}" data to "{}".'
+                                      .format(data.dtype, dtype))
+
+        return data
+
     def _check_group(self, group):
         """
         Ensure group is in .h5 file
@@ -377,6 +403,7 @@ class Outputs(Resource):
         attrs : dict
             Attributes to add to the meta data dataset
         """
+        # pylint: disable=attribute-defined-outside-init
         self._meta = meta
         if isinstance(meta, pd.DataFrame):
             meta = to_records_array(meta)
@@ -400,6 +427,7 @@ class Outputs(Resource):
         attrs : dict
             Attributes to add to the meta data dataset
         """
+        # pylint: disable=attribute-defined-outside-init
         self._time_index = time_index
         if isinstance(time_index, pd.DatetimeIndex):
             time_index = time_index.astype(str)
@@ -452,41 +480,6 @@ class Outputs(Resource):
 
                 self.h5['meta'].attrs[key] = config
 
-    @staticmethod
-    def _check_data_dtype(data, dtype, scale_factor=1):
-        """
-        Check data dtype and scale if needed
-
-        Parameters
-        ----------
-        data : ndarray
-            Data to be written to disc
-        dtype : str
-            dtype of data on disc
-        scale_factor : int
-            Scale factor to scale data to integer (if needed)
-
-        Returns
-        -------
-        data : ndarray
-            Data ready for writing to disc:
-            - Scaled and converted to dtype
-        """
-        if not np.issubdtype(data.dtype, np.dtype(dtype)):
-            if scale_factor == 1:
-                raise HandlerRuntimeError('A scale_factor is needed to'
-                                          'scale "{}" data to "{}".'
-                                          .format(data.dtype, dtype))
-
-            # apply scale factor and dtype
-            data = np.multiply(data, scale_factor)
-            if np.issubdtype(dtype, np.integer):
-                data = np.round(data)
-
-            data = data.astype(dtype)
-
-        return data
-
     def _set_ds_array(self, ds_name, arr, ds_slice):
         """
         Write ds to disk
@@ -505,10 +498,10 @@ class Outputs(Resource):
             raise HandlerRuntimeError(msg)
 
         dtype = self.h5[ds_name].dtype
-        scale_factor = self.get_scale_factor(ds_name)
+        attrs = self.get_attrs(ds_name)
         ds_slice = parse_slice(ds_slice)
-        self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
-                                                            scale_factor)
+        self.h5[ds_name][ds_slice] = self._check_data_dtype(
+            arr, dtype, attrs=attrs)
 
     def _check_chunks(self, chunks, data=None):
         """
@@ -647,12 +640,7 @@ class Outputs(Resource):
         """
         self._check_dset_shape(data)
 
-        if attrs is not None:
-            scale_factor = attrs.get('scale_factor', 1)
-        else:
-            scale_factor = 1
-
-        data = self._check_data_dtype(data, dtype, scale_factor=scale_factor)
+        data = self._check_data_dtype(data, dtype, attrs=attrs)
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
@@ -702,7 +690,7 @@ class Outputs(Resource):
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
-                       attrs, dtype, SAM_configs=None, chunks=(None, 100),
+                       dtype, attrs=None, SAM_configs=None, chunks=(None, 100),
                        unscale=True, mode='w-', str_decode=True, group=None):
         """
         Write profiles to disk
@@ -719,23 +707,27 @@ class Outputs(Resource):
             Name of the target dataset (should identify the profiles).
         profiles : ndarray
             reV output result timeseries profiles
-        attrs : dict
-            Attributes to be set. May include 'scale_factor'.
         dtype : str
             Intended dataset datatype after scaling.
-        SAM_configs : dict
-            Dictionary of SAM configuration JSONs used to compute cf profiles
-        chunks : tuple
-            Chunk size for profiles dataset
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        mode : str
-            Mode to instantiate h5py.File instance
-        str_decode : bool
+        attrs : dict, optional
+            Attributes to be set. May include 'scale_factor', by default None
+        SAM_configs : dict, optional
+            Dictionary of SAM configuration JSONs used to compute cf means,
+            by default None
+        chunks : tuple, optional
+            Chunk size for capacity factor means dataset,
+            by default (None, 100)
+        unscale : bool, optional
+            Boolean flag to automatically unscale variables on extraction,
+            by default True
+        mode : str, optional
+            Mode to instantiate h5py.File instance, by default 'w-'
+        str_decode : bool, optional
             Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
+            strings. Setting this to False will speed up the meta data read,
+            by default True
+        group : str, optional
+            Group within .h5 resource file to open, by default None
         """
         logger.info("Saving profiles ({}) to {}".format(dset_name, h5_file))
         if profiles.shape != (len(time_index), len(meta)):
@@ -768,7 +760,7 @@ class Outputs(Resource):
                      .format(tt))
 
     @classmethod
-    def write_means(cls, h5_file, meta, dset_name, means, attrs, dtype,
+    def write_means(cls, h5_file, meta, dset_name, means, dtype, attrs=None,
                     SAM_configs=None, chunks=None, unscale=True, mode='w-',
                     str_decode=True, group=None):
         """
@@ -784,23 +776,26 @@ class Outputs(Resource):
             Name of the target dataset (should identify the means).
         means : ndarray
             reV output means array.
-        attrs : dict
-            Attributes to be set. May include 'scale_factor'.
         dtype : str
             Intended dataset datatype after scaling.
-        SAM_configs : dict
-            Dictionary of SAM configuration JSONs used to compute cf means
-        chunks : tuple
-            Chunk size for capacity factor means dataset
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        mode : str
-            Mode to instantiate h5py.File instance
-        str_decode : bool
+        attrs : dict, optional
+            Attributes to be set. May include 'scale_factor', by default None
+        SAM_configs : dict, optional
+            Dictionary of SAM configuration JSONs used to compute cf means,
+            by default None
+        chunks : tuple, optional
+            Chunk size for capacity factor means dataset, by default None
+        unscale : bool, optional
+            Boolean flag to automatically unscale variables on extraction,
+            by default True
+        mode : str, optional
+            Mode to instantiate h5py.File instance, by default 'w-'
+        str_decode : bool, optional
             Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
+            strings. Setting this to False will speed up the meta data read,
+            by default True
+        group : str, optional
+            Group within .h5 resource file to open, by default None
         """
         logger.info("Saving means ({}) to {}".format(dset_name, h5_file))
         if len(means) != len(meta):
@@ -831,7 +826,7 @@ class Outputs(Resource):
                      .format(tt))
 
     @classmethod
-    def add_dataset(cls, h5_file, dset_name, dset_data, attrs, dtype,
+    def add_dataset(cls, h5_file, dset_name, dset_data, dtype, attrs=None,
                     chunks=None, unscale=True, mode='a', str_decode=True,
                     group=None):
         """
@@ -845,19 +840,21 @@ class Outputs(Resource):
             Name of dataset to be added to h5 file
         dset_data : ndarray
             Data to be added to h5 file
-        attrs : dict
-            Attributes to be set. May include 'scale_factor'.
         dtype : str
             Intended dataset datatype after scaling.
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        mode : str
-            Mode to instantiate h5py.File instance
-        str_decode : bool
+        attrs : dict, optional
+            Attributes to be set. May include 'scale_factor', by default None
+        unscale : bool, optional
+            Boolean flag to automatically unscale variables on extraction,
+            by default True
+        mode : str, optional
+            Mode to instantiate h5py.File instance, by default 'a'
+        str_decode : bool, optional
             Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
+            strings. Setting this to False will speed up the meta data read,
+            by default True
+        group : str, optional
+            Group within .h5 resource file to open, by default None
         """
         logger.info("Adding {} to {}".format(dset_name, h5_file))
         ts = time.time()
