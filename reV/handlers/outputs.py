@@ -2,7 +2,6 @@
 """
 Classes to handle reV h5 output files.
 """
-import h5py
 import json
 import logging
 import numpy as np
@@ -13,14 +12,14 @@ from reV.version import __version__
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
 
-from rex.resource import Resource
+from rex.resource import BaseResource
 from rex.utilities.parse_keys import parse_keys, parse_slice
 from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 
 
-class Outputs(Resource):
+class Outputs(BaseResource):
     """
     Base class to handle reV output data in .h5 format
 
@@ -141,23 +140,21 @@ class Outputs(Resource):
         ----------
         h5_file : str
             Path to .h5 resource file
-        mode : str
-            Mode to instantiate h5py.File instance
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        str_decode : bool
+        mode : str, optional
+            Mode to instantiate h5py.File instance, by default 'r'
+        unscale : bool, optional
+            Boolean flag to automatically unscale variables on extraction,
+            by default True
+        str_decode : bool, optional
             Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
+            strings. Setting this to False will speed up the meta data read,
+            by default True
+        group : str, optional
+            Group within .h5 resource file to open, by default None
         """
-        self.h5_file = h5_file
-        self._h5 = h5py.File(h5_file, mode=mode)
-        self._unscale = unscale
+        super().__init__(h5_file, unscale=unscale, hsds=False,
+                         str_decode=str_decode, group=group, mode=mode)
         self._mode = mode
-        self._meta = None
-        self._time_index = None
-        self._str_decode = str_decode
         self._group = self._check_group(group)
 
         if self.writable:
@@ -276,7 +273,7 @@ class Outputs(Resource):
 
         return is_writable
 
-    @Resource.meta.setter  # pylint: disable-msg=E1101
+    @BaseResource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
         """
         Write meta data to disk, convert type if neccessary
@@ -288,7 +285,7 @@ class Outputs(Resource):
         """
         self._set_meta('meta', meta)
 
-    @Resource.time_index.setter  # pylint: disable-msg=E1101
+    @BaseResource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
         """
         Write time_index to dics, convert type if neccessary
@@ -343,6 +340,64 @@ class Outputs(Resource):
             for k, v in run_attrs.items():
                 self.h5.attrs[k] = v
 
+    @staticmethod
+    def _check_data_dtype(data, dtype, scale_factor=1):
+        """
+        Check data dtype and scale if needed
+
+        Parameters
+        ----------
+        data : ndarray
+            Data to be written to disc
+        dtype : str
+            dtype of data on disc
+        scale_factor : int
+            Scale factor to scale data to integer (if needed)
+
+        Returns
+        -------
+        data : ndarray
+            Data ready for writing to disc:
+            - Scaled and converted to dtype
+        """
+        if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            if scale_factor == 1:
+                raise HandlerRuntimeError('A scale_factor is needed to'
+                                          'scale "{}" data to "{}".'
+                                          .format(data.dtype, dtype))
+
+            # apply scale factor and dtype
+            data = np.multiply(data, scale_factor)
+            if np.issubdtype(dtype, np.integer):
+                data = np.round(data)
+
+            data = data.astype(dtype)
+
+        return data
+
+    def _get_SAM_df(self, ds_name, site):
+        """
+        Placeholder for get_SAM_df method that it resource specific
+
+        Parameters
+        ----------
+        ds_name : str
+            'Dataset' name == SAM
+        site : int
+            Site to extract SAM DataFrame for
+
+        Returns
+        -------
+        sam_df : pandas.DataFrame
+            Example SAM DataFrame but for a single dataset. This method will
+            return all variable needed to run SAM in all renewable resource
+            classes.
+        """
+        sam_df = pd.DataFrame({ds_name: self[ds_name, :, site]},
+                              index=self.time_index)
+
+        return sam_df
+
     def _check_group(self, group):
         """
         Ensure group is in .h5 file
@@ -377,6 +432,7 @@ class Outputs(Resource):
         attrs : dict
             Attributes to add to the meta data dataset
         """
+        # pylint: disable=attribute-defined-outside-init
         self._meta = meta
         if isinstance(meta, pd.DataFrame):
             meta = to_records_array(meta)
@@ -400,6 +456,7 @@ class Outputs(Resource):
         attrs : dict
             Attributes to add to the meta data dataset
         """
+        # pylint: disable=attribute-defined-outside-init
         self._time_index = time_index
         if isinstance(time_index, pd.DatetimeIndex):
             time_index = time_index.astype(str)
@@ -451,41 +508,6 @@ class Outputs(Resource):
                     key = str(key)
 
                 self.h5['meta'].attrs[key] = config
-
-    @staticmethod
-    def _check_data_dtype(data, dtype, scale_factor=1):
-        """
-        Check data dtype and scale if needed
-
-        Parameters
-        ----------
-        data : ndarray
-            Data to be written to disc
-        dtype : str
-            dtype of data on disc
-        scale_factor : int
-            Scale factor to scale data to integer (if needed)
-
-        Returns
-        -------
-        data : ndarray
-            Data ready for writing to disc:
-            - Scaled and converted to dtype
-        """
-        if not np.issubdtype(data.dtype, np.dtype(dtype)):
-            if scale_factor == 1:
-                raise HandlerRuntimeError('A scale_factor is needed to'
-                                          'scale "{}" data to "{}".'
-                                          .format(data.dtype, dtype))
-
-            # apply scale factor and dtype
-            data = np.multiply(data, scale_factor)
-            if np.issubdtype(dtype, np.integer):
-                data = np.round(data)
-
-            data = data.astype(dtype)
-
-        return data
 
     def _set_ds_array(self, ds_name, arr, ds_slice):
         """
