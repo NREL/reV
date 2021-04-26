@@ -498,8 +498,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     max_workers = ctx.obj['MAX_WORKERS']
     timeout = ctx.obj['TIMEOUT']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
+    dirout, fout = os.path.split(ctx.obj['OUT_FPATH'])
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     append = ctx.obj['APPEND']

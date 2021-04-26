@@ -670,8 +670,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
+    dirout, fout = os.path.split(ctx.obj['OUT_FPATH'])
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     site_data = ctx.obj['SITE_DATA']
