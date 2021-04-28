@@ -789,7 +789,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Resource h5 handler object.
         """
         if self._h5 is None:
-            self._h5 = Resource(self._h5_fpath,)
+            self._h5 = Resource(self._h5_fpath)
 
         return self._h5
 
