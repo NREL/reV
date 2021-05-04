@@ -9,15 +9,12 @@ from subprocess import check_call
 import shlex
 from warnings import warn
 
+from reV import __version__ as version
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
     readme = f.read()
-
-with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
-    version = f.read()
-
-version = version.split('=')[-1].strip().strip('"').strip("'")
 
 
 class PostDevelopCommand(develop):
