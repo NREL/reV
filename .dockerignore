@@ -1,0 +1,9 @@
+# dot files and directories
+.*
+.*/
+# non-package directories
+bin/
+conda.recipe/
+docs/
+examples/
+tests/

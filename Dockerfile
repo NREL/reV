@@ -9,6 +9,6 @@ COPY . /reV
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 ENTRYPOINT ["reV"]
