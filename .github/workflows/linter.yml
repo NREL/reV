@@ -21,6 +21,7 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_ISORT: false
           VALIDATE_PYTHON_MYPY: false
+          VALIDATE_DOCKERFILE_HADOLINT: false
           VALIDATE_JSCPD: false
           VALIDATE_JSON: false
           VALIDATE_MARKDOWN: false
