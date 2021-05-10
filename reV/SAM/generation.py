@@ -63,20 +63,21 @@ class Generation(RevPySam, ABC):
                 if res_out is None:
                     res_out = {}
                 res_out[req] = cls.ensure_res_len(res_df[req].values)
+
         for req in res_reqs:
             out_req_cleaned.remove(req)
 
         return res_out, out_req_cleaned
 
     @staticmethod
-    def _get_res_mean(resource, site, output_request):
+    def _get_res_mean(resource, res_gid, output_request):
         """Get the resource annual means (single site).
 
         Parameters
         ----------
         resource : rex.sam_resource.SAMResource
             SAM resource object for WIND resource
-        site : int
+        res_gid : int
             Site to extract means for
         output_request : list
             Outputs to retrieve from SAM.
@@ -91,7 +92,7 @@ class Generation(RevPySam, ABC):
 
         out_req_nomeans = copy.deepcopy(output_request)
         res_mean = None
-        idx = resource.sites.index(site)
+        idx = resource.sites.index(res_gid)
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
@@ -239,7 +240,7 @@ class Generation(RevPySam, ABC):
             lcoe_out_reqs = [r for r in self.output_request if r in lcoe_vars]
             self.output_request = [r for r in self.output_request
                                    if r not in lcoe_out_reqs]
-        elif any([x in self.output_request for x in so_vars]):
+        elif any(x in self.output_request for x in so_vars):
             so_out_reqs = [r for r in self.output_request if r in so_vars]
             self.output_request = [r for r in self.output_request
                                    if r not in so_out_reqs]
@@ -272,7 +273,8 @@ class Generation(RevPySam, ABC):
 
     @classmethod
     def reV_run(cls, points_control, res_file, site_df,
-                output_request=('cf_mean',), drop_leap=False):
+                output_request=('cf_mean',), drop_leap=False,
+                gid_map=None):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -291,6 +293,11 @@ class Generation(RevPySam, ABC):
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
             31st is dropped from leap years.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
 
         Returns
         -------
@@ -306,7 +313,8 @@ class Generation(RevPySam, ABC):
         resources = RevPySam.get_sam_res(res_file,
                                          points_control.project_points,
                                          points_control.project_points.tech,
-                                         output_request=output_request)
+                                         output_request=output_request,
+                                         gid_map=gid_map)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
@@ -314,35 +322,40 @@ class Generation(RevPySam, ABC):
             resources = curtail(resources, curtailment,
                                 random_seed=curtailment.random_seed)
 
-        # Use resource object iterator
-        for res_df, meta in resources:
+        # iterate through project_points gen_gid values
+        for gen_gid in points_control.project_points.sites:
+
+            # Lookup the resource gid if there's a mapping and get the resource
+            # data from the SAMResource object using the res_gid.
+            res_gid = gen_gid if gid_map is None else gid_map[gen_gid]
+            site_res_df, site_meta = resources._get_res_df(res_gid)
 
             # drop the leap day
             if drop_leap:
-                res_df = cls.drop_leap(res_df)
+                site_res_df = cls.drop_leap(site_res_df)
 
-            # get SAM inputs from project_points based on the current site
-            site = res_df.name
-            _, inputs = points_control.project_points[site]
+            _, inputs = points_control.project_points[gen_gid]
 
-            res_outs, out_req_cleaned = cls._get_res(res_df, output_request)
-            res_mean, out_req_cleaned = cls._get_res_mean(resources, site,
+            # get resource data pass-throughs and resource means
+            res_outs, out_req_cleaned = cls._get_res(site_res_df,
+                                                     output_request)
+            res_mean, out_req_cleaned = cls._get_res_mean(resources, res_gid,
                                                           out_req_cleaned)
 
             # iterate through requested sites.
-            sim = cls(resource=res_df, meta=meta, sam_sys_inputs=inputs,
-                      output_request=out_req_cleaned,
-                      site_sys_inputs=dict(site_df.loc[site, :]))
+            sim = cls(resource=site_res_df, meta=site_meta,
+                      sam_sys_inputs=inputs, output_request=out_req_cleaned,
+                      site_sys_inputs=dict(site_df.loc[gen_gid, :]))
             sim._gen_exec()
 
             # collect outputs to dictout
-            out[site] = sim.outputs
+            out[gen_gid] = sim.outputs
 
             if res_outs is not None:
-                out[site].update(res_outs)
+                out[gen_gid].update(res_outs)
 
             if res_mean is not None:
-                out[site].update(res_mean)
+                out[gen_gid].update(res_mean)
 
         return out
 

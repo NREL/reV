@@ -102,6 +102,47 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL), msg
 
 
+@pytest.mark.parametrize('gid_map',
+                         [{0: 0, 1: 1, 2: 1, 3: 3, 4: 4},
+                          {0: 4, 1: 3, 2: 2, 3: 1, 4: 0},
+                          {0: 59, 1: 1, 2: 1, 3: 0, 4: 4},
+                          ])
+def test_gid_map(gid_map):
+    """Test gid mapping feature where the unique gen_gids are mapped to
+    non-unique res_gids
+    """
+    points_base = sorted(list(set(gid_map.values())))
+    points_test = sorted(list(set(gid_map.keys())))
+    year = 2012
+    max_workers = 1
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
+
+    output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
+                      'monthly_energy')
+
+    baseline = Gen.reV_run('windpower', points_base, sam_files, res_file,
+                           max_workers=max_workers, sites_per_worker=3,
+                           out_fpath=None, output_request=output_request)
+
+    test = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                       max_workers=max_workers, sites_per_worker=3,
+                       out_fpath=None, output_request=output_request,
+                       gid_map=gid_map)
+
+    assert baseline.out['cf_mean'] != test.out['cf_mean']
+
+    for gen_gid_test, res_gid in gid_map.items():
+        gen_gid_base = points_base.index(res_gid)
+        for key in output_request:
+            if len(test.out[key].shape) == 2:
+                assert np.allclose(baseline.out[key][:, gen_gid_base],
+                                   test.out[key][:, gen_gid_test])
+            else:
+                assert np.allclose(baseline.out[key][gen_gid_base],
+                                   test.out[key][gen_gid_test])
+
+
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     """Test reV 2.0 generation for wind with new outputs."""
     # get full file paths.
