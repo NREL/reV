@@ -35,6 +35,7 @@ jobs:
       run: |
         conda install rtree geopandas
         pip install -e .
+        pip install HOPP
     - name: Run reVX pytest
       working-directory: ./reVX
       shell: bash -l {0}
