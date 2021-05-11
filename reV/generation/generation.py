@@ -154,17 +154,23 @@ class Gen(BaseGen):
             with res_cls(self.res_file, **kwargs) as res:
                 res_meta = res.meta
 
-            if np.max(self.project_points.sites) > len(res_meta):
+            res_gids = self.project_points.sites
+            if self._gid_map is not None:
+                res_gids = [self._gid_map[i] for i in res_gids]
+
+            if np.max(res_gids) > len(res_meta):
                 msg = ('ProjectPoints has a max site gid of {} which is '
                        'out of bounds for the meta data of size {} from '
                        'resource file: {}'
-                       .format(np.max(self.project_points.sites),
+                       .format(np.max(res_gids),
                                res_meta.shape, self.res_file))
                 logger.error(msg)
                 raise ProjectPointsValueError(msg)
 
-            self._meta = res_meta.iloc[self.project_points.sites, :]
-            self._meta.loc[:, 'gid'] = self.project_points.sites
+            self._meta = res_meta.iloc[res_gids, :]
+            self._meta.loc[:, 'gid'] = res_gids
+            self._meta.index = self.project_points.sites
+            self._meta.index.name = 'gid'
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta

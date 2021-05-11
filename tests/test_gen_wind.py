@@ -19,6 +19,8 @@ from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 
+from rex import Resource
+
 RTOL = 0
 ATOL = 0.001
 
@@ -130,7 +132,8 @@ def test_gid_map(gid_map):
                        out_fpath=None, output_request=output_request,
                        gid_map=gid_map)
 
-    assert baseline.out['cf_mean'] != test.out['cf_mean']
+    if len(baseline.out['cf_mean']) == len(test.out['cf_mean']):
+        assert not np.allclose(baseline.out['cf_mean'], test.out['cf_mean'])
 
     for gen_gid_test, res_gid in gid_map.items():
         gen_gid_base = points_base.index(res_gid)
@@ -141,6 +144,15 @@ def test_gid_map(gid_map):
             else:
                 assert np.allclose(baseline.out[key][gen_gid_base],
                                    test.out[key][gen_gid_test])
+
+    labels = ['latitude', 'longitude']
+    with Resource(res_file) as res:
+        for i, (gen_gid, site_meta) in enumerate(test.meta.iterrows()):
+            res_gid = gid_map[gen_gid]
+            test_coords = site_meta[labels].values.astype(float)
+            true_coords = res.meta.loc[res_gid, labels].values.astype(float)
+            assert np.allclose(test_coords, true_coords)
+            assert site_meta['gid'] == res_gid
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
