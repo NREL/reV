@@ -65,7 +65,7 @@ class SamResourceRetriever:
         return res_handler
 
     @staticmethod
-    def _parse_gid_map_sites(gen_gids, gid_map):
+    def _parse_gid_map_sites(gen_gids, gid_map=None):
         """Parse resource gids based on the generation gids used by
         project_points and a gid_map. If gid_map is None, the input gen_gids
         are just passed through as the res_gids.
@@ -122,7 +122,7 @@ class SamResourceRetriever:
         res_handler : SolarResource | NSRDB
             Solar resource handler.
         """
-        sites = cls._parse_gid_map_sites(project_points.sites, gid_map)
+        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
         args = (sites,)
 
         kwargs = {}
@@ -182,7 +182,7 @@ class SamResourceRetriever:
             Wind resource handler.
         """
 
-        sites = cls._parse_gid_map_sites(project_points.sites, gid_map)
+        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
         args = (sites, project_points.h)
         kwargs = {}
         kwargs['icing'] = project_points.sam_config_obj.icing
