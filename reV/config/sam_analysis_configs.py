@@ -203,6 +203,19 @@ class GenConfig(SAMAnalysisConfig):
         return self._curtailment
 
     @property
+    def gid_map(self):
+        """Optional gid mapping that can be used to map unique generation gids
+        to non-unique gids in the resource file. Should be a filepath to a csv
+        with columns gid and gid_map. Can be the same csv as project_points
+        input.
+
+        Returns
+        -------
+        NoneType | str
+        """
+        return self.get('gid_map', None)
+
+    @property
     def resource_file(self):
         """
         get base resource_file

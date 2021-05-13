@@ -16,6 +16,12 @@ class ConfigError(Exception):
     """
 
 
+class InputError(Exception):
+    """
+    Error during input checks.
+    """
+
+
 class FileInputError(Exception):
     """
     Error during input file checks.

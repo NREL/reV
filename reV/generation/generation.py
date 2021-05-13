@@ -5,12 +5,13 @@ reV generation module.
 import copy
 import logging
 import numpy as np
+import pandas as pd
 import os
 import pprint
 import json
 
 from reV.generation.base import BaseGen
-from reV.utilities.exceptions import ProjectPointsValueError
+from reV.utilities.exceptions import ProjectPointsValueError, InputError
 from reV.SAM.generation import (Pvwattsv5, Pvwattsv7, TcsMoltenSalt, WindPower,
                                 SolarWaterHeat, TroughPhysicalHeat,
                                 LinearDirectSteam)
@@ -58,7 +59,7 @@ class Gen(BaseGen):
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 site_data=None, out_fpath=None, drop_leap=False,
+                 site_data=None, gid_map=None, out_fpath=None, drop_leap=False,
                  mem_util_lim=0.4):
         """
         Parameters
@@ -75,6 +76,14 @@ class Gen(BaseGen):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids.  This can be None, a pre-extracted dict, or a
+            filepath to json or csv. If this is a csv, it must have the columns
+            "gid" (which matches the project points) and "gid_map" (gids to
+            extract from the resource input)
         out_fpath : str, optional
             Output .h5 file path, by default None
         drop_leap : bool
@@ -95,6 +104,7 @@ class Gen(BaseGen):
         self._run_attrs['res_file'] = res_file
 
         self._multi_h5_res, self._hsds = check_res_file(res_file)
+        self._gid_map = self._parse_gid_map(gid_map)
 
         if self.tech not in self.OPTIONS:
             msg = ('Requested technology "{}" is not available. '
@@ -144,17 +154,23 @@ class Gen(BaseGen):
             with res_cls(self.res_file, **kwargs) as res:
                 res_meta = res.meta
 
-            if np.max(self.project_points.sites) > len(res_meta):
+            res_gids = self.project_points.sites
+            if self._gid_map is not None:
+                res_gids = [self._gid_map[i] for i in res_gids]
+
+            if np.max(res_gids) > len(res_meta):
                 msg = ('ProjectPoints has a max site gid of {} which is '
                        'out of bounds for the meta data of size {} from '
                        'resource file: {}'
-                       .format(np.max(self.project_points.sites),
+                       .format(np.max(res_gids),
                                res_meta.shape, self.res_file))
                 logger.error(msg)
                 raise ProjectPointsValueError(msg)
 
-            self._meta = res_meta.iloc[self.project_points.sites, :]
-            self._meta.loc[:, 'gid'] = self.project_points.sites
+            self._meta = res_meta.iloc[res_gids, :]
+            self._meta.loc[:, 'gid'] = res_gids
+            self._meta.index = self.project_points.sites
+            self._meta.index.name = 'gid'
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
@@ -200,7 +216,7 @@ class Gen(BaseGen):
 
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True):
+            scale_outputs=True, gid_map=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -218,6 +234,11 @@ class Gen(BaseGen):
             Output variables requested from SAM.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
 
         Returns
         -------
@@ -233,7 +254,8 @@ class Gen(BaseGen):
         # run generation method for specified technology
         try:
             out = cls.OPTIONS[tech].reV_run(points_control, res_file, site_df,
-                                            output_request=output_request)
+                                            output_request=output_request,
+                                            gid_map=gid_map)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -264,6 +286,69 @@ class Gen(BaseGen):
                                                     dtype=dtype)[0]
 
         return out
+
+    def _parse_gid_map(self, gid_map):
+        """
+        Parameters
+        ----------
+        gid_map : None | dict | str
+            This can be None, a pre-extracted dict, or a filepath to json or
+            csv. If this is a csv, it must have the columns "gid" (which
+            matches the project points) and "gid_map" (gids to extract from the
+            resource input)
+
+        Returns
+        -------
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids.
+        """
+
+        if isinstance(gid_map, str):
+            if gid_map.endswith('.csv'):
+                gid_map = pd.read_csv(gid_map).to_dict()
+                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
+                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
+                           for i in gid_map['gid'].keys()}
+
+            elif gid_map.endswith('.json'):
+                with open(gid_map, 'r') as f:
+                    gid_map = json.load(f)
+
+        if isinstance(gid_map, dict):
+            if not self._multi_h5_res:
+                res_cls = Resource
+                kwargs = {'hsds': self._hsds}
+            else:
+                res_cls = MultiFileResource
+                kwargs = {}
+
+            with res_cls(self.res_file, **kwargs) as res:
+                for gen_gid, res_gid in gid_map.items():
+                    msg1 = ('gid_map values must all be int but received '
+                            '{}: {}'.format(gen_gid, res_gid))
+                    msg2 = ('Could not find the gen_gid to res_gid mapping '
+                            '{}: {} in the resource meta data.'
+                            .format(gen_gid, res_gid))
+                    assert isinstance(gen_gid, int), msg1
+                    assert isinstance(res_gid, int), msg1
+                    assert res_gid in res.meta.index.values, msg2
+
+                for gen_gid in self.project_points.sites:
+                    msg3 = ('Could not find the project points gid {} in the '
+                            'gen_gid input of the gid_map.'.format(gen_gid))
+                    assert gen_gid in gid_map, msg3
+
+        elif gid_map is not None:
+            msg = ('Could not parse gid_map, must be None, dict, or path to '
+                   'csv or json, but received: {}'.format(gid_map))
+            logger.error(msg)
+            raise InputError(msg)
+
+        return gid_map
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -296,7 +381,7 @@ class Gen(BaseGen):
     @classmethod
     def reV_run(cls, tech, points, sam_configs, res_file,
                 output_request=('cf_mean',), site_data=None, curtailment=None,
-                max_workers=1, sites_per_worker=None,
+                gid_map=None, max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, out_fpath=None, mem_util_lim=0.4,
                 scale_outputs=True):
@@ -334,6 +419,14 @@ class Gen(BaseGen):
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids.  This can be None, a pre-extracted dict, or a
+            filepath to json or csv. If this is a csv, it must have the columns
+            "gid" (which matches the project points) and "gid_map" (gids to
+            extract from the resource input)
         max_workers : int
             Number of local workers to run on.
         sites_per_worker : int | None
@@ -372,13 +465,16 @@ class Gen(BaseGen):
         gen = cls(pc, res_file,
                   output_request=output_request,
                   site_data=site_data,
+                  gid_map=gid_map,
                   out_fpath=out_fpath,
                   mem_util_lim=mem_util_lim)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs}
+                  'scale_outputs': scale_outputs,
+                  'gid_map': gen._gid_map,
+                  }
 
         logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'

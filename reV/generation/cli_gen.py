@@ -104,6 +104,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
+    ctx.obj['GID_MAP'] = config.gid_map
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
@@ -269,15 +270,21 @@ def make_fout(name, year):
               help='Site-specific data file for gen calculation. Input '
               'should be a filepath that points to a csv. Rows match sites, '
               'columns are input keys. Needs a "gid" column. Input as None '
-              'if no site-specific data.')
+              'if no site-specific data. Can be the same csv as the '
+              'project_points input')
 @click.option('--mem_util_lim', '-mem', type=float, default=0.4,
               show_default=True,
               help='Fractional node memory utilization limit. Default is 0.4 '
               'to account for numpy memory spikes and memory bloat.')
 @click.option('--curtailment', '-curt', type=click.Path(exists=True),
               default=None, show_default=True,
-              help=('JSON file with curtailment inputs parameters. '
-                    'Default is None (no curtailment).'))
+              help='Optional JSON file with curtailment inputs parameters.')
+@click.option('--gid_map', '-gm', type=click.Path(exists=True),
+              default=None, show_default=True,
+              help='Optional gid mapping that can be used to map unique '
+              'generation gids to non-unique gids in the resource file. '
+              'Should be a filepath to a csv with columns gid and gid_map. '
+              'Can be the same csv as project_points input.')
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -297,6 +304,7 @@ def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
     ctx.obj['SITE_DATA'] = site_data
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
+    ctx.obj['GID_MAP'] = gid_map
 
     ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
     ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
@@ -398,6 +406,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     site_data = ctx.obj['SITE_DATA']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
+    gid_map = ctx.obj['GID_MAP']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -423,6 +432,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 site_data=site_data,
                 output_request=output_request,
                 curtailment=curtailment,
+                gid_map=gid_map,
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker,
                 points_range=points_range,
@@ -537,7 +547,7 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
-                 curtailment=None, verbose=False):
+                 curtailment=None, gid_map=None, verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -581,6 +591,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
     curtailment : NoneType | str
         Pointer to a file containing curtailment input parameters or None if
         no curtailment.
+    gid_map : NoneType | str
+        Pointer to a gid_map csv file (can be the same as project_points) with
+        gid and gid_map columns or None.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -611,6 +624,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 
     if curtailment:
         arg_direct.append('-curt {}'.format(SLURM.s(curtailment)))
+
+    if gid_map:
+        arg_direct.append('-gm {}'.format(SLURM.s(gid_map)))
 
     # make a cli arg string for local() in this module
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
@@ -678,6 +694,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
+    gid_map = ctx.obj['GID_MAP']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
@@ -693,12 +710,17 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
 
         node_fpath = os.path.join(dirout, fout_node)
         cmd = get_node_cmd(node_name, tech, sam_files, res_file, node_fpath,
-                           points=points, points_range=split.split_range,
+                           points=points,
+                           points_range=split.split_range,
                            sites_per_worker=sites_per_worker,
-                           max_workers=max_workers, logdir=logdir,
-                           output_request=output_request, site_data=site_data,
-                           mem_util_lim=mem_util_lim, timeout=timeout,
+                           max_workers=max_workers,
+                           logdir=logdir,
+                           output_request=output_request,
+                           site_data=site_data,
+                           mem_util_lim=mem_util_lim,
+                           timeout=timeout,
                            curtailment=curtailment,
+                           gid_map=gid_map,
                            verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name,

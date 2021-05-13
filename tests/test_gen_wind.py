@@ -19,6 +19,8 @@ from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 
+from rex import Resource
+
 RTOL = 0
 ATOL = 0.001
 
@@ -100,6 +102,78 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     # benchmark the results
     msg = 'Wind cf_means results did not match reV 1.0 results!'
     assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL), msg
+    assert np.allclose(pp.sites, gen.meta.index.values), 'bad gen meta!'
+    assert np.allclose(pp.sites, gen.meta['gid'].values), 'bad gen meta!'
+
+    labels = ['latitude', 'longitude']
+    with Resource(res_file) as res:
+        for i, (gen_gid, site_meta) in enumerate(gen.meta.iterrows()):
+            res_gid = site_meta['gid']
+            assert gen_gid == res_gid
+            test_coords = site_meta[labels].values.astype(float)
+            true_coords = res.meta.loc[res_gid, labels].values.astype(float)
+            assert np.allclose(test_coords, true_coords)
+            assert site_meta['gid'] == res_gid
+
+
+@pytest.mark.parametrize('gid_map',
+                         [{0: 0, 1: 1, 2: 1, 3: 3, 4: 4},
+                          {0: 4, 1: 3, 2: 2, 3: 1, 4: 0},
+                          {10: 14, 11: 13, 12: 12, 13: 11, 20: 0},
+                          {0: 59, 1: 1, 2: 1, 3: 0, 4: 4},
+                          ])
+def test_gid_map(gid_map):
+    """Test gid mapping feature where the unique gen_gids are mapped to
+    non-unique res_gids
+    """
+    points_base = sorted(list(set(gid_map.values())))
+    points_test = sorted(list(set(gid_map.keys())))
+    year = 2012
+    max_workers = 1
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
+
+    output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
+                      'monthly_energy')
+
+    baseline = Gen.reV_run('windpower', points_base, sam_files, res_file,
+                           max_workers=max_workers, sites_per_worker=3,
+                           out_fpath=None, output_request=output_request)
+
+    test = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                       max_workers=max_workers, sites_per_worker=3,
+                       out_fpath=None, output_request=output_request,
+                       gid_map=gid_map)
+
+    if len(baseline.out['cf_mean']) == len(test.out['cf_mean']):
+        assert not np.allclose(baseline.out['cf_mean'], test.out['cf_mean'])
+
+    for gen_gid_test, res_gid in gid_map.items():
+        gen_gid_test = points_test.index(gen_gid_test)
+        gen_gid_base = points_base.index(res_gid)
+        for key in output_request:
+            if len(test.out[key].shape) == 2:
+                assert np.allclose(baseline.out[key][:, gen_gid_base],
+                                   test.out[key][:, gen_gid_test])
+            else:
+                assert np.allclose(baseline.out[key][gen_gid_base],
+                                   test.out[key][gen_gid_test])
+
+    labels = ['latitude', 'longitude']
+    with Resource(res_file) as res:
+        for i, (gen_gid, site_meta) in enumerate(baseline.meta.iterrows()):
+            res_gid = site_meta['gid']
+            test_coords = site_meta[labels].values.astype(float)
+            true_coords = res.meta.loc[res_gid, labels].values.astype(float)
+            assert np.allclose(test_coords, true_coords)
+            assert site_meta['gid'] == res_gid
+
+        for i, (gen_gid, site_meta) in enumerate(test.meta.iterrows()):
+            res_gid = gid_map[gen_gid]
+            test_coords = site_meta[labels].values.astype(float)
+            true_coords = res.meta.loc[res_gid, labels].values.astype(float)
+            assert np.allclose(test_coords, true_coords)
+            assert site_meta['gid'] == res_gid
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):

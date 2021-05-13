@@ -50,13 +50,13 @@ class SamResourceRetriever:
         try:
             res_handler = RevPySam.RESOURCE_TYPES[module.lower()]
 
-        except KeyError:
+        except KeyError as e:
             msg = ('Cannot interpret what kind of resource handler the SAM '
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
                    .format(module, list(RevPySam.RESOURCE_TYPES.keys())))
             logger.exception(msg)
-            raise SAMExecutionError(msg)
+            raise SAMExecutionError(msg) from e
 
         if res_handler == SolarResource and 'nsrdb' in res_file.lower():
             # Use NSRDB handler if definitely an NSRDB file
@@ -65,7 +65,37 @@ class SamResourceRetriever:
         return res_handler
 
     @staticmethod
-    def _make_solar_kwargs(res_handler, project_points, output_request):
+    def _parse_gid_map_sites(gen_gids, gid_map=None):
+        """Parse resource gids based on the generation gids used by
+        project_points and a gid_map. If gid_map is None, the input gen_gids
+        are just passed through as the res_gids.
+
+        Parameters
+        ----------
+        gen_gids : list
+            List of project_points "sites" that are the generation gids.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
+
+        Returns
+        -------
+        res_gids : list
+            List of resource gids corresponding to the generation gids used by
+            project points. If gid_map is None, then this is the same as the
+            input gen_gids.
+        """
+        if gid_map is None:
+            res_gids = gen_gids
+        else:
+            res_gids = [gid_map[i] for i in gen_gids]
+        return res_gids
+
+    @classmethod
+    def _make_solar_kwargs(cls, res_handler, project_points, output_request,
+                           gid_map):
         """Make kwargs dict for Solar | NSRDB resource handler initialization.
 
         Parameters
@@ -77,6 +107,11 @@ class SamResourceRetriever:
             specific set of sites.
         output_request : list
             Outputs to retrieve from SAM.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
 
         Returns
         -------
@@ -87,7 +122,8 @@ class SamResourceRetriever:
         res_handler : SolarResource | NSRDB
             Solar resource handler.
         """
-        args = (project_points.sites,)
+        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
+        args = (sites,)
 
         kwargs = {}
         # check for clearsky irradiation analysis for NSRDB
@@ -96,7 +132,7 @@ class SamResourceRetriever:
         kwargs['tech'] = project_points.tech
         # Check for resource means:
         mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
-        if any([x in output_request for x in mean_keys]):
+        if any(x in output_request for x in mean_keys):
             kwargs['means'] = True
 
         downscale = project_points.sam_config_obj.downscale
@@ -116,8 +152,9 @@ class SamResourceRetriever:
 
         return kwargs, args, res_handler
 
-    @staticmethod
-    def _make_wind_kwargs(res_handler, project_points, output_request):
+    @classmethod
+    def _make_wind_kwargs(cls, res_handler, project_points, output_request,
+                          gid_map):
         """Make kwargs dict for Wind resource handler initialization.
 
         Parameters
@@ -129,6 +166,11 @@ class SamResourceRetriever:
             specific set of sites.
         output_request : list
             Outputs to retrieve from SAM.
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
 
         Returns
         -------
@@ -139,7 +181,9 @@ class SamResourceRetriever:
         res_handler : WindResource | MultiFileWTK
             Wind resource handler.
         """
-        args = (project_points.sites, project_points.h)
+
+        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
+        args = (sites, project_points.h)
         kwargs = {}
         kwargs['icing'] = project_points.sam_config_obj.icing
         if project_points.curtailment is not None:
@@ -189,7 +233,7 @@ class SamResourceRetriever:
 
     @classmethod
     def get(cls, res_file, project_points, module,
-            output_request=('cf_mean', )):
+            output_request=('cf_mean', ), gid_map=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -207,6 +251,11 @@ class SamResourceRetriever:
             the NSRDB handler will be used.
         output_request : list | tuple, optional
             Outputs to retrieve from SAM, by default ('cf_mean', )
+        gid_map : None | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This enables the user to input unique
+            generation gids in the project points that map to non-unique
+            resource gids. This can be None or a pre-extracted dict.
 
         Returns
         -------
@@ -218,11 +267,11 @@ class SamResourceRetriever:
 
         if res_handler in (SolarResource, NSRDB):
             kwargs, args, res_handler = cls._make_solar_kwargs(
-                res_handler, project_points, output_request)
+                res_handler, project_points, output_request, gid_map)
 
         elif res_handler == WindResource:
             kwargs, args, res_handler = cls._make_wind_kwargs(
-                res_handler, project_points, output_request)
+                res_handler, project_points, output_request, gid_map)
 
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
@@ -306,7 +355,7 @@ class Sam:
                        'Received the following error: "{}"'
                        .format(key, group, self.pysam, value, type(value), e))
                 logger.exception(msg)
-                raise SAMInputError(msg)
+                raise SAMInputError(msg) from e
 
     @property
     def pysam(self):
@@ -417,7 +466,7 @@ class Sam:
         except Exception as e:
             msg = 'PySAM raised an error while executing: "{}"'.format(e)
             logger.exception(msg)
-            raise SAMExecutionError(msg)
+            raise SAMExecutionError(msg) from e
 
     @staticmethod
     def _filter_inputs(key, value):
