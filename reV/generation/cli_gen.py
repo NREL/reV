@@ -291,7 +291,7 @@ def make_fout(name, year):
 def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
            logdir, output_request, site_data, mem_util_lim,
-           curtailment, verbose):
+           curtailment, gid_map, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
