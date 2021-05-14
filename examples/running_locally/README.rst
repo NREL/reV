@@ -42,8 +42,8 @@ coordinates:
                              'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
-    gen = Gen.reV_run(tech='windpower', points=pp, sam_files=sam_file,
-                      res_file=res_file, max_workers=1, fout=None,
+    gen = Gen.reV_run('windpower', pp, sam_file, res_file,
+                      max_workers=1, fout=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_profile'])
 
@@ -75,8 +75,8 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
     sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
-    gen = Gen.reV_run(tech='pvwattsv5', points=pp, sam_files=sam_file,
-                      res_file=res_file, max_workers=1, fout=None,
+    gen = Gen.reV_run('pvwattsv5', pp, sam_file, res_file,
+                      max_workers=1, fout=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_mean'])
 

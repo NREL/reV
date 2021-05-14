@@ -55,13 +55,14 @@ reV Gen
 -------
 
 reV generation (`reV.Gen <https://nrel.github.io/reV/reV/reV.generation.html>`_)
-will automatically infer if a file path is locally on disk or from HSDS. 
+will automatically infer if a file path is locally on disk or from HSDS.
 
-Note that for all of these examples, the ``sam_file`` input points to files in the 
+Note that for all of these examples, the ``sam_file`` input points to files in
+the
 `reV test directory <https://github.com/NREL/reV/tree/master/tests/data/SAM>`_
-that may not be copied in your install. You may want to download the relevant SAM 
-system configs from that directory and point the ``sam_file`` variable to the correct 
-filepath on your computer. 
+that may not be copied in your install. You may want to download the relevant
+SAM system configs from that directory and point the ``sam_file`` variable to
+the correct filepath on your computer.
 
 windpower
 +++++++++
@@ -92,9 +93,8 @@ coordinates:
                              'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
-    gen = Gen.reV_run(tech='windpower', points=pp, sam_files=sam_file,
-                      res_file=res_file, max_workers=1, fout=None,
-                      output_request=('cf_mean', 'cf_profile'))
+    gen = Gen.reV_run('windpower', pp, sam_file, res_file, max_workers=1,
+                      fout=None, output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_profile'])
 
     [[0.319 0.538 0.287 ... 0.496 0.579 0.486]
