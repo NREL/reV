@@ -121,6 +121,9 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
                           {0: 4, 1: 3, 2: 2, 3: 1, 4: 0},
                           {10: 14, 11: 13, 12: 12, 13: 11, 20: 0},
                           {0: 59, 1: 1, 2: 1, 3: 0, 4: 4},
+                          {0: 59, 1: 1, 2: 0, 3: 0, 4: 4},
+                          {0: 1, 1: 1, 2: 0, 3: 0, 4: 0},
+                          {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
                           ])
 def test_gid_map(gid_map):
     """Test gid mapping feature where the unique gen_gids are mapped to

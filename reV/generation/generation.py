@@ -490,7 +490,8 @@ class Gen(BaseGen):
                 logger.debug('Running serial generation for: {}'.format(pc))
                 for pc_sub in pc:
                     gen.out = gen.run(pc_sub, **kwargs)
-
+                    logger.info('Finished reV gen serial compute for: {}'
+                                .format(pc_sub))
                 gen.flush()
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
