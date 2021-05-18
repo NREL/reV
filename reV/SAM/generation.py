@@ -112,8 +112,9 @@ class Generation(RevPySam, ABC):
         return res_mean, out_req_nomeans
 
     @staticmethod
-    def tz_check(sam_sys_inputs, site_sys_inputs, meta):
-        """Check timezone input and use json config tz if not in resource meta.
+    def tz_elev_check(sam_sys_inputs, site_sys_inputs, meta):
+        """Check timezone+elevation input and use json config
+        timezone+elevation if not in resource meta.
 
         Parameters
         ----------
@@ -128,20 +129,23 @@ class Generation(RevPySam, ABC):
         Returns
         -------
         meta : pd.DataFrame
-            1D table with resource meta data. If meta was not originally set in
-            the resource meta data, but was set as "tz" or "timezone" in the
-            SAM model input parameters json file, timezone will be added to
-            this instance of meta.
+            1D table with resource meta data. Will include "tz", "timezone",
+            and "elevation" from the sam and site system inputs if found.
         """
 
         if meta is not None:
             if sam_sys_inputs is not None:
+                if 'elevation' in sam_sys_inputs:
+                    meta['elevation'] = int(sam_sys_inputs['elevation'])
                 if 'tz' in sam_sys_inputs:
                     meta['timezone'] = int(sam_sys_inputs['tz'])
                 elif 'timezone' in sam_sys_inputs:
                     meta['timezone'] = int(sam_sys_inputs['timezone'])
 
-            elif site_sys_inputs is not None:
+            # site-specific inputs take priority over generic system inputs
+            if site_sys_inputs is not None:
+                if 'elevation' in site_sys_inputs:
+                    meta['elevation'] = int(site_sys_inputs['elevation'])
                 if 'tz' in site_sys_inputs:
                     meta['timezone'] = int(site_sys_inputs['tz'])
                 elif 'timezone' in site_sys_inputs:
@@ -403,7 +407,7 @@ class Solar(Generation, ABC):
             resource = self.drop_leap(resource)
 
         sam_sys_inputs = self.set_latitude_tilt_az(sam_sys_inputs, meta)
-        meta = self.tz_check(sam_sys_inputs, site_sys_inputs, meta)
+        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
 
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(meta, sam_sys_inputs, output_request,
@@ -1115,7 +1119,7 @@ class WindPower(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
-        meta = self.tz_check(sam_sys_inputs, site_sys_inputs, meta)
+        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
 
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(meta, sam_sys_inputs, output_request,
