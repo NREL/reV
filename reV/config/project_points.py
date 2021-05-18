@@ -503,6 +503,11 @@ class ProjectPoints:
         df = pd.DataFrame(columns=['gid', 'config'])
         if isinstance(points, (list, tuple)):
             # explicit site list, set directly
+            if any(isinstance(i, (list, tuple)) for i in points):
+                msg = "Provided project points is not flat: {}!".format(points)
+                logger.error(msg)
+                raise RuntimeError(msg)
+
             df['gid'] = points
         elif isinstance(points, slice):
             stop = points.stop
