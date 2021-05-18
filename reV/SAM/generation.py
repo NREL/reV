@@ -129,26 +129,22 @@ class Generation(RevPySam, ABC):
         Returns
         -------
         meta : pd.DataFrame
-            1D table with resource meta data. Will include "tz", "timezone",
+            1D table with resource meta data. Will include "timezone"
             and "elevation" from the sam and site system inputs if found.
         """
 
         if meta is not None:
             if sam_sys_inputs is not None:
                 if 'elevation' in sam_sys_inputs:
-                    meta['elevation'] = int(sam_sys_inputs['elevation'])
-                if 'tz' in sam_sys_inputs:
-                    meta['timezone'] = int(sam_sys_inputs['tz'])
-                elif 'timezone' in sam_sys_inputs:
+                    meta['elevation'] = sam_sys_inputs['elevation']
+                if 'timezone' in sam_sys_inputs:
                     meta['timezone'] = int(sam_sys_inputs['timezone'])
 
             # site-specific inputs take priority over generic system inputs
             if site_sys_inputs is not None:
                 if 'elevation' in site_sys_inputs:
-                    meta['elevation'] = int(site_sys_inputs['elevation'])
-                if 'tz' in site_sys_inputs:
-                    meta['timezone'] = int(site_sys_inputs['tz'])
-                elif 'timezone' in site_sys_inputs:
+                    meta['elevation'] = site_sys_inputs['elevation']
+                if 'timezone' in site_sys_inputs:
                     meta['timezone'] = int(site_sys_inputs['timezone'])
 
             if 'timezone' not in meta:
