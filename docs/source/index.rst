@@ -22,7 +22,12 @@ geospatial exclusion layers, and generation of renewable energy supply curves.
    :caption: Contents:
 
    misc/misc
-   reV/reV
+
+.. autosummary::
+   :toctree: _reV
+   :recursive:
+
+   reV
 
 Indices and tables
 ==================
