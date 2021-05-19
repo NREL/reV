@@ -302,6 +302,18 @@ def test_bad_sam_configs():
         ProjectPoints(fpp, sam_files, 'windpower')
 
 
+def test_nested_sites():
+    """
+    Test check for nested points list
+    """
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    with pytest.raises(RuntimeError):
+        points = [[1, 2, 3, 5]]
+        sam_file = os.path.join(TESTDATADIR,
+                                'SAM/wind_gen_standard_losses_0.json')
+        ProjectPoints(points, sam_file, 'windpower', res_file)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
