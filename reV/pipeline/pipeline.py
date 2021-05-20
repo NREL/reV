@@ -12,7 +12,6 @@ from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.pipeline import PipelineConfig
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ExecutionError
-from reV.utilities import log_versions
 
 from rex.utilities.execution import SubprocessManager
 from rex.utilities.hpc import SLURM
@@ -54,7 +53,6 @@ class Pipeline:
         verbose : bool
             Flag to submit pipeline steps with -v flag for debug logging
         """
-        log_versions(logger)
         self.monitor = monitor
         self.verbose = verbose
         self._config = PipelineConfig(pipeline)
