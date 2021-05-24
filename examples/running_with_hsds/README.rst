@@ -24,8 +24,8 @@ creating a configuration file at ``~/.hscfg``:
 
     hsconfigure
     hs_endpoint = https://developer.nrel.gov/api/hsds
-    hs_username = None
-    hs_password = None
+    hs_username =
+    hs_password =
     hs_api_key = 3K3JQbjZmWctY0xmIfSYvYgtIcM3CN0cb1Y2w9bf
 
 *The example API key here is for demonstration and is rate-limited per IP. To
@@ -125,8 +125,8 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
     sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
-    gen = Gen.reV_run(tech='pvwattsv5', points=pp, sam_files=sam_file,
-                      res_file=res_file, max_workers=1, fout=None,
+    gen = Gen.reV_run('pvwattsv5', pp, sam_file, res_file,
+                      max_workers=1, fout=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_mean'])
 
