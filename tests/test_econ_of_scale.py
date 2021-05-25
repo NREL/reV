@@ -158,6 +158,7 @@ def test_econ_of_scale_baseline():
                                            cap_cost_scale='1')
 
         assert np.allclose(base['mean_lcoe'], s['mean_lcoe'])
+        assert (s['capital_cost_scalar'] == 1).all()
 
 
 def test_sc_agg_econ_scale():
@@ -214,6 +215,8 @@ def test_sc_agg_econ_scale():
                              * scalars * data['capital_cost']
                              + data['fixed_operating_cost'])
                             / aep + data['variable_operating_cost'])
+
+        assert np.allclose(scalars, s['capital_cost_scalar'])
 
         assert np.allclose(true_scaled_lcoe, s['mean_lcoe'])
         assert np.allclose(true_raw_lcoe, s['raw_lcoe'])

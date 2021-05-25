@@ -670,6 +670,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         eos = EconomiesOfScale(cap_cost_scale, summary)
         summary['raw_lcoe'] = eos.raw_lcoe
         summary['mean_lcoe'] = eos.scaled_lcoe
+        summary['capital_cost_scalar'] = eos.capital_cost_scalar
 
         return summary
 
