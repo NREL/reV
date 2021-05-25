@@ -160,7 +160,7 @@ pvwatts
 
 NOTE: ``pvwattsv5`` and ``pvwattsv7`` are both available from reV.
 
-Compute pvcapacity factors for all resource gids in a Rhode Island:
+Compute pvcapacity factors for all resource gids in Rhode Island:
 
 .. code-block:: bash
 
