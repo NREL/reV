@@ -155,6 +155,7 @@ class Outputs(BaseResource):
                          str_decode=str_decode, group=group, mode=mode)
         self._mode = mode
         self._group = self._check_group(group)
+        self._shape = None
 
         if self.writable:
             self.set_version_attr()
@@ -231,14 +232,14 @@ class Outputs(BaseResource):
         tuple
             shape of variables arrays == (time, locations)
         """
-        _shape = None
-        dsets = self.datasets
-        if 'meta' in dsets:
-            _shape = self.h5['meta'].shape
-            if 'time_index' in dsets:
-                _shape = self.h5['time_index'].shape + _shape
+        if self._shape is None:
+            dsets = self.datasets
+            if 'meta' in dsets:
+                self._shape = self.h5['meta'].shape
+                if 'time_index' in dsets:
+                    self._shape = self.h5['time_index'].shape + self._shape
 
-        return _shape
+        return self._shape
 
     @property
     def writable(self):
