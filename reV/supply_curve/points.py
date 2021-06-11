@@ -1515,7 +1515,7 @@ class SupplyCurveExtent:
             self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
                                          'col_ind': self.col_indices.copy()})
 
-            self._points.index.name = 'gid'
+            self._points.index.name = 'gid'  # sc_point_gid
 
         return self._points
 

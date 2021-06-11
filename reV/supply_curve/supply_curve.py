@@ -49,7 +49,7 @@ class SupplyCurve:
         Capital cost of connecting each supply curve point to their respective
         transmission feature. This value includes line cost with
         transmission_multiplier and the tie-in cost. Default units are $/MW.
-    dist_mi : float
+    dist_km : float
         Distance in miles from supply curve point to transmission connection.
     lcot : float
         Levelized cost of connecting to transmission ($/MWh).
@@ -224,6 +224,12 @@ class SupplyCurve:
         """
 
         trans_table = parse_table(trans_table)
+        trans_table = \
+            trans_table.rename(columns={'trans_line_gid': 'trans_gid'})
+
+        if 'dist_mi' in trans_table:
+            trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
+            trans_table['dist_km'] *= 1.60934
 
         drop_cols = ['sc_gid', 'cap_left', 'sc_point_gid']
         drop_cols = [c for c in drop_cols if c in trans_table]
@@ -345,10 +351,9 @@ class SupplyCurve:
                 avc = trans_costs['available_capacity']
 
         feature_cap = TF.feature_capacity(trans_table, available_capacity=avc)
-        dtype = trans_table['trans_line_gid'].dtype
-        feature_cap['trans_line_gid'] = \
-            feature_cap['trans_line_gid'].astype(dtype)
-        trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
+        dtype = trans_table['trans_gid'].dtype
+        feature_cap['trans_gid'] = feature_cap['trans_gid'].astype(dtype)
+        trans_table = trans_table.merge(feature_cap, on='trans_gid')
 
         return trans_table
 
@@ -387,13 +392,17 @@ class SupplyCurve:
         trans_table = cls._feature_capacity(trans_table,
                                             trans_costs=trans_costs)
         trans_table = trans_table.sort_values('sc_gid')
-        lcot, cost = cls._compute_lcot(trans_table, fcr,
-                                       trans_costs=trans_costs,
-                                       line_limited=line_limited,
-                                       connectable=connectable,
-                                       max_workers=max_workers)
+        if 'trans_cap_cost' not in trans_table:
+            cost = cls._compute_trans_cap_cost(trans_table,
+                                               trans_costs=trans_costs,
+                                               line_limited=line_limited,
+                                               connectable=connectable,
+                                               max_workers=max_workers)
+            trans_table['trans_cap_cost'] = cost
 
-        trans_table['trans_cap_cost'] = cost
+        cf_mean_arr = trans_table['mean_cf'].values
+        lcot = (cost * fcr) / (cf_mean_arr * 8760)
+
         trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
@@ -464,8 +473,9 @@ class SupplyCurve:
         return trans_table, sc_gids, mask
 
     @staticmethod
-    def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=None,
-                      connectable=True, line_limited=False):
+    def _compute_trans_cap_cost(trans_table, trans_costs=None,
+                                max_workers=None, connectable=True,
+                                line_limited=False):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -551,18 +561,15 @@ class SupplyCurve:
                     capacity = None
 
                 tm = row.get('transmission_multiplier', 1)
-                cost.append(feature.cost(row['trans_line_gid'], row['dist_mi'],
+                cost.append(feature.cost(row['trans_gid'], row['dist_mi'],
                                          capacity=capacity,
                                          transmission_multiplier=tm))
 
             cost = np.array(cost, dtype='float32')
 
-        cf_mean_arr = trans_table['mean_cf'].values
-        lcot = (cost * fcr) / (cf_mean_arr * 8760)
-
         logger.info('LCOT cost calculation is complete.')
 
-        return lcot, cost
+        return cost
 
     def _calculate_total_lcoe_friction(self):
         """Look for site mean LCOE with friction in the trans table and if
@@ -690,7 +697,7 @@ class SupplyCurve:
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
         trans_sc_gids = trans_table['sc_gid'].values.astype(int)
-        trans_gids = trans_table['trans_line_gid'].values
+        trans_gids = trans_table['trans_gid'].values
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
         categories = trans_table['category'].values
@@ -891,7 +898,7 @@ class SupplyCurve:
 
         connections = trans_table.sort_values(sort_on).groupby('sc_gid')
         connections = connections.first()
-        rename = {'trans_line_gid': 'trans_gid',
+        rename = {'trans_gid': 'trans_gid',
                   'category': 'trans_type'}
         connections = connections.rename(columns=rename)
         connections = connections[columns].reset_index()
