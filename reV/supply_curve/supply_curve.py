@@ -68,9 +68,10 @@ class SupplyCurve:
         sc_points : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             point summary
-        trans_table : str | pandas.DataFrame
+        trans_table : str | pandas.DataFrame | list
             Path to .csv or .json or DataFrame containing supply curve
-            transmission mapping
+            transmission mapping, can also be a list of transmission tables
+            with different line voltage (capacity) ratings.
         fcr : float
             Fixed charge rate, used to compute LCOT
         sc_features : str | pandas.DataFrame
@@ -250,7 +251,8 @@ class SupplyCurve:
             Table of supply curve point summary
         trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
-            (either str filepath to table file or pre-loaded dataframe).
+            (either str filepath to table file, list of filepaths to tables by
+             line voltage (capacity) or pre-loaded dataframe).
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
