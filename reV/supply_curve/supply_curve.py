@@ -99,10 +99,9 @@ class SupplyCurve:
         trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
-        self._trans_table = \
-            self._merge_sc_trans_tables(self._sc_points, trans_table)
-        self._check_sc_trans_table(self._sc_points, self._trans_table)
-        self._trans_table = self._add_trans_lcot(self._trans_table, fcr,
+        trans_table = self._merge_sc_trans_tables(self._sc_points, trans_table)
+        self._check_sc_trans_table(self._sc_points, trans_table)
+        self._trans_table = self._add_trans_lcot(trans_table, fcr,
                                                  trans_costs=trans_costs,
                                                  line_limited=line_limited,
                                                  connectable=connectable,
@@ -312,7 +311,7 @@ class SupplyCurve:
                 trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
                                                    how='inner')
 
-        return trans_table.reset_index(drop=True)
+        return trans_sc_table.reset_index(drop=True)
 
     @staticmethod
     def _check_sc_trans_table(sc_points, trans_table):
@@ -588,7 +587,7 @@ class SupplyCurve:
                     capacity = None
 
                 tm = row.get('transmission_multiplier', 1)
-                cost.append(feature.cost(row['trans_gid'], row['dist_mi'],
+                cost.append(feature.cost(row['trans_gid'], row['dist_km'],
                                          capacity=capacity,
                                          transmission_multiplier=tm))
 
@@ -689,7 +688,7 @@ class SupplyCurve:
     def _full_sort(self, trans_table, comp_wind_dirs=None,
                    total_lcoe_fric=None, sort_on='total_lcoe',
                    columns=('trans_gid', 'trans_capacity', 'trans_type',
-                            'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                            'trans_cap_cost', 'dist_km', 'lcot', 'total_lcoe'),
                    downwind=False):
         """
         Internal method to handle full supply curve sorting
@@ -709,7 +708,7 @@ class SupplyCurve:
         columns : tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
-                        'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe')
+                        'trans_cap_cost', 'dist_km', 'lcot', 'total_lcoe')
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
@@ -728,7 +727,7 @@ class SupplyCurve:
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
         categories = trans_table['category'].values
-        dists = trans_table['dist_mi'].values
+        dists = trans_table['dist_km'].values
         trans_cap_costs = trans_table['trans_cap_cost'].values
         lcots = trans_table['lcot'].values
         total_lcoes = trans_table['total_lcoe'].values
@@ -750,7 +749,7 @@ class SupplyCurve:
                     conn_lists['trans_capacity'][sc_gid] = trans_cap[i]
                     conn_lists['trans_type'][sc_gid] = categories[i]
                     conn_lists['trans_cap_cost'][sc_gid] = trans_cap_costs[i]
-                    conn_lists['dist_mi'][sc_gid] = dists[i]
+                    conn_lists['dist_km'][sc_gid] = dists[i]
                     conn_lists['lcot'][sc_gid] = lcots[i]
                     conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
 
@@ -796,7 +795,7 @@ class SupplyCurve:
 
     def full_sort(self, trans_table=None, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
-                           'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                           'trans_cap_cost', 'dist_km', 'lcot', 'total_lcoe'),
                   wind_dirs=None, n_dirs=2, downwind=False,
                   offshore_compete=False):
         """
@@ -952,7 +951,7 @@ class SupplyCurve:
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
-                      'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                      'trans_cap_cost', 'dist_km', 'lcot', 'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
              offshore_compete=False):
         """
