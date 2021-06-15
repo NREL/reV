@@ -149,7 +149,8 @@ class TransmissionFeatures:
             raise
 
         trans_table = \
-            trans_table.rename(columns={'trans_line_gid': 'trans_gid'})
+            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
+                                        'trans_gids': 'trans_line_gids'})
 
         if 'dist_mi' in trans_table:
             trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
@@ -189,7 +190,7 @@ class TransmissionFeatures:
                 feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
 
             elif name == 'substation':
-                feature_dict['lines'] = json.loads(feature['trans_gids'])
+                feature_dict['lines'] = json.loads(feature['trans_line_gids'])
 
             elif name == 'loadcen':
                 feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac

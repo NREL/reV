@@ -224,8 +224,10 @@ class SupplyCurve:
         """
 
         trans_table = parse_table(trans_table)
+
         trans_table = \
-            trans_table.rename(columns={'trans_line_gid': 'trans_gid'})
+            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
+                                        'trans_gids': 'trans_line_gids'})
 
         if 'dist_mi' in trans_table:
             trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
