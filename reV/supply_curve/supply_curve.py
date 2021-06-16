@@ -248,7 +248,6 @@ class SupplyCurve:
 
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
-                               compare_cap=True,
                                sc_cols=('capacity', 'sc_gid', 'mean_cf',
                                         'mean_lcoe')):
         """Merge the supply curve table with the transmission features table.
@@ -261,9 +260,6 @@ class SupplyCurve:
             Table mapping supply curve points to transmission features
             (either str filepath to table file, list of filepaths to tables by
              line voltage (capacity) or pre-loaded dataframe).
-        compare_cap : bool, optional
-            Flag to compare the sc_point and transmission feature capacities,
-            'capacity' <= 'max_cap'
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
@@ -285,42 +281,35 @@ class SupplyCurve:
         else:
             trans_table = cls._parse_trans_table(trans_table)
 
-            compare_cap &= 'max_cap' in trans_table
-            compare_cap &= 'min_cap' in trans_table
-            if compare_cap:
-                trans_sc_table = []
-                by = ['min_cap', 'max_cap']
-                for (min_cap, max_cap), table in trans_table.groupby(by=by):
-                    mask = sc_points['capacity'] > min_cap
-                    mask &= sc_points['capacity'] <= max_cap
-                    trans_sc_table.append(cls._merge_sc_trans_tables(
-                        sc_points.loc[mask].copy(),
-                        table,
-                        compare_cap=False,
-                        sc_cols=sc_cols))
-                trans_sc_table = pd.concat(trans_sc_table)
-            else:
-                merge_cols = cls._get_merge_cols(sc_points.columns,
-                                                 trans_table.columns)
-                logger.debug('Merging SC table and Trans Table on: {}'
-                             .format(merge_cols))
-                sc_points = sc_points.rename(columns=merge_cols)
-                merge_cols = list(merge_cols.values())
+            merge_cols = cls._get_merge_cols(sc_points.columns,
+                                             trans_table.columns)
+            logger.debug('Merging SC table and Trans Table on: {}'
+                         .format(merge_cols))
+            sc_points = sc_points.rename(columns=merge_cols)
+            merge_cols = list(merge_cols.values())
 
-                if isinstance(sc_cols, tuple):
-                    sc_cols = list(sc_cols)
+            if isinstance(sc_cols, tuple):
+                sc_cols = list(sc_cols)
 
-                if 'mean_lcoe_friction' in sc_points:
-                    sc_cols.append('mean_lcoe_friction')
+            if 'mean_lcoe_friction' in sc_points:
+                sc_cols.append('mean_lcoe_friction')
 
-                if 'transmission_multiplier' in sc_points:
-                    sc_cols.append('transmission_multiplier')
+            if 'transmission_multiplier' in sc_points:
+                sc_cols.append('transmission_multiplier')
 
-                sc_cols = sc_cols + merge_cols
-                sc_points = sc_points[sc_cols].copy()
+            sc_cols += merge_cols
+            if 'capacity' not in sc_cols:
+                sc_cols += ['capacity']
 
-                trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
-                                                   how='inner')
+            sc_points = sc_points[sc_cols].copy()
+
+            trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
+                                               how='inner')
+
+            if 'max_cap' in trans_sc_table and 'min_cap' in trans_sc_table:
+                mask = trans_sc_table['capacity'] > trans_sc_table['min_cap']
+                mask &= trans_sc_table['capacity'] <= trans_sc_table['max_cap']
+                trans_sc_table = trans_sc_table.loc[mask]
 
         return trans_sc_table.reset_index(drop=True)
 
@@ -435,9 +424,10 @@ class SupplyCurve:
                                                line_limited=line_limited,
                                                connectable=connectable,
                                                max_workers=max_workers)
-            trans_table['trans_cap_cost'] = cost
+            trans_table['trans_cap_cost'] = cost  # $/MW
         else:
-            cost = trans_table['trans_cap_cost'].values
+            cost = trans_table['trans_cap_cost'].values  # $
+            cost /= trans_table['capacity']  # $/MW
 
         cf_mean_arr = trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
