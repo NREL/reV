@@ -50,7 +50,7 @@ class SupplyCurve:
         transmission feature. This value includes line cost with
         transmission_multiplier and the tie-in cost. Default units are $/MW.
     dist_km : float
-        Distance in miles from supply curve point to transmission connection.
+        Distance in km from supply curve point to transmission connection.
     lcot : float
         Levelized cost of connecting to transmission ($/MWh).
     total_lcoe : float
@@ -225,6 +225,12 @@ class SupplyCurve:
 
         trans_table = parse_table(trans_table)
 
+        # Update legacy transmission table columns to match new less ambiguous
+        # column names:
+        # trans_gid -> the transmission feature id, legacy name: trans_line_gid
+        # trans_line_gids -> gids of transmission lines connected to the given
+        # transmission feature (only used for Substations),
+        # legacy name: trans_gids
         trans_table = \
             trans_table.rename(columns={'trans_line_gid': 'trans_gid',
                                         'trans_gids': 'trans_line_gids'})
@@ -279,16 +285,19 @@ class SupplyCurve:
         else:
             trans_table = cls._parse_trans_table(trans_table)
 
-            if compare_cap and 'max_cap' in trans_table:
+            compare_cap &= 'max_cap' in trans_table
+            compare_cap &= 'min_cap' in trans_table
+            if compare_cap:
                 trans_sc_table = []
-                for cap, table in trans_table.groupby('max_cap'):
-                    mask = sc_points['capacity'] <= cap
+                by = ['min_cap', 'max_cap']
+                for (min_cap, max_cap), table in trans_table.groupby(by=by):
+                    mask = sc_points['capacity'] > min_cap
+                    mask &= sc_points['capacity'] <= max_cap
                     trans_sc_table.append(cls._merge_sc_trans_tables(
                         sc_points.loc[mask].copy(),
                         table,
                         compare_cap=False,
                         sc_cols=sc_cols))
-
                 trans_sc_table = pd.concat(trans_sc_table)
             else:
                 merge_cols = cls._get_merge_cols(sc_points.columns,
@@ -427,6 +436,8 @@ class SupplyCurve:
                                                connectable=connectable,
                                                max_workers=max_workers)
             trans_table['trans_cap_cost'] = cost
+        else:
+            cost = trans_table['trans_cap_cost'].values
 
         cf_mean_arr = trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
