@@ -800,7 +800,7 @@ class SupplyCurve:
 
         return supply_curve.reset_index(drop=True)
 
-    def full_sort(self, trans_table=None, sort_on='total_lcoe',
+    def full_sort(self, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
                            'trans_cap_cost_per_mw', 'dist_km', 'lcot',
                            'total_lcoe'),
@@ -811,9 +811,6 @@ class SupplyCurve:
 
         Parameters
         ----------
-        trans_table : pandas.DataFrame | NoneType
-            Supply Curve Tranmission table to sort on
-            If none use self._trans_table
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -839,12 +836,12 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on full supply curve connections
         """
-        if trans_table is None:
-            trans_table = self._trans_table
+        self._trans_features.check_feature_dependencies()
 
         if isinstance(columns, tuple):
             columns = list(columns)
 
+        trans_table = self._trans_table.copy()
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values(sort_on)
 
@@ -884,7 +881,7 @@ class SupplyCurve:
 
         return supply_curve
 
-    def simple_sort(self, trans_table=None, sort_on='total_lcoe',
+    def simple_sort(self, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                              'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
@@ -895,9 +892,6 @@ class SupplyCurve:
 
         Parameters
         ----------
-        trans_table : pandas.DataFrame | NoneType
-            Supply Curve Tranmission table to sort on
-            If none use self._trans_table
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -922,8 +916,7 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on simple supply curve connections
         """
-        if trans_table is None:
-            trans_table = self._trans_table
+        trans_table = self._trans_table.copy()
 
         if isinstance(columns, tuple):
             columns = list(columns)

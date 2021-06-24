@@ -70,7 +70,6 @@ class TransmissionFeatures:
         self._available_capacity_frac = available_capacity
 
         self._features = self._get_features(trans_table)
-        self._check_feature_dependencies()
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones(
@@ -232,7 +231,7 @@ class TransmissionFeatures:
 
         return features
 
-    def _check_feature_dependencies(self):
+    def check_feature_dependencies(self):
         """Check features for dependencies that are missing and raise error."""
         missing = {}
         for gid, feature_dict in self._features.items():
