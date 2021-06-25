@@ -96,7 +96,11 @@ class SupplyCurve:
         logger.info('Supply curve points input: {}'.format(sc_points))
         logger.info('Transmission table input: {}'.format(trans_table))
 
-        trans_costs = transmission_costs
+        if transmission_costs is not None:
+            trans_costs = TF._parse_dictionary(transmission_costs)
+        else:
+            trans_costs = {}
+
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
         trans_table = self._merge_sc_trans_tables(self._sc_points, trans_table)
@@ -108,6 +112,8 @@ class SupplyCurve:
                                                  max_workers=max_workers)
         self._trans_features = self._create_handler(self._trans_table,
                                                     trans_costs=trans_costs)
+        self._available_capacity_frac = \
+            trans_costs.get('available_capacity', 0.1)
 
         self._consider_friction = consider_friction
         self._calculate_total_lcoe_friction()
@@ -351,38 +357,6 @@ class SupplyCurve:
         logger.debug('Transmission Table created with columns: {}'
                      .format(trans_table.columns.values.tolist()))
 
-    @staticmethod
-    def _feature_capacity(trans_table, trans_costs=None):
-        """
-        Add the transmission connection feature capacity to the trans table.
-
-        Parameters
-        ----------
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features
-        trans_costs : str | dict
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-
-        Returns
-        -------
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features with
-            'avail_cap' column.
-        """
-        avc = 0.1
-        if trans_costs is not None:
-            if 'available_capacity' in trans_costs:
-                avc = trans_costs['available_capacity']
-
-        feature_cap = TF.feature_capacity(trans_table, available_capacity=avc)
-        dtype = trans_table['trans_gid'].dtype
-        feature_cap['trans_gid'] = feature_cap['trans_gid'].astype(dtype)
-        trans_table = trans_table.merge(feature_cap, on='trans_gid')
-
-        return trans_table
-
     @classmethod
     def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
                         line_limited=False, connectable=True,
@@ -414,9 +388,6 @@ class SupplyCurve:
             Same as input table but with new columns for trans_cap_cost_per_mw,
             lcot, and total_lcoe.
         """
-
-        trans_table = cls._feature_capacity(trans_table,
-                                            trans_costs=trans_costs)
         trans_table = trans_table.sort_values('sc_gid')
         if 'trans_cap_cost' not in trans_table:
             cost = cls._compute_trans_cap_cost(trans_table,
@@ -800,6 +771,16 @@ class SupplyCurve:
 
         return supply_curve.reset_index(drop=True)
 
+    def _check_feature_capacity(self):
+        """
+        Add the transmission connection feature capacity to the trans table if
+        needed
+        """
+        if 'avail_cap' not in self._trans_table:
+            kwargs = {'available_capacity': self._available_capacity_frac}
+            fc = TF.feature_capacity(self._trans_table, **kwargs)
+            self._trans_table = self._trans_table.merge(fc, on='trans_gid')
+
     def full_sort(self, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
                            'trans_cap_cost_per_mw', 'dist_km', 'lcot',
@@ -837,6 +818,7 @@ class SupplyCurve:
             and LCOE+LCOT based on full supply curve connections
         """
         self._trans_features.check_feature_dependencies()
+        self._check_feature_capacity()
 
         if isinstance(columns, tuple):
             columns = list(columns)

@@ -229,6 +229,20 @@ def test_least_cost_simple(sc_points):
     verify_trans_cap(sc_simple, trans_tables)
 
 
+def test_simple_trans_table(sc_points):
+    """
+    Run the simple SC test using a simple transmission table
+    and verify results against baseline file.
+    """
+    trans_table = os.path.join(TESTDATADIR,
+                               'trans_tables',
+                               'ri_simple_transmission_table.csv')
+    sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1)
+
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+    baseline_verify(sc_simple, fpath_baseline)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
