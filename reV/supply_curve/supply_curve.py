@@ -855,12 +855,6 @@ class SupplyCurve:
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
 
-        if 'offshore' in supply_curve:
-            sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
-                                              'export_cable_CAPEX',
-                                              'trans_cap_cost_per_mw']}
-            supply_curve = self.add_sum_cols(supply_curve, sum_cols)
-
         return supply_curve
 
     def simple_sort(self, sort_on='total_lcoe',
@@ -924,11 +918,6 @@ class SupplyCurve:
                                          downwind=downwind)
 
         supply_curve = supply_curve.reset_index(drop=True)
-        if 'offshore' in supply_curve:
-            sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
-                                              'export_cable_CAPEX',
-                                              'trans_cap_cost_per_mw']}
-            supply_curve = self.add_sum_cols(supply_curve, sum_cols)
 
         return supply_curve
 
