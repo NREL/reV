@@ -25,6 +25,7 @@ geospatial exclusion layers, and generation of renewable energy supply curves.
 
 .. autosummary::
    :toctree: _reV
+   :template: custom-module-template.rst
    :recursive:
 
    reV
