@@ -194,12 +194,13 @@ def verify_trans_cap(sc_table, trans_tables):
 
     trans_features = pd.concat(trans_features)
 
-    for max_cap, df in trans_features.groupby(by='max_cap'):
-        mask = sc_table['capacity'] <= max_cap
-        msg = ("SC points were not connected to a transmission feature with "
-               "capacity <= {}:\n{}"
-               .format(max_cap, sc_table.loc[mask, 'capacity']))
-        assert all(sc_table.loc[mask, 'trans_gid'].isin(df['trans_gid'])), msg
+    test = sc_table.merge(trans_features, on='trans_gid', how='left')
+    mask = test['capacity'] > test['max_cap']
+    cols = ['sc_gid', 'trans_gid', 'capacity', 'max_cap']
+    msg = ("SC points connected to transmission features with "
+           "max_cap < sc_cap:\n{}"
+           .format(test.loc[mask, cols]))
+    assert any(mask), msg
 
 
 def test_least_cost_full(sc_points):
