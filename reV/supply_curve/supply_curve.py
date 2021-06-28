@@ -312,9 +312,8 @@ class SupplyCurve:
             trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
                                                how='inner')
 
-            if 'max_cap' in trans_sc_table and 'min_cap' in trans_sc_table:
-                mask = trans_sc_table['capacity'] > trans_sc_table['min_cap']
-                mask &= trans_sc_table['capacity'] <= trans_sc_table['max_cap']
+            if 'max_cap' in trans_sc_table:
+                mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
                 trans_sc_table = trans_sc_table.loc[mask]
 
         return trans_sc_table.reset_index(drop=True)

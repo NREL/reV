@@ -190,16 +190,15 @@ def verify_trans_cap(sc_table, trans_tables):
     trans_features = []
     for path in trans_tables:
         df = pd.read_csv(path)
-        trans_features.append(df[['trans_gid', 'min_cap', 'max_cap']])
+        trans_features.append(df[['trans_gid', 'max_cap']])
 
     trans_features = pd.concat(trans_features)
 
-    by = ['min_cap', 'max_cap']
-    for (min_cap, max_cap), df in trans_features.groupby(by=by):
-        mask = sc_table['capacity'] > min_cap
-        mask &= sc_table['capacity'] <= max_cap
+    for max_cap, df in trans_features.groupby(by='max_cap'):
+        mask = sc_table['capacity'] <= max_cap
         msg = ("SC points were not connected to a transmission feature with "
-               "capacity between {} and {}".format(min_cap, max_cap))
+               "capacity <= {}:\n{}"
+               .format(max_cap, sc_table.loc[mask, 'capacity']))
         assert all(sc_table.loc[mask, 'trans_gid'].isin(df['trans_gid'])), msg
 
 
