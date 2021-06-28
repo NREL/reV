@@ -15,16 +15,16 @@ requirements:
     - python
     - pip
     - setuptools
-    - NREL-rex>=0.2.58
-    - NREL-PySAM>=2.1.4,!=2.2.*
+    - NREL-rex
+    - NREL-PySAM
     - packaging
     - plotting
     - plotly
   run:
     - python
     - pip
-    - NREL-rex>=0.2.58
-    - NREL-PySAM>=2.1.4,!=2.2.*
+    - NREL-rex
+    - NREL-PySAM
     - packaging
     - plotting
     - plotly
