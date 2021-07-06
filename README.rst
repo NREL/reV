@@ -29,6 +29,9 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://zenodo.org/badge/201343076.svg
    :target: https://zenodo.org/badge/latestdoi/201343076
 
+.. image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
+
 .. inclusion-intro
 
 
