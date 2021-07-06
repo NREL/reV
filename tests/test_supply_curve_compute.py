@@ -12,6 +12,7 @@ import numpy as np
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
 
+
 TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
                  'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
                  'sink_tie_in_cost': 100, 'available_capacity': 0.3}
@@ -179,6 +180,67 @@ def test_parallel(sc_points, trans_table, multipliers):
                                       max_workers=1)
 
     assert_frame_equal(sc_full_parallel, sc_full_serial)
+
+
+def verify_trans_cap(sc_table, trans_tables):
+    """
+    Verify that sc_points are connected to features in the correct capacity
+    bins
+    """
+    trans_features = []
+    for path in trans_tables:
+        df = pd.read_csv(path)
+        trans_features.append(df[['trans_gid', 'max_cap']])
+
+    trans_features = pd.concat(trans_features)
+
+    test = sc_table.merge(trans_features, on='trans_gid', how='left')
+    mask = test['capacity'] > test['max_cap']
+    cols = ['sc_gid', 'trans_gid', 'capacity', 'max_cap']
+    msg = ("SC points connected to transmission features with "
+           "max_cap < sc_cap:\n{}"
+           .format(test.loc[mask, cols]))
+    assert any(mask), msg
+
+
+def test_least_cost_full(sc_points):
+    """
+    Test full supply curve sorting with least-cost path transmission tables
+    """
+    trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                 f'costs_RI_{cap}MW.csv')
+                    for cap in [100, 200, 400, 1000]]
+    sc_full = SupplyCurve.full(sc_points, trans_tables, fcr=0.1)
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
+    baseline_verify(sc_full, fpath_baseline)
+    verify_trans_cap(sc_full, trans_tables)
+
+
+def test_least_cost_simple(sc_points):
+    """
+    Test simple supply curve sorting with least-cost path transmission tables
+    """
+    trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                 f'costs_RI_{cap}MW.csv')
+                    for cap in [100, 200, 400, 1000]]
+    sc_simple = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1)
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+    baseline_verify(sc_simple, fpath_baseline)
+    verify_trans_cap(sc_simple, trans_tables)
+
+
+def test_simple_trans_table(sc_points):
+    """
+    Run the simple SC test using a simple transmission table
+    and verify results against baseline file.
+    """
+    trans_table = os.path.join(TESTDATADIR,
+                               'trans_tables',
+                               'ri_simple_transmission_table.csv')
+    sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1)
+
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+    baseline_verify(sc_simple, fpath_baseline)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

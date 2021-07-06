@@ -21,7 +21,7 @@ class TransmissionFeatures:
     """
     Class to handle Supply Curve Transmission features
     """
-    def __init__(self, trans_table, line_tie_in_cost=14000, line_cost=3667,
+    def __init__(self, trans_table, line_tie_in_cost=14000, line_cost=2279,
                  station_tie_in_cost=0, center_tie_in_cost=0,
                  sink_tie_in_cost=14000, available_capacity=0.1,
                  line_limited=False):
@@ -34,7 +34,7 @@ class TransmissionFeatures:
         line_tie_in_cost : float
             Cost of connecting to a transmission line in $/MW
         line_cost : float
-            Cost of building transmission line during connection in $/MW-mile
+            Cost of building transmission line during connection in $/MW-km
         station_tie_in_cost : float
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
@@ -51,7 +51,7 @@ class TransmissionFeatures:
 
         logger.debug('Trans table input: {}'.format(trans_table))
         logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
-        logger.debug('Line cost: {} $/MW-mile'.format(line_cost))
+        logger.debug('Line cost: {} $/MW-km'.format(line_cost))
         logger.debug('Station tie in cost: {} $/MW'
                      .format(station_tie_in_cost))
         logger.debug('Center tie in cost: {} $/MW'.format(center_tie_in_cost))
@@ -70,7 +70,6 @@ class TransmissionFeatures:
         self._available_capacity_frac = available_capacity
 
         self._features = self._get_features(trans_table)
-        self._check_feature_dependencies()
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones(
@@ -148,6 +147,14 @@ class TransmissionFeatures:
             logger.error(ex)
             raise
 
+        trans_table = \
+            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
+                                        'trans_gids': 'trans_line_gids'})
+
+        if 'dist_mi' in trans_table:
+            trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
+            trans_table['dist_km'] *= 1.60934
+
         return trans_table
 
     def _features_from_table(self, trans_table):
@@ -172,7 +179,7 @@ class TransmissionFeatures:
         features = {}
 
         cap_frac = self._available_capacity_frac
-        trans_features = trans_table.groupby('trans_line_gid').first()
+        trans_features = trans_table.groupby('trans_gid').first()
 
         for gid, feature in trans_features.iterrows():
             name = feature['category'].lower()
@@ -182,7 +189,7 @@ class TransmissionFeatures:
                 feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
 
             elif name == 'substation':
-                feature_dict['lines'] = json.loads(feature['trans_gids'])
+                feature_dict['lines'] = json.loads(feature['trans_line_gids'])
 
             elif name == 'loadcen':
                 feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
@@ -224,7 +231,7 @@ class TransmissionFeatures:
 
         return features
 
-    def _check_feature_dependencies(self):
+    def check_feature_dependencies(self):
         """Check features for dependencies that are missing and raise error."""
         missing = {}
         for gid, feature_dict in self._features.items():
@@ -242,7 +249,7 @@ class TransmissionFeatures:
             raise RuntimeError(emsg)
 
     @staticmethod
-    def _calc_cost(distance, line_cost=3667, tie_in_cost=0,
+    def _calc_cost(distance, line_cost=2279, tie_in_cost=0,
                    transmission_multiplier=1):
         """
         Compute transmission cost in $/MW
@@ -250,9 +257,9 @@ class TransmissionFeatures:
         Parameters
         ----------
         distance : float
-            Distance to feature in miles
+            Distance to feature in kms
         line_cost : float
-            Cost of tranmission lines in $/MW-mile
+            Cost of tranmission lines in $/MW-km
         tie_in_cost : float
             Cost to connect to feature in $/MW
         line_multiplier : float
@@ -515,7 +522,7 @@ class TransmissionFeatures:
         gid : int
             Feature gid to connect to
         distance : float
-            Distance to feature in miles
+            Distance to feature in kms
         line_multiplier : float
             Multiplier for region specific line cost increases
         capacity : float
@@ -566,7 +573,7 @@ class TransmissionFeatures:
         line_tie_in_cost : float
             Cost of connecting to a transmission line in $/MW
         line_cost : float
-            Cost of building transmission line during connection in $/MW-mile
+            Cost of building transmission line during connection in $/MW-km
         station_tine_in_cost : float
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
@@ -595,7 +602,7 @@ class TransmissionFeatures:
 
         feature_cap = pd.Series(feature_cap)
         feature_cap.name = 'avail_cap'
-        feature_cap.index.name = 'trans_line_gid'
+        feature_cap.index.name = 'trans_gid'
         feature_cap = feature_cap.to_frame().reset_index()
 
         return feature_cap
@@ -630,9 +637,9 @@ class TransmissionCosts(TransmissionFeatures):
             kwargs = {'available_capacity': self._available_capacity_frac}
             fc = TransmissionFeatures.feature_capacity(trans_table,
                                                        **kwargs)
-            trans_table = trans_table.merge(fc, on='trans_line_gid')
+            trans_table = trans_table.merge(fc, on='trans_gid')
 
-        trans_features = trans_table.groupby('trans_line_gid').first()
+        trans_features = trans_table.groupby('trans_gid').first()
         for gid, feature in trans_features.iterrows():
             name = feature['category'].lower()
             feature_dict = {'type': name, 'avail_cap': feature['avail_cap']}
@@ -660,7 +667,7 @@ class TransmissionCosts(TransmissionFeatures):
 
     @classmethod
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
-                      line_cost=3667, station_tie_in_cost=0,
+                      line_cost=2279, station_tie_in_cost=0,
                       center_tie_in_cost=0, sink_tie_in_cost=14000,
                       available_capacity=0.1, line_limited=False):
         """
@@ -676,7 +683,7 @@ class TransmissionCosts(TransmissionFeatures):
         line_tie_in_cost : float
             Cost of connecting to a transmission line in $/MW
         line_cost : float
-            Cost of building transmission line during connection in $/MW-mile
+            Cost of building transmission line during connection in $/MW-km
         station_tine_in_cost : float
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
@@ -709,8 +716,8 @@ class TransmissionCosts(TransmissionFeatures):
             costs = []
             for _, row in trans_table.iterrows():
                 tm = row.get('transmission_multiplier', 1)
-                costs.append(feature.cost(row['trans_line_gid'],
-                                          row['dist_mi'], capacity=capacity,
+                costs.append(feature.cost(row['trans_gid'],
+                                          row['dist_km'], capacity=capacity,
                                           transmission_multiplier=tm))
         except Exception:
             logger.exception("Error computing costs for all connections in {}"

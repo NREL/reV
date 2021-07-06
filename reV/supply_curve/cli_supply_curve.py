@@ -15,7 +15,7 @@ from reV.supply_curve.supply_curve import SupplyCurve
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
-from rex.utilities.cli_dtypes import STR, INT
+from rex.utilities.cli_dtypes import STR, INT, STR_OR_LIST
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
 
@@ -138,8 +138,9 @@ def from_config(ctx, config_file, verbose):
 @main.group(invoke_without_command=True)
 @click.option('--sc_points', '-sc', type=STR, required=True,
               help='Supply curve point summary table (.csv or .json).')
-@click.option('--trans_table', '-tt', type=STR, required=True,
-              help='Supply curve transmission mapping table (.csv or .json).')
+@click.option('--trans_table', '-tt', type=STR_OR_LIST, required=True,
+              help=('Supply curve transmission mapping table(s) (.csv or '
+                    'list of .csv).'))
 @click.option('--fixed_charge_rate', '-fcr', type=float, required=True,
               help='Fixed charge rate used to compute LCOT')
 @click.option('--sc_features', '-scf', type=STR, default=None,

@@ -45,12 +45,12 @@ class SupplyCurve:
     trans_type : str
         Tranmission feature type that each supply curve point was connected to
         (e.g. Transline, Substation).
-    trans_cap_cost : float
+    trans_cap_cost_per_mw : float
         Capital cost of connecting each supply curve point to their respective
         transmission feature. This value includes line cost with
         transmission_multiplier and the tie-in cost. Default units are $/MW.
-    dist_mi : float
-        Distance in miles from supply curve point to transmission connection.
+    dist_km : float
+        Distance in km from supply curve point to transmission connection.
     lcot : float
         Levelized cost of connecting to transmission ($/MWh).
     total_lcoe : float
@@ -68,9 +68,10 @@ class SupplyCurve:
         sc_points : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             point summary
-        trans_table : str | pandas.DataFrame
+        trans_table : str | pandas.DataFrame | list
             Path to .csv or .json or DataFrame containing supply curve
-            transmission mapping
+            transmission mapping, can also be a list of transmission tables
+            with different line voltage (capacity) ratings.
         fcr : float
             Fixed charge rate, used to compute LCOT
         sc_features : str | pandas.DataFrame
@@ -95,19 +96,24 @@ class SupplyCurve:
         logger.info('Supply curve points input: {}'.format(sc_points))
         logger.info('Transmission table input: {}'.format(trans_table))
 
-        trans_costs = transmission_costs
+        if transmission_costs is not None:
+            trans_costs = TF._parse_dictionary(transmission_costs)
+        else:
+            trans_costs = {}
+
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
-        self._trans_table = \
-            self._merge_sc_trans_tables(self._sc_points, trans_table)
-        self._check_sc_trans_table(self._sc_points, self._trans_table)
-        self._trans_table = self._add_trans_lcot(self._trans_table, fcr,
+        trans_table = self._merge_sc_trans_tables(self._sc_points, trans_table)
+        self._check_sc_trans_table(self._sc_points, trans_table)
+        self._trans_table = self._add_trans_lcot(trans_table, fcr,
                                                  trans_costs=trans_costs,
                                                  line_limited=line_limited,
                                                  connectable=connectable,
                                                  max_workers=max_workers)
         self._trans_features = self._create_handler(self._trans_table,
                                                     trans_costs=trans_costs)
+        self._available_capacity_frac = \
+            trans_costs.get('available_capacity', 0.1)
 
         self._consider_friction = consider_friction
         self._calculate_total_lcoe_friction()
@@ -225,6 +231,20 @@ class SupplyCurve:
 
         trans_table = parse_table(trans_table)
 
+        # Update legacy transmission table columns to match new less ambiguous
+        # column names:
+        # trans_gid -> the transmission feature id, legacy name: trans_line_gid
+        # trans_line_gids -> gids of transmission lines connected to the given
+        # transmission feature (only used for Substations),
+        # legacy name: trans_gids
+        trans_table = \
+            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
+                                        'trans_gids': 'trans_line_gids'})
+
+        if 'dist_mi' in trans_table:
+            trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
+            trans_table['dist_km'] *= 1.60934
+
         drop_cols = ['sc_gid', 'cap_left', 'sc_point_gid']
         drop_cols = [c for c in drop_cols if c in trans_table]
         if drop_cols:
@@ -244,7 +264,8 @@ class SupplyCurve:
             Table of supply curve point summary
         trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
-            (either str filepath to table file or pre-loaded dataframe).
+            (either str filepath to table file, list of filepaths to tables by
+             line voltage (capacity) or pre-loaded dataframe).
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
@@ -256,30 +277,46 @@ class SupplyCurve:
             This is performed by merging left with trans_table, so there may be
             rows with nan sc_gid.
         """
-        trans_table = cls._parse_trans_table(trans_table)
+        if isinstance(trans_table, (list, tuple)):
+            trans_sc_table = []
+            for table in trans_table:
+                trans_sc_table.append(cls._merge_sc_trans_tables(
+                    sc_points, table, sc_cols=sc_cols))
 
-        if isinstance(sc_cols, tuple):
-            sc_cols = list(sc_cols)
+            trans_sc_table = pd.concat(trans_sc_table)
+        else:
+            trans_table = cls._parse_trans_table(trans_table)
 
-        if 'mean_lcoe_friction' in sc_points:
-            sc_cols.append('mean_lcoe_friction')
+            merge_cols = cls._get_merge_cols(sc_points.columns,
+                                             trans_table.columns)
+            logger.debug('Merging SC table and Trans Table on: {}'
+                         .format(merge_cols))
+            sc_points = sc_points.rename(columns=merge_cols)
+            merge_cols = list(merge_cols.values())
 
-        if 'transmission_multiplier' in sc_points:
-            sc_cols.append('transmission_multiplier')
+            if isinstance(sc_cols, tuple):
+                sc_cols = list(sc_cols)
 
-        merge_cols = cls._get_merge_cols(sc_points.columns,
-                                         trans_table.columns)
-        logger.debug('Merging SC table and Trans Table on: {}'
-                     .format(merge_cols))
-        sc_points = sc_points.rename(columns=merge_cols)
-        merge_cols = list(merge_cols.values())
+            if 'mean_lcoe_friction' in sc_points:
+                sc_cols.append('mean_lcoe_friction')
 
-        sc_cols = sc_cols + merge_cols
-        sc_points = sc_points[sc_cols].copy()
+            if 'transmission_multiplier' in sc_points:
+                sc_cols.append('transmission_multiplier')
 
-        trans_table = trans_table.merge(sc_points, on=merge_cols, how='inner')
+            sc_cols += merge_cols
+            if 'capacity' not in sc_cols:
+                sc_cols += ['capacity']
 
-        return trans_table
+            sc_points = sc_points[sc_cols].copy()
+
+            trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
+                                               how='inner')
+
+            if 'max_cap' in trans_sc_table:
+                mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
+                trans_sc_table = trans_sc_table.loc[mask]
+
+        return trans_sc_table.reset_index(drop=True)
 
     @staticmethod
     def _check_sc_trans_table(sc_points, trans_table):
@@ -319,39 +356,6 @@ class SupplyCurve:
         logger.debug('Transmission Table created with columns: {}'
                      .format(trans_table.columns.values.tolist()))
 
-    @staticmethod
-    def _feature_capacity(trans_table, trans_costs=None):
-        """
-        Add the transmission connection feature capacity to the trans table.
-
-        Parameters
-        ----------
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features
-        trans_costs : str | dict
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-
-        Returns
-        -------
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features with
-            'avail_cap' column.
-        """
-        avc = 0.1
-        if trans_costs is not None:
-            if 'available_capacity' in trans_costs:
-                avc = trans_costs['available_capacity']
-
-        feature_cap = TF.feature_capacity(trans_table, available_capacity=avc)
-        dtype = trans_table['trans_line_gid'].dtype
-        feature_cap['trans_line_gid'] = \
-            feature_cap['trans_line_gid'].astype(dtype)
-        trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
-
-        return trans_table
-
     @classmethod
     def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
                         line_limited=False, connectable=True,
@@ -380,20 +384,25 @@ class SupplyCurve:
         Returns
         -------
         trans_table : pd.DataFrame
-            Same as input table but with new columns for trans_cap_cost, lcot,
-            and total_lcoe.
+            Same as input table but with new columns for trans_cap_cost_per_mw,
+            lcot, and total_lcoe.
         """
-
-        trans_table = cls._feature_capacity(trans_table,
-                                            trans_costs=trans_costs)
         trans_table = trans_table.sort_values('sc_gid')
-        lcot, cost = cls._compute_lcot(trans_table, fcr,
-                                       trans_costs=trans_costs,
-                                       line_limited=line_limited,
-                                       connectable=connectable,
-                                       max_workers=max_workers)
+        if 'trans_cap_cost' not in trans_table:
+            cost = cls._compute_trans_cap_cost(trans_table,
+                                               trans_costs=trans_costs,
+                                               line_limited=line_limited,
+                                               connectable=connectable,
+                                               max_workers=max_workers)
+            trans_table['trans_cap_cost_per_mw'] = cost  # $/MW
+        else:
+            cost = trans_table['trans_cap_cost'].values.copy()  # $
+            cost /= trans_table['capacity']  # $/MW
+            trans_table['trans_cap_cost_per_mw'] = cost
 
-        trans_table['trans_cap_cost'] = cost
+        cf_mean_arr = trans_table['mean_cf'].values
+        lcot = (cost * fcr) / (cf_mean_arr * 8760)
+
         trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
@@ -464,8 +473,9 @@ class SupplyCurve:
         return trans_table, sc_gids, mask
 
     @staticmethod
-    def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=None,
-                      connectable=True, line_limited=False):
+    def _compute_trans_cap_cost(trans_table, trans_costs=None,
+                                max_workers=None, connectable=True,
+                                line_limited=False):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -551,18 +561,15 @@ class SupplyCurve:
                     capacity = None
 
                 tm = row.get('transmission_multiplier', 1)
-                cost.append(feature.cost(row['trans_line_gid'], row['dist_mi'],
+                cost.append(feature.cost(row['trans_gid'], row['dist_km'],
                                          capacity=capacity,
                                          transmission_multiplier=tm))
 
             cost = np.array(cost, dtype='float32')
 
-        cf_mean_arr = trans_table['mean_cf'].values
-        lcot = (cost * fcr) / (cf_mean_arr * 8760)
-
         logger.info('LCOT cost calculation is complete.')
 
-        return lcot, cost
+        return cost
 
     def _calculate_total_lcoe_friction(self):
         """Look for site mean LCOE with friction in the trans table and if
@@ -655,7 +662,8 @@ class SupplyCurve:
     def _full_sort(self, trans_table, comp_wind_dirs=None,
                    total_lcoe_fric=None, sort_on='total_lcoe',
                    columns=('trans_gid', 'trans_capacity', 'trans_type',
-                            'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                            'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                            'total_lcoe'),
                    downwind=False):
         """
         Internal method to handle full supply curve sorting
@@ -675,7 +683,8 @@ class SupplyCurve:
         columns : tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
-                        'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe')
+                        'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                        'total_lcoe')
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
@@ -690,12 +699,12 @@ class SupplyCurve:
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
         trans_sc_gids = trans_table['sc_gid'].values.astype(int)
-        trans_gids = trans_table['trans_line_gid'].values
+        trans_gids = trans_table['trans_gid'].values
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
         categories = trans_table['category'].values
-        dists = trans_table['dist_mi'].values
-        trans_cap_costs = trans_table['trans_cap_cost'].values
+        dists = trans_table['dist_km'].values
+        trans_cap_costs = trans_table['trans_cap_cost_per_mw'].values
         lcots = trans_table['lcot'].values
         total_lcoes = trans_table['total_lcoe'].values
 
@@ -715,8 +724,9 @@ class SupplyCurve:
                     conn_lists['trans_gid'][sc_gid] = trans_gid
                     conn_lists['trans_capacity'][sc_gid] = trans_cap[i]
                     conn_lists['trans_type'][sc_gid] = categories[i]
-                    conn_lists['trans_cap_cost'][sc_gid] = trans_cap_costs[i]
-                    conn_lists['dist_mi'][sc_gid] = dists[i]
+                    conn_lists['trans_cap_cost_per_mw'][sc_gid] = \
+                        trans_cap_costs[i]
+                    conn_lists['dist_km'][sc_gid] = dists[i]
                     conn_lists['lcot'][sc_gid] = lcots[i]
                     conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
 
@@ -760,9 +770,20 @@ class SupplyCurve:
 
         return supply_curve.reset_index(drop=True)
 
-    def full_sort(self, trans_table=None, sort_on='total_lcoe',
+    def _check_feature_capacity(self):
+        """
+        Add the transmission connection feature capacity to the trans table if
+        needed
+        """
+        if 'avail_cap' not in self._trans_table:
+            kwargs = {'available_capacity': self._available_capacity_frac}
+            fc = TF.feature_capacity(self._trans_table, **kwargs)
+            self._trans_table = self._trans_table.merge(fc, on='trans_gid')
+
+    def full_sort(self, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
-                           'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                           'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                           'total_lcoe'),
                   wind_dirs=None, n_dirs=2, downwind=False,
                   offshore_compete=False):
         """
@@ -770,9 +791,6 @@ class SupplyCurve:
 
         Parameters
         ----------
-        trans_table : pandas.DataFrame | NoneType
-            Supply Curve Tranmission table to sort on
-            If none use self._trans_table
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -798,12 +816,13 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on full supply curve connections
         """
-        if trans_table is None:
-            trans_table = self._trans_table
+        self._trans_features.check_feature_dependencies()
+        self._check_feature_capacity()
 
         if isinstance(columns, tuple):
             columns = list(columns)
 
+        trans_table = self._trans_table.copy()
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values(sort_on)
 
@@ -835,16 +854,11 @@ class SupplyCurve:
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
 
-        sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
-                                          'export_cable_CAPEX',
-                                          'trans_cap_cost']}
-        supply_curve = self.add_sum_cols(supply_curve, sum_cols)
-
         return supply_curve
 
-    def simple_sort(self, trans_table=None, sort_on='total_lcoe',
+    def simple_sort(self, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                             'trans_cap_cost'),
+                             'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
                     offshore_compete=False):
         """
@@ -853,9 +867,6 @@ class SupplyCurve:
 
         Parameters
         ----------
-        trans_table : pandas.DataFrame | NoneType
-            Supply Curve Tranmission table to sort on
-            If none use self._trans_table
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -880,8 +891,7 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on simple supply curve connections
         """
-        if trans_table is None:
-            trans_table = self._trans_table
+        trans_table = self._trans_table.copy()
 
         if isinstance(columns, tuple):
             columns = list(columns)
@@ -891,7 +901,7 @@ class SupplyCurve:
 
         connections = trans_table.sort_values(sort_on).groupby('sc_gid')
         connections = connections.first()
-        rename = {'trans_line_gid': 'trans_gid',
+        rename = {'trans_gid': 'trans_gid',
                   'category': 'trans_type'}
         connections = connections.rename(columns=rename)
         connections = connections[columns].reset_index()
@@ -907,10 +917,6 @@ class SupplyCurve:
                                          downwind=downwind)
 
         supply_curve = supply_curve.reset_index(drop=True)
-        sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
-                                          'export_cable_CAPEX',
-                                          'trans_cap_cost']}
-        supply_curve = self.add_sum_cols(supply_curve, sum_cols)
 
         return supply_curve
 
@@ -918,7 +924,8 @@ class SupplyCurve:
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
-                      'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                      'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                      'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
              offshore_compete=False):
         """
@@ -986,7 +993,7 @@ class SupplyCurve:
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, sort_on='total_lcoe',
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                        'trans_cap_cost'),
+                        'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """
