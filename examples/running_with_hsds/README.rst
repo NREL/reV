@@ -46,7 +46,7 @@ To access the resource data used by reV (NSRDB or WTK) you have to turn on the
 
 .. code-block:: python
 
-    nsrdb_file = '/nrel/nsrdb/nsrdb_2013.h5'
+    nsrdb_file = '/nrel/nsrdb/v3/nsrdb_2013.h5'
     with rex.Resource(nsrdb_file, hsds=True) as f:
         meta_data = f.meta
         time_index = f.time_index

@@ -3,8 +3,7 @@ Run reV locally
 
 `reV Gen <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
 and `reV Econ <https://nrel.github.io/reV/reV/reV.econ.econ.html#reV.econ.econ.Econ>`_
-can be run locally using resource .h5 files stored locally or available via
-`HSDS <https://github.com/nrel/hsds-examples>`_.
+can be run locally using resource .h5 files stored locally.
 
 reV Gen
 -------
@@ -27,15 +26,11 @@ coordinates:
     from reV.generation.generation import Gen
 
     lat_lons = np.array([[ 41.25, -71.66],
-                         [ 41.05, -71.74],
-                         [ 41.45, -71.66],
-                         [ 41.97, -71.78],
-                         [ 41.65, -71.74],
-                         [ 41.53, -71.7 ],
-                         [ 41.25, -71.7 ],
-                         [ 41.05, -71.78],
-                         [ 42.01, -71.74],
-                         [ 41.45, -71.78]])
+                            [ 41.05, -71.74],
+                            [ 41.97, -71.78],
+                            [ 41.65, -71.74],
+                            [ 41.25, -71.7 ],
+                            [ 41.05, -71.78]])
 
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_file = os.path.join(TESTDATADIR,
@@ -43,7 +38,7 @@ coordinates:
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
     gen = Gen.reV_run('windpower', pp, sam_file, res_file,
-                      max_workers=1, fout=None,
+                      max_workers=1, out_fpath=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_profile'])
 
@@ -76,7 +71,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
     gen = Gen.reV_run('pvwattsv5', pp, sam_file, res_file,
-                      max_workers=1, fout=None,
+                      max_workers=1, out_fpath=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_mean'])
 

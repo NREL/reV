@@ -164,7 +164,7 @@ CLI
 
     out_file='./project_points.csv'
 
-    TESTDATADIR=reV/tests/data
+    TESTDATADIR=.../tests/data
     res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
     sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
 
@@ -174,7 +174,7 @@ CLI
 
     out_file='./project_points.csv'
 
-    TESTDATADIR=../tests/data
+    TESTDATADIR=.../tests/data
     res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
     sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
 
