@@ -27,7 +27,7 @@ jobs:
       working-directory: ./reV
       shell: bash -l {0}
       run: |
-        conda install pip
+        conda install pip pandas
         pip install -e .
     - name: Install reVX dependencies
       working-directory: ./reVX
