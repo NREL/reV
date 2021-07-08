@@ -301,7 +301,6 @@ class Sam:
     def __init__(self):
         self._pysam = self.PYSAM.new()
         self._attr_dict = None
-        self._default = None
         self._inputs = []
         if 'constant' in self.input_list:
             self['constant'] = 0.0
@@ -362,20 +361,17 @@ class Sam:
         """Get the pysam object."""
         return self._pysam
 
-    @property
-    def default(self):
+    @classmethod
+    def default(cls):
         """Get the executed default pysam object.
 
         Returns
         -------
-        _default : PySAM.GenericSystem
-            Executed generic system pysam object.
+        PySAM.GenericSystem
         """
-        if self._default is None:
-            self._default = self.PYSAM.default('GenericSystemNone')
-            self._default.execute()
-
-        return self._default
+        obj = cls.PYSAM.default('GenericSystemNone')
+        obj.execute()
+        return obj
 
     @property
     def attr_dict(self):
@@ -565,6 +561,8 @@ class RevPySam(Sam):
         self.sam_sys_inputs = sam_sys_inputs
         self.site_sys_inputs = site_sys_inputs
         self.output_request = output_request
+        if self.output_request is None:
+            self.output_request = []
 
         self._parse_site_sys_inputs(site_sys_inputs)
 

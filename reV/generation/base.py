@@ -833,9 +833,7 @@ class BaseGen(ABC):
 
         else:
             if self._sam_obj_default is None:
-                sam_module_class = self.sam_module
-                init_obj = sam_module_class()  # pylint: disable=E1102
-                self._sam_obj_default = init_obj.default
+                self._sam_obj_default = self.sam_module.default()
 
             try:
                 out_data = getattr(self._sam_obj_default.Outputs, dset)

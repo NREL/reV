@@ -385,8 +385,8 @@ class Solar(Generation, ABC):
     """Base Class for Solar generation from SAM
     """
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
 
         Parameters
@@ -654,10 +654,10 @@ class AbstractPv(Solar, ABC):
 
         return np.where(ac < ac.max(), 0, dc - ac)
 
-    @property
+    @staticmethod
     @abstractmethod
-    def default(self):
-        """Get the executed default pysam PVWATTS object."""
+    def default():
+        """Get the executed default pysam object."""
 
     def collect_outputs(self, output_lookup=None):
         """Collect SAM gen output_request.
@@ -689,19 +689,15 @@ class Pvwattsv5(AbstractPv):
     MODULE = 'pvwattsv5'
     PYSAM = PySamPV5
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam PVWATTSV5 object.
 
         Returns
         -------
-        _default : PySAM.Pvwattsv5
-            Executed pvwatts pysam object.
+        PySAM.Pvwattsv5
         """
-        if self._default is None:
-            self._default = DefaultPvwattsv5.default()
-
-        return self._default
+        return DefaultPvwattsv5.default()
 
 
 class Pvwattsv7(AbstractPv):
@@ -710,19 +706,15 @@ class Pvwattsv7(AbstractPv):
     MODULE = 'pvwattsv7'
     PYSAM = PySamPV7
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam PVWATTSV7 object.
 
         Returns
         -------
-        _default : PySAM.Pvwattsv7
-            Executed pvwatts pysam object.
+        PySAM.Pvwattsv7
         """
-        if self._default is None:
-            self._default = DefaultPvwattsv7.default()
-
-        return self._default
+        return DefaultPvwattsv7.default()
 
 
 class Pvsamv1(AbstractPv):
@@ -754,19 +746,15 @@ class Pvsamv1(AbstractPv):
         """
         return np.array(self['dc_net'], dtype=np.float32)
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam Pvsamv1 object.
 
         Returns
         -------
-        _default : PySAM.Pvsamv1
-            Executed detailed pv pysam object.
+        PySAM.Pvsamv1
         """
-        if self._default is None:
-            self._default = DefaultPvsamv1.default()
-
-        return self._default
+        return DefaultPvsamv1.default()
 
 
 class TcsMoltenSalt(Solar):
@@ -775,8 +763,8 @@ class TcsMoltenSalt(Solar):
     MODULE = 'tcsmolten_salt'
     PYSAM = PySamCSP
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None):
         """Initialize a SAM concentrated solar power (CSP) object.
         """
         super().__init__(resource=resource, meta=meta,
@@ -797,25 +785,21 @@ class TcsMoltenSalt(Solar):
         x = np.abs(self.gen_profile() / self.sam_sys_inputs['system_capacity'])
         return x
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam CSP object.
 
         Returns
         -------
-        _default : PySAM.TcsmoltenSalt
-            Executed TcsmoltenSalt pysam object.
+        PySAM.TcsmoltenSalt
         """
-        if self._default is None:
-            self._default = DefaultTcsMoltenSalt.default()
-
-        return self._default
+        return DefaultTcsMoltenSalt.default()
 
 
 class SolarThermal(Solar, ABC):
     """ Base class for solar thermal """
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar thermal object
 
         Parameters
@@ -972,8 +956,8 @@ class SolarWaterHeat(SolarThermal):
     MODULE = 'solarwaterheat'
     PYSAM = PySamSWH
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar water heater object.
 
         Parameters
@@ -1010,18 +994,15 @@ class SolarWaterHeat(SolarThermal):
                          site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=drop_leap)
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam swh object.
+
         Returns
         -------
-        _default : PySAM.
-            Executed  pysam object.
+        PySAM.Swh
         """
-        if self._default is None:
-            self._default = DefaultSwh.default()
-
-        return self._default
+        return DefaultSwh.default()
 
 
 class LinearDirectSteam(SolarThermal):
@@ -1031,8 +1012,8 @@ class LinearDirectSteam(SolarThermal):
     MODULE = 'lineardirectsteam'
     PYSAM = PySamLDS
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM process heat linear Fresnel direct steam object.
 
         Parameters
@@ -1084,18 +1065,15 @@ class LinearDirectSteam(SolarThermal):
 
         return net_power / name_plate
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam linear Fresnel object.
+
         Returns
         -------
-        _default : PySAM.
-            Executed  pysam object.
+        PySAM.LinearFresnelDsgIph
         """
-        if self._default is None:
-            self._default = DefaultLinearFresnelDsgIph.default()
-
-        return self._default
+        return DefaultLinearFresnelDsgIph.default()
 
 
 class TroughPhysicalHeat(SolarThermal):
@@ -1105,8 +1083,8 @@ class TroughPhysicalHeat(SolarThermal):
     MODULE = 'troughphysicalheat'
     PYSAM = PySamTPPH
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM trough physical process heat object.
 
         Parameters
@@ -1158,18 +1136,15 @@ class TroughPhysicalHeat(SolarThermal):
 
         return net_power / name_plate
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam trough object.
+
         Returns
         -------
-        _default : PySAM.
-            Executed  pysam object.
+        PySAM.TroughPhysicalProcessHeat
         """
-        if self._default is None:
-            self._default = DefaultTroughPhysicalProcessHeat.default()
-
-        return self._default
+        return DefaultTroughPhysicalProcessHeat.default()
 
 
 class WindPower(Generation):
@@ -1178,8 +1153,8 @@ class WindPower(Generation):
     MODULE = 'windpower'
     PYSAM = PySamWindPower
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None, drop_leap=False):
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
         """Initialize a SAM wind object.
 
         Parameters
@@ -1297,16 +1272,12 @@ class WindPower(Generation):
         # add resource data to self.data and clear
         self['wind_resource_data'] = data_dict
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam WindPower object.
 
         Returns
         -------
-        _default : PySAM.Windpower
-            Executed Windpower pysam object.
+        PySAM.Windpower
         """
-        if self._default is None:
-            self._default = DefaultWindPower.default()
-
-        return self._default
+        return DefaultWindPower.default()
