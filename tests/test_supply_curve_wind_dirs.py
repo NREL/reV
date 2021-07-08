@@ -12,7 +12,8 @@ from reV.supply_curve.supply_curve import CompetitiveWindFarms, SupplyCurve
 
 TRANS_COSTS = {'line_tie_in_cost': 200, 'line_cost': 1000,
                'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
-               'sink_tie_in_cost': 100, 'available_capacity': 0.3}
+               'sink_tie_in_cost': 100}
+AVAIL_CAP_FRAC = 0.3
 
 SC_POINTS = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
 TRANS_TABLE = os.path.join(
@@ -52,6 +53,7 @@ def test_sc_full_wind_dirs(downwind):
     sc_out = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
                               sc_features=MULTIPLIERS,
                               transmission_costs=TRANS_COSTS,
+                              avail_cap_frac=AVAIL_CAP_FRAC,
                               wind_dirs=WIND_DIRS, downwind=downwind)
 
     if downwind:
