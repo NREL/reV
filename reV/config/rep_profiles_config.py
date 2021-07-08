@@ -56,8 +56,17 @@ class RepProfilesConfig(AnalysisConfig):
                     break
 
             if fpath == 'PIPELINE':
-                raise PipelineError('Could not parse gen_fpath from previous '
-                                    'pipeline jobs.')
+                try:
+                    fpath = Pipeline.parse_previous(
+                        self.dirout, 'rep-profiles', target='gen_fpath',
+                        target_module='supply-curve-aggregation')[0]
+                except KeyError:
+                    pass
+
+            if fpath == 'PIPELINE':
+                msg = 'Could not parse gen_fpath from previous pipeline jobs.'
+                logger.error(msg)
+                raise PipelineError(msg)
             else:
                 logger.info('Rep profiles using the following '
                             'pipeline input for gen_fpath: {}'.format(fpath))

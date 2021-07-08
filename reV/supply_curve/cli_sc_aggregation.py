@@ -411,6 +411,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                   'resolution': resolution,
                   'area_filter_kernel': area_filter_kernel,
                   'min_area': min_area}
+
         Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 
