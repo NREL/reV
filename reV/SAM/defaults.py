@@ -4,6 +4,7 @@ import json
 import os
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
+import PySAM.Pvsamv1 as PySamDetailedPV
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSWH
@@ -50,6 +51,20 @@ class DefaultPvwattsv7:
         res_file = os.path.join(DEFAULTSDIR,
                                 'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamPV7.default('PVWattsNone')
+        obj.SolarResource.solar_resource_file = res_file
+        obj.execute()
+        return obj
+
+
+class DefaultPvsamv1:
+    """class for default detailed PV"""
+
+    @staticmethod
+    def default():
+        """Get the default PySAM Pvsamv1 object"""
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        obj = PySamDetailedPV.default('FlatPlatePVNone')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
         return obj

@@ -4,7 +4,7 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
-from abc import ABC
+from abc import ABC, abstractmethod
 import copy
 import os
 import logging
@@ -13,15 +13,20 @@ import pandas as pd
 from warnings import warn
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
+import PySAM.Pvsamv1 as PySamDetailedPV
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSWH
 import PySAM.TroughPhysicalProcessHeat as PySamTPPH
 import PySAM.LinearFresnelDsgIph as PySamLDS
 
-from reV.SAM.defaults import (DefaultPvwattsv5, DefaultPvwattsv7,
-                              DefaultWindPower, DefaultTcsMoltenSalt,
-                              DefaultSwh, DefaultTroughPhysicalProcessHeat,
+from reV.SAM.defaults import (DefaultPvwattsv5,
+                              DefaultPvwattsv7,
+                              DefaultPvsamv1,
+                              DefaultWindPower,
+                              DefaultTcsMoltenSalt,
+                              DefaultSwh,
+                              DefaultTroughPhysicalProcessHeat,
                               DefaultLinearFresnelDsgIph)
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
@@ -236,7 +241,7 @@ class Generation(RevPySam, ABC):
 
         super().collect_outputs(output_lookup=output_lookup)
 
-    def _gen_exec(self):
+    def run_gen_and_econ(self):
         """Run SAM generation with possibility for follow on econ analysis."""
 
         lcoe_out_reqs = None
@@ -256,10 +261,7 @@ class Generation(RevPySam, ABC):
                                    if r not in so_out_reqs]
 
         # Execute the SAM generation compute module (pvwattsv7, windpower, etc)
-        self.assign_inputs()
-        self.execute()
-        self.collect_outputs()
-        self.outputs_to_utc_arr()
+        self.run()
 
         # Execute a follow-on SAM econ compute module
         # (lcoe_fcr, singleowner, etc)
@@ -280,6 +282,15 @@ class Generation(RevPySam, ABC):
             so.collect_outputs()
             so.outputs_to_utc_arr()
             self.outputs.update(so.outputs)
+
+    def run(self):
+        """Run a reV-SAM generation object by assigning inputs, executing the
+        SAM simulation, collecting outputs, and converting all arrays to UTC.
+        """
+        self.assign_inputs()
+        self.execute()
+        self.collect_outputs()
+        self.outputs_to_utc_arr()
 
     @classmethod
     def reV_run(cls, points_control, res_file, site_df,
@@ -356,7 +367,7 @@ class Generation(RevPySam, ABC):
             sim = cls(resource=site_res_df, meta=site_meta,
                       sam_sys_inputs=inputs, output_request=out_req_cleaned,
                       site_sys_inputs=dict(site_df.loc[gen_gid, :]))
-            sim._gen_exec()
+            sim.run_gen_and_econ()
 
             # collect outputs to dictout
             out[gen_gid] = sim.outputs
@@ -381,9 +392,15 @@ class Solar(Generation, ABC):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -410,13 +427,13 @@ class Solar(Generation, ABC):
                          site_sys_inputs=site_sys_inputs)
 
         # Set the site number using resource
-        if isinstance(resource, pd.DataFrame):
+        if hasattr(resource, 'name'):
             self._site = resource.name
         else:
             self._site = None
 
         if resource is not None and meta is not None:
-            self.set_nsrdb(resource)
+            self.set_nsrdb(resource, meta)
 
     def set_latitude_tilt_az(self, sam_sys_inputs, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
@@ -466,14 +483,23 @@ class Solar(Generation, ABC):
                                  sam_sys_inputs['azimuth']))
         return sam_sys_inputs
 
-    def set_nsrdb(self, resource):
+    def set_nsrdb(self, resource, meta):
         """Set NSRDB resource data arrays.
 
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         """
+
         time_index = resource.index
         self.time_interval = self.get_time_interval(resource.index.values)
 
@@ -481,18 +507,23 @@ class Solar(Generation, ABC):
         var_map = {'dni': 'dn',
                    'dhi': 'df',
                    'ghi': 'gh',
-                   'clearsky_dni': 'dn',
-                   'clearsky_dhi': 'df',
-                   'clearsky_ghi': 'gh',
-                   'wind_speed': 'wspd',
-                   'air_temperature': 'tdry',
-                   'dew_point': 'tdew',
-                   'surface_pressure': 'pres',
-                   'surface_albedo': 'albedo',
+                   'clearskydni': 'dn',
+                   'clearskydhi': 'df',
+                   'clearskyghi': 'gh',
+                   'windspeed': 'wspd',
+                   'airtemperature': 'tdry',
+                   'temperature': 'tdry',
+                   'temp': 'tdry',
+                   'dewpoint': 'tdew',
+                   'surfacepressure': 'pres',
+                   'pressure': 'pres',
+                   'surfacealbedo': 'albedo',
                    }
-
+        lower_case = {k: k.lower().replace(' ', '').replace('_', '')
+                      for k in resource.columns}
         irrad_vars = ['dn', 'df', 'gh']
 
+        resource = resource.rename(mapper=lower_case, axis='columns')
         resource = resource.rename(mapper=var_map, axis='columns')
         resource = {k: np.array(v) for (k, v) in
                     resource.to_dict(orient='list').items()}
@@ -515,12 +546,12 @@ class Solar(Generation, ABC):
 
                 resource[var] = arr.tolist()
 
-        resource['lat'] = self.meta['latitude']
-        resource['lon'] = self.meta['longitude']
-        resource['tz'] = self.meta['timezone']
+        resource['lat'] = meta['latitude']
+        resource['lon'] = meta['longitude']
+        resource['tz'] = meta['timezone']
 
-        if 'elevation' in self.meta:
-            resource['elev'] = self.meta['elevation']
+        if 'elevation' in meta:
+            resource['elev'] = meta['elevation']
         else:
             resource['elev'] = 0.0
 
@@ -537,36 +568,13 @@ class Solar(Generation, ABC):
         self['solar_resource_data'] = resource
 
 
-class Pvwatts(Solar, ABC):
-    """Photovoltaic (PV) generation with pvwattsv5.
+class AbstractPv(Solar, ABC):
+    """Photovoltaic (PV) generation with either pvwatts of detailed pv.
     """
-    MODULE = 'pvwattsv7'
-    PYSAM = PySamPV7
 
-    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
-                 site_sys_inputs=None, output_request=None):
-        """Initialize a SAM solar PV object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        """
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request)
+    # set these class attrs in concrete subclasses
+    MODULE = None
+    PYSAM = None
 
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
@@ -647,6 +655,7 @@ class Pvwatts(Solar, ABC):
         return np.where(ac < ac.max(), 0, dc - ac)
 
     @property
+    @abstractmethod
     def default(self):
         """Get the executed default pysam PVWATTS object."""
 
@@ -674,7 +683,7 @@ class Pvwatts(Solar, ABC):
         super().collect_outputs(output_lookup=output_lookup)
 
 
-class Pvwattsv5(Pvwatts):
+class Pvwattsv5(AbstractPv):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
     MODULE = 'pvwattsv5'
@@ -695,7 +704,7 @@ class Pvwattsv5(Pvwatts):
         return self._default
 
 
-class Pvwattsv7(Pvwatts):
+class Pvwattsv7(AbstractPv):
     """Photovoltaic (PV) generation with pvwattsv7.
     """
     MODULE = 'pvwattsv7'
@@ -712,6 +721,50 @@ class Pvwattsv7(Pvwatts):
         """
         if self._default is None:
             self._default = DefaultPvwattsv7.default()
+
+        return self._default
+
+
+class Pvsamv1(AbstractPv):
+    """Detailed PV model"""
+
+    MODULE = 'Pvsamv1'
+    PYSAM = PySamDetailedPV
+
+    def ac(self):
+        """Get AC inverter power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of AC inverter power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return np.array(self['gen'], dtype=np.float32)
+
+    def dc(self):
+        """
+        Get DC array power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of DC array power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return np.array(self['dc_net'], dtype=np.float32)
+
+    @property
+    def default(self):
+        """Get the executed default pysam Pvsamv1 object.
+
+        Returns
+        -------
+        _default : PySAM.Pvsamv1
+            Executed detailed pv pysam object.
+        """
+        if self._default is None:
+            self._default = DefaultPvsamv1.default()
 
         return self._default
 
@@ -768,9 +821,15 @@ class SolarThermal(Solar, ABC):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -793,7 +852,7 @@ class SolarThermal(Solar, ABC):
                          site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=False)
 
-    def set_nsrdb(self, resource):
+    def set_nsrdb(self, resource, meta):
         """
         Set NSRDB resource file. Overloads Solar.set_nsrdb(). Solar thermal
         PySAM models require a data file, not raw data.
@@ -801,14 +860,22 @@ class SolarThermal(Solar, ABC):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         """
         self.time_interval = self.get_time_interval(resource.index.values)
-        self._pysam_w_fname = self._create_pysam_wfile(self._meta, resource)
+        self._pysam_w_fname = self._create_pysam_wfile(resource, meta)
         # pylint: disable=E1101
         self[self._pysam_weather_tag] = self._pysam_w_fname
 
-    def _create_pysam_wfile(self, meta, resource):
+    def _create_pysam_wfile(self, resource, meta):
         """
         Create PySAM weather input file. PySAM will not accept data on Feb
         29th. For leap years, December 31st is dropped and time steps are
@@ -816,15 +883,21 @@ class SolarThermal(Solar, ABC):
 
         Parameters
         ----------
-        meta : pd.DataFrame
-            1D table with resource meta data.
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
 
         Returns
         -------
-            fname : string
-                Name of weather csv file
+        fname : string
+            Name of weather csv file
         """
         fname = '{}_weather.csv'.format(self._site)
         logger.debug('Creating PySAM weather data file: {}'.format(fname))
@@ -877,7 +950,7 @@ class SolarThermal(Solar, ABC):
 
         return fname
 
-    def _gen_exec(self, delete_wfile=True):
+    def run_gen_and_econ(self, delete_wfile=True):
         """
         Run SAM generation with possibility for follow on econ analysis.
 
@@ -886,7 +959,7 @@ class SolarThermal(Solar, ABC):
         delete_wfile : bool
             Delete PySAM weather file after processing is complete
         """
-        super()._gen_exec()
+        super().run_gen_and_econ()
 
         if delete_wfile and os.path.exists(self._pysam_w_fname):
             os.remove(self._pysam_w_fname)
@@ -906,9 +979,15 @@ class SolarWaterHeat(SolarThermal):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -959,9 +1038,15 @@ class LinearDirectSteam(SolarThermal):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -1027,9 +1112,15 @@ class TroughPhysicalHeat(SolarThermal):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -1094,9 +1185,15 @@ class WindPower(Generation):
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have wind_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         site_sys_inputs : dict
@@ -1122,22 +1219,44 @@ class WindPower(Generation):
                          site_sys_inputs=site_sys_inputs)
 
         # Set the site number using resource
-        if isinstance(resource, pd.DataFrame):
+        if hasattr(resource, 'name'):
             self._site = resource.name
         else:
             self._site = None
 
         if resource is not None and meta is not None:
-            self.set_wtk(resource)
+            self.set_wtk(resource, meta)
 
-    def set_wtk(self, resource):
+    def set_wtk(self, resource, meta):
         """Set WTK resource data arrays.
 
         Parameters
         ----------
         resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
         """
+
+        # map resource data names to SAM required data names
+        var_map = {'speed': 'windspeed',
+                   'direction': 'winddirection',
+                   'airtemperature': 'temperature',
+                   'temp': 'temperature',
+                   'surfacepressure': 'pressure',
+                   'relativehumidity': 'rh',
+                   'humidity': 'rh',
+                   }
+        lower_case = {k: k.lower().replace(' ', '').replace('_', '')
+                      for k in resource.columns}
+        resource = resource.rename(mapper=lower_case, axis='columns')
+        resource = resource.rename(mapper=var_map, axis='columns')
 
         data_dict = {}
         var_list = ['temperature', 'pressure', 'windspeed', 'winddirection']
@@ -1153,7 +1272,7 @@ class WindPower(Generation):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = np.roll(self.ensure_res_len(resource['rh'].values),
-                         int(self.meta['timezone'] * self.time_interval),
+                         int(meta['timezone'] * self.time_interval),
                          axis=0)
             data_dict['rh'] = rh.tolist()
 
@@ -1161,13 +1280,13 @@ class WindPower(Generation):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = np.roll(self.ensure_res_len(resource[var_list].values),
-                       int(self.meta['timezone'] * self.time_interval), axis=0)
+                       int(meta['timezone'] * self.time_interval), axis=0)
         data_dict['data'] = temp.tolist()
 
-        resource['lat'] = self.meta['latitude']
-        resource['lon'] = self.meta['longitude']
-        resource['tz'] = self.meta['timezone']
-        resource['elev'] = self.meta['elevation']
+        resource['lat'] = meta['latitude']
+        resource['lon'] = meta['longitude']
+        resource['tz'] = meta['timezone']
+        resource['elev'] = meta['elevation']
 
         data_dict['minute'] = self.ensure_res_len(time_index.minute)
         data_dict['hour'] = self.ensure_res_len(time_index.hour)

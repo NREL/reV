@@ -12,8 +12,13 @@ import json
 
 from reV.generation.base import BaseGen
 from reV.utilities.exceptions import ProjectPointsValueError, InputError
-from reV.SAM.generation import (Pvwattsv5, Pvwattsv7, TcsMoltenSalt, WindPower,
-                                SolarWaterHeat, TroughPhysicalHeat,
+from reV.SAM.generation import (Pvwattsv5,
+                                Pvwattsv7,
+                                Pvsamv1,
+                                TcsMoltenSalt,
+                                WindPower,
+                                SolarWaterHeat,
+                                TroughPhysicalHeat,
                                 LinearDirectSteam)
 
 from rex.resource import Resource
@@ -42,6 +47,7 @@ class Gen(BaseGen):
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pvwattsv5': Pvwattsv5,
                'pvwattsv7': Pvwattsv7,
+               'pvsamv1': Pvsamv1,
                'tcsmoltensalt': TcsMoltenSalt,
                'solarwaterheat': SolarWaterHeat,
                'troughphysicalheat': TroughPhysicalHeat,
@@ -98,14 +104,6 @@ class Gen(BaseGen):
                          out_fpath=out_fpath, drop_leap=drop_leap,
                          mem_util_lim=mem_util_lim)
 
-        self._res_file = res_file
-        self._sam_module = self.OPTIONS[self.tech]
-        self._run_attrs['sam_module'] = self._sam_module.MODULE
-        self._run_attrs['res_file'] = res_file
-
-        self._multi_h5_res, self._hsds = check_res_file(res_file)
-        self._gid_map = self._parse_gid_map(gid_map)
-
         if self.tech not in self.OPTIONS:
             msg = ('Requested technology "{}" is not available. '
                    'reV generation can analyze the following '
@@ -113,6 +111,14 @@ class Gen(BaseGen):
                    .format(self.tech, list(self.OPTIONS.keys())))
             logger.error(msg)
             raise KeyError(msg)
+
+        self._res_file = res_file
+        self._sam_module = self.OPTIONS[self.tech]
+        self._run_attrs['sam_module'] = self._sam_module.MODULE
+        self._run_attrs['res_file'] = res_file
+
+        self._multi_h5_res, self._hsds = check_res_file(res_file)
+        self._gid_map = self._parse_gid_map(gid_map)
 
         # initialize output file
         self._init_fpath()
