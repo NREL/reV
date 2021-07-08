@@ -527,6 +527,7 @@ class RevPySam(Sam):
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
     RESOURCE_TYPES = {'pvwattsv5': SolarResource,
                       'pvwattsv7': SolarResource,
+                      'pvsamv1': SolarResource,
                       'tcsmoltensalt': SolarResource,
                       'solarwaterheat': SolarResource,
                       'troughphysicalheat': SolarResource,

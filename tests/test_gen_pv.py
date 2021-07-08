@@ -270,7 +270,7 @@ def test_pvwattsv7_baseline():
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
     assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
-                       rtol=RTOL, atol=ATOL), msg
+                       rtol=0.005, atol=0.0), msg
 
     for req in output_request:
         assert req in gen.out
@@ -417,6 +417,65 @@ def test_clipping():
     dc_ac = dc[~mask] - ac[~mask]
     assert all(clipped[mask] == 0)
     assert np.allclose(clipped[~mask], dc_ac, rtol=RTOL, atol=ATOL)
+
+
+def test_detailed_pv_baseline():
+    """Test the detailed pv module against baseline values that are similar to
+    the pvwattsv7 cf mean values"""
+    baseline_cf_mean = np.array([0.1594, 0.1595, 0.1650])
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvsamv1.json'
+
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc')
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvsamv1', res_file=res_file)
+    gen = Gen.reV_run('pvsamv1', rev2_points, sam_files, res_file,
+                      max_workers=1,
+                      sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+
+    msg = ('PVSAMv1 cf_mean results {} did not match baseline: {}'
+           .format(gen.out['cf_mean'], baseline_cf_mean))
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=0.005, atol=0.0), msg
+
+    for req in output_request:
+        assert req in gen.out
+        assert (gen.out[req] != 0).sum() > 0
+
+
+def test_detailed_pv_bifacial():
+    """Test the detailed pv module with bifacial configs"""
+    baseline_cf_mean = np.array([0.1673, 0.1674, 0.1728])
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvsamv1_bifacial.json'
+
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc', 'surface_albedo')
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvsamv1', res_file=res_file)
+    gen = Gen.reV_run('pvsamv1', rev2_points, sam_files, res_file,
+                      max_workers=1,
+                      sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+
+    msg = ('PVSAMv1 cf_mean results {} did not match baseline: {}'
+           .format(gen.out['cf_mean'], baseline_cf_mean))
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=0.005, atol=0.0), msg
+
+    for req in output_request:
+        assert req in gen.out
+        assert (gen.out[req] != 0).sum() > 0
 
 
 def execute_pytest(capture='all', flags='-rapP'):
