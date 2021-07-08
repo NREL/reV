@@ -12,6 +12,7 @@ from scipy import stats
 from warnings import warn
 
 from reV.econ.economies_of_scale import EconomiesOfScale
+from reV.econ.utilities import lcoe_fcr
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
@@ -34,7 +35,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                  res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
-                 exclusion_shape=None, close=False, friction_layer=None):
+                 exclusion_shape=None, close=False, friction_layer=None,
+                 recalc_lcoe=True):
         """
         Parameters
         ----------
@@ -92,6 +94,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         friction_layer : None | FrictionMask
             Friction layer with scalar friction values if valid friction inputs
             were entered. Otherwise, None to not apply friction layer.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
+            capital_cost, fixed_operating_cost, annual_energy_production,
+            and variable_operating_cost.
         """
 
         self._res_class_dset = res_class_dset
@@ -106,6 +114,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._pd_obj = None
         self._power_density = power_density
         self._friction_layer = friction_layer
+        self._recalc_lcoe = recalc_lcoe
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
                          excl_dict=excl_dict,
@@ -181,6 +190,16 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return self._lcoe_data
 
     @property
+    def aep(self):
+        """Get the annual energy production in kWh per one year
+
+        Returns
+        -------
+        float
+        """
+        return self.capacity * 1000 * self.mean_cf * 8760
+
+    @property
     def mean_cf(self):
         """Get the mean capacity factor for the non-excluded data. Capacity
         factor is weighted by the exclusions (usually 0 or 1, but 0.5
@@ -206,8 +225,26 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         mean_lcoe : float | None
             Mean LCOE value for the non-excluded data.
         """
+
         mean_lcoe = None
-        if self.lcoe_data is not None:
+
+        # prioritize the calculation of lcoe explicitly
+        # from the multi year mean CF
+        if self._recalc_lcoe:
+            required = ('fixed_charge_rate', 'capital_cost',
+                        'fixed_operating_cost', 'variable_operating_cost')
+            if self.mean_h5_dsets_data is not None:
+                if all(k in self.mean_h5_dsets_data for k in required):
+                    mean_lcoe = lcoe_fcr(
+                        self.mean_h5_dsets_data['fixed_charge_rate'],
+                        self.mean_h5_dsets_data['capital_cost'],
+                        self.mean_h5_dsets_data['fixed_operating_cost'],
+                        self.aep,
+                        self.mean_h5_dsets_data['variable_operating_cost'])
+
+        # alternative if lcoe was not able to be re-calculated from
+        # multi year mean CF
+        if mean_lcoe is None and self.lcoe_data is not None:
             mean_lcoe = self.exclusion_weighted_mean(self.lcoe_data)
 
         return mean_lcoe

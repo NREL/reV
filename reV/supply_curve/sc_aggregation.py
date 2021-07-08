@@ -289,7 +289,13 @@ class SupplyCurveAggregation(AbstractAggregation):
         weighted by the inclusion layer) (unitless).
     mean_lcoe : float
         Mean LCOE of each supply curve point (the arithmetic mean is weighted
-        by the inclusion layer). Units match the reV econ output ($/MWh).
+        by the inclusion layer). Units match the reV econ output ($/MWh). By
+        default, the LCOE is re-calculated using the multi-year mean capacity
+        factor and annual energy production. This requires several datasets to
+        be aggregated in the h5_dsets input: fixed_charge_rate, capital_cost,
+        fixed_operating_cost, annual_energy_production, and
+        variable_operating_cost. This recalc behavior can be disabled by
+        setting recalc_lcoe=False.
     mean_res : float
         Mean resource, the resource dataset to average is provided by the user
         in 'res_class_dset'. The arithmetic mean is weighted by the inclusion
@@ -380,7 +386,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
-                 cap_cost_scale=None):
+                 cap_cost_scale=None, recalc_lcoe=True):
         """
         Parameters
         ----------
@@ -454,6 +460,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
+            capital_cost, fixed_operating_cost, annual_energy_production,
+            and variable_operating_cost.
         """
         log_versions(logger)
         logger.info('Initializing SupplyCurveAggregation...')
@@ -478,6 +490,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
         self._data_layers = data_layers
+        self._recalc_lcoe = recalc_lcoe
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
@@ -669,7 +682,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081, cap_cost_scale=None):
+                   excl_area=0.0081, cap_cost_scale=None, recalc_lcoe=True):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -751,6 +764,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
+            capital_cost, fixed_operating_cost, annual_energy_production,
+            and variable_operating_cost.
 
         Returns
         -------
@@ -817,7 +836,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                             excl_area=excl_area,
                             close=False,
                             friction_layer=fh.friction_layer,
-                            cap_cost_scale=cap_cost_scale)
+                            cap_cost_scale=cap_cost_scale,
+                            recalc_lcoe=recalc_lcoe)
 
                     except EmptySupplyCurvePointError:
                         logger.debug('SC point {} is empty'.format(gid))
@@ -908,7 +928,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                     gids=gid_set,
                     args=args,
                     excl_area=self._excl_area,
-                    cap_cost_scale=self._cap_cost_scale))
+                    cap_cost_scale=self._cap_cost_scale,
+                    recalc_lcoe=self._recalc_lcoe))
 
             # gather results
             for future in as_completed(futures):
@@ -1027,7 +1048,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       min_area=self._min_area,
                                       gids=self.gids, args=args,
                                       excl_area=self._excl_area,
-                                      cap_cost_scale=self._cap_cost_scale)
+                                      cap_cost_scale=self._cap_cost_scale,
+                                      recalc_lcoe=self._recalc_lcoe)
         else:
             summary = self.run_parallel(args=args,
                                         max_workers=max_workers,
@@ -1052,7 +1074,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
-                cap_cost_scale=None):
+                cap_cost_scale=None, recalc_lcoe=True):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1135,6 +1157,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
+            capital_cost, fixed_operating_cost, annual_energy_production,
+            and variable_operating_cost.
 
         Returns
         -------
@@ -1160,7 +1188,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                   area_filter_kernel=area_filter_kernel,
                   min_area=min_area,
                   excl_area=excl_area,
-                  cap_cost_scale=cap_cost_scale)
+                  cap_cost_scale=cap_cost_scale,
+                  recalc_lcoe=recalc_lcoe)
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
