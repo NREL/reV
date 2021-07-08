@@ -97,8 +97,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
-            capital_cost, fixed_operating_cost, annual_energy_production,
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
         """
 
@@ -190,16 +190,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return self._lcoe_data
 
     @property
-    def aep(self):
-        """Get the annual energy production in kWh per one year
-
-        Returns
-        -------
-        float
-        """
-        return self.capacity * 1000 * self.mean_cf * 8760
-
-    @property
     def mean_cf(self):
         """Get the mean capacity factor for the non-excluded data. Capacity
         factor is weighted by the exclusions (usually 0 or 1, but 0.5
@@ -232,14 +222,17 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         # from the multi year mean CF
         if self._recalc_lcoe:
             required = ('fixed_charge_rate', 'capital_cost',
-                        'fixed_operating_cost', 'variable_operating_cost')
+                        'fixed_operating_cost', 'variable_operating_cost',
+                        'system_capacity')
             if self.mean_h5_dsets_data is not None:
                 if all(k in self.mean_h5_dsets_data for k in required):
+                    aep = (self.mean_h5_dsets_data['system_capacity']
+                           * self.mean_cf * 8760)
                     mean_lcoe = lcoe_fcr(
                         self.mean_h5_dsets_data['fixed_charge_rate'],
                         self.mean_h5_dsets_data['capital_cost'],
                         self.mean_h5_dsets_data['fixed_operating_cost'],
-                        self.aep,
+                        aep,
                         self.mean_h5_dsets_data['variable_operating_cost'])
 
         # alternative if lcoe was not able to be re-calculated from
@@ -719,7 +712,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
                   close=False, friction_layer=None, args=None,
-                  data_layers=None, cap_cost_scale=None):
+                  data_layers=None, cap_cost_scale=None, recalc_lcoe=True):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -790,6 +783,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
 
         Returns
         -------
@@ -808,7 +807,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   "resolution": resolution,
                   "exclusion_shape": exclusion_shape,
                   "close": close,
-                  'friction_layer': friction_layer}
+                  'friction_layer': friction_layer,
+                  'recalc_lcoe': recalc_lcoe,
+                  }
 
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:

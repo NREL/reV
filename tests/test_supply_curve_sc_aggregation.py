@@ -309,6 +309,48 @@ def test_data_layer_methods():
             assert slope_min <= slope_mean <= slope_max
 
 
+def test_recalc_lcoe():
+    """Test supply curve aggregation with the re-calculation of lcoe using the
+    multi-year mean capacity factor"""
+    data = {'capital_cost': 34900000,
+            'fixed_operating_cost': 280000,
+            'fixed_charge_rate': 0.09606382995843887,
+            'variable_operating_cost': 0,
+            'system_capacity': 20000}
+
+    with tempfile.TemporaryDirectory() as td:
+        gen_temp = os.path.join(td, 'ri_my_pv_gen.h5')
+        shutil.copy(GEN, gen_temp)
+
+        with h5py.File(gen_temp, 'a') as res:
+            for k, v in data.items():
+                arr = np.full(res['meta'].shape, v)
+                res.create_dataset(k, res['meta'].shape, data=arr)
+                res[k].attrs['scale_factor'] = 1.0
+
+        h5_dsets = ('capital_cost', 'fixed_operating_cost',
+                    'fixed_charge_rate', 'variable_operating_cost',
+                    'system_capacity')
+
+        base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
+                                              excl_dict=EXCL_DICT,
+                                              res_class_dset=RES_CLASS_DSET,
+                                              res_class_bins=RES_CLASS_BINS,
+                                              data_layers=DATA_LAYERS,
+                                              h5_dsets=h5_dsets,
+                                              gids=list(np.arange(10)),
+                                              max_workers=1, recalc_lcoe=False)
+        s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
+                                           excl_dict=EXCL_DICT,
+                                           res_class_dset=RES_CLASS_DSET,
+                                           res_class_bins=RES_CLASS_BINS,
+                                           data_layers=DATA_LAYERS,
+                                           h5_dsets=h5_dsets,
+                                           gids=list(np.arange(10)),
+                                           max_workers=1, recalc_lcoe=True)
+    assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

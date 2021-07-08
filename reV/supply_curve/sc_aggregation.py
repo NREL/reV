@@ -463,8 +463,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
-            capital_cost, fixed_operating_cost, annual_energy_production,
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
         """
         log_versions(logger)
@@ -767,8 +767,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
-            capital_cost, fixed_operating_cost, annual_energy_production,
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
 
         Returns
@@ -1160,8 +1160,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: fixed_charge_rate,
-            capital_cost, fixed_operating_cost, annual_energy_production,
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
 
         Returns
