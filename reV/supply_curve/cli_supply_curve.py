@@ -95,6 +95,7 @@ def from_config(ctx, config_file, verbose):
                        fixed_charge_rate=config.fixed_charge_rate,
                        sc_features=config.sc_features,
                        transmission_costs=config.transmission_costs,
+                       avail_cap_frac=config.avail_cap_frac,
                        sort_on=config.sort_on,
                        wind_dirs=config.wind_dirs,
                        n_dirs=config.n_dirs,
@@ -114,6 +115,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FIXED_CHARGE_RATE'] = config.fixed_charge_rate
         ctx.obj['SC_FEATURES'] = config.sc_features
         ctx.obj['TRANSMISSION_COSTS'] = config.transmission_costs
+        ctx.obj['AVAIL_CAP_FRAC'] = config.avail_cap_frac
         ctx.obj['SORT_ON'] = config.sort_on
         ctx.obj['WIND_DIRS'] = config.wind_dirs
         ctx.obj['N_DIRS'] = config.n_dirs
@@ -150,6 +152,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('--transmission_costs', '-tc', type=STR, default=None,
               show_default=True,
               help='Table or serialized dict of transmission cost inputs.')
+@click.option('--avail_cap_frac', '-acf', type=float, default=1,
+              show_default=True,
+              help=("Fraction of transmissions features capacity 'ac_cap' to "
+                    "make available for connection to supply curve points"))
 @click.option('--sort_on', '-so', type=str, default='total_lcoe',
               show_default=True,
               help='The supply curve table column label to sort on. '
@@ -188,8 +194,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
-           transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
-           offshore_compete, max_workers, out_dir, log_dir,
+           transmission_costs, avail_cap_frac, sort_on, wind_dirs, n_dirs,
+           downwind, offshore_compete, max_workers, out_dir, log_dir,
            simple, line_limited, verbose):
     """reV Supply Curve CLI."""
     name = ctx.obj['NAME']
@@ -198,6 +204,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['FIXED_CHARGE_RATE'] = fixed_charge_rate
     ctx.obj['SC_FEATURES'] = sc_features
     ctx.obj['TRANSMISSION_COSTS'] = transmission_costs
+    ctx.obj['AVAIL_CAP_FRAC'] = avail_cap_frac
     ctx.obj['SORT_ON'] = sort_on
     ctx.obj['WIND_DIRS'] = wind_dirs
     ctx.obj['N_DIRS'] = n_dirs
@@ -233,6 +240,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                                        fixed_charge_rate,
                                        sc_features=sc_features,
                                        transmission_costs=transmission_costs,
+                                       avail_cap_frac=avail_cap_frac,
                                        line_limited=line_limited,
                                        sort_on=sort_on, wind_dirs=wind_dirs,
                                        n_dirs=n_dirs, downwind=downwind,
@@ -251,7 +259,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
         logger.info('Supply curve complete. Time elapsed: {:.2f} min. '
                     'Target output dir: {}'.format(runtime, out_dir))
 
-        finput = [sc_points, trans_table]
+        finput = [sc_points, trans_table, avail_cap_frac]
         if sc_features is not None:
             finput.append(sc_features)
 
@@ -267,7 +275,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, sort_on, wind_dirs,
+                 transmission_costs, avail_cap_frac, sort_on, wind_dirs,
                  n_dirs, downwind, offshore_compete, max_workers, out_dir,
                  log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
@@ -277,6 +285,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-fcr {}'.format(SLURM.s(fixed_charge_rate)),
             '-scf {}'.format(SLURM.s(sc_features)),
             '-tc {}'.format(SLURM.s(transmission_costs)),
+            '-acf {}'.format(SLURM.s(avail_cap_frac)),
             '-so {}'.format(SLURM.s(sort_on)),
             '-dirs {}'.format(SLURM.s(n_dirs)),
             '-mw {}'.format(SLURM.s(max_workers)),
@@ -340,6 +349,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
     fixed_charge_rate = ctx.obj['FIXED_CHARGE_RATE']
     sc_features = ctx.obj['SC_FEATURES']
     transmission_costs = ctx.obj['TRANSMISSION_COSTS']
+    avail_cap_frac = ctx.obj['AVAIL_CAP_FRAC']
     simple = ctx.obj['SIMPLE']
     line_limited = ctx.obj['LINE_LIMITED']
     sort_on = ctx.obj['SORT_ON']
@@ -356,8 +366,8 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
-                       sc_features, transmission_costs, sort_on,
-                       wind_dirs, n_dirs, downwind,
+                       sc_features, transmission_costs, avail_cap_frac,
+                       sort_on, wind_dirs, n_dirs, downwind,
                        offshore_compete, max_workers, out_dir, log_dir,
                        simple, line_limited, verbose)
 
