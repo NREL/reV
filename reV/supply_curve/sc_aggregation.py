@@ -616,60 +616,68 @@ class SupplyCurveAggregation(AbstractAggregation):
             the extracted arrays from the h5 files.
         """
 
-        if res_class_dset is None:
-            res_data = None
+        dset_list = (res_class_dset, cf_dset, lcoe_dset)
+        labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
+        temp = [None, None, None]
+        for i, dset in enumerate(dset_list):
+            if dset in gen.datasets:
+                temp[i] = gen[dset]
+            else:
+                w = ('Could not find {} dataset "{}" in '
+                     'generation file: {}. Available datasets: {}'
+                     .format(labels[i], dset, gen_fpath, gen.datasets))
+                logger.warning(w)
+                warn(w, OutputWarning)
+
+        res_data, cf_data, lcoe_data = temp
+
+        if res_class_dset is None or res_class_bins is None:
             res_class_bins = [None]
-        else:
-            res_data = gen[res_class_dset]
 
-        if res_class_bins is None:
-            res_class_bins = [None]
-
-        if cf_dset in gen.datasets:
-            cf_data = gen[cf_dset]
-        else:
-            cf_data = None
-            w = ('Could not find cf dataset "{}" in '
-                 'generation file: {}. Available datasets: {}'
-                 .format(cf_dset, gen_fpath, gen.datasets))
-            logger.warning(w)
-            warn(w, OutputWarning)
-
-        if lcoe_dset in gen.datasets:
-            lcoe_data = gen[lcoe_dset]
-        else:
-            lcoe_data = None
-            w = ('Could not find lcoe dataset "{}" in generation file: {} or '
-                 'econ file: {}. Available datasets: {}'
-                 .format(lcoe_dset, gen_fpath, econ_fpath, gen.datasets))
-            logger.warning(w)
-            warn(w, OutputWarning)
+        lcoe_recalc_req = ('fixed_charge_rate', 'capital_cost',
+                           'fixed_operating_cost', 'variable_operating_cost',
+                           'system_capacity')
+        missing1 = [k for k in lcoe_recalc_req if k not in gen.datasets]
+        missing2 = []
 
         h5_dsets_data = None
         if h5_dsets is not None:
-            h5_dsets_data = {}
+            missing2 = [k for k in lcoe_recalc_req if k not in h5_dsets]
+
             if not isinstance(h5_dsets, (list, tuple)):
                 e = ('Additional h5_dsets argument must be a list or tuple '
                      'but received: {} {}'.format(type(h5_dsets), h5_dsets))
                 logger.error(e)
                 raise TypeError(e)
-            else:
-                for dset in h5_dsets:
-                    if dset not in gen.datasets:
-                        w = ('Could not find additional h5_dset "{}" in '
-                             'generation file: {} or econ file: {}. '
-                             'Available datasets: {}'
-                             .format(dset, gen_fpath, econ_fpath,
-                                     gen.datasets))
-                        logger.warning(w)
-                        warn(w, OutputWarning)
-                    else:
-                        h5_dsets_data[dset] = gen[dset]
 
+            missing = [k for k in h5_dsets if k not in gen.datasets]
+            if any(missing):
+                msg = ('Could not find additional h5_dsets "{}" in '
+                       'generation file: {} or econ file: {}. '
+                       'Available datasets: {}'
+                       .format(missing, gen_fpath, econ_fpath,
+                               gen.datasets))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            h5_dsets_data = {dset: gen[dset] for dset in h5_dsets}
+
+        if any(missing1):
+            msg = ('Could not find datasets required to re-calculate the '
+                   'multi-year LCOE, missing: {}'.format(missing1))
+            logger.warning(msg)
+            warn(msg, InputWarning)
+        elif any(missing2):
+            msg = ('It is strongly advised that you include the following '
+                   'datasets in the h5_dsets input in order to re-calculate '
+                   'the LCOE from the multi-year mean capacity factor and '
+                   'AEP: {}'.format(missing2))
+            logger.warning(msg)
+            warn(msg, InputWarning)
+
+        offshore_flag = None
         if 'offshore' in gen.meta:
             offshore_flag = gen.meta['offshore'].values
-        else:
-            offshore_flag = None
 
         return (res_data, res_class_bins, cf_data, lcoe_data, offshore_flag,
                 h5_dsets_data)
