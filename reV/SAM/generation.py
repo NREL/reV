@@ -11,18 +11,18 @@ import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
-import PySAM.Pvwattsv5 as PySamPV5
-import PySAM.Pvwattsv7 as PySamPV7
-import PySAM.Pvsamv1 as PySamDetailedPV
+import PySAM.Pvwattsv5 as PySamPv5
+import PySAM.Pvwattsv7 as PySamPv7
+import PySAM.Pvsamv1 as PySamDetailedPv
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
-import PySAM.Swh as PySamSWH
-import PySAM.TroughPhysicalProcessHeat as PySamTPPH
-import PySAM.LinearFresnelDsgIph as PySamLDS
+import PySAM.Swh as PySamSwh
+import PySAM.TroughPhysicalProcessHeat as PySamTpph
+import PySAM.LinearFresnelDsgIph as PySamLds
 
-from reV.SAM.defaults import (DefaultPvwattsv5,
-                              DefaultPvwattsv7,
-                              DefaultPvsamv1,
+from reV.SAM.defaults import (DefaultPvWattsv5,
+                              DefaultPvWattsv7,
+                              DefaultPvSamv1,
                               DefaultWindPower,
                               DefaultTcsMoltenSalt,
                               DefaultSwh,
@@ -36,7 +36,7 @@ from reV.SAM.econ import LCOE, SingleOwner
 logger = logging.getLogger(__name__)
 
 
-class Generation(RevPySam, ABC):
+class AbstractSamGeneration(RevPySam, ABC):
     """Base class for SAM generation simulations."""
 
     def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
@@ -435,7 +435,7 @@ class Generation(RevPySam, ABC):
         return out
 
 
-class Solar(Generation, ABC):
+class AbstractSamSolar(AbstractSamGeneration, ABC):
     """Base Class for Solar generation from SAM"""
 
     def set_resource_data(self, resource, meta):
@@ -523,7 +523,7 @@ class Solar(Generation, ABC):
         self['solar_resource_data'] = resource
 
 
-class AbstractPv(Solar, ABC):
+class AbstractSamPv(AbstractSamSolar, ABC):
     """Photovoltaic (PV) generation with either pvwatts of detailed pv.
     """
 
@@ -724,11 +724,11 @@ class AbstractPv(Solar, ABC):
         super().collect_outputs(output_lookup=output_lookup)
 
 
-class Pvwattsv5(AbstractPv):
+class PvWattsv5(AbstractSamPv):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
     MODULE = 'pvwattsv5'
-    PYSAM = PySamPV5
+    PYSAM = PySamPv5
 
     @staticmethod
     def default():
@@ -738,14 +738,14 @@ class Pvwattsv5(AbstractPv):
         -------
         PySAM.Pvwattsv5
         """
-        return DefaultPvwattsv5.default()
+        return DefaultPvWattsv5.default()
 
 
-class Pvwattsv7(AbstractPv):
+class PvWattsv7(AbstractSamPv):
     """Photovoltaic (PV) generation with pvwattsv7.
     """
     MODULE = 'pvwattsv7'
-    PYSAM = PySamPV7
+    PYSAM = PySamPv7
 
     @staticmethod
     def default():
@@ -755,14 +755,14 @@ class Pvwattsv7(AbstractPv):
         -------
         PySAM.Pvwattsv7
         """
-        return DefaultPvwattsv7.default()
+        return DefaultPvWattsv7.default()
 
 
-class Pvsamv1(AbstractPv):
+class PvSamv1(AbstractSamPv):
     """Detailed PV model"""
 
     MODULE = 'Pvsamv1'
-    PYSAM = PySamDetailedPV
+    PYSAM = PySamDetailedPv
 
     def ac(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
@@ -795,10 +795,10 @@ class Pvsamv1(AbstractPv):
         -------
         PySAM.Pvsamv1
         """
-        return DefaultPvsamv1.default()
+        return DefaultPvSamv1.default()
 
 
-class TcsMoltenSalt(Solar):
+class TcsMoltenSalt(AbstractSamSolar):
     """Concentrated Solar Power (CSP) generation with tower molten salt
     """
     MODULE = 'tcsmolten_salt'
@@ -828,8 +828,8 @@ class TcsMoltenSalt(Solar):
         return DefaultTcsMoltenSalt.default()
 
 
-class SolarThermal(Solar, ABC):
-    """ Base class for solar thermal """
+class AbstractSamSolarThermal(AbstractSamSolar, ABC):
+    """Base class for solar thermal """
     PYSAM_WEATHER_TAG = None
 
     def set_resource_data(self, resource, meta):
@@ -946,12 +946,12 @@ class SolarThermal(Solar, ABC):
             os.remove(pysam_w_fname)
 
 
-class SolarWaterHeat(SolarThermal):
+class SolarWaterHeat(AbstractSamSolarThermal):
     """
     Solar Water Heater generation
     """
     MODULE = 'solarwaterheat'
-    PYSAM = PySamSWH
+    PYSAM = PySamSwh
     PYSAM_WEATHER_TAG = 'solar_resource_file'
 
     @staticmethod
@@ -965,12 +965,12 @@ class SolarWaterHeat(SolarThermal):
         return DefaultSwh.default()
 
 
-class LinearDirectSteam(SolarThermal):
+class LinearDirectSteam(AbstractSamSolarThermal):
     """
     Process heat linear Fresnel direct steam generation
     """
     MODULE = 'lineardirectsteam'
-    PYSAM = PySamLDS
+    PYSAM = PySamLds
     PYSAM_WEATHER_TAG = 'file_name'
 
     def cf_mean(self):
@@ -999,12 +999,12 @@ class LinearDirectSteam(SolarThermal):
         return DefaultLinearFresnelDsgIph.default()
 
 
-class TroughPhysicalHeat(SolarThermal):
+class TroughPhysicalHeat(AbstractSamSolarThermal):
     """
     Trough Physical Process Heat generation
     """
     MODULE = 'troughphysicalheat'
-    PYSAM = PySamTPPH
+    PYSAM = PySamTpph
     PYSAM_WEATHER_TAG = 'file_name'
 
     def cf_mean(self):
@@ -1033,8 +1033,8 @@ class TroughPhysicalHeat(SolarThermal):
         return DefaultTroughPhysicalProcessHeat.default()
 
 
-class WindPower(Generation):
-    """Base class for Wind generation from SAM
+class WindPower(AbstractSamGeneration):
+    """Class for Wind generation from SAM
     """
     MODULE = 'windpower'
     PYSAM = PySamWindPower

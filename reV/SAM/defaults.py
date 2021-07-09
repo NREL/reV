@@ -18,7 +18,7 @@ DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULTSDIR = os.path.join(DEFAULTSDIR, 'defaults')
 
 
-class DefaultPvwattsv5:
+class DefaultPvWattsv5:
     """Class for default PVWattsv5"""
 
     @staticmethod
@@ -42,7 +42,7 @@ class DefaultPvwattsv5:
         return obj
 
 
-class DefaultPvwattsv7:
+class DefaultPvWattsv7:
     """class for default PVWattsv7"""
 
     @staticmethod
@@ -56,7 +56,7 @@ class DefaultPvwattsv7:
         return obj
 
 
-class DefaultPvsamv1:
+class DefaultPvSamv1:
     """class for default detailed PV"""
 
     @staticmethod
@@ -144,7 +144,7 @@ class DefaultLCOE:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        pv = DefaultPvwattsv5.default()
+        pv = DefaultPvWattsv5.default()
         obj = PySamLCOE.default('PVWattsLCOECalculator')
         obj.SimpleLCOE.annual_energy = pv.Outputs.annual_energy
         obj.execute()
@@ -157,7 +157,7 @@ class DefaultSingleOwner:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        pv = DefaultPvwattsv5.default()
+        pv = DefaultPvWattsv5.default()
         obj = PySamSingleOwner.default('PVWattsSingleOwner')
         obj.SystemOutput.gen = pv.Outputs.ac
         obj.execute()

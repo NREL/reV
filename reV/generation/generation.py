@@ -12,9 +12,9 @@ import json
 
 from reV.generation.base import BaseGen
 from reV.utilities.exceptions import ProjectPointsValueError, InputError
-from reV.SAM.generation import (Pvwattsv5,
-                                Pvwattsv7,
-                                Pvsamv1,
+from reV.SAM.generation import (PvWattsv5,
+                                PvWattsv7,
+                                PvSamv1,
                                 TcsMoltenSalt,
                                 WindPower,
                                 SolarWaterHeat,
@@ -54,7 +54,9 @@ class Gen(BaseGen):
     bundle a "follow-on" econ calculation by just adding the desired econ
     output keys to the output_request kwarg. You can request reV to run the
     analysis for one or more "sites", which correspond to the meta indices in
-    the resource data (also commonly called the gid's).
+    the resource data (also commonly called the gid's). Note that the
+    TESTDATADIR refers to the local cloned repository and will need to be
+    replaced with a valid path if you installed reV via a simple pip install.
 
     >>> import os
     >>> from reV import Gen, TESTDATADIR
@@ -86,9 +88,9 @@ class Gen(BaseGen):
     """
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {'pvwattsv5': Pvwattsv5,
-               'pvwattsv7': Pvwattsv7,
-               'pvsamv1': Pvsamv1,
+    OPTIONS = {'pvwattsv5': PvWattsv5,
+               'pvwattsv7': PvWattsv7,
+               'pvsamv1': PvSamv1,
                'tcsmoltensalt': TcsMoltenSalt,
                'solarwaterheat': SolarWaterHeat,
                'troughphysicalheat': TroughPhysicalHeat,
