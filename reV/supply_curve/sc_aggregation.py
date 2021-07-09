@@ -623,7 +623,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             if dset in gen.datasets:
                 temp[i] = gen[dset]
             else:
-                w = ('Could not find {} dataset "{}" in '
+                w = ('Could not find "{}" input as "{}" in '
                      'generation file: {}. Available datasets: {}'
                      .format(labels[i], dset, gen_fpath, gen.datasets))
                 logger.warning(w)

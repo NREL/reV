@@ -15,6 +15,7 @@ import tempfile
 import shutil
 import h5py
 
+from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
@@ -312,21 +313,47 @@ def test_data_layer_methods():
 def test_recalc_lcoe():
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
+
     data = {'capital_cost': 34900000,
             'fixed_operating_cost': 280000,
             'fixed_charge_rate': 0.09606382995843887,
             'variable_operating_cost': 0,
             'system_capacity': 20000}
+    annual_cf = [0.24, 0.26, 0.37, 0.15]
+    annual_lcoe = []
+    years = list(range(2012, 2016))
 
     with tempfile.TemporaryDirectory() as td:
         gen_temp = os.path.join(td, 'ri_my_pv_gen.h5')
         shutil.copy(GEN, gen_temp)
 
         with h5py.File(gen_temp, 'a') as res:
+            for k in [d for d in list(res) if d != 'meta']:
+                del res[k]
             for k, v in data.items():
                 arr = np.full(res['meta'].shape, v)
                 res.create_dataset(k, res['meta'].shape, data=arr)
-                res[k].attrs['scale_factor'] = 1.0
+            for year, cf in zip(years, annual_cf):
+                lcoe = lcoe_fcr(data['fixed_charge_rate'],
+                                data['capital_cost'],
+                                data['fixed_operating_cost'],
+                                data['system_capacity'] * cf * 8760,
+                                data['variable_operating_cost'])
+                cf_arr = np.full(res['meta'].shape, cf)
+                lcoe_arr = np.full(res['meta'].shape, lcoe)
+                annual_lcoe.append(lcoe)
+
+                res.create_dataset('cf_mean-{}'.format(year),
+                                   res['meta'].shape, data=cf_arr)
+                res.create_dataset('lcoe_fcr-{}'.format(year),
+                                   res['meta'].shape, data=lcoe_arr)
+
+            cf_arr = np.full(res['meta'].shape, np.mean(annual_cf))
+            lcoe_arr = np.full(res['meta'].shape, np.mean(annual_lcoe))
+            res.create_dataset('cf_mean-means'.format(year),
+                               res['meta'].shape, data=cf_arr)
+            res.create_dataset('lcoe_fcr-means'.format(year),
+                               res['meta'].shape, data=lcoe_arr)
 
         h5_dsets = ('capital_cost', 'fixed_operating_cost',
                     'fixed_charge_rate', 'variable_operating_cost',
@@ -334,20 +361,21 @@ def test_recalc_lcoe():
 
         base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
                                               excl_dict=EXCL_DICT,
-                                              res_class_dset=RES_CLASS_DSET,
-                                              res_class_bins=RES_CLASS_BINS,
+                                              res_class_dset=None,
+                                              res_class_bins=None,
                                               data_layers=DATA_LAYERS,
                                               h5_dsets=h5_dsets,
                                               gids=list(np.arange(10)),
                                               max_workers=1, recalc_lcoe=False)
         s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
                                            excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
+                                           res_class_dset=None,
+                                           res_class_bins=None,
                                            data_layers=DATA_LAYERS,
                                            h5_dsets=h5_dsets,
                                            gids=list(np.arange(10)),
                                            max_workers=1, recalc_lcoe=True)
+
     assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
 
 
