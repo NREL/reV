@@ -216,9 +216,10 @@ class ProjectPoints:
         """
         Parameters
         ----------
-        points : slice | list | tuple | str | pd.DataFrame | dict
+        points : int | slice | list | tuple | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
+            Can also be a single integer site value.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
@@ -488,9 +489,10 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : str | pd.DataFrame | slice | list
+        points : int | str | pd.DataFrame | slice | list
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
+            Can also be a single integer site value.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -501,6 +503,8 @@ class ProjectPoints:
             DataFrame mapping sites (gids) to SAM technology (config)
         """
         df = pd.DataFrame(columns=['gid', 'config'])
+        if isinstance(points, int):
+            points = [points]
         if isinstance(points, (list, tuple)):
             # explicit site list, set directly
             if any(isinstance(i, (list, tuple)) for i in points):
@@ -539,9 +543,10 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : str | pd.DataFrame | slice | list | dict
+        points : int | str | pd.DataFrame | slice | list | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
+            Can also be a single integer site value.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -555,7 +560,7 @@ class ProjectPoints:
             df = cls._parse_csv(points)
         elif isinstance(points, dict):
             df = pd.DataFrame(points)
-        elif isinstance(points, (slice, list, tuple)):
+        elif isinstance(points, (int, slice, list, tuple)):
             df = cls._parse_sites(points, res_file=res_file)
         elif isinstance(points, pd.DataFrame):
             df = points
