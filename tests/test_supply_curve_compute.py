@@ -67,24 +67,29 @@ def baseline_verify(sc_full, fpath_baseline):
         sc_full.to_csv(fpath_baseline, index=False)
 
 
-@pytest.mark.parametrize(('i', 'tcosts'), ((1, TRANS_COSTS_1),
-                                           (2, TRANS_COSTS_2)))
-def test_integrated_sc_full(i, tcosts, sc_points, trans_table, multipliers):
+@pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
+                                                (2, TRANS_COSTS_2)))
+def test_integrated_sc_full(i, trans_costs, sc_points, trans_table,
+                            multipliers):
     """Run the full SC test and verify results against baseline file."""
-
+    tcosts = trans_costs.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
     sc_full = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
                                sc_features=multipliers,
-                               transmission_costs=tcosts)
+                               transmission_costs=tcosts,
+                               avail_cap_frac=avail_cap_frac)
     fpath_baseline = os.path.join(TESTDATADIR,
                                   'sc_out/sc_full_out_{}.csv'.format(i))
     baseline_verify(sc_full, fpath_baseline)
 
 
-@pytest.mark.parametrize(('i', 'tcosts'), ((1, TRANS_COSTS_1),
-                                           (2, TRANS_COSTS_2)))
-def test_integrated_sc_simple(i, tcosts, sc_points, trans_table, multipliers):
+@pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
+                                                (2, TRANS_COSTS_2)))
+def test_integrated_sc_simple(i, trans_costs, sc_points, trans_table,
+                              multipliers):
     """Run the simple SC test and verify results against baseline file."""
-
+    tcosts = trans_costs.copy()
+    tcosts.pop('available_capacity', 1)
     sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1,
                                    sc_features=multipliers,
                                    transmission_costs=tcosts)
@@ -97,10 +102,12 @@ def test_integrated_sc_simple(i, tcosts, sc_points, trans_table, multipliers):
 def test_integrated_sc_full_friction(sc_points_friction, trans_table,
                                      multipliers):
     """Run the full SC algorithm with friction"""
-
+    tcosts = TRANS_COSTS_1.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
     sc_full = SupplyCurve.full(sc_points_friction, trans_table, fcr=0.1,
                                sc_features=multipliers,
-                               transmission_costs=TRANS_COSTS_1,
+                               transmission_costs=tcosts,
+                               avail_cap_frac=avail_cap_frac,
                                sort_on='total_lcoe_friction')
 
     assert 'mean_lcoe_friction' in sc_full
@@ -116,10 +123,11 @@ def test_integrated_sc_full_friction(sc_points_friction, trans_table,
 def test_integrated_sc_simple_friction(sc_points_friction, trans_table,
                                        multipliers):
     """Run the simple SC algorithm with friction"""
-
+    tcosts = TRANS_COSTS_1.copy()
+    tcosts.pop('available_capacity', 1)
     sc_simple = SupplyCurve.simple(sc_points_friction, trans_table, fcr=0.1,
                                    sc_features=multipliers,
-                                   transmission_costs=TRANS_COSTS_1,
+                                   transmission_costs=tcosts,
                                    sort_on='total_lcoe_friction')
 
     assert 'mean_lcoe_friction' in sc_simple
@@ -136,11 +144,14 @@ def test_sc_warning1(sc_points, trans_table, multipliers):
     """Run the full SC test with missing connections and verify warning."""
     mask = trans_table['sc_point_gid'].isin(list(range(10)))
     trans_table = trans_table[~mask]
+    tcosts = TRANS_COSTS_1.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         SupplyCurve.full(sc_points, trans_table, fcr=0.1,
                          sc_features=multipliers,
-                         transmission_costs=TRANS_COSTS_1)
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac)
 
         s1 = str(list(range(10))).replace(']', '').replace('[', '')
         s2 = str(w[0].message)
@@ -153,11 +164,14 @@ def test_sc_warning2(sc_points, trans_table, multipliers):
     """Run the full SC test without PCA load centers and verify warning."""
     mask = trans_table['category'] == 'PCALoadCen'
     trans_table = trans_table[~mask]
+    tcosts = TRANS_COSTS_1.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         SupplyCurve.full(sc_points, trans_table, fcr=0.1,
                          sc_features=multipliers,
-                         transmission_costs=TRANS_COSTS_1)
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac)
 
         s1 = 'Unconnected sc_gid'
         s2 = str(w[0].message)
@@ -169,14 +183,18 @@ def test_sc_warning2(sc_points, trans_table, multipliers):
 def test_parallel(sc_points, trans_table, multipliers):
     """Test a parallel compute against a serial compute"""
 
+    tcosts = TRANS_COSTS_1.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
     sc_full_parallel = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
                                         sc_features=multipliers,
-                                        transmission_costs=TRANS_COSTS_1,
+                                        transmission_costs=tcosts,
+                                        avail_cap_frac=avail_cap_frac,
                                         max_workers=4)
 
     sc_full_serial = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
                                       sc_features=multipliers,
-                                      transmission_costs=TRANS_COSTS_1,
+                                      transmission_costs=tcosts,
+                                      avail_cap_frac=avail_cap_frac,
                                       max_workers=1)
 
     assert_frame_equal(sc_full_parallel, sc_full_serial)
@@ -210,7 +228,8 @@ def test_least_cost_full(sc_points):
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_full = SupplyCurve.full(sc_points, trans_tables, fcr=0.1)
+    sc_full = SupplyCurve.full(sc_points, trans_tables, fcr=0.1,
+                               avail_cap_frac=0.1)
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
     baseline_verify(sc_full, fpath_baseline)
     verify_trans_cap(sc_full, trans_tables)

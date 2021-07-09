@@ -248,6 +248,7 @@ class SupplyCurveConfig(AnalysisConfig):
 
         self._default_sort_on = 'total_lcoe'
         self._default_n_dirs = 2
+        self._default_avail_cap_frac = 1
 
         self._sc_preflight()
 
@@ -295,6 +296,11 @@ class SupplyCurveConfig(AnalysisConfig):
     def transmission_costs(self):
         """Get the transmission costs input."""
         return self.get('transmission_costs', None)
+
+    @property
+    def avail_cap_frac(self):
+        """Get the available capacity fraction for transmission features."""
+        return self.get('avail_cap_frac', self._default_avail_cap_frac)
 
     @property
     def simple(self):

@@ -23,7 +23,7 @@ class TransmissionFeatures:
     """
     def __init__(self, trans_table, line_tie_in_cost=14000, line_cost=2279,
                  station_tie_in_cost=0, center_tie_in_cost=0,
-                 sink_tie_in_cost=14000, available_capacity=0.1,
+                 sink_tie_in_cost=1e9, avail_cap_frac=1,
                  line_limited=False):
         """
         Parameters
@@ -31,22 +31,26 @@ class TransmissionFeatures:
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
-        line_tie_in_cost : float
-            Cost of connecting to a transmission line in $/MW
-        line_cost : float
-            Cost of building transmission line during connection in $/MW-km
-        station_tie_in_cost : float
-            Cost of connecting to a substation in $/MW
-        center_tie_in_cost : float
-            Cost of connecting to a load center in $/MW
-        sink_tie_in_cost : float
+        line_tie_in_cost : float, optional
+            Cost of connecting to a transmission line in $/MW,
+            by default 14000
+        line_cost : float, optional
+            Cost of building transmission line during connection in $/MW-km,
+            by default 2279
+        station_tie_in_cost : float, optional
+            Cost of connecting to a substation in $/MW,
+            by default 0
+        center_tie_in_cost : float, optional
+            Cost of connecting to a load center in $/MW,
+            by default 0
+        sink_tie_in_cost : float, optional
             Cost of connecting to a synthetic load center (infinite sink)
-            in $/MW
-        available_capacity : float
-            Fraction of capacity that is available for connection
-        line_limited : bool
+            in $/MW, by default 1e9
+        avail_cap_frac : float, optional
+            Fraction of capacity that is available for connection, by default 1
+        line_limited : bool, optional
             Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
+            attached lines, legacy method, by default False
         """
 
         logger.debug('Trans table input: {}'.format(trans_table))
@@ -58,7 +62,7 @@ class TransmissionFeatures:
         logger.debug('Synthetic load center tie in cost: {} $/MW'
                      .format(sink_tie_in_cost))
         logger.debug('Available capacity fraction: {}'
-                     .format(available_capacity))
+                     .format(avail_cap_frac))
         logger.debug('Line limited substation connections: {}'
                      .format(line_limited))
 
@@ -67,7 +71,7 @@ class TransmissionFeatures:
         self._station_tie_in_cost = station_tie_in_cost
         self._center_tie_in_cost = center_tie_in_cost
         self._sink_tie_in_cost = sink_tie_in_cost
-        self._available_capacity_frac = available_capacity
+        self._avail_cap_frac = avail_cap_frac
 
         self._features = self._get_features(trans_table)
 
@@ -178,7 +182,7 @@ class TransmissionFeatures:
 
         features = {}
 
-        cap_frac = self._available_capacity_frac
+        cap_frac = self._avail_cap_frac
         trans_features = trans_table.groupby('trans_gid').first()
 
         for gid, feature in trans_features.iterrows():
@@ -258,12 +262,13 @@ class TransmissionFeatures:
         ----------
         distance : float
             Distance to feature in kms
-        line_cost : float
-            Cost of tranmission lines in $/MW-km
-        tie_in_cost : float
-            Cost to connect to feature in $/MW
-        line_multiplier : float
-            Multiplier for region specific line cost increases
+        line_tie_in_cost : float, optional
+            Cost of connecting to a transmission line in $/MW,
+            by default 14000
+        tie_in_cost : float, optional
+            Cost to tie in line to feature in $/MW, by default 0
+        tranmission_multiplier : float, optional
+            Multiplier for region specific line cost increases, by default 1
 
         Returns
         -------
@@ -313,7 +318,7 @@ class TransmissionFeatures:
         -------
         avail_cap : float
             Available capacity = capacity * available fraction
-            default = 10%
+            default = 100%
         """
 
         feature = self[gid]
@@ -562,7 +567,7 @@ class TransmissionFeatures:
         return cost
 
     @classmethod
-    def feature_capacity(cls, trans_table, available_capacity=0.1):
+    def feature_capacity(cls, trans_table, avail_cap_frac=1):
         """
         Compute available capacity for all features
 
@@ -570,19 +575,8 @@ class TransmissionFeatures:
         ----------
         trans_table : str | pandas.DataFrame
             Path to .csv or .json containing supply curve transmission mapping
-        line_tie_in_cost : float
-            Cost of connecting to a transmission line in $/MW
-        line_cost : float
-            Cost of building transmission line during connection in $/MW-km
-        station_tine_in_cost : float
-            Cost of connecting to a substation in $/MW
-        center_tie_in_cost : float
-            Cost of connecting to a load center in $/MW
-        center_tie_in_cost : float
-            Cost of connecting to a synthetic load center (infinite sink)
-            in $/MW
-        available_capacity : float
-            Fraction of capacity that is available for connection
+        avail_cap_frac : float, optional
+            Fraction of capacity that is available for connection, by default 1
 
         Returns
         -------
@@ -590,7 +584,7 @@ class TransmissionFeatures:
             Available Capacity for each transmission feature
         """
         try:
-            feature = cls(trans_table, available_capacity=available_capacity)
+            feature = cls(trans_table, avail_cap_frac=avail_cap_frac)
 
             feature_cap = {}
             for gid, _ in feature._features.items():
@@ -634,7 +628,7 @@ class TransmissionCosts(TransmissionFeatures):
         features = {}
 
         if 'avail_cap' not in trans_table:
-            kwargs = {'available_capacity': self._available_capacity_frac}
+            kwargs = {'avail_cap_frac': self._avail_cap_frac}
             fc = TransmissionFeatures.feature_capacity(trans_table,
                                                        **kwargs)
             trans_table = trans_table.merge(fc, on='trans_gid')
@@ -660,7 +654,7 @@ class TransmissionCosts(TransmissionFeatures):
         -------
         avail_cap : float
             Available capacity = capacity * available fraction
-            default = 10%
+            default = 100%
         """
 
         return self[gid]['avail_cap']
@@ -668,8 +662,8 @@ class TransmissionCosts(TransmissionFeatures):
     @classmethod
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
                       line_cost=2279, station_tie_in_cost=0,
-                      center_tie_in_cost=0, sink_tie_in_cost=14000,
-                      available_capacity=0.1, line_limited=False):
+                      center_tie_in_cost=0, sink_tie_in_cost=1e9,
+                      avail_cap_frac=1, line_limited=False):
         """
         Compute costs for all connections in given transmission table
 
@@ -680,22 +674,26 @@ class TransmissionCosts(TransmissionFeatures):
         capacity : float
             Capacity needed in MW, if None DO NOT check if connection is
             possible
-        line_tie_in_cost : float
-            Cost of connecting to a transmission line in $/MW
-        line_cost : float
-            Cost of building transmission line during connection in $/MW-km
-        station_tine_in_cost : float
-            Cost of connecting to a substation in $/MW
-        center_tie_in_cost : float
-            Cost of connecting to a load center in $/MW
-        center_tie_in_cost : float
+        line_tie_in_cost : float, optional
+            Cost of connecting to a transmission line in $/MW,
+            by default 14000
+        line_cost : float, optional
+            Cost of building transmission line during connection in $/MW-km,
+            by default 2279
+        station_tie_in_cost : float, optional
+            Cost of connecting to a substation in $/MW,
+            by default 0
+        center_tie_in_cost : float, optional
+            Cost of connecting to a load center in $/MW,
+            by default 0
+        sink_tie_in_cost : float, optional
             Cost of connecting to a synthetic load center (infinite sink)
-            in $/MW
-        available_capacity : float
-            Fraction of capacity that is available for connection
-        line_limited : bool
+            in $/MW, by default 1e9
+        avail_cap_frac : float, optional
+            Fraction of capacity that is available for connection, by default 1
+        line_limited : bool, optional
             Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
+            attached lines, legacy method, by default False
 
         Returns
         -------
@@ -710,7 +708,7 @@ class TransmissionCosts(TransmissionFeatures):
                           station_tie_in_cost=station_tie_in_cost,
                           center_tie_in_cost=center_tie_in_cost,
                           sink_tie_in_cost=sink_tie_in_cost,
-                          available_capacity=available_capacity,
+                          avail_cap_frac=avail_cap_frac,
                           line_limited=line_limited)
 
             costs = []

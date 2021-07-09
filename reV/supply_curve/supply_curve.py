@@ -60,8 +60,9 @@ class SupplyCurve:
         scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
-                 transmission_costs=None, line_limited=False,
-                 connectable=True, max_workers=None, consider_friction=True):
+                 transmission_costs=None, avail_cap_frac=1,
+                 line_limited=False, connectable=True, max_workers=None,
+                 consider_friction=True):
         """
         Parameters
         ----------
@@ -74,23 +75,28 @@ class SupplyCurve:
             with different line voltage (capacity) ratings.
         fcr : float
             Fixed charge rate, used to compute LCOT
-        sc_features : str | pandas.DataFrame
+        sc_features : str | pandas.DataFrame, optional
             Path to .csv or .json or DataFrame containing additional supply
-            curve features, e.g. transmission multipliers, regions
-        transmission_costs : str | dict
+            curve features, e.g. transmission multipliers, regions,
+            by default None
+        transmission_costs : str | dict, optional
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-        line_limited : bool
-            Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
-        connectable : bool
-            Determine if connection is possible
-        max_workers : int | NoneType
+            center_tie_in_cost, sink_tie_in_cost, by default None
+        avail_cap_frac : int, optional
+            Fraction of transmissions features capacity 'ac_cap' to make
+            available for connection to supply curve points, by default 1
+        line_limited : bool, optional
+            Flag to have substation connection is limited by maximum capacity
+            of the attached lines, legacy method, by default False
+        connectable : bool, optional
+            Flag to only compute tranmission capital cost if transmission
+            feature has enough available capacity, by default True
+        max_workers : int | NoneType, optional
             Number of workers to use to compute lcot, if > 1 run in parallel.
-            None uses all available cpu's.
-        consider_friction : bool
-            Flag to consider friction layer on LCOE.
+            None uses all available cpu's. by default None
+        consider_friction : bool, optional
+            Flag to consider friction layer on LCOE, by default True
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
@@ -107,13 +113,14 @@ class SupplyCurve:
         self._check_sc_trans_table(self._sc_points, trans_table)
         self._trans_table = self._add_trans_lcot(trans_table, fcr,
                                                  trans_costs=trans_costs,
+                                                 avail_cap_frac=avail_cap_frac,
                                                  line_limited=line_limited,
                                                  connectable=connectable,
                                                  max_workers=max_workers)
-        self._trans_features = self._create_handler(self._trans_table,
-                                                    trans_costs=trans_costs)
-        self._available_capacity_frac = \
-            trans_costs.get('available_capacity', 0.1)
+        self._trans_features = self._create_handler(
+            self._trans_table, trans_costs=trans_costs,
+            avail_cap_frac=avail_cap_frac)
+        self._avail_cap_frac = avail_cap_frac
 
         self._consider_friction = consider_friction
         self._calculate_total_lcoe_friction()
@@ -358,7 +365,7 @@ class SupplyCurve:
 
     @classmethod
     def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
-                        line_limited=False, connectable=True,
+                        avail_cap_frac=1, line_limited=False, connectable=True,
                         max_workers=None):
         """Compute LCOT for possible connections and add to the trans_table
 
@@ -372,11 +379,15 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
             center_tie_in_cost, sink_tie_in_cost
+        avail_cap_frac : int, optional
+            Fraction of transmissions features capacity 'ac_cap' to make
+            available for connection to supply curve points, by default 1
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
-        connectable : bool
-            Determine if connection is possible
+        connectable : bool, optional
+            Flag to only compute tranmission capital cost if transmission
+            feature has enough available capacity, by default True
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
@@ -391,6 +402,7 @@ class SupplyCurve:
         if 'trans_cap_cost' not in trans_table:
             cost = cls._compute_trans_cap_cost(trans_table,
                                                trans_costs=trans_costs,
+                                               avail_cap_frac=avail_cap_frac,
                                                line_limited=line_limited,
                                                connectable=connectable,
                                                max_workers=max_workers)
@@ -410,7 +422,7 @@ class SupplyCurve:
         return trans_table
 
     @staticmethod
-    def _create_handler(trans_table, trans_costs=None):
+    def _create_handler(trans_table, trans_costs=None, avail_cap_frac=1):
         """
         Create TransmissionFeatures handler from supply curve transmission
         mapping table.  Update connection costs if given.
@@ -424,6 +436,9 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
             center_tie_in_cost, sink_tie_in_cost
+        avail_cap_frac: int, optional
+            Fraction of transmissions features capacity 'ac_cap' to make
+            available for connection to supply curve points, by default 1
 
         Returns
         -------
@@ -436,7 +451,8 @@ class SupplyCurve:
         else:
             kwargs = {}
 
-        trans_features = TF(trans_table, **kwargs)
+        trans_features = TF(trans_table, avail_cap_frac=avail_cap_frac,
+                            **kwargs)
 
         return trans_features
 
@@ -474,8 +490,8 @@ class SupplyCurve:
 
     @staticmethod
     def _compute_trans_cap_cost(trans_table, trans_costs=None,
-                                max_workers=None, connectable=True,
-                                line_limited=False):
+                                avail_cap_frac=1, max_workers=None,
+                                connectable=True, line_limited=False):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -491,11 +507,15 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
             center_tie_in_cost, sink_tie_in_cost
+        avail_cap_frac: int, optional
+            Fraction of transmissions features capacity 'ac_cap' to make
+            available for connection to supply curve points, by default 1
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
-        connectable : bool
-            Determine if connection is possible
+        connectable : bool, optional
+            Flag to only compute tranmission capital cost if transmission
+            feature has enough available capacity, by default True
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
@@ -545,6 +565,7 @@ class SupplyCurve:
 
                     futures.append(exe.submit(TC.feature_costs, sc_table,
                                               capacity=capacity,
+                                              avail_cap_frac=avail_cap_frac,
                                               line_limited=line_limited,
                                               **trans_costs))
 
@@ -776,7 +797,7 @@ class SupplyCurve:
         needed
         """
         if 'avail_cap' not in self._trans_table:
-            kwargs = {'available_capacity': self._available_capacity_frac}
+            kwargs = {'avail_cap_frac': self._avail_cap_frac}
             fc = TF.feature_capacity(self._trans_table, **kwargs)
             self._trans_table = self._trans_table.merge(fc, on='trans_gid')
 
@@ -922,7 +943,8 @@ class SupplyCurve:
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
-             transmission_costs=None, line_limited=False, sort_on='total_lcoe',
+             transmission_costs=None, avail_cap_frac=1,
+             line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost_per_mw', 'dist_km', 'lcot',
                       'total_lcoe'),
@@ -942,16 +964,20 @@ class SupplyCurve:
             transmission mapping
         fcr : float
             Fixed charge rate, used to compute LCOT
-        sc_features : str | pandas.DataFrame
+        sc_features : str | pandas.DataFrame, optional
             Path to .csv or .json or DataFrame containing additional supply
-            curve features, e.g. transmission multipliers, regions
-        transmission_costs : str | dict
+            curve features, e.g. transmission multipliers, regions,
+            by default None
+        transmission_costs : str | dict, optional
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-        line_limited : bool
-            Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
+            center_tie_in_cost, sink_tie_in_cost, by default None
+        avail_cap_frac : int, optional
+            Fraction of transmissions features capacity 'ac_cap' to make
+            available for connection to supply curve points, by default 1
+        line_limited : bool, optional
+            Flag to have substation connection is limited by maximum capacity
+            of the attached lines, legacy method, by default False
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -981,7 +1007,8 @@ class SupplyCurve:
         """
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs,
-                 line_limited=line_limited, max_workers=max_workers)
+                 avail_cap_frac=avail_cap_frac, line_limited=line_limited,
+                 max_workers=max_workers)
         supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
                                     wind_dirs=wind_dirs, n_dirs=n_dirs,
                                     downwind=downwind,

@@ -66,7 +66,9 @@ def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     """
     Test tranmission capital cost calculation
     """
-    tf = TF(trans_table, **trans_costs)
+    tcosts = trans_costs.copy()
+    avail_cap_frac = tcosts.pop('available_capacity')
+    tf = TF(trans_table, avail_cap_frac=avail_cap_frac, **tcosts)
     true_cost = COSTS['{}-{}-{}'.format(i, distance, gid)]
     trans_cost = tf.cost(gid, distance)
 
@@ -86,24 +88,33 @@ def test_connect(trans_costs, capacity, gid, trans_table):
     """
     Test connection to transmission lines and load centers
     """
-    tf = TF(trans_table, **trans_costs)
+    tcosts = trans_costs.copy()
+    avail_cap_frac = tcosts.pop('available_capacity')
+
+    tf = TF(trans_table, avail_cap_frac=avail_cap_frac, **tcosts)
     avail_cap = tf[gid].get('avail_cap', None)
     if avail_cap is not None:
         if avail_cap > capacity:
             assert tf.connect(gid, capacity, apply=False)
 
 
-def test_substation_connect(trans_table):
+@pytest.mark.parametrize('line_limited', (False, True))
+def test_substation_connect(line_limited, trans_table):
     """
     Test connection to substation
     """
     capacity = 350
     gid = 68867
-    tf = TF(trans_table, **TRANS_COSTS_1, line_limited=False)
-    assert tf.connect(gid, capacity, apply=False)
 
-    tf = TF(trans_table, **TRANS_COSTS_1, line_limited=True)
-    assert not tf.connect(gid, capacity, apply=False)
+    trans_costs = TRANS_COSTS_1.copy()
+    avail_cap_frac = trans_costs.pop('available_capacity')
+
+    tf = TF(trans_table, avail_cap_frac=avail_cap_frac,
+            line_limited=line_limited, **trans_costs)
+    if line_limited:
+        assert not tf.connect(gid, capacity, apply=False)
+    else:
+        assert tf.connect(gid, capacity, apply=False)
 
 
 @pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
@@ -114,7 +125,11 @@ def test_substation_load_spreading(i, trans_costs, trans_table):
     """
     capacity = 350
     gid = 68867
-    tf = TF(trans_table, **trans_costs)
+
+    tcosts = trans_costs.copy()
+    avail_cap_frac = tcosts.pop('available_capacity')
+
+    tf = TF(trans_table, avail_cap_frac=avail_cap_frac, **tcosts)
     connect = tf.connect(gid, capacity, apply=True)
     assert connect
 
