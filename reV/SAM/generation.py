@@ -39,6 +39,56 @@ logger = logging.getLogger(__name__)
 class Generation(RevPySam, ABC):
     """Base class for SAM generation simulations."""
 
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM generation object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
+        """
+
+        # drop the leap day
+        if drop_leap:
+            resource = self.drop_leap(resource)
+
+        # make sure timezone and elevation are in the meta data
+        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
+
+        # don't pass resource to base class,
+        # set in concrete generation classes instead
+        super().__init__(meta, sam_sys_inputs, output_request,
+                         site_sys_inputs=site_sys_inputs)
+
+        # Set the site number using resource
+        if hasattr(resource, 'name'):
+            self._site = resource.name
+        else:
+            self._site = None
+
+        self.set_resource_data(resource, meta)
+
     @classmethod
     def _get_res(cls, res_df, output_request):
         """Get the resource arrays and pass through for output (single site).
@@ -115,6 +165,10 @@ class Generation(RevPySam, ABC):
                     res_mean[label_1] = resource[label_2, idx] / 1000 * 24
 
         return res_mean, out_req_nomeans
+
+    @abstractmethod
+    def set_resource_data(self, resource, meta):
+        """Placeholder for resource data setting (nsrdb or wtk)"""
 
     @staticmethod
     def tz_elev_check(sam_sys_inputs, site_sys_inputs, meta):
@@ -382,108 +436,9 @@ class Generation(RevPySam, ABC):
 
 
 class Solar(Generation, ABC):
-    """Base Class for Solar generation from SAM
-    """
+    """Base Class for Solar generation from SAM"""
 
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM solar object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
-        """
-
-        # drop the leap day
-        if drop_leap:
-            resource = self.drop_leap(resource)
-
-        sam_sys_inputs = self.set_latitude_tilt_az(sam_sys_inputs, meta)
-        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
-
-        # don't pass resource to base class, set in set_nsrdb instead.
-        super().__init__(meta, sam_sys_inputs, output_request,
-                         site_sys_inputs=site_sys_inputs)
-
-        # Set the site number using resource
-        if hasattr(resource, 'name'):
-            self._site = resource.name
-        else:
-            self._site = None
-
-        if resource is not None and meta is not None:
-            self.set_nsrdb(resource, meta)
-
-    def set_latitude_tilt_az(self, sam_sys_inputs, meta):
-        """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
-
-        Parameters
-        ----------
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        meta : pd.DataFrame
-            1D table with resource meta data.
-
-        Returns
-        -------
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-            If for a pv simulation the "tilt" parameter was originally not
-            present or set to 'lat' or 'latitude', the tilt will be set to
-            the absolute value of the latitude found in meta and the azimuth
-            will be 180 if lat>0, 0 if lat<0.
-        """
-
-        set_tilt = False
-        if 'pv' in self.MODULE:  # pylint: disable=unsupported-membership-test
-            if sam_sys_inputs is not None and meta is not None:
-                if 'tilt' not in sam_sys_inputs:
-                    warn('No tilt specified, setting at latitude.',
-                         SAMInputWarning)
-                    set_tilt = True
-                else:
-                    if (sam_sys_inputs['tilt'] == 'lat'
-                            or sam_sys_inputs['tilt'] == 'latitude'):
-                        set_tilt = True
-
-        if set_tilt:
-            # set tilt to abs(latitude)
-            sam_sys_inputs['tilt'] = np.abs(meta['latitude'])
-            if meta['latitude'] > 0:
-                # above the equator, az = 180
-                sam_sys_inputs['azimuth'] = 180
-            else:
-                # below the equator, az = 0
-                sam_sys_inputs['azimuth'] = 0
-
-            logger.debug('Tilt specified at "latitude", setting tilt to: {}, '
-                         'azimuth to: {}'
-                         .format(sam_sys_inputs['tilt'],
-                                 sam_sys_inputs['azimuth']))
-        return sam_sys_inputs
-
-    def set_nsrdb(self, resource, meta):
+    def set_resource_data(self, resource, meta):
         """Set NSRDB resource data arrays.
 
         Parameters
@@ -575,6 +530,92 @@ class AbstractPv(Solar, ABC):
     # set these class attrs in concrete subclasses
     MODULE = None
     PYSAM = None
+
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM solar object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
+        """
+
+        # need to check tilt=lat and azimuth for pv systems
+        sam_sys_inputs = self.set_latitude_tilt_az(sam_sys_inputs, meta)
+
+        super().__init__(resource, meta, sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
+                         output_request=output_request,
+                         drop_leap=drop_leap)
+
+    @staticmethod
+    def set_latitude_tilt_az(sam_sys_inputs, meta):
+        """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
+
+        Parameters
+        ----------
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        meta : pd.DataFrame
+            1D table with resource meta data.
+
+        Returns
+        -------
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+            If for a pv simulation the "tilt" parameter was originally not
+            present or set to 'lat' or 'latitude', the tilt will be set to
+            the absolute value of the latitude found in meta and the azimuth
+            will be 180 if lat>0, 0 if lat<0.
+        """
+
+        set_tilt = False
+        if sam_sys_inputs is not None and meta is not None:
+            if 'tilt' not in sam_sys_inputs:
+                warn('No tilt specified, setting at latitude.',
+                     SAMInputWarning)
+                set_tilt = True
+            else:
+                if (sam_sys_inputs['tilt'] == 'lat'
+                        or sam_sys_inputs['tilt'] == 'latitude'):
+                    set_tilt = True
+
+        if set_tilt:
+            # set tilt to abs(latitude)
+            sam_sys_inputs['tilt'] = np.abs(meta['latitude'])
+            if meta['latitude'] > 0:
+                # above the equator, az = 180
+                sam_sys_inputs['azimuth'] = 180
+            else:
+                # below the equator, az = 0
+                sam_sys_inputs['azimuth'] = 0
+
+            logger.debug('Tilt specified at "latitude", setting tilt to: {}, '
+                         'azimuth to: {}'
+                         .format(sam_sys_inputs['tilt'],
+                                 sam_sys_inputs['azimuth']))
+        return sam_sys_inputs
 
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
@@ -763,15 +804,6 @@ class TcsMoltenSalt(Solar):
     MODULE = 'tcsmolten_salt'
     PYSAM = PySamCSP
 
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None):
-        """Initialize a SAM concentrated solar power (CSP) object.
-        """
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request)
-
     def cf_profile(self):
         """Get absolute value hourly capacity factor (frac) profile in
         orig timezone.
@@ -798,48 +830,12 @@ class TcsMoltenSalt(Solar):
 
 class SolarThermal(Solar, ABC):
     """ Base class for solar thermal """
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM solar thermal object
+    PYSAM_WEATHER_TAG = None
 
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years. PySAM will not accept csv data on
-            Feb 29th. For leap years, December 31st is dropped and time steps
-            are shifted to relabel Feb 29th as March 1st, March 1st as March
-            2nd, etc.
+    def set_resource_data(self, resource, meta):
         """
-        self._drop_leap = drop_leap
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request, drop_leap=False)
-
-    def set_nsrdb(self, resource, meta):
-        """
-        Set NSRDB resource file. Overloads Solar.set_nsrdb(). Solar thermal
-        PySAM models require a data file, not raw data.
+        Set NSRDB resource file. Overloads Solar.set_resource_data(). Solar
+        thermal PySAM models require a data file, not raw data.
 
         Parameters
         ----------
@@ -855,9 +851,9 @@ class SolarThermal(Solar, ABC):
             and timezone.
         """
         self.time_interval = self.get_time_interval(resource.index.values)
-        self._pysam_w_fname = self._create_pysam_wfile(resource, meta)
+        pysam_w_fname = self._create_pysam_wfile(resource, meta)
         # pylint: disable=E1101
-        self[self._pysam_weather_tag] = self._pysam_w_fname
+        self[self.PYSAM_WEATHER_TAG] = pysam_w_fname
 
     def _create_pysam_wfile(self, resource, meta):
         """
@@ -945,8 +941,9 @@ class SolarThermal(Solar, ABC):
         """
         super().run_gen_and_econ()
 
-        if delete_wfile and os.path.exists(self._pysam_w_fname):
-            os.remove(self._pysam_w_fname)
+        pysam_w_fname = self[self.PYSAM_WEATHER_TAG]
+        if delete_wfile and os.path.exists(pysam_w_fname):
+            os.remove(pysam_w_fname)
 
 
 class SolarWaterHeat(SolarThermal):
@@ -955,44 +952,7 @@ class SolarWaterHeat(SolarThermal):
     """
     MODULE = 'solarwaterheat'
     PYSAM = PySamSWH
-
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM solar water heater object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years. PySAM will not accept csv data on
-            Feb 29th. For leap years, December 31st is dropped and time steps
-            are shifted to relabel Feb 29th as March 1st, March 1st as March
-            2nd, etc.
-        """
-        self._pysam_weather_tag = 'solar_resource_file'
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request, drop_leap=drop_leap)
+    PYSAM_WEATHER_TAG = 'solar_resource_file'
 
     @staticmethod
     def default():
@@ -1011,44 +971,7 @@ class LinearDirectSteam(SolarThermal):
     """
     MODULE = 'lineardirectsteam'
     PYSAM = PySamLDS
-
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM process heat linear Fresnel direct steam object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years. PySAM will not accept csv data on
-            Feb 29th. For leap years, December 31st is dropped and time steps
-            are shifted to relabel Feb 29th as March 1st, March 1st as March
-            2nd, etc.
-        """
-        self._pysam_weather_tag = 'file_name'
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request, drop_leap=drop_leap)
+    PYSAM_WEATHER_TAG = 'file_name'
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.
@@ -1082,44 +1005,7 @@ class TroughPhysicalHeat(SolarThermal):
     """
     MODULE = 'troughphysicalheat'
     PYSAM = PySamTPPH
-
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM trough physical process heat object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years. PySAM will not accept csv data on
-            Feb 29th. For leap years, December 31st is dropped and time steps
-            are shifted to relabel Feb 29th as March 1st, March 1st as March
-            2nd, etc.
-        """
-        self._pysam_weather_tag = 'file_name'
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request, drop_leap=drop_leap)
+    PYSAM_WEATHER_TAG = 'file_name'
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.
@@ -1153,56 +1039,7 @@ class WindPower(Generation):
     MODULE = 'windpower'
     PYSAM = PySamWindPower
 
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM wind object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        sam_sys_inputs : dict
-            Site-agnostic SAM system model inputs arguments.
-        site_sys_inputs : dict
-            Optional set of site-specific SAM system inputs to complement the
-            site-agnostic inputs.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
-        """
-
-        # drop the leap day
-        if drop_leap:
-            resource = self.drop_leap(resource)
-
-        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
-
-        # don't pass resource to base class, set in set_wtk instead.
-        super().__init__(meta, sam_sys_inputs, output_request,
-                         site_sys_inputs=site_sys_inputs)
-
-        # Set the site number using resource
-        if hasattr(resource, 'name'):
-            self._site = resource.name
-        else:
-            self._site = None
-
-        if resource is not None and meta is not None:
-            self.set_wtk(resource, meta)
-
-    def set_wtk(self, resource, meta):
+    def set_resource_data(self, resource, meta):
         """Set WTK resource data arrays.
 
         Parameters
