@@ -634,15 +634,19 @@ class SupplyCurveAggregation(AbstractAggregation):
         if res_class_dset is None or res_class_bins is None:
             res_class_bins = [None]
 
+        # look for the datasets required by the LCOE re-calculation and make
+        # lists of the missing datasets
         lcoe_recalc_req = ('fixed_charge_rate', 'capital_cost',
                            'fixed_operating_cost', 'variable_operating_cost',
                            'system_capacity')
-        missing1 = [k for k in lcoe_recalc_req if k not in gen.datasets]
-        missing2 = []
+        missing_lcoe_source = [k for k in lcoe_recalc_req
+                               if k not in gen.datasets]
+        missing_lcoe_request = []
 
         h5_dsets_data = None
         if h5_dsets is not None:
-            missing2 = [k for k in lcoe_recalc_req if k not in h5_dsets]
+            missing_lcoe_request = [k for k in lcoe_recalc_req
+                                    if k not in h5_dsets]
 
             if not isinstance(h5_dsets, (list, tuple)):
                 e = ('Additional h5_dsets argument must be a list or tuple '
@@ -650,28 +654,32 @@ class SupplyCurveAggregation(AbstractAggregation):
                 logger.error(e)
                 raise TypeError(e)
 
-            missing = [k for k in h5_dsets if k not in gen.datasets]
-            if any(missing):
-                msg = ('Could not find additional h5_dsets "{}" in '
+            missing_h5_dsets = [k for k in h5_dsets if k not in gen.datasets]
+            if any(missing_h5_dsets):
+                msg = ('Could not find requested h5_dsets "{}" in '
                        'generation file: {} or econ file: {}. '
                        'Available datasets: {}'
-                       .format(missing, gen_fpath, econ_fpath,
+                       .format(missing_h5_dsets, gen_fpath, econ_fpath,
                                gen.datasets))
                 logger.error(msg)
                 raise FileInputError(msg)
 
             h5_dsets_data = {dset: gen[dset] for dset in h5_dsets}
 
-        if any(missing1):
-            msg = ('Could not find datasets required to re-calculate the '
-                   'multi-year LCOE, missing: {}'.format(missing1))
+        if any(missing_lcoe_source):
+            msg = ('Could not find the datasets in the gen source file that '
+                   'are required to re-calculate the multi-year LCOE. If you '
+                   'are running a multi-year job, it is strongly suggested '
+                   'you pass through these datasets to re-calculate the LCOE '
+                   'from the multi-year mean CF: {}'
+                   .format(missing_lcoe_source))
             logger.warning(msg)
             warn(msg, InputWarning)
-        elif any(missing2):
+        if any(missing_lcoe_request):
             msg = ('It is strongly advised that you include the following '
-                   'datasets in the h5_dsets input in order to re-calculate '
-                   'the LCOE from the multi-year mean capacity factor and '
-                   'AEP: {}'.format(missing2))
+                   'datasets in the h5_dsets request in order to re-calculate '
+                   'the LCOE from the multi-year mean CF and AEP: {}'
+                   .format(missing_lcoe_request))
             logger.warning(msg)
             warn(msg, InputWarning)
 

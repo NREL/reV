@@ -218,8 +218,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         mean_lcoe = None
 
-        # prioritize the calculation of lcoe explicitly
-        # from the multi year mean CF
+        # prioritize the calculation of lcoe explicitly from the multi year
+        # mean CF (the lcoe re-calc will still happen if mean_cf is a single
+        # year CF, but the output should be identical to the original LCOE and
+        # so is not consequential).
         if self._recalc_lcoe:
             required = ('fixed_charge_rate', 'capital_cost',
                         'fixed_operating_cost', 'variable_operating_cost',
