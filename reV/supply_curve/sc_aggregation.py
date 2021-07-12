@@ -289,7 +289,13 @@ class SupplyCurveAggregation(AbstractAggregation):
         weighted by the inclusion layer) (unitless).
     mean_lcoe : float
         Mean LCOE of each supply curve point (the arithmetic mean is weighted
-        by the inclusion layer). Units match the reV econ output ($/MWh).
+        by the inclusion layer). Units match the reV econ output ($/MWh). By
+        default, the LCOE is re-calculated using the multi-year mean capacity
+        factor and annual energy production. This requires several datasets to
+        be aggregated in the h5_dsets input: fixed_charge_rate, capital_cost,
+        fixed_operating_cost, annual_energy_production, and
+        variable_operating_cost. This recalc behavior can be disabled by
+        setting recalc_lcoe=False.
     mean_res : float
         Mean resource, the resource dataset to average is provided by the user
         in 'res_class_dset'. The arithmetic mean is weighted by the inclusion
@@ -380,7 +386,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
-                 cap_cost_scale=None):
+                 cap_cost_scale=None, recalc_lcoe=True):
         """
         Parameters
         ----------
@@ -454,6 +460,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
         """
         log_versions(logger)
         logger.info('Initializing SupplyCurveAggregation...')
@@ -478,6 +490,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
         self._data_layers = data_layers
+        self._recalc_lcoe = recalc_lcoe
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
@@ -603,60 +616,76 @@ class SupplyCurveAggregation(AbstractAggregation):
             the extracted arrays from the h5 files.
         """
 
-        if res_class_dset is None:
-            res_data = None
+        dset_list = (res_class_dset, cf_dset, lcoe_dset)
+        labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
+        temp = [None, None, None]
+        for i, dset in enumerate(dset_list):
+            if dset in gen.datasets:
+                temp[i] = gen[dset]
+            else:
+                w = ('Could not find "{}" input as "{}" in '
+                     'generation file: {}. Available datasets: {}'
+                     .format(labels[i], dset, gen_fpath, gen.datasets))
+                logger.warning(w)
+                warn(w, OutputWarning)
+
+        res_data, cf_data, lcoe_data = temp
+
+        if res_class_dset is None or res_class_bins is None:
             res_class_bins = [None]
-        else:
-            res_data = gen[res_class_dset]
 
-        if res_class_bins is None:
-            res_class_bins = [None]
-
-        if cf_dset in gen.datasets:
-            cf_data = gen[cf_dset]
-        else:
-            cf_data = None
-            w = ('Could not find cf dataset "{}" in '
-                 'generation file: {}. Available datasets: {}'
-                 .format(cf_dset, gen_fpath, gen.datasets))
-            logger.warning(w)
-            warn(w, OutputWarning)
-
-        if lcoe_dset in gen.datasets:
-            lcoe_data = gen[lcoe_dset]
-        else:
-            lcoe_data = None
-            w = ('Could not find lcoe dataset "{}" in generation file: {} or '
-                 'econ file: {}. Available datasets: {}'
-                 .format(lcoe_dset, gen_fpath, econ_fpath, gen.datasets))
-            logger.warning(w)
-            warn(w, OutputWarning)
+        # look for the datasets required by the LCOE re-calculation and make
+        # lists of the missing datasets
+        lcoe_recalc_req = ('fixed_charge_rate', 'capital_cost',
+                           'fixed_operating_cost', 'variable_operating_cost',
+                           'system_capacity')
+        missing_lcoe_source = [k for k in lcoe_recalc_req
+                               if k not in gen.datasets]
+        missing_lcoe_request = []
 
         h5_dsets_data = None
         if h5_dsets is not None:
-            h5_dsets_data = {}
+            missing_lcoe_request = [k for k in lcoe_recalc_req
+                                    if k not in h5_dsets]
+
             if not isinstance(h5_dsets, (list, tuple)):
                 e = ('Additional h5_dsets argument must be a list or tuple '
                      'but received: {} {}'.format(type(h5_dsets), h5_dsets))
                 logger.error(e)
                 raise TypeError(e)
-            else:
-                for dset in h5_dsets:
-                    if dset not in gen.datasets:
-                        w = ('Could not find additional h5_dset "{}" in '
-                             'generation file: {} or econ file: {}. '
-                             'Available datasets: {}'
-                             .format(dset, gen_fpath, econ_fpath,
-                                     gen.datasets))
-                        logger.warning(w)
-                        warn(w, OutputWarning)
-                    else:
-                        h5_dsets_data[dset] = gen[dset]
 
+            missing_h5_dsets = [k for k in h5_dsets if k not in gen.datasets]
+            if any(missing_h5_dsets):
+                msg = ('Could not find requested h5_dsets "{}" in '
+                       'generation file: {} or econ file: {}. '
+                       'Available datasets: {}'
+                       .format(missing_h5_dsets, gen_fpath, econ_fpath,
+                               gen.datasets))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            h5_dsets_data = {dset: gen[dset] for dset in h5_dsets}
+
+        if any(missing_lcoe_source):
+            msg = ('Could not find the datasets in the gen source file that '
+                   'are required to re-calculate the multi-year LCOE. If you '
+                   'are running a multi-year job, it is strongly suggested '
+                   'you pass through these datasets to re-calculate the LCOE '
+                   'from the multi-year mean CF: {}'
+                   .format(missing_lcoe_source))
+            logger.warning(msg)
+            warn(msg, InputWarning)
+        if any(missing_lcoe_request):
+            msg = ('It is strongly advised that you include the following '
+                   'datasets in the h5_dsets request in order to re-calculate '
+                   'the LCOE from the multi-year mean CF and AEP: {}'
+                   .format(missing_lcoe_request))
+            logger.warning(msg)
+            warn(msg, InputWarning)
+
+        offshore_flag = None
         if 'offshore' in gen.meta:
             offshore_flag = gen.meta['offshore'].values
-        else:
-            offshore_flag = None
 
         return (res_data, res_class_bins, cf_data, lcoe_data, offshore_flag,
                 h5_dsets_data)
@@ -669,7 +698,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081, cap_cost_scale=None):
+                   excl_area=0.0081, cap_cost_scale=None, recalc_lcoe=True):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -751,6 +780,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
 
         Returns
         -------
@@ -817,7 +852,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                             excl_area=excl_area,
                             close=False,
                             friction_layer=fh.friction_layer,
-                            cap_cost_scale=cap_cost_scale)
+                            cap_cost_scale=cap_cost_scale,
+                            recalc_lcoe=recalc_lcoe)
 
                     except EmptySupplyCurvePointError:
                         logger.debug('SC point {} is empty'.format(gid))
@@ -908,7 +944,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                     gids=gid_set,
                     args=args,
                     excl_area=self._excl_area,
-                    cap_cost_scale=self._cap_cost_scale))
+                    cap_cost_scale=self._cap_cost_scale,
+                    recalc_lcoe=self._recalc_lcoe))
 
             # gather results
             for future in as_completed(futures):
@@ -1027,7 +1064,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       min_area=self._min_area,
                                       gids=self.gids, args=args,
                                       excl_area=self._excl_area,
-                                      cap_cost_scale=self._cap_cost_scale)
+                                      cap_cost_scale=self._cap_cost_scale,
+                                      recalc_lcoe=self._recalc_lcoe)
         else:
             summary = self.run_parallel(args=args,
                                         max_workers=max_workers,
@@ -1052,7 +1090,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
-                cap_cost_scale=None):
+                cap_cost_scale=None, recalc_lcoe=True):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1135,6 +1173,12 @@ class SupplyCurveAggregation(AbstractAggregation):
             value to multiply the capital cost by. Independent variables in
             the equation should match the names of the columns in the reV
             supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
 
         Returns
         -------
@@ -1160,7 +1204,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                   area_filter_kernel=area_filter_kernel,
                   min_area=min_area,
                   excl_area=excl_area,
-                  cap_cost_scale=cap_cost_scale)
+                  cap_cost_scale=cap_cost_scale,
+                  recalc_lcoe=recalc_lcoe)
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,

@@ -21,7 +21,8 @@ def lcoe_fcr(fixed_charge_rate, capital_cost, fixed_operating_cost,
     fixed_operating_cost : float | np.ndarray
         Fixed annual operating cost ($/year)
     annual_energy_production : float | np.ndarray
-        Annual energy production (kWh/year)
+        Annual energy production (kWh for year)
+        (can be calculated as capacity * cf * 8760)
     variable_operating_cost : float | np.ndarray
         Variable operating cost ($/kWh)
 

@@ -395,10 +395,23 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': finput,
+                  'gen_fpath': gen_fpath,
+                  'econ_fpath': econ_fpath,
                   'excl_fpath': excl_fpath,
                   'excl_dict': excl_dict,
+                  'friction_fpath': friction_fpath,
+                  'friction_dset': friction_dset,
+                  'cf_dset': cf_dset,
+                  'lcoe_dset': lcoe_dset,
+                  'tm_dset': tm_dset,
+                  'res_class_dset': res_class_dset,
+                  'res_class_bins': res_class_bins,
+                  'cap_cost_scale': cap_cost_scale,
+                  'power_density': power_density,
+                  'resolution': resolution,
                   'area_filter_kernel': area_filter_kernel,
                   'min_area': min_area}
+
         Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 
