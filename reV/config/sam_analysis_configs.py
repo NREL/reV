@@ -48,9 +48,10 @@ class SAMAnalysisConfig(AnalysisConfig):
         Returns
         -------
         tech : str
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string is lower-cased with spaces and underscores removed.
+            SAM technology to analyze (pvwattsv7, pvsamv1, windpower,
+            tcsmoltensalt, solarwaterheat, troughphysicalheat,
+            lineardirectsteam) The string is lower-cased with spaces and
+            underscores removed.
         """
         if self._tech is None:
             self._tech = self['technology'].lower()

@@ -24,7 +24,7 @@ class Economic(RevPySam):
     """Base class for SAM economic models."""
     MODULE = None
 
-    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
+    def __init__(self, sam_sys_inputs, site_sys_inputs=None,
                  output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
@@ -337,7 +337,7 @@ class LCOE(Economic):
     MODULE = 'lcoefcr'
     PYSAM = PySamLCOE
 
-    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
+    def __init__(self, sam_sys_inputs, site_sys_inputs=None,
                  output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object."""
         super().__init__(sam_sys_inputs, site_sys_inputs=site_sys_inputs,
@@ -401,18 +401,15 @@ class LCOE(Economic):
                                'Available datasets: {}'.format(cfh.datasets))
         return site_gids, calc_aey, cf_arr
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam LCOE FCR object.
 
         Returns
         -------
-        _default : PySAM.Lcoefcr
-            Executed Lcoefcr pysam object.
+        PySAM.Lcoefcr
         """
-        if self._default is None:
-            self._default = DefaultLCOE.default()
-        return self._default
+        return DefaultLCOE.default()
 
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, year,
@@ -468,7 +465,7 @@ class SingleOwner(Economic):
     MODULE = 'singleowner'
     PYSAM = PySamSingleOwner
 
-    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
+    def __init__(self, sam_sys_inputs, site_sys_inputs=None,
                  output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
@@ -509,19 +506,15 @@ class SingleOwner(Economic):
                         outputs = wb.output
         return inputs, outputs
 
-    @property
-    def default(self):
+    @staticmethod
+    def default():
         """Get the executed default pysam Single Owner object.
 
         Returns
         -------
-        _default : PySAM.Singleowner
-            Executed Singleowner pysam object.
+        PySAM.Singleowner
         """
-        if self._default is None:
-            self._default = DefaultSingleOwner.default()
-
-        return self._default
+        return DefaultSingleOwner.default()
 
     def collect_outputs(self):
         """Collect SAM output_request, including windbos results."""

@@ -68,7 +68,8 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 out_fpath=None, drop_leap=False, mem_util_lim=0.4):
+                 out_fpath=None, drop_leap=False, mem_util_lim=0.4,
+                 scale_outputs=True):
         """
         Parameters
         ----------
@@ -89,6 +90,8 @@ class BaseGen(ABC):
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
         """
         log_versions(logger)
         self._points_control = points_control
@@ -102,6 +105,7 @@ class BaseGen(ABC):
         self._sam_obj_default = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self.scale_outputs = scale_outputs
 
         self._run_attrs = {'points_control': str(points_control),
                            'output_request': output_request,
@@ -363,7 +367,7 @@ class BaseGen(ABC):
             else:
                 scale_factor = 1
 
-            if scale_factor != 1:
+            if scale_factor != 1 and self.scale_outputs:
                 v = v.astype('float32')
                 v /= scale_factor
 
@@ -483,9 +487,13 @@ class BaseGen(ABC):
 
         Parameters
         ----------
-        points : slice | list | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
+        points : int | slice | list | str | pandas.DataFrame
+                 | reV.config.project_points.PointsControl
+            Single site integer,
+            or slice or list specifying project points,
+            or string pointing to a project points csv,
+            or a pre-loaded project points DataFrame,
+            or a fully instantiated PointsControl object.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -547,9 +555,10 @@ class BaseGen(ABC):
 
         Parameters
         ----------
-        points : slice | list | str | pandas.DataFrame
+        points : int | slice | list | str | pandas.DataFrame
                  | reV.config.project_points.PointsControl
-            Slice or list specifying project points,
+            Single site integer,
+            or slice or list specifying project points,
             or string pointing to a project points csv,
             or a pre-loaded project points DataFrame,
             or a fully instantiated PointsControl object.
@@ -833,9 +842,7 @@ class BaseGen(ABC):
 
         else:
             if self._sam_obj_default is None:
-                sam_module_class = self.sam_module
-                init_obj = sam_module_class()  # pylint: disable=E1102
-                self._sam_obj_default = init_obj.default
+                self._sam_obj_default = self.sam_module.default()
 
             try:
                 out_data = getattr(self._sam_obj_default.Outputs, dset)
@@ -958,7 +965,7 @@ class BaseGen(ABC):
 
         for request in self.output_request:
             dtype = 'float32'
-            if request in self.OUT_ATTRS:
+            if request in self.OUT_ATTRS and self.scale_outputs:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
 
             shape = self._get_data_shape(request, self._out_n_sites)
@@ -1006,6 +1013,7 @@ class BaseGen(ABC):
                     value = np.array(value)
 
                 self._out[var][:, i] = value.T
+
             elif value != 0:
                 self._out[var][i] = value
 

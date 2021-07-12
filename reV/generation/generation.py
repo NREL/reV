@@ -12,8 +12,13 @@ import json
 
 from reV.generation.base import BaseGen
 from reV.utilities.exceptions import ProjectPointsValueError, InputError
-from reV.SAM.generation import (Pvwattsv5, Pvwattsv7, TcsMoltenSalt, WindPower,
-                                SolarWaterHeat, TroughPhysicalHeat,
+from reV.SAM.generation import (PvWattsv5,
+                                PvWattsv7,
+                                PvSamv1,
+                                TcsMoltenSalt,
+                                WindPower,
+                                SolarWaterHeat,
+                                TroughPhysicalHeat,
                                 LinearDirectSteam)
 
 from rex.resource import Resource
@@ -37,11 +42,55 @@ with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
 
 
 class Gen(BaseGen):
-    """reV generation analysis class to run SAM simulations"""
+    """reV generation analysis class to run SAM simulations
+
+
+    Examples
+    --------
+    The following is an example of the most simple way to run reV generation.
+    The reV code pipes in renewable energy resource data (usually from the
+    NSRDB or WTK), loads the SAM config, and then executes the PySAM compute
+    module for a given technology. If economic parameters are supplied, you can
+    bundle a "follow-on" econ calculation by just adding the desired econ
+    output keys to the output_request kwarg. You can request reV to run the
+    analysis for one or more "sites", which correspond to the meta indices in
+    the resource data (also commonly called the gid's). Note that the
+    TESTDATADIR refers to the local cloned repository and will need to be
+    replaced with a valid path if you installed reV via a simple pip install.
+
+    >>> import os
+    >>> from reV import Gen, TESTDATADIR
+    >>>
+    >>> sam_tech = 'pvwattsv7'
+    >>> sites = 0
+    >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
+    >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
+    >>>
+    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res)
+    >>>
+    >>> gen.out
+    {'cf_mean': array([0.16966143], dtype=float32)}
+    >>>
+    >>> sites = [3, 4, 7, 9]
+    >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
+    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res, output_request=req)
+    >>>
+    >>> gen.out
+    {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
+     'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
+     'cf_profile': array([[0., 0., 0., 0.],
+            [0., 0., 0., 0.],
+            [0., 0., 0., 0.],
+            ...,
+            [0., 0., 0., 0.],
+            [0., 0., 0., 0.],
+            [0., 0., 0., 0.]])}
+    """
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {'pvwattsv5': Pvwattsv5,
-               'pvwattsv7': Pvwattsv7,
+    OPTIONS = {'pvwattsv5': PvWattsv5,
+               'pvwattsv7': PvWattsv7,
+               'pvsamv1': PvSamv1,
                'tcsmoltensalt': TcsMoltenSalt,
                'solarwaterheat': SolarWaterHeat,
                'troughphysicalheat': TroughPhysicalHeat,
@@ -60,7 +109,7 @@ class Gen(BaseGen):
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  site_data=None, gid_map=None, out_fpath=None, drop_leap=False,
-                 mem_util_lim=0.4):
+                 mem_util_lim=0.4, scale_outputs=True):
         """
         Parameters
         ----------
@@ -92,19 +141,14 @@ class Gen(BaseGen):
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
                          out_fpath=out_fpath, drop_leap=drop_leap,
-                         mem_util_lim=mem_util_lim)
-
-        self._res_file = res_file
-        self._sam_module = self.OPTIONS[self.tech]
-        self._run_attrs['sam_module'] = self._sam_module.MODULE
-        self._run_attrs['res_file'] = res_file
-
-        self._multi_h5_res, self._hsds = check_res_file(res_file)
-        self._gid_map = self._parse_gid_map(gid_map)
+                         mem_util_lim=mem_util_lim,
+                         scale_outputs=scale_outputs)
 
         if self.tech not in self.OPTIONS:
             msg = ('Requested technology "{}" is not available. '
@@ -113,6 +157,14 @@ class Gen(BaseGen):
                    .format(self.tech, list(self.OPTIONS.keys())))
             logger.error(msg)
             raise KeyError(msg)
+
+        self._res_file = res_file
+        self._sam_module = self.OPTIONS[self.tech]
+        self._run_attrs['sam_module'] = self._sam_module.MODULE
+        self._run_attrs['res_file'] = res_file
+
+        self._multi_h5_res, self._hsds = check_res_file(res_file)
+        self._gid_map = self._parse_gid_map(gid_map)
 
         # initialize output file
         self._init_fpath()
@@ -273,6 +325,7 @@ class Gen(BaseGen):
 
                         # apply scale factor and dtype
                         out[site][k] *= scale_factor
+
                         if np.issubdtype(dtype, np.integer):
                             # round after scaling if integer dtype
                             out[site][k] = np.round(out[site][k])
@@ -393,9 +446,10 @@ class Gen(BaseGen):
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
             The string should be lower-cased with spaces and _ removed.
-        points : slice | list | str | reV.config.project_points.PointsControl
+        points : int | slice | list | str | PointsControl
             Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
+            points csv, or a fully instantiated PointsControl object. Can
+            also be a single site integer values.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
@@ -467,7 +521,8 @@ class Gen(BaseGen):
                   site_data=site_data,
                   gid_map=gid_map,
                   out_fpath=out_fpath,
-                  mem_util_lim=mem_util_lim)
+                  mem_util_lim=mem_util_lim,
+                  scale_outputs=scale_outputs)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,

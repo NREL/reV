@@ -69,8 +69,10 @@ class SAMConfig(BaseConfig):
         if self._bifacial is None:
             self._bifacial = False
             for v in self.inputs.values():
-                self._bifacial = any((self._bifacial,
-                                      bool(v.get('bifaciality', False))))
+                bi_flags = ('bifaciality', 'spe_is_bifacial',
+                            'cec_is_bifacial', '6par_is_bifacial')
+                bi_bools = [bool(v.get(flag, 0)) for flag in bi_flags]
+                self._bifacial = any(bi_bools + [self._bifacial])
 
         return self._bifacial
 

@@ -4,6 +4,7 @@ import json
 import os
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
+import PySAM.Pvsamv1 as PySamDetailedPV
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSWH
@@ -17,7 +18,7 @@ DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULTSDIR = os.path.join(DEFAULTSDIR, 'defaults')
 
 
-class DefaultPvwattsv5:
+class DefaultPvWattsv5:
     """Class for default PVWattsv5"""
 
     @staticmethod
@@ -41,7 +42,7 @@ class DefaultPvwattsv5:
         return obj
 
 
-class DefaultPvwattsv7:
+class DefaultPvWattsv7:
     """class for default PVWattsv7"""
 
     @staticmethod
@@ -50,6 +51,20 @@ class DefaultPvwattsv7:
         res_file = os.path.join(DEFAULTSDIR,
                                 'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamPV7.default('PVWattsNone')
+        obj.SolarResource.solar_resource_file = res_file
+        obj.execute()
+        return obj
+
+
+class DefaultPvSamv1:
+    """class for default detailed PV"""
+
+    @staticmethod
+    def default():
+        """Get the default PySAM Pvsamv1 object"""
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        obj = PySamDetailedPV.default('FlatPlatePVNone')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
         return obj
@@ -129,7 +144,7 @@ class DefaultLCOE:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        pv = DefaultPvwattsv5.default()
+        pv = DefaultPvWattsv5.default()
         obj = PySamLCOE.default('PVWattsLCOECalculator')
         obj.SimpleLCOE.annual_energy = pv.Outputs.annual_energy
         obj.execute()
@@ -142,7 +157,7 @@ class DefaultSingleOwner:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        pv = DefaultPvwattsv5.default()
+        pv = DefaultPvWattsv5.default()
         obj = PySamSingleOwner.default('PVWattsSingleOwner')
         obj.SystemOutput.gen = pv.Outputs.ac
         obj.execute()

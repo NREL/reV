@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from reV.SAM.defaults import (DefaultPvwattsv5, DefaultPvwattsv7,
+from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv7,
                               DefaultWindPower)
-from reV.SAM.generation import Pvwattsv5
+from reV.SAM.generation import PvWattsv5
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.SAM.version_checker import PySamVersionChecker
@@ -43,7 +43,7 @@ def test_res_length(res):
     for res_df, meta in res:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            res_dropped = Pvwattsv5.ensure_res_len(res_df.values)
+            res_dropped = PvWattsv5.ensure_res_len(res_df.values)
         break
 
     compare = np.allclose(res_dropped[:9000, :], res_df.values[:9000, :])
@@ -53,7 +53,7 @@ def test_leap_year(res):
     """Test the method to ensure resource array length with dropping leap day.
     """
     for res_df, meta in res:
-        res_dropped = Pvwattsv5.drop_leap(res_df)
+        res_dropped = PvWattsv5.drop_leap(res_df)
         break
     compare = np.allclose(res_dropped.iloc[-9000:, :].values,
                           res_df.iloc[-9000:, :].values)
@@ -79,7 +79,7 @@ def test_PV_lat_tilt(res, site_index):
             # iterate through requested sites.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sim = Pvwattsv5(resource=res_df, meta=meta,
+                sim = PvWattsv5(resource=res_df, meta=meta,
                                 sam_sys_inputs=inputs,
                                 output_request=('cf_mean',))
             break
@@ -95,7 +95,7 @@ def test_time_interval(dt):
     baseline = {'1h': 1, '30min': 2, '5min': 12}
     ti = pd.date_range('1-1-{y}'.format(y=2012), '1-1-{y}'.format(y=2013),
                        freq=dt)[:-1]
-    interval = Pvwattsv5.get_time_interval(ti)
+    interval = PvWattsv5.get_time_interval(ti)
     assert interval == baseline[dt]
 
 
@@ -133,13 +133,13 @@ def test_pysam_version_checker_wind():
 
 def test_default_pvwattsv5():
     """Test default pvwattsv5 execution and compare baseline annual energy"""
-    default = DefaultPvwattsv5.default()
+    default = DefaultPvWattsv5.default()
     assert round(default.Outputs.annual_energy, -1) == 6830
 
 
 def test_default_pvwattsv7():
     """Test default pvwattsv7 execution and compare baseline annual energy"""
-    default = DefaultPvwattsv7.default()
+    default = DefaultPvWattsv7.default()
     assert round(default.Outputs.annual_energy, -1) == 6940
 
 
