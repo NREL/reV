@@ -23,6 +23,7 @@ jobs:
       - name: build documentation
         run: |
           cd docs
+          sphinx-apidoc -eMT -o source/reV ../reV
           make html
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3.6.1
