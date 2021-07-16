@@ -23,7 +23,7 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
     :target: https://anaconda.org/nrel/nrel-rev
 
-.. image:: https://codecov.io/gh/nrel/reV/branch/master/graph/badge.svg?token=U4ZU9F0K0Z
+.. image:: https://codecov.io/gh/nrel/reV/branch/main/graph/badge.svg?token=U4ZU9F0K0Z
     :target: https://codecov.io/gh/nrel/reV
 
 .. image:: https://zenodo.org/badge/201343076.svg
@@ -48,19 +48,19 @@ Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis William
 reV command line tools
 ======================
 
-- `reV <https://nrel.github.io/reV/reV/reV.cli.html#rev>`_
-- `reV-project-points <https://nrel.github.io/reV/reV/reV.config.cli_project_points.html#rev-project-points>`_
-- `reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
-- `reV-econ <https://nrel.github.io/reV/reV/reV.econ.cli_econ.html#rev-econ>`_
-- `reV-offshore <https://nrel.github.io/reV/reV/reV.offshore.cli_offshore.html#rev-offshore>`_
-- `reV-collect <https://nrel.github.io/reV/reV/reV.handlers.cli_collect.html#rev-collect>`_
-- `reV-multiyear <https://nrel.github.io/reV/reV/reV.handlers.cli_multi_year.html#rev-multiyear>`_
-- `reV-supply-curve-aggregation <https://nrel.github.io/reV/reV/reV.supply_curve.cli_sc_aggregation.html#rev-supply-curve-aggregation>`_
-- `reV-supply-curve <https://nrel.github.io/reV/reV/reV.supply_curve.cli_supply_curve.html#rev-supply-curve>`_
-- `reV-rep-profiles <https://nrel.github.io/reV/reV/reV.rep_profiles.cli_rep_profiles.html#rev-rep-profiles>`_
-- `reV-pipeline <https://nrel.github.io/reV/reV/reV.pipeline.cli_pipeline.html#rev-pipeline>`_
-- `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
-- `reV-QA-QC <https://nrel.github.io/reV/reV/reV.qa_qc.cli_qa_qc.html#rev-qa-qc>`_
+- `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
+- `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
+- `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
+- `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
+- `reV-offshore <https://nrel.github.io/reV/_cli/reV-offshore.html#rev-offshore>`_
+- `reV-collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
+- `reV-multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
+- `reV-supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
+- `reV-supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
+- `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
+- `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
+- `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
+- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA_QC.html#rev-qa-qc>`_
 
 Using Eagle Env
 ===============
@@ -144,7 +144,7 @@ Option 2: Clone repo (recommended for developers)
     2) Run the command: ``conda activate rev``
     3) cd into the repo cloned in 1.
     4) prior to running ``pip`` below, make sure the branch is correct (install
-       from master!)
+       from main!)
     5) Install ``reV`` and its dependencies by running:
        ``pip install .`` (or ``pip install -e .`` if running a dev branch
        or working on the source code)
