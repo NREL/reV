@@ -60,7 +60,7 @@ reV command line tools
 - `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
 - `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
 - `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
-- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA_QC.html#rev-qa-qc>`_
+- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
 
 Using Eagle Env
 ===============
