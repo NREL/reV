@@ -64,6 +64,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/_autosummary/
 
 # PyBuilder
 target/
@@ -108,6 +109,6 @@ ENV/
 # VSCode
 *.vscode
 
-# VIM
+# vim
 *.swp
 tags
