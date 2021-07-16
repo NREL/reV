@@ -1,0 +1,44 @@
+/* Override nav bar color */
+/*.wy-side-nav-search {
+    background-color: #fbfbb6;
+}
+.wy-side-nav-search > a {
+    color: #b2355c
+}*/
+
+/* Override text bar color */
+/*.caption-text {
+    color: #b2355c;
+}*/
+
+/* Override code signature colour */
+/*.rst-content dl:not(.docutils) dt {
+    background: #fbfbb6;
+    color: #b2355c;
+    border-top: solid 3px #b2355c;
+}*/
+
+/* Override hyperlink colour */
+/* a {
+    color: #b2355c;
+}*/
+
+/* Make content width wider*/
+.wy-nav-content {
+    max-width: 60% !important;
+}
+
+
+.wy-side-nav-search {
+  display: block;
+  width: 300px;
+  padding: 0.809em;
+  margin-bottom: 0.809em;
+  z-index: 200;
+  background-color: #fcfcfc;
+  text-align: center;
+  padding: 0.809em;
+  display: block;
+  color: #fcfcfc;
+  margin-bottom: 0.809em;
+}

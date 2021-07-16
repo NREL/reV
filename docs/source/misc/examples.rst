@@ -1,11 +1,5 @@
-Installation and Usage
-======================
-.. toctree::
-
-    installation
-
 Examples
-============
+========
 .. toctree::
 
    examples.project_points
