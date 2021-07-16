@@ -22,15 +22,15 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'rex'
+project = 'reV'
 copyright = '2020, Alliance for Sustainable Energy, LLC'
-author = 'Michael Rossol, Grant Buster'
+author = 'Galen MacLaurin, Michael Rossol'
 
 pkg = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 pkg = os.path.dirname(pkg)
 sys.path.append(pkg)
 
-with open(os.path.join(pkg, "rex", "version.py"), encoding="utf-8") as f:
+with open(os.path.join(pkg, "reV", "version.py"), encoding="utf-8") as f:
     v = f.read()
 
 v = v.split('=')[-1].strip().strip('"').strip("'")
@@ -118,7 +118,7 @@ html_css_file = ["custom.css"]
 html_context = {
     "display_github": True,
     "github_user": "nrel",
-    "github_repo": "rex",
+    "github_repo": "reV",
     "github_version": "main",
     "conf_py_path": "/docs/source/",
     "source_suffix": source_suffix,
@@ -143,7 +143,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'rexdoc'
+htmlhelp_basename = 'reVdoc'
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -169,7 +169,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'rex.tex', 'rex Documentation',
+    (master_doc, 'reV.tex', 'reV Documentation',
      'Michael Rossol, Grant Buster', 'manual'),
 ]
 
@@ -178,7 +178,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'rex', 'rex Documentation',
+    (master_doc, 'reV', 'reV Documentation',
      [author], 1)
 ]
 
@@ -188,8 +188,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'rex', 'rex Documentation',
-     author, 'rex', 'One line description of project.',
+    (master_doc, 'reV', 'reV Documentation',
+     author, 'reV', 'One line description of project.',
      'Miscellaneous'),
 ]
 
