@@ -172,8 +172,8 @@ class MultiYearGroup:
 
         if not any(source_files):
             e = ('Could not find any source files for '
-                 'multi-year collection group: "{}"'
-                 .format(self.name))
+                 'multi-year collection group: "{}" in "{}"'
+                 .format(self.name, self._source_dir))
             logger.error(e)
             raise FileNotFoundError(e)
 
