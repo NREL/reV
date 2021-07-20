@@ -152,4 +152,5 @@ class PipelineConfig(AnalysisConfig):
             if 'name' in self:
                 if self['name']:
                     self._name = self['name']
+
         return self._name
