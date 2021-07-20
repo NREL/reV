@@ -13,6 +13,8 @@ import logging
 from reV.utilities.exceptions import ConfigError
 from reV.config.base_config import BaseConfig
 
+from rex.utilities.utilities import unstupify_path
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class BatchConfig(BaseConfig):
         self._pre_flight_fp(config)
         config_dir = None
         if config.endswith('.csv'):
-            config_dir = os.path.dirname(os.path.realpath(config))
+            config_dir = os.path.dirname(unstupify_path(config))
             config = BatchCsv(config)
 
         super().__init__(config, perform_str_rep=False)

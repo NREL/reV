@@ -7,7 +7,7 @@ import logging
 import os
 
 from rex.utilities import safe_json_load
-from rex.utilities.utilities import get_class_properties
+from rex.utilities.utilities import get_class_properties, unstupify_path
 
 from reV.utilities.exceptions import ConfigError
 
@@ -193,7 +193,7 @@ class BaseConfig(dict):
         # str is either json file path or serialized json object
         if isinstance(config, str):
             if config.endswith('.json'):
-                self._config_dir = os.path.dirname(os.path.realpath(config))
+                self._config_dir = os.path.dirname(unstupify_path(config))
                 self._config_dir += '/'
                 self._config_dir = self._config_dir.replace('\\', '/')
                 self.str_rep['./'] = self.config_dir

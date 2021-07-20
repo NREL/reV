@@ -10,7 +10,7 @@ from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
-from rex.utilities.utilities import get_class_properties
+from rex.utilities.utilities import get_class_properties, unstupify_path
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ class AnalysisConfig(BaseConfig):
         if self._name is None:
 
             # name defaults to base directory name
-            self._name = os.path.basename(os.path.normpath(self.dirout))
+            self._name = os.path.basename(unstupify_path(self.dirout))
 
             # collect name is simple, will be added to what is being collected
             if self.NAME == 'collect':
