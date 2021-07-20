@@ -11,8 +11,6 @@ import os
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.utilities.exceptions import ConfigError, PipelineError
 
-from rex.utilities.utilities import unstupify_path
-
 
 class PipelineConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
@@ -148,7 +146,7 @@ class PipelineConfig(AnalysisConfig):
             reV pipeline name.
         """
         if self._name is None:
-            self._name = os.path.basename(unstupify_path(self.dirout))
+            self._name = os.path.basename(os.path.normpath(self.dirout))
             if 'name' in self:
                 if self['name']:
                     self._name = self['name']
