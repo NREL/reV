@@ -16,7 +16,8 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
 
 from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
                                      MultiFileWTK)
-from rex.renewable_resource import WindResource, SolarResource, NSRDB
+from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
+                                    WaveResource)
 from rex.utilities.utilities import check_res_file
 
 
@@ -94,14 +95,15 @@ class SamResourceRetriever:
         return res_gids
 
     @classmethod
-    def _make_solar_kwargs(cls, res_handler, project_points, output_request,
-                           gid_map):
-        """Make kwargs dict for Solar | NSRDB resource handler initialization.
+    def _make_res_kwargs(cls, res_handler, project_points, output_request,
+                         gid_map):
+        """
+        Make Resource.preloadSam args and kwargs
 
         Parameters
         ----------
-        res_handler : SolarResource | NSRDB
-            Solar resource handler.
+        res_handler : Resource handler
+            Wind resource handler.
         project_points : reV.config.ProjectPoints
             reV Project Points instance used to retrieve resource data at a
             specific set of sites.
@@ -119,83 +121,49 @@ class SamResourceRetriever:
             Extra input args to preload sam resource.
         args : tuple
             Args for res_handler.preload_SAM class method
-        res_handler : SolarResource | NSRDB
-            Solar resource handler.
         """
         sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
         args = (sites,)
 
         kwargs = {}
-        # check for clearsky irradiation analysis for NSRDB
-        kwargs['clearsky'] = project_points.sam_config_obj.clearsky
-        kwargs['bifacial'] = project_points.sam_config_obj.bifacial
-        kwargs['tech'] = project_points.tech
-        # Check for resource means:
-        mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
-        if any(x in output_request for x in mean_keys):
-            kwargs['means'] = True
+        if res_handler in (SolarResource, NSRDB):
+            # check for clearsky irradiation analysis for NSRDB
+            kwargs['clearsky'] = project_points.sam_config_obj.clearsky
+            kwargs['bifacial'] = project_points.sam_config_obj.bifacial
+            kwargs['tech'] = project_points.tech
+            # Check for resource means:
+            mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
+            if any(x in output_request for x in mean_keys):
+                kwargs['means'] = True
 
-        downscale = project_points.sam_config_obj.downscale
-        # check for downscaling request
-        if downscale is not None:
-            # make sure that downscaling is only requested for NSRDB resource
-            if res_handler != NSRDB:
-                msg = ('Downscaling was requested for a non-NSRDB '
-                       'resource file. reV does not have this capability at '
-                       'the current time. Please contact a developer for '
-                       'more information on this feature.')
-                logger.warning(msg)
-                warn(msg, SAMInputWarning)
-            else:
-                # pass through the downscaling request
-                kwargs['downscale'] = downscale
+            downscale = project_points.sam_config_obj.downscale
+            # check for downscaling request
+            if downscale is not None:
+                # make sure that downscaling is only requested for NSRDB
+                # resource
+                if res_handler != NSRDB:
+                    msg = ('Downscaling was requested for a non-NSRDB '
+                           'resource file. reV does not have this capability '
+                           'at the current time. Please contact a developer '
+                           'for more information on this feature.')
+                    logger.warning(msg)
+                    warn(msg, SAMInputWarning)
+                else:
+                    # pass through the downscaling request
+                    kwargs['downscale'] = downscale
+        elif res_handler == WindResource:
+            args += (project_points.h)
+            kwargs['icing'] = project_points.sam_config_obj.icing
+            if project_points.curtailment is not None:
+                if project_points.curtailment.precipitation:
+                    # make precip rate available for curtailment analysis
+                    kwargs['precip_rate'] = True
 
-        return kwargs, args, res_handler
+            # Check for resource means:
+            if 'ws_mean' in output_request:
+                kwargs['means'] = True
 
-    @classmethod
-    def _make_wind_kwargs(cls, res_handler, project_points, output_request,
-                          gid_map):
-        """Make kwargs dict for Wind resource handler initialization.
-
-        Parameters
-        ----------
-        res_handler : SolarResource | NSRDB
-            Wind resource handler.
-        project_points : reV.config.ProjectPoints
-            reV Project Points instance used to retrieve resource data at a
-            specific set of sites.
-        output_request : list
-            Outputs to retrieve from SAM.
-        gid_map : None | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids. This can be None or a pre-extracted dict.
-
-        Returns
-        -------
-        kwargs : dict
-            Extra input args to preload sam resource.
-        args : tuple
-            Args for res_handler.preload_SAM class method
-        res_handler : WindResource | MultiFileWTK
-            Wind resource handler.
-        """
-
-        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
-        args = (sites, project_points.h)
-        kwargs = {}
-        kwargs['icing'] = project_points.sam_config_obj.icing
-        if project_points.curtailment is not None:
-            if project_points.curtailment.precipitation:
-                # make precip rate available for curtailment analysis
-                kwargs['precip_rate'] = True
-
-        # Check for resource means:
-        if 'ws_mean' in output_request:
-            kwargs['means'] = True
-
-        return kwargs, args, res_handler
+        return kwargs, args
 
     @staticmethod
     def _multi_file_mods(res_handler, kwargs, res_file):
@@ -264,14 +232,8 @@ class SamResourceRetriever:
         """
 
         res_handler = cls._get_base_handler(res_file, module)
-
-        if res_handler in (SolarResource, NSRDB):
-            kwargs, args, res_handler = cls._make_solar_kwargs(
-                res_handler, project_points, output_request, gid_map)
-
-        elif res_handler == WindResource:
-            kwargs, args, res_handler = cls._make_wind_kwargs(
-                res_handler, project_points, output_request, gid_map)
+        kwargs, args = cls._make_res_kwargs(res_handler, project_points,
+                                            output_request, gid_map)
 
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
@@ -533,6 +495,7 @@ class RevPySam(Sam):
                       'troughphysicalheat': SolarResource,
                       'lineardirectsteam': SolarResource,
                       'windpower': WindResource,
+                      'mhkwave': WaveResource
                       }
 
     def __init__(self, meta, sam_sys_inputs, output_request,
@@ -629,9 +592,10 @@ class RevPySam(Sam):
             Truncated array of resource data such that length(res_arr)%base=0.
         """
 
-        if len(res_arr) < base:
-            msg = ('Received timeseries of length {}, expected timeseries to'
-                   'be at least {}'.format(len(res_arr), base))
+        if len(res_arr) < base & base % len(res_arr) != 0:
+            msg = ('Received timeseries of length {r}, expected timeseries to'
+                   ' be at least {b} or a multiple of {b}'
+                   .format(r=len(res_arr), b=base))
             logger.exception(msg)
             raise ResourceError(msg)
 
