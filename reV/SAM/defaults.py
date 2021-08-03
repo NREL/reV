@@ -2,6 +2,7 @@
 """PySAM default implementations."""
 import json
 import os
+import pandas as pd
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
 import PySAM.Pvsamv1 as PySamDetailedPV
@@ -12,7 +13,7 @@ import PySAM.TroughPhysicalProcessHeat as PySamTPPH
 import PySAM.LinearFresnelDsgIph as PySamLDS
 import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
-import PySAM.WaveFileReader as PySamMhkWave
+import PySAM.MhkWave as PySamMhkWave
 
 
 DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
@@ -153,10 +154,19 @@ class DefaultMhkWave:
     @staticmethod
     def default():
         """Get the default PySAM object"""
+        data_dict = {}
+        data_dict['lat'] = 40.8418
+        data_dict['lon'] = 124.2477
+        data_dict['tz'] = -7
         res_file = os.path.join(DEFAULTSDIR, 'US_Wave.csv')
+        for var, data in pd.read_csv(res_file).iteritems():
+            data_dict[var] = data.values.tolist()
+
         obj = PySamMhkWave.default('MEwaveLCOECalculator')
-        obj.WeatherReader.wave_resource_filename_ts = res_file
-        obj.WeatherReader.wave_resource_model_choice = 1
+        obj.MHKWave.wave_resource_model_choice = 1
+        obj.unassign('significant_wave_height')
+        obj.unassign('energy_period')
+        obj.MHKWave.wave_resource_data = data_dict
         obj.execute()
 
         return obj
