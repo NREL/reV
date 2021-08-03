@@ -152,7 +152,7 @@ class SamResourceRetriever:
                     # pass through the downscaling request
                     kwargs['downscale'] = downscale
         elif res_handler == WindResource:
-            args += (project_points.h)
+            args += (project_points.h, )
             kwargs['icing'] = project_points.sam_config_obj.icing
             if project_points.curtailment is not None:
                 if project_points.curtailment.precipitation:
@@ -286,6 +286,7 @@ class Sam:
             out = getattr(getattr(self.pysam, group), key)
         except Exception:
             out = None
+
         return out
 
     def __setitem__(self, key, value):
@@ -333,6 +334,7 @@ class Sam:
         """
         obj = cls.PYSAM.default('GenericSystemNone')
         obj.execute()
+
         return obj
 
     @property
@@ -576,38 +578,46 @@ class RevPySam(Sam):
         return resource
 
     @staticmethod
-    def ensure_res_len(res_arr, base=8760):
-        """Ensure that the length of resource array is a multiple of base.
+    def ensure_res_len(arr, time_index):
+        """
+        Ensure time_index has a constant time-step and only covers 365 days
+        (no leap days). If not remove last day
 
         Parameters
         ----------
-        res_arr : np.ndarray
-            Array of resource data.
-        base : int
-            Ensure that length of resource array is a multiple of this value.
+        arr : ndarray
+            Array to truncate if time_index has a leap day
+        time_index : pandas.DatatimeIndex
+            Time index associated with arr, used to check time-series
+            frequency and number of days
 
         Returns
         -------
-        res_arr : array-like
-            Truncated array of resource data such that length(res_arr)%base=0.
+        arr : ndarray
+            Truncated array of data such that there are 365 days
         """
+        msg = ('A valid time_index must be supplied to ensure the proper '
+               'resource length! Instead {} was supplied'
+               .format(type(time_index)))
+        assert isinstance(time_index, pd.DatetimeIndex)
 
-        if len(res_arr) < base & base % len(res_arr) != 0:
-            msg = ('Received timeseries of length {r}, expected timeseries to'
-                   ' be at least {b} or a multiple of {b}'
-                   .format(r=len(res_arr), b=base))
-            logger.exception(msg)
+        msg = ('arr length {} does not match time_index length {}!'
+               .format(len(arr), len(time_index)))
+        assert len(arr) == len(time_index)
+
+        freq = pd.infer_freq(time_index)
+        if freq is None:
+            msg = ('Resource time_index does not have a consistent time-step '
+                   '(frequency)!')
+            logger.error(msg)
             raise ResourceError(msg)
 
-        if len(res_arr) % base != 0:
-            div = np.floor(len(res_arr) / base)
-            target_len = int(div * base)
-            if len(res_arr.shape) == 1:
-                res_arr = res_arr[0:target_len]
-            else:
-                res_arr = res_arr[0:target_len, :]
+        doy = time_index.dayofyear
+        if doy.max() > 365:
+            mask = np.where(doy <= 365)[0]
+            arr = arr[mask]
 
-        return res_arr
+        return arr
 
     @staticmethod
     def make_datetime(series):

@@ -153,7 +153,7 @@ class DefaultMhkWave:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(DEFAULTSDIR, 'US Wave.csv')
+        res_file = os.path.join(DEFAULTSDIR, 'US_Wave.csv')
         obj = PySamMhkWave.default('MEwaveLCOECalculator')
         obj.WeatherReader.wave_resource_filename_ts = res_file
         obj.WeatherReader.wave_resource_model_choice = 1
