@@ -926,8 +926,8 @@ class AbstractSamSolarThermal(AbstractSamSolar, ABC):
                         axis=0)
         resource = pd.DataFrame(local, columns=resource.columns,
                                 index=time_index)
-        mask = (time_index.month != 2) & (time_index.day != 29)
-        time_index = time_index[mask]
+        mask = (time_index.month == 2) & (time_index.day == 29)
+        time_index = time_index[~mask]
 
         df = pd.DataFrame(index=time_index)
         df['Year'] = time_index.year
@@ -935,11 +935,9 @@ class AbstractSamSolarThermal(AbstractSamSolar, ABC):
         df['Day'] = time_index.day
         df['Hour'] = time_index.hour
         df['Minute'] = time_index.minute
-        df = df.join(resource.loc[mask])
-        print(df.columns)
+        df = df.join(resource.loc[~mask])
 
         df.to_csv(fname, index=False, mode='a')
-        print(pd.read_csv(fname).iloc[1].head())
 
         return fname
 
