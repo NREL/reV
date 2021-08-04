@@ -254,6 +254,27 @@ def test_pv_name_error():
         assert 'Did not recognize' in record[0].message
 
 
+def test_southern_hemisphere():
+    """Test reV pvwatts in the southern hemisphere with correct azimuth"""
+
+    rev2_points = slice(0, 1)
+    res_file = TESTDATADIR + '/nsrdb/brazil_solar.h5'
+    sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc', 'azimuth')
+
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+    assert gen.out['azimuth'] == 0
+
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+    assert gen.out['azimuth'] == 180
+
+
 def test_pvwattsv7_baseline():
     """Test reV pvwattsv7 generation against baseline data"""
 
