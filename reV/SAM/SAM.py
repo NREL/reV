@@ -605,7 +605,22 @@ class RevPySam(Sam):
                .format(len(arr), len(time_index)))
         assert len(arr) == len(time_index)
 
-        freq = pd.infer_freq(time_index)
+        if time_index.is_leap_year.all():
+            mask = time_index.month == 2
+            mask &= time_index.day == 29
+            if not mask.any():
+                mask = time_index.month == 2
+                mask &= time_index.day == 28
+                s = np.where(mask)[0][-1]
+
+                freq = pd.infer_freq(time_index[:s])
+                msg = 'frequencies do not match before and after 2/29'
+                assert freq == pd.infer_freq(time_index[s + 1:]), msg
+            else:
+                freq = pd.infer_freq(time_index)
+        else:
+            freq = pd.infer_freq(time_index)
+
         if freq is None:
             msg = ('Resource time_index does not have a consistent time-step '
                    '(frequency)!')
@@ -613,8 +628,11 @@ class RevPySam(Sam):
             raise ResourceError(msg)
 
         doy = time_index.dayofyear
-        if doy.max() > 365:
-            mask = np.where(doy <= 365)[0]
+        n_doy = len(doy.unique())
+        if n_doy > 365:
+            # Drop last day of year
+            doy_max = doy.max()
+            mask = doy != doy_max
             arr = arr[mask]
 
         return arr

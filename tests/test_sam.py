@@ -43,7 +43,7 @@ def test_res_length(res):
     for res_df, meta in res:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            res_dropped = PvWattsv5.ensure_res_len(res_df.values)
+            res_dropped = PvWattsv5.ensure_res_len(res_df.values, res_df.index)
         break
 
     compare = np.allclose(res_dropped[:9000, :], res_df.values[:9000, :])
@@ -55,9 +55,27 @@ def test_leap_year(res):
     for res_df, meta in res:
         res_dropped = PvWattsv5.drop_leap(res_df)
         break
+
     compare = np.allclose(res_dropped.iloc[-9000:, :].values,
                           res_df.iloc[-9000:, :].values)
     assert compare
+
+
+def test_leap_year_freq():
+    """
+    Test ensure_res_len with leap year data
+    """
+    time_index = pd.date_range('2012', '2013', freq='h', closed='left')
+    arr = np.arange(len(time_index) * 10).reshape(len(time_index), 10)
+    out = PvWattsv5.ensure_res_len(arr, time_index)
+    assert np.allclose(arr[:8760], out)
+
+    mask = time_index.month == 2
+    mask &= time_index.day == 29
+    time_index = time_index[~mask]
+    arr = np.arange(len(time_index) * 10).reshape(len(time_index), 10)
+    out = PvWattsv5.ensure_res_len(arr, time_index)
+    assert np.allclose(arr, out)
 
 
 @pytest.mark.parametrize('site_index', range(5))
