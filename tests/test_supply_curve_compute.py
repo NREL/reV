@@ -62,6 +62,9 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
+        # double check useful for when tables are changing
+        # but lcoe should be the same
+        assert np.allclose(baseline['total_lcoe'], sc_full['total_lcoe'])
         assert_frame_equal(baseline, sc_full, check_dtype=False)
     else:
         sc_full.to_csv(fpath_baseline, index=False)

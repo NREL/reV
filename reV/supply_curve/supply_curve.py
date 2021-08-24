@@ -1020,7 +1020,7 @@ class SupplyCurve:
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, sort_on='total_lcoe',
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                        'trans_cap_cost_per_mw'),
+                        'dist_km', 'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """
