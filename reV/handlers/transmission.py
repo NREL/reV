@@ -155,7 +155,7 @@ class TransmissionFeatures:
             trans_table.rename(columns={'trans_line_gid': 'trans_gid',
                                         'trans_gids': 'trans_line_gids'})
 
-        if 'dist_mi' in trans_table:
+        if 'dist_mi' in trans_table and 'dist_km' not in trans_table:
             trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
             trans_table['dist_km'] *= 1.60934
 
