@@ -84,6 +84,7 @@ class Offshore:
         self._time_index = None
         self._lcoe_key = nrwal_lcoe_key
         self._loss_key = nrwal_loss_key
+        self._run_all = run_all
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
@@ -123,7 +124,8 @@ class Offshore:
             if key in self._offshore_data:
                 self._out[key] = self._offshore_data[key].values
             else:
-                self._out[key] = np.full(len(self._offshore_data), np.nan)
+                self._out[key] = np.full(len(self._offshore_data), np.nan,
+                                         dtype=np.float32)
 
     @staticmethod
     def _parse_gen_data(gen_fpath, run_all=False):
@@ -167,7 +169,6 @@ class Offshore:
         # currently an assumption of sorted gids in the reV gen output
         msg = ('Source capacity factor meta data is not ordered!')
         assert list(meta['gid']) == sorted(list(meta['gid'])), msg
-
 
         if 'offshore' not in meta and not run_all:
             e = ('Offshore module cannot run without "offshore" flag in meta '
@@ -430,7 +431,7 @@ class Offshore:
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
 
-            # pylint: disable=C0201
+            # pylint: disable=C0201,C0206
             for name in self._out.keys():
                 if name in outs:
                     value = outs[name]
@@ -489,9 +490,18 @@ class Offshore:
             del f._h5['meta']
             f._set_meta('meta', self.meta_out, attrs=meta_attrs)
 
-            lcoe = f['lcoe_fcr']
-            lcoe[self._offshore_mask] = self._out[self._lcoe_key]
-            f['lcoe_fcr'] = lcoe
+            if 'lcoe_fcr' in f:
+                lcoe = f['lcoe_fcr']
+                lcoe[self._offshore_mask] = self._out[self._lcoe_key]
+                f['lcoe_fcr'] = lcoe
+            elif 'lcoe_fcr' not in f and self._run_all:
+                f._add_dset('lcoe_fcr', self._out[self._lcoe_key], np.float32,
+                            attrs={'units': 'dol/MWh', 'scale_factor': 1})
+            elif 'lcoe_fcr' not in f and not self._run_all:
+                lcoe = np.zeros(len(self.meta_out), dtype=np.float32)
+                lcoe[self._offshore_mask] = self._out[self._lcoe_key]
+                f._add_dset('lcoe_fcr', lcoe, np.float32,
+                            attrs={'units': 'dol/MWh', 'scale_factor': 1})
 
             cf_mean = f['cf_mean']
             cf_mean[self._offshore_mask] *= loss_mult
