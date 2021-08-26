@@ -1,4 +1,4 @@
-NREL-NRWAL>=0.0.1
+NREL-NRWAL>=0.0.3
 NREL-PySAM>=2.2.4
 NREL-rex>=0.2.64
 packaging>=20.3
