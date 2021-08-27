@@ -762,3 +762,17 @@ class RevPySam(Sam):
     def assign_inputs(self):
         """Assign the self.sam_sys_inputs attribute to the PySAM object."""
         super().assign_inputs(self.sam_sys_inputs)
+
+    def execute(self):
+        """Call the PySAM execute method. Raise SAMExecutionError if error.
+        Include the site index if available.
+        """
+        try:
+            self.pysam.execute()
+        except Exception as e:
+            msg = ('PySAM raised an error while executing: "{}"'
+                   .format(self.module))
+            if self.site is not None:
+                msg += ' for site {}'.format(self.site)
+            logger.exception(msg)
+            raise SAMExecutionError(msg) from e
