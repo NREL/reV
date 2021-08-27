@@ -16,7 +16,8 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
 
 from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
                                      MultiFileWTK)
-from rex.renewable_resource import WindResource, SolarResource, NSRDB
+from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
+                                    WaveResource)
 from rex.utilities.utilities import check_res_file
 
 
@@ -94,14 +95,15 @@ class SamResourceRetriever:
         return res_gids
 
     @classmethod
-    def _make_solar_kwargs(cls, res_handler, project_points, output_request,
-                           gid_map):
-        """Make kwargs dict for Solar | NSRDB resource handler initialization.
+    def _make_res_kwargs(cls, res_handler, project_points, output_request,
+                         gid_map):
+        """
+        Make Resource.preloadSam args and kwargs
 
         Parameters
         ----------
-        res_handler : SolarResource | NSRDB
-            Solar resource handler.
+        res_handler : Resource handler
+            Wind resource handler.
         project_points : reV.config.ProjectPoints
             reV Project Points instance used to retrieve resource data at a
             specific set of sites.
@@ -119,83 +121,49 @@ class SamResourceRetriever:
             Extra input args to preload sam resource.
         args : tuple
             Args for res_handler.preload_SAM class method
-        res_handler : SolarResource | NSRDB
-            Solar resource handler.
         """
         sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
         args = (sites,)
 
         kwargs = {}
-        # check for clearsky irradiation analysis for NSRDB
-        kwargs['clearsky'] = project_points.sam_config_obj.clearsky
-        kwargs['bifacial'] = project_points.sam_config_obj.bifacial
-        kwargs['tech'] = project_points.tech
-        # Check for resource means:
-        mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
-        if any(x in output_request for x in mean_keys):
-            kwargs['means'] = True
+        if res_handler in (SolarResource, NSRDB):
+            # check for clearsky irradiation analysis for NSRDB
+            kwargs['clearsky'] = project_points.sam_config_obj.clearsky
+            kwargs['bifacial'] = project_points.sam_config_obj.bifacial
+            kwargs['tech'] = project_points.tech
+            # Check for resource means:
+            mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
+            if any(x in output_request for x in mean_keys):
+                kwargs['means'] = True
 
-        downscale = project_points.sam_config_obj.downscale
-        # check for downscaling request
-        if downscale is not None:
-            # make sure that downscaling is only requested for NSRDB resource
-            if res_handler != NSRDB:
-                msg = ('Downscaling was requested for a non-NSRDB '
-                       'resource file. reV does not have this capability at '
-                       'the current time. Please contact a developer for '
-                       'more information on this feature.')
-                logger.warning(msg)
-                warn(msg, SAMInputWarning)
-            else:
-                # pass through the downscaling request
-                kwargs['downscale'] = downscale
+            downscale = project_points.sam_config_obj.downscale
+            # check for downscaling request
+            if downscale is not None:
+                # make sure that downscaling is only requested for NSRDB
+                # resource
+                if res_handler != NSRDB:
+                    msg = ('Downscaling was requested for a non-NSRDB '
+                           'resource file. reV does not have this capability '
+                           'at the current time. Please contact a developer '
+                           'for more information on this feature.')
+                    logger.warning(msg)
+                    warn(msg, SAMInputWarning)
+                else:
+                    # pass through the downscaling request
+                    kwargs['downscale'] = downscale
+        elif res_handler == WindResource:
+            args += (project_points.h, )
+            kwargs['icing'] = project_points.sam_config_obj.icing
+            if project_points.curtailment is not None:
+                if project_points.curtailment.precipitation:
+                    # make precip rate available for curtailment analysis
+                    kwargs['precip_rate'] = True
 
-        return kwargs, args, res_handler
+            # Check for resource means:
+            if 'ws_mean' in output_request:
+                kwargs['means'] = True
 
-    @classmethod
-    def _make_wind_kwargs(cls, res_handler, project_points, output_request,
-                          gid_map):
-        """Make kwargs dict for Wind resource handler initialization.
-
-        Parameters
-        ----------
-        res_handler : SolarResource | NSRDB
-            Wind resource handler.
-        project_points : reV.config.ProjectPoints
-            reV Project Points instance used to retrieve resource data at a
-            specific set of sites.
-        output_request : list
-            Outputs to retrieve from SAM.
-        gid_map : None | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids. This can be None or a pre-extracted dict.
-
-        Returns
-        -------
-        kwargs : dict
-            Extra input args to preload sam resource.
-        args : tuple
-            Args for res_handler.preload_SAM class method
-        res_handler : WindResource | MultiFileWTK
-            Wind resource handler.
-        """
-
-        sites = cls._parse_gid_map_sites(project_points.sites, gid_map=gid_map)
-        args = (sites, project_points.h)
-        kwargs = {}
-        kwargs['icing'] = project_points.sam_config_obj.icing
-        if project_points.curtailment is not None:
-            if project_points.curtailment.precipitation:
-                # make precip rate available for curtailment analysis
-                kwargs['precip_rate'] = True
-
-        # Check for resource means:
-        if 'ws_mean' in output_request:
-            kwargs['means'] = True
-
-        return kwargs, args, res_handler
+        return kwargs, args
 
     @staticmethod
     def _multi_file_mods(res_handler, kwargs, res_file):
@@ -264,14 +232,8 @@ class SamResourceRetriever:
         """
 
         res_handler = cls._get_base_handler(res_file, module)
-
-        if res_handler in (SolarResource, NSRDB):
-            kwargs, args, res_handler = cls._make_solar_kwargs(
-                res_handler, project_points, output_request, gid_map)
-
-        elif res_handler == WindResource:
-            kwargs, args, res_handler = cls._make_wind_kwargs(
-                res_handler, project_points, output_request, gid_map)
+        kwargs, args = cls._make_res_kwargs(res_handler, project_points,
+                                            output_request, gid_map)
 
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
@@ -324,6 +286,7 @@ class Sam:
             out = getattr(getattr(self.pysam, group), key)
         except Exception:
             out = None
+
         return out
 
     def __setitem__(self, key, value):
@@ -371,6 +334,7 @@ class Sam:
         """
         obj = cls.PYSAM.default('GenericSystemNone')
         obj.execute()
+
         return obj
 
     @property
@@ -533,6 +497,7 @@ class RevPySam(Sam):
                       'troughphysicalheat': SolarResource,
                       'lineardirectsteam': SolarResource,
                       'windpower': WindResource,
+                      'mhkwave': WaveResource
                       }
 
     def __init__(self, meta, sam_sys_inputs, output_request,
@@ -613,37 +578,64 @@ class RevPySam(Sam):
         return resource
 
     @staticmethod
-    def ensure_res_len(res_arr, base=8760):
-        """Ensure that the length of resource array is a multiple of base.
+    def ensure_res_len(arr, time_index):
+        """
+        Ensure time_index has a constant time-step and only covers 365 days
+        (no leap days). If not remove last day
 
         Parameters
         ----------
-        res_arr : np.ndarray
-            Array of resource data.
-        base : int
-            Ensure that length of resource array is a multiple of this value.
+        arr : ndarray
+            Array to truncate if time_index has a leap day
+        time_index : pandas.DatatimeIndex
+            Time index associated with arr, used to check time-series
+            frequency and number of days
 
         Returns
         -------
-        res_arr : array-like
-            Truncated array of resource data such that length(res_arr)%base=0.
+        arr : ndarray
+            Truncated array of data such that there are 365 days
         """
+        msg = ('A valid time_index must be supplied to ensure the proper '
+               'resource length! Instead {} was supplied'
+               .format(type(time_index)))
+        assert isinstance(time_index, pd.DatetimeIndex)
 
-        if len(res_arr) < base:
-            msg = ('Received timeseries of length {}, expected timeseries to'
-                   'be at least {}'.format(len(res_arr), base))
-            logger.exception(msg)
+        msg = ('arr length {} does not match time_index length {}!'
+               .format(len(arr), len(time_index)))
+        assert len(arr) == len(time_index)
+
+        if time_index.is_leap_year.all():
+            mask = time_index.month == 2
+            mask &= time_index.day == 29
+            if not mask.any():
+                mask = time_index.month == 2
+                mask &= time_index.day == 28
+                s = np.where(mask)[0][-1]
+
+                freq = pd.infer_freq(time_index[:s])
+                msg = 'frequencies do not match before and after 2/29'
+                assert freq == pd.infer_freq(time_index[s + 1:]), msg
+            else:
+                freq = pd.infer_freq(time_index)
+        else:
+            freq = pd.infer_freq(time_index)
+
+        if freq is None:
+            msg = ('Resource time_index does not have a consistent time-step '
+                   '(frequency)!')
+            logger.error(msg)
             raise ResourceError(msg)
 
-        if len(res_arr) % base != 0:
-            div = np.floor(len(res_arr) / base)
-            target_len = int(div * base)
-            if len(res_arr.shape) == 1:
-                res_arr = res_arr[0:target_len]
-            else:
-                res_arr = res_arr[0:target_len, :]
+        doy = time_index.dayofyear
+        n_doy = len(doy.unique())
+        if n_doy > 365:
+            # Drop last day of year
+            doy_max = doy.max()
+            mask = doy != doy_max
+            arr = arr[mask]
 
-        return res_arr
+        return arr
 
     @staticmethod
     def make_datetime(series):

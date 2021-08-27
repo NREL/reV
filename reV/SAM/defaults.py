@@ -2,6 +2,7 @@
 """PySAM default implementations."""
 import json
 import os
+import pandas as pd
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
 import PySAM.Pvsamv1 as PySamDetailedPV
@@ -12,6 +13,7 @@ import PySAM.TroughPhysicalProcessHeat as PySamTPPH
 import PySAM.LinearFresnelDsgIph as PySamLDS
 import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
+import PySAM.MhkWave as PySamMhkWave
 
 
 DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
@@ -39,6 +41,7 @@ class DefaultPvWattsv5:
         obj.AdjustmentFactors.constant = 0.0
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
+
         return obj
 
 
@@ -53,6 +56,7 @@ class DefaultPvWattsv7:
         obj = PySamPV7.default('PVWattsNone')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
+
         return obj
 
 
@@ -67,6 +71,7 @@ class DefaultPvSamv1:
         obj = PySamDetailedPV.default('FlatPlatePVNone')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
+
         return obj
 
 
@@ -81,6 +86,7 @@ class DefaultTcsMoltenSalt:
         obj = PySamCSP.default('MSPTSingleOwner')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
+
         return obj
 
 
@@ -92,8 +98,9 @@ class DefaultWindPower:
         """Get the default PySAM object"""
         res_file = os.path.join(DEFAULTSDIR, 'WY Southern-Flat Lands.csv')
         obj = PySamWindPower.default('WindPowerNone')
-        obj.Resource .wind_resource_filename = res_file
+        obj.Resource.wind_resource_filename = res_file
         obj.execute()
+
         return obj
 
 
@@ -108,6 +115,7 @@ class DefaultSwh:
         obj = PySamSWH.default('SolarWaterHeatingNone')
         obj.Weather.solar_resource_file = res_file
         obj.execute()
+
         return obj
 
 
@@ -122,6 +130,7 @@ class DefaultTroughPhysicalProcessHeat:
         obj = PySamTPPH.default('PhysicalTroughIPHNone')
         obj.Weather.file_name = res_file
         obj.execute()
+
         return obj
 
 
@@ -135,6 +144,31 @@ class DefaultLinearFresnelDsgIph:
         obj = PySamLDS.default('DSGLIPHNone')
         obj.Weather.file_name = res_file
         obj.execute()
+
+        return obj
+
+
+class DefaultMhkWave:
+    """Class for default mhkwave"""
+
+    @staticmethod
+    def default():
+        """Get the default PySAM object"""
+        data_dict = {}
+        data_dict['lat'] = 40.8418
+        data_dict['lon'] = 124.2477
+        data_dict['tz'] = -7
+        res_file = os.path.join(DEFAULTSDIR, 'US_Wave.csv')
+        for var, data in pd.read_csv(res_file).iteritems():
+            data_dict[var] = data.values.tolist()
+
+        obj = PySamMhkWave.default('MEwaveLCOECalculator')
+        obj.MHKWave.wave_resource_model_choice = 1
+        obj.unassign('significant_wave_height')
+        obj.unassign('energy_period')
+        obj.MHKWave.wave_resource_data = data_dict
+        obj.execute()
+
         return obj
 
 
@@ -148,6 +182,7 @@ class DefaultLCOE:
         obj = PySamLCOE.default('PVWattsLCOECalculator')
         obj.SimpleLCOE.annual_energy = pv.Outputs.annual_energy
         obj.execute()
+
         return obj
 
 
@@ -161,4 +196,5 @@ class DefaultSingleOwner:
         obj = PySamSingleOwner.default('PVWattsSingleOwner')
         obj.SystemOutput.gen = pv.Outputs.ac
         obj.execute()
+
         return obj

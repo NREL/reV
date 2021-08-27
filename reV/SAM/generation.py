@@ -19,6 +19,7 @@ import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSwh
 import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.LinearFresnelDsgIph as PySamLds
+import PySAM.MhkWave as PySamMhkWave
 
 from reV.SAM.defaults import (DefaultPvWattsv5,
                               DefaultPvWattsv7,
@@ -27,7 +28,8 @@ from reV.SAM.defaults import (DefaultPvWattsv5,
                               DefaultTcsMoltenSalt,
                               DefaultSwh,
                               DefaultTroughPhysicalProcessHeat,
-                              DefaultLinearFresnelDsgIph)
+                              DefaultLinearFresnelDsgIph,
+                              DefaultMhkWave)
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
@@ -112,12 +114,13 @@ class AbstractSamGeneration(RevPySam, ABC):
         res_out = None
 
         res_reqs = []
+        ti = res_df.index
         for req in out_req_cleaned:
             if req in res_df:
                 res_reqs.append(req)
                 if res_out is None:
                     res_out = {}
-                res_out[req] = cls.ensure_res_len(res_df[req].values)
+                res_out[req] = cls.ensure_res_len(res_df[req].values, ti)
 
         for req in res_reqs:
             out_req_cleaned.remove(req)
@@ -480,6 +483,7 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
         resource = resource.rename(mapper=lower_case, axis='columns')
         resource = resource.rename(mapper=var_map, axis='columns')
+        time_index = resource.index
         resource = {k: np.array(v) for (k, v) in
                     resource.to_dict(orient='list').items()}
 
@@ -489,7 +493,7 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
                 # ensure that resource array length is multiple of 8760
                 arr = np.roll(
-                    self.ensure_res_len(arr),
+                    self.ensure_res_len(arr, time_index),
                     int(self._meta['timezone'] * self.time_interval))
 
                 if var in irrad_vars:
@@ -510,12 +514,12 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
         else:
             resource['elev'] = 0.0
 
-        ti_8760 = self.ensure_res_len(time_index)
-        resource['minute'] = ti_8760.minute
-        resource['hour'] = ti_8760.hour
-        resource['year'] = ti_8760.year
-        resource['month'] = ti_8760.month
-        resource['day'] = ti_8760.day
+        time_index = self.ensure_res_len(time_index, time_index)
+        resource['minute'] = time_index.minute
+        resource['hour'] = time_index.hour
+        resource['year'] = time_index.year
+        resource['month'] = time_index.month
+        resource['day'] = time_index.day
 
         if 'albedo' in resource:
             self['albedo'] = resource.pop('albedo')
@@ -884,17 +888,17 @@ class AbstractSamSolarThermal(AbstractSamSolar, ABC):
 
         # ------- Process metadata
         m = pd.DataFrame(meta).T
-        timezone = m.timezone
+        timezone = m['timezone']
         m['Source'] = 'NSRDB'
         m['Location ID'] = meta.name
         m['City'] = '-'
-        m['State'] = m.state.apply(lambda x: '-' if x == 'None' else x)
-        m['Country'] = m.country.apply(lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m.latitude
-        m['Longitude'] = m.longitude
-        m['Time Zone'] = m.timezone
-        m['Elevation'] = m.elevation
-        m['Local Time Zone'] = m.timezone
+        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
+        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m['latitude']
+        m['Longitude'] = m['longitude']
+        m['Time Zone'] = timezone
+        m['Elevation'] = m['elevation']
+        m['Local Time Zone'] = timezone
         m['Dew Point Units'] = 'c'
         m['DHI Units'] = 'w/m2'
         m['DNI Units'] = 'w/m2'
@@ -907,25 +911,32 @@ class AbstractSamSolarThermal(AbstractSamSolar, ABC):
         m.to_csv(fname, index=False, mode='w')
 
         # --------- Process data
+        var_map = {'dni': 'DNI',
+                   'dhi': 'DHI',
+                   'wind_speed': 'Wind Speed',
+                   'air_temperature': 'Temperature',
+                   'dew_point': 'Dew Point',
+                   'surface_pressure': 'Pressure',
+                   }
+        resource = resource.rename(mapper=var_map, axis='columns')
+
+        time_index = resource.index
         # Adjust from UTC to local time
         local = np.roll(resource.values, int(timezone * self.time_interval),
                         axis=0)
-        res = pd.DataFrame(local, columns=resource.columns,
-                           index=resource.index)
-        leap_mask = (res.index.month == 2) & (res.index.day == 29)
-        no_leap_index = res.index[~leap_mask]
-        df = pd.DataFrame(index=no_leap_index)
-        df['Year'] = df.index.year
-        df['Month'] = df.index.month
-        df['Day'] = df.index.day
-        df['Hour'] = df.index.hour
-        df['Minute'] = df.index.minute
-        df['DNI'] = self.ensure_res_len(res.dni.values)
-        df['DHI'] = self.ensure_res_len(res.dhi.values)
-        df['Wind Speed'] = self.ensure_res_len(res.wind_speed.values)
-        df['Temperature'] = self.ensure_res_len(res.air_temperature.values)
-        df['Dew Point'] = self.ensure_res_len(res.dew_point.values)
-        df['Pressure'] = self.ensure_res_len(res.surface_pressure.values)
+        resource = pd.DataFrame(local, columns=resource.columns,
+                                index=time_index)
+        mask = (time_index.month == 2) & (time_index.day == 29)
+        time_index = time_index[~mask]
+
+        df = pd.DataFrame(index=time_index)
+        df['Year'] = time_index.year
+        df['Month'] = time_index.month
+        df['Day'] = time_index.day
+        df['Hour'] = time_index.hour
+        df['Minute'] = time_index.minute
+        df = df.join(resource.loc[~mask])
+
         df.to_csv(fname, index=False, mode='a')
 
         return fname
@@ -1083,7 +1094,8 @@ class WindPower(AbstractSamGeneration):
 
         if 'rh' in resource:
             # set relative humidity for icing.
-            rh = np.roll(self.ensure_res_len(resource['rh'].values),
+            rh = np.roll(self.ensure_res_len(resource['rh'].values,
+                                             time_index),
                          int(meta['timezone'] * self.time_interval),
                          axis=0)
             data_dict['rh'] = rh.tolist()
@@ -1091,20 +1103,22 @@ class WindPower(AbstractSamGeneration):
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
-        temp = np.roll(self.ensure_res_len(resource[var_list].values),
+        temp = np.roll(self.ensure_res_len(resource[var_list].values,
+                                           time_index),
                        int(meta['timezone'] * self.time_interval), axis=0)
         data_dict['data'] = temp.tolist()
 
-        resource['lat'] = meta['latitude']
-        resource['lon'] = meta['longitude']
-        resource['tz'] = meta['timezone']
-        resource['elev'] = meta['elevation']
+        data_dict['lat'] = meta['latitude']
+        data_dict['lon'] = meta['longitude']
+        data_dict['tz'] = meta['timezone']
+        data_dict['elev'] = meta['elevation']
 
-        data_dict['minute'] = self.ensure_res_len(time_index.minute)
-        data_dict['hour'] = self.ensure_res_len(time_index.hour)
-        data_dict['year'] = self.ensure_res_len(time_index.year)
-        data_dict['month'] = self.ensure_res_len(time_index.month)
-        data_dict['day'] = self.ensure_res_len(time_index.day)
+        time_index = self.ensure_res_len(time_index, time_index)
+        data_dict['minute'] = time_index.minute
+        data_dict['hour'] = time_index.hour
+        data_dict['year'] = time_index.year
+        data_dict['month'] = time_index.month
+        data_dict['day'] = time_index.day
 
         # add resource data to self.data and clear
         self['wind_resource_data'] = data_dict
@@ -1118,3 +1132,77 @@ class WindPower(AbstractSamGeneration):
         PySAM.Windpower
         """
         return DefaultWindPower.default()
+
+
+class MhkWave(AbstractSamGeneration):
+    """Class for Wave generation from SAM
+    """
+    MODULE = 'mhkwave'
+    PYSAM = PySamMhkWave
+
+    def set_resource_data(self, resource, meta):
+        """Set Hindcast US Wave resource data arrays.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries resource data for a single location with a
+            pandas DatetimeIndex. There must be columns for all the required
+            variables to run the respective SAM simulation.
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        """
+
+        # map resource data names to SAM required data names
+        var_map = {'significantwaveheight': 'significant_wave_height',
+                   'waveheight': 'significant_wave_height',
+                   'height': 'significant_wave_height',
+                   'swh': 'significant_wave_height',
+                   'energyperiod': 'energy_period',
+                   'waveperiod': 'energy_period',
+                   'period': 'energy_period',
+                   'ep': 'energy_period',
+                   }
+        lower_case = {k: k.lower().replace(' ', '').replace('_', '')
+                      for k in resource.columns}
+        resource = resource.rename(mapper=lower_case, axis='columns')
+        resource = resource.rename(mapper=var_map, axis='columns')
+
+        data_dict = {}
+
+        time_index = resource.index
+        self.time_interval = self.get_time_interval(resource.index.values)
+
+        # must be set as matrix in [temperature, pres, speed, direction] order
+        # ensure that resource array length is multiple of 8760
+        # roll the truncated resource array to local timezone
+        for var in ['significant_wave_height', 'energy_period']:
+            data_dict[var] = np.roll(
+                self.ensure_res_len(resource[var].values, time_index),
+                int(meta['timezone'] * self.time_interval), axis=0).tolist()
+
+        data_dict['lat'] = meta['latitude']
+        data_dict['lon'] = meta['longitude']
+        data_dict['tz'] = meta['timezone']
+
+        time_index = self.ensure_res_len(time_index, time_index)
+        data_dict['minute'] = time_index.minute
+        data_dict['hour'] = time_index.hour
+        data_dict['year'] = time_index.year
+        data_dict['month'] = time_index.month
+        data_dict['day'] = time_index.day
+
+        # add resource data to self.data and clear
+        self['wave_resource_data'] = data_dict
+
+    @staticmethod
+    def default():
+        """Get the executed default PySAM MhkWave object.
+
+        Returns
+        -------
+        PySAM.MhkWave
+        """
+        return DefaultMhkWave.default()

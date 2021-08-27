@@ -116,6 +116,10 @@ General Run times and Node configuration on Eagle
 Installing reV
 ==============
 
+NOTE: The installation instruction below assume that you have python installed
+on your machine and are using `conda <https://docs.conda.io/en/latest/index.html>`_
+as your package/environment manager.
+
 Option 1: Install from PIP or Conda (recommended for analysts):
 ---------------------------------------------------------------
 

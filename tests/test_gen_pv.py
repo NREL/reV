@@ -205,19 +205,26 @@ def test_smart(year):
         assert np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
 
 
-def test_multi_file_nsrdb_2018():
+@pytest.mark.parametrize('model', ['pvwattsv5', 'pvwattsv7'])
+def test_multi_file_nsrdb_2018(model):
     """Test running reV gen from a multi-h5 directory with prefix and suffix"""
     points = slice(0, 10)
     max_workers = 1
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
     # run reV 2.0 generation
-    gen = Gen.reV_run('pvwattsv5', points, sam_files, res_file,
+    gen = Gen.reV_run(model, points, sam_files, res_file,
+                      output_request=('cf_mean', 'cf_profile'),
                       max_workers=max_workers,
                       sites_per_worker=3, out_fpath=None)
-    gen_outs = list(gen.out['cf_mean'])
-    assert len(gen_outs) == 10
-    assert np.mean(gen_outs) > 0.14
+
+    means_outs = list(gen.out['cf_mean'])
+    assert len(means_outs) == 10
+    assert np.mean(means_outs) > 0.14
+
+    profiles_out = gen.out['cf_profile']
+    assert profiles_out.shape == (105120, 10)
+    assert np.mean(profiles_out) > 0.14
 
 
 def get_r1_profiles(year=2012):
@@ -245,6 +252,27 @@ def test_pv_name_error():
         Gen.reV_run('pv', rev2_points, sam_files, res_file, max_workers=1,
                     sites_per_worker=1, out_fpath=None)
         assert 'Did not recognize' in record[0].message
+
+
+def test_southern_hemisphere():
+    """Test reV pvwatts in the southern hemisphere with correct azimuth"""
+
+    rev2_points = slice(0, 1)
+    res_file = TESTDATADIR + '/nsrdb/brazil_solar.h5'
+    sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc', 'azimuth')
+
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+    assert gen.out['azimuth'] == 0
+
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
+    gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+    assert gen.out['azimuth'] == 180
 
 
 def test_pvwattsv7_baseline():

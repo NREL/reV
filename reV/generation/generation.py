@@ -19,7 +19,8 @@ from reV.SAM.generation import (PvWattsv5,
                                 WindPower,
                                 SolarWaterHeat,
                                 TroughPhysicalHeat,
-                                LinearDirectSteam)
+                                LinearDirectSteam,
+                                MhkWave)
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -96,6 +97,7 @@ class Gen(BaseGen):
                'troughphysicalheat': TroughPhysicalHeat,
                'lineardirectsteam': LinearDirectSteam,
                'windpower': WindPower,
+               'mhkwave': MhkWave
                }
 
     # Mapping of reV generation outputs to scale factors and units.
