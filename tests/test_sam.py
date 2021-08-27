@@ -12,11 +12,12 @@ import warnings
 
 from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv7,
                               DefaultWindPower)
-from reV.SAM.generation import PvWattsv5
+from reV.SAM.generation import PvWattsv5, PvWattsv7
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import PySAMVersionWarning
+from reV.utilities.exceptions import InputError
 
 from rex.renewable_resource import NSRDB
 
@@ -147,6 +148,22 @@ def test_pysam_version_checker_wind():
         assert 'turb_generic_loss' in sam_sys_inputs
         assert 'system_capacity' in sam_sys_inputs
         assert 'wind_farm_losses_percent'
+
+
+def test_nan_resource():
+    """Test that the reV-SAM interface will raise an error if there is NaN
+    data in the resource input."""
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    pp = ProjectPoints(0, sam_files, 'pv')
+    res = NSRDB.preload_SAM(res_file, pp.sites)
+
+    for res_df, meta in res:
+        res_df.iloc[10, 0] = np.nan
+        site = res_df.name
+        _, inputs = pp[site]
+        with pytest.raises(InputError):
+            PvWattsv7(resource=res_df, meta=meta, sam_sys_inputs=inputs)
 
 
 def test_default_pvwattsv5():
