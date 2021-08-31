@@ -433,6 +433,8 @@ class Offshore:
 
             # pylint: disable=C0201,C0206
             for name in self._out.keys():
+                value = None
+
                 if name in outs:
                     value = outs[name]
                     self._out[name][mask] = value[mask]
@@ -457,27 +459,32 @@ class Offshore:
                 elif name not in self._offshore_data:
                     msg = ('Could not find "{}" in the output dict of NRWAL '
                            'config {}'.format(name, cid))
-                    logger.error(msg)
-                    raise KeyError(msg)
+                    logger.warning(msg)
+                    warn(msg)
 
                 logger.debug('NRWAL output "{}": {}'.format(name, value))
 
     def check_outputs(self):
         """Check the nrwal outputs for nan values and raise errors if found."""
         for name, arr in self._out.items():
-            if np.isnan(arr).any():
+            if np.isnan(arr).all():
+                msg = ('Output array "{}" is all NaN! Probably was not '
+                       'found in the available NRWAL keys.'.format(name))
+                logger.warning(msg)
+                warn(msg)
+            elif np.isnan(arr).any():
                 mask = np.isnan(arr)
                 nan_meta = self.meta_out_offshore[mask]
                 nan_gids = nan_meta['gid'].values
                 msg = ('NaN values ({} out of {}) persist in offshore '
                        'output "{}"!'
                        .format(np.isnan(arr).sum(), len(arr), name))
-                logger.error(msg)
-                logger.error('This is the offshore meta that is causing NaN '
-                             'outputs: {}'.format(nan_meta))
-                logger.error('These are the resource gids causing NaN '
-                             'outputs: {}'.format(nan_gids))
-                raise ValueError(msg)
+                logger.warning(msg)
+                logger.warning('This is the offshore meta that is causing NaN '
+                               'outputs: {}'.format(nan_meta))
+                logger.warning('These are the resource gids causing NaN '
+                               'outputs: {}'.format(nan_gids))
+                warn(msg)
 
     def write_to_gen_fpath(self):
         """Save offshore outputs to input generation fpath file. This will
