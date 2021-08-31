@@ -491,6 +491,7 @@ class Offshore:
         overwrite data!"""
 
         loss_mult = 1 - self._out[self._loss_key]
+        loss_mult = np.where(np.isnan(loss_mult), 1, loss_mult)
 
         with Outputs(self._gen_fpath, 'a') as f:
             meta_attrs = f.get_attrs('meta')
