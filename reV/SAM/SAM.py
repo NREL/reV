@@ -131,10 +131,6 @@ class SamResourceRetriever:
             kwargs['clearsky'] = project_points.sam_config_obj.clearsky
             kwargs['bifacial'] = project_points.sam_config_obj.bifacial
             kwargs['tech'] = project_points.tech
-            # Check for resource means:
-            mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
-            if any(x in output_request for x in mean_keys):
-                kwargs['means'] = True
 
             downscale = project_points.sam_config_obj.downscale
             # check for downscaling request
@@ -151,6 +147,7 @@ class SamResourceRetriever:
                 else:
                     # pass through the downscaling request
                     kwargs['downscale'] = downscale
+
         elif res_handler == WindResource:
             args += (project_points.h, )
             kwargs['icing'] = project_points.sam_config_obj.icing
@@ -159,9 +156,9 @@ class SamResourceRetriever:
                     # make precip rate available for curtailment analysis
                     kwargs['precip_rate'] = True
 
-            # Check for resource means:
-            if 'ws_mean' in output_request:
-                kwargs['means'] = True
+        # Check for resource means
+        if any(req.endswith('_mean') for req in output_request):
+            kwargs['means'] = True
 
         return kwargs, args
 

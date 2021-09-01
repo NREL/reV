@@ -153,6 +153,7 @@ class AbstractSamGeneration(RevPySam, ABC):
         out_req_nomeans = copy.deepcopy(output_request)
         res_mean = None
         idx = resource.sites.index(res_gid)
+        irrad_means = ('dni_mean', 'dhi_mean', 'ghi_mean')
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
@@ -160,14 +161,19 @@ class AbstractSamGeneration(RevPySam, ABC):
             res_mean['ws_mean'] = resource['mean_windspeed', idx]
 
         else:
-            for var in ('dni', 'dhi', 'ghi'):
+            for var in resource.var_list:
                 label_1 = '{}_mean'.format(var)
                 label_2 = 'mean_{}'.format(var)
                 if label_1 in out_req_nomeans:
                     out_req_nomeans.remove(label_1)
                     if res_mean is None:
                         res_mean = {}
-                    res_mean[label_1] = resource[label_2, idx] / 1000 * 24
+                    res_mean[label_1] = resource[label_2, idx]
+
+                if label_1 in irrad_means:
+                    # convert to kWh/m2/day
+                    res_mean[label_1] /= 1000
+                    res_mean[label_1] *= 24
 
         return res_mean, out_req_nomeans
 
