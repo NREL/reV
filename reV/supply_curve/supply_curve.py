@@ -259,6 +259,42 @@ class SupplyCurve:
 
         return trans_table
 
+    @staticmethod
+    def _map_trans_capacity(trans_sc_table):
+        """
+        Map SC gids to transmission features based on capacity. For any SC
+        gids with capacity > the maximum transmission feature capacity, map
+        SC gids to the feature with the largest capacity
+
+        Parameters
+        ----------
+        trans_sc_table : pandas.DataFrame
+            Table mapping supply curve points to transmission features.
+
+        Returns
+        -------
+        trans_sc_table : pandas.DataFrame
+            Updated table mapping supply curve points to transmission features
+            based on maximum capacity
+        """
+        mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
+        over_max = trans_sc_table.loc[~mask].copy()
+        trans_sc_table = trans_sc_table.loc[mask]
+        if over_max.size:
+            msg = ("The following SC points have a capacity that "
+                   "exceeds the maximum transmission feature capacity "
+                   "{}, and will be mapped to features with the max "
+                   "capacity:\n{}"
+                   .format(over_max['sc_gid'].unique(),
+                           np.max(over_max['max_cap'])))
+            logger.warning(msg)
+            warn(msg)
+            for _, grp_df in over_max.groupby(['sc_gid', 'trans_gid']):
+                idx_max = grp_df['max_cap'].argmax()
+                trans_sc_table = trans_sc_table.append(grp_df.iloc[[idx_max]])
+
+        return trans_sc_table
+
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                sc_cols=('capacity', 'sc_gid', 'mean_cf',
@@ -279,7 +315,7 @@ class SupplyCurve:
 
         Returns
         -------
-        trans_table : pd.DataFrame
+        trans_sc_table : pd.DataFrame
             Updated table mapping supply curve points to transmission features.
             This is performed by merging left with trans_table, so there may be
             rows with nan sc_gid.
@@ -320,8 +356,10 @@ class SupplyCurve:
                                                how='inner')
 
             if 'max_cap' in trans_sc_table:
-                mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
-                trans_sc_table = trans_sc_table.loc[mask]
+                trans_sc_table = cls._map_trans_capacity(trans_sc_table)
+
+            trans_sc_table = \
+                trans_sc_table.sort_values(['sc_gid', 'trans_gid'])
 
         return trans_sc_table.reset_index(drop=True)
 
@@ -398,7 +436,6 @@ class SupplyCurve:
             Same as input table but with new columns for trans_cap_cost_per_mw,
             lcot, and total_lcoe.
         """
-        trans_table = trans_table.sort_values('sc_gid')
         if 'trans_cap_cost' not in trans_table:
             cost = cls._compute_trans_cap_cost(trans_table,
                                                trans_costs=trans_costs,
