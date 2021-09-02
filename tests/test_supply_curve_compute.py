@@ -261,7 +261,7 @@ def test_simple_trans_table(sc_points):
                                'ri_simple_transmission_table.csv')
     sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1)
 
-    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/ri_sc_simple_lc.csv')
     baseline_verify(sc_simple, fpath_baseline)
 
 
