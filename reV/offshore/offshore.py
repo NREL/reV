@@ -153,14 +153,16 @@ class Offshore:
         """
 
         with Outputs(gen_fpath, mode='r') as out:
-            if 'cf_mean' not in out.dsets:
-                msg = ('Could not find cf_mean (required) in file: {}'
+            meta = out.meta
+            if 'cf_mean_raw' in out.dsets:
+                cf_mean = out['cf_mean_raw']
+            elif 'cf_mean' in out.dsets:
+                cf_mean = out['cf_mean']
+            else:
+                msg = ('Could not find cf_mean or cf_mean_raw in file: {}'
                        .format(gen_fpath))
                 logger.error(msg)
                 raise OffshoreWindInputError(msg)
-
-            meta = out.meta
-            cf_mean = out['cf_mean']
 
         msg = ('Could not find "gid" column in source '
                'capacity factor meta data!')
@@ -511,12 +513,19 @@ class Offshore:
                 f._add_dset('lcoe_fcr', lcoe, np.float32,
                             attrs={'units': 'dol/MWh', 'scale_factor': 1})
 
-            cf_mean = f['cf_mean']
-            cf_mean[self._offshore_mask] *= loss_mult
-            f['cf_mean'] = cf_mean
+            f._add_dset('cf_mean_raw', self._cf_mean, f.dtypes['cf_mean'],
+                        attrs=f.attrs['cf_mean'])
+            self._cf_mean[self._offshore_mask] *= loss_mult
+            f['cf_mean'] = self._cf_mean
 
-            if 'cf_profile' in f.dsets:
+            profiles = None
+            if 'cf_profile_raw' in f.dsets:
+                profiles = f['cf_profile_raw']
+            elif 'cf_profile' in f.dsets:
                 profiles = f['cf_profile']
+            if profiles is not None:
+                f._add_dset('cf_profile_raw', profiles, f.dtypes['cf_profile'],
+                            attrs=f.attrs['cf_profile'])
                 profiles[:, self._offshore_mask] *= loss_mult
                 f['cf_profile'] = profiles
 
