@@ -200,7 +200,8 @@ class SupplyCurve:
         Returns
         -------
         merge_cols : dict
-            Columns to merge on
+            Columns to merge on which maps the sc columns (keys) to the
+            corresponding trans table columns (values)
         """
         sc_columns = [c for c in sc_columns if c.startswith('sc_')]
         trans_columns = [c for c in trans_columns if c.startswith('sc_')]
@@ -296,8 +297,9 @@ class SupplyCurve:
 
             merge_cols = cls._get_merge_cols(sc_points.columns,
                                              trans_table.columns)
-            logger.debug('Merging SC table and Trans Table on: {}'
-                         .format(merge_cols))
+            logger.info('Merging SC table and Trans Table with '
+                        '{} mapping: {}'
+                        .format('sc_table_col: trans_table_col', merge_cols))
             sc_points = sc_points.rename(columns=merge_cols)
             merge_cols = list(merge_cols.values())
 
