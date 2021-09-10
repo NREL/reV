@@ -2,7 +2,7 @@
 """
 reV aggregation framework.
 """
-from abc import ABC, abstractmethod, abstractclassmethod
+from abc import ABC, abstractmethod
 from concurrent.futures import as_completed
 import h5py
 import logging
@@ -183,11 +183,12 @@ class AbstractAggregation(ABC):
         self._excl_area = self._get_excl_area(excl_fpath, excl_area=excl_area)
 
         if pre_extract_inclusions:
-            self._inclusion_mask = self._extract_inclusion_mask(
-                excl_fpath, tm_dset,
-                excl_dict=excl_dict,
-                area_filter_kernel=area_filter_kernel,
-                min_area=min_area)
+            self._inclusion_mask = \
+                ExclusionMaskFromDict.extract_inclusion_mask(
+                    excl_fpath, tm_dset,
+                    excl_dict=excl_dict,
+                    area_filter_kernel=area_filter_kernel,
+                    min_area=min_area)
         else:
             self._inclusion_mask = None
 
@@ -244,58 +245,6 @@ class AbstractAggregation(ABC):
             raise SupplyCurveInputError(e)
 
         return excl_area
-
-    @staticmethod
-    def _extract_inclusion_mask(excl_fpath, tm_dset, excl_dict=None,
-                                area_filter_kernel='queen', min_area=None):
-        """
-        Extract the full inclusion mask from excl_fpath using the given
-        exclusion layers and whether or not to run a minimum area filter
-
-        Parameters
-        ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-            by default None
-        area_filter_kernel : str, optional
-            Contiguous area filter method to use on final exclusions mask,
-            by default "queen"
-        min_area : float, optional
-            Minimum required contiguous area filter in sq-km,
-            by default None
-
-        Returns
-        -------
-        inclusion_mask : ndarray
-            Pre-computed 2D inclusion mask (normalized with expected range:
-            [0, 1], where 1 is included and 0 is excluded)
-        """
-        logger.info('Pre-extracting full exclusion mask, this could take '
-                    'up to 30min for a large exclusion config...')
-        with ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
-                                   check_layers=False, min_area=min_area,
-                                   kernel=area_filter_kernel) as f:
-            inclusion_mask = f._generate_mask(..., check_layers=True)
-            tm_mask = f._excl_h5[tm_dset] == -1
-            inclusion_mask[tm_mask] = 0
-
-        logger.info('Finished extracting full exclusion mask.')
-        logger.info('The full exclusion mask has {:.2f}% of area included.'
-                    .format(100 * inclusion_mask.sum()
-                            / inclusion_mask.size))
-
-        if inclusion_mask.sum() == 0:
-            msg = 'The exclusions inputs resulted in a fully excluded mask!'
-            logger.error(msg)
-            raise SupplyCurveInputError(msg)
-
-        return inclusion_mask
 
     @abstractmethod
     def _check_files(self):
@@ -422,7 +371,8 @@ class AbstractAggregation(ABC):
 
         return gen_index
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def run_serial(cls, sc_point_method, excl_fpath, tm_dset,
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None, resolution=64,
