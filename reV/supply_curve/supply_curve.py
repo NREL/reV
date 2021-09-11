@@ -110,7 +110,6 @@ class SupplyCurve:
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
         trans_table = self._merge_sc_trans_tables(self._sc_points, trans_table)
-        self._check_sc_trans_table(self._sc_points, trans_table)
         self._trans_table = self._add_trans_lcot(trans_table, fcr,
                                                  trans_costs=trans_costs,
                                                  avail_cap_frac=avail_cap_frac,
@@ -295,6 +294,44 @@ class SupplyCurve:
 
         return trans_sc_table
 
+    @staticmethod
+    def _check_sc_trans_table(sc_points, trans_table):
+        """Run self checks on sc_points table and the merged trans_table
+
+        Parameters
+        ----------
+        sc_points : pd.DataFrame
+            Table of supply curve point summary
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+            (should already be merged with SC points).
+        """
+        sc_gids = set(sc_points['sc_gid'].unique())
+        trans_sc_gids = set(trans_table['sc_gid'].unique())
+        missing = sorted(list(sc_gids - trans_sc_gids))
+        if any(missing):
+            msg = ("There are {} Supply Curve points with missing "
+                   "transmission mappings. Supply curve points with no "
+                   "transmission features will not be connected! "
+                   "Missing sc_gid's: {}"
+                   .format(len(missing), missing))
+            logger.warning(msg)
+            warn(msg)
+
+        if not any(trans_sc_gids) or not any(sc_gids):
+            msg = ('Merging of sc points table and transmission features '
+                   'table failed with {} original sc gids and {} transmission '
+                   'sc gids after table merge.'
+                   .format(len(sc_gids), len(trans_sc_gids)))
+            logger.error(msg)
+            raise SupplyCurveError(msg)
+
+        logger.debug('There are {} original SC gids and {} sc gids in the '
+                     'merged transmission table.'
+                     .format(len(sc_gids), len(trans_sc_gids)))
+        logger.debug('Transmission Table created with columns: {}'
+                     .format(trans_table.columns.values.tolist()))
+
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                sc_cols=('capacity', 'sc_gid', 'mean_cf',
@@ -317,8 +354,7 @@ class SupplyCurve:
         -------
         trans_sc_table : pd.DataFrame
             Updated table mapping supply curve points to transmission features.
-            This is performed by merging left with trans_table, so there may be
-            rows with nan sc_gid.
+            This is performed by an inner merging with trans_table
         """
         if isinstance(trans_table, (list, tuple)):
             trans_sc_table = []
@@ -359,47 +395,12 @@ class SupplyCurve:
                 trans_sc_table = cls._map_trans_capacity(trans_sc_table)
 
             trans_sc_table = \
-                trans_sc_table.sort_values(['sc_gid', 'trans_gid'])
+                trans_sc_table.sort_values(
+                    ['sc_gid', 'trans_gid']).reset_index(drop=True)
 
-        return trans_sc_table.reset_index(drop=True)
+        cls._check_sc_trans_table(sc_points, trans_sc_table)
 
-    @staticmethod
-    def _check_sc_trans_table(sc_points, trans_table):
-        """Run self checks on sc_points table and the merged trans_table
-
-        Parameters
-        ----------
-        sc_points : pd.DataFrame
-            Table of supply curve point summary
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features
-            (should already be merged with SC points).
-        """
-        sc_gids = set(sc_points['sc_gid'].unique())
-        trans_sc_gids = set(trans_table['sc_gid'].unique())
-        missing = sorted(list(sc_gids - trans_sc_gids))
-        if any(missing):
-            msg = ("There are {} Supply Curve points with missing "
-                   "transmission mappings. Supply curve points with no "
-                   "transmission features will not be connected! "
-                   "Missing sc_gid's: {}"
-                   .format(len(missing), missing))
-            logger.warning(msg)
-            warn(msg)
-
-        if not any(trans_sc_gids) or not any(sc_gids):
-            msg = ('Merging of sc points table and transmission features '
-                   'table failed with {} original sc gids and {} transmission '
-                   'sc gids after table merge.'
-                   .format(len(sc_gids), len(trans_sc_gids)))
-            logger.error(msg)
-            raise SupplyCurveError(msg)
-
-        logger.debug('There are {} original SC gids and {} sc gids in the '
-                     'merged transmission table.'
-                     .format(len(sc_gids), len(trans_sc_gids)))
-        logger.debug('Transmission Table created with columns: {}'
-                     .format(trans_table.columns.values.tolist()))
+        return trans_sc_table
 
     @classmethod
     def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
