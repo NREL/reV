@@ -110,7 +110,6 @@ class SupplyCurve:
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
         trans_table = self._merge_sc_trans_tables(self._sc_points, trans_table)
-        self._check_sc_trans_table(self._sc_points, trans_table)
         self._trans_table = self._add_trans_lcot(trans_table, fcr,
                                                  trans_costs=trans_costs,
                                                  avail_cap_frac=avail_cap_frac,
@@ -259,71 +258,41 @@ class SupplyCurve:
 
         return trans_table
 
-    @classmethod
-    def _merge_sc_trans_tables(cls, sc_points, trans_table,
-                               sc_cols=('capacity', 'sc_gid', 'mean_cf',
-                                        'mean_lcoe')):
-        """Merge the supply curve table with the transmission features table.
+    @staticmethod
+    def _map_trans_capacity(trans_sc_table):
+        """
+        Map SC gids to transmission features based on capacity. For any SC
+        gids with capacity > the maximum transmission feature capacity, map
+        SC gids to the feature with the largest capacity
 
         Parameters
         ----------
-        sc_points : pd.DataFrame
-            Table of supply curve point summary
-        trans_table : pd.DataFrame | str
-            Table mapping supply curve points to transmission features
-            (either str filepath to table file, list of filepaths to tables by
-             line voltage (capacity) or pre-loaded dataframe).
-        sc_cols : tuple | list, optional
-            List of column from sc_points to transfer into the trans table,
-            by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
+        trans_sc_table : pandas.DataFrame
+            Table mapping supply curve points to transmission features.
 
         Returns
         -------
-        trans_table : pd.DataFrame
-            Updated table mapping supply curve points to transmission features.
-            This is performed by merging left with trans_table, so there may be
-            rows with nan sc_gid.
+        trans_sc_table : pandas.DataFrame
+            Updated table mapping supply curve points to transmission features
+            based on maximum capacity
         """
-        if isinstance(trans_table, (list, tuple)):
-            trans_sc_table = []
-            for table in trans_table:
-                trans_sc_table.append(cls._merge_sc_trans_tables(
-                    sc_points, table, sc_cols=sc_cols))
+        mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
+        over_max = trans_sc_table.loc[~mask].copy()
+        trans_sc_table = trans_sc_table.loc[mask]
+        if over_max.size:
+            msg = ("The following SC points have a capacity that "
+                   "exceeds the maximum transmission feature capacity "
+                   "{}, and will be mapped to features with the max "
+                   "capacity:\n{}"
+                   .format(over_max['sc_gid'].unique(),
+                           np.max(over_max['max_cap'])))
+            logger.warning(msg)
+            warn(msg)
+            for _, grp_df in over_max.groupby(['sc_gid', 'trans_gid']):
+                idx_max = grp_df['max_cap'].argmax()
+                trans_sc_table = trans_sc_table.append(grp_df.iloc[[idx_max]])
 
-            trans_sc_table = pd.concat(trans_sc_table)
-        else:
-            trans_table = cls._parse_trans_table(trans_table)
-
-            merge_cols = cls._get_merge_cols(sc_points.columns,
-                                             trans_table.columns)
-            logger.debug('Merging SC table and Trans Table on: {}'
-                         .format(merge_cols))
-            sc_points = sc_points.rename(columns=merge_cols)
-            merge_cols = list(merge_cols.values())
-
-            if isinstance(sc_cols, tuple):
-                sc_cols = list(sc_cols)
-
-            if 'mean_lcoe_friction' in sc_points:
-                sc_cols.append('mean_lcoe_friction')
-
-            if 'transmission_multiplier' in sc_points:
-                sc_cols.append('transmission_multiplier')
-
-            sc_cols += merge_cols
-            if 'capacity' not in sc_cols:
-                sc_cols += ['capacity']
-
-            sc_points = sc_points[sc_cols].copy()
-
-            trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
-                                               how='inner')
-
-            if 'max_cap' in trans_sc_table:
-                mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
-                trans_sc_table = trans_sc_table.loc[mask]
-
-        return trans_sc_table.reset_index(drop=True)
+        return trans_sc_table
 
     @staticmethod
     def _check_sc_trans_table(sc_points, trans_table):
@@ -364,6 +333,76 @@ class SupplyCurve:
                      .format(trans_table.columns.values.tolist()))
 
     @classmethod
+    def _merge_sc_trans_tables(cls, sc_points, trans_table,
+                               sc_cols=('capacity', 'sc_gid', 'mean_cf',
+                                        'mean_lcoe')):
+        """Merge the supply curve table with the transmission features table.
+
+        Parameters
+        ----------
+        sc_points : pd.DataFrame
+            Table of supply curve point summary
+        trans_table : pd.DataFrame | str
+            Table mapping supply curve points to transmission features
+            (either str filepath to table file, list of filepaths to tables by
+             line voltage (capacity) or pre-loaded dataframe).
+        sc_cols : tuple | list, optional
+            List of column from sc_points to transfer into the trans table,
+            by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
+
+        Returns
+        -------
+        trans_sc_table : pd.DataFrame
+            Updated table mapping supply curve points to transmission features.
+            This is performed by an inner merging with trans_table
+        """
+        if isinstance(trans_table, (list, tuple)):
+            trans_sc_table = []
+            for table in trans_table:
+                trans_sc_table.append(cls._merge_sc_trans_tables(
+                    sc_points, table, sc_cols=sc_cols))
+
+            trans_sc_table = pd.concat(trans_sc_table)
+        else:
+            trans_table = cls._parse_trans_table(trans_table)
+
+            merge_cols = cls._get_merge_cols(sc_points.columns,
+                                             trans_table.columns)
+            logger.debug('Merging SC table and Trans Table on: {}'
+                         .format(merge_cols))
+            sc_points = sc_points.rename(columns=merge_cols)
+            merge_cols = list(merge_cols.values())
+
+            if isinstance(sc_cols, tuple):
+                sc_cols = list(sc_cols)
+
+            if 'mean_lcoe_friction' in sc_points:
+                sc_cols.append('mean_lcoe_friction')
+
+            if 'transmission_multiplier' in sc_points:
+                sc_cols.append('transmission_multiplier')
+
+            sc_cols += merge_cols
+            if 'capacity' not in sc_cols:
+                sc_cols += ['capacity']
+
+            sc_points = sc_points[sc_cols].copy()
+
+            trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
+                                               how='inner')
+
+            if 'max_cap' in trans_sc_table:
+                trans_sc_table = cls._map_trans_capacity(trans_sc_table)
+
+            trans_sc_table = \
+                trans_sc_table.sort_values(
+                    ['sc_gid', 'trans_gid']).reset_index(drop=True)
+
+        cls._check_sc_trans_table(sc_points, trans_sc_table)
+
+        return trans_sc_table
+
+    @classmethod
     def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
                         avail_cap_frac=1, line_limited=False, connectable=True,
                         max_workers=None):
@@ -398,7 +437,6 @@ class SupplyCurve:
             Same as input table but with new columns for trans_cap_cost_per_mw,
             lcot, and total_lcoe.
         """
-        trans_table = trans_table.sort_values('sc_gid')
         if 'trans_cap_cost' not in trans_table:
             cost = cls._compute_trans_cap_cost(trans_table,
                                                trans_costs=trans_costs,
