@@ -279,15 +279,16 @@ class TransmissionFeatures:
 
         return cost
 
-    def _substation_capacity(self, line_gids):
+    def _substation_capacity(self, gid, line_gids):
         """
         Get capacity of a substation from its tranmission lines
 
         Parameters
         ----------
+        gid : int
+            Substation gid
         line_gids : list
             List of transmission line gids connected to the substation
-
 
         Returns
         -------
@@ -295,7 +296,14 @@ class TransmissionFeatures:
             Substation available capacity
         """
 
-        line_caps = [self[gid]['avail_cap'] for gid in line_gids]
+        try:
+            line_caps = [self[gid]['avail_cap'] for gid in line_gids]
+        except HandlerKeyError as e:
+            msg = ('Could not find capacities for substation gid {} and '
+                   'connected lines: {}'.format(gid, line_gids))
+            logger.error(msg)
+            raise HandlerKeyError(msg) from e
+
         avail_cap = sum(line_caps) / 2
 
         if self._line_limited:
@@ -327,7 +335,7 @@ class TransmissionFeatures:
             avail_cap = feature['avail_cap']
 
         elif 'lines' in feature:
-            avail_cap = self._substation_capacity(feature['lines'])
+            avail_cap = self._substation_capacity(gid, feature['lines'])
 
         else:
             msg = ('Could not parse available capacity from feature: {}'
