@@ -10,6 +10,7 @@ from warnings import warn
 from rex.utilities.loggers import log_mem
 from reV.handlers.exclusions import ExclusionLayers
 from reV.utilities.exceptions import ExclusionLayerError
+from reV.utilities.exceptions import SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
 
@@ -940,6 +941,58 @@ class ExclusionMaskFromDict(ExclusionMask):
         super().__init__(excl_h5, layers=layers, min_area=min_area,
                          kernel=kernel, hsds=hsds, check_layers=check_layers)
 
+    @classmethod
+    def extract_inclusion_mask(cls, excl_fpath, tm_dset, excl_dict=None,
+                               area_filter_kernel='queen', min_area=None):
+        """
+        Extract the full inclusion mask from excl_fpath using the given
+        exclusion layers and whether or not to run a minimum area filter
+
+        Parameters
+        ----------
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
+        tm_dset : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        excl_dict : dict, optional
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            by default None
+        area_filter_kernel : str, optional
+            Contiguous area filter method to use on final exclusions mask,
+            by default "queen"
+        min_area : float, optional
+            Minimum required contiguous area filter in sq-km,
+            by default None
+
+        Returns
+        -------
+        inclusion_mask : ndarray
+            Pre-computed 2D inclusion mask (normalized with expected range:
+            [0, 1], where 1 is included and 0 is excluded)
+        """
+        logger.info('Pre-extracting full exclusion mask, this could take '
+                    'up to 30min for a large exclusion config...')
+        with cls(excl_fpath, layers_dict=excl_dict, check_layers=False,
+                 min_area=min_area, kernel=area_filter_kernel) as f:
+            inclusion_mask = f._generate_mask(..., check_layers=True)
+            tm_mask = f._excl_h5[tm_dset] == -1
+            inclusion_mask[tm_mask] = 0
+
+        logger.info('Finished extracting full exclusion mask.')
+        logger.info('The full exclusion mask has {:.2f}% of area included.'
+                    .format(100 * inclusion_mask.sum()
+                            / inclusion_mask.size))
+
+        if inclusion_mask.sum() == 0:
+            msg = 'The exclusions inputs resulted in a fully excluded mask!'
+            logger.error(msg)
+            raise SupplyCurveInputError(msg)
+
+        return inclusion_mask
+
+    # pylint: disable=W0237
     @classmethod
     def run(cls, excl_h5, layers_dict=None, min_area=None,
             kernel='queen', hsds=False):
