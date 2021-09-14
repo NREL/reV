@@ -622,7 +622,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         for i, dset in enumerate(dset_list):
             if dset in gen.datasets:
                 temp[i] = gen[dset]
-            else:
+            elif dset not in gen.datasets and dset is not None:
                 w = ('Could not find "{}" input as "{}" in '
                      'generation file: {}. Available datasets: {}'
                      .format(labels[i], dset, gen_fpath, gen.datasets))
