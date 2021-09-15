@@ -1,0 +1,44 @@
+{
+  "directories": {
+    "collect_directory": "PIPELINE",
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "dsets": [
+    "cf_mean",
+    "significant_wave_height_mean",
+    "energy_period_mean",
+    "lcoe_fcr",
+    "annual_energy",
+    "system_capacity",
+    "depth",
+    "dist_s_to_l",
+    "assembly",
+    "power_takeoff",
+    "mooring_found_substruc",
+    "device_costs",
+    "development",
+    "eng_and_mgmt",
+    "assembly_and_install",
+    "bos_costs",
+    "array",
+    "export",
+    "offshore_substation",
+    "other_elec_infra",
+    "electrical_costs",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
+  ],
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 1
+  },
+  "file_prefixes": "PIPELINE",
+  "log_level": "INFO",
+  "project_points": "PLACEHOLDER",
+  "purge_chunks": false
+}

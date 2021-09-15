@@ -1,0 +1,26 @@
+{
+  "analysis_years": "PLACEHOLDER",
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "nodes": 10,
+    "option": "eagle",
+    "sites_per_worker": 100,
+    "walltime": 4
+  },
+  "log_level": "INFO",
+  "output_request": [
+    "cf_mean",
+    "significant_wave_height_mean",
+    "energy_period_mean",
+    "system_capacity"
+  ],
+  "project_points": "PLACEHOLDER",
+  "resource_file": "PLACEHOLDER",
+  "sam_files": "PLACEHOLDER",
+  "technology": "mhkwave"
+}

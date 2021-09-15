@@ -1,0 +1,48 @@
+{
+  "cf_dset": "cf_mean-means",
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "excl_dict": null,
+  "excl_fpath": "/shared-projects/rev/exclusions/Offshore_Exclusions.h5",
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 4.0
+  },
+  "gen_fpath": "PIPELINE",
+  "h5_dsets": [
+    "annual_energy-means",
+    "significant_wave_height_mean-means",
+    "energy_period_mean-means",
+    "system_capacity",
+    "depth",
+    "dist_s_to_l",
+    "assembly",
+    "power_takeoff",
+    "mooring_found_substruc",
+    "device_costs",
+    "development",
+    "eng_and_mgmt",
+    "assembly_and_install",
+    "bos_costs",
+    "array",
+    "export",
+    "offshore_substation",
+    "other_elec_infra",
+    "electrical_costs",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
+  ],
+  "lcoe_dset": "lcoe_fcr-means",
+  "log_level": "INFO",
+  "power_density": "PLACEHOLDER",
+  "pre_extract_inclusions": false,
+  "res_fpath": "PLACEHOLDER",
+  "resolution": 60,
+  "tm_dset": "PLACEHOLDER"
+}

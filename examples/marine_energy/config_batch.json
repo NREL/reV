@@ -1,0 +1,449 @@
+{
+  "pipeline_config": "./config_pipeline.json",
+  "sets": [
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm3.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/atlantic_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          0.981
+        ],
+        "project_points": [
+          "./inputs/atlantic_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm3.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_atlantic"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "atlantic_rm3"
+    },
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm5.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/atlantic_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          1.235
+        ],
+        "project_points": [
+          "./inputs/atlantic_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm5.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_atlantic"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "atlantic_rm5"
+    },
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm6.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/atlantic_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          1.202
+        ],
+        "project_points": [
+          "./inputs/atlantic_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/Atlantic/Atlantic_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm6.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_atlantic"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "atlantic_rm6"
+    },
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1979,
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm3.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/pacific_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          0.981
+        ],
+        "project_points": [
+          "./inputs/pacific_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm3.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_pacific"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "pacific_rm3"
+    },
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1979,
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm5.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/pacific_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          1.235
+        ],
+        "project_points": [
+          "./inputs/pacific_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm5.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_pacific"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "pacific_rm5"
+    },
+    {
+      "args": {
+        "analysis_years": [
+          [
+            1979,
+            1980,
+            1981,
+            1982,
+            1983,
+            1984,
+            1985,
+            1986,
+            1987,
+            1988,
+            1989,
+            1990,
+            1991,
+            1992,
+            1993,
+            1994,
+            1995,
+            1996,
+            1997,
+            1998,
+            1999,
+            2000,
+            2001,
+            2002,
+            2003,
+            2004,
+            2005,
+            2006,
+            2007,
+            2008,
+            2009,
+            2010
+          ]
+        ],
+        "nrwal_configs": [
+          {
+            "wec": "/home/gbuster/code/NRWAL/NRWAL/default_configs/marine_energy/rm6.yaml"
+          }
+        ],
+        "offshore_fpath": [
+          "./inputs/pacific_wave_spatial_inputs.csv"
+        ],
+        "power_density": [
+          1.202
+        ],
+        "project_points": [
+          "./inputs/pacific_project_points_wave.csv"
+        ],
+        "res_fpath": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_1979.h5"
+        ],
+        "resource_file": [
+          "/datasets/US_wave/v1.0.0/West_Coast/West_Coast_wave_{}.h5"
+        ],
+        "sam_files": [
+          {
+            "wec": "./inputs/rm6.json"
+          }
+        ],
+        "tm_dset": [
+          "techmap_marine_pacific"
+        ]
+      },
+      "files": [
+        "./config_aggregation.json",
+        "./config_collect.json",
+        "./config_gen.json",
+        "./config_offshore.json"
+      ],
+      "set_tag": "pacific_rm6"
+    }
+  ]
+}
