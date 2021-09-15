@@ -281,11 +281,10 @@ class SupplyCurve:
         over_max = trans_sc_table.loc[~mask].copy()
         trans_sc_table = trans_sc_table.loc[mask]
         if over_max.size:
-            msg = ("The following SC points have a capacity that "
-                   "exceeds the maximum transmission feature capacity "
-                   "and will be mapped to features with the max "
-                   "capacity:\n{}"
-                   .format(over_max['sc_gid'].unique()))
+            msg = ("{} SC points have a capacity that exceeds the maximum "
+                   "transmission feature capacity and will be mapped to "
+                   "features with the max capacity"
+                   .format(len(over_max['sc_gid'].unique())))
             logger.warning(msg)
             warn(msg)
             over_max = over_max.sort_values('max_cap')
