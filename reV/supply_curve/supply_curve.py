@@ -290,7 +290,7 @@ class SupplyCurve:
             over_max = over_max.sort_values('max_cap')
             over_max = over_max.drop_duplicates(subset=['sc_gid', 'trans_gid'],
                                                 keep='last')
-            trans_sc_table.append(over_max)
+            trans_sc_table = trans_sc_table.append(over_max)
 
         return trans_sc_table
 
