@@ -283,15 +283,15 @@ class SupplyCurve:
         if over_max.size:
             msg = ("The following SC points have a capacity that "
                    "exceeds the maximum transmission feature capacity "
-                   "{}, and will be mapped to features with the max "
+                   "and will be mapped to features with the max "
                    "capacity:\n{}"
-                   .format(over_max['sc_gid'].unique(),
-                           np.max(over_max['max_cap'])))
+                   .format(over_max['sc_gid'].unique()))
             logger.warning(msg)
             warn(msg)
-            for _, grp_df in over_max.groupby(['sc_gid', 'trans_gid']):
-                idx_max = grp_df['max_cap'].argmax()
-                trans_sc_table = trans_sc_table.append(grp_df.iloc[[idx_max]])
+            over_max = over_max.sort_values('max_cap')
+            over_max = over_max.drop_duplicates(subset=['sc_gid', 'trans_gid'],
+                                                keep='last')
+            trans_sc_table.append(over_max)
 
         return trans_sc_table
 
