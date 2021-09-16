@@ -256,6 +256,17 @@ class SupplyCurve:
     def _parse_trans_line_gids(trans_line_gids):
         """
         Parse json string of trans_line_gids if needed
+
+        Parameters
+        ----------
+        trans_line_gids : str | list
+            list of transmission line 'trans_gid's, if a json string, convert
+            to list
+
+        Returns
+        -------
+        trans_line_gids : list
+            list of transmission line 'trans_gid's
         """
         if isinstance(trans_line_gids, str):
             trans_line_gids = json.loads(trans_line_gids)
@@ -266,6 +277,18 @@ class SupplyCurve:
     def _check_sub_trans_lines(cls, features):
         """
         Check to make sure all trans-lines are available for all sub-stations
+
+        Parameters
+        ----------
+        features : pandas.DataFrame
+            Table of transmission feature to check substation to transmission
+            line gid connections
+
+        Returns
+        -------
+        line_gids : list
+            List of missing transmission line 'trans_gid's for all substations
+            in features table
         """
         mask = features['category'].str.lower() == 'substation'
         line_gids = \
@@ -446,63 +469,6 @@ class SupplyCurve:
         cls._check_sc_trans_table(sc_points, trans_sc_table)
 
         return trans_sc_table
-
-    @classmethod
-    def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
-                        avail_cap_frac=1, line_limited=False, connectable=True,
-                        max_workers=None):
-        """Compute LCOT for possible connections and add to the trans_table
-
-        Parameters
-        ----------
-        trans_table : pd.DataFrame
-            Table mapping supply curve points to transmission features.
-        fcr : float
-            Fixed charge rate, used to compute LCOT
-        trans_costs : str | dict | None
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-        avail_cap_frac : int, optional
-            Fraction of transmissions features capacity 'ac_cap' to make
-            available for connection to supply curve points, by default 1
-        line_limited : bool
-            Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
-        connectable : bool, optional
-            Flag to only compute tranmission capital cost if transmission
-            feature has enough available capacity, by default True
-        max_workers : int | NoneType
-            Number of workers to use to compute lcot, if > 1 run in parallel.
-            None uses all available cpu's.
-
-        Returns
-        -------
-        trans_table : pd.DataFrame
-            Same as input table but with new columns for trans_cap_cost_per_mw,
-            lcot, and total_lcoe.
-        """
-        if 'trans_cap_cost' not in trans_table:
-            cost = cls._compute_trans_cap_cost(trans_table,
-                                               trans_costs=trans_costs,
-                                               avail_cap_frac=avail_cap_frac,
-                                               line_limited=line_limited,
-                                               connectable=connectable,
-                                               max_workers=max_workers)
-            trans_table['trans_cap_cost_per_mw'] = cost  # $/MW
-        else:
-            cost = trans_table['trans_cap_cost'].values.copy()  # $
-            cost /= trans_table['capacity']  # $/MW
-            trans_table['trans_cap_cost_per_mw'] = cost
-
-        cf_mean_arr = trans_table['mean_cf'].values
-        lcot = (cost * fcr) / (cf_mean_arr * 8760)
-
-        trans_table['lcot'] = lcot
-        trans_table['total_lcoe'] = (trans_table['lcot']
-                                     + trans_table['mean_lcoe'])
-
-        return trans_table
 
     @staticmethod
     def _create_handler(trans_table, trans_costs=None, avail_cap_frac=1):
@@ -717,15 +683,28 @@ class SupplyCurve:
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's. by default None
         consider_friction : bool, optional
-            Flag to consider friction layer on LCOE, by default True
+            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
+            is in the sc points input, by default True
         """
-        trans_costs = transmission_costs
-        self._trans_table = self._add_trans_lcot(self._trans_table, fcr,
-                                                 trans_costs=trans_costs,
-                                                 avail_cap_frac=avail_cap_frac,
-                                                 line_limited=line_limited,
-                                                 connectable=connectable,
-                                                 max_workers=max_workers)
+        if 'trans_cap_cost' not in self._trans_table:
+            cost = self._compute_trans_cap_cost(self._trans_table,
+                                                trans_costs=transmission_costs,
+                                                avail_cap_frac=avail_cap_frac,
+                                                line_limited=line_limited,
+                                                connectable=connectable,
+                                                max_workers=max_workers)
+            self._trans_table['trans_cap_cost_per_mw'] = cost  # $/MW
+        else:
+            cost = self._trans_table['trans_cap_cost'].values.copy()  # $
+            cost /= self._trans_table['capacity']  # $/MW
+            self._trans_table['trans_cap_cost_per_mw'] = cost
+
+        cf_mean_arr = self._trans_table['mean_cf'].values
+        lcot = (cost * fcr) / (cf_mean_arr * 8760)
+
+        self._trans_table['lcot'] = lcot
+        self._trans_table['total_lcoe'] = (self._trans_table['lcot']
+                                           + self._trans_table['mean_lcoe'])
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
@@ -981,7 +960,8 @@ class SupplyCurve:
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's. by default None
         consider_friction : bool, optional
-            Flag to consider friction layer on LCOE, by default True
+            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
+            is in the sc points input, by default True
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -1090,7 +1070,8 @@ class SupplyCurve:
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's. by default None
         consider_friction : bool, optional
-            Flag to consider friction layer on LCOE, by default True
+            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
+            is in the sc points input, by default True
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -1189,6 +1170,9 @@ class SupplyCurve:
         line_limited : bool, optional
             Flag to have substation connection is limited by maximum capacity
             of the attached lines, legacy method, by default False
+        consider_friction : bool, optional
+            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
+            is in the sc points input, by default True
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -1258,6 +1242,9 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
             center_tie_in_cost, sink_tie_in_cost
+        consider_friction : bool, optional
+            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
+            is in the sc points input, by default True
         sort_on : str
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
