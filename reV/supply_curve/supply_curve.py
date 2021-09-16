@@ -5,9 +5,10 @@ reV supply curve module
 - Supply Curve creation
 """
 from copy import deepcopy
-import os
+import json
 import logging
 import numpy as np
+import os
 import pandas as pd
 from warnings import warn
 
@@ -295,7 +296,62 @@ class SupplyCurve:
         return trans_sc_table
 
     @staticmethod
-    def _check_sc_trans_table(sc_points, trans_table):
+    def _parse_trans_line_gids(trans_line_gids):
+        """
+        Parse json string of trans_line_gids if needed
+        """
+        if isinstance(trans_line_gids, str):
+            trans_line_gids = json.loads(trans_line_gids)
+
+        return trans_line_gids
+
+    @classmethod
+    def _check_sub_trans_lines(cls, features):
+        """
+        Check to make sure all trans-lines are available for all sub-stations
+        """
+        mask = features['category'].str.lower() == 'substation'
+        line_gids = \
+            features.loc[mask,
+                         'trans_line_gids'].apply(cls._parse_trans_line_gids)
+
+        line_gids = np.unique(np.concatenate(line_gids.values))
+
+        test = np.isin(line_gids, features['trans_gid'].values)
+
+        assert line_gids[~test].tolist()
+
+    @classmethod
+    def _check_substation_conns(cls, trans_table, sc_cols='sc_gid'):
+        """
+        Run checks on substation transmission features to make sure that
+        every sc point connecting to a substation can also connect to its
+        respective transmission lines
+
+        Parameters
+        ----------
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+            (should already be merged with SC points).
+        sc_cols : str | list, optional
+            Column(s) in trans_table with unique supply curve id,
+            by default 'sc_gid'
+        """
+        missing = {}
+        for sc_point, sc_table in trans_table.groupby(sc_cols):
+            tl_gids = cls._check_sub_trans_lines(sc_table)
+            if tl_gids:
+                missing[sc_point] = tl_gids
+
+        if any(missing):
+            msg = ('The following sc_gid (keys) were connected to substations '
+                   'but were not connected to the respective transmission line'
+                   ' gids (values): {}'.format(missing))
+            logger.error(msg)
+            raise SupplyCurveInputError(msg)
+
+    @classmethod
+    def _check_sc_trans_table(cls, sc_points, trans_table):
         """Run self checks on sc_points table and the merged trans_table
 
         Parameters
@@ -331,6 +387,8 @@ class SupplyCurve:
                      .format(len(sc_gids), len(trans_sc_gids)))
         logger.debug('Transmission Table created with columns: {}'
                      .format(trans_table.columns.values.tolist()))
+
+        cls._check_substation_conns(trans_table)
 
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
