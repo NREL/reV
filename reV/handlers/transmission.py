@@ -295,9 +295,8 @@ class TransmissionFeatures:
         avail_cap : float
             Substation available capacity
         """
-
         try:
-            line_caps = [self[gid]['avail_cap'] for gid in line_gids]
+            line_caps = [self[l_gid]['avail_cap'] for l_gid in line_gids]
         except HandlerKeyError as e:
             msg = ('Could not find capacities for substation gid {} and '
                    'connected lines: {}'.format(gid, line_gids))

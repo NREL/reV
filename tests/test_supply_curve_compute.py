@@ -11,7 +11,7 @@ import numpy as np
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
-
+from reV.utilities.exceptions import SupplyCurveInputError
 
 TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
                  'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
@@ -263,6 +263,24 @@ def test_simple_trans_table(sc_points):
 
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/ri_sc_simple_lc.csv')
     baseline_verify(sc_simple, fpath_baseline)
+
+
+def test_substation_conns(sc_points, trans_table, multipliers):
+    """
+    Ensure missing trans lines are caught by SupplyCurveInputError
+    """
+    tcosts = TRANS_COSTS_1.copy()
+    avail_cap_frac = tcosts.pop('available_capacity', 1)
+    drop_lines = np.where(trans_table['category'] == 'TransLine')[0]
+    drop_lines = np.random.choice(drop_lines, 10, replace=False)
+    trans_table = trans_table.drop(labels=drop_lines)
+
+    with pytest.raises(SupplyCurveInputError):
+        SupplyCurve.full(sc_points, trans_table, fcr=0.1,
+                         sc_features=multipliers,
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac,
+                         max_workers=4)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
