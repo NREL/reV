@@ -558,7 +558,43 @@ class SupplyCurve:
         return trans_table, sc_gids, mask
 
     @staticmethod
-    def _compute_trans_cap_cost(trans_table, trans_costs=None,
+    def _get_capacity(sc_gid, sc_table, connectable=True):
+        """
+        Get capacity of supply curve point
+
+        Parameters
+        ----------
+        sc_gid : int
+            Supply curve gid
+        sc_table : pandas.DataFrame
+            DataFrame of sc point to transmission features mapping for given
+            sc_gid
+        connectable : bool, optional
+            Flag to ensure SC point can connect to transmission features,
+            by default True
+
+        Returns
+        -------
+        capacity : float
+            Capacity of supply curve point
+        """
+        if connectable:
+            capacity = sc_table['capacity'].unique()
+            if len(capacity) == 1:
+                capacity = capacity[0]
+            else:
+                msg = ('Each supply curve point should only have '
+                       'a single capacity, but {} has {}'
+                       .format(sc_gid, capacity))
+                logger.error(msg)
+                raise RuntimeError(msg)
+        else:
+            capacity = None
+
+        return capacity
+
+    @classmethod
+    def _compute_trans_cap_cost(cls, trans_table, trans_costs=None,
                                 avail_cap_frac=1, max_workers=None,
                                 connectable=True, line_limited=False):
         """
@@ -612,26 +648,15 @@ class SupplyCurve:
             max_workers = os.cpu_count()
 
         logger.info('Computing LCOT costs for all possible connections...')
+        groups = trans_table.groupby('sc_gid')
         if max_workers > 1:
-            groups = trans_table.groupby('sc_gid')
             loggers = [__name__, 'reV.handlers.transmission', 'reV']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 futures = []
                 for sc_gid, sc_table in groups:
-                    if connectable:
-                        capacity = sc_table['capacity'].unique()
-                        if len(capacity) == 1:
-                            capacity = capacity[0]
-                        else:
-                            msg = ('Each supply curve point should only have '
-                                   'a single capacity, but {} has {}'
-                                   .format(sc_gid, capacity))
-                            logger.error(msg)
-                            raise RuntimeError(msg)
-                    else:
-                        capacity = None
-
+                    capacity = cls._get_capacity(sc_gid, sc_table,
+                                                 connectable=connectable)
                     futures.append(exe.submit(TC.feature_costs, sc_table,
                                               capacity=capacity,
                                               avail_cap_frac=avail_cap_frac,
@@ -639,24 +664,18 @@ class SupplyCurve:
                                               **trans_costs))
 
                 cost = [future.result() for future in futures]
-                cost = np.hstack(cost)
         else:
-            feature = TC(trans_table, line_limited=line_limited,
-                         **trans_costs)
             cost = []
-            for _, row in trans_table.iterrows():
-                if connectable:
-                    capacity = row['capacity']
-                else:
-                    capacity = None
+            for sc_gid, sc_table in groups:
+                capacity = cls._get_capacity(sc_gid, sc_table,
+                                             connectable=connectable)
+                cost.append(TC.feature_costs(sc_table,
+                                             capacity=capacity,
+                                             avail_cap_frac=avail_cap_frac,
+                                             line_limited=line_limited,
+                                             **trans_costs))
 
-                tm = row.get('transmission_multiplier', 1)
-                cost.append(feature.cost(row['trans_gid'], row['dist_km'],
-                                         capacity=capacity,
-                                         transmission_multiplier=tm))
-
-            cost = np.array(cost, dtype='float32')
-
+        cost = np.hstack(cost).astype('float32')
         logger.info('LCOT cost calculation is complete.')
 
         return cost
