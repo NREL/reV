@@ -290,6 +290,8 @@ class SupplyCurve:
             List of missing transmission line 'trans_gid's for all substations
             in features table
         """
+        features = features.rename(columns={'trans_line_gid': 'trans_gid',
+                                            'trans_gids': 'trans_line_gids'})
         mask = features['category'].str.lower() == 'substation'
         line_gids = \
             features.loc[mask,
