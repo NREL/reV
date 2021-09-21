@@ -120,6 +120,7 @@ def from_config(ctx, config_file, verbose):
                 max_workers=config.execution_control.max_workers,
                 sites_per_worker=config.execution_control.sites_per_worker,
                 log_dir=config.logdir,
+                recalc_lcoe=config.recalc_lcoe,
                 pre_extract_inclusions=config.pre_extract_inclusions,
                 verbose=verbose)
 
@@ -150,6 +151,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['SITES_PER_WORKER'] = spw
         ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['RECALC_LCOE'] = config.recalc_lcoe
         ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
         ctx.obj['VERBOSE'] = verbose
 
@@ -266,6 +268,15 @@ def from_config(ctx, config_file, verbose):
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               show_default=True,
               help='Directory to save aggregation logs.')
+@click.option('-recalc', '--recalc_lcoe', type=bool, default=True,
+              show_default=True,
+              help='Flag to recalculate LCOE from the multi-year mean '
+              'capacity factor and annual energy production data. The recalc '
+              '(which happens by default because it represents a more "True" '
+              'LCOE) requires several datasets to be aggregated in the '
+              'h5_dsets input: system_capacity, fixed_charge_rate, '
+              'capital_cost, fixed_operating_cost, and '
+              'variable_operating_cost.')
 @click.option('-pre', '--pre_extract_inclusions', is_flag=True,
               help='Optional flag to pre-extract/compute the inclusion mask '
               'from the provided excl_dict, by default False. Typically '
@@ -279,7 +290,8 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
            friction_dset, cap_cost_scale, out_dir, max_workers,
-           sites_per_worker, log_dir, pre_extract_inclusions, verbose):
+           sites_per_worker, log_dir, recalc_lcoe,
+           pre_extract_inclusions, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
     sites_per_worker = sites_per_worker if sites_per_worker else 100
 
@@ -308,6 +320,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
     ctx.obj['MAX_WORKERS'] = max_workers
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['LOG_DIR'] = log_dir
+    ctx.obj['RECALC_LCOE'] = recalc_lcoe
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = pre_extract_inclusions
     ctx.obj['VERBOSE'] = verbose
 
@@ -367,6 +380,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                 friction_fpath=friction_fpath,
                 friction_dset=friction_dset,
                 cap_cost_scale=cap_cost_scale,
+                recalc_lcoe=recalc_lcoe,
                 pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker)
@@ -409,6 +423,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                   'cap_cost_scale': cap_cost_scale,
                   'power_density': power_density,
                   'resolution': resolution,
+                  'recalc_lcoe': recalc_lcoe,
                   'area_filter_kernel': area_filter_kernel,
                   'min_area': min_area}
 
@@ -421,7 +436,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  excl_area, power_density, area_filter_kernel, min_area,
                  friction_fpath, friction_dset, cap_cost_scale,
                  out_dir, max_workers, sites_per_worker, log_dir,
-                 pre_extract_inclusions, verbose):
+                 recalc_lcoe, pre_extract_inclusions, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -449,6 +464,9 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-spw {}'.format(SLURM.s(sites_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
+
+    if recalc_lcoe:
+        args.append('-recalc')
 
     if pre_extract_inclusions:
         args.append('-pre')
@@ -514,6 +532,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     max_workers = ctx.obj['MAX_WORKERS']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     log_dir = ctx.obj['LOG_DIR']
+    recalc_lcoe = ctx.obj['RECALC_LCOE']
     pre_extract_inclusions = ctx.obj['PRE_EXTRACT_INCLUSIONS']
     verbose = ctx.obj['VERBOSE']
 
@@ -528,7 +547,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset, cap_cost_scale,
                        out_dir, max_workers, sites_per_worker,
-                       log_dir, pre_extract_inclusions, verbose)
+                       log_dir, recalc_lcoe,
+                       pre_extract_inclusions, verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
