@@ -463,10 +463,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-mw {}'.format(SLURM.s(max_workers)),
             '-spw {}'.format(SLURM.s(sites_per_worker)),
             '-ld {}'.format(SLURM.s(log_dir)),
+            '-recalc {}'.format(SLURM.s(recalc_lcoe)),
             ]
-
-    if recalc_lcoe:
-        args.append('-recalc')
 
     if pre_extract_inclusions:
         args.append('-pre')
