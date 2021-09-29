@@ -139,9 +139,7 @@ Option 1: Install from PIP or Conda (recommended for analysts):
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
 
-1. from home dir, ``git clone https://github.com/NREL/reV.git``
-    1) enter github username
-    2) enter github password
+1. from home dir, ``git clone git@github.com:NREL/reV.git``
 
 2. Create ``reV`` environment and install package
     1) Create a conda env: ``conda create -n rev``
