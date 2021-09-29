@@ -73,9 +73,13 @@ coordinates:
 .. code-block:: python
 
     import os
+    import numpy as np
     from reV import TESTDATADIR
     from reV.config.project_points import ProjectPoints
     from reV.generation.generation import Gen
+    from rex import init_logger
+
+    init_logger('reV', log_level='DEBUG')
 
     lat_lons = np.array([[ 41.25, -71.66],
                          [ 41.05, -71.74],
@@ -94,7 +98,7 @@ coordinates:
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
     gen = Gen.reV_run('windpower', pp, sam_file, res_file, max_workers=1,
-                      fout=None, output_request=('cf_mean', 'cf_profile'))
+                      out_fpath=None, output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_profile'])
 
     [[0.319 0.538 0.287 ... 0.496 0.579 0.486]
@@ -118,6 +122,9 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
     from reV import TESTDATADIR
     from reV.config.project_points import ProjectPoints
     from reV.generation.generation import Gen
+    from rex import init_logger
+
+    init_logger('reV', log_level='DEBUG')
 
     regions = {'Rhode Island': 'state'}
 
@@ -126,7 +133,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
     gen = Gen.reV_run('pvwattsv5', pp, sam_file, res_file,
-                      max_workers=1, fout=None,
+                      max_workers=1, out_fpath=None,
                       output_request=('cf_mean', 'cf_profile'))
     print(gen.out['cf_mean'])
 

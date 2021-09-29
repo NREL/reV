@@ -222,6 +222,17 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         return self.get('cap_cost_scale', None)
 
     @property
+    def recalc_lcoe(self):
+        """Flag to recalculate LCOE from the multi-year mean capacity factor
+        and annual energy production data. The recalc (which happens by default
+        because it represents a more "True" LCOE) requires several datasets to
+        be aggregated in the h5_dsets input: system_capacity,
+        fixed_charge_rate, capital_cost, fixed_operating_cost, and
+        variable_operating_cost.
+        """
+        return self.get('recalc_lcoe', True)
+
+    @property
     def pre_extract_inclusions(self):
         """Optional flag to pre-extract/compute the inclusion mask from the
         provided excl_dict, by default False. Typically faster to compute
