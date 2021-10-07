@@ -45,8 +45,10 @@ def test_mhkwave():
                        out_fpath=None, output_request=output_request)
 
     with Resource(BASELINE) as f:
-        assert np.allclose(test.out['cf_mean'], f['cf_mean'])
-        assert np.allclose(test.out['cf_profile'], f['cf_profile'])
+        assert np.allclose(test.out['cf_mean'], f['cf_mean'],
+                           atol=0.01, rtol=0.01)
+        assert np.allclose(test.out['cf_profile'], f['cf_profile'],
+                           atol=0.01, rtol=0.01)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
