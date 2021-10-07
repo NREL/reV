@@ -170,10 +170,10 @@ class AbstractSamGeneration(RevPySam, ABC):
                         res_mean = {}
                     res_mean[label_1] = resource[label_2, idx]
 
-                if label_1 in irrad_means:
-                    # convert to kWh/m2/day
-                    res_mean[label_1] /= 1000
-                    res_mean[label_1] *= 24
+                    if label_1 in irrad_means:
+                        # convert to kWh/m2/day
+                        res_mean[label_1] /= 1000
+                        res_mean[label_1] *= 24
 
         return res_mean, out_req_nomeans
 
