@@ -30,7 +30,8 @@ from reV.SAM.defaults import (DefaultPvWattsv5,
                               DefaultTroughPhysicalProcessHeat,
                               DefaultLinearFresnelDsgIph,
                               DefaultMhkWave)
-from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
+                                      InputError)
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
@@ -89,6 +90,7 @@ class AbstractSamGeneration(RevPySam, ABC):
         else:
             self._site = None
 
+        self.check_resource_data(resource)
         self.set_resource_data(resource, meta)
 
     @classmethod
@@ -151,6 +153,7 @@ class AbstractSamGeneration(RevPySam, ABC):
         out_req_nomeans = copy.deepcopy(output_request)
         res_mean = None
         idx = resource.sites.index(res_gid)
+        irrad_means = ('dni_mean', 'dhi_mean', 'ghi_mean')
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
@@ -158,16 +161,41 @@ class AbstractSamGeneration(RevPySam, ABC):
             res_mean['ws_mean'] = resource['mean_windspeed', idx]
 
         else:
-            for var in ('dni', 'dhi', 'ghi'):
+            for var in resource.var_list:
                 label_1 = '{}_mean'.format(var)
                 label_2 = 'mean_{}'.format(var)
                 if label_1 in out_req_nomeans:
                     out_req_nomeans.remove(label_1)
                     if res_mean is None:
                         res_mean = {}
-                    res_mean[label_1] = resource[label_2, idx] / 1000 * 24
+                    res_mean[label_1] = resource[label_2, idx]
+
+                    if label_1 in irrad_means:
+                        # convert to kWh/m2/day
+                        res_mean[label_1] /= 1000
+                        res_mean[label_1] *= 24
 
         return res_mean, out_req_nomeans
+
+    def check_resource_data(self, resource):
+        """Check resource dataframe for NaN values
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        """
+        if pd.isna(resource).any().any():
+            bad_vars = pd.isna(resource).any(axis=0)
+            bad_vars = resource.columns[bad_vars].values.tolist()
+            msg = ('Found NaN values for site {} in variables {}'
+                   .format(self.site, bad_vars))
+            logger.error(msg)
+            raise InputError(msg)
 
     @abstractmethod
     def set_resource_data(self, resource, meta):

@@ -1,0 +1,49 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 1
+  },
+  "groups": {
+    "none": {
+      "dsets": [
+        "cf_mean",
+        "annual_energy",
+        "significant_wave_height_mean",
+        "energy_period_mean",
+        "lcoe_fcr"
+      ],
+      "pass_through_dsets": [
+        "system_capacity",
+        "depth",
+        "dist_s_to_l",
+        "assembly",
+        "power_takeoff",
+        "mooring_found_substruc",
+        "device_costs",
+        "development",
+        "eng_and_mgmt",
+        "assembly_and_install",
+        "bos_costs",
+        "array",
+        "export",
+        "offshore_substation",
+        "other_elec_infra",
+        "electrical_costs",
+        "capital_cost",
+        "fixed_operating_cost",
+        "variable_operating_cost",
+        "fixed_charge_rate"
+      ],
+      "source_dir": "./",
+      "source_files": "PIPELINE",
+      "source_prefix": ""
+    }
+  },
+  "log_level": "INFO"
+}

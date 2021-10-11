@@ -34,7 +34,7 @@ class Offshore:
     def __init__(self, gen_fpath, offshore_fpath, nrwal_configs,
                  project_points, offshore_meta_cols=None,
                  offshore_nrwal_keys=None, nrwal_lcoe_key='lcoe',
-                 nrwal_loss_key='total_losses'):
+                 nrwal_loss_key='total_losses', run_all=False):
         """
         Parameters
         ----------
@@ -66,6 +66,9 @@ class Offshore:
             Key in the NRWAL config for final capacity factor losses output
             value. Can be changed and runtime for different NRWAL configs
             using this kwarg.
+        run_all : bool
+            Flag to run nrwal econ for all generation sites and ignore the
+            offshore flag
         """
 
         log_versions(logger)
@@ -81,6 +84,7 @@ class Offshore:
         self._time_index = None
         self._lcoe_key = nrwal_lcoe_key
         self._loss_key = nrwal_loss_key
+        self._run_all = run_all
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
@@ -101,7 +105,7 @@ class Offshore:
             self._offshore_nrwal_keys += list(self.DEFAULT_NRWAL_KEYS)
             self._offshore_nrwal_keys = list(set(self._offshore_nrwal_keys))
 
-        out = self._parse_gen_data(self._gen_fpath)
+        out = self._parse_gen_data(self._gen_fpath, run_all=run_all)
         self._meta_source, self._onshore_mask = out[:2]
         self._offshore_mask, self._cf_mean = out[2:]
 
@@ -120,10 +124,11 @@ class Offshore:
             if key in self._offshore_data:
                 self._out[key] = self._offshore_data[key].values
             else:
-                self._out[key] = np.full(len(self._offshore_data), np.nan)
+                self._out[key] = np.full(len(self._offshore_data), np.nan,
+                                         dtype=np.float32)
 
     @staticmethod
-    def _parse_gen_data(gen_fpath):
+    def _parse_gen_data(gen_fpath, run_all=False):
         """Parse cf meta dataframe and get masks for onshore/offshore points.
 
         Parameters
@@ -142,17 +147,22 @@ class Offshore:
         cf_mean : np.ndarray
             1D array of mean capacity factor values corresponding to the
             un-masked meta data
+        run_all : bool
+            Flag to run nrwal econ for all generation sites and ignore the
+            offshore flag
         """
 
         with Outputs(gen_fpath, mode='r') as out:
-            if 'cf_mean' not in out.dsets:
-                msg = ('Could not find cf_mean (required) in file: {}'
+            meta = out.meta
+            if 'cf_mean_raw' in out.dsets:
+                cf_mean = out['cf_mean_raw']
+            elif 'cf_mean' in out.dsets:
+                cf_mean = out['cf_mean']
+            else:
+                msg = ('Could not find cf_mean or cf_mean_raw in file: {}'
                        .format(gen_fpath))
                 logger.error(msg)
                 raise OffshoreWindInputError(msg)
-
-            meta = out.meta
-            cf_mean = out['cf_mean']
 
         msg = ('Could not find "gid" column in source '
                'capacity factor meta data!')
@@ -162,11 +172,13 @@ class Offshore:
         msg = ('Source capacity factor meta data is not ordered!')
         assert list(meta['gid']) == sorted(list(meta['gid'])), msg
 
-        if 'offshore' not in meta:
+        if 'offshore' not in meta and not run_all:
             e = ('Offshore module cannot run without "offshore" flag in meta '
                  'data of gen_fpath: {}'.format(gen_fpath))
             logger.error(e)
             raise KeyError(e)
+        elif run_all:
+            meta['offshore'] = 1
 
         onshore_mask = meta['offshore'] == 0
         offshore_mask = meta['offshore'] == 1
@@ -253,7 +265,8 @@ class Offshore:
         for gid in self.offshore_res_gids:
             system_inputs[gid] = self._project_points[gid][1]
 
-            if 'turbine_capacity' not in system_inputs[gid]:
+            if ('wind_turbine_powercurve_powerout' in system_inputs[gid]
+                    and 'turbine_capacity' not in system_inputs[gid]):
                 # convert from SAM kw powercurve to MW.
                 arr = system_inputs[gid]['wind_turbine_powercurve_powerout']
                 cap_kw = np.max(arr)
@@ -309,7 +322,11 @@ class Offshore:
             msg = 'Offshore data input already had gross capacity factor!'
             logger.error(msg)
             raise OffshoreWindInputError(msg)
+
+        # store capacity factor under gcf (gross cf) and also under cf_mean
+        # (useful for non-orca configs)
         self._offshore_data['gcf'] = self._cf_mean[self._offshore_mask]
+        self._offshore_data['cf_mean'] = self._cf_mean[self._offshore_mask]
 
         for config_id, nrwal_config in self._nrwal_configs.items():
             system_vars = [var for var in nrwal_config.required_inputs
@@ -406,6 +423,7 @@ class Offshore:
     def run_nrwal(self):
         """Run offshore analysis via the NRWAL analysis library"""
         from NRWAL import Equation
+
         for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
             mask = self._offshore_data['config'].values == cid
             logger.info('Running offshore config {} of {}: "{}" and applying '
@@ -415,8 +433,10 @@ class Offshore:
 
             outs = nrwal_config.eval(inputs=self._offshore_data)
 
-            # pylint: disable=C0201
+            # pylint: disable=C0201,C0206
             for name in self._out.keys():
+                value = None
+
                 if name in outs:
                     value = outs[name]
                     self._out[name][mask] = value[mask]
@@ -441,49 +461,71 @@ class Offshore:
                 elif name not in self._offshore_data:
                     msg = ('Could not find "{}" in the output dict of NRWAL '
                            'config {}'.format(name, cid))
-                    logger.error(msg)
-                    raise KeyError(msg)
+                    logger.warning(msg)
+                    warn(msg)
 
                 logger.debug('NRWAL output "{}": {}'.format(name, value))
 
     def check_outputs(self):
         """Check the nrwal outputs for nan values and raise errors if found."""
         for name, arr in self._out.items():
-            if np.isnan(arr).any():
+            if np.isnan(arr).all():
+                msg = ('Output array "{}" is all NaN! Probably was not '
+                       'found in the available NRWAL keys.'.format(name))
+                logger.warning(msg)
+                warn(msg)
+            elif np.isnan(arr).any():
                 mask = np.isnan(arr)
                 nan_meta = self.meta_out_offshore[mask]
                 nan_gids = nan_meta['gid'].values
                 msg = ('NaN values ({} out of {}) persist in offshore '
                        'output "{}"!'
                        .format(np.isnan(arr).sum(), len(arr), name))
-                logger.error(msg)
-                logger.error('This is the offshore meta that is causing NaN '
-                             'outputs: {}'.format(nan_meta))
-                logger.error('These are the resource gids causing NaN '
-                             'outputs: {}'.format(nan_gids))
-                raise ValueError(msg)
+                logger.warning(msg)
+                logger.warning('This is the offshore meta that is causing NaN '
+                               'outputs: {}'.format(nan_meta))
+                logger.warning('These are the resource gids causing NaN '
+                               'outputs: {}'.format(nan_gids))
+                warn(msg)
 
     def write_to_gen_fpath(self):
         """Save offshore outputs to input generation fpath file. This will
         overwrite data!"""
 
         loss_mult = 1 - self._out[self._loss_key]
+        loss_mult = np.where(np.isnan(loss_mult), 1, loss_mult)
 
         with Outputs(self._gen_fpath, 'a') as f:
             meta_attrs = f.get_attrs('meta')
             del f._h5['meta']
             f._set_meta('meta', self.meta_out, attrs=meta_attrs)
 
-            lcoe = f['lcoe_fcr']
-            lcoe[self._offshore_mask] = self._out[self._lcoe_key]
-            f['lcoe_fcr'] = lcoe
+            if 'lcoe_fcr' in f:
+                lcoe = f['lcoe_fcr']
+                lcoe[self._offshore_mask] = self._out[self._lcoe_key]
+                f['lcoe_fcr'] = lcoe
+            elif 'lcoe_fcr' not in f and self._run_all:
+                f._add_dset('lcoe_fcr', self._out[self._lcoe_key], np.float32,
+                            attrs={'units': 'dol/MWh', 'scale_factor': 1})
+            elif 'lcoe_fcr' not in f and not self._run_all:
+                lcoe = np.zeros(len(self.meta_out), dtype=np.float32)
+                lcoe[self._offshore_mask] = self._out[self._lcoe_key]
+                f._add_dset('lcoe_fcr', lcoe, np.float32,
+                            attrs={'units': 'dol/MWh', 'scale_factor': 1})
 
-            cf_mean = f['cf_mean']
-            cf_mean[self._offshore_mask] *= loss_mult
-            f['cf_mean'] = cf_mean
+            f._add_dset('cf_mean_raw', self._cf_mean, f.dtypes['cf_mean'],
+                        attrs=f.attrs['cf_mean'])
+            self._cf_mean[self._offshore_mask] *= loss_mult
+            f['cf_mean'] = self._cf_mean
 
-            if 'cf_profile' in f.dsets:
+            profiles = None
+            if 'cf_profile_raw' in f.dsets:
+                profiles = f['cf_profile_raw']
+            elif 'cf_profile' in f.dsets:
                 profiles = f['cf_profile']
+            if profiles is not None:
+                f._add_dset('cf_profile_raw', profiles, f.dtypes['cf_profile'],
+                            attrs=f.attrs['cf_profile'])
                 profiles[:, self._offshore_mask] *= loss_mult
                 f['cf_profile'] = profiles
 
@@ -501,7 +543,8 @@ class Offshore:
     @classmethod
     def run(cls, gen_fpath, offshore_fpath, sam_files, nrwal_configs,
             points, offshore_meta_cols=None, offshore_nrwal_keys=None,
-            nrwal_lcoe_key='lcoe', nrwal_loss_key='total_losses'):
+            nrwal_lcoe_key='lcoe', nrwal_loss_key='total_losses',
+            run_all=False):
         """
         Parameters
         ----------
@@ -539,6 +582,9 @@ class Offshore:
             Key in the NRWAL config for final capacity factor losses output
             value. Can be changed and runtime for different NRWAL configs
             using this kwarg.
+        run_all : bool
+            Flag to run nrwal econ for all generation sites and ignore the
+            offshore flag
 
         Returns
         -------
@@ -554,7 +600,8 @@ class Offshore:
                        offshore_meta_cols=offshore_meta_cols,
                        offshore_nrwal_keys=offshore_nrwal_keys,
                        nrwal_lcoe_key=nrwal_lcoe_key,
-                       nrwal_loss_key=nrwal_loss_key)
+                       nrwal_loss_key=nrwal_loss_key,
+                       run_all=run_all)
 
         if any(offshore.offshore_res_gids):
             offshore.run_nrwal()

@@ -70,6 +70,12 @@ class OffshoreConfig(AnalysisConfig):
         datasets in the reV output h5"""
         return self.get('offshore_nrwal_keys', None)
 
+    @property
+    def run_all(self):
+        """Get the flag to run nrwal offshore lcoe for all sites and ignore the
+        offshore flag in the meta data"""
+        return bool(self.get('run_all', False))
+
     def parse_gen_fpaths(self):
         """
         Get a list of generation data filepaths

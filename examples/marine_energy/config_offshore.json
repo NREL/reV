@@ -1,0 +1,46 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "max_workers": 1,
+    "option": "eagle",
+    "walltime": 1
+  },
+  "gen_fpath": "PIPELINE",
+  "log_level": "INFO",
+  "nrwal_configs": "PLACEHOLDER",
+  "offshore_fpath": "PLACEHOLDER",
+  "offshore_meta_cols": [
+    "depth",
+    "dist_s_to_l"
+  ],
+  "offshore_nrwal_keys": [
+    "annual_energy",
+    "depth",
+    "dist_s_to_l",
+    "assembly",
+    "power_takeoff",
+    "mooring_found_substruc",
+    "device_costs",
+    "development",
+    "eng_and_mgmt",
+    "assembly_and_install",
+    "bos_costs",
+    "array",
+    "export",
+    "offshore_substation",
+    "other_elec_infra",
+    "electrical_costs",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
+  ],
+  "project_points": "PLACEHOLDER",
+  "run_all": true,
+  "sam_files": "PLACEHOLDER"
+}

@@ -105,6 +105,7 @@ def from_config(ctx, config_file, verbose):
                            nrwal_configs=config.nrwal_configs,
                            offshore_meta_cols=config.offshore_meta_cols,
                            offshore_nrwal_keys=config.offshore_nrwal_keys,
+                           run_all=config.run_all,
                            logdir=config.logdir,
                            verbose=verbose)
 
@@ -117,6 +118,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['NRWAL_CONFIGS'] = config.nrwal_configs
             ctx.obj['OFFSHORE_META_COLS'] = config.offshore_meta_cols
             ctx.obj['OFFSHORE_NRWAL_KEYS'] = config.offshore_nrwal_keys
+            ctx.obj['RUN_ALL'] = config.run_all
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -160,11 +162,14 @@ def from_config(ctx, config_file, verbose):
               'new datasets in the reV output h5.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               help='Directory to save offshore logs.')
+@click.option('-ra', '--run_all', is_flag=True,
+              help='Flag to run nrwal econ for all sites and ignore the '
+              'offshore flag in the meta data.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
-           offshore_meta_cols, offshore_nrwal_keys, log_dir, verbose):
+           offshore_meta_cols, offshore_nrwal_keys, log_dir, run_all, verbose):
     """Main entry point to run offshore wind aggregation"""
     name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
@@ -174,6 +179,7 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
     ctx.obj['NRWAL_CONFIGS'] = nrwal_configs
     ctx.obj['OFFSHORE_META_COLS'] = offshore_meta_cols
     ctx.obj['OFFSHORE_NRWAL_KEYS'] = offshore_nrwal_keys
+    ctx.obj['RUN_ALL'] = run_all
     ctx.obj['OUT_DIR'] = os.path.dirname(gen_fpath)
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -186,7 +192,8 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
         try:
             Offshore.run(gen_fpath, offshore_fpath, sam_files, nrwal_configs,
                          points, offshore_meta_cols=offshore_meta_cols,
-                         offshore_nrwal_keys=offshore_nrwal_keys)
+                         offshore_nrwal_keys=offshore_nrwal_keys,
+                         run_all=run_all)
         except Exception as e:
             logger.exception('Offshore module failed, received the '
                              'following exception:\n{}'.format(e))
@@ -204,7 +211,7 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files, nrwal_configs,
 
 def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
                  nrwal_configs, offshore_meta_cols, offshore_nrwal_keys,
-                 log_dir, verbose):
+                 log_dir, run_all, verbose):
     """Get a CLI call command for the offshore aggregation cli."""
 
     args = ['-gf {}'.format(SLURM.s(gen_fpath)),
@@ -217,6 +224,8 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
+    if run_all:
+        args.append('-ra')
     if verbose:
         args.append('-v')
 
@@ -256,6 +265,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     nrwal_configs = ctx.obj['NRWAL_CONFIGS']
     offshore_meta_cols = ctx.obj['OFFSHORE_META_COLS']
     offshore_nrwal_keys = ctx.obj['OFFSHORE_NRWAL_KEYS']
+    run_all = ctx.obj['RUN_ALL']
     log_dir = ctx.obj['LOG_DIR']
     out_dir = ctx.obj['OUT_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -265,7 +275,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
 
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
                        sam_files, nrwal_configs, offshore_meta_cols,
-                       offshore_nrwal_keys, log_dir, verbose)
+                       offshore_nrwal_keys, log_dir, run_all, verbose)
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()

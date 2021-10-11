@@ -64,38 +64,63 @@ def test_offshore():
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
             lcoe_new = f['lcoe_fcr']
+            losses = f['total_losses']
+            assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
+            assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
             cf_mean_new = f['cf_mean']
             cf_profile_new = f['cf_profile']
             fcr = f['fixed_charge_rate']
             depth = f['depth']
 
-            assert 'depth' in meta_new
-            assert all(meta_new.loc[(meta_new.offshore == 1), 'depth'] >= 0)
-            assert all(np.isnan(
-                meta_new.loc[(meta_new.offshore == 0), 'depth']))
-
-            assert all(fcr[(meta_new.offshore == 1)] == 0.071)
-            assert all(fcr[(meta_new.offshore == 0)] == 0.09)
-            assert not any(np.isnan(fcr))
-
-            assert all(depth[(meta_new.offshore == 1)] >= 0)
-            assert all(np.isnan(depth[(meta_new.offshore == 0)]))
-
-            for col in off._offshore_meta_cols:
-                assert col in meta_new
-
+            # check nrwal keys requested as h5 dsets
             for key in off._offshore_nrwal_keys:
                 assert key in f.dsets
                 assert np.isnan(f[key][mask]).sum() == 0
                 if key in ('total_losses', 'array', 'export'):
                     assert np.isnan(f[key][~mask]).all()
 
+        # run offshore twice and make sure losses don't get doubled
+        _ = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
+                         nrwal_configs, points,
+                         offshore_meta_cols=['depth'],
+                         offshore_nrwal_keys=['fixed_charge_rate', 'depth'])
+
+        # make sure the second offshore compute gives same results as first
+        with Outputs(gen_fpath, 'r') as f:
+            assert np.allclose(lcoe_new, f['lcoe_fcr'])
+            assert np.allclose(cf_mean_new, f['cf_mean'])
+            assert np.allclose(cf_profile_new, f['cf_profile'])
+            assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
+            assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
+
+        # check offshore depth data
+        assert 'depth' in meta_new
+        assert all(meta_new.loc[(meta_new.offshore == 1), 'depth'] >= 0)
+        assert all(np.isnan(
+            meta_new.loc[(meta_new.offshore == 0), 'depth']))
+        assert all(depth[(meta_new.offshore == 1)] >= 0)
+        assert all(np.isnan(depth[(meta_new.offshore == 0)]))
+
+        # check difference fcr values for onshore/offshore
+        assert all(fcr[(meta_new.offshore == 1)] == 0.071)
+        assert all(fcr[(meta_new.offshore == 0)] == 0.09)
+        assert not any(np.isnan(fcr))
+
+        # make sure all of the requested offshore meta columns got
+        # sent to the new meta data
+        for col in off._offshore_meta_cols:
+            assert col in meta_new
+
+        # sanity check lcoe and cf values
         assert (lcoe_new[mask] != lcoe_raw[mask]).all()
         assert (lcoe_new[~mask] == lcoe_raw[~mask]).all()
         assert (cf_mean_new[mask] < cf_mean_raw[mask]).all()
-        assert (cf_mean_new[~mask] == cf_mean_raw[~mask]).all()
+        assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
         assert (cf_profile_new[:, mask] <= cf_profile_raw[:, mask]).all()
-        assert (cf_profile_new[:, ~mask] == cf_profile_raw[:, ~mask]).all()
+        assert np.allclose(cf_profile_new[:, ~mask], cf_profile_raw[:, ~mask])
+        assert np.allclose(cf_mean_new[mask],
+                           (1 - losses[mask]) * cf_mean_raw[mask],
+                           rtol=0.005)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
