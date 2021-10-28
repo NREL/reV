@@ -1,5 +1,5 @@
-Command Line Interphases (CLIs)
-===============================
+Command Line Interfaces (CLIs)
+==============================
 
 .. toctree::
 
