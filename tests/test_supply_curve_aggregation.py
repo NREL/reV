@@ -14,6 +14,7 @@ from reV import TESTDATADIR
 from rex.resource import Resource
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
 TM_DSET = 'techmap_wtk'
 AGG_DSET = ('cf_mean', 'cf_profile')

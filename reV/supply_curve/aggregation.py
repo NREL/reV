@@ -17,6 +17,7 @@ from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError, SupplyCurveInputError)
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -336,14 +337,15 @@ class AbstractAggregation(ABC):
         return gid_inclusions
 
     @staticmethod
-    def _parse_gen_index(h5_fpath):
+    def _parse_gen_index(gen_fpath):
         """Parse gen outputs for an array of generation gids corresponding to
         the resource gids.
 
         Parameters
         ----------
-        h5_fpath : str
-            Filepath to reV compliant .h5 file
+        gen_fpath : str
+            Filepath to reV generation output .h5 file. This can also be a csv
+            filepath to a project points input file.
 
         Returns
         -------
@@ -353,8 +355,17 @@ class AbstractAggregation(ABC):
             generation run.
         """
 
-        with Resource(h5_fpath) as f:
-            gen_index = f.meta
+        if gen_fpath.endswith('.h5'):
+            with Resource(gen_fpath) as f:
+                gen_index = f.meta
+        elif gen_fpath.endswith('.csv'):
+            gen_index = pd.read_csv(gen_fpath)
+        else:
+            msg = ('Could not recognize gen_fpath input, needs to be reV gen '
+                   'output h5 or project points csv but received: {}'
+                   .format(gen_fpath))
+            logger.error(msg)
+            raise FileInputError(msg)
 
         if 'gid' in gen_index:
             gen_index = gen_index.rename(columns={'gid': 'res_gids'})
@@ -503,6 +514,7 @@ class AbstractAggregation(ABC):
         chunks = np.array_split(
             self.gids, int(np.ceil(len(self.gids) / sites_per_worker)))
 
+        slice_lookup = None
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
                                    resolution=self._resolution) as sc:
@@ -694,7 +706,8 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate, can supply multiple datasets
+            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
+            datasets.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -720,6 +733,11 @@ class Aggregation(AbstractAggregation):
             provided excl_dict, by default False. Typically faster to compute
             the inclusion mask on the fly with parallel workers.
         """
+        log_versions(logger)
+        logger.info('Initializing Aggregation...')
+        logger.debug('Exclusion filepath: {}'.format(excl_fpath))
+        logger.debug('Exclusion dict: {}'.format(excl_dict))
+
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area, resolution=resolution,
@@ -780,12 +798,18 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate, can supply multiple datasets
+            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
+            datasets.
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
+        inclusion_mask : np.ndarray, optional
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. This must be either match the full exclusion shape or
+            be a list of single-sc-point exclusion masks corresponding to the
+            gids input, by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
             by default "queen"
@@ -893,6 +917,7 @@ class Aggregation(AbstractAggregation):
             Aggregated values for each aggregation dataset
         """
 
+        slice_lookup = None
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
         chunks = np.array_split(self.gids, chunks)
 
@@ -1084,7 +1109,8 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate, can supply multiple datasets
+            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
+            datasets.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None

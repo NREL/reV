@@ -9,14 +9,15 @@ import click
 import logging
 import pprint
 import time
-import h5py
 
 from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
+from reV.supply_curve.aggregation import Aggregation
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import __version__
 
+from rex.multi_file_resource import MultiFileResource
 from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
                                       STRFLOAT, STR_OR_LIST)
@@ -168,8 +169,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('--excl_fpath', '-exf', type=STR_OR_LIST, required=True,
               help='Single exclusions file (.h5) or a '
               'list of exclusion files (.h5, .h5).')
-@click.option('--gen_fpath', '-gf', type=STR, required=True,
-              help='reV generation/econ output file.')
+@click.option('--gen_fpath', '-gf', type=STR, default=None,
+              help='reV generation/econ output file. If not input, a generic '
+              'exclusions aggregation will be run based on the res_fpath '
+              'input.')
 @click.option('--tm_dset', '-tm', type=STR, required=True,
               help='Dataset in the exclusions file that maps the exclusions '
               'to the resource being analyzed.')
@@ -180,7 +183,8 @@ def from_config(ctx, config_file, verbose):
               'different files.')
 @click.option('--res_fpath', '-rf', type=STR, default=None,
               show_default=True,
-              help='Resource file, required if techmap dset is to be created.')
+              help='Resource file (e.g. WTK or NSRDB), required if techmap '
+              'dset is to be created or if gen_fpath is not input.')
 @click.option('--excl_dict', '-exd', type=STR, default=None,
               show_default=True,
               help=('String representation of a dictionary of exclusion '
@@ -333,9 +337,9 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
         paths = excl_fpath
         if isinstance(excl_fpath, str):
             paths = [excl_fpath]
-        for fp in paths:
-            with h5py.File(fp, mode='r') as f:
-                dsets += list(f)
+
+        with MultiFileResource(paths) as res:
+            dsets = res.dsets
 
         if tm_dset in dsets:
             logger.info('Found techmap "{}".'.format(tm_dset))
@@ -351,9 +355,10 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
             try:
                 TechMapping.run(excl_fpath, res_fpath, dset=tm_dset)
             except Exception as e:
-                logger.exception('TechMapping process failed. Received the '
-                                 'following error:\n{}'.format(e))
-                raise e
+                msg = ('TechMapping process failed. Received the '
+                       'following error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg) from e
 
         if isinstance(excl_dict, str):
             excl_dict = dict_str_load(excl_dict)
@@ -362,33 +367,47 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
             data_layers = dict_str_load(data_layers)
 
         try:
-            summary = SupplyCurveAggregation.summary(
-                excl_fpath, gen_fpath, tm_dset,
-                econ_fpath=econ_fpath,
-                excl_dict=excl_dict,
-                res_class_dset=res_class_dset,
-                res_class_bins=res_class_bins,
-                cf_dset=cf_dset,
-                lcoe_dset=lcoe_dset,
-                h5_dsets=h5_dsets,
-                data_layers=data_layers,
-                resolution=resolution,
-                excl_area=excl_area,
-                power_density=power_density,
-                area_filter_kernel=area_filter_kernel,
-                min_area=min_area,
-                friction_fpath=friction_fpath,
-                friction_dset=friction_dset,
-                cap_cost_scale=cap_cost_scale,
-                recalc_lcoe=recalc_lcoe,
-                pre_extract_inclusions=pre_extract_inclusions,
-                max_workers=max_workers,
-                sites_per_worker=sites_per_worker)
+            if gen_fpath is None:
+                out = Aggregation.run(
+                    excl_fpath, res_fpath, tm_dset,
+                    excl_dict=excl_dict,
+                    resolution=resolution,
+                    excl_area=excl_area,
+                    area_filter_kernel=area_filter_kernel,
+                    min_area=min_area,
+                    pre_extract_inclusions=pre_extract_inclusions,
+                    max_workers=max_workers,
+                    sites_per_worker=sites_per_worker)
+                summary = out['meta']
+            else:
+                summary = SupplyCurveAggregation.summary(
+                    excl_fpath, gen_fpath, tm_dset,
+                    econ_fpath=econ_fpath,
+                    excl_dict=excl_dict,
+                    res_class_dset=res_class_dset,
+                    res_class_bins=res_class_bins,
+                    cf_dset=cf_dset,
+                    lcoe_dset=lcoe_dset,
+                    h5_dsets=h5_dsets,
+                    data_layers=data_layers,
+                    resolution=resolution,
+                    excl_area=excl_area,
+                    power_density=power_density,
+                    area_filter_kernel=area_filter_kernel,
+                    min_area=min_area,
+                    friction_fpath=friction_fpath,
+                    friction_dset=friction_dset,
+                    cap_cost_scale=cap_cost_scale,
+                    recalc_lcoe=recalc_lcoe,
+                    pre_extract_inclusions=pre_extract_inclusions,
+                    max_workers=max_workers,
+                    sites_per_worker=sites_per_worker)
 
         except Exception as e:
-            logger.exception('Supply curve Aggregation failed. Received the '
-                             'following error:\n{}'.format(e))
-            raise e
+            msg = ('Supply curve Aggregation failed. Received the '
+                   'following error:\n{}'.format(e))
+            logger.exception(msg)
+            raise RuntimeError(msg) from e
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)

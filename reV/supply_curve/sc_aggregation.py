@@ -91,7 +91,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                          min_area=min_area)
 
         self._gen = self._open_gen_econ_resource(gen_fpath, econ_fpath)
-        # pre-initialize any import attributes
+        # pre-initialize the resource meta data
         _ = self._gen.meta
 
         self._data_layers = self._open_data_layers(data_layers)
@@ -124,13 +124,17 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         Returns
         -------
         handler : Resource | MultiFileResource
-            Open resource handler initialized with gen_fpath and
-            (optionally) econ_fpath.
+            Open resource handler initialized with gen_fpath and (optionally)
+            econ_fpath.
         """
 
-        if econ_fpath is None:
+        handler = None
+        is_gen_h5 = isinstance(gen_fpath, str) and gen_fpath.endswith('.h5')
+        is_econ_h5 = isinstance(econ_fpath, str) and econ_fpath.endswith('.h5')
+
+        if is_gen_h5 and not is_econ_h5:
             handler = Resource(gen_fpath)
-        else:
+        elif is_gen_h5 and is_econ_h5:
             handler = MultiFileResource([gen_fpath, econ_fpath],
                                         check_files=True)
 
@@ -617,15 +621,17 @@ class SupplyCurveAggregation(AbstractAggregation):
         """
 
         dset_list = (res_class_dset, cf_dset, lcoe_dset)
+        dset_list = (d for d in dset_list if d is not None)
+        gen_dsets = [] if gen is None else gen.datasets
         labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
         temp = [None, None, None]
         for i, dset in enumerate(dset_list):
-            if dset in gen.datasets:
+            if dset in gen_dsets:
                 temp[i] = gen[dset]
-            elif dset not in gen.datasets and dset is not None:
+            elif dset not in gen_dsets and dset is not None:
                 w = ('Could not find "{}" input as "{}" in '
                      'generation file: {}. Available datasets: {}'
-                     .format(labels[i], dset, gen_fpath, gen.datasets))
+                     .format(labels[i], dset, gen_fpath, gen_dsets))
                 logger.warning(w)
                 warn(w, OutputWarning)
 
@@ -640,7 +646,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                            'fixed_operating_cost', 'variable_operating_cost',
                            'system_capacity')
         missing_lcoe_source = [k for k in lcoe_recalc_req
-                               if k not in gen.datasets]
+                               if k not in gen_dsets]
         missing_lcoe_request = []
 
         h5_dsets_data = None
@@ -654,13 +660,13 @@ class SupplyCurveAggregation(AbstractAggregation):
                 logger.error(e)
                 raise TypeError(e)
 
-            missing_h5_dsets = [k for k in h5_dsets if k not in gen.datasets]
+            missing_h5_dsets = [k for k in h5_dsets if k not in gen_dsets]
             if any(missing_h5_dsets):
                 msg = ('Could not find requested h5_dsets "{}" in '
                        'generation file: {} or econ file: {}. '
                        'Available datasets: {}'
                        .format(missing_h5_dsets, gen_fpath, econ_fpath,
-                               gen.datasets))
+                               gen_dsets))
                 logger.error(msg)
                 raise FileInputError(msg)
 
