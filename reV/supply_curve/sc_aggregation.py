@@ -19,8 +19,8 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
                                           AbstractAggregation)
 from reV.supply_curve.exclusions import FrictionMask
-from reV.supply_curve.points import SupplyCurveExtent
-from reV.supply_curve.point_summary import SupplyCurvePointSummary
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning)
@@ -508,7 +508,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         if self._power_density is None:
             msg = ('Supply curve aggregation power density not specified. '
                    'Will try to infer based on lookup table: {}'
-                   .format(SupplyCurvePointSummary.POWER_DENSITY))
+                   .format(GenerationSupplyCurvePoint.POWER_DENSITY))
             logger.warning(msg)
             warn(msg, InputWarning)
 
@@ -621,7 +621,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         """
 
         dset_list = (res_class_dset, cf_dset, lcoe_dset)
-        dset_list = (d for d in dset_list if d is not None)
         gen_dsets = [] if gen is None else gen.datasets
         labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
         temp = [None, None, None]
@@ -837,7 +836,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                 for ri, res_bin in enumerate(inputs[1]):
                     try:
-                        pointsum = SupplyCurvePointSummary.summarize(
+                        pointsum = GenerationSupplyCurvePoint.summarize(
                             gid,
                             fh.exclusions,
                             fh.gen,

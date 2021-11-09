@@ -225,9 +225,10 @@ def test_econ_from_config(runner):
 
         result = runner.invoke(main, ['-c', config_path,
                                       'econ'])
-        msg = ('Failed with error {}'
-               .format(traceback.print_exception(*result.exc_info)))
-        assert result.exit_code == 0, msg
+        if result.exit_code != 0:
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
 
         out_fpath = os.path.join(td, 'econ-test_2012.h5')
         with Outputs(out_fpath, 'r') as f:

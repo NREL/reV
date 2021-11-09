@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV supply curve extent and points base frameworks.
+reV supply curve points frameworks.
 """
 from abc import ABC
 import logging
@@ -9,13 +9,19 @@ import pandas as pd
 from scipy import stats
 from warnings import warn
 
+from reV.econ.economies_of_scale import EconomiesOfScale
+from reV.econ.utilities import lcoe_fcr
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
-from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
-                                      EmptySupplyCurvePointError, InputWarning)
+from reV.utilities.exceptions import (SupplyCurveInputError,
+                                      EmptySupplyCurvePointError,
+                                      InputWarning,
+                                      FileInputError,
+                                      DataShapeError,
+                                      OutputWarning)
 
 from rex.resource import Resource
-from rex.utilities.utilities import get_chunk_ranges
+from rex.utilities.utilities import jsonify_dict
 
 logger = logging.getLogger(__name__)
 
@@ -689,6 +695,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             raise EmptySupplyCurvePointError(emsg)
 
         self._check_excl()
+        self._apply_exclusions()
 
     @staticmethod
     def _parse_h5_file(h5):
@@ -722,6 +729,22 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                                         .format(type(h5)))
 
         return h5_fpath, h5
+
+    def _apply_exclusions(self):
+        """Apply exclusions by masking the generation and resource gid arrays.
+        This removes all res/gen entries that are masked by the exclusions or
+        resource bin."""
+
+        # exclusions mask is False where excluded
+        exclude = self.include_mask_flat == 0
+
+        self._gids[exclude] = -1
+        self._h5_gids[exclude] = -1
+
+        if (self._gids != -1).sum() == 0:
+            msg = ('Supply curve point gid {} is completely excluded!'
+                   .format(self._gid))
+            raise EmptySupplyCurvePointError(msg)
 
     def close(self):
         """Close all file handlers."""
@@ -997,11 +1020,19 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
 
 class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
-    """Single supply curve point with associated reV generation"""
+    """Supply curve point summary framework that ties a reV SC point to its
+    respective generation and resource data."""
+
+    # technology-dependent power density estimates in MW/km2
+    POWER_DENSITY = {'pv': 36, 'wind': 3}
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index,
-                 excl_dict=None, inclusion_mask=None, resolution=64,
-                 excl_area=0.0081, exclusion_shape=None, close=True):
+                 excl_dict=None, inclusion_mask=None,
+                 res_class_dset=None, res_class_bin=None, excl_area=0.0081,
+                 power_density=None, cf_dset='cf_mean-means',
+                 lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
+                 exclusion_shape=None, close=False, friction_layer=None,
+                 recalc_lcoe=True):
         """
         Parameters
         ----------
@@ -1009,11 +1040,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             gid for supply curve point to analyze.
         excl : str | ExclusionMask
             Filepath to exclusions h5 or ExclusionMask file handler.
-        gen : str | reV.handlers.Resource
-            Filepath to .h5 reV generation output results or reV Resource file
+        gen : str | reV.handlers.Outputs
+            Filepath to .h5 reV generation output results or reV Outputs file
             handler.
         tm_dset : str
-            Dataset name in the exclusions file containing the
+            Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
@@ -1026,18 +1057,60 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. The shape of this will be checked against the input
             resolution.
-        resolution : int
-            Number of exclusion points per SC point along an axis.
-            This number**2 is the total number of exclusion points per
-            SC point.
+        res_class_dset : str | np.ndarray | None
+            Dataset in the generation file dictating resource classes.
+            Can be pre-extracted resource data in np.ndarray.
+            None if no resource classes.
+        res_class_bin : list | None
+            Two-entry lists dictating the single resource class bin.
+            None if no resource classes.
         excl_area : float
             Area of an exclusion cell (square km).
+        power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
+        cf_dset : str | np.ndarray
+            Dataset name from gen containing capacity factor mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        lcoe_dset : str | np.ndarray
+            Dataset name from gen containing LCOE mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        h5_dsets : None | list | dict
+            Optional list of dataset names to summarize from the gen/econ h5
+            files. Can also be pre-extracted data dictionary where keys are
+            the dataset names and values are the arrays of data from the
+            h5 files.
+        resolution : int | None
+            SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
-            Shape of the full exclusions extent (rows, cols). Inputing this
-            will speed things up considerably.
+            Shape of the exclusions extent (rows, cols). Inputing this will
+            speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
+        friction_layer : None | FrictionMask
+            Friction layer with scalar friction values if valid friction inputs
+            were entered. Otherwise, None to not apply friction layer.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
         """
+
+        self._res_class_dset = res_class_dset
+        self._res_class_bin = res_class_bin
+        self._cf_dset = cf_dset
+        self._lcoe_dset = lcoe_dset
+        self._h5_dsets = h5_dsets
+        self._mean_res = None
+        self._res_data = None
+        self._gen_data = None
+        self._lcoe_data = None
+        self._pd_obj = None
+        self._power_density = power_density
+        self._friction_layer = friction_layer
+        self._recalc_lcoe = recalc_lcoe
 
         super().__init__(gid, excl, gen, tm_dset,
                          excl_dict=excl_dict,
@@ -1062,6 +1135,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             raise EmptySupplyCurvePointError(emsg)
 
         self._check_excl()
+        self._apply_exclusions()
 
     def exclusion_weighted_mean(self, flat_arr):
         """Calc the exclusions-weighted mean value of a flat array of gen data.
@@ -1159,549 +1233,701 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         return gid_counts
 
+    @property
+    def res_data(self):
+        """Get the resource data array.
 
-class SupplyCurveExtent:
-    """Supply curve full extent framework."""
-
-    def __init__(self, f_excl, resolution=64):
-        """
-        Parameters
-        ----------
-        f_excl : str | list | tuple | ExclusionLayers
-            File path(s) to the exclusions grid, or pre-initialized
-            ExclusionLayers. The exclusions dictate the SC analysis extent.
-        resolution : int
-            Number of exclusion points per SC point along an axis.
-            This number**2 is the total number of exclusion points per
-            SC point.
+        Returns
+        -------
+        _res_data : np.ndarray
+            Multi-year-mean resource data array for all sites in the
+            generation data output file.
         """
 
-        logger.debug('Initializing SupplyCurveExtent with res {} from: {}'
-                     .format(resolution, f_excl))
+        if isinstance(self._res_class_dset, np.ndarray):
+            return self._res_class_dset
 
-        if not isinstance(resolution, int):
-            raise SupplyCurveInputError('Supply Curve resolution needs to be '
-                                        'an integer but received: {}'
-                                        .format(type(resolution)))
-
-        if isinstance(f_excl, (str, list, tuple)):
-            self._excl_fpath = f_excl
-            self._excls = ExclusionLayers(f_excl)
-        elif isinstance(f_excl, ExclusionLayers):
-            self._excl_fpath = f_excl.h5_file
-            self._excls = f_excl
         else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs an '
-                                        'exclusions file path, or '
-                                        'ExclusionLayers handler but '
-                                        'received: {}'
-                                        .format(type(f_excl)))
+            if self._res_data is None:
+                if self._res_class_dset in self.gen.datasets:
+                    self._res_data = self.gen[self._res_class_dset]
 
-        self._excl_shape = self.exclusions.shape
-        # limit the resolution to the exclusion shape.
-        self._res = int(np.min(list(self.excl_shape) + [resolution]))
-
-        self._n_rows = None
-        self._n_cols = None
-        self._cols_of_excl = None
-        self._rows_of_excl = None
-        self._excl_row_slices = None
-        self._excl_col_slices = None
-        self._latitude = None
-        self._longitude = None
-        self._points = None
-
-        self._sc_col_ind, self._sc_row_ind = np.meshgrid(
-            np.arange(self.n_cols), np.arange(self.n_rows))
-        self._sc_col_ind = self._sc_col_ind.flatten()
-        self._sc_row_ind = self._sc_row_ind.flatten()
-
-        logger.debug('Initialized SupplyCurveExtent with shape {} from '
-                     'exclusions with shape {}'
-                     .format(self.shape, self.excl_shape))
-
-    def __len__(self):
-        """Total number of supply curve points."""
-        return self.n_rows * self.n_cols
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        if type is not None:
-            raise
-
-    def __getitem__(self, gid):
-        """Get SC extent meta data corresponding to an SC point gid."""
-        if gid >= len(self):
-            raise KeyError('SC extent with {} points does not contain SC '
-                           'point gid {}.'.format(len(self), gid))
-
-        return self.points.loc[gid]
-
-    def close(self):
-        """Close all file handlers."""
-        self._excls.close()
+        return self._res_data
 
     @property
-    def shape(self):
-        """Get the Supply curve shape tuple (n_rows, n_cols).
+    def gen_data(self):
+        """Get the generation capacity factor data array.
 
         Returns
         -------
-        shape : tuple
-            2-entry tuple representing the full supply curve extent.
+        _gen_data : np.ndarray
+            Multi-year-mean capacity factor data array for all sites in the
+            generation data output file.
         """
 
-        return (self.n_rows, self.n_cols)
+        if isinstance(self._cf_dset, np.ndarray):
+            return self._cf_dset
+
+        else:
+            if self._gen_data is None:
+                if self._cf_dset in self.gen.datasets:
+                    self._gen_data = self.gen[self._cf_dset]
+
+        return self._gen_data
 
     @property
-    def exclusions(self):
-        """Get the exclusions object.
+    def lcoe_data(self):
+        """Get the LCOE data array.
 
         Returns
         -------
-        _excls : ExclusionLayers
-            ExclusionLayers h5 handler object.
+        _lcoe_data : np.ndarray
+            Multi-year-mean LCOE data array for all sites in the
+            generation data output file.
         """
-        return self._excls
+
+        if isinstance(self._lcoe_dset, np.ndarray):
+            return self._lcoe_dset
+
+        else:
+            if self._lcoe_data is None:
+                if self._lcoe_dset in self.gen.datasets:
+                    self._lcoe_data = self.gen[self._lcoe_dset]
+
+        return self._lcoe_data
 
     @property
-    def resolution(self):
-        """Get the 1D resolution.
+    def mean_cf(self):
+        """Get the mean capacity factor for the non-excluded data. Capacity
+        factor is weighted by the exclusions (usually 0 or 1, but 0.5
+        exclusions will weight appropriately).
 
         Returns
         -------
-        _res : int
-            Number of exclusion points per SC point along an axis.
-            This number**2 is the total number of exclusion points per
-            SC point.
+        mean_cf : float | None
+            Mean capacity factor value for the non-excluded data.
         """
-        return self._res
+        mean_cf = None
+        if self.gen_data is not None:
+            mean_cf = self.exclusion_weighted_mean(self.gen_data)
+
+        return mean_cf
 
     @property
-    def excl_shape(self):
-        """Get the shape tuple of the exclusion file raster.
+    def mean_lcoe(self):
+        """Get the mean LCOE for the non-excluded data.
 
         Returns
         -------
-        tuple
+        mean_lcoe : float | None
+            Mean LCOE value for the non-excluded data.
         """
-        return self._excl_shape
+
+        mean_lcoe = None
+
+        # prioritize the calculation of lcoe explicitly from the multi year
+        # mean CF (the lcoe re-calc will still happen if mean_cf is a single
+        # year CF, but the output should be identical to the original LCOE and
+        # so is not consequential).
+        if self._recalc_lcoe:
+            required = ('fixed_charge_rate', 'capital_cost',
+                        'fixed_operating_cost', 'variable_operating_cost',
+                        'system_capacity')
+            if self.mean_h5_dsets_data is not None:
+                if all(k in self.mean_h5_dsets_data for k in required):
+                    aep = (self.mean_h5_dsets_data['system_capacity']
+                           * self.mean_cf * 8760)
+                    mean_lcoe = lcoe_fcr(
+                        self.mean_h5_dsets_data['fixed_charge_rate'],
+                        self.mean_h5_dsets_data['capital_cost'],
+                        self.mean_h5_dsets_data['fixed_operating_cost'],
+                        aep,
+                        self.mean_h5_dsets_data['variable_operating_cost'])
+
+        # alternative if lcoe was not able to be re-calculated from
+        # multi year mean CF
+        if mean_lcoe is None and self.lcoe_data is not None:
+            mean_lcoe = self.exclusion_weighted_mean(self.lcoe_data)
+
+        return mean_lcoe
 
     @property
-    def excl_rows(self):
-        """Get the unique row indices identifying the exclusion points.
+    def mean_res(self):
+        """Get the mean resource for the non-excluded data.
 
         Returns
         -------
-        excl_rows : np.ndarray
-            Array of exclusion row indices.
+        mean_res : float | None
+            Mean resource for the non-excluded data.
         """
-        return np.arange(self.excl_shape[0])
+        mean_res = None
+        if self._res_class_dset is not None:
+            mean_res = self.exclusion_weighted_mean(self.res_data)
+
+        return mean_res
 
     @property
-    def excl_cols(self):
-        """Get the unique column indices identifying the exclusion points.
+    def mean_lcoe_friction(self):
+        """Get the mean LCOE for the non-excluded data, multiplied by the
+        mean_friction scalar value.
 
         Returns
         -------
-        excl_cols : np.ndarray
-            Array of exclusion column indices.
+        mean_lcoe_friction : float | None
+            Mean LCOE value for the non-excluded data multiplied by the
+            mean friction scalar value.
         """
-        return np.arange(self.excl_shape[1])
+        mean_lcoe_friction = None
+        if self.mean_lcoe is not None and self.mean_friction is not None:
+            mean_lcoe_friction = self.mean_lcoe * self.mean_friction
+
+        return mean_lcoe_friction
 
     @property
-    def rows_of_excl(self):
-        """List representing the supply curve points rows and which
-        exclusions rows belong to each supply curve row.
+    def mean_friction(self):
+        """Get the mean friction scalar for the non-excluded data.
 
         Returns
         -------
-        _rows_of_excl : list
-            List representing the supply curve points rows. Each list entry
-            contains the exclusion row indices that are included in the sc
-            point.
+        friction : None | float
+            Mean value of the friction data layer for the non-excluded data.
+            If friction layer is not input to this class, None is returned.
         """
-        if self._rows_of_excl is None:
-            self._rows_of_excl = self._chunk_excl(self.excl_rows,
-                                                  self.resolution)
+        friction = None
+        if self._friction_layer is not None:
+            friction = self.friction_data.flatten()[self.bool_mask].mean()
 
-        return self._rows_of_excl
+        return friction
 
     @property
-    def cols_of_excl(self):
-        """List representing the supply curve points columns and which
-        exclusions columns belong to each supply curve column.
+    def friction_data(self):
+        """Get the friction data for the full SC point (no exclusions)
 
         Returns
         -------
-        _cols_of_excl : list
-            List representing the supply curve points columns. Each list entry
-            contains the exclusion column indices that are included in the sc
-            point.
+        friction_data : None | np.ndarray
+            2D friction data layer corresponding to the exclusions grid in
+            the SC domain. If friction layer is not input to this class,
+            None is returned.
         """
-        if self._cols_of_excl is None:
-            self._cols_of_excl = self._chunk_excl(self.excl_cols,
-                                                  self.resolution)
+        friction_data = None
+        if self._friction_layer is not None:
+            friction_data = self._friction_layer[self.rows, self.cols]
 
-        return self._cols_of_excl
+        return friction_data
 
     @property
-    def excl_row_slices(self):
-        """
-        List representing the supply curve points rows and which
-        exclusions rows belong to each supply curve row.
+    def power_density(self):
+        """Get the estimated power density either from input or infered from
+        generation output meta.
 
         Returns
         -------
-        _excl_row_slices : list
-            List representing the supply curve points rows. Each list entry
-            contains the exclusion row slice that are included in the sc
-            point.
+        _power_density : float
+            Estimated power density in MW/km2
         """
-        if self._excl_row_slices is None:
-            self._excl_row_slices = self._excl_slices(self.excl_rows,
-                                                      self.resolution)
 
-        return self._excl_row_slices
+        if self._power_density is None:
+            tech = self.gen.meta['reV_tech'][0]
+            if tech in self.POWER_DENSITY:
+                self._power_density = self.POWER_DENSITY[tech]
+            else:
+                warn('Could not recognize reV technology in generation meta '
+                     'data: "{}". Cannot lookup an appropriate power density '
+                     'to calculate SC point capacity.'.format(tech))
+
+        elif isinstance(self._power_density, pd.DataFrame):
+            self._pd_obj = self._power_density
+
+            missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
+            if any(missing):
+                msg = ('Variable power density input is missing the '
+                       'following resource GIDs: {}'.format(missing))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
+                                   'power_density'].values
+            pds = pds.astype(np.float32)
+            pds *= self.include_mask_flat[self.bool_mask]
+            denom = self.include_mask_flat[self.bool_mask].sum()
+            self._power_density = pds.sum() / denom
+
+        return self._power_density
 
     @property
-    def excl_col_slices(self):
-        """
-        List representing the supply curve points cols and which
-        exclusions cols belong to each supply curve col.
+    def capacity(self):
+        """Get the estimated capacity in MW of the supply curve point in the
+        current resource class with the applied exclusions.
 
         Returns
         -------
-        _excl_col_slices : list
-            List representing the supply curve points cols. Each list entry
-            contains the exclusion col slice that are included in the sc
-            point.
+        capacity : float
+            Estimated capacity in MW of the supply curve point in the
+            current resource class with the applied exclusions.
         """
-        if self._excl_col_slices is None:
-            self._excl_col_slices = self._excl_slices(self.excl_cols,
-                                                      self.resolution)
 
-        return self._excl_col_slices
+        capacity = None
+        if self.power_density is not None:
+            capacity = self.area * self.power_density
+
+        return capacity
 
     @property
-    def n_rows(self):
-        """Get the number of supply curve grid rows.
+    def h5_dsets_data(self):
+        """Get any additional/supplemental h5 dataset data to summarize.
 
         Returns
         -------
-        n_rows : int
-            Number of row entries in the full supply curve grid.
-        """
-        if self._n_rows is None:
-            self._n_rows = int(np.ceil(self.excl_shape[0] / self.resolution))
+        h5_dsets_data : dict | None
 
-        return self._n_rows
+        """
+
+        _h5_dsets_data = None
+
+        if isinstance(self._h5_dsets, (list, tuple)):
+            _h5_dsets_data = {}
+            for dset in self._h5_dsets:
+                if dset in self.gen.datasets:
+                    _h5_dsets_data[dset] = self.gen[dset]
+
+        elif isinstance(self._h5_dsets, dict):
+            _h5_dsets_data = self._h5_dsets
+
+        elif self._h5_dsets is not None:
+            e = ('Cannot recognize h5_dsets input type, should be None, '
+                 'a list of dataset names, or a dictionary or '
+                 'pre-extracted data. Received: {} {}'
+                 .format(type(self._h5_dsets), self._h5_dsets))
+            logger.error(e)
+            raise TypeError(e)
+
+        return _h5_dsets_data
 
     @property
-    def n_cols(self):
-        """Get the number of supply curve grid columns.
+    def mean_h5_dsets_data(self):
+        """Get the mean supplemental h5 datasets data (optional)
 
         Returns
         -------
-        n_cols : int
-            Number of column entries in the full supply curve grid.
+        mean_h5_dsets_data : dict | None
+            Mean dataset values for the non-excluded data for the optional
+            h5_dsets input.
         """
-        if self._n_cols is None:
-            self._n_cols = int(np.ceil(self.excl_shape[1] / self.resolution))
+        _mean_h5_dsets_data = None
+        if self.h5_dsets_data is not None:
+            _mean_h5_dsets_data = {}
+            for dset, arr in self.h5_dsets_data.items():
+                _mean_h5_dsets_data[dset] = self.exclusion_weighted_mean(arr)
 
-        return self._n_cols
-
-    @property
-    def latitude(self):
-        """
-        Get supply curve point latitudes
-
-        Returns
-        -------
-        ndarray
-        """
-        if self._latitude is None:
-            lats = []
-            lons = []
-
-            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
-                                           np.arange(self.n_rows))
-            for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
-                r = self.excl_row_slices[r]
-                c = self.excl_col_slices[c]
-                lats.append(self.exclusions['latitude', r, c].mean())
-                lons.append(self.exclusions['longitude', r, c].mean())
-
-            self._latitude = np.array(lats, dtype='float32')
-            self._longitude = np.array(lons, dtype='float32')
-
-        return self._latitude
-
-    @property
-    def longitude(self):
-        """
-        Get supply curve point longitudes
-
-        Returns
-        -------
-        ndarray
-        """
-        if self._longitude is None:
-            lats = []
-            lons = []
-
-            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
-                                           np.arange(self.n_rows))
-            for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
-                r = self.excl_row_slices[r]
-                c = self.excl_col_slices[c]
-                lats.append(self.exclusions['latitude', r, c].mean())
-                lons.append(self.exclusions['longitude', r, c].mean())
-
-            self._latitude = np.array(lats, dtype='float32')
-            self._longitude = np.array(lons, dtype='float32')
-
-        return self._longitude
-
-    @property
-    def lat_lon(self):
-        """
-        2D array of lat, lon coordinates for all sc points
-
-        Returns
-        -------
-        ndarray
-        """
-        return np.dstack((self.latitude, self.longitude))[0]
-
-    @property
-    def row_indices(self):
-        """Get a 1D array of row indices for every gid. That is, this property
-        has length == len(gids) and row_indices[sc_gid] yields the row index of
-        the target supply curve gid
-
-        Returns
-        -------
-        ndarray
-        """
-        return self._sc_row_ind
-
-    @property
-    def col_indices(self):
-        """Get a 1D array of col indices for every gid. That is, this property
-        has length == len(gids) and col_indices[sc_gid] yields the col index of
-        the target supply curve gid
-
-        Returns
-        -------
-        ndarray
-        """
-        return self._sc_col_ind
-
-    @property
-    def points(self):
-        """Get the summary dataframe of supply curve points.
-
-        Returns
-        -------
-        _points : pd.DataFrame
-            Supply curve points with columns for attributes of each sc point.
-        """
-
-        if self._points is None:
-            self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
-                                         'col_ind': self.col_indices.copy()})
-
-            self._points.index.name = 'gid'  # sc_point_gid
-
-        return self._points
+        return _mean_h5_dsets_data
 
     @staticmethod
-    def _chunk_excl(arr, resolution):
-        """Split an array into a list of arrays with len == resolution.
+    def _mode(data):
+        """
+        Compute the mode of the data vector and return a single value
 
         Parameters
         ----------
-        arr : np.ndarray
-            1D array to be split into chunks.
-        resolution : int
-            Resolution of the chunks.
+        data : ndarray
+            data layer vector to compute mode for
 
         Returns
         -------
-        chunks : list
-            List of arrays, each with length equal to self.resolution
-            (except for the last array in the list which is the remainder).
+        float | int
+            Mode of data
         """
-
-        chunks = get_chunk_ranges(len(arr), resolution)
-        chunks = list(map(lambda i: np.arange(*i), chunks))
-
-        return chunks
+        if not data.size:
+            return None
+        else:
+            return stats.mode(data).mode[0]
 
     @staticmethod
-    def _excl_slices(arr, resolution):
-        """Split row or col ind into slices of excl rows or slices
+    def _categorize(data, incl_mult):
+        """
+        Extract the sum of inclusion scalar values (where 1 is
+        included, 0 is excluded, and 0.7 is included with 70 percent of
+        available land) for each unique (categorical value) in data
 
         Parameters
         ----------
-        arr : np.ndarray
-            1D array to be split into slices
-        resolution : int
-            Resolution of the sc points
+        data : ndarray
+            Vector of categorical values
+        incl_mult : ndarray
+            Vector of inclusion values
 
         Returns
         -------
-        slices : list
-            List of arr slices, each with length equal to self.resolution
-            (except for the last array in the list which is the remainder).
+        str
+            Jsonified string of the dictionary mapping categorical values to
+            total inclusions
         """
 
-        slices = get_chunk_ranges(len(arr), resolution)
-        slices = list(map(lambda i: slice(*i), slices))
+        data = {category: float(incl_mult[(data == category)].sum())
+                for category in np.unique(data)}
+        data = jsonify_dict(data)
 
-        return slices
+        return data
 
-    def get_excl_slices(self, gid):
-        """Get the row and column slices of the exclusions grid corresponding
-        to the supply curve point gid.
+    @classmethod
+    def _agg_data_layer_method(cls, data, incl_mult, method):
+        """Aggregate the data array using specified method.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        incl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
+        method : str
+            Aggregation method (mode, mean, max, min, sum, category)
+
+        Returns
+        -------
+        data : float | int | str | None
+            Result of applying method to data.
+        """
+        method_func = {'mode': cls._mode,
+                       'mean': np.mean,
+                       'max': np.max,
+                       'min': np.min,
+                       'sum': np.sum,
+                       'category': cls._categorize}
+
+        if data is not None:
+            method = method.lower()
+            if method not in method_func:
+                e = ('Cannot recognize data layer agg method: '
+                     '"{}". Can only {}'.format(method, list(method_func)))
+                logger.error(e)
+                raise ValueError(e)
+
+            if len(data.shape) > 1:
+                data = data.flatten()
+
+            if data.shape != incl_mult.shape:
+                e = ('Cannot aggregate data with shape that doesnt '
+                     'match excl mult!')
+                logger.error(e)
+                raise DataShapeError(e)
+
+            if method == 'category':
+                data = method_func['category'](data, incl_mult)
+            elif method in ['mean', 'sum']:
+                data = data * incl_mult
+                data = method_func[method](data)
+            else:
+                data = method_func[method](data)
+
+        return data
+
+    def _apply_exclusions(self):
+        """Apply exclusions by masking the generation and resource gid arrays.
+        This removes all res/gen entries that are masked by the exclusions or
+        resource bin."""
+
+        # exclusions mask is False where excluded
+        exclude = self.include_mask_flat == 0
+        exclude = self._resource_exclusion(exclude)
+
+        self._gen_gids[exclude] = -1
+        self._res_gids[exclude] = -1
+
+        # ensure that excluded pixels (including resource exclusions!)
+        # has an exclusions multiplier of 0
+        exclude = exclude.reshape(self.include_mask.shape)
+        self._incl_mask[exclude] = 0.0
+        self._incl_mask = self._incl_mask.flatten()
+
+        if (self._gen_gids != -1).sum() == 0:
+            msg = ('Supply curve point gid {} is completely excluded for res '
+                   'bin: {}'.format(self._gid, self._res_class_bin))
+            raise EmptySupplyCurvePointError(msg)
+
+    def _resource_exclusion(self, boolean_exclude):
+        """Include the resource exclusion into a pre-existing bool exclusion.
+
+        Parameters
+        ----------
+        boolean_exclude : np.ndarray
+            Boolean exclusion array (True is exclude).
+
+        Returns
+        -------
+        boolean_exclude : np.ndarray
+            Same as input but includes additional exclusions for resource
+            outside of current resource class bin.
+        """
+
+        if (self._res_class_dset is not None
+                and self._res_class_bin is not None):
+
+            rex = self.res_data[self._gen_gids]
+            rex = ((rex < np.min(self._res_class_bin))
+                   | (rex >= np.max(self._res_class_bin)))
+
+            boolean_exclude = (boolean_exclude | rex)
+
+        return boolean_exclude
+
+    def agg_data_layers(self, summary, data_layers):
+        """Perform additional data layer aggregation. If there is no valid data
+        in the included area, the data layer will be taken from the full SC
+        point extent (ignoring exclusions). If there is still no valid data,
+        a warning will be raised and the data layer will have a NaN/None value.
+
+        Parameters
+        ----------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point. A new entry for
+            each data layer is added.
+        """
+
+        if data_layers is not None:
+            for name, attrs in data_layers.items():
+
+                if 'fobj' not in attrs:
+                    with ExclusionLayers(attrs['fpath']) as f:
+                        raw = f[attrs['dset'], self.rows, self.cols]
+                        nodata = f.get_nodata_value(attrs['dset'])
+                else:
+                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
+                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
+
+                data = raw.flatten()[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask].copy()
+
+                if nodata is not None:
+                    valid_data_mask = (data != nodata)
+                    data = data[valid_data_mask]
+                    incl_mult = incl_mult[valid_data_mask]
+
+                    if not data.size:
+                        m = ('Data layer "{}" has no valid data for '
+                             'SC point gid {} because of exclusions '
+                             'and/or nodata values in the data layer.'
+                             .format(name, self._gid))
+                        logger.debug(m)
+
+                data = self._agg_data_layer_method(data, incl_mult,
+                                                   attrs['method'])
+                summary[name] = data
+
+        return summary
+
+    def point_summary(self, args=None):
+        """
+        Get a summary dictionary of a single supply curve point.
+
+        Parameters
+        ----------
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        """
+
+        ARGS = {'res_gids': self.res_gid_set,
+                'gen_gids': self.gen_gid_set,
+                'gid_counts': self.gid_counts,
+                'n_gids': self.n_gids,
+                'mean_cf': self.mean_cf,
+                'mean_lcoe': self.mean_lcoe,
+                'mean_res': self.mean_res,
+                'capacity': self.capacity,
+                'area_sq_km': self.area,
+                'latitude': self.latitude,
+                'longitude': self.longitude,
+                'country': self.country,
+                'state': self.state,
+                'county': self.county,
+                'elevation': self.elevation,
+                'timezone': self.timezone,
+                }
+
+        if self.offshore is not None:
+            ARGS['offshore'] = self.offshore
+
+        if self._friction_layer is not None:
+            ARGS['mean_friction'] = self.mean_friction
+            ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
+
+        if self._h5_dsets is not None:
+            for dset, data in self.mean_h5_dsets_data.items():
+                ARGS['mean_{}'.format(dset)] = data
+
+        if args is None:
+            args = list(ARGS.keys())
+
+        summary = {}
+        for arg in args:
+            if arg in ARGS:
+                summary[arg] = ARGS[arg]
+            else:
+                warn('Cannot find "{}" as an available SC self summary '
+                     'output', OutputWarning)
+
+        return summary
+
+    @staticmethod
+    def economies_of_scale(cap_cost_scale, summary):
+        """Apply economies of scale to this point summary
+
+        Parameters
+        ----------
+        cap_cost_scale : str
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table.
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        """
+
+        eos = EconomiesOfScale(cap_cost_scale, summary)
+        summary['raw_lcoe'] = eos.raw_lcoe
+        summary['mean_lcoe'] = eos.scaled_lcoe
+        summary['capital_cost_scalar'] = eos.capital_cost_scalar
+
+        return summary
+
+    @classmethod
+    def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
+                  excl_dict=None, inclusion_mask=None,
+                  res_class_dset=None, res_class_bin=None,
+                  excl_area=0.0081, power_density=None,
+                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                  h5_dsets=None, resolution=64, exclusion_shape=None,
+                  close=False, friction_layer=None, args=None,
+                  data_layers=None, cap_cost_scale=None, recalc_lcoe=True):
+        """Get a summary dictionary of a single supply curve point.
 
         Parameters
         ----------
         gid : int
-            Supply curve point gid.
-
-        Returns
-        -------
-        row_slice : slice
-            Exclusions grid row slice corresponding to the sc point gid.
-        col_slice : slice
-            Exclusions grid col slice corresponding to the sc point gid.
-        """
-
-        if gid >= len(self):
-            raise SupplyCurveError('Requested gid "{}" is out of bounds for '
-                                   'supply curve points with length "{}".'
-                                   .format(gid, len(self)))
-
-        row_slice = self.excl_row_slices[self.row_indices[gid]]
-        col_slice = self.excl_col_slices[self.col_indices[gid]]
-
-        return row_slice, col_slice
-
-    def get_flat_excl_ind(self, gid):
-        """Get the index values of the flattened exclusions grid corresponding
-        to the supply curve point gid.
-
-        Parameters
-        ----------
-        gid : int
-            Supply curve point gid.
-
-        Returns
-        -------
-        excl_ind : np.ndarray
-            Index values of the flattened exclusions grid corresponding to
-            the SC gid.
-        """
-
-        row_slice, col_slice = self.get_excl_slices(gid)
-        excl_ind = self.exclusions.iarr[row_slice, col_slice].flatten()
-
-        return excl_ind
-
-    def get_excl_points(self, dset, gid):
-        """Get the exclusions data corresponding to a supply curve gid.
-
-        Parameters
-        ----------
-        dset : str | int
-            Used as the first arg in the exclusions __getitem__ slice.
-            String can be "meta", integer can be layer number.
-        gid : int
-            Supply curve point gid.
-
-        Returns
-        -------
-        excl_points : pd.DataFrame
-            Exclusions data reduced to just the exclusion points associated
-            with the requested supply curve gid.
-        """
-
-        row_slice, col_slice = self.get_excl_slices(gid)
-
-        return self.exclusions[dset, row_slice, col_slice]
-
-    def get_coord(self, gid):
-        """Get the centroid coordinate for the supply curve gid point.
-
-        Parameters
-        ----------
-        gid : int
-            Supply curve point gid.
-
-        Returns
-        -------
-        coord : tuple
-            Two entry coordinate tuple: (latitude, longitude)
-        """
-
-        lat = self.latitude[gid]
-        lon = self.longitude[gid]
-
-        return (lat, lon)
-
-    def valid_sc_points(self, tm_dset):
-        """
-        Determine which sc_point_gids contain resource gids and are thus
-        valid supply curve points
-
-        Parameters
-        ----------
+            gid for supply curve point to analyze.
+        excl_fpath : str
+            Filepath to exclusions h5.
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
         tm_dset : str
-            Techmap dataset name
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        inclusion_mask : np.ndarray
+            2D array pre-extracted inclusion mask where 1 is included and 0 is
+            excluded. The shape of this will be checked against the input
+            resolution.
+        res_class_dset : str | np.ndarray | None
+            Dataset in the generation file dictating resource classes.
+            Can be pre-extracted resource data in np.ndarray.
+            None if no resource classes.
+        res_class_bin : list | None
+            Two-entry lists dictating the single resource class bin.
+            None if no resource classes.
+        excl_area : float
+            Area of an exclusion cell (square km).
+        power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
+        cf_dset : str | np.ndarray
+            Dataset name from gen containing capacity factor mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        lcoe_dset : str | np.ndarray
+            Dataset name from gen containing LCOE mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        h5_dsets : None | list | dict
+            Optional list of dataset names to summarize from the gen/econ h5
+            files. Can also be pre-extracted data dictionary where keys are
+            the dataset names and values are the arrays of data from the
+            h5 files.
+        resolution : int | None
+            SC resolution, must be input in combination with gid.
+        exclusion_shape : tuple
+            Shape of the exclusions extent (rows, cols). Inputing this will
+            speed things up considerably.
+        close : bool
+            Flag to close object file handlers on exit.
+        friction_layer : None | FrictionMask
+            Friction layer with scalar friction values if valid friction inputs
+            were entered. Otherwise, None to not apply friction layer.
+        args : tuple | list, optional
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr, by default None
+        data_layers : dict, optional
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath", by default None
+        cap_cost_scale : str | None
+            Optional LCOE scaling equation to implement "economies of scale".
+            Equations must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table.
+        recalc_lcoe : bool
+            Flag to re-calculate the LCOE from the multi-year mean capacity
+            factor and annual energy production data. This requires several
+            datasets to be aggregated in the h5_dsets input: system_capacity,
+            fixed_charge_rate, capital_cost, fixed_operating_cost,
+            and variable_operating_cost.
 
         Returns
         -------
-        valid_gids : ndarray
-            Vector of valid sc_point_gids that contain resource gis
+        summary : dict
+            Dictionary of summary outputs for this sc point.
         """
+        kwargs = {"excl_dict": excl_dict,
+                  "inclusion_mask": inclusion_mask,
+                  "res_class_dset": res_class_dset,
+                  "res_class_bin": res_class_bin,
+                  "excl_area": excl_area,
+                  "power_density": power_density,
+                  "cf_dset": cf_dset,
+                  "lcoe_dset": lcoe_dset,
+                  "h5_dsets": h5_dsets,
+                  "resolution": resolution,
+                  "exclusion_shape": exclusion_shape,
+                  "close": close,
+                  'friction_layer': friction_layer,
+                  'recalc_lcoe': recalc_lcoe,
+                  }
 
-        logger.info('Getting valid SC points from "{}"...'.format(tm_dset))
+        with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
+                 **kwargs) as point:
+            summary = point.point_summary(args=args)
 
-        valid_bool = np.zeros(self.n_rows * self.n_cols)
-        tm = self._excls[tm_dset]
+            if data_layers is not None:
+                summary = point.agg_data_layers(summary, data_layers)
 
-        gid = 0
-        for r in self.excl_row_slices:
-            for c in self.excl_col_slices:
-                if np.any(tm[r, c] != -1):
-                    valid_bool[gid] = 1
-                gid += 1
+            if cap_cost_scale is not None:
+                summary = point.economies_of_scale(cap_cost_scale, summary)
 
-        valid_gids = np.where(valid_bool == 1)[0].astype(np.uint32)
-
-        logger.info('Found {} valid SC points out of {} total possible '
-                    '(valid SC points that map to valid resource gids)'
-                    .format(len(valid_gids), len(valid_bool)))
-
-        return valid_gids
-
-    def get_slice_lookup(self, sc_point_gids):
-        """
-        Get exclusion slices for all requested supply curve point gids
-
-        Parameters
-        ----------
-        sc_point_gids : list | ndarray
-            List or 1D array of sc_point_gids to get exclusion slices for
-
-        Returns
-        -------
-        dict
-            lookup mapping sc_point_gid to exclusion slice
-        """
-        return {g: self.get_excl_slices(g) for g in sc_point_gids}
+        return summary

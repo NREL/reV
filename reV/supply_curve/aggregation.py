@@ -13,8 +13,8 @@ import pandas as pd
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.supply_curve.points import (SupplyCurveExtent,
-                                     AggregationSupplyCurvePoint)
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.points import AggregationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError, SupplyCurveInputError)
 from reV.utilities import log_versions
@@ -1033,7 +1033,7 @@ class Aggregation(AbstractAggregation):
                 v = v.sort_values('sc_point_gid')
                 v = v.reset_index(drop=True)
                 v.index.name = 'sc_gid'
-                agg[k] = v.reset_index()
+                agg[k] = v
             else:
                 v = np.dstack(v)[0]
                 if v.shape[0] == 1:
@@ -1055,7 +1055,7 @@ class Aggregation(AbstractAggregation):
             Aggregated values for each aggregation dataset
         """
         agg_out = aggregation.copy()
-        meta = agg_out.pop('meta')
+        meta = agg_out.pop('meta').reset_index()
         for c in meta.columns:
             try:
                 meta[c] = pd.to_numeric(meta[c])

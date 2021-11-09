@@ -14,12 +14,19 @@ import pytest
 import tempfile
 import shutil
 import h5py
+import tempfile
+import json
+import shutil
+from click.testing import CliRunner
+import traceback
 
+from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
 ONLY_GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_gen.h5')
 ONLY_ECON = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_econ.h5')
@@ -350,9 +357,9 @@ def test_recalc_lcoe():
 
             cf_arr = np.full(res['meta'].shape, np.mean(annual_cf))
             lcoe_arr = np.full(res['meta'].shape, np.mean(annual_lcoe))
-            res.create_dataset('cf_mean-means'.format(year),
+            res.create_dataset('cf_mean-means',
                                res['meta'].shape, data=cf_arr)
-            res.create_dataset('lcoe_fcr-means'.format(year),
+            res.create_dataset('lcoe_fcr-means',
                                res['meta'].shape, data=lcoe_arr)
 
         h5_dsets = ('capital_cost', 'fixed_operating_cost',
@@ -367,6 +374,7 @@ def test_recalc_lcoe():
                                               h5_dsets=h5_dsets,
                                               gids=list(np.arange(10)),
                                               max_workers=1, recalc_lcoe=False)
+
         s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
                                            excl_dict=EXCL_DICT,
                                            res_class_dset=None,
@@ -377,6 +385,46 @@ def test_recalc_lcoe():
                                            max_workers=1, recalc_lcoe=True)
 
     assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
+
+
+def test_cli_basic_agg():
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'excl.h5')
+        shutil.copy(EXCL, excl_fp)
+        config = {
+            "directories": {
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "option": "local",
+                "max_workers": 1,
+            },
+            "log_level": "INFO",
+            "excl_fpath": excl_fp,
+            "gen_fpath": None,
+            "econ_fpath": None,
+            "tm_dset": "techmap_ri",
+            "res_fpath": RES,
+            'excl_dict': EXCL_DICT,
+            'resolution': 32,
+            'name': 'agg'
+        }
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        runner = CliRunner()
+        result = runner.invoke(main, ['-c', config_path,
+                                      'supply-curve-aggregation'])
+
+        if result.exit_code != 0:
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        assert os.path.exists(os.path.join(td, 'jobstatus_agg.json'))
+        assert os.path.exists(os.path.join(td, 'agg.csv'))
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -45,7 +45,7 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
-                truth.index.name = None
+                truth = truth.set_index('sc_gid')
                 for c in ['source_gids', 'gid_counts']:
                     test[c] = test[c].astype(str)
 
@@ -61,9 +61,9 @@ def test_aggregation_serial(excl_dict, baseline_name):
     """
     test aggregation run in seriel
     """
+    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=1)
-    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     check_agg(agg_out, baseline_h5)
 
 
@@ -74,10 +74,10 @@ def test_aggregation_parallel(excl_dict, baseline_name):
     """
     test aggregation run in parallel
     """
+    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=None,
                               sites_per_worker=10)
-    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     check_agg(agg_out, baseline_h5)
 
 
@@ -86,10 +86,10 @@ def test_pre_extract_inclusions(pre_extract_inclusions):
     """
     test aggregation w/ and w/out pre-extracting inclusions
     """
+    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=EXCL_DICT,
                               pre_extract_inclusions=pre_extract_inclusions)
-    baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
     check_agg(agg_out, baseline_h5)
 
 
