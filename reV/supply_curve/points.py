@@ -21,6 +21,7 @@ from reV.utilities.exceptions import (SupplyCurveInputError,
                                       OutputWarning)
 
 from rex.resource import Resource
+from rex.multi_time_resource import MultiTimeResource
 from rex.utilities.utilities import jsonify_dict
 
 logger = logging.getLogger(__name__)
@@ -494,6 +495,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         ----------
         arr : np.ndarray
             Array of wind direction data.
+
         Returns
         -------
         mean_wind_dirs : np.ndarray | float
@@ -722,8 +724,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if isinstance(h5, str):
             h5_fpath = h5
             h5 = None
-        elif isinstance(h5, Resource):
+        elif issubclass(h5.__class__, Resource):
             h5_fpath = h5.h5_file
+        elif issubclass(h5.__class__, MultiTimeResource):
+            h5_fpath = h5.h5_files
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs a '
                                         '.h5 file path, or '
