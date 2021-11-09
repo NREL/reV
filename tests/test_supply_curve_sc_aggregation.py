@@ -14,7 +14,6 @@ import pytest
 import tempfile
 import shutil
 import h5py
-import tempfile
 import json
 import shutil
 from click.testing import CliRunner
@@ -422,9 +421,6 @@ def test_cli_basic_agg():
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
             raise RuntimeError(msg)
-
-        assert os.path.exists(os.path.join(td, 'jobstatus_agg.json'))
-        assert os.path.exists(os.path.join(td, 'agg.csv'))
 
 
 def execute_pytest(capture='all', flags='-rapP'):

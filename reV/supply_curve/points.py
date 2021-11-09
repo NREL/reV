@@ -636,7 +636,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def __init__(self, gid, excl, agg_h5, tm_dset,
                  excl_dict=None, inclusion_mask=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
-                 close=True, gen_index=None):
+                 close=True, gen_index=None, apply_exclusions=True):
         """
         Parameters
         ----------
@@ -671,6 +671,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
+        apply_exclusions : bool
+            Flag to apply exclusions to the resource / generation gid's on
+            initialization.
         """
         super().__init__(gid, excl, tm_dset,
                          excl_dict=excl_dict,
@@ -694,8 +697,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                     .format(self._gid, self._excl_fpath))
             raise EmptySupplyCurvePointError(emsg)
 
-        self._check_excl()
-        self._apply_exclusions()
+        if apply_exclusions:
+            self._apply_exclusions()
 
     @staticmethod
     def _parse_h5_file(h5):
@@ -1034,7 +1037,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
                  exclusion_shape=None, close=False, friction_layer=None,
-                 recalc_lcoe=True):
+                 recalc_lcoe=True, apply_exclusions=True):
         """
         Parameters
         ----------
@@ -1098,6 +1101,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             datasets to be aggregated in the h5_dsets input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
+        apply_exclusions : bool
+            Flag to apply exclusions to the resource / generation gid's on
+            initialization.
         """
 
         self._res_class_dset = res_class_dset
@@ -1120,7 +1126,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                          resolution=resolution,
                          excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
-                         close=close)
+                         close=close, apply_exclusions=False)
 
         self._res_gid_set = None
         self._gen_gid_set = None
@@ -1136,8 +1142,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                     .format(self._gid, self._excl_fpath))
             raise EmptySupplyCurvePointError(emsg)
 
-        self._check_excl()
-        self._apply_exclusions()
+        if apply_exclusions:
+            self._apply_exclusions()
 
     def exclusion_weighted_mean(self, flat_arr):
         """Calc the exclusions-weighted mean value of a flat array of gen data.
