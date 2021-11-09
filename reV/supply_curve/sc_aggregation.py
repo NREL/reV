@@ -573,20 +573,16 @@ class SupplyCurveAggregation(AbstractAggregation):
         logger.debug('Finished checking data layers.')
 
     @staticmethod
-    def _get_input_data(gen, gen_fpath, econ_fpath, res_class_dset,
-                        res_class_bins, cf_dset, lcoe_dset, h5_dsets):
-        """Extract SC point agg input data args from higher level inputs.
+    def _get_res_gen_lcoe_data(gen, res_class_dset, res_class_bins,
+                               cf_dset, lcoe_dset):
+        """Extract the basic resource / generation / lcoe data to be used in
+        the aggregation process.
 
         Parameters
         ----------
         gen : Resource | MultiFileResource
             Open rex resource handler initialized from gen_fpath and
             (optionally) econ_fpath.
-        gen_fpath : str
-            Filepath to .h5 reV generation output results.
-        econ_fpath : str
-            Filepath to .h5 reV econ output results (optional argument if
-            lcoe_dset is not found in gen_fpath).
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -597,9 +593,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
-        h5_dsets : list | None
-            Optional list of additional datasets from the source h5 gen/econ
-            files to aggregate.
 
         Returns
         -------
@@ -611,26 +604,30 @@ class SupplyCurveAggregation(AbstractAggregation):
             Capacity factor data extracted from cf_dset in gen
         lcoe_data : np.ndarray | None
             LCOE data extracted from lcoe_dset in gen
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
-        h5_dsets_data : dict | None
-            If additional h5_dsets are requested, this will be a dictionary
-            keyed by the h5 dataset names. The corresponding values will be
-            the extracted arrays from the h5 files.
         """
 
         dset_list = (res_class_dset, cf_dset, lcoe_dset)
         gen_dsets = [] if gen is None else gen.datasets
         labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
         temp = [None, None, None]
+
+        if isinstance(gen, Resource):
+            source_fps = [gen.h5_file]
+        elif isinstance(gen, MultiFileResource):
+            source_fps = gen._h5_files
+        else:
+            msg = ('Did not recognize gen object input of type "{}": {}'
+                   .format(type(gen), gen))
+            logger.error(msg)
+            raise TypeError(msg)
+
         for i, dset in enumerate(dset_list):
             if dset in gen_dsets:
                 temp[i] = gen[dset]
             elif dset not in gen_dsets and dset is not None:
-                w = ('Could not find "{}" input as "{}" in '
-                     'generation file: {}. Available datasets: {}'
-                     .format(labels[i], dset, gen_fpath, gen_dsets))
+                w = ('Could not find "{}" input as "{}" in source files: {}. '
+                     'Available datasets: {}'
+                     .format(labels[i], dset, source_fps, gen_dsets))
                 logger.warning(w)
                 warn(w, OutputWarning)
 
@@ -639,14 +636,49 @@ class SupplyCurveAggregation(AbstractAggregation):
         if res_class_dset is None or res_class_bins is None:
             res_class_bins = [None]
 
+        return res_data, res_class_bins, cf_data, lcoe_data
+
+    @staticmethod
+    def _get_extra_dsets(gen, h5_dsets):
+        """Extract extra ancillary datasets to be used in the aggregation
+        process
+
+        Parameters
+        ----------
+        gen : Resource | MultiFileResource
+            Open rex resource handler initialized from gen_fpath and
+            (optionally) econ_fpath.
+        h5_dsets : list | None
+            Optional list of additional datasets from the source h5 gen/econ
+            files to aggregate.
+
+        Returns
+        -------
+        h5_dsets_data : dict | None
+            If additional h5_dsets are requested, this will be a dictionary
+            keyed by the h5 dataset names. The corresponding values will be
+            the extracted arrays from the h5 files.
+        """
+
         # look for the datasets required by the LCOE re-calculation and make
         # lists of the missing datasets
+        gen_dsets = [] if gen is None else gen.datasets
         lcoe_recalc_req = ('fixed_charge_rate', 'capital_cost',
                            'fixed_operating_cost', 'variable_operating_cost',
                            'system_capacity')
         missing_lcoe_source = [k for k in lcoe_recalc_req
                                if k not in gen_dsets]
         missing_lcoe_request = []
+
+        if isinstance(gen, Resource):
+            source_fps = [gen.h5_file]
+        elif isinstance(gen, MultiFileResource):
+            source_fps = gen._h5_files
+        else:
+            msg = ('Did not recognize gen object input of type "{}": {}'
+                   .format(type(gen), gen))
+            logger.error(msg)
+            raise TypeError(msg)
 
         h5_dsets_data = None
         if h5_dsets is not None:
@@ -662,10 +694,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             missing_h5_dsets = [k for k in h5_dsets if k not in gen_dsets]
             if any(missing_h5_dsets):
                 msg = ('Could not find requested h5_dsets "{}" in '
-                       'generation file: {} or econ file: {}. '
-                       'Available datasets: {}'
-                       .format(missing_h5_dsets, gen_fpath, econ_fpath,
-                               gen_dsets))
+                       'source files: {}. Available datasets: {}'
+                       .format(missing_h5_dsets, source_fps, gen_dsets))
                 logger.error(msg)
                 raise FileInputError(msg)
 
@@ -680,6 +710,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    .format(missing_lcoe_source))
             logger.warning(msg)
             warn(msg, InputWarning)
+
         if any(missing_lcoe_request):
             msg = ('It is strongly advised that you include the following '
                    'datasets in the h5_dsets request in order to re-calculate '
@@ -688,12 +719,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             logger.warning(msg)
             warn(msg, InputWarning)
 
-        offshore_flag = None
-        if 'offshore' in gen.meta:
-            offshore_flag = gen.meta['offshore'].values
-
-        return (res_data, res_class_bins, cf_data, lcoe_data, offshore_flag,
-                h5_dsets_data)
+        return h5_dsets_data
 
     @classmethod
     def run_serial(cls, excl_fpath, gen_fpath, tm_dset, gen_index,
@@ -825,16 +851,20 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'friction_dset': friction_dset}
         with SupplyCurveAggFileHandler(excl_fpath, gen_fpath,
                                        **file_kwargs) as fh:
-            inputs = cls._get_input_data(fh.gen, gen_fpath, econ_fpath,
-                                         res_class_dset, res_class_bins,
-                                         cf_dset, lcoe_dset, h5_dsets)
+
+            temp = cls._get_res_gen_lcoe_data(fh.gen, res_class_dset,
+                                              res_class_bins, cf_dset,
+                                              lcoe_dset)
+            res_data, res_class_bins, cf_data, lcoe_data = temp
+            h5_dsets_data = cls._get_extra_dsets(fh.gen, h5_dsets)
+
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
                     inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
 
-                for ri, res_bin in enumerate(inputs[1]):
+                for ri, res_bin in enumerate(res_class_bins):
                     try:
                         pointsum = GenerationSupplyCurvePoint.summarize(
                             gid,
@@ -842,11 +872,11 @@ class SupplyCurveAggregation(AbstractAggregation):
                             fh.gen,
                             tm_dset,
                             gen_index,
-                            res_class_dset=inputs[0],
+                            res_class_dset=res_data,
                             res_class_bin=res_bin,
-                            cf_dset=inputs[2],
-                            lcoe_dset=inputs[3],
-                            h5_dsets=inputs[5],
+                            cf_dset=cf_data,
+                            lcoe_dset=lcoe_data,
+                            h5_dsets=h5_dsets_data,
                             data_layers=fh.data_layers,
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,

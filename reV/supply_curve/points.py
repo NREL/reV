@@ -955,7 +955,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate, can supply multiple datasets
+            Dataset to aggreate, can supply multiple datasets or no datasets.
+            The datasets should be scalar values for each site. This method
+            cannot aggregate timeseries data.
         agg_method : str
             Aggregation method, either mean or sum/aggregate
         excl_dict : dict | None

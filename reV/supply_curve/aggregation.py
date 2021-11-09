@@ -706,8 +706,9 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
-            datasets.
+            Dataset to aggreate, can supply multiple datasets. The datasets
+            should be scalar values for each site. This method cannot aggregate
+            timeseries data.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -798,8 +799,9 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
-            datasets.
+            Dataset to aggreate, can supply multiple datasets. The datasets
+            should be scalar values for each site. This method cannot aggregate
+            timeseries data.
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
         excl_dict : dict, optional
@@ -1109,8 +1111,9 @@ class Aggregation(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         agg_dset : str
-            Dataset to aggreate in h5_fpath, can supply multiple datasets or no
-            datasets.
+            Dataset to aggreate, can supply multiple datasets. The datasets
+            should be scalar values for each site. This method cannot aggregate
+            timeseries data.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
