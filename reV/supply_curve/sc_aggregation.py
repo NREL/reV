@@ -418,8 +418,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath, by default None
         gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
@@ -765,8 +766,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
         gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         args : list | None
             List of positional args for sc_point_method
         res_class_dset : str | None
@@ -1151,8 +1153,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
         gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute

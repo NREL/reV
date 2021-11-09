@@ -90,8 +90,11 @@ class AggFileHandler(AbstractAggFileHandler):
     - h5 file to be aggregated
     """
 
+    DEFAULT_H5_HANDLER = Resource
+
     def __init__(self, excl_fpath, h5_fpath, excl_dict=None,
-                 area_filter_kernel='queen', min_area=None):
+                 area_filter_kernel='queen', min_area=None,
+                 h5_handler=None):
         """
         Parameters
         ----------
@@ -108,12 +111,18 @@ class AggFileHandler(AbstractAggFileHandler):
             by default 'queen'
         min_area : float, optional
             Minimum required contiguous area filter in sq-km, by default None
+        h5_handler : rex.Resource | None
+            Optional special handler similar to the rex.Resource handler which
+            is default.
         """
         super().__init__(excl_fpath, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area)
 
-        self._h5 = Resource(h5_fpath)
+        if h5_handler is None:
+            self._h5 = Resource(h5_fpath)
+        else:
+            self._h5 = h5_handler(h5_fpath)
 
     @property
     def h5(self):
@@ -167,8 +176,9 @@ class AbstractAggregation(ABC):
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath, by default None
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
@@ -418,8 +428,9 @@ class AbstractAggregation(ABC):
             option is to use the row/col slices to define the SC point instead,
             by default None
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         args : list, optional
             List of positional args for sc_point_method, by default None
         kwargs : dict, optional
@@ -647,8 +658,9 @@ class AbstractAggregation(ABC):
             option is to use the row/col slices to define the SC point instead,
             by default 64
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         excl_area : float, optional
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath,
@@ -727,8 +739,9 @@ class Aggregation(AbstractAggregation):
             from the profile transform attribute in excl_fpath,
             by default None
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
@@ -827,8 +840,9 @@ class Aggregation(AbstractAggregation):
             from the profile transform attribute in excl_fpath,
             by default None
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         gen_index : np.ndarray, optional
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
@@ -881,9 +895,10 @@ class Aggregation(AbstractAggregation):
                 except EmptySupplyCurvePointError:
                     logger.debug('SC gid {} is fully excluded or does not '
                                  'have any valid source data!'.format(gid))
-                except Exception:
-                    logger.exception('SC gid {} failed!'.format(gid))
-                    raise
+                except Exception as e:
+                    msg = 'SC gid {} failed!'.format(gid)
+                    logger.exception(msg)
+                    raise RuntimeError(msg) from e
                 else:
                     n_finished += 1
                     logger.debug('Serial aggregation: '
@@ -1132,8 +1147,9 @@ class Aggregation(AbstractAggregation):
             from the profile transform attribute in excl_fpath,
             by default None
         gids : list, optional
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent, by default None
+            List of supply curve point gids to get summary for (can use to
+            subset if running in parallel), or None for all gids in the SC
+            extent, by default None
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
