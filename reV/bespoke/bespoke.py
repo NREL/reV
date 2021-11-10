@@ -14,6 +14,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
 
+from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem
 
@@ -28,6 +29,7 @@ class BespokeSingleFarm:
 
     @classmethod
     def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset,
+            ws_bins=(0, 30, 5), wd_bins=(0, 360, 45),
             excl_dict=None, inclusion_mask=None,
             resolution=64, excl_area=None, exclusion_shape=None, close=True):
         """Run the bespoke optimization for a single wind farm.
@@ -50,6 +52,11 @@ class BespokeSingleFarm:
             Winddirection dataset at a target hub height e.g.
             winddirection_88m. The software will interpolate available data to
             the desired hub height.
+        ws_bins : tuple
+            3-entry tuple with (start, stop, step) for the windspeed binning of
+            the wind joint probability distribution. The stop value is
+            inclusive, so ws_bins=(0, 20, 5) would result in four bins with bin
+            edges (0, 5, 10, 15, 20).
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
@@ -92,6 +99,18 @@ class BespokeSingleFarm:
 
             wd = point.mean_wind_dirs(wd)
             ws = point.exclusion_weighted_mean(ws)
+
+            ws_bins = JointPD._make_bins(*ws_bins)
+            wd_bins = JointPD._make_bins(*wd_bins)
+
+            out = np.histogram2d(ws, wd, bins=(ws_bins, wd_bins))
+            wind_dist, ws_edges, wd_edges = out
+            wind_dist /= wind_dist.sum()
+
+            print(wind_dist)
+            print(wind_dist.shape, wind_dist.sum())
+            print(ws_edges)
+            print(wd_edges)
 
 
 class BespokeWindFarms(AbstractAggregation):
