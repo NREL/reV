@@ -24,6 +24,9 @@ from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
+from rex.utilities.loggers import LOGGERS
+
+
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
@@ -417,10 +420,18 @@ def test_cli_basic_agg():
         result = runner.invoke(main, ['-c', config_path,
                                       'supply-curve-aggregation'])
 
+        # windows doesnt release log file handler
+        # unless we clear log handlers from rex
+        LOGGERS.clear()
+
         if result.exit_code != 0:
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
             raise RuntimeError(msg)
+
+        fn_list = os.listdir(td)
+        assert 'jobstatus_agg.json' in fn_list
+        assert 'agg.csv' in fn_list
 
 
 def execute_pytest(capture='all', flags='-rapP'):
