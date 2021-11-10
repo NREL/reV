@@ -11,7 +11,7 @@ import pytest
 import os
 import warnings
 
-from reV.supply_curve.points import SupplyCurveExtent
+from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
