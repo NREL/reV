@@ -10,9 +10,9 @@ import numpy as np
 import pytest
 
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import (SupplyCurvePoint,
-                                     GenerationSupplyCurvePoint,
-                                     SupplyCurveExtent)
+                                     GenerationSupplyCurvePoint)
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 

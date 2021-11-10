@@ -17,7 +17,7 @@ import os
 from scipy.spatial import cKDTree
 from warnings import warn
 
-from reV.supply_curve.points import SupplyCurveExtent
+from reV.supply_curve.extent import SupplyCurveExtent
 from reV.utilities.exceptions import FileInputWarning, FileInputError
 
 from rex.resource import Resource
