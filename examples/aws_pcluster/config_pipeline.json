@@ -1,0 +1,17 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "INFO"
+  },
+  "pipeline": [
+    {
+      "generation": "./config_gen.json"
+    },
+    {
+      "collect": "./config_collect.json"
+    },
+    {
+      "multi-year": "./config_multi-year.json"
+    }
+  ]
+}

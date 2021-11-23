@@ -11,13 +11,11 @@
     "ghi_mean"
   ],
   "execution_control": {
-    "allocation": "rev",
-    "feature": "--qos=high",
-    "memory": 90,
-    "option": "eagle",
-    "walltime": 2
+    "allocation": "aws",
+    "option": "slurm",
+    "walltime": 1.0
   },
   "file_prefixes": "PIPELINE",
   "log_level": "INFO",
-  "project_points": "./nsrdb_conus_project_points.csv"
+  "project_points": "TESTDATADIR/config/project_points_100.csv"
 }

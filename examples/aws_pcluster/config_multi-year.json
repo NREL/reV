@@ -1,0 +1,25 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "aws",
+    "option": "slurm",
+    "walltime": 1.0
+  },
+  "groups": {
+    "none": {
+      "dsets": [
+        "cf_mean",
+        "cf_profile",
+        "lcoe_fcr",
+        "ghi_mean"
+      ],
+      "source_dir": "./",
+      "source_files": "PIPELINE",
+      "source_prefix": ""
+    }
+  },
+  "log_level": "INFO"
+}
