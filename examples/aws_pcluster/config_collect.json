@@ -17,5 +17,5 @@
   },
   "file_prefixes": "PIPELINE",
   "log_level": "INFO",
-  "project_points": "TESTDATADIR/config/project_points_100.csv"
+  "project_points": "./nsrdb_points_front_range.csv"
 }
