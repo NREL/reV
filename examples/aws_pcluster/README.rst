@@ -69,12 +69,13 @@ push to a private ECR repo.
    "hslambda". Keep the default private repo settings.
 4. Create an HSDS image and push to your hslambda ECR repo. This sublist is a
    combination of commands from the ECR push commands and the HSDS build
-   instructions:
+   instructions (make sure you use the actual push commands from your ECR repo 
+   with the actual region, repository name, and aws account id):
 
-    a. ``aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 691069865480.dkr.ecr.us-west-2.amazonaws.com``
+    a. ``aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com``
     b. ``sh lambda_build.sh``
-    c. ``docker tag hslambda:latest 691069865480.dkr.ecr.us-west-2.amazonaws.com/hslambda:latest``
-    d. ``docker push 691069865480.dkr.ecr.us-west-2.amazonaws.com/hslambda:latest``
+    c. ``docker tag hslambda:latest aws_account_id.dkr.ecr.region.amazonaws.com/my-repository:tag``
+    d. ``docker push aws_account_id.dkr.ecr.region.amazonaws.com/my-repository:tag``
 
 5. You should now see your new image appear in your hslambda ECR repo in the
    AWS Console. Get the URI from this image.
@@ -102,5 +103,6 @@ push to a private ECR repo.
       "body": "{\"start_time\": 1637706428, \"state\": \"READY\", \"hsds_version\": \"0.7.0beta\", \"name\": \"HSDS on AWS Lambda\", \"greeting\": \"Welcome to HSDS!\", \"about\": \"HSDS is a webservice for HDF data\", \"node_count\": 1, \"dn_urls\": [\"http+unix://%2Ftmp%2Fhs1a1c917f%2Fdn_1.sock\"], \"dn_ids\": [\"dn-001\"], \"username\": \"anonymous\", \"isadmin\": false}"
     }
 
-17. You should be good to go! Try creating the AWS Parallel Cluster and running
-    the reV ``aws_pcluster`` example.
+17. Add a API Gateway trigger, make sure it's a REST API with an API key
+18. Enable `CloudWatch logging <https://aws.amazon.com/premiumsupport/knowledge-center/api-gateway-cloudwatch-logs/>`_ (optional but useful)
+19. Set up a API usage plan including method throttling for your API key.
