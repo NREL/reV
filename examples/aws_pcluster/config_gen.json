@@ -9,13 +9,13 @@
   },
   "execution_control": {
     "allocation": "aws",
-    "nodes": 2,
+    "nodes": 10,
     "option": "slurm",
-    "sites_per_worker": 50,
+    "sites_per_worker": 20,
     "max_workers": null,
     "walltime": 1.0
   },
-  "log_level": "DEBUG",
+  "log_level": "INFO",
   "output_request": [
     "cf_mean",
     "cf_profile",

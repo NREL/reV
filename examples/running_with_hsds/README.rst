@@ -7,6 +7,9 @@ the `HDF Group <https://www.hdfgroup.org/>`_ and is hosted on Amazon Web
 Services (AWS) using a combination of EC2 (Elastic Compute) and S3 (Scalable
 Storage Service). You can read more about the HSDS service
 `in this slide deck <https://www.slideshare.net/HDFEOS/hdf-cloud-services>`_.
+You can use the NREL developer API as the HSDS endpoint for small workloads
+or stand up your own HSDS local server (instructions further below) for an
+enhanced parallelized data experience.
 
 Setting up HSDS
 ---------------
@@ -179,5 +182,56 @@ Compute pvcapacity factors for all resource gids in Rhode Island:
 
     reV-gen direct --tech=pvwattsv5 --res_file=${res_file} --sam_files=${sam_file} --region="Rhode Island" --region_col=state local
 
+Setting up an HSDS Local Server on AWS EC2
+------------------------------------------
+
+You can stand up a local HSDS server on an EC2 instance to improve the HSDS throughput versus the NREL developer API. Generally you should follow `these instructions <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ from the HSDS documentation. Here are a few additional tips and tricks to get everything connected to the NREL bucket:
+
+If you need to install docker and docker-compose on your EC2 instance (if not already installed). You can run ``docker run hello-world`` to test your docker install. 
+
+.. code-block:: bash
+
+    sudo amazon-linux-extras install -y docker
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
+    newgrp docker
+    sudo service docker start
+
+Your ``~/.hscfg`` file should look like this (feel free to change the ``hs_username`` and ``hs_password``):
+
+.. code-block:: bash
+
+    # local hsds server
+    hs_endpoint = http://localhost:5101
+    hs_username = admin
+    hs_password = admin
+    hs_api_key = None
+    hs_bucket = nrel-pds-hsds
+
+
+The following environment variables must be set:
+
+.. code-block:: bash
+
+    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    export BUCKET_NAME=${YOUR_S3_BUCKET_NAME_HERE}
+    export AWS_REGION=us-west-2
+    export AWS_S3_GATEWAY=http://s3.us-west-2.amazonaws.com/
+    export HSDS_ENDPOINT=http://localhost:5101
+    export LOG_LEVEL=INFO
+
+A few miscellaneous tips:
+
+#. You can list the available docker images with ``docker images``
+#. You can delete the docker HSDS image with ``docker rmi $IMAGE_ID`` (useful to reset the docker image)
+#. If you have AWS permissions issues try using a non-root IAM user with the corresponding AWS credentials as environment variables
+#. You can stand up parallel docker HSDS servers on your EC2 instance by running ``sh runall.sh -8``
+#. You can also set ``hs_endpoint = local`` in your ``~/.hscfg`` file to have h5pyd automatically spin up a local HSDS server as it opens a file handler. You still need to set all of the other environment variables for this to work. 
+
+Other Resources
+---------------
 
 For more HSDS examples please see: https://github.com/NREL/hsds-examples
