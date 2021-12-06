@@ -43,9 +43,11 @@ class RepresentativeMethods:
             1D array of weighting factors (multiplicative) for profiles.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         """
         log_versions(logger)
         self._rep_method = self.rep_methods[rep_method]
@@ -252,9 +254,11 @@ class RepresentativeMethods:
             1D array of weighting factors (multiplicative) for profiles.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         n_profiles : int
             Number of representative profiles to save to fout.
 
@@ -313,9 +317,11 @@ class RegionRepProfile:
             Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
@@ -496,9 +502,11 @@ class RegionRepProfile:
             Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
@@ -549,9 +557,11 @@ class RepProfilesBase(ABC):
             Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
@@ -871,9 +881,11 @@ class RepProfiles(RepProfilesBase):
             Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
@@ -1102,9 +1114,11 @@ class RepProfiles(RepProfilesBase):
             Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
-        err_method : str
+        err_method : str | None
             Method identifier for calculation of error from the representative
-            profile.
+            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            representative meanoid / medianoid profile will be returned
+            directly
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
