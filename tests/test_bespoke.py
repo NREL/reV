@@ -2,6 +2,7 @@
 # pylint: skip-file
 """reV SAM unit test module
 """
+import json
 import os
 import shutil
 import tempfile
@@ -13,6 +14,7 @@ from reV.supply_curve.tech_mapping import TechMapping
 from rex import init_logger
 
 
+SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
@@ -32,6 +34,10 @@ if __name__ == '__main__':
     gid = 33  # 39% included
     ws_dset = 'windspeed_88m'
     wd_dset = 'winddirection_88m'
+
+    with open(SAM, 'r') as f:
+        sam_sys_inputs = json.load(f)
+
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -42,4 +48,5 @@ if __name__ == '__main__':
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET, ws_dset, wd_dset,
+                                    sam_sys_inputs,
                                     excl_dict=EXCL_DICT, gids=gid)

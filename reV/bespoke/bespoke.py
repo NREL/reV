@@ -4,9 +4,11 @@ reV bespoke wind plant analysis tools
 """
 import h5py
 import logging
+import pandas as pd
 import numpy as np
 import os
 
+from reV.SAM.generation import WindPowerPD
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
@@ -28,7 +30,8 @@ class BespokeSingleFarm:
     """
 
     @classmethod
-    def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset,
+    def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset, sam_sys_inputs,
+            output_request=('capacity', 'annual_energy', 'capacity_factor'),
             ws_bins=(0, 30, 5), wd_bins=(0, 360, 45),
             excl_dict=None, inclusion_mask=None,
             resolution=64, excl_area=None, exclusion_shape=None, close=True):
@@ -106,6 +109,17 @@ class BespokeSingleFarm:
             out = np.histogram2d(ws, wd, bins=(ws_bins, wd_bins))
             wind_dist, ws_edges, wd_edges = out
             wind_dist /= wind_dist.sum()
+
+            meta = pd.Series({'timezone': point.timezone,
+                              'country': point.country,
+                              'state': point.state,
+                              'county': point.county,
+                              'elevation': point.elevation},
+                             name=point.gid)
+
+            wind_plant = WindPowerPD(ws_edges, wd_edges, wind_dist, meta,
+                                     sam_sys_inputs,
+                                     output_request=output_request)
 
             print(wind_dist)
             print(wind_dist.shape, wind_dist.sum())
@@ -211,6 +225,9 @@ class BespokeWindFarms(AbstractAggregation):
 
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset, ws_dset, wd_dset,
+                   sam_sys_inputs,
+                   output_request=('capacity', 'annual_energy',
+                                   'capacity_factor'),
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, gids=None,
@@ -303,6 +320,8 @@ class BespokeWindFarms(AbstractAggregation):
                         tm_dset,
                         ws_dset,
                         wd_dset,
+                        sam_sys_inputs,
+                        output_request=output_request,
                         excl_dict=excl_dict,
                         inclusion_mask=gid_inclusions,
                         resolution=resolution,

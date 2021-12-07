@@ -78,6 +78,11 @@ class AbstractSupplyCurvePoint(ABC):
         return rows, cols
 
     @property
+    def gid(self):
+        """supply curve point gid"""
+        return self._gid
+
+    @property
     def sc_point_gid(self):
         """
         Supply curve point gid
