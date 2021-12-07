@@ -90,8 +90,10 @@ class AbstractSamGeneration(RevPySam, ABC):
         else:
             self._site = None
 
-        self.check_resource_data(resource)
-        self.set_resource_data(resource, meta)
+        # let children pass in None resource
+        if resource is not None:
+            self.check_resource_data(resource)
+            self.set_resource_data(resource, meta)
 
     @classmethod
     def _get_res(cls, res_df, output_request):
@@ -1160,6 +1162,71 @@ class WindPower(AbstractSamGeneration):
         PySAM.Windpower
         """
         return DefaultWindPower.default()
+
+
+class WindPowerPD(WindPower):
+    """WindPower analysis with wind speed/direction joint probabilty
+    distrubtion input"""
+
+    def __init__(self, ws_edges, wd_edges, wind_dist, meta, sam_sys_inputs,
+                 site_sys_inputs=None, output_request=None):
+        """Initialize a SAM generation object for windpower with a
+        speed/direction joint probability distribution.
+
+        Parameters
+        ----------
+        ws_edges : np.ndarray
+            1D array of windspeed (m/s) values that set the edges for the wind
+            probability distribution.
+        wd_edges : np.ndarray
+            1D array of winddirections (deg) values that set the edges for the
+            wind probability distribution.
+        wind_dist : np.ndarray
+            2D array probability distribution of (windspeed, winddirection).
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
+        """
+
+        # make sure timezone and elevation are in the meta data
+        meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
+
+        # don't pass resource to base class,
+        # set in concrete generation classes instead
+        super().__init__(None, meta, sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
+                         output_request=output_request,
+                         drop_leap=False)
+
+        # Set the site number using meta data
+        if hasattr(meta, 'name'):
+            self._site = meta.name
+        else:
+            self._site = None
+
+        self.set_resource_data(ws_edges, wd_edges, wind_dist)
+
+    def set_resource_data(self, ws_edges, wd_edges, wind_dist):
+        """Send wind PD to pysam"""
+
+        self['wind_resource_model_choice'] == 2
+
+        # pysam throws a segfault if wrd isnt a real resource dist
+        #wrd = []
+        #self['wind_resource_distribution'] = wrd
 
 
 class MhkWave(AbstractSamGeneration):
