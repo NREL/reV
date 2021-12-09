@@ -21,11 +21,6 @@ class PackTurbines():
             The "safe" area(s) where turbines can be placed without
             violating boundary, setback, exclusion, or other constraints.
         weight_x : float, optional
-            A weight used to alter the angle at which turbine rows are created.
-        turbine_x : array
-            Packed turbine x coordinates.
-        turbine_y : array
-            Packed turbine y coordinates.
         """
 
         self.min_spacing = min_spacing
@@ -38,7 +33,8 @@ class PackTurbines():
 
     def pack_turbines_poly(self):
         """Fast packing algorithm that maximizes plant capacity in a
-        provided wind plant area.
+        provided wind plant area. Sets the the optimal locations to
+        self.turbine_x and self.turbine_y
         """
 
         can_add_more = True
