@@ -1168,19 +1168,19 @@ class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
 
-    def __init__(self, ws_edges, wd_edges, wind_dist, meta, sam_sys_inputs,
-                 site_sys_inputs=None, output_request=None):
+    def __init__(self, ws_sample_points, wd_sample_points, wind_dist, meta,
+                 sam_sys_inputs, site_sys_inputs=None, output_request=None):
         """Initialize a SAM generation object for windpower with a
         speed/direction joint probability distribution.
 
         Parameters
         ----------
-        ws_edges : np.ndarray
-            1D array of windspeed (m/s) values that set the edges for the wind
-            probability distribution.
-        wd_edges : np.ndarray
-            1D array of winddirections (deg) values that set the edges for the
-            wind probability distribution.
+        ws_sample_points : np.ndarray
+            1D array of windspeed (m/s) values that set the sample points for
+            the wind probability distribution.
+        wd_sample_points : np.ndarray
+            1D array of winddirections (deg) values that set the sample points
+            for the wind probability distribution.
         wind_dist : np.ndarray
             2D array probability distribution of (windspeed, winddirection).
         meta : pd.DataFrame | pd.Series
@@ -1196,9 +1196,6 @@ class WindPowerPD(WindPower):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
         """
 
         # make sure timezone and elevation are in the meta data
@@ -1217,16 +1214,25 @@ class WindPowerPD(WindPower):
         else:
             self._site = None
 
-        self.set_resource_data(ws_edges, wd_edges, wind_dist)
+        self.set_resource_data(ws_sample_points, wd_sample_points, wind_dist)
 
-    def set_resource_data(self, ws_edges, wd_edges, wind_dist):
+    def set_resource_data(self, ws_sample_points, wd_sample_points, wind_dist):
         """Send wind PD to pysam"""
 
-        self['wind_resource_model_choice'] == 2
+        self.sam_sys_inputs['wind_resource_model_choice'] = 2
 
-        # pysam throws a segfault if wrd isnt a real resource dist
-        #wrd = []
-        #self['wind_resource_distribution'] = wrd
+        n_speeds = len(ws_sample_points)
+        n_dirs = len(wd_sample_points)
+
+        wind_resource_distribution = []  # speed (m/s), dir (deg), freq
+        for i in range(n_speeds):
+            for j in range(n_dirs):
+                wind_resource_distribution.\
+                    append([ws_sample_points[i], wd_sample_points[j],
+                           wind_dist[i, j]])
+
+        self.sam_sys_inputs['wind_resource_distribution'] = \
+            wind_resource_distribution
 
 
 class MhkWave(AbstractSamGeneration):
