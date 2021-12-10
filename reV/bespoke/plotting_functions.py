@@ -28,24 +28,25 @@ def get_xy(A):
     return x, y
 
 
-def plot_poly(geom, ax=False, color="black", linestyle="--", linewidth=0.5):
+def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
     """plot the wind plant boundaries
     Parameters
     ----------
     geom : Polygon | MultiPolygon
-    the shapely.Polygon or shapely.MultiPolygon that define the wind plant
+        the shapely.Polygon or shapely.MultiPolygon that define the wind plant
     boundary(ies).
-    ax : matplotlib axis (optional)
-    the axis you want to plot on
+    ax (:py:class:`matplotlib.pyplot.axes`, optional):
+        The figure axes on which the wind rose is plotted. Defaults to None.
     color : string (optional)
-    the color for the wind plant boundaries
+        the color for the wind plant boundaries
     linestyle : string (optional)
-    style to plot the boundary lines
+        style to plot the boundary lines
     linewidth : float (optional)
-    the width of the boundary lines
+        the width of the boundary lines
     """
-    if ax is False:
-        ax = plt.gca()
+    if ax is None:
+        _, ax = plt.subplots()
+
     if geom.type == 'Polygon':
         exterior_coords = geom.exterior.coords[:]
         x, y = get_xy(exterior_coords)
@@ -68,26 +69,33 @@ def plot_poly(geom, ax=False, color="black", linestyle="--", linewidth=0.5):
                 interior_coords = interior.coords[:]
                 x, y = get_xy(interior_coords)
                 ax.plot(x, y, "--b", linewidth=0.5)
+    return ax
 
 
-def plot_turbines(x, y, r, color="C0", nums=False):
+def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
     """plot wind turbine locations
     Parameters
     ----------
     x : array
-    wind turbine x locations
+        wind turbine x locations
     y : array
-    wind turbine y locations
+        wind turbine y locations
     r : float
-    wind turbine radius
+        wind turbine radius
+    ax (:py:class:`matplotlib.pyplot.axes`, optional):
+        The figure axes on which the wind rose is plotted. Defaults to None.
     color : string (optional)
-    the color for the wind plant boundaries
+        the color for the wind plant boundaries
     nums : Bool (optional)
-    show the turbine numbers next to each turbine
+        show the turbine numbers next to each turbine
     """
+    # Set up figure
+    if ax is None:
+        _, ax = plt.subplots(subplot_kw=dict(polar=True))
+
     n = len(x)
     for i in range(n):
         t = plt.Circle((x[i], y[i]), r, color=color)
-        plt.gca().add_patch(t)
+        ax.add_patch(t)
         if nums is True:
-            plt.text(x[i], y[i], "%s" % (i + 1))
+            ax.text(x[i], y[i], "%s" % (i + 1))
