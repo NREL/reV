@@ -2,12 +2,17 @@
 """
 reV bespoke wind plant analysis tools
 """
+# TODO update docstring
+# TODO check on outputs
+# TODO move sample bounds code
+# TODO passing in one cell rather than cropping one big cell
 import h5py
 import logging
 import pandas as pd
 import numpy as np
 import os
 
+from reV.bespoke.place_turbines import PlaceTurbines
 from reV.SAM.generation import WindPowerPD
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
@@ -20,7 +25,6 @@ from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,10 +35,12 @@ class BespokeSingleFarm:
 
     @classmethod
     def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset, sam_sys_inputs,
+            objective_function, cost_function, min_spacing, ga_time,
             output_request=('capacity', 'annual_energy', 'capacity_factor'),
-            ws_bins=(0, 30, 5), wd_bins=(0, 360, 45),
+            ws_sample_points=(5, 30, 5), wd_sample_points=(0, 360, 45),
             excl_dict=None, inclusion_mask=None,
-            resolution=64, excl_area=None, exclusion_shape=None, close=True):
+            resolution=64, excl_area=None, exclusion_shape=None, close=True,
+            wind_farm_wake_model=2):
         """Run the bespoke optimization for a single wind farm.
 
         Parameters
@@ -78,15 +84,12 @@ class BespokeSingleFarm:
             will speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
-        gen_index : np.ndarray
-            Array of generation gids with array index equal to resource gid.
-            Array value is -1 if the resource index was not used in the
-            generation run.
 
         Returns
         -------
         out : dict
-            Given datasets and meta data aggregated to supply curve points
+            Output dictionary containing turbine locations and other
+            information
         """
         kws = {'excl_dict': excl_dict,
                'inclusion_mask': inclusion_mask,
@@ -103,10 +106,41 @@ class BespokeSingleFarm:
             wd = point.mean_wind_dirs(wd)
             ws = point.exclusion_weighted_mean(ws)
 
-            ws_bins = JointPD._make_bins(*ws_bins)
-            wd_bins = JointPD._make_bins(*wd_bins)
+            ws_sample_points = JointPD._make_bins(*ws_sample_points)
+            wd_sample_points = JointPD._make_bins(*wd_sample_points)
 
-            out = np.histogram2d(ws, wd, bins=(ws_bins, wd_bins))
+            # TODO go over this with Grant
+            ws_step = ws_sample_points[1] - ws_sample_points[0]
+            ws_edges = ws_sample_points - ws_step / 2.0
+            ws_edges = np.append(ws_edges, np.array(ws_sample_points[-1]
+                                 + ws_step / 2.0))
+
+            wd_step = wd_sample_points[1] - wd_sample_points[0]
+            wd_edges = wd_sample_points - wd_step / 2.0
+            wd_edges = np.append(wd_edges, np.array(wd_sample_points[-1]
+                                 + wd_step / 2.0))
+            # Get the overhangs
+            negative_overhang = wd_edges[0]
+            positive_overhang = wd_edges[-1] - 360.0
+            # Need potentially to wrap high angle direction to negative
+            # for correct binning
+            if negative_overhang < 0:
+                # print("Correcting negative Overhang:%.1f" %
+                # negative_overhang)
+                wd = np.where(
+                    wd >= 360.0 + negative_overhang,
+                    wd - 360.0,
+                    wd,
+                )
+            # Check on other side
+            if positive_overhang > 0:
+                # print("Correcting positive Overhang:%.1f" %
+                # positive_overhang)
+                wd = np.where(
+                    wd <= positive_overhang, wd + 360.0, wd
+                )
+
+            out = np.histogram2d(ws, wd, bins=(ws_edges, wd_edges))
             wind_dist, ws_edges, wd_edges = out
             wind_dist /= wind_dist.sum()
 
@@ -117,14 +151,40 @@ class BespokeSingleFarm:
                               'elevation': point.elevation},
                              name=point.gid)
 
-            wind_plant = WindPowerPD(ws_edges, wd_edges, wind_dist, meta,
-                                     sam_sys_inputs,
+            wind_plant = WindPowerPD(ws_sample_points, wd_sample_points,
+                                     wind_dist, meta, sam_sys_inputs,
                                      output_request=output_request)
 
-            print(wind_dist)
-            print(wind_dist.shape, wind_dist.sum())
-            print(ws_edges)
-            print(wd_edges)
+            wind_plant.sam_sys_inputs["wind_farm_wake_model"] =\
+                wind_farm_wake_model
+
+            place_turbines = PlaceTurbines(wind_plant, objective_function,
+                                           cost_function, point.exclusions,
+                                           min_spacing, ga_time)
+            place_turbines.place_turbines()
+
+            # TODO need to add:
+            # total cell area
+            # cell capacity density
+            out = {}
+            out["turbine_x_coords"] = place_turbines.turbine_x
+            out["turbine_y_coords"] = place_turbines.turbine_y
+            out["nturbs"] = place_turbines.nturbs
+            out["plant_capacity"] = place_turbines.capacity
+            out["non_excluded_area"] = place_turbines.area
+            out["non_excluded_capacity_density"] =\
+                place_turbines.capacity_density
+            out["aep"] = place_turbines.aep
+            out["objective"] = place_turbines.objective
+            out["annual_cost"] = cost_function(place_turbines.capacity)
+            out["ws_sample_points"] = ws_sample_points
+            out["wd_sample_points"] = wd_sample_points
+            out["wind_dist"] = wind_dist
+            out["boundary_polys"] = place_turbines.safe_polygons
+            out["sam_sys_inputs"] = wind_plant.sam_sys_inputs
+            out["meta"] = meta
+
+            return out
 
 
 class BespokeWindFarms(AbstractAggregation):
@@ -225,7 +285,8 @@ class BespokeWindFarms(AbstractAggregation):
 
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset, ws_dset, wd_dset,
-                   sam_sys_inputs,
+                   sam_sys_inputs, objective_function, cost_function,
+                   min_spacing, ga_time,
                    output_request=('capacity', 'annual_energy',
                                    'capacity_factor'),
                    excl_dict=None, inclusion_mask=None,
@@ -321,6 +382,10 @@ class BespokeWindFarms(AbstractAggregation):
                         ws_dset,
                         wd_dset,
                         sam_sys_inputs,
+                        objective_function,
+                        cost_function,
+                        min_spacing,
+                        ga_time,
                         output_request=output_request,
                         excl_dict=excl_dict,
                         inclusion_mask=gid_inclusions,
