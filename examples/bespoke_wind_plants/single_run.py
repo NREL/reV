@@ -40,7 +40,7 @@ if __name__ == '__main__':
         """dummy objective function"""
         return cost / aep
 
-    ga_time = 10.0
+    ga_time = 20.0
 
     with open(SAM, 'r') as f:
         sam_sys_inputs = json.load(f)
