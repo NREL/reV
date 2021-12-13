@@ -1168,8 +1168,9 @@ class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
 
-    def __init__(self, ws_sample_points, wd_sample_points, wind_dist, meta,
-                 sam_sys_inputs, site_sys_inputs=None, output_request=None):
+    def __init__(self, ws_sample_points, wd_sample_points, wind_direction_data,
+                 wind_speed_data, meta, sam_sys_inputs,
+                 site_sys_inputs=None, output_request=None):
         """Initialize a SAM generation object for windpower with a
         speed/direction joint probability distribution.
 
@@ -1201,6 +1202,9 @@ class WindPowerPD(WindPower):
         # make sure timezone and elevation are in the meta data
         meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
 
+        wind_dist = get_wind_dist(wind_direction_data, wind_speed_data,
+                                  wd_sample_points, ws_sample_points)
+
         # don't pass resource to base class,
         # set in concrete generation classes instead
         super().__init__(None, meta, sam_sys_inputs,
@@ -1215,6 +1219,7 @@ class WindPowerPD(WindPower):
             self._site = None
 
         self.set_resource_data(ws_sample_points, wd_sample_points, wind_dist)
+        self.sam_sys_inputs["wind_dist"] = wind_dist
 
     def set_resource_data(self, ws_sample_points, wd_sample_points, wind_dist):
         """Send wind PD to pysam"""
@@ -1307,3 +1312,43 @@ class MhkWave(AbstractSamGeneration):
         PySAM.MhkWave
         """
         return DefaultMhkWave.default()
+
+
+def get_wind_dist(wind_direction_data, wind_speed_data,
+                  wd_sample_points, ws_sample_points):
+    """Create frequency data from will direction and speed dist
+    """
+
+    ws_step = ws_sample_points[1] - ws_sample_points[0]
+    ws_edges = ws_sample_points - ws_step / 2.0
+    ws_edges = np.append(ws_edges, np.array(ws_sample_points[-1]
+                         + ws_step / 2.0))
+
+    wd_step = wd_sample_points[1] - wd_sample_points[0]
+    wd_edges = wd_sample_points - wd_step / 2.0
+    wd_edges = np.append(wd_edges, np.array(wd_sample_points[-1]
+                         + wd_step / 2.0))
+    # Get the overhangs
+    negative_overhang = wd_edges[0]
+    positive_overhang = wd_edges[-1] - 360.0
+    # Need potentially to wrap high angle direction to negative
+    # for correct binning
+    if negative_overhang < 0:
+        wind_direction_data = np.where(
+            wind_direction_data >= 360.0 + negative_overhang,
+            wind_direction_data - 360.0,
+            wind_direction_data,
+        )
+    # Check on other side
+    if positive_overhang > 0:
+        wind_direction_data = np.where(wind_direction_data
+                                       <= positive_overhang,
+                                       wind_direction_data
+                                       + 360.0, wind_direction_data)
+
+    out = np.histogram2d(wind_speed_data, wind_direction_data,
+                         bins=(ws_edges, wd_edges))
+    wind_dist, ws_edges, wd_edges = out
+    wind_dist /= wind_dist.sum()
+
+    return wind_dist

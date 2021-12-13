@@ -4,7 +4,6 @@ reV bespoke wind plant analysis tools
 """
 # TODO update docstring
 # TODO check on outputs
-# TODO move sample bounds code
 # TODO passing in one cell rather than cropping one big cell
 import h5py
 import logging
@@ -21,9 +20,9 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
 
-from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem
+from rex.joint_pd.joint_pd import JointPD
 
 logger = logging.getLogger(__name__)
 
@@ -107,44 +106,6 @@ class BespokeSingleFarm:
             wd = point.mean_wind_dirs(wd)
             ws = point.exclusion_weighted_mean(ws)
 
-            ws_sample_points = JointPD._make_bins(*ws_sample_points)
-            wd_sample_points = JointPD._make_bins(*wd_sample_points)
-
-            # TODO go over this with Grant
-            ws_step = ws_sample_points[1] - ws_sample_points[0]
-            ws_edges = ws_sample_points - ws_step / 2.0
-            ws_edges = np.append(ws_edges, np.array(ws_sample_points[-1]
-                                 + ws_step / 2.0))
-
-            wd_step = wd_sample_points[1] - wd_sample_points[0]
-            wd_edges = wd_sample_points - wd_step / 2.0
-            wd_edges = np.append(wd_edges, np.array(wd_sample_points[-1]
-                                 + wd_step / 2.0))
-            # Get the overhangs
-            negative_overhang = wd_edges[0]
-            positive_overhang = wd_edges[-1] - 360.0
-            # Need potentially to wrap high angle direction to negative
-            # for correct binning
-            if negative_overhang < 0:
-                # print("Correcting negative Overhang:%.1f" %
-                # negative_overhang)
-                wd = np.where(
-                    wd >= 360.0 + negative_overhang,
-                    wd - 360.0,
-                    wd,
-                )
-            # Check on other side
-            if positive_overhang > 0:
-                # print("Correcting positive Overhang:%.1f" %
-                # positive_overhang)
-                wd = np.where(
-                    wd <= positive_overhang, wd + 360.0, wd
-                )
-
-            out = np.histogram2d(ws, wd, bins=(ws_edges, wd_edges))
-            wind_dist, ws_edges, wd_edges = out
-            wind_dist /= wind_dist.sum()
-
             meta = pd.Series({'timezone': point.timezone,
                               'country': point.country,
                               'state': point.state,
@@ -152,8 +113,10 @@ class BespokeSingleFarm:
                               'elevation': point.elevation},
                              name=point.gid)
 
+            ws_sample_points = JointPD._make_bins(*ws_sample_points)
+            wd_sample_points = JointPD._make_bins(*wd_sample_points)
             wind_plant = WindPowerPD(ws_sample_points, wd_sample_points,
-                                     wind_dist, meta, sam_sys_inputs,
+                                     wd, ws, meta, sam_sys_inputs,
                                      output_request=output_request)
 
             wind_plant.sam_sys_inputs["wind_farm_wake_model"] =\
@@ -180,7 +143,7 @@ class BespokeSingleFarm:
             out["annual_cost"] = cost_function(place_turbines.capacity)
             out["ws_sample_points"] = ws_sample_points
             out["wd_sample_points"] = wd_sample_points
-            out["wind_dist"] = wind_dist
+            out["wind_dist"] = sam_sys_inputs["wind_dist"]
             out["boundary_polys"] = place_turbines.safe_polygons
             out["sam_sys_inputs"] = wind_plant.sam_sys_inputs
             out["meta"] = meta

@@ -50,6 +50,7 @@ def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
     if geom.type == 'Polygon':
         exterior_coords = geom.exterior.coords[:]
         x, y = get_xy(exterior_coords)
+        ax.fill(x, y, color="C0", alpha=0.25)
         ax.plot(x, y, color=color, linestyle=linestyle, linewidth=linewidth)
 
         for interior in geom.interiors:
@@ -62,6 +63,7 @@ def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
         for part in geom:
             exterior_coords = part.exterior.coords[:]
             x, y = get_xy(exterior_coords)
+            ax.fill(x, y, color="C0", alpha=0.25)
             ax.plot(x, y, color=color, linestyle=linestyle,
                     linewidth=linewidth)
 
@@ -99,6 +101,8 @@ def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
         ax.add_patch(t)
         if nums is True:
             ax.text(x[i], y[i], "%s" % (i + 1))
+
+    return ax
 
 
 def plot_windrose(wind_directions, wind_speeds, wind_frequencies, ax=None,
