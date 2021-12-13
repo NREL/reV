@@ -156,3 +156,5 @@ def plot_windrose(wind_directions, wind_speeds, wind_frequencies, ax=None,
     plt.yticks(fontsize=10)
 
     plt.subplots_adjust(left=0.0, right=1.0, top=0.9, bottom=0.1)
+
+    return ax
