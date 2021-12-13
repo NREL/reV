@@ -5,7 +5,8 @@ An example single run to get bespoke wind plant layout
 import numpy as np
 import matplotlib.pyplot as plt
 from reV.bespoke.bespoke import BespokeWindFarms
-from reV.bespoke.plotting_functions import plot_poly, plot_turbines
+from reV.bespoke.plotting_functions import plot_poly, plot_turbines,\
+    plot_windrose
 from reV import TESTDATADIR
 from reV.supply_curve.tech_mapping import TechMapping
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
         """dummy objective function"""
         return cost / aep
 
-    ga_time = 20.0
+    ga_time = 10.0
 
     with open(SAM, 'r') as f:
         sam_sys_inputs = json.load(f)
@@ -80,9 +81,9 @@ if __name__ == '__main__':
     print("objective: ", results["objective"])
     print("annual_cost: ", results["annual_cost"])
 
-    # out["ws_sample_points"] = ws_sample_points
-    # out["wd_sample_points"] = wd_sample_points
-    # out["wind_dist"] = wind_dist
+    ax1 = plot_windrose(results["wd_sample_points"],
+                        results["ws_sample_points"],
+                        results["wind_dist"])
 
     ax2 = plot_poly(results["boundary_polys"])
     ax2 = plot_turbines(results["turbine_x_coords"],
