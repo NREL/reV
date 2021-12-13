@@ -37,7 +37,7 @@ class BespokeSingleFarm:
     def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset, sam_sys_inputs,
             objective_function, cost_function, min_spacing, ga_time,
             output_request=('capacity', 'annual_energy', 'capacity_factor'),
-            ws_sample_points=(5, 30, 5), wd_sample_points=(0, 360, 45),
+            ws_sample_points=(5, 30, 5), wd_sample_points=(0, 315, 45),
             excl_dict=None, inclusion_mask=None,
             resolution=64, excl_area=None, exclusion_shape=None, close=True,
             wind_farm_wake_model=2):
