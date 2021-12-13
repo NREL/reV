@@ -91,7 +91,7 @@ def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
     """
     # Set up figure
     if ax is None:
-        _, ax = plt.subplots(subplot_kw=dict(polar=True))
+        _, ax = plt.subplots()
 
     n = len(x)
     for i in range(n):
@@ -99,3 +99,60 @@ def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
         ax.add_patch(t)
         if nums is True:
             ax.text(x[i], y[i], "%s" % (i + 1))
+
+
+def plot_windrose(wind_directions, wind_speeds, wind_frequencies, ax=None,
+                  colors=None):
+    """plot windrose
+    Parameters
+    ----------
+    wind_directions : 1D array
+        wind direction samples
+    wind_speeds : 1D array
+        wind speed samples
+    wind_frequencies : 2D array
+        frequency of wind direction and speed samples
+    ax (:py:class:`matplotlib.pyplot.axes`, optional):
+        The figure axes on which the wind rose is plotted. Defaults to None.
+    color : array (optional)
+        the color for the different wind speed bins
+    """
+    if ax is None:
+        _, ax = plt.subplots(subplot_kw=dict(polar=True))
+
+    ndirs = len(wind_directions)
+    nspeeds = len(wind_speeds)
+
+    if colors is None:
+        colors = []
+        for i in range(nspeeds):
+            colors = np.append(colors, "C%s" % i)
+
+    for i in range(ndirs):
+        wind_directions[i] = np.deg2rad(90.0 - wind_directions[i])
+
+    width = 0.8 * 2 * np.pi / len(wind_directions)
+
+    for i in range(ndirs):
+        bottom = 0.0
+        for j in range(nspeeds):
+            if i == 0:
+                ax.bar(wind_directions[i], wind_frequencies[j, i],
+                       bottom=bottom, width=width, edgecolor="black",
+                       color=[colors[j]], label="%s m/s" % int(wind_speeds[j])
+                       )
+            else:
+                ax.bar(wind_directions[i], wind_frequencies[j, i],
+                       bottom=bottom, width=width, edgecolor="black",
+                       color=[colors[j]])
+            bottom = bottom + wind_frequencies[j, i]
+
+    ax.legend(bbox_to_anchor=(1.3, 1), fontsize=10)
+    pi = np.pi
+    ax.set_xticks((0, pi / 4, pi / 2, 3 * pi / 4, pi, 5 * pi / 4,
+                   3 * pi / 2, 7 * pi / 4))
+    ax.set_xticklabels(("E", "NE", "N", "NW", "W", "SW", "S", "SE"),
+                       fontsize=10)
+    plt.yticks(fontsize=10)
+
+    plt.subplots_adjust(left=0.0, right=1.0, top=0.9, bottom=0.1)
