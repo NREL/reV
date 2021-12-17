@@ -12,13 +12,7 @@ if ! command -v docker-compose &> /dev/null; then
 fi
 
 # make sure docker is available
+sudo chmod 666 /var/run/docker.sock
 sudo groupadd docker
 sudo usermod -aG docker $USER
 sudo service docker start
-
-# start local HSDS server
-if [ -f $HOME/hsds/ ]; then
-    cd $HOME/hsds/
-    sh runall.sh "-$(nproc --all)"
-    cd -
-fi
