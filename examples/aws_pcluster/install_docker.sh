@@ -14,5 +14,5 @@ fi
 # make sure docker is available
 sudo chmod 666 /var/run/docker.sock
 sudo groupadd docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker "$USER"
 sudo service docker start

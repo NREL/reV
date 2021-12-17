@@ -1,3 +1,6 @@
+"""
+Simple h5pyd read test from AWS S3
+"""
 import h5pyd
 
 if __name__ == '__main__':

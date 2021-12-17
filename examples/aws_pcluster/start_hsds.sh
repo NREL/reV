@@ -10,13 +10,13 @@ export LOG_LEVEL=INFO
 export EC2_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
 
 if [[ $EC2_TYPE = t2* ]]; then
-    echo On EC2 login node $EC2_TYPE, not starting HSDS service.
+    echo On EC2 login node "$EC2_TYPE", not starting HSDS service.
 elif [[ ($EC2_TYPE = c*) && (-d ~/hsds) ]]; then
     if [ -f ~/install_docker.sh ]; then
         sh ~/install_docker.sh
     fi
-    echo On EC2 compute node $EC2_TYPE, starting HSDS service...
-    cd ~/hsds/
+    echo On EC2 compute node "$EC2_TYPE", starting HSDS service...
+    cd ~/hsds/ || exit
     sh runall.sh "$(nproc --all)"
-    cd -
+    cd - || exit
 fi

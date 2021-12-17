@@ -185,6 +185,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
+                   sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 
 
@@ -673,11 +674,14 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
-          stdout_path, verbose):
+          stdout_path, sh_script, verbose):
     """Run generation on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -722,6 +726,9 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                            curtailment=curtailment,
                            gid_map=gid_map,
                            verbose=verbose)
+
+        if sh_script:
+            cmd = sh_script + '\n' + cmd
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name,
                                             hardware='eagle',
