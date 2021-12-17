@@ -21,11 +21,11 @@ class BaseExecutionConfig(BaseConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-        super().__init__(config_dict)
 
         self._default_option = 'local'
         self._default_nodes = 1
         self._default_mem_util_lim = 0.4
+        super().__init__(config_dict)
 
     @property
     def option(self):

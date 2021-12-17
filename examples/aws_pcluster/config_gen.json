@@ -8,14 +8,13 @@
     "output_directory": "./"
   },
   "execution_control": {
-    "allocation": "aws",
     "nodes": 10,
     "option": "slurm",
     "sites_per_worker": 20,
-    "max_workers": null,
-    "walltime": 1.0
+    "max_workers": 1,
+    "sh_script": "source ~/start_hsds.sh"
   },
-  "log_level": "INFO",
+  "log_level": "DEBUG",
   "output_request": [
     "cf_mean",
     "cf_profile",
