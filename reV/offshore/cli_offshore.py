@@ -129,7 +129,7 @@ def from_config(ctx, config_file, verbose):
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        module=config.execution_control.module,
-                       conda_env=config.execution_control.conda_env
+                       conda_env=config.execution_control.conda_env,
                        sh_script=config.execution_control.sh_script)
 
 
