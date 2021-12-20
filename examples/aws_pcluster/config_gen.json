@@ -12,7 +12,7 @@
     "option": "slurm",
     "sites_per_worker": 50,
     "max_workers": null,
-    "sh_script": "sh ~/setup_hsds.sh"
+    "sh_script": "sh ~/start_hsds.sh"
   },
   "log_level": "INFO",
   "output_request": [

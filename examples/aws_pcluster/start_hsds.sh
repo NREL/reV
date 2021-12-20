@@ -62,5 +62,5 @@ else
         # give hsds a chance to warm up (not sure why but this helps a ton!)
         sleep 10s
 
-    ) 200>~/.flock.$EC2_ID
+    ) 200>/tmp/.rev_ec2_"$EC2_ID".flock
 fi
