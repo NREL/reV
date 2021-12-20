@@ -3,7 +3,7 @@ Running reV on AWS Parallel Cluster HPC Infrastructure
 
 reV was originally designed to run on the NREL high performance computer (HPC), but you can now run reV on AWS using the NREL renewable energy resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 via HSDS.
 
-If you plan on only running reV for a handful of sites (less than 100), first check out our `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own HSDS Kubernetes service to perform the parallel data requests from S3. 
+If you plan on only running reV for a handful of sites (less than 100), first check out our `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NREL HSDS developer API.  
 
 Note that everything should be done in AWS region us-west-2 (Oregon) since this is where the NSRDB and WTK data live on S3.
 
@@ -12,7 +12,6 @@ Setting up an AWS Parallel Cluster
 
 #. Get started with the `AWS HPC Overview <https://www.hpcworkshops.com/01-hpc-overview.html>`_.
 #. Set up a `Cloud9 IDE <https://www.hpcworkshops.com/02-aws-getting-started.html>`_.
-#. Configure an HSDS Kubernetes service for fully parallel data retrievals from the NSRDB and WTK (see HSDS Kubernetes instructions below). If you just want to run a test case you can skip this step and just use a highly limited NREL developer API endpoint or a local HSDS server (`more details here <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_).
 #. Set up an `AWS Parallel Cluster <https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop.html>`_.
 
     #. Use the `rev-pcluster-config.ini <https://github.com/NREL/reV/blob/gb/aws/examples/aws_pcluster/rev-pcluster-config.ini>`_ file as an example.
@@ -24,12 +23,12 @@ Setting up an AWS Parallel Cluster
     * Seems like EBS is probably fine and FSx is unnecessary for non-IO-intensive reV modules. Generation will source resource data from HSDS and so is probably fine with EBS. SC-aggregation is probably fine with EBS if you set ``pre_extract_inclusions=True``.
 
 #. `Login to your cluster <https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop/07-logon-pc.html>`_ from your cloud9 IDE: ``pcluster ssh pcluster_name -i ~/.ssh/lab-3-key``
-#. Set up the ``.hscfg`` file in your home directory (see HSDS Kubernetes instructions below for details)
 #. Get `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ and install.
 
     #. ``wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh``
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
 
+#. Set up an HSDS service. At this time, it is recommended that you use local HSDS servers on your compute cluster. See instructions below for details. 
 #. Install reV 
 
     #. You need to clone the reV repo to get this ``aws_pcluster`` example. reV example files do not ship with the pypi package.
@@ -47,14 +46,50 @@ Setting up an AWS Parallel Cluster
     #. Check the slurm queue with ``squeue`` and the compute cluster status in the ec2 console or with ``sinfo``
     #. Jobs will be in state ``CF`` (configuring) while the nodes spin up (this can take several minutes) and then ``R`` (running)
 
-#. Note that if you don't configure a custom HSDS Kubernetes Service you will probably see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Kubernetes Service.
-#. Note that you can shut down your compute fleet using ``pcluster stop pcluster_name`` and delete the whole pcluster using ``pcluster delete pcluster_name`` but the ``stop`` command won't shut down the login node and the ``delete`` command will wipe the EBS memory. A good option is to stop the compute fleet with ``pcluster stop pcluster_name`` and then stop the login node in the AWS Console EC2 interface (find the "master" node and stop the instance). This will keep the EBS data intact. 
+Notes on Running reV in the AWS Parallel Cluster
+------------------------------------------------
+#. AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (this has been verified for the c5 instances). The pcluster framework treats each physical CPU as a node that can accept one reV job. For this reason, it is recommended that you scale the ``"nodes"`` entry in the reV generation config file but keep ``"max_workers": 1``. For example, if you use two ``c5.2xlarge`` instances in your compute fleet, this is a total of 8 physical CPU's, each of which can be thought of as a HPC "node" that can run one process at a time.
+#. If you don't configure a custom HSDS Service you will probably see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
+#. The best way to stop your pcluster is using ``pcluster stop pcluster_name`` from the cloud9 IDE (not ssh'd into the pcluster) and then stop the login node in the AWS Console EC2 interface (find the "master" node and stop the instance). This will keep the EBS data intact and not charge you for EC2 costs. When you're done with the pcluster you can call ``pcluster delete pcluster_name`` but this will also delete all of the EBS data. 
+
+
+Setting up HSDS Local Servers on your Compute Cluster
+-----------------------------------------------------
+
+The current recommended approach for setting up an HSDS service for reV is to start local HSDS servers on your AWS parallel cluster compute nodes. These instructions set up a shell script that each reV compute job will run on its respective compute node. The shell script checks that an HSDS local server is running, and will start one if not. These instructions are generally copied from the `HSDS AWS README <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ with a few modifications. 
+
+#. Make sure you have installed Miniconda but have not yet installed reV/rex.
+#. Clone the `HSDS Repository <https://github.com/HDFGroup/hsds>`_. into your home directory in the pcluster login node: ``git clone git@github.com:HDFGroup/hsds.git`` (you may have to set up your ssh keys first). 
+#. Install HSDS by running ``python setup.py install`` from the hsds repository folder (running ``python setup.py install`` is currently required as the setup script does some extra magic over a pip installation). 
+#. Copy the password file from ``~/hsds/admin/config/passwd.default`` to ``~/hsds/admin/config/passwd.txt`` and (optionally) modify any username/passwords you wish.
+#. Create an HSDS config file at ``~/.hscfg`` with the following entries:
+
+    .. code-block:: bash
+    
+        # Local HSDS server
+        hs_endpoint = http://localhost:5101
+        hs_username = admin
+        hs_password = admin
+        hs_api_key = None
+        hs_bucket = nrel-pds-hsds
+
+#. Copy the ``start_hsds.sh`` script from this example to your home directory in the pcluster login node. 
+#. Replace the following environment variables in ``start_hsds.sh`` with your values: ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``BUCKET_NAME`` (note that you should use AWS keys from an IAM user with admin privileges and not your AWS console root user). 
+#. Optional: to test your HSDS local server config, do the following:
+
+    #. Run the start script: ``sh ~/start_hsds.sh``
+    #. Run ``docker ps`` and verify that there are 4 or more HSDS services active (hsds_rangeget_1, hsds_sn_1, hsds_head_1, and an hsds_dn_* node for every available core)
+    #. Run ``hsinfo`` and verify that this doesn't throw an error
+    #. Try running ``pip install h5pyd`` and then run the the h5pyd test (either the .py in this example or the h5pyd test snippet below).
+    
+#. Make sure this key-value pair is set in the ``execution_control`` block of the ``config_gen.json`` file: ``"sh_script": "sh ~/start_hsds.sh"``
+#. You should be good to go! The line in the generation config file makes reV run the ``start_hsds.sh`` script before running the reV job. The script will install docker and make sure one HSDS server is running per EC2 instance. 
 
 
 Setting up an HSDS Kubernetes Service
 -------------------------------------
 
-Setting up your own HSDS Kubernetes service is the best (and currently only) way to run a large reV job with full parallelization. You can generally follow the HSDS repository instructions for `HSDS Kubernetes on AWS <https://github.com/HDFGroup/hsds/blob/master/docs/kubernetes_install_aws.md>`_. Here are some extra tips and tricks for the NREL-reV workflow. 
+Setting up your own HSDS Kubernetes service is one way to run a large reV job with full parallelization. This has not been trialed by the NREL team in full, but we have tested on the HSDS group's Kubernetes cluster. If you want to pursue this route, you can follow the HSDS repository instructions for `HSDS Kubernetes on AWS <https://github.com/HDFGroup/hsds/blob/master/docs/kubernetes_install_aws.md>`_.
 
 
 Setting up an HSDS Lambda Service
@@ -151,3 +186,64 @@ Here's a simple h5pyd test to make sure you can retrieve data from the NSRDB/WTK
         print(data)
         print(type(data))
         print(data.shape)
+
+
+Compute Cost Estimates
+----------------------
+
+Here are some initial compute cost results and estimates for running reV generation (the largest compute module in reV). All estimates are based on c5.2xlarge EC2 instances at the on-demand price of $0.34 per hour. These numbers are *rough* estimates! Do not plan your budget around then. Also, these numbers could be reduced significantly if running in the EC2 spot market (see how to configure pcluster spot pricing `here <https://docs.aws.amazon.com/parallelcluster/latest/ug/compute-resource-section.html#compute-resource-spot-price>`_.
+
+.. list-table:: reV PCluster Compute Costs (Empirical)
+    :widths: auto
+    :header-rows: 1
+
+    * - Compute Module
+      - Timesteps
+      - Sites
+      - Total Datum
+      - Total Compute Time (hr)
+      - Total EC2 Cost
+      - Cost per Datum
+    * - PVWattsv7
+      - 35088
+      - 1850
+      - 6.49e7
+      - 2.4
+      - $0.82
+      - 1.26e-08
+    * - Windpower
+      - 17544
+      - 6268
+      - 1.10e8
+      - 1.6
+      - $0.55
+      - 4.95e-09
+      
+.. list-table:: CONUS Compute Costs (Estimated)
+    :widths: auto
+    :header-rows: 1
+
+    * - Compute Module
+      - Source Data
+      - Timesteps (one year)
+      - Sites
+      - Total Datum
+      - Total Compute Time (hr)
+      - Cost per Datum
+      - Total EC2 Cost
+    * - PVWattsv7
+      - NSRDB (4km, 30min)
+      - 17520
+      - ~5e05
+      - 8.76e9
+      - 325.1
+      - 1.26e-08
+      - $110.50
+    * - Windpower
+      - WTK (2km, 1hr)
+      - 8760
+      - ~2e6
+      - 1.75e10
+      - 254.5
+      - 4.95e-09
+      - $86.53
