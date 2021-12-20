@@ -4,17 +4,14 @@
     "output_directory": "./"
   },
   "execution_control": {
-    "allocation": "aws",
-    "option": "slurm",
-    "walltime": 1.0
+    "option": "slurm"
   },
   "groups": {
     "none": {
       "dsets": [
         "cf_mean",
         "cf_profile",
-        "lcoe_fcr",
-        "ghi_mean"
+        "lcoe_fcr"
       ],
       "source_dir": "./",
       "source_files": "PIPELINE",

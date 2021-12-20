@@ -1,30 +1,29 @@
 {
   "analysis_years": [
-    2019,
-    2020
+    2007,
+    2008
   ],
   "directories": {
     "log_directory": "./logs/",
     "output_directory": "./"
   },
   "execution_control": {
-    "nodes": 5,
+    "nodes": 4,
     "option": "slurm",
-    "sites_per_worker": 50,
-    "max_workers": null,
+    "sites_per_worker": 10,
+    "max_workers": 1,
     "sh_script": "sh ~/start_hsds.sh"
   },
   "log_level": "INFO",
   "output_request": [
     "cf_mean",
     "cf_profile",
-    "lcoe_fcr",
-    "ghi_mean"
+    "lcoe_fcr"
   ],
-  "project_points": "./nsrdb_points_front_range.csv",
-  "resource_file": "/nrel/nsrdb/v3/nsrdb_{}.h5",
+  "project_points": "./wtk_points_front_range.csv",
+  "resource_file": "/nrel/wtk/conus/wtk_conus_{}.h5",
   "sam_files": {
-    "def": "./pv.json"
+    "def": "./windpower.json"
   },
-  "technology": "pvwattsv7"
+  "technology": "windpower"
 }
