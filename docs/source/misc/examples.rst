@@ -11,3 +11,4 @@ Examples
    examples.offshore_wind
    examples.eagle_node_requests
    examples.running_with_hsds
+   examples.aws_pcluster
