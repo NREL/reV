@@ -7,17 +7,12 @@
   "dsets": [
     "cf_mean",
     "cf_profile",
-    "lcoe_fcr",
-    "ghi_mean"
+    "lcoe_fcr"
   ],
   "execution_control": {
-    "allocation": "rev",
-    "feature": "--qos=high",
-    "memory": 90,
-    "option": "eagle",
-    "walltime": 2
+    "option": "slurm"
   },
   "file_prefixes": "PIPELINE",
   "log_level": "INFO",
-  "project_points": "./nsrdb_conus_project_points.csv"
+  "project_points": "./wtk_points_front_range.csv"
 }

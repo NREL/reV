@@ -107,6 +107,7 @@ def from_config(ctx, config_file, verbose):
                    module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    group_params=json.dumps(config.group_params),
+                   sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 
 
@@ -319,11 +320,14 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
-                     conda_env, module, stdout_path, verbose):
+                     conda_env, module, stdout_path, sh_script, verbose):
     """
     Run multi year collection and means on HPC via SLURM job submission.
     """
@@ -353,8 +357,10 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
                     ' name "{}", collecting into "{}".'
                     .format(name, my_file))
         # create and submit the SLURM job
-        slurm_cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
-        out = slurm_manager.sbatch(slurm_cmd, alloc=alloc, memory=memory,
+        cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
+        if sh_script:
+            cmd = sh_script + '\n' + cmd
+        out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,
                                    walltime=walltime, feature=feature,
                                    name=name, stdout_path=stdout_path,
                                    conda_env=conda_env, module=module)[0]

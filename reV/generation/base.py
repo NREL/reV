@@ -1138,8 +1138,9 @@ class BaseGen(ABC):
             Keyword arguments to self.run().
         """
 
-        logger.debug('Running parallel execution with max_workers={}'
-                     .format(max_workers))
+        max_workers = os.cpu_count() if max_workers is None else max_workers
+        logger.info('Running parallel execution with max_workers={}'
+                    .format(max_workers))
         i = 0
         N, pc_chunks = self._pre_split_pc(pool_size=pool_size)
         for j, pc_chunk in enumerate(pc_chunks):

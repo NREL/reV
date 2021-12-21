@@ -129,7 +129,8 @@ def from_config(ctx, config_file, verbose):
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        module=config.execution_control.module,
-                       conda_env=config.execution_control.conda_env)
+                       conda_env=config.execution_control.conda_env,
+                       sh_script=config.execution_control.sh_script)
 
 
 @main.group(invoke_without_command=True)
@@ -252,9 +253,12 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
               help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.pass_context
 def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
-          stdout_path):
+          stdout_path, sh_script):
     """slurm (Eagle) submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
@@ -276,6 +280,9 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
                        sam_files, nrwal_configs, offshore_meta_cols,
                        offshore_nrwal_keys, log_dir, run_all, verbose)
+    if sh_script:
+        cmd = sh_script + '\n' + cmd
+
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()
