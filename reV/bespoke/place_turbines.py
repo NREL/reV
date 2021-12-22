@@ -16,7 +16,7 @@ class PlaceTurbines():
     exclusions, wind resources, and objective
     """
     def __init__(self, wind_plant, objective_function, cost_function,
-                 exclusions, min_spacing, ga_time):
+                 include_mask, pixel_side_length, min_spacing, ga_time):
         """
         Parameters
         ----------
@@ -46,17 +46,19 @@ class PlaceTurbines():
         self.wind_plant = wind_plant
         self.cost_function = cost_function
         self.objective_function = objective_function
-        self.exclusions = exclusions
+        self.include_mask = include_mask
+        self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
         self.ga_time = ga_time
-
         # internal variables
+        self.nrows, self.ncols = np.shape(include_mask)
         self.x_locations = np.array([])
         self.y_locations = np.array([])
         self.turbine_capacity = \
             np.max(self.wind_plant.
                    sam_sys_inputs["wind_turbine_powercurve_powerout"])
-        self.safe_polygons = None
+        self.full_polygons = None
+        self.packing_polygons = None
 
         # outputs
         self.turbine_x = np.array([])
@@ -73,55 +75,31 @@ class PlaceTurbines():
         self.safe_polygons that defines where turbines can be placed.
         """
 
-        latitude = list(self.exclusions.latitude)
-        longitude = list(self.exclusions.longitude)
-        safe = list(self.exclusions.mask)
-
-        latitude = [[float(y) for y in x] for x in latitude]
-        longitude = [[float(y) for y in x] for x in longitude]
-
-        lat = np.mean(latitude)
-        exclusions_x = \
-            [[y * 40075000 * np.cos(np.deg2rad(lat)) / 360 for y in x]
-             for x in longitude]
-        exclusions_y = [[y * 111.32 * 1000 for y in x] for x in latitude]
-
-        exclusions_x = np.array(exclusions_x)
-        exclusions_y = np.array(exclusions_y)
-        safe = np.array(safe)
-
-        # TODO this is left in for testing while the exclusions file is huge
-        ncells = 128
-        s1 = 0
-        s2 = 0
-        exclusions_x = exclusions_x[s1:s1 + ncells, s2:s2 + ncells]
-        exclusions_y = exclusions_y[s1:s1 + ncells, s2:s2 + ncells]
-        safe = safe[s1:s1 + ncells, s2:s2 + ncells]
-
-        shapes = rasterio.features.shapes(safe)
+        shapes = rasterio.features.shapes(self.include_mask)
         polygons = [Polygon(shape[0]["coordinates"][0]) for shape in shapes
                     if shape[1] == 1]
-
         for i, _ in enumerate(polygons):
-            polygons[i] = shapely.affinity.scale(polygons[i], xfact=90.0,
-                                                 yfact=-90.0, origin=(0, 0))
+            polygons[i] = shapely.affinity.scale(polygons[i],
+                                                 xfact=self.pixel_side_length,
+                                                 yfact=-self.pixel_side_length,
+                                                 origin=(0, 0))
 
         safe_polygons = MultiPolygon(polygons)
-        safe_polygons = safe_polygons.buffer(0)
+        minx, miny, maxx, maxy = safe_polygons.bounds
+        safe_polygons = shapely.affinity.translate(safe_polygons, xoff=-minx,
+                                                   yoff=-miny)
+        self.full_polygons = safe_polygons.buffer(0)
 
         # add extra setback to cell boundary
-        minx = np.min(exclusions_x) - 45.0
-        maxx = np.max(exclusions_x) + 45.0
-        miny = np.min(exclusions_y) - 45.0
-        maxy = np.max(exclusions_y) + 45.0
-        maxx = maxx - minx - self.min_spacing / 2.0
-        minx = minx - minx + self.min_spacing / 2.0
-        miny = miny - maxy + self.min_spacing / 2.0
-        maxy = maxy - maxy - self.min_spacing / 2.0
+        minx, miny, maxx, maxy = self.full_polygons.bounds
+        minx += self.min_spacing / 2.0
+        miny += self.min_spacing / 2.0
+        maxx -= self.min_spacing / 2.0
+        maxy -= self.min_spacing / 2.0
 
         boundary_poly = \
             Polygon(((minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)))
-        self.safe_polygons = boundary_poly.intersection(safe_polygons)
+        self.packing_polygons = boundary_poly.intersection(self.full_polygons)
 
     def initialize_packing(self):
         """run the turbine packing algorithm (maximizing plant capacity) to
@@ -129,7 +107,7 @@ class PlaceTurbines():
         variables in the gentic algorithm.
         """
 
-        packing = PackTurbines(self.min_spacing, self.safe_polygons)
+        packing = PackTurbines(self.min_spacing, self.packing_polygons)
         nturbs = 1E6
         mult = 1.0
         while nturbs > 300:
@@ -195,7 +173,7 @@ class PlaceTurbines():
         self.turbine_y = self.y_locations[optimized_design_variables]
         self.nturbs = np.sum(optimized_design_variables)
         self.capacity = self.turbine_capacity * self.nturbs
-        self.area = self.safe_polygons.area
+        self.area = self.full_polygons.area
         self.capacity_density = self.capacity / self.area * 1E3
 
         self.wind_plant.sam_sys_inputs["wind_farm_xCoordinates"] = \
