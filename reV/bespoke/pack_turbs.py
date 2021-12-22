@@ -56,7 +56,7 @@ class PackTurbines():
                 new_turbine = Point(x[np.argmin(metric)], y[np.argmin(metric)]
                                     ).buffer(self.min_spacing)
             else:
-                can_add_more = False
+                break
 
             leftover = leftover.difference(new_turbine)
             if isinstance(leftover, Polygon):
