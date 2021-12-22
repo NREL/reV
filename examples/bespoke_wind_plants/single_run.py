@@ -48,7 +48,8 @@ if __name__ == '__main__':
     rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
     min_spacing = 5 * rotor_diameter
 
-    gid = 33  # 39% included
+    gid = 34  # 39% included
+    # gid = 34
     ws_dset = 'windspeed_88m'
     wd_dset = 'winddirection_88m'
 
@@ -81,14 +82,42 @@ if __name__ == '__main__':
     print("objective: ", results["objective"])
     print("annual_cost: ", results["annual_cost"])
 
-    ax1 = plot_windrose(results["wd_sample_points"],
-                        results["ws_sample_points"],
-                        results["wind_dist"])
+    plt.figure(1)
+    ax = plot_windrose(results["wd_sample_points"],
+                       results["ws_sample_points"],
+                       results["wind_dist"])
+    plt.title("wind rose")
 
-    ax2 = plot_poly(results["boundary_polys"])
-    ax2 = plot_turbines(results["turbine_x_coords"],
-                        results["turbine_y_coords"], rotor_diameter / 2,
-                        ax=ax2)
+    plt.figure(2)
+    ax = plot_poly(results["full_polygons"])
+    ax = plot_turbines(results["packed_x"],
+                       results["packed_y"], rotor_diameter / 2,
+                       ax=ax)
     plt.axis("equal")
+    plt.title("full polys, packed points")
+
+    plt.figure(3)
+    ax = plot_poly(results["full_polygons"])
+    ax = plot_turbines(results["turbine_x_coords"],
+                       results["turbine_y_coords"], rotor_diameter / 2,
+                       ax=ax)
+    plt.axis("equal")
+    plt.title("full polys, turbines")
+
+    plt.figure(4)
+    ax = plot_poly(results["packing_polygons"])
+    ax = plot_turbines(results["packed_x"],
+                       results["packed_y"], rotor_diameter / 2,
+                       ax=ax)
+    plt.axis("equal")
+    plt.title("packed polys, packed points")
+
+    plt.figure(5)
+    ax = plot_poly(results["packing_polygons"])
+    ax = plot_turbines(results["turbine_x_coords"],
+                       results["turbine_y_coords"], rotor_diameter / 2,
+                       ax=ax)
+    plt.axis("equal")
+    plt.title("packed polys, turbines")
 
     plt.show()
