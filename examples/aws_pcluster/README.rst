@@ -28,7 +28,7 @@ Setting up an AWS Parallel Cluster
     #. ``wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh``
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
 
-#. Set up an HSDS service. At this time, it is recommended that you use local HSDS servers on your compute cluster. See instructions below for details.
+#. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See instructions below for details.
 #. Install reV
 
     #. You need to clone the reV repo to get this ``aws_pcluster`` example. reV example files do not ship with the pypi package.
@@ -48,8 +48,11 @@ Setting up an AWS Parallel Cluster
 
 Notes on Running reV in the AWS Parallel Cluster
 ------------------------------------------------
-#. AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (this has been verified for the c5 instances). The pcluster framework treats each physical CPU as a node that can accept one reV job. For this reason, it is recommended that you scale the ``"nodes"`` entry in the reV generation config file but keep ``"max_workers": 1``. For example, if you use two ``c5.2xlarge`` instances in your compute fleet, this is a total of 8 physical CPU's, each of which can be thought of as a HPC "node" that can run one process at a time.
-#. If you don't configure a custom HSDS Service you will probably see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
+
+#. If you don't configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
+#. AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (at least for the c5 instances) (see ``disable_hyperthreading = false``). The pcluster framework treats each thread as a "node" that can accept one reV job. For this reason, it is recommended that you scale the ``"nodes"`` entry in the reV generation config file but keep ``"max_workers": 1``. For example, if you use two ``c5.2xlarge`` instances in your compute fleet, this is a total of 16 vCPUs, each of which can be thought of as a HPC "node" that can run one process at a time.
+#. If you setup an HSDS local server but the parallel cluster ends up sending too many requests (some nodes but not all will see 503 errors), you can try upping the ``max_task_count`` in the ``~/hsds/admin/config/override.yml`` file.
+#. If your HSDS local server nodes run out of memory (monitor with ``docker stats``), you can try upping the ``dn_ram`` or ``sn_ram`` options in the ``~/hsds/admin/config/override.yml`` file.
 #. The best way to stop your pcluster is using ``pcluster stop pcluster_name`` from the cloud9 IDE (not ssh'd into the pcluster) and then stop the login node in the AWS Console EC2 interface (find the "master" node and stop the instance). This will keep the EBS data intact and not charge you for EC2 costs. When you're done with the pcluster you can call ``pcluster delete pcluster_name`` but this will also delete all of the EBS data.
 
 
@@ -61,7 +64,7 @@ The current recommended approach for setting up an HSDS service for reV is to st
 #. Make sure you have installed Miniconda but have not yet installed reV/rex.
 #. Clone the `HSDS Repository <https://github.com/HDFGroup/hsds>`_. into your home directory in the pcluster login node: ``git clone git@github.com:HDFGroup/hsds.git`` (you may have to set up your ssh keys first).
 #. Install HSDS by running ``python setup.py install`` from the hsds repository folder (running ``python setup.py install`` is currently required as the setup script does some extra magic over a pip installation).
-#. Copy the password file from ``~/hsds/admin/config/passwd.default`` to ``~/hsds/admin/config/passwd.txt`` and (optionally) modify any username/passwords you wish.
+#. Copy the password file: ``cp ~/hsds/admin/config/passwd.default ~/hsds/admin/config/passwd.txt`` and (optionally) modify any username/passwords you wish.
 #. Create an HSDS config file at ``~/.hscfg`` with the following entries:
 
     .. code-block:: bash
@@ -75,7 +78,7 @@ The current recommended approach for setting up an HSDS service for reV is to st
 
 #. Copy the ``start_hsds.sh`` script from this example to your home directory in the pcluster login node.
 #. Replace the following environment variables in ``start_hsds.sh`` with your values: ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``BUCKET_NAME`` (note that you should use AWS keys from an IAM user with admin privileges and not your AWS console root user).
-#. Optional: to test your HSDS local server config, do the following:
+#. Optional, to test your HSDS local server config, do the following:
 
     #. Run the start script: ``sh ~/start_hsds.sh``
     #. Run ``docker ps`` and verify that there are 4 or more HSDS services active (hsds_rangeget_1, hsds_sn_1, hsds_head_1, and an hsds_dn_* node for every available core)
@@ -83,6 +86,7 @@ The current recommended approach for setting up an HSDS service for reV is to st
     #. Try running ``pip install h5pyd`` and then run the the h5pyd test (either the .py in this example or the h5pyd test snippet below).
 
 #. Make sure this key-value pair is set in the ``execution_control`` block of the ``config_gen.json`` file: ``"sh_script": "sh ~/start_hsds.sh"``
+#. Optional, copy the config override file: ``cp ~/hsds/admin/config/config.yml ~/hsds/admin/config/override.yml``, update any config lines in the ``override.yml`` file that you wish to change, and remove all other lines (see notes on ``max_task_count`` and ``dn_ram``).
 #. You should be good to go! The line in the generation config file makes reV run the ``start_hsds.sh`` script before running the reV job. The script will install docker and make sure one HSDS server is running per EC2 instance.
 
 
@@ -191,7 +195,7 @@ Here's a simple h5pyd test to make sure you can retrieve data from the NSRDB/WTK
 Compute Cost Estimates
 ----------------------
 
-Here are some initial compute cost results and estimates for running reV generation (the largest compute module in reV). All estimates are only for EC2 compute costs based on c5.2xlarge instances at the on-demand price of $0.34 per hour. These numbers are *rough* estimates! Do not plan your budget around then. Also, these numbers could be reduced significantly if running in the EC2 spot market (see how to configure pcluster spot pricing `here <https://docs.aws.amazon.com/parallelcluster/latest/ug/compute-resource-section.html#compute-resource-spot-price>`_.
+Here are some initial compute cost results and estimates for running reV generation (the largest compute module in reV). All estimates are only for EC2 compute costs based on c5.2xlarge instances at the on-demand price of $0.34 per hour. These numbers are *rough* estimates! Consider making your own estimates before developing a budget. The EC2 costs could be reduced significantly if running in the EC2 spot market (see how to configure pcluster spot pricing `here <https://docs.aws.amazon.com/parallelcluster/latest/ug/compute-resource-section.html#compute-resource-spot-price>`_. The ``sites_per_worker`` input in the ``config_gen.json`` file will also influence the computational efficiency.
 
 .. list-table:: reV PCluster Compute Costs (Empirical)
     :widths: auto
@@ -208,16 +212,16 @@ Here are some initial compute cost results and estimates for running reV generat
       - 35088
       - 1850
       - 6.49e7
-      - 2.4
-      - $0.82
-      - 1.26e-08
+      - 3.4
+      - $1.15
+      - 1.77e-8
     * - Windpower
       - 17544
       - 6268
       - 1.10e8
-      - 1.6
-      - $0.55
-      - 4.95e-09
+      - 1.2
+      - $0.42
+      - 3.79e-09
 
 .. list-table:: CONUS Compute Costs (Estimated)
     :widths: auto
@@ -229,21 +233,18 @@ Here are some initial compute cost results and estimates for running reV generat
       - Sites
       - Total Datum
       - Total Compute Time (hr)
-      - Cost per Datum
       - Total EC2 Cost
     * - PVWattsv7
       - NSRDB (4km, 30min)
       - 17520
       - ~5e05
       - 8.76e9
-      - 325.1
-      - 1.26e-08
-      - $110.50
+      - 457.12
+      - $155.42
     * - Windpower
       - WTK (2km, 1hr)
       - 8760
       - ~2e6
       - 1.75e10
-      - 254.5
-      - 4.95e-09
-      - $86.53
+      - 195.21
+      - $66.37

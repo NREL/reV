@@ -8,9 +8,9 @@
     "output_directory": "./"
   },
   "execution_control": {
-    "nodes": 4,
+    "nodes": 8,
     "option": "slurm",
-    "sites_per_worker": 10,
+    "sites_per_worker": 100,
     "max_workers": 1,
     "sh_script": "sh ~/start_hsds.sh"
   },
