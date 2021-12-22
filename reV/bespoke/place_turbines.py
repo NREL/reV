@@ -75,7 +75,7 @@ class PlaceTurbines():
         self.safe_polygons that defines where turbines can be placed.
         """
 
-        shapes = rasterio.features.shapes(self.include_mask)
+        shapes = rasterio.features.shapes(np.floor(self.include_mask))
         polygons = [Polygon(shape[0]["coordinates"][0]) for shape in shapes
                     if shape[1] == 1]
         for i, _ in enumerate(polygons):
