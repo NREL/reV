@@ -122,9 +122,11 @@ class BespokeSingleFarm:
             wind_plant.sam_sys_inputs["wind_farm_wake_model"] =\
                 wind_farm_wake_model
 
+            pixel_side_length = np.sqrt(point._excl_area) * 1000.0  # in m
             place_turbines = PlaceTurbines(wind_plant, objective_function,
-                                           cost_function, point.exclusions,
-                                           min_spacing, ga_time)
+                                           cost_function, point.include_mask,
+                                           pixel_side_length, min_spacing,
+                                           ga_time)
             place_turbines.place_turbines()
 
             # TODO need to add:
@@ -133,6 +135,8 @@ class BespokeSingleFarm:
             out = {}
             out["turbine_x_coords"] = place_turbines.turbine_x
             out["turbine_y_coords"] = place_turbines.turbine_y
+            out["packed_x"] = place_turbines.x_locations
+            out["packed_y"] = place_turbines.y_locations
             out["nturbs"] = place_turbines.nturbs
             out["plant_capacity"] = place_turbines.capacity
             out["non_excluded_area"] = place_turbines.area
@@ -144,7 +148,8 @@ class BespokeSingleFarm:
             out["ws_sample_points"] = ws_sample_points
             out["wd_sample_points"] = wd_sample_points
             out["wind_dist"] = sam_sys_inputs["wind_dist"]
-            out["boundary_polys"] = place_turbines.safe_polygons
+            out["full_polygons"] = place_turbines.full_polygons
+            out["packing_polygons"] = place_turbines.packing_polygons
             out["sam_sys_inputs"] = wind_plant.sam_sys_inputs
             out["meta"] = meta
 
