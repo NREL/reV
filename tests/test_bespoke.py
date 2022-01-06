@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import tempfile
+import numpy as np
 
 from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeWindFarms
@@ -28,15 +29,28 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': False}}
 
+def cost_function(x):
+    """dummy cost function"""
+    R = 0.1
+    return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
+
+def objective_function(aep, cost):
+    """dummy objective function"""
+    return cost / aep
+
 
 if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
     gid = 33  # 39% included
+    ga_time = 20.0
     ws_dset = 'windspeed_88m'
     wd_dset = 'winddirection_88m'
 
     with open(SAM, 'r') as f:
         sam_sys_inputs = json.load(f)
+
+    rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
+    min_spacing = 5 * rotor_diameter
 
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -48,5 +62,6 @@ if __name__ == '__main__':
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET, ws_dset, wd_dset,
-                                    sam_sys_inputs,
+                                    sam_sys_inputs, objective_function,
+                                    cost_function, min_spacing, ga_time,
                                     excl_dict=EXCL_DICT, gids=gid)
