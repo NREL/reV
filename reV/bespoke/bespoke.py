@@ -9,6 +9,8 @@ import logging
 import pandas as pd
 import numpy as np
 import os
+import psutil
+from concurrent.futures import as_completed
 
 from reV.bespoke.place_turbines import PlaceTurbines
 from reV.SAM.generation import WindPowerPD
@@ -22,6 +24,7 @@ from reV.utilities import log_versions
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem
 from rex.joint_pd.joint_pd import JointPD
+from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +37,12 @@ class BespokeSingleFarm:
     @classmethod
     def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset, sam_sys_inputs,
             objective_function, cost_function, min_spacing, ga_time,
-            output_request=('capacity', 'annual_energy', 'capacity_factor'),
-            ws_sample_points=(5.0, 25.0, 5.0),
-            wd_sample_points=(0.0, 315.0, 45.0),
+            output_request=('system_capacity', 'cf_mean'),
+            ws_bins=(0.0, 20.0, 5.0),
+            wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None, inclusion_mask=None,
             resolution=64, excl_area=None, exclusion_shape=None, close=True,
-            wind_farm_wake_model=2):
+            ):
         """Run the bespoke optimization for a single wind farm.
 
         Parameters
@@ -65,6 +68,11 @@ class BespokeSingleFarm:
             the wind joint probability distribution. The stop value is
             inclusive, so ws_bins=(0, 20, 5) would result in four bins with bin
             edges (0, 5, 10, 15, 20).
+        wd_bins : tuple
+            3-entry tuple with (start, stop, step) for the winddirection
+            binning of the wind joint probability distribution. The stop value
+            is inclusive, so ws_bins=(0, 360, 90) would result in four bins
+            with bin edges (0, 90, 180, 270, 360).
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
@@ -76,8 +84,9 @@ class BespokeSingleFarm:
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -112,14 +121,16 @@ class BespokeSingleFarm:
                               'elevation': point.elevation},
                              name=point.gid)
 
-            ws_sample_points = JointPD._make_bins(*ws_sample_points)
-            wd_sample_points = JointPD._make_bins(*wd_sample_points)
-            wind_plant = WindPowerPD(ws_sample_points, wd_sample_points,
-                                     wd, ws, meta, sam_sys_inputs,
-                                     output_request=output_request)
+            ws_bins = JointPD._make_bins(*ws_bins)
+            wd_bins = JointPD._make_bins(*wd_bins)
 
-            wind_plant.sam_sys_inputs["wind_farm_wake_model"] =\
-                wind_farm_wake_model
+            out = np.histogram2d(ws, wd, bins=(ws_bins, wd_bins))
+            wind_dist, ws_edges, wd_edges = out
+            wind_dist /= wind_dist.sum()
+
+            wind_plant = WindPowerPD(ws_edges, wd_edges, wind_dist,
+                                     meta, sam_sys_inputs,
+                                     output_request=output_request)
 
             pixel_side_length = np.sqrt(point._excl_area) * 1000.0  # in m
             place_turbines = PlaceTurbines(wind_plant, objective_function,
@@ -144,13 +155,12 @@ class BespokeSingleFarm:
             out["aep"] = place_turbines.aep
             out["objective"] = place_turbines.objective
             out["annual_cost"] = cost_function(place_turbines.capacity)
-            out["ws_sample_points"] = ws_sample_points
-            out["wd_sample_points"] = wd_sample_points
-            out["wind_dist"] = sam_sys_inputs["wind_dist"]
+#            out["ws_sample_points"] = ws_sample_points
+#            out["wd_sample_points"] = wd_sample_points
+#            out["wind_dist"] = sam_sys_inputs["wind_dist"]
             out["full_polygons"] = place_turbines.full_polygons
             out["packing_polygons"] = place_turbines.packing_polygons
             out["sam_sys_inputs"] = wind_plant.sam_sys_inputs
-            out["meta"] = meta
 
             return out
 
@@ -161,6 +171,9 @@ class BespokeWindFarms(AbstractAggregation):
     """
 
     def __init__(self, excl_fpath, res_fpath, tm_dset, hub_height,
+                 sam_sys_inputs, objective_function, cost_function,
+                 min_spacing, ga_time,
+                 output_request=('system_capacity', 'cf_mean'),
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
@@ -224,6 +237,12 @@ class BespokeWindFarms(AbstractAggregation):
         self._hh = int(hub_height)
         self._ws_dset = 'windspeed_{}m'.format(self._hh)
         self._wd_dset = 'winddirection_{}m'.format(self._hh)
+        self._sam_sys_inputs = sam_sys_inputs
+        self._obj_fun = objective_function
+        self._cost_fun = cost_function
+        self._min_spacing = min_spacing
+        self._ga_time = ga_time
+        self._output_request = output_request
         self._check_files()
 
     def _check_files(self):
@@ -233,10 +252,6 @@ class BespokeWindFarms(AbstractAggregation):
             raise FileNotFoundError('Could not find required exclusions file: '
                                     '{}'.format(self._excl_fpath))
 
-        if not os.path.exists(self._res_fpath):
-            raise FileNotFoundError('Could not find required h5 file: '
-                                    '{}'.format(self._res_fpath))
-
         with h5py.File(self._excl_fpath, 'r') as f:
             if self._tm_dset not in f:
                 raise FileInputError('Could not find techmap dataset "{}" '
@@ -244,19 +259,15 @@ class BespokeWindFarms(AbstractAggregation):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
+        # just check that this file exists, cannot check res_fpath if *glob
         with MultiYearWindResource(self._res_fpath) as f:
-            for dset in (self._ws_dset, self._wd_dset):
-                if dset not in f:
-                    raise FileInputError('Could not find provided dataset "{}"'
-                                         ' in h5 file: {}'
-                                         .format(dset, self._res_fpath))
+            assert any(f.dsets)
 
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset, ws_dset, wd_dset,
                    sam_sys_inputs, objective_function, cost_function,
                    min_spacing, ga_time,
-                   output_request=('capacity', 'annual_energy',
-                                   'capacity_factor'),
+                   output_request=('system_capacity', 'cf_mean'),
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, gids=None,
@@ -371,10 +382,138 @@ class BespokeWindFarms(AbstractAggregation):
                     raise RuntimeError(msg) from e
                 else:
                     n_finished += 1
-                    logger.debug('Serial aggregation: '
+                    logger.debug('Serial bespoke: '
                                  '{} out of {} points complete'
                                  .format(n_finished, len(gids)))
                     log_mem(logger)
                     out[gid] = gid_out
+
+        return out
+
+    def run_parallel(self, max_workers=None, sites_per_worker=100):
+        """Run the bespoke optimization for many supply curve points in
+        parallel.
+
+        Parameters
+        ----------
+        max_workers : int | None, optional
+            Number of cores to run summary on. None is all
+            available cpus, by default None
+        sites_per_worker : int
+            Number of sc_points to summarize on each worker, by default 100
+
+        Returns
+        -------
+        out : dict
+            Bespoke outputs keyed by sc point gid
+        """
+
+        chunks = int(np.ceil(len(self.gids) / sites_per_worker))
+        chunks = np.array_split(self.gids, chunks)
+
+        logger.info('Running bespoke optimization for '
+                    'points {} through {} at a resolution of {} '
+                    'on {} cores in {} chunks.'
+                    .format(self.gids[0], self.gids[-1], self._resolution,
+                            max_workers, len(chunks)))
+
+        slice_lookup = None
+        if self._inclusion_mask is not None:
+            with SupplyCurveExtent(self._excl_fpath,
+                                   resolution=self._resolution) as sc:
+                assert sc.exclusions.shape == self._inclusion_mask.shape
+                slice_lookup = sc.get_slice_lookup(self.gids)
+
+        futures = []
+        out = {}
+        n_finished = 0
+        loggers = [__name__, 'reV.supply_curve.point_summary', 'reV']
+        with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
+
+            # iterate through split executions, submitting each to worker
+            for gid_set in chunks:
+                # submit executions and append to futures list
+                chunk_incl_masks = None
+                if self._inclusion_mask is not None:
+                    chunk_incl_masks = {}
+                    for gid in gid_set:
+                        rs, cs = slice_lookup[gid]
+                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
+
+                futures.append(exe.submit(
+                    self.run_serial,
+                    self._excl_fpath,
+                    self._res_fpath,
+                    self._tm_dset,
+                    self._ws_dset,
+                    self._wd_dset,
+                    self._sam_sys_inputs,
+                    self._obj_fun,
+                    self._cost_fun,
+                    self._min_spacing,
+                    self._ga_time,
+                    output_request=self._output_request,
+                    excl_dict=self._excl_dict,
+                    inclusion_mask=chunk_incl_masks,
+                    area_filter_kernel=self._area_filter_kernel,
+                    min_area=self._min_area,
+                    resolution=self._resolution,
+                    excl_area=self._excl_area,
+                    gids=gid_set))
+
+            # gather results
+            for future in as_completed(futures):
+                n_finished += 1
+                out.update(future.result())
+                if n_finished % 10 == 0:
+                    mem = psutil.virtual_memory()
+                    logger.info('Parallel bespoke futures collected: '
+                                '{} out of {}. Memory usage is {:.3f} GB out '
+                                'of {:.3f} GB ({:.2f}% utilized).'
+                                .format(n_finished, len(chunks),
+                                        mem.used / 1e9, mem.total / 1e9,
+                                        100 * mem.used / mem.total))
+
+        return out
+
+    @classmethod
+    def run(cls, excl_fpath, res_fpath, tm_dset, hub_height,
+            sam_sys_inputs, objective_function, cost_function,
+            min_spacing, ga_time,
+            output_request=('system_capacity', 'cf_mean'),
+            excl_dict=None,
+            area_filter_kernel='queen', min_area=None,
+            resolution=64, excl_area=None, gids=None,
+            pre_extract_inclusions=False, max_workers=None,
+            sites_per_worker=100):
+        """Run the bespoke wind farm optimization in serial or parallel."""
+
+        bsp = cls(excl_fpath, res_fpath, tm_dset, hub_height,
+                  sam_sys_inputs, objective_function, cost_function,
+                  min_spacing, ga_time,
+                  output_request=output_request,
+                  excl_dict=excl_dict,
+                  area_filter_kernel=area_filter_kernel, min_area=min_area,
+                  resolution=resolution, excl_area=excl_area, gids=gids,
+                  pre_extract_inclusions=pre_extract_inclusions)
+
+        if max_workers == 1:
+            out = bsp.run_serial(excl_fpath, res_fpath, tm_dset, bsp._ws_dset,
+                                 bsp._wd_dset,
+                                 sam_sys_inputs,
+                                 objective_function,
+                                 cost_function,
+                                 min_spacing,
+                                 ga_time,
+                                 output_request=bsp._output_request,
+                                 excl_dict=bsp._excl_dict,
+                                 area_filter_kernel=bsp._area_filter_kernel,
+                                 min_area=bsp._min_area,
+                                 resolution=bsp._resolution,
+                                 excl_area=bsp._excl_area,
+                                 gids=bsp.gids)
+        else:
+            out = bsp.run_parallel(max_workers=max_workers,
+                                   sites_per_worker=sites_per_worker)
 
         return out

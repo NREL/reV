@@ -937,6 +937,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     .format(self.gids[0], self.gids[-1], self._resolution,
                             max_workers, len(chunks)))
 
+        slice_lookup = None
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
                                    resolution=self._resolution) as sc:
