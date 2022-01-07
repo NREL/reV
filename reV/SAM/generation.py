@@ -471,6 +471,36 @@ class AbstractSamGeneration(RevPySam, ABC):
 class AbstractSamSolar(AbstractSamGeneration, ABC):
     """Base Class for Solar generation from SAM"""
 
+    @staticmethod
+    def agg_albedo(time_index, albedo):
+        """Aggregate a timeseries of albedo data to monthly values w len 12 as
+        required by pysam Pvsamv1
+
+        Tech spec from pysam docs:
+        https://nrel-pysam.readthedocs.io/en/master/modules/Pvsamv1.html
+        #PySAM.Pvsamv1.Pvsamv1.SolarResource.albedo
+
+        Parameters
+        ----------
+        time_index : pd.DatetimeIndex
+            Timeseries solar resource datetimeindex
+        albedo : list
+            Timeseries Albedo data to be aggregated. Should be 0-1 and likely
+            hourly or less.
+
+        Returns
+        -------
+        monthly_albedo : list
+            1D list of monthly albedo values with length 12
+        """
+        monthly_albedo = np.zeros(12).tolist()
+        albedo = np.array(albedo)
+        for month in range(1, 13):
+            m = np.where(time_index.month == month)[0]
+            monthly_albedo[int(month - 1)] = albedo[m].mean()
+
+        return monthly_albedo
+
     def set_resource_data(self, resource, meta):
         """Set NSRDB resource data arrays.
 
@@ -552,7 +582,8 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
         resource['day'] = time_index.day
 
         if 'albedo' in resource:
-            self['albedo'] = resource.pop('albedo')
+            self['albedo'] = self.agg_albedo(
+                time_index, resource.pop('albedo'))
 
         self['solar_resource_data'] = resource
 
