@@ -131,6 +131,16 @@ class BespokeSingleFarm:
 
         self._parse_output_req()
 
+    def __str__(self):
+        s = ('BespokeSingleFarm for reV SC gid {} with resolution {}'
+             .format(self.sc_point.gid, self.sc_point.resolution))
+        return s
+
+    def __repr__(self):
+        s = ('BespokeSingleFarm for reV SC gid {} with resolution {}'
+             .format(self.sc_point.gid, self.sc_point.resolution))
+        return s
+
     def __enter__(self):
         return self
 
@@ -369,7 +379,14 @@ class BespokeSingleFarm:
         """
 
         for year, plant in self.wind_plant_ts.items():
-            plant.run_gen_and_econ()
+            try:
+                plant.run_gen_and_econ()
+            except Exception as e:
+                msg = ('{} failed while trying to run SAM WindPower '
+                       'timeseries analysis for {}'.format(self, year))
+                logger.exception(msg)
+                raise RuntimeError(msg) from e
+
             for k, v in plant.outputs.items():
                 self._outputs[k + '-{}'.format(year)] = v
 
@@ -398,7 +415,15 @@ class BespokeSingleFarm:
             BespokeSingleFarm.outputs property.
         """
 
-        self.plant_optimizer.place_turbines()
+        try:
+            self.plant_optimizer.place_turbines()
+        except Exception as e:
+            msg = ('{} failed while trying to run the '
+                   'turbine placement optimizer'
+                   .format(self))
+            logger.exception(msg)
+            raise RuntimeError(msg) from e
+
         # TODO need to add:
         # total cell area
         # cell capacity density
