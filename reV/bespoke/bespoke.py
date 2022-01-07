@@ -10,10 +10,11 @@ import pandas as pd
 import numpy as np
 import os
 import psutil
+from numbers import Number
 from concurrent.futures import as_completed
 
 from reV.bespoke.place_turbines import PlaceTurbines
-from reV.SAM.generation import WindPowerPD
+from reV.SAM.generation import WindPower, WindPowerPD
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
@@ -21,48 +22,50 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
 
+from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem
-from rex.joint_pd.joint_pd import JointPD
+from rex.utilities.utilities import parse_year
 from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
 
 class BespokeSingleFarm:
-    """Framework for analyzing an optimized wind farm layout specific to the
+    """Framework for analyzing and optimized a wind farm layout specific to the
     local wind resource and exclusions for a single reV supply curve point.
     """
 
-    @classmethod
-    def run(cls, gid, excl, res, tm_dset, ws_dset, wd_dset, sam_sys_inputs,
-            objective_function, cost_function, min_spacing, ga_time,
-            output_request=('system_capacity', 'cf_mean'),
-            ws_bins=(0.0, 20.0, 5.0),
-            wd_bins=(0.0, 360.0, 45.0),
-            excl_dict=None, inclusion_mask=None,
-            resolution=64, excl_area=None, exclusion_shape=None, close=True,
-            ):
-        """Run the bespoke optimization for a single wind farm.
-
+    def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
+                 objective_function, cost_function, min_spacing, ga_time,
+                 output_request=('system_capacity', 'cf_mean'),
+                 ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
+                 excl_dict=None, inclusion_mask=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
+                 close=True):
+        """
         Parameters
         ----------
         gid : int
             gid for supply curve point to analyze.
         excl : str | ExclusionMask
             Filepath to exclusions h5 or ExclusionMask file handler.
-        agg_h5 : str | Resource
-            Filepath to .h5 file to aggregate or Resource handler
+        res : str | Resource
+            Filepath to .h5 wind resource file or pre-initialized Resource
+            handler
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        ws_dset : str
-            Windspeed dataset at a target hub height e.g. windspeed_88m. The
-            software will interpolate available data to the desired hub height.
-        wd_dset : str
-            Winddirection dataset at a target hub height e.g.
-            winddirection_88m. The software will interpolate available data to
-            the desired hub height.
+        sam_sys_inputs : dict
+            SAM windpower compute module system inputs not including the
+            wind resource data.
+
+        # TODO
+        objective_function :
+        cost_function :
+        min_spacing :
+        ga_time :
+
         ws_bins : tuple
             3-entry tuple with (start, stop, step) for the windspeed binning of
             the wind joint probability distribution. The stop value is
@@ -92,6 +95,320 @@ class BespokeSingleFarm:
             will speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
+        """
+
+        self.objective_function = objective_function
+        self.cost_function = cost_function
+        self.min_spacing = min_spacing
+        self.ga_time = ga_time
+
+        self._sam_sys_inputs = sam_sys_inputs
+        self._out_req = output_request
+        self._ws_bins = ws_bins
+        self._wd_bins = wd_bins
+
+        self._res_df = None
+        self._meta = None
+        self._wind_dist = None
+        self._ws_edges = None
+        self._wd_edges = None
+        self._wind_plant_pd = None
+        self._wind_plant_ts = None
+        self._plant_optm = None
+        self._outputs = {}
+
+        self._sc_point = AggSCPoint(gid, excl, res, tm_dset,
+                                    excl_dict=excl_dict,
+                                    inclusion_mask=inclusion_mask,
+                                    resolution=resolution,
+                                    excl_area=excl_area,
+                                    exclusion_shape=exclusion_shape,
+                                    close=close)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.sc_point.close()
+        if type is not None:
+            raise
+
+    @property
+    def include_mask(self):
+        """Get the supply curve point 2D inclusion mask (included is 1,
+        excluded is 0)
+
+        Returns
+        -------
+        np.ndarray
+        """
+        return self.sc_point.include_mask
+
+    @property
+    def pixel_side_length(self):
+        """Get the length of a single exclusion pixel side (meters)
+
+        Returns
+        -------
+        float
+        """
+        return np.sqrt(self.sc_point._excl_area) * 1000.0
+
+    @property
+    def sam_sys_inputs(self):
+        """Get the SAM windpower system inputs. If the wind plant has not yet
+        been optimized, this returns the initial SAM config. If the wind plant
+        has been optimized, this returns the final SAM plant config.
+
+        Returns
+        -------
+        dict
+        """
+        if self._wind_plant_pd is None:
+            return self._sam_sys_inputs
+        else:
+            return self._wind_plant_pd.sam_sys_inputs
+
+    @property
+    def sc_point(self):
+        """Get the reV supply curve point object.
+
+        Returns
+        -------
+        AggSCPoint
+        """
+        return self._sc_point
+
+    @property
+    def meta(self):
+        """Get the basic supply curve point meta data
+
+        Returns
+        -------
+        pd.Series
+        """
+        self._meta = pd.Series({'latitude': self.sc_point.latitude,
+                                'longitude': self.sc_point.longitude,
+                                'timezone': self.sc_point.timezone,
+                                'country': self.sc_point.country,
+                                'state': self.sc_point.state,
+                                'county': self.sc_point.county,
+                                'elevation': self.sc_point.elevation},
+                               name=self.sc_point.gid)
+        return self._meta
+
+    @property
+    def hub_height(self):
+        """Get the integer SAM system config turbine hub height (meters)
+
+        Returns
+        -------
+        int
+        """
+        return int(self.sam_sys_inputs['wind_turbine_hub_ht'])
+
+    @property
+    def res_df(self):
+        """Get the reV compliant wind resource dataframe representing the
+        aggregated and included wind resource in the current reV supply curve
+        point at the turbine hub height. Includes a DatetimeIndex and columns
+        for temperature, pressure, windspeed, and winddirection.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        if self._res_df is None:
+            ti = self.sc_point.h5.time_index
+            wd = self.sc_point.h5['winddirection_{}m'.format(self.hub_height)]
+            ws = self.sc_point.h5['windspeed_{}m'.format(self.hub_height)]
+            temp = self.sc_point.h5['temperature_{}m'.format(self.hub_height)]
+            pres = self.sc_point.h5['pressure_{}m'.format(self.hub_height)]
+
+            wd = self.sc_point.mean_wind_dirs(wd)
+            ws = self.sc_point.exclusion_weighted_mean(ws)
+            temp = self.sc_point.exclusion_weighted_mean(temp)
+            pres = self.sc_point.exclusion_weighted_mean(pres)
+
+            self._res_df = pd.DataFrame({'temperature': temp,
+                                         'pressure': pres,
+                                         'windspeed': ws,
+                                         'winddirection': wd}, index=ti)
+        return self._res_df
+
+    @property
+    def years(self):
+        """Get the sorted list of analysis years.
+
+        Returns
+        -------
+        list
+        """
+        return sorted(list(self.res_df.index.year.unique()))
+
+    @property
+    def wind_dist(self):
+        """Get the wind joint probability distribution and corresonding bin
+        edges
+
+        Returns
+        -------
+        wind_dist : np.ndarray
+            2D array probability distribution of (windspeed, winddirection)
+            normalized so the sum of all values = 1.
+        ws_edges : np.ndarray
+            1D array of windspeed (m/s) values that set the bin edges for the
+            wind probability distribution. Same len as wind_dist.shape[0] + 1
+        wd_edges : np.ndarray
+            1D array of winddirections (deg) values that set the bin edges
+            for the wind probability dist. Same len as wind_dist.shape[1] + 1
+        """
+        if self._wind_dist is None:
+            ws_bins = JointPD._make_bins(*self._ws_bins)
+            wd_bins = JointPD._make_bins(*self._wd_bins)
+
+            hist_out = np.histogram2d(self.res_df['windspeed'],
+                                      self.res_df['winddirection'],
+                                      bins=(ws_bins, wd_bins))
+            self._wind_dist, self._ws_edges, self._wd_edges = hist_out
+            self._wind_dist /= self._wind_dist.sum()
+
+        return self._wind_dist, self._ws_edges, self._wd_edges
+
+    @property
+    def wind_plant_pd(self):
+        """reV WindPowerPD compute object based on wind joint probability
+        distribution
+
+        Returns
+        -------
+        reV.SAM.generation.WindPowerPD
+        """
+
+        if self._wind_plant_pd is None:
+            wind_dist, ws_edges, wd_edges = self.wind_dist
+            self._wind_plant_pd = WindPowerPD(ws_edges, wd_edges, wind_dist,
+                                              self.meta, self.sam_sys_inputs,
+                                              output_request=self._out_req)
+        return self._wind_plant_pd
+
+    @property
+    def wind_plant_ts(self):
+        """reV WindPower compute object based on wind resource timeseries data
+
+        Returns
+        -------
+        reV.SAM.generation.WindPower
+        """
+        if self._wind_plant_ts is None:
+            self._wind_plant_ts = {}
+            for year in self.years:
+                i_wp = WindPower(self.res_df[(self.res_df.index.year == year)],
+                                 self.meta, self.sam_sys_inputs,
+                                 output_request=self._out_req)
+                self._wind_plant_ts[year] = i_wp
+        return self._wind_plant_ts
+
+    @property
+    def plant_optimizer(self):
+        """Bespoke plant turbine placement optimizer object.
+
+        Returns
+        -------
+        PlaceTurbines
+        """
+        if self._plant_optm is None:
+            self._plant_optm = PlaceTurbines(self.wind_plant_pd,
+                                             self.objective_function,
+                                             self.cost_function,
+                                             self.include_mask,
+                                             self.pixel_side_length,
+                                             self.min_spacing,
+                                             self.ga_time)
+        return self._plant_optm
+
+    def run_wind_plant_ts(self):
+        """Run the wind plant multi-year timeseries analysis and export output
+        requests to outputs property.
+
+        Returns
+        -------
+        outputs : dict
+            Output dictionary for the full BespokeSingleFarm object. The
+            multi-year timeseries data is also exported to the
+            BespokeSingleFarm.outputs property.
+        """
+
+        for year, plant in self.wind_plant_ts.items():
+            plant.run_gen_and_econ()
+            for k, v in plant.outputs.items():
+                self._outputs[k + '-{}'.format(year)] = v
+
+        means = {}
+        for k1, v1 in self._outputs.items():
+            if isinstance(v1, Number) and parse_year(k1, option='boolean'):
+                year = parse_year(k1)
+                base_str = k1.replace(str(year), '')
+                all_values = [v2 for k2, v2 in self._outputs.items()
+                              if base_str in k2]
+                means[base_str + 'means'] = np.mean(all_values)
+
+        self._outputs.update(means)
+
+        return self.outputs
+
+    def run_plant_optimization(self):
+        """Run the wind plant layout optimization and export outputs
+        to outputs property.
+
+        Returns
+        -------
+        outputs : dict
+            Output dictionary for the full BespokeSingleFarm object. The
+            layout optimization output data is also exported to the
+            BespokeSingleFarm.outputs property.
+        """
+
+        self.plant_optimizer.place_turbines()
+        # TODO need to add:
+        # total cell area
+        # cell capacity density
+        self._outputs["turbine_x_coords"] = self.plant_optimizer.turbine_x
+        self._outputs["turbine_y_coords"] = self.plant_optimizer.turbine_y
+        self._outputs["packed_x"] = self.plant_optimizer.x_locations
+        self._outputs["packed_y"] = self.plant_optimizer.y_locations
+        self._outputs["n_turbines"] = self.plant_optimizer.nturbs
+        self._outputs["system_capacity"] = self.plant_optimizer.capacity
+        self._outputs["included_area"] = self.plant_optimizer.area
+        self._outputs["bespoke_aep"] = self.plant_optimizer.aep
+        self._outputs["objective"] = self.plant_optimizer.objective
+        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
+        self._outputs["sam_sys_inputs"] = self.sam_sys_inputs
+        self._outputs["packing_polygons"] = \
+            self.plant_optimizer.packing_polygons
+        self._outputs["annual_cost"] = \
+            self.cost_function(self.plant_optimizer.capacity)
+        self._outputs["included_area_capacity_density"] =\
+            self.plant_optimizer.capacity_density
+        return self.outputs
+
+    @property
+    def outputs(self):
+        """Saved outputs for the single wind farm bespoke optimization.
+
+        Returns
+        -------
+        dict
+        """
+        return self._outputs
+
+    @classmethod
+    def run(cls, *args, **kwargs):
+        """Run the bespoke optimization for a single wind farm.
+
+        Parameters
+        ----------
+        See the class initialization parameters.
 
         Returns
         -------
@@ -99,70 +416,12 @@ class BespokeSingleFarm:
             Output dictionary containing turbine locations and other
             information
         """
-        kws = {'excl_dict': excl_dict,
-               'inclusion_mask': inclusion_mask,
-               'resolution': resolution,
-               'excl_area': excl_area,
-               'exclusion_shape': exclusion_shape,
-               'close': close,
-               }
-        with AggSCPoint(gid, excl, res, tm_dset, **kws) as point:
 
-            wd = point.h5[wd_dset]
-            ws = point.h5[ws_dset]
+        with cls(*args, **kwargs) as bsp_plant:
+            out = bsp_plant.run_plant_optimization()
+            out = bsp_plant.run_wind_plant_ts()
 
-            wd = point.mean_wind_dirs(wd)
-            ws = point.exclusion_weighted_mean(ws)
-
-            meta = pd.Series({'timezone': point.timezone,
-                              'country': point.country,
-                              'state': point.state,
-                              'county': point.county,
-                              'elevation': point.elevation},
-                             name=point.gid)
-
-            ws_bins = JointPD._make_bins(*ws_bins)
-            wd_bins = JointPD._make_bins(*wd_bins)
-
-            out = np.histogram2d(ws, wd, bins=(ws_bins, wd_bins))
-            wind_dist, ws_edges, wd_edges = out
-            wind_dist /= wind_dist.sum()
-
-            wind_plant = WindPowerPD(ws_edges, wd_edges, wind_dist,
-                                     meta, sam_sys_inputs,
-                                     output_request=output_request)
-
-            pixel_side_length = np.sqrt(point._excl_area) * 1000.0  # in m
-            place_turbines = PlaceTurbines(wind_plant, objective_function,
-                                           cost_function, point.include_mask,
-                                           pixel_side_length, min_spacing,
-                                           ga_time)
-            place_turbines.place_turbines()
-
-            # TODO need to add:
-            # total cell area
-            # cell capacity density
-            out = {}
-            out["turbine_x_coords"] = place_turbines.turbine_x
-            out["turbine_y_coords"] = place_turbines.turbine_y
-            out["packed_x"] = place_turbines.x_locations
-            out["packed_y"] = place_turbines.y_locations
-            out["nturbs"] = place_turbines.nturbs
-            out["plant_capacity"] = place_turbines.capacity
-            out["non_excluded_area"] = place_turbines.area
-            out["non_excluded_capacity_density"] =\
-                place_turbines.capacity_density
-            out["aep"] = place_turbines.aep
-            out["objective"] = place_turbines.objective
-            out["annual_cost"] = cost_function(place_turbines.capacity)
-#            out["ws_sample_points"] = ws_sample_points
-#            out["wd_sample_points"] = wd_sample_points
-#            out["wind_dist"] = sam_sys_inputs["wind_dist"]
-            out["full_polygons"] = place_turbines.full_polygons
-            out["packing_polygons"] = place_turbines.packing_polygons
-            out["sam_sys_inputs"] = wind_plant.sam_sys_inputs
-
-            return out
+        return out
 
 
 class BespokeWindFarms(AbstractAggregation):
@@ -170,7 +429,7 @@ class BespokeWindFarms(AbstractAggregation):
     local wind resource and exclusions for the full reV supply curve grid.
     """
 
-    def __init__(self, excl_fpath, res_fpath, tm_dset, hub_height,
+    def __init__(self, excl_fpath, res_fpath, tm_dset,
                  sam_sys_inputs, objective_function, cost_function,
                  min_spacing, ga_time,
                  output_request=('system_capacity', 'cf_mean'),
@@ -191,10 +450,6 @@ class BespokeWindFarms(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        hub_height : int
-            Wind turbine hub height to analyze. Windspeed and direction
-            will be taken at this height. The software will interpolate to a
-            desired hub height using the available data.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -234,9 +489,6 @@ class BespokeWindFarms(AbstractAggregation):
                          pre_extract_inclusions=pre_extract_inclusions)
 
         self._res_fpath = res_fpath
-        self._hh = int(hub_height)
-        self._ws_dset = 'windspeed_{}m'.format(self._hh)
-        self._wd_dset = 'winddirection_{}m'.format(self._hh)
         self._sam_sys_inputs = sam_sys_inputs
         self._obj_fun = objective_function
         self._cost_fun = cost_function
@@ -264,7 +516,7 @@ class BespokeWindFarms(AbstractAggregation):
             assert any(f.dsets)
 
     @classmethod
-    def run_serial(cls, excl_fpath, res_fpath, tm_dset, ws_dset, wd_dset,
+    def run_serial(cls, excl_fpath, res_fpath, tm_dset,
                    sam_sys_inputs, objective_function, cost_function,
                    min_spacing, ga_time,
                    output_request=('system_capacity', 'cf_mean'),
@@ -287,13 +539,6 @@ class BespokeWindFarms(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        ws_dset : str
-            Windspeed dataset at a target hub height e.g. windspeed_88m. The
-            software will interpolate available data to the desired hub height.
-        wd_dset : str
-            Winddirection dataset at a target hub height e.g.
-            winddirection_88m. The software will interpolate available data to
-            the desired hub height.
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -358,8 +603,6 @@ class BespokeWindFarms(AbstractAggregation):
                         fh.exclusions,
                         fh.h5,
                         tm_dset,
-                        ws_dset,
-                        wd_dset,
                         sam_sys_inputs,
                         objective_function,
                         cost_function,
@@ -445,8 +688,6 @@ class BespokeWindFarms(AbstractAggregation):
                     self._excl_fpath,
                     self._res_fpath,
                     self._tm_dset,
-                    self._ws_dset,
-                    self._wd_dset,
                     self._sam_sys_inputs,
                     self._obj_fun,
                     self._cost_fun,
@@ -477,7 +718,7 @@ class BespokeWindFarms(AbstractAggregation):
         return out
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, tm_dset, hub_height,
+    def run(cls, excl_fpath, res_fpath, tm_dset,
             sam_sys_inputs, objective_function, cost_function,
             min_spacing, ga_time,
             output_request=('system_capacity', 'cf_mean'),
@@ -488,7 +729,7 @@ class BespokeWindFarms(AbstractAggregation):
             sites_per_worker=100):
         """Run the bespoke wind farm optimization in serial or parallel."""
 
-        bsp = cls(excl_fpath, res_fpath, tm_dset, hub_height,
+        bsp = cls(excl_fpath, res_fpath, tm_dset,
                   sam_sys_inputs, objective_function, cost_function,
                   min_spacing, ga_time,
                   output_request=output_request,
@@ -498,8 +739,7 @@ class BespokeWindFarms(AbstractAggregation):
                   pre_extract_inclusions=pre_extract_inclusions)
 
         if max_workers == 1:
-            out = bsp.run_serial(excl_fpath, res_fpath, tm_dset, bsp._ws_dset,
-                                 bsp._wd_dset,
+            out = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
                                  sam_sys_inputs,
                                  objective_function,
                                  cost_function,
