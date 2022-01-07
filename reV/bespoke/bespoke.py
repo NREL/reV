@@ -9,11 +9,11 @@ import logging
 import pandas as pd
 import numpy as np
 import os
+import sys
 import psutil
 from numbers import Number
 from concurrent.futures import as_completed
 
-from reV.bespoke.place_turbines import PlaceTurbines
 from reV.SAM.generation import WindPower, WindPowerPD
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
@@ -35,6 +35,8 @@ class BespokeSingleFarm:
     """Framework for analyzing and optimized a wind farm layout specific to the
     local wind resource and exclusions for a single reV supply curve point.
     """
+
+    DEPENDENCIES = ('shapely', 'rasterio')
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
                  objective_function, cost_function, min_spacing, ga_time,
@@ -357,6 +359,8 @@ class BespokeSingleFarm:
         PlaceTurbines
         """
         if self._plant_optm is None:
+            # put import here to delay breaking due to special dependencies
+            from reV.bespoke.place_turbines import PlaceTurbines
             self._plant_optm = PlaceTurbines(self.wind_plant_pd,
                                              self.objective_function,
                                              self.cost_function,
@@ -365,6 +369,22 @@ class BespokeSingleFarm:
                                              self.min_spacing,
                                              self.ga_time)
         return self._plant_optm
+
+    @classmethod
+    def check_dependencies(cls):
+        """Check special dependencies for bespoke"""
+
+        missing = []
+        for name in cls.DEPENDENCIES:
+            if name not in sys.modules:
+                missing.append(name)
+
+        if any(missing):
+            msg = ('The reV bespoke module depends on the following special '
+                   'dependencies that were not found in the active '
+                   'environment: {}'.format(missing))
+            logger.error(msg)
+            raise ImportError(msg)
 
     def run_wind_plant_ts(self):
         """Run the wind plant multi-year timeseries analysis and export output
@@ -560,6 +580,8 @@ class BespokeWindFarms(AbstractAggregation):
         logger.info('Initializing BespokeWindFarms...')
         logger.debug('Exclusion filepath: {}'.format(excl_fpath))
         logger.debug('Exclusion dict: {}'.format(excl_dict))
+
+        BespokeSingleFarm.check_dependencies()
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
