@@ -47,6 +47,7 @@ class AbstractSupplyCurvePoint(ABC):
         """
 
         self._gid = gid
+        self._resolution = resolution
         self._rows, self._cols = self._parse_slices(
             gid, resolution, exclusion_shape)
 
@@ -92,6 +93,11 @@ class AbstractSupplyCurvePoint(ABC):
         int
         """
         return self._gid
+
+    @property
+    def resolution(self):
+        """Get the supply curve grid aggregation resolution"""
+        return self._resolution
 
     @property
     def rows(self):
