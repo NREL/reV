@@ -7,12 +7,16 @@ import os
 import shutil
 import tempfile
 import numpy as np
+import pytest
 
 from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeWindFarms
 from reV.supply_curve.tech_mapping import TechMapping
 
 from rex import init_logger
+
+pytest.importorskip("shapely")
+pytest.importorskip("rasterio")
 
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
@@ -73,7 +77,6 @@ if __name__ == '__main__':
                                    max_workers=1, sites_per_worker=2)
         print(out)
         print(list(out.keys()))
-        breakpoint()
 
 #        BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET,
 #                                    sam_sys_inputs, objective_function,
