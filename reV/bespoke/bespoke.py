@@ -66,6 +66,10 @@ class BespokeSingleFarm:
         min_spacing :
         ga_time :
 
+        output_request : list | tuple
+            Outputs requested from the SAM windpower simulation after the
+            bespoke plant layout optimization. Can also request resource means
+            like ws_mean, windspeed_mean, temperature_mean, pressure_mean.
         ws_bins : tuple
             3-entry tuple with (start, stop, step) for the windspeed binning of
             the wind joint probability distribution. The stop value is
@@ -458,6 +462,7 @@ class BespokeWindFarms(AbstractAggregation):
                  sam_sys_inputs, objective_function, cost_function,
                  min_spacing, ga_time,
                  output_request=('system_capacity', 'cf_mean'),
+                 ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
@@ -475,6 +480,30 @@ class BespokeWindFarms(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        sam_sys_inputs : dict
+            SAM windpower compute module system inputs not including the
+            wind resource data.
+
+        # TODO
+        objective_function :
+        cost_function :
+        min_spacing :
+        ga_time :
+
+        output_request : list | tuple
+            Outputs requested from the SAM windpower simulation after the
+            bespoke plant layout optimization. Can also request resource means
+            like ws_mean, windspeed_mean, temperature_mean, pressure_mean.
+        ws_bins : tuple
+            3-entry tuple with (start, stop, step) for the windspeed binning of
+            the wind joint probability distribution. The stop value is
+            inclusive, so ws_bins=(0, 20, 5) would result in four bins with bin
+            edges (0, 5, 10, 15, 20).
+        wd_bins : tuple
+            3-entry tuple with (start, stop, step) for the winddirection
+            binning of the wind joint probability distribution. The stop value
+            is inclusive, so ws_bins=(0, 360, 90) would result in four bins
+            with bin edges (0, 90, 180, 270, 360).
         excl_dict : dict, optional
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             by default None
@@ -520,6 +549,8 @@ class BespokeWindFarms(AbstractAggregation):
         self._min_spacing = min_spacing
         self._ga_time = ga_time
         self._output_request = output_request
+        self._ws_bins = ws_bins
+        self._wd_bins = wd_bins
         self._check_files()
 
     def _check_files(self):
@@ -545,51 +576,14 @@ class BespokeWindFarms(AbstractAggregation):
                    sam_sys_inputs, objective_function, cost_function,
                    min_spacing, ga_time,
                    output_request=('system_capacity', 'cf_mean'),
+                   ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, gids=None,
                    ):
         """
-        Standalone method to aggregate - can be parallelized.
-
-        Parameters
-        ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        res_fpath : str
-            Wind resource h5 filepath in NREL WTK format. Can also include
-            unix-style wildcards like /dir/wind_*.h5 for multiple years of
-            resource data.
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-            by default None
-        inclusion_mask : np.ndarray, optional
-            2D array pre-extracted inclusion mask where 1 is included and 0 is
-            excluded. This must be either match the full exclusion shape or
-            be a list of single-sc-point exclusion masks corresponding to the
-            gids input, by default None
-        area_filter_kernel : str, optional
-            Contiguous area filter method to use on final exclusions mask,
-            by default "queen"
-        min_area : float, optional
-            Minimum required contiguous area filter in sq-km,
-            by default None
-        resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead,
-            by default 0.0081
-        excl_area : float, optional
-            Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath,
-            by default None
-        gids : list, optional
-            List of supply curve point gids to get summary for (can use to
-            subset if running in parallel), or None for all gids in the SC
-            extent, by default None
+        Standalone serial method to run bespoke optimization.
+        See BespokeWindFarms docstring for parameter description.
 
         Returns
         -------
@@ -634,6 +628,8 @@ class BespokeWindFarms(AbstractAggregation):
                         min_spacing,
                         ga_time,
                         output_request=output_request,
+                        ws_bins=ws_bins,
+                        wd_bins=wd_bins,
                         excl_dict=excl_dict,
                         inclusion_mask=gid_inclusions,
                         resolution=resolution,
@@ -719,6 +715,8 @@ class BespokeWindFarms(AbstractAggregation):
                     self._min_spacing,
                     self._ga_time,
                     output_request=self._output_request,
+                    ws_bins=self._ws_bins,
+                    wd_bins=self._wd_bins,
                     excl_dict=self._excl_dict,
                     inclusion_mask=chunk_incl_masks,
                     area_filter_kernel=self._area_filter_kernel,
@@ -747,20 +745,28 @@ class BespokeWindFarms(AbstractAggregation):
             sam_sys_inputs, objective_function, cost_function,
             min_spacing, ga_time,
             output_request=('system_capacity', 'cf_mean'),
+            ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, gids=None,
             pre_extract_inclusions=False, max_workers=None,
             sites_per_worker=100):
-        """Run the bespoke wind farm optimization in serial or parallel."""
+        """Run the bespoke wind farm optimization in serial or parallel.
+        See BespokeWindFarms docstring for parameter description.
+        """
 
         bsp = cls(excl_fpath, res_fpath, tm_dset,
                   sam_sys_inputs, objective_function, cost_function,
                   min_spacing, ga_time,
                   output_request=output_request,
+                  ws_bins=ws_bins,
+                  wd_bins=wd_bins,
                   excl_dict=excl_dict,
-                  area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  resolution=resolution, excl_area=excl_area, gids=gids,
+                  area_filter_kernel=area_filter_kernel,
+                  min_area=min_area,
+                  resolution=resolution,
+                  excl_area=excl_area,
+                  gids=gids,
                   pre_extract_inclusions=pre_extract_inclusions)
 
         if max_workers == 1:
@@ -771,6 +777,8 @@ class BespokeWindFarms(AbstractAggregation):
                                  min_spacing,
                                  ga_time,
                                  output_request=bsp._output_request,
+                                 ws_bins=bsp._ws_bins,
+                                 wd_bins=bsp._wd_bins,
                                  excl_dict=bsp._excl_dict,
                                  area_filter_kernel=bsp._area_filter_kernel,
                                  min_area=bsp._min_area,
