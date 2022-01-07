@@ -547,8 +547,8 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
         time_index = self.ensure_res_len(time_index, time_index)
         resource['minute'] = time_index.minute
         resource['hour'] = time_index.hour
-        resource['year'] = time_index.year
         resource['month'] = time_index.month
+        resource['year'] = time_index.year
         resource['day'] = time_index.day
 
         if 'albedo' in resource:

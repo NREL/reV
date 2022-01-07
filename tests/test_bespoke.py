@@ -44,11 +44,9 @@ def objective_function(aep, cost):
 if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
     gids = np.arange(33, 40)
-    gid = 33  # 39% included
+    gids = [33]  # 39% included
     ga_time = 20.0
-    hub_height = 88
-    ws_dset = 'windspeed_{}m'.format(hub_height)
-    wd_dset = 'winddirection_{}m'.format(hub_height)
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     with open(SAM, 'r') as f:
         sam_sys_inputs = json.load(f)
@@ -67,16 +65,17 @@ if __name__ == '__main__':
         res_fp = res_fp.format('*')
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET, hub_height,
+        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    sam_sys_inputs, objective_function,
                                    cost_function, min_spacing, ga_time,
                                    excl_dict=EXCL_DICT, gids=gids,
-                                   max_workers=2, sites_per_worker=2)
+                                   output_request=output_request,
+                                   max_workers=1, sites_per_worker=2)
         print(out)
         print(list(out.keys()))
+        breakpoint()
 
 #        BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET,
-#                                    ws_dset, wd_dset,
 #                                    sam_sys_inputs, objective_function,
 #                                    cost_function, min_spacing, ga_time,
 #                                    excl_dict=EXCL_DICT, gids=gid)
