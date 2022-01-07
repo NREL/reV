@@ -103,7 +103,7 @@ class BespokeSingleFarm:
         self.ga_time = ga_time
 
         self._sam_sys_inputs = sam_sys_inputs
-        self._out_req = output_request
+        self._out_req = list(output_request)
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
 
@@ -125,6 +125,8 @@ class BespokeSingleFarm:
                                     exclusion_shape=exclusion_shape,
                                     close=close)
 
+        self._parse_output_req()
+
     def __enter__(self):
         return self
 
@@ -132,6 +134,29 @@ class BespokeSingleFarm:
         self.sc_point.close()
         if type is not None:
             raise
+
+    def _parse_output_req(self):
+        """Make sure that the output request has basic important parameters
+        (cf_mean, annual_energy) and process mean wind resource datasets
+        (ws_mean, *_mean) if requested.
+        """
+
+        required = ('cf_mean', 'annual_energy')
+        for req in required:
+            if req not in self._out_req:
+                self._out_req.append(req)
+
+        if 'ws_mean' in self._out_req:
+            self._out_req.remove('ws_mean')
+            self._outputs['ws_mean'] = self.res_df['windspeed'].mean()
+
+        for req in self._out_req:
+            dset = req.replace('_mean', '')
+            available_dsets = ('windspeed', 'winddirection',
+                               'pressure', 'temperature')
+            if dset in available_dsets:
+                self._out_req.remove(req)
+                self._outputs[req] = self.res_df[dset].mean()
 
     @property
     def include_mask(self):
