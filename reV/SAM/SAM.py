@@ -629,6 +629,7 @@ class RevPySam(Sam):
 
         doy = time_index.dayofyear
         n_doy = len(doy.unique())
+
         if n_doy > 365:
             # Drop last day of year
             doy_max = doy.max()
