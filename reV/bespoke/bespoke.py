@@ -454,14 +454,14 @@ class BespokeSingleFarm:
         self._outputs["n_turbines"] = self.plant_optimizer.nturbs
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
         self._outputs["included_area"] = self.plant_optimizer.area
-        self._outputs["bespoke_aep"] = self.plant_optimizer.aep
-        self._outputs["objective"] = self.plant_optimizer.objective
         self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
         self._outputs["sam_sys_inputs"] = self.sam_sys_inputs
+        self._outputs["bespoke_aep"] = self.plant_optimizer.aep
+        self._outputs["bespoke_objective"] = self.plant_optimizer.objective
+        self._outputs["bespoke_annual_cost"] = \
+            self.cost_function(self.plant_optimizer.capacity)
         self._outputs["packing_polygons"] = \
             self.plant_optimizer.packing_polygons
-        self._outputs["annual_cost"] = \
-            self.cost_function(self.plant_optimizer.capacity)
         self._outputs["included_area_capacity_density"] =\
             self.plant_optimizer.capacity_density
         return self.outputs
