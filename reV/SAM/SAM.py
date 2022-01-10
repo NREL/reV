@@ -3,6 +3,7 @@
 
 Wraps the NREL-PySAM library with additional reV features.
 """
+import copy
 import json
 import logging
 import numpy as np
@@ -261,6 +262,7 @@ class Sam:
         self._pysam = self.PYSAM.new()
         self._attr_dict = None
         self._inputs = []
+        self.sam_sys_inputs = {}
         if 'constant' in self.input_list:
             self['constant'] = 0.0
 
@@ -304,6 +306,7 @@ class Sam:
             logger.exception(msg)
             raise SAMInputError(msg)
         else:
+            self.sam_sys_inputs[key] = value
             group = self._get_group(key, outputs=False)
             try:
                 setattr(getattr(self.pysam, group), key, value)
@@ -626,6 +629,7 @@ class RevPySam(Sam):
 
         doy = time_index.dayofyear
         n_doy = len(doy.unique())
+
         if n_doy > 365:
             # Drop last day of year
             doy_max = doy.max()
@@ -758,7 +762,7 @@ class RevPySam(Sam):
 
     def assign_inputs(self):
         """Assign the self.sam_sys_inputs attribute to the PySAM object."""
-        super().assign_inputs(self.sam_sys_inputs)
+        super().assign_inputs(copy.deepcopy(self.sam_sys_inputs))
 
     def execute(self):
         """Call the PySAM execute method. Raise SAMExecutionError if error.

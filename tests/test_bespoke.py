@@ -6,12 +6,17 @@ import json
 import os
 import shutil
 import tempfile
+import numpy as np
+import pytest
 
 from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeWindFarms
 from reV.supply_curve.tech_mapping import TechMapping
 
 from rex import init_logger
+
+pytest.importorskip("shapely")
+pytest.importorskip("rasterio")
 
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
@@ -28,15 +33,70 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': False}}
 
+with open(SAM, 'r') as f:
+    SAM_SYS_INPUTS = json.load(f)
+
+SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
+rotor_diameter = SAM_SYS_INPUTS["wind_turbine_rotor_diameter"]
+MIN_SPACING = 5 * rotor_diameter
+
+
+def cost_function(x):
+    """dummy cost function"""
+    R = 0.1
+    return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
+
+
+def objective_function(aep, cost):
+    """dummy objective function"""
+    return cost / aep
+
+
+def test_single_serial(gid=33, ga_time=5.0):
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
+                                   SAM_SYS_INPUTS, objective_function,
+                                   cost_function, MIN_SPACING, ga_time,
+                                   excl_dict=EXCL_DICT, gids=gid,
+                                   output_request=output_request,
+                                   max_workers=1, sites_per_worker=1)
+
+        assert gid in out
+        assert 'cf_profile-2012' in out[gid]
+        assert 'cf_profile-2013' in out[gid]
+        assert 'cf_mean-2012' in out[gid]
+        assert 'cf_mean-2013' in out[gid]
+        assert 'cf_mean-means' in out[gid]
+        assert 'annual_energy-2012' in out[gid]
+        assert 'annual_energy-2013' in out[gid]
+        assert 'annual_energy-means' in out[gid]
+        assert len(out[gid]['cf_profile-2012']) == 8760
+        assert len(out[gid]['cf_profile-2013']) == 8760
+
 
 if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
-    gid = 33  # 39% included
-    ws_dset = 'windspeed_88m'
-    wd_dset = 'winddirection_88m'
+    gids = np.arange(33, 40)
+    gids = [33]  # 39% included
+    ga_time = 20.0
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     with open(SAM, 'r') as f:
         sam_sys_inputs = json.load(f)
+
+    sam_sys_inputs['wind_farm_wake_model'] = 2
+
+    rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
+    min_spacing = 5 * rotor_diameter
 
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -47,6 +107,16 @@ if __name__ == '__main__':
         res_fp = res_fp.format('*')
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET, ws_dset, wd_dset,
-                                    sam_sys_inputs,
-                                    excl_dict=EXCL_DICT, gids=gid)
+        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
+                                   sam_sys_inputs, objective_function,
+                                   cost_function, min_spacing, ga_time,
+                                   excl_dict=EXCL_DICT, gids=gids,
+                                   output_request=output_request,
+                                   max_workers=1, sites_per_worker=2)
+        print(out)
+        print(list(out.keys()))
+
+#        BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET,
+#                                    sam_sys_inputs, objective_function,
+#                                    cost_function, min_spacing, ga_time,
+#                                    excl_dict=EXCL_DICT, gids=gid)

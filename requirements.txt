@@ -1,6 +1,8 @@
 NREL-NRWAL>=0.0.3
-NREL-PySAM>=2.2.4
+NREL-PySAM>=2.2.4,<3.0
 NREL-rex>=0.2.64
 packaging>=20.3
 plotly>=4.7.1
 plotting>=0.0.6
+rasterio; sys_platform=='darwin' or sys_platform=='linux'
+shapely

@@ -471,6 +471,36 @@ class AbstractSamGeneration(RevPySam, ABC):
 class AbstractSamSolar(AbstractSamGeneration, ABC):
     """Base Class for Solar generation from SAM"""
 
+    @staticmethod
+    def agg_albedo(time_index, albedo):
+        """Aggregate a timeseries of albedo data to monthly values w len 12 as
+        required by pysam Pvsamv1
+
+        Tech spec from pysam docs:
+        https://nrel-pysam.readthedocs.io/en/master/modules/Pvsamv1.html
+        #PySAM.Pvsamv1.Pvsamv1.SolarResource.albedo
+
+        Parameters
+        ----------
+        time_index : pd.DatetimeIndex
+            Timeseries solar resource datetimeindex
+        albedo : list
+            Timeseries Albedo data to be aggregated. Should be 0-1 and likely
+            hourly or less.
+
+        Returns
+        -------
+        monthly_albedo : list
+            1D list of monthly albedo values with length 12
+        """
+        monthly_albedo = np.zeros(12).tolist()
+        albedo = np.array(albedo)
+        for month in range(1, 13):
+            m = np.where(time_index.month == month)[0]
+            monthly_albedo[int(month - 1)] = albedo[m].mean()
+
+        return monthly_albedo
+
     def set_resource_data(self, resource, meta):
         """Set NSRDB resource data arrays.
 
@@ -547,12 +577,13 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
         time_index = self.ensure_res_len(time_index, time_index)
         resource['minute'] = time_index.minute
         resource['hour'] = time_index.hour
-        resource['year'] = time_index.year
         resource['month'] = time_index.month
+        resource['year'] = time_index.year
         resource['day'] = time_index.day
 
         if 'albedo' in resource:
-            self['albedo'] = resource.pop('albedo')
+            self['albedo'] = self.agg_albedo(
+                time_index, resource.pop('albedo'))
 
         self['solar_resource_data'] = resource
 
@@ -1168,20 +1199,20 @@ class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
 
-    def __init__(self, ws_sample_points, wd_sample_points, wind_direction_data,
-                 wind_speed_data, meta, sam_sys_inputs,
+    def __init__(self, ws_edges, wd_edges, wind_dist,
+                 meta, sam_sys_inputs,
                  site_sys_inputs=None, output_request=None):
         """Initialize a SAM generation object for windpower with a
         speed/direction joint probability distribution.
 
         Parameters
         ----------
-        ws_sample_points : np.ndarray
-            1D array of windspeed (m/s) values that set the sample points for
-            the wind probability distribution.
-        wd_sample_points : np.ndarray
-            1D array of winddirections (deg) values that set the sample points
-            for the wind probability distribution.
+        ws_edges : np.ndarray
+            1D array of windspeed (m/s) values that set the bin edges for the
+            wind probability distribution. Same len as wind_dist.shape[0] + 1
+        wd_edges : np.ndarray
+            1D array of winddirections (deg) values that set the bin edges
+            for the wind probability dist. Same len as wind_dist.shape[1] + 1
         wind_dist : np.ndarray
             2D array probability distribution of (windspeed, winddirection).
         meta : pd.DataFrame | pd.Series
@@ -1202,9 +1233,6 @@ class WindPowerPD(WindPower):
         # make sure timezone and elevation are in the meta data
         meta = self.tz_elev_check(sam_sys_inputs, site_sys_inputs, meta)
 
-        wind_dist = get_wind_dist(wind_direction_data, wind_speed_data,
-                                  wd_sample_points, ws_sample_points)
-
         # don't pass resource to base class,
         # set in concrete generation classes instead
         super().__init__(None, meta, sam_sys_inputs,
@@ -1218,26 +1246,40 @@ class WindPowerPD(WindPower):
         else:
             self._site = None
 
-        self.set_resource_data(ws_sample_points, wd_sample_points, wind_dist)
-        self.sam_sys_inputs["wind_dist"] = wind_dist
+        self.set_resource_data(ws_edges, wd_edges, wind_dist)
 
-    def set_resource_data(self, ws_sample_points, wd_sample_points, wind_dist):
-        """Send wind PD to pysam"""
+    def set_resource_data(self, ws_edges, wd_edges, wind_dist):
+        """Send wind PD to pysam
 
-        self.sam_sys_inputs['wind_resource_model_choice'] = 2
+        Parameters
+        ----------
+        ws_edges : np.ndarray
+            1D array of windspeed (m/s) values that set the bin edges for the
+            wind probability distribution. Same len as wind_dist.shape[0] + 1
+        wd_edges : np.ndarray
+            1D array of winddirections (deg) values that set the bin edges
+            for the wind probability dist. Same len as wind_dist.shape[1] + 1
+        wind_dist : np.ndarray
+            2D array probability distribution of (windspeed, winddirection).
+        """
 
-        n_speeds = len(ws_sample_points)
-        n_dirs = len(wd_sample_points)
+        assert len(ws_edges) == wind_dist.shape[0] + 1
+        assert len(wd_edges) == wind_dist.shape[1] + 1
 
-        wind_resource_distribution = []  # speed (m/s), dir (deg), freq
-        for i in range(n_speeds):
-            for j in range(n_dirs):
-                wind_resource_distribution.\
-                    append([ws_sample_points[i], wd_sample_points[j],
-                           wind_dist[i, j]])
+        wind_dist /= wind_dist.sum()
 
-        self.sam_sys_inputs['wind_resource_distribution'] = \
-            wind_resource_distribution
+        # SAM wants the midpoints of the sample bins
+        ws_points = ws_edges[:-1] + np.diff(ws_edges) / 2
+        wd_points = wd_edges[:-1] + np.diff(wd_edges) / 2
+
+        wd_points, ws_points = np.meshgrid(wd_points, ws_points)
+        vstack = (ws_points.flatten(),
+                  wd_points.flatten(),
+                  wind_dist.flatten())
+        wrd = np.vstack(vstack).T.tolist()
+
+        self['wind_resource_model_choice'] = 2
+        self['wind_resource_distribution'] = wrd
 
 
 class MhkWave(AbstractSamGeneration):
@@ -1312,43 +1354,3 @@ class MhkWave(AbstractSamGeneration):
         PySAM.MhkWave
         """
         return DefaultMhkWave.default()
-
-
-def get_wind_dist(wind_direction_data, wind_speed_data,
-                  wd_sample_points, ws_sample_points):
-    """Create frequency data from will direction and speed dist
-    """
-
-    ws_step = ws_sample_points[1] - ws_sample_points[0]
-    ws_edges = ws_sample_points - ws_step / 2.0
-    ws_edges = np.append(ws_edges, np.array(ws_sample_points[-1]
-                         + ws_step / 2.0))
-
-    wd_step = wd_sample_points[1] - wd_sample_points[0]
-    wd_edges = wd_sample_points - wd_step / 2.0
-    wd_edges = np.append(wd_edges, np.array(wd_sample_points[-1]
-                         + wd_step / 2.0))
-    # Get the overhangs
-    negative_overhang = wd_edges[0]
-    positive_overhang = wd_edges[-1] - 360.0
-    # Need potentially to wrap high angle direction to negative
-    # for correct binning
-    if negative_overhang < 0:
-        wind_direction_data = np.where(
-            wind_direction_data >= 360.0 + negative_overhang,
-            wind_direction_data - 360.0,
-            wind_direction_data,
-        )
-    # Check on other side
-    if positive_overhang > 0:
-        wind_direction_data = np.where(wind_direction_data
-                                       <= positive_overhang,
-                                       wind_direction_data
-                                       + 360.0, wind_direction_data)
-
-    out = np.histogram2d(wind_speed_data, wind_direction_data,
-                         bins=(ws_edges, wd_edges))
-    wind_dist, ws_edges, wd_edges = out
-    wind_dist /= wind_dist.sum()
-
-    return wind_dist

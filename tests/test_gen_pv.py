@@ -479,7 +479,7 @@ def test_detailed_pv_baseline():
 
 def test_detailed_pv_bifacial():
     """Test the detailed pv module with bifacial configs"""
-    baseline_cf_mean = np.array([0.1673, 0.1674, 0.1728])
+    baseline_cf_mean = np.array([0.17193589, 0.17201012, 0.17734073])
 
     year = 2012
     rev2_points = slice(0, 3)
