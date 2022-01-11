@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=all
 """
-reV offshore wind module command line interface (CLI).
+reV-NRWAL module command line interface (CLI).
 
-This module uses the NRWAL library to assess offshore losses and LCOE to
-complement the simple SAM windpower module.
+This module runs reV data through the NRWAL compute library. This code was
+first developed to use a custom offshore wind LCOE equation library but has
+since been refactored to analyze any equation library in NRWAL.
 
 Everything in this module operates on the native wind resource resolution.
 """
