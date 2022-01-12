@@ -12,7 +12,7 @@ from reV.pipeline.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
-class OffshoreConfig(AnalysisConfig):
+class RevNrwalConfig(AnalysisConfig):
     """Offshore wind aggregation config."""
 
     NAME = 'nrwal'

@@ -17,7 +17,7 @@ import click
 import logging
 import time
 
-from reV.config.nrwal_config import NrwalConfig
+from reV.config.nrwal_config import RevNrwalConfig
 from reV.pipeline.status import Status
 from reV.nrwal.nrwal import RevNrwal
 from reV.utilities.cli_dtypes import SAMFILES
@@ -50,7 +50,7 @@ def valid_config_keys():
     """
     Echo the valid nrwal config keys
     """
-    click.echo(', '.join(get_class_properties(NrwalConfig)))
+    click.echo(', '.join(get_class_properties(RevNrwalConfig)))
 
 
 @main.command()
@@ -63,7 +63,7 @@ def valid_config_keys():
 def from_config(ctx, config_file, verbose):
     """Run reV-NRWAL analysis from a config file."""
     # Instantiate the config object
-    config = NrwalConfig(config_file)
+    config = RevNrwalConfig(config_file)
     name = ctx.obj['NAME']
 
     # take name from config if not default
