@@ -32,7 +32,7 @@ class RevNrwal:
     # Default columns from the site_data table to join to the output meta data
     DEFAULT_META_COLS = ('config', )
 
-    def __init__(self, gen_fpath, site_data, sam_configs, nrwal_configs,
+    def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw=True, meta_gid_col='gid',
                  site_meta_cols=None,
                  ):
@@ -49,18 +49,18 @@ class RevNrwal:
             "config" column that corresponds to the nrwal_configs input. Only
             sites with a gid in this file's "gid" column will be run through
             NRWAL.
-        sam_configs : dict
+        sam_files : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
             nrwal_configs lookup input.
         nrwal_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
-            sam_configs lookup in project_points
+            sam_files lookup in project_points
         output_request : list | tuple
             List of output dataset names you want written to the gen_fpath
             file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_configs) is available to be exported as an output
+            (site_data or sam_files) is available to be exported as an output
             dataset.
         save_raw : bool
             Flag to save a copy of existing datasets in gen_fpath that are part
@@ -109,7 +109,7 @@ class RevNrwal:
         self._analysis_gids, self._site_data = self._parse_analysis_gids()
 
         pc = Gen.get_pc(self._site_data[['gid', 'config']], points_range=None,
-                        sam_configs=sam_configs, tech='windpower')
+                        sam_configs=sam_files, tech='windpower')
         self._project_points = pc.project_points
 
         self._sam_sys_inputs = self._parse_sam_sys_inputs()
@@ -279,11 +279,11 @@ class RevNrwal:
 
     def _preflight_checks(self):
         """Run some preflight checks on the offshore inputs"""
-        sam_configs = {k: v for k, v in
-                       self._project_points.sam_inputs.items()
-                       if k in self._nrwal_configs}
+        sam_files = {k: v for k, v in
+                     self._project_points.sam_inputs.items()
+                     if k in self._nrwal_configs}
 
-        for cid, sys_in in sam_configs.items():
+        for cid, sys_in in sam_files.items():
             loss1 = sys_in.get('wind_farm_losses_percent', 0)
             loss2 = sys_in.get('turb_generic_loss', 0)
             if loss1 != 0 or loss2 != 0:
@@ -635,7 +635,7 @@ class RevNrwal:
                     .format(self._gen_fpath))
 
     @classmethod
-    def run(cls, gen_fpath, site_data, sam_configs, nrwal_configs,
+    def run(cls, gen_fpath, site_data, sam_files, nrwal_configs,
             output_request, save_raw=True, meta_gid_col='gid',
             site_meta_cols=None):
         """Initialize and run the NRWAL analysis object.
@@ -652,18 +652,18 @@ class RevNrwal:
             "config" column that corresponds to the nrwal_configs input. Only
             sites with a gid in this file's "gid" column will be run through
             NRWAL.
-        sam_configs : dict
+        sam_files : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
             nrwal_configs lookup input.
         nrwal_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
-            sam_configs lookup in project_points
+            sam_files lookup in project_points
         output_request : list | tuple
             List of output dataset names you want written to the gen_fpath
             file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_configs) is available to be exported as an output
+            (site_data or sam_files) is available to be exported as an output
             dataset.
         save_raw : bool
             Flag to save a copy of existing datasets in gen_fpath that are part
@@ -687,7 +687,7 @@ class RevNrwal:
             Instantiated and run RevNrwal analysis object.
         """
 
-        obj = cls(gen_fpath, site_data, sam_configs, nrwal_configs,
+        obj = cls(gen_fpath, site_data, sam_files, nrwal_configs,
                   output_request,
                   save_raw=save_raw,
                   meta_gid_col=meta_gid_col,

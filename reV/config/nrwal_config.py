@@ -16,8 +16,8 @@ class OffshoreConfig(AnalysisConfig):
     """Offshore wind aggregation config."""
 
     NAME = 'nrwal'
-    REQUIREMENTS = ('gen_fpath', 'site_data', 'project_points',
-                    'sam_files', 'nrwal_configs')
+    REQUIREMENTS = ('gen_fpath', 'site_data', 'sam_files', 'nrwal_configs',
+                    'output_request')
 
     def __init__(self, config):
         """
@@ -28,23 +28,35 @@ class OffshoreConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         super().__init__(config)
+        self._gen_fpath = self._parse_gen_fpath()
+
+    def _parse_gen_fpath(self):
+        """Get one or more generation data filepaths
+
+        Returns
+        -------
+        list | str
+        """
+        fpaths = self['gen_fpath']
+        if fpaths == 'PIPELINE':
+            fpaths = Pipeline.parse_previous(
+                self.dirout, 'nrwal', target='fpath',
+                target_module='generation')
+
+        if len(fpaths) == 1:
+            fpaths = fpaths[0]
+
+        return fpaths
 
     @property
     def gen_fpath(self):
-        """
-        Base generation fpath
-        """
-        return self['gen_fpath']
+        """Base generation fpath(s)"""
+        return self._gen_fpath
 
     @property
     def site_data(self):
         """Get the site-specific spatial data filepath"""
         return self['site_data']
-
-    @property
-    def project_points(self):
-        """Get the project points filepath"""
-        return self['project_points']
 
     @property
     def sam_files(self):
@@ -57,38 +69,27 @@ class OffshoreConfig(AnalysisConfig):
         return self['nrwal_configs']
 
     @property
-    def site_meta_cols(self):
-        """Column labels from site_data to pass through to the output meta
-        data."""
-        return self.get('site_meta_cols', None)
-
-    @property
     def output_request(self):
         """Get keys from the nrwal configs to pass through as new datasets in
         the reV output h5"""
-        return self.get('output_request', None)
+        return self['output_request']
 
     @property
-    def run_offshore(self):
-        """Get the flag to run nrwal for offshore sites only based on the
-        'offshore' flag in the meta data"""
-        return bool(self.get('run_offshore', False))
+    def save_raw(self):
+        """Get the flag to save raw datasets in gen_fpath in the case that they
+        are manipulated then requested in output_request. Optional, default is
+        True."""
+        return bool(self.get('save_raw', True))
 
-    def parse_gen_fpaths(self):
+    @property
+    def meta_gid_col(self):
+        """The column in the gen_fpath meta data that corresponds to the "gid"
+        column in the site_data input. Optional, default is "gid".
         """
-        Get a list of generation data filepaths
+        return self.get('meta_gid_col', 'gid')
 
-        Returns
-        -------
-        list
-        """
-        fpaths = self.gen_fpath
-        if fpaths == 'PIPELINE':
-            fpaths = Pipeline.parse_previous(
-                self.dirout, 'nrwal', target='fpath',
-                target_module='generation')
-
-        if isinstance(fpaths, str):
-            fpaths = [fpaths]
-
-        return fpaths
+    @property
+    def site_meta_cols(self):
+        """Column labels from site_data to pass through to the output meta
+        data. Optional, default is None."""
+        return self.get('site_meta_cols', None)
