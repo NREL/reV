@@ -210,18 +210,18 @@ class RevNrwal:
         missing = ~np.isin(meta_gids, self._site_data['gid'])
         if any(missing):
             msg = ('{} sites from the generation meta data input were '
-                   'missing from the "site_data" input: {}'
+                   'missing from the "site_data" input and will not be '
+                   'run through NRWAL: {}'
                    .format(missing.sum(), meta_gids[missing]))
-            logger.warning(msg)
-            warn(msg)
+            logger.info(msg)
 
         missing = ~np.isin(self._site_data['gid'], meta_gids)
         if any(missing):
             missing = self._site_data['gid'].values[missing]
             msg = ('{} sites from the "site_data" input were missing from the '
-                   'generation meta data: {}'.format(len(missing), missing))
-            logger.warning(msg)
-            warn(msg)
+                   'generation meta data and will not be run through NRWAL: {}'
+                   .format(len(missing), missing))
+            logger.info(msg)
 
         analysis_gids = set(meta_gids) & set(self._site_data['gid'])
         analysis_gids = np.array(sorted(list(analysis_gids)))
