@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV offshore wind aggregation config.
+reV-NRWAL config.
 
 @author: gbuster
 """
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class OffshoreConfig(AnalysisConfig):
     """Offshore wind aggregation config."""
 
-    NAME = 'offshore'
-    REQUIREMENTS = ('gen_fpath', 'offshore_fpath', 'project_points',
+    NAME = 'nrwal'
+    REQUIREMENTS = ('gen_fpath', 'site_data', 'project_points',
                     'sam_files', 'nrwal_configs')
 
     def __init__(self, config):
@@ -37,9 +37,9 @@ class OffshoreConfig(AnalysisConfig):
         return self['gen_fpath']
 
     @property
-    def offshore_fpath(self):
-        """Get the offshore data filepath"""
-        return self['offshore_fpath']
+    def site_data(self):
+        """Get the site-specific spatial data filepath"""
+        return self['site_data']
 
     @property
     def project_points(self):
@@ -57,24 +57,22 @@ class OffshoreConfig(AnalysisConfig):
         return self['nrwal_configs']
 
     @property
-    def offshore_meta_cols(self):
-        """Column labels from offshore_fpath to pass through to the output meta
-        data. None (default) will use the offshore class variable
-        DEFAULT_META_COLS, and any additional cols requested here will be added
-        to DEFAULT_META_COLS."""
-        return self.get('offshore_meta_cols', None)
+    def site_meta_cols(self):
+        """Column labels from site_data to pass through to the output meta
+        data."""
+        return self.get('site_meta_cols', None)
 
     @property
-    def offshore_nrwal_keys(self):
-        """Get keys from the offshore nrwal configs to pass through as new
-        datasets in the reV output h5"""
-        return self.get('offshore_nrwal_keys', None)
+    def output_request(self):
+        """Get keys from the nrwal configs to pass through as new datasets in
+        the reV output h5"""
+        return self.get('output_request', None)
 
     @property
-    def run_all(self):
-        """Get the flag to run nrwal offshore lcoe for all sites and ignore the
-        offshore flag in the meta data"""
-        return bool(self.get('run_all', False))
+    def run_offshore(self):
+        """Get the flag to run nrwal for offshore sites only based on the
+        'offshore' flag in the meta data"""
+        return bool(self.get('run_offshore', False))
 
     def parse_gen_fpaths(self):
         """
@@ -87,7 +85,7 @@ class OffshoreConfig(AnalysisConfig):
         fpaths = self.gen_fpath
         if fpaths == 'PIPELINE':
             fpaths = Pipeline.parse_previous(
-                self.dirout, 'offshore', target='fpath',
+                self.dirout, 'nrwal', target='fpath',
                 target_module='generation')
 
         if isinstance(fpaths, str):

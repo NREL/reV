@@ -32,8 +32,8 @@ class RevNrwal:
     # Default columns from the site_data table to join to the output meta data
     DEFAULT_META_COLS = ('config', )
 
-    def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
-                 output_request, save_raw=True, meta_gid_col='res_gid',
+    def __init__(self, gen_fpath, site_data, sam_configs, nrwal_configs,
+                 output_request, save_raw=True, meta_gid_col='gid',
                  site_meta_cols=None,
                  ):
         """
@@ -49,18 +49,18 @@ class RevNrwal:
             "config" column that corresponds to the nrwal_configs input. Only
             sites with a gid in this file's "gid" column will be run through
             NRWAL.
-        sam_files : dict
+        sam_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
             nrwal_configs lookup input.
         nrwal_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the sam_files
-            lookup in project_points
+            (values). The same config_id values will be used from the
+            sam_configs lookup in project_points
         output_request : list | tuple
             List of output dataset names you want written to the gen_fpath
             file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_files) is available to be exported as an output
+            (site_data or sam_configs) is available to be exported as an output
             dataset.
         save_raw : bool
             Flag to save a copy of existing datasets in gen_fpath that are part
@@ -91,7 +91,6 @@ class RevNrwal:
         self._output_request = output_request
         self._meta_out = None
         self._time_index = None
-        self._gen_dsets = None
         self._save_raw = save_raw
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
@@ -110,11 +109,12 @@ class RevNrwal:
         self._analysis_gids, self._site_data = self._parse_analysis_gids()
 
         pc = Gen.get_pc(self._site_data[['gid', 'config']], points_range=None,
-                        sam_files=sam_files, tech='windpower')
+                        sam_configs=sam_configs, tech='windpower')
         self._project_points = pc.project_points
 
         self._sam_sys_inputs = self._parse_sam_sys_inputs()
         self._preflight_checks()
+        self.save_raw_dsets()
         self._nrwal_inputs = self._get_input_data()
         self._out = self._init_outputs()
 
@@ -178,8 +178,9 @@ class RevNrwal:
         with Outputs(self._gen_fpath, mode='r') as out:
             meta = out.meta
 
-        msg = ('Could not find "{}" column in source capacity factor '
-               'meta data!'.format(self._meta_gid_col))
+        msg = ('Could not find "{}" column in source generation h5 file '
+               'meta data! Available cols: {}'
+               .format(self._meta_gid_col, meta.columns.values.tolist()))
         assert self._meta_gid_col in meta, msg
 
         # currently an assumption of sorted gids in the reV gen output
@@ -208,7 +209,6 @@ class RevNrwal:
 
         missing = ~np.isin(meta_gids, self._site_data['gid'])
         if any(missing):
-            missing = meta_gids[missing]
             msg = ('{} sites from the generation meta data input were '
                    'missing from the "site_data" input: {}'
                    .format(missing.sum(), meta_gids[missing]))
@@ -282,13 +282,8 @@ class RevNrwal:
         sam_configs = {k: v for k, v in
                        self._project_points.sam_inputs.items()
                        if k in self._nrwal_configs}
-        for cid, sys_in in sam_configs.items():
-            if 'turbine_capacity' not in sys_in:
-                msg = ('System input key "turbine_capacity" not found in '
-                       'SAM system inputs for "{}". Calculating from turbine '
-                       'power curves.'.format(cid))
-                logger.info(msg)
 
+        for cid, sys_in in sam_configs.items():
             loss1 = sys_in.get('wind_farm_losses_percent', 0)
             loss2 = sys_in.get('turb_generic_loss', 0)
             if loss1 != 0 or loss2 != 0:
@@ -369,7 +364,7 @@ class RevNrwal:
         logger.info('Pulling the following inputs from the SAM system '
                     'configs: {}'.format(sam_sys_vars))
         for var in sam_sys_vars:
-            nrwal_inputs[var] = sam_sys_vars[var].values
+            nrwal_inputs[var] = self._sam_sys_inputs[var].values
 
         gen_vars = [var for var in all_required
                     if var not in self._site_data
@@ -377,12 +372,14 @@ class RevNrwal:
         logger.info('Pulling the following inputs from the generation '
                     'h5 file: {}'.format(gen_vars))
         with Outputs(self._gen_fpath, mode='r') as f:
+            source_gids = self.meta_source[self._meta_gid_col]
+            gen_gids = np.where(source_gids.isin(self.analysis_gids))[0]
             for var in gen_vars:
                 shape = f.shapes[var]
                 if len(shape) == 1:
-                    nrwal_inputs[var] = f[var, self.analysis_gids]
-                if len(shape) == 2:
-                    nrwal_inputs[var] = f[var, :, self.analysis_gids]
+                    nrwal_inputs[var] = f[var, gen_gids]
+                elif len(shape) == 2:
+                    nrwal_inputs[var] = f[var, :, gen_gids]
                 else:
                     msg = ('Data shape for "{}" must be 1 or 2D but '
                            'received: {}'.format(var, shape))
@@ -405,11 +402,10 @@ class RevNrwal:
     @property
     def gen_dsets(self):
         """Get the available datasets from the gen source file"""
-        if self._gen_dsets is None:
-            with Outputs(self._gen_fpath, mode='r') as out:
-                self._gen_dsets = out.dsets
+        with Outputs(self._gen_fpath, mode='r') as out:
+            dsets = out.dsets
 
-        return self._gen_dsets
+        return dsets
 
     @property
     def meta_source(self):
@@ -480,7 +476,7 @@ class RevNrwal:
             self._out[name][output_mask] = value
 
         elif len(value.shape) == 2:
-            if self._out[name].shape == 1:
+            if len(self._out[name].shape) == 1:
                 if not all(np.isnan(self._out[name])):
                     msg = ('Output dataset "{}" was initialized as 1D but was '
                            'later found to be 2D but was not all NaN!'
@@ -615,8 +611,10 @@ class RevNrwal:
                     logger.info('Loading "{}" from source'.format(dset))
                     data = f[dset]
                     dset_attrs = f.attrs[dset]
+                    dset_dtype = f.dtypes[dset]
                 else:
                     dset_attrs = {'scale_factor': 1}
+                    dset_dtype = np.float32
                     if len(arr.shape) == 1:
                         data = np.full(len(self.meta_source), np.nan,
                                        dtype=np.float32)
@@ -631,14 +629,14 @@ class RevNrwal:
                     data[:, self.analysis_mask] = arr
 
                 logger.info('Writing "{}"'.format(dset))
-                f._add_dset(dset, data, np.float32, attrs=dset_attrs)
+                f._add_dset(dset, data, dset_dtype, attrs=dset_attrs)
 
         logger.info('Finished writing NRWAL outputs to: {}'
                     .format(self._gen_fpath))
 
     @classmethod
-    def run(cls, gen_fpath, site_data, sam_files, nrwal_configs,
-            output_request, save_raw=True, meta_gid_col='res_gid',
+    def run(cls, gen_fpath, site_data, sam_configs, nrwal_configs,
+            output_request, save_raw=True, meta_gid_col='gid',
             site_meta_cols=None):
         """Initialize and run the NRWAL analysis object.
 
@@ -654,18 +652,18 @@ class RevNrwal:
             "config" column that corresponds to the nrwal_configs input. Only
             sites with a gid in this file's "gid" column will be run through
             NRWAL.
-        sam_files : dict
+        sam_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
             (values). The same config_id values will be used from the
             nrwal_configs lookup input.
         nrwal_configs : dict
             Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the sam_files
-            lookup in project_points
+            (values). The same config_id values will be used from the
+            sam_configs lookup in project_points
         output_request : list | tuple
             List of output dataset names you want written to the gen_fpath
             file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_files) is available to be exported as an output
+            (site_data or sam_configs) is available to be exported as an output
             dataset.
         save_raw : bool
             Flag to save a copy of existing datasets in gen_fpath that are part
@@ -689,7 +687,7 @@ class RevNrwal:
             Instantiated and run RevNrwal analysis object.
         """
 
-        obj = cls(gen_fpath, site_data, sam_files, nrwal_configs,
+        obj = cls(gen_fpath, site_data, sam_configs, nrwal_configs,
                   output_request,
                   save_raw=save_raw,
                   meta_gid_col=meta_gid_col,
@@ -698,10 +696,7 @@ class RevNrwal:
         if any(obj.analysis_gids):
             obj.run_nrwal()
             obj.check_outputs()
-            obj.save_raw_dsets()
             obj.write_to_gen_fpath()
-        else:
-            obj.save_raw_dsets()
 
         logger.info('NRWAL module complete!')
 

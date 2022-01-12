@@ -31,6 +31,10 @@ interest_during_construction:
 tax_rate:
   0.26
 
+# gross capacity factor
+gcf:
+  cf_mean_raw
+
 # CapEx Equations
 cost_reductions:
   2019::cost_reductions::fixed
@@ -102,8 +106,12 @@ opex:
   (operations + maintenance) * (1 - cost_reductions::opex_2017)
 
 # NCF
+gcf_adjustment:
+  (0.006 * turbine_capacity + 0.9691) * (1 + cost_reductions::gross_aep_2017)
 adjusted_gcf:
-  (gcf * (0.006 * turbine_capacity + 0.9691)) * (1 + cost_reductions::gross_aep_2017)
+  gcf * gcf_adjustment
+adjusted_gcf_profile:
+  (cf_profile_raw * (0.006 * turbine_capacity + 0.9691)) * (1 + cost_reductions::gross_aep_2017)
 wake:
   2015::losses::wake
 elec:
@@ -120,9 +128,11 @@ site_specific:
   1 - (1 - wake) * (1 - elec) * (1 - avail)
 total_losses:
   (1 - (1 - environmental) * (1 - technical) * (1 - site_specific)) * (1 - cost_reductions::total_losses_2017)
-ncf:
+cf_mean:
   adjusted_gcf * (1 - total_losses) * (1 - cost_reductions::ncf_2017)
+cf_profile:
+  adjusted_gcf_profile * (1 - total_losses) * (1 - cost_reductions::ncf_2017)
 
 # LCOE
-lcoe:
-  (capex * fixed_charge_rate + opex) / (ncf * turbine_capacity * num_turbines * 8760)
+lcoe_fcr:
+  (capex * fixed_charge_rate + opex) / (cf_mean * turbine_capacity * num_turbines * 8760)

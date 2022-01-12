@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PyTest file for offshore econ and losses
+PyTest file for NRWAL analysis module
 
 Created on Dec 16 2019
 
@@ -15,28 +15,27 @@ import pytest
 import tempfile
 
 from reV.handlers.outputs import Outputs
-from reV.offshore.offshore import Offshore
+from reV.nrwal.nrwal import RevNrwal
 from reV import TESTDATADIR
 
 
-SOURCE_DIR = os.path.join(TESTDATADIR, 'offshore/')
+SOURCE_DIR = os.path.join(TESTDATADIR, 'nrwal/')
 
 
-def test_offshore():
-    """Test the reV offshore module, calculating offshore wind lcoe and losses
+def test_nrwal():
+    """Test the reV nrwal module, calculating offshore wind lcoe and losses
     from reV generation outputs and using the NRWAL library"""
     with tempfile.TemporaryDirectory() as td:
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
         gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
-        offshore_fpath = os.path.join(td, 'example_offshore_data.csv')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
                        'offshore': offshore_config}
         nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
-        points = os.path.join(td, 'ri_offshore_proj_points.csv')
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd.date_range('20100101', '20110101',
@@ -50,21 +49,26 @@ def test_offshore():
                         chunks=None)
 
         with Outputs(gen_fpath, 'r') as f:
+            original_dsets = [d for d in f.dsets
+                              if d not in ('meta', 'time_index')]
             meta_raw = f.meta
             lcoe_raw = f['lcoe_fcr']
             cf_mean_raw = f['cf_mean']
             cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
-        off = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
-                           nrwal_configs, points,
-                           offshore_meta_cols=['depth'],
-                           offshore_nrwal_keys=['fixed_charge_rate', 'depth'])
+        output_request = ['fixed_charge_rate', 'depth', 'total_losses',
+                          'array', 'export', 'gcf_adjustment',
+                          'lcoe_fcr', 'cf_mean', 'cf_profile']
+
+        obj = RevNrwal.run(gen_fpath, site_data, sam_configs, nrwal_configs,
+                           output_request, site_meta_cols=['depth'])
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
             lcoe_new = f['lcoe_fcr']
             losses = f['total_losses']
+            gcf_adjustment = f['gcf_adjustment']
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
             cf_mean_new = f['cf_mean']
@@ -72,18 +76,24 @@ def test_offshore():
             fcr = f['fixed_charge_rate']
             depth = f['depth']
 
+            for key in [d for d in original_dsets if d in f]:
+                assert key in f
+                assert np.isnan(f[key]).sum() == 0
+
             # check nrwal keys requested as h5 dsets
-            for key in off._offshore_nrwal_keys:
-                assert key in f.dsets
-                assert np.isnan(f[key][mask]).sum() == 0
+            for key in obj._output_request:
+                assert key in f
+                if 'profile' not in key:
+                    assert np.isnan(f[key][mask]).sum() == 0
+                else:
+                    assert np.isnan(f[key][:, mask]).sum() == 0
+
                 if key in ('total_losses', 'array', 'export'):
                     assert np.isnan(f[key][~mask]).all()
 
         # run offshore twice and make sure losses don't get doubled
-        _ = Offshore.run(gen_fpath, offshore_fpath, sam_configs,
-                         nrwal_configs, points,
-                         offshore_meta_cols=['depth'],
-                         offshore_nrwal_keys=['fixed_charge_rate', 'depth'])
+        _ = RevNrwal.run(gen_fpath, site_data, sam_configs, nrwal_configs,
+                         output_request, site_meta_cols=['depth'])
 
         # make sure the second offshore compute gives same results as first
         with Outputs(gen_fpath, 'r') as f:
@@ -108,19 +118,23 @@ def test_offshore():
 
         # make sure all of the requested offshore meta columns got
         # sent to the new meta data
-        for col in off._offshore_meta_cols:
+        for col in obj._site_meta_cols:
             assert col in meta_new
 
         # sanity check lcoe and cf values
         assert (lcoe_new[mask] != lcoe_raw[mask]).all()
         assert (lcoe_new[~mask] == lcoe_raw[~mask]).all()
         assert (cf_mean_new[mask] < cf_mean_raw[mask]).all()
-        assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
-        assert (cf_profile_new[:, mask] <= cf_profile_raw[:, mask]).all()
+
+        cf_net = (gcf_adjustment[mask] * (1 - losses[mask])
+                  * cf_profile_raw[:, mask])
+        assert np.allclose(cf_profile_new[:, mask], cf_net, rtol=0.005,
+                           atol=0.001)
         assert np.allclose(cf_profile_new[:, ~mask], cf_profile_raw[:, ~mask])
-        assert np.allclose(cf_mean_new[mask],
-                           (1 - losses[mask]) * cf_mean_raw[mask],
-                           rtol=0.005)
+
+        cf_net = gcf_adjustment[mask] * (1 - losses[mask]) * cf_mean_raw[mask]
+        assert np.allclose(cf_mean_new[mask], cf_net, rtol=0.005)
+        assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
 
 
 def execute_pytest(capture='all', flags='-rapP'):

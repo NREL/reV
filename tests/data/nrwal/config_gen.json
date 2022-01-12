@@ -24,8 +24,8 @@
   "project_points": "./ri_offshore_proj_points.csv",
   "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
   "sam_files": {
-    "onshore": "./onshore.json",
-    "offshore": "./offshore.json"
+    "offshore": "./offshore.json",
+    "onshore": "./onshore.json"
   },
   "technology": "windpower"
 }
