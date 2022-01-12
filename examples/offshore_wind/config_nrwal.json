@@ -14,20 +14,11 @@
   "nrwal_configs": {
     "offshore": "./semi_8MW_2017.yaml"
   },
-  "offshore_fpath": "./offshore_test_data_inputs.csv",
-  "offshore_meta_cols": [
-    "depth",
-    "dist_p_to_a",
-    "dist_a_to_s",
-    "dist_op_to_s",
-    "dist_p_to_s",
-    "dist_p_to_s_nolimit",
-    "dist_s_to_l",
-    "hs_average",
-    "fixed_downtime",
-    "floating_downtime"
-  ],
-  "offshore_nrwal_keys": [
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr",
+    "total_losses",
     "depth",
     "dist_p_to_a",
     "dist_a_to_s",
@@ -43,9 +34,21 @@
     "variable_operating_cost",
     "fixed_charge_rate"
   ],
-  "project_points": "./project_points_offshore_test.csv",
   "sam_files": {
     "offshore": "./offshore.json",
     "onshore": "./onshore.json"
-  }
+  },
+  "site_data": "./offshore_test_data_inputs.csv",
+  "site_meta_cols": [
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime"
+  ]
 }

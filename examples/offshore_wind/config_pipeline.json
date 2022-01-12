@@ -8,7 +8,7 @@
       "generation": "./config_gen.json"
     },
     {
-      "offshore": "./config_offshore.json"
+      "nrwal": "./config_nrwal.json"
     },
     {
       "collect": "./config_collect.json"
