@@ -983,7 +983,10 @@ class RepProfiles(RepProfilesBase):
                 for n in range(profiles.shape[1]):
                     self._profiles[n][:, i] = profiles[:, n]
 
-                    if len(ggids) == 1:
+                    if ggids is None:
+                        self._meta.at[i, 'rep_gen_gid'] = None
+                        self._meta.at[i, 'rep_res_gid'] = None
+                    elif len(ggids) == 1:
                         self._meta.at[i, 'rep_gen_gid'] = ggids[0]
                         self._meta.at[i, 'rep_res_gid'] = rgids[0]
                     else:
@@ -1053,7 +1056,10 @@ class RepProfiles(RepProfilesBase):
                     for n in range(profiles.shape[1]):
                         self._profiles[n][:, i] = profiles[:, n]
 
-                    if len(ggids) == 1:
+                    if ggids is None:
+                        self._meta.at[i, 'rep_gen_gid'] = None
+                        self._meta.at[i, 'rep_res_gid'] = None
+                    elif len(ggids) == 1:
                         self._meta.at[i, 'rep_gen_gid'] = ggids[0]
                         self._meta.at[i, 'rep_res_gid'] = rgids[0]
                     else:
