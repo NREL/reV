@@ -258,7 +258,7 @@ class RepresentativeMethods:
             Method identifier for calculation of error from the representative
             profile (e.g. "rmse", "mae", "mbe"). If this is None, the
             representative meanoid / medianoid profile will be returned
-            directly
+            directly.
         n_profiles : int
             Number of representative profiles to save to fout.
 
@@ -266,9 +266,10 @@ class RepresentativeMethods:
         -------
         profiles : np.ndarray
             (time, n_profiles) array for the most representative profile(s)
-        i_reps : list
+        i_reps : list | None
             List (length of n_profiles) with column Index in profiles of the
-            representative profile(s).
+            representative profile(s). If err_method is None, this value is
+            also set to None.
         """
         inst = cls(profiles, weights=weights, rep_method=rep_method,
                    err_method=err_method)
