@@ -11,7 +11,7 @@ import time
 
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
-from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
+from reV.rep_profiles.rep_profiles import RepProfiles
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -189,7 +189,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to calculate the aggregate (weighted meanoid) '
               'profile for each supply curve point. This behavior is instead '
               'of finding the single profile per region closest to the '
-              'meanoid.')
+              'meanoid. If you use this flag, you must set "reg_cols" to a '
+              'primary key such as "sc_gid".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -221,9 +222,9 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         fout = os.path.join(out_dir, fn_out)
 
         if aggregate_profiles:
-            AggregatedRepProfiles.run(gen_fpath, rev_summary, cf_dset=cf_dset,
-                                      weight=weight, fout=fout,
-                                      max_workers=max_workers)
+            RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                            err_method=None, weight=weight, fout=fout,
+                            max_workers=max_workers)
         else:
             RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                             rep_method=rep_method, err_method=err_method,
