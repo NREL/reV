@@ -71,7 +71,12 @@ class RevNrwalConfig(AnalysisConfig):
     @property
     def output_request(self):
         """Get keys from the nrwal configs to pass through as new datasets in
-        the reV output h5"""
+        the reV output h5. If you want to manipulate a dset like cf_mean from
+        gen_fpath and include it in the output_request, you should set
+        save_raw=True and then in the NRWAL equations use cf_mean_raw as the
+        input and then define cf_mean as the manipulated data that will be
+        included in the output_request.
+        """
         return self['output_request']
 
     @property

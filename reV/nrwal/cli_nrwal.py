@@ -163,7 +163,11 @@ def from_config(ctx, config_file, verbose):
               help='List of output dataset names you want written to the '
               'gen_fpath file. Any key from the NRWAL configs or any of the '
               'inputs (site_data or sam_files) is available to be exported as '
-              'an output dataset.')
+              'an output dataset. If you want to manipulate a dset like '
+              'cf_mean from gen_fpath and include it in the output_request, '
+              'you should set save_raw=True and then in the NRWAL equations '
+              'use cf_mean_raw as the input and then define cf_mean as the '
+              'manipulated data that will be included in the output_request.')
 @click.option('--save_raw', '-sr', default=True, type=bool,
               help='Flag to save a copy of existing datasets in gen_fpath '
               'that are part of the output_request. For example, if you '
