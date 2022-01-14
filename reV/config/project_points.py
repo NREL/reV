@@ -271,7 +271,7 @@ class ProjectPoints:
         site_bool = (self.df['gid'] == site)
         try:
             config_id = self.df.loc[site_bool, 'config'].values[0]
-        except KeyError as ex:
+        except (KeyError, IndexError) as ex:
             msg = ('Site {} not found in this instance of '
                    'ProjectPoints. Available sites include: {}'
                    .format(site, self.sites))
