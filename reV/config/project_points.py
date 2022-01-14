@@ -423,11 +423,7 @@ class ProjectPoints:
             solarwaterheat, troughphysicalheat, lineardirectsteam)
             The string should be lower-cased with spaces and _ removed.
         """
-        tech = self._tech
-        if 'wind' in tech.lower():
-            tech = 'windpower'
-
-        return self._tech
+        return 'windpower' if 'wind' in self._tech.lower() else self._tech
 
     @property
     def h(self):
