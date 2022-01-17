@@ -1,0 +1,54 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 1
+  },
+  "gen_fpath": "PIPELINE",
+  "log_level": "DEBUG",
+  "nrwal_configs": {
+    "offshore": "./semi_8MW_2017.yaml"
+  },
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr",
+    "total_losses",
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime",
+    "capital_cost",
+    "fixed_operating_cost",
+    "variable_operating_cost",
+    "fixed_charge_rate"
+  ],
+  "sam_files": {
+    "offshore": "./offshore.json",
+    "onshore": "./onshore.json"
+  },
+  "site_data": "./offshore_test_data_inputs.csv",
+  "site_meta_cols": [
+    "depth",
+    "dist_p_to_a",
+    "dist_a_to_s",
+    "dist_op_to_s",
+    "dist_p_to_s",
+    "dist_p_to_s_nolimit",
+    "dist_s_to_l",
+    "hs_average",
+    "fixed_downtime",
+    "floating_downtime"
+  ]
+}
