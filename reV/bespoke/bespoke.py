@@ -14,6 +14,7 @@ import psutil
 from numbers import Number
 from concurrent.futures import as_completed
 
+from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
@@ -504,13 +505,14 @@ class BespokeWindFarms(AbstractAggregation):
     """
 
     def __init__(self, excl_fpath, res_fpath, tm_dset,
-                 sam_sys_inputs, objective_function, cost_function,
+                 objective_function, cost_function,
                  min_spacing, ga_time,
+                 points, sam_configs, points_range=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None, gids=None,
+                 resolution=64, excl_area=None,
                  pre_extract_inclusions=False):
         """
         Parameters
@@ -525,9 +527,22 @@ class BespokeWindFarms(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        sam_sys_inputs : dict
-            SAM windpower compute module system inputs not including the
-            wind resource data.
+        points : int | slice | list | str | PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object. Can
+            also be a single site integer values. Points csv should have 'gid'
+            and 'config' column, the config maps to the sam_configs dict keys.
+        sam_configs : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
+            pre loaded SAMConfig object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. The list is the (Beginning, end) (inclusive/exclusive,
+            respectively) index split parameters for ProjectPoints.split()
+            method.
 
         # TODO
         objective_function :
@@ -583,14 +598,17 @@ class BespokeWindFarms(AbstractAggregation):
 
         BespokeSingleFarm.check_dependencies()
 
+        pc = Gen.get_pc(points, points_range, sam_configs,
+                        tech='windpower', sites_per_worker=1)
+        self._project_points = pc.project_points
+
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area, resolution=resolution,
-                         excl_area=excl_area, gids=gids,
+                         excl_area=excl_area, gids=self._project_points.gids,
                          pre_extract_inclusions=pre_extract_inclusions)
 
         self._res_fpath = res_fpath
-        self._sam_sys_inputs = sam_sys_inputs
         self._obj_fun = objective_function
         self._cost_fun = cost_function
         self._min_spacing = min_spacing
@@ -701,7 +719,7 @@ class BespokeWindFarms(AbstractAggregation):
 
         return out
 
-    def run_parallel(self, max_workers=None, sites_per_worker=100):
+    def run_parallel(self, max_workers=None):
         """Run the bespoke optimization for many supply curve points in
         parallel.
 
@@ -710,8 +728,6 @@ class BespokeWindFarms(AbstractAggregation):
         max_workers : int | None, optional
             Number of cores to run summary on. None is all
             available cpus, by default None
-        sites_per_worker : int
-            Number of sc_points to summarize on each worker, by default 100
 
         Returns
         -------
@@ -719,14 +735,10 @@ class BespokeWindFarms(AbstractAggregation):
             Bespoke outputs keyed by sc point gid
         """
 
-        chunks = int(np.ceil(len(self.gids) / sites_per_worker))
-        chunks = np.array_split(self.gids, chunks)
-
-        logger.info('Running bespoke optimization for '
-                    'points {} through {} at a resolution of {} '
-                    'on {} cores in {} chunks.'
+        logger.info('Running bespoke optimization for points {} through {} '
+                    'at a resolution of {} on {} cores.'
                     .format(self.gids[0], self.gids[-1], self._resolution,
-                            max_workers, len(chunks)))
+                            max_workers))
 
         slice_lookup = None
         if self._inclusion_mask is not None:
@@ -742,21 +754,19 @@ class BespokeWindFarms(AbstractAggregation):
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
-            for gid_set in chunks:
+            for gid in self.gids:
                 # submit executions and append to futures list
-                chunk_incl_masks = None
+                gid_incl_mask = None
                 if self._inclusion_mask is not None:
-                    chunk_incl_masks = {}
-                    for gid in gid_set:
-                        rs, cs = slice_lookup[gid]
-                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
+                    rs, cs = slice_lookup[gid]
+                    gid_incl_mask = self._inclusion_mask[rs, cs]
 
                 futures.append(exe.submit(
                     self.run_serial,
                     self._excl_fpath,
                     self._res_fpath,
                     self._tm_dset,
-                    self._sam_sys_inputs,
+                    self._project_points[gid][1],
                     self._obj_fun,
                     self._cost_fun,
                     self._min_spacing,
@@ -765,12 +775,12 @@ class BespokeWindFarms(AbstractAggregation):
                     ws_bins=self._ws_bins,
                     wd_bins=self._wd_bins,
                     excl_dict=self._excl_dict,
-                    inclusion_mask=chunk_incl_masks,
+                    inclusion_mask=gid_incl_mask,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
                     resolution=self._resolution,
                     excl_area=self._excl_area,
-                    gids=gid_set))
+                    gids=gid))
 
             # gather results
             for future in as_completed(futures):
@@ -781,7 +791,7 @@ class BespokeWindFarms(AbstractAggregation):
                     logger.info('Parallel bespoke futures collected: '
                                 '{} out of {}. Memory usage is {:.3f} GB out '
                                 'of {:.3f} GB ({:.2f}% utilized).'
-                                .format(n_finished, len(chunks),
+                                .format(n_finished, len(futures),
                                         mem.used / 1e9, mem.total / 1e9,
                                         100 * mem.used / mem.total))
 
@@ -789,13 +799,14 @@ class BespokeWindFarms(AbstractAggregation):
 
     @classmethod
     def run(cls, excl_fpath, res_fpath, tm_dset,
-            sam_sys_inputs, objective_function, cost_function,
+            objective_function, cost_function,
             min_spacing, ga_time,
+            points, sam_configs, points_range=None,
             output_request=('system_capacity', 'cf_mean'),
             ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None,
             area_filter_kernel='queen', min_area=None,
-            resolution=64, excl_area=None, gids=None,
+            resolution=64, excl_area=None,
             pre_extract_inclusions=False, max_workers=None,
             sites_per_worker=100):
         """Run the bespoke wind farm optimization in serial or parallel.
@@ -803,8 +814,10 @@ class BespokeWindFarms(AbstractAggregation):
         """
 
         bsp = cls(excl_fpath, res_fpath, tm_dset,
-                  sam_sys_inputs, objective_function, cost_function,
+                  objective_function, cost_function,
                   min_spacing, ga_time,
+                  points, sam_configs,
+                  points_range=points_range,
                   output_request=output_request,
                   ws_bins=ws_bins,
                   wd_bins=wd_bins,
@@ -813,25 +826,27 @@ class BespokeWindFarms(AbstractAggregation):
                   min_area=min_area,
                   resolution=resolution,
                   excl_area=excl_area,
-                  gids=gids,
                   pre_extract_inclusions=pre_extract_inclusions)
 
         if max_workers == 1:
-            out = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
-                                 sam_sys_inputs,
-                                 objective_function,
-                                 cost_function,
-                                 min_spacing,
-                                 ga_time,
-                                 output_request=bsp._output_request,
-                                 ws_bins=bsp._ws_bins,
-                                 wd_bins=bsp._wd_bins,
-                                 excl_dict=bsp._excl_dict,
-                                 area_filter_kernel=bsp._area_filter_kernel,
-                                 min_area=bsp._min_area,
-                                 resolution=bsp._resolution,
-                                 excl_area=bsp._excl_area,
-                                 gids=bsp.gids)
+            out = {}
+            for gid in bsp.gids:
+                si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
+                                    bsp._project_points[gid][1],
+                                    objective_function,
+                                    cost_function,
+                                    min_spacing,
+                                    ga_time,
+                                    output_request=bsp._output_request,
+                                    ws_bins=bsp._ws_bins,
+                                    wd_bins=bsp._wd_bins,
+                                    excl_dict=bsp._excl_dict,
+                                    area_filter_kernel=bsp._area_filter_kernel,
+                                    min_area=bsp._min_area,
+                                    resolution=bsp._resolution,
+                                    excl_area=bsp._excl_area,
+                                    gids=gid)
+                out.update(si)
         else:
             out = bsp.run_parallel(max_workers=max_workers,
                                    sites_per_worker=sites_per_worker)
