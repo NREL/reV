@@ -37,6 +37,7 @@ with open(SAM, 'r') as f:
     SAM_SYS_INPUTS = json.load(f)
 
 SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
+SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 rotor_diameter = SAM_SYS_INPUTS["wind_turbine_rotor_diameter"]
 MIN_SPACING = 5 * rotor_diameter
 
@@ -61,12 +62,14 @@ def test_single_serial(gid=33, ga_time=5.0):
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
+        points = [gid]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
-                                   SAM_SYS_INPUTS, objective_function,
-                                   cost_function, MIN_SPACING, ga_time,
-                                   excl_dict=EXCL_DICT, gids=gid,
+                                   objective_function, cost_function,
+                                   MIN_SPACING, ga_time,
+                                   points, SAM_CONFIGS,
+                                   excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1, sites_per_worker=1)
 
@@ -85,8 +88,8 @@ def test_single_serial(gid=33, ga_time=5.0):
 
 if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
-    gids = np.arange(33, 40)
-    gids = [33]  # 39% included
+    points = np.arange(33, 40)
+    points = [33]  # 39% included
     ga_time = 20.0
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
@@ -94,6 +97,7 @@ if __name__ == '__main__':
         sam_sys_inputs = json.load(f)
 
     sam_sys_inputs['wind_farm_wake_model'] = 2
+    sam_configs = {'default': sam_sys_inputs}
 
     rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
     min_spacing = 5 * rotor_diameter
@@ -108,9 +112,10 @@ if __name__ == '__main__':
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
-                                   sam_sys_inputs, objective_function,
-                                   cost_function, min_spacing, ga_time,
-                                   excl_dict=EXCL_DICT, gids=gids,
+                                   objective_function, cost_function,
+                                   min_spacing, ga_time,
+                                   points, sam_configs,
+                                   excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1, sites_per_worker=2)
         print(out)

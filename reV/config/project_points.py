@@ -4,7 +4,6 @@ reV Project Points Configuration
 """
 import copy
 import logging
-from math import ceil
 import numpy as np
 import os
 import pandas as pd
@@ -100,7 +99,7 @@ class PointsControl:
 
     def __len__(self):
         """Len is the number of possible iterations aka splits."""
-        return ceil(len(self.project_points) / self.sites_per_split)
+        return np.ceil(len(self.project_points) / self.sites_per_split)
 
     @property
     def N(self):
@@ -170,7 +169,7 @@ class PointsControl:
         ----------
         i0/i1 : int
             Beginning/end (inclusive/exclusive, respectively) index split
-            parameters for ProjectPoints.split.
+            parameters for ProjectPoints.split() method.
         project_points : reV.config.ProjectPoints
             Project points instance that will be split.
         sites_per_split : int
