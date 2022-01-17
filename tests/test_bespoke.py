@@ -38,8 +38,6 @@ with open(SAM, 'r') as f:
 
 SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
-rotor_diameter = SAM_SYS_INPUTS["wind_turbine_rotor_diameter"]
-MIN_SPACING = 5 * rotor_diameter
 
 
 def cost_function(x):
@@ -53,7 +51,7 @@ def objective_function(aep, cost):
     return cost / aep
 
 
-def test_single_serial(gid=33, ga_time=5.0):
+def test_single_serial(gid=33):
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -67,8 +65,8 @@ def test_single_serial(gid=33, ga_time=5.0):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    objective_function, cost_function,
-                                   MIN_SPACING, ga_time,
                                    points, SAM_CONFIGS,
+                                   ga_time=5,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1, sites_per_worker=1)
@@ -90,7 +88,6 @@ if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
     points = np.arange(33, 40)
     points = [33]  # 39% included
-    ga_time = 20.0
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     with open(SAM, 'r') as f:
@@ -100,7 +97,6 @@ if __name__ == '__main__':
     sam_configs = {'default': sam_sys_inputs}
 
     rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
-    min_spacing = 5 * rotor_diameter
 
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -113,15 +109,10 @@ if __name__ == '__main__':
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    objective_function, cost_function,
-                                   min_spacing, ga_time,
                                    points, sam_configs,
+                                   min_spacing='5x', ga_time=20,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1, sites_per_worker=2)
         print(out)
         print(list(out.keys()))
-
-#        BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET,
-#                                    sam_sys_inputs, objective_function,
-#                                    cost_function, min_spacing, ga_time,
-#                                    excl_dict=EXCL_DICT, gids=gid)
