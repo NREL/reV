@@ -497,7 +497,9 @@ class Gen(BaseGen):
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
-            property.
+            property. The list is the (Beginning, end) (inclusive/exclusive,
+            respectively) index split parameters for ProjectPoints.split()
+            method.
         out_fpath : str, optional
             Output .h5 file path, by default None
         mem_util_lim : float
