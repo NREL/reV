@@ -142,7 +142,8 @@ def from_config(ctx, config_file, verbose):
 
 @main.group(invoke_without_command=True)
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
-              help='reV wind generation/econ output file.')
+              help='reV wind generation/econ output file. Anything in the '
+              'output_request is added and/or manipulated in this file.')
 @click.option('--site_data', '-sd', type=STR, required=True,
               help='Site-specific input data for NRWAL calculation. String '
               'should be a filepath that points to a csv. Rows match sites, '
@@ -296,7 +297,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(gen_fpath, site_data, sam_files, nrwal_configs,
+    cmd = get_node_cmd(name, gen_fpath, site_data, sam_files, nrwal_configs,
                        output_request, save_raw, meta_gid_col, site_meta_cols,
                        log_dir, verbose)
     if sh_script:

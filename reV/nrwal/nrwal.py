@@ -41,6 +41,8 @@ class RevNrwal:
         ----------
         gen_fpath : str
             Full filepath to reV generation or rep_profiles h5 output file.
+            Anything in the output_request is added and/or manipulated in this
+            file.
         site_data : str | pd.DataFrame
             Site-specific input data for NRWAL calculation. String should be a
             filepath that points to a csv, DataFrame is pre-extracted data.
@@ -274,11 +276,32 @@ class RevNrwal:
             Dictionary of output data
         """
         out = {}
+
         for key in self._output_request:
             out[key] = np.full(len(self.analysis_gids), np.nan,
                                dtype=np.float32)
+
+            if key in self.gen_dsets and not self._save_raw:
+                msg = ('Output request "{0}" was also found in '
+                       'the source gen file but save_raw=False! If '
+                       'you are manipulating this '
+                       'dset, make sure you set save_raw=False '
+                       'and reference "{0}_raw" as the '
+                       'input in the NRWAL equations and then define "{0}" '
+                       'as the final manipulated dataset.'.format(key))
+                logger.warning(msg)
+                warn(msg)
+            elif key in self.gen_dsets:
+                msg = ('Output request "{0}" was also found in '
+                       'the source gen file. If you are manipulating this '
+                       'dset, make sure you reference "{0}_raw" as the '
+                       'input in the NRWAL equations and then define "{0}" '
+                       'as the final manipulated dataset.'.format(key))
+                logger.info(msg)
+
             if key in self._nrwal_inputs:
                 out[key] = self._nrwal_inputs[key]
+
         return out
 
     def _preflight_checks(self):
@@ -337,15 +360,14 @@ class RevNrwal:
         assert len(self._site_data) == len(self.analysis_gids)
         assert len(self._sam_sys_inputs) == len(self.analysis_gids)
 
-        nrwal_inputs = {var: self._site_data[var].values
-                        for var in self._site_data.columns}
-
         all_required = []
         for config_id, nrwal_config in self._nrwal_configs.items():
             all_required += list(nrwal_config.required_inputs)
+            all_required = list(set(all_required))
 
             missing_vars = [var for var in nrwal_config.required_inputs
                             if var not in self._site_data
+                            and var not in self.meta_source
                             and var not in self._sam_sys_inputs
                             and var not in self.gen_dsets]
 
@@ -357,22 +379,33 @@ class RevNrwal:
                 logger.error(msg)
                 raise OffshoreWindInputError(msg)
 
+        meta_data_vars = [var for var in all_required
+                          if var in self.meta_source]
+        logger.info('Pulling the following inputs from the gen meta data: {}'
+                    .format(meta_data_vars))
+        nrwal_inputs = {var: self.meta_source[var].values[self.analysis_mask]
+                        for var in meta_data_vars}
+
         site_data_vars = [var for var in all_required
-                          if var in self._site_data]
+                          if var in self._site_data
+                          and var not in nrwal_inputs]
+        site_data_vars.append('config')
         logger.info('Pulling the following inputs from the site_data input: {}'
                     .format(site_data_vars))
+        for var in site_data_vars:
+            nrwal_inputs[var] = self._site_data[var].values
 
         sam_sys_vars = [var for var in all_required
-                        if var not in self._site_data
-                        and var not in self.gen_dsets]
+                        if var in self._sam_sys_inputs
+                        and var not in nrwal_inputs]
         logger.info('Pulling the following inputs from the SAM system '
                     'configs: {}'.format(sam_sys_vars))
         for var in sam_sys_vars:
             nrwal_inputs[var] = self._sam_sys_inputs[var].values
 
         gen_vars = [var for var in all_required
-                    if var not in self._site_data
-                    and var in self.gen_dsets]
+                    if var in self.gen_dsets
+                    and var not in nrwal_inputs]
         logger.info('Pulling the following inputs from the generation '
                     'h5 file: {}'.format(gen_vars))
         with Outputs(self._gen_fpath, mode='r') as f:
@@ -477,7 +510,7 @@ class RevNrwal:
         """
         value = nrwal_out[name]
         if len(value.shape) == 1:
-            self._out[name][output_mask] = value
+            self._out[name][output_mask] = value[output_mask]
 
         elif len(value.shape) == 2:
             if len(self._out[name].shape) == 1:
@@ -493,7 +526,7 @@ class RevNrwal:
                 out_shape = (len(self.time_index), len(self.analysis_gids))
                 self._out[name] = np.full(out_shape, np.nan, dtype=np.float32)
 
-            self._out[name][:, output_mask] = value
+            self._out[name][:, output_mask] = value[:, output_mask]
 
         else:
             msg = ('Could not make sense of NRWAL output "{}" '
@@ -549,6 +582,7 @@ class RevNrwal:
                         .format(i + 1, len(self._nrwal_configs), cid,
                                 output_mask.sum(), len(output_mask)))
 
+#            breakpoint()
             nrwal_out = nrwal_config.eval(inputs=self._nrwal_inputs)
 
             # pylint: disable=C0201
@@ -604,6 +638,7 @@ class RevNrwal:
         """Save NRWAL outputs to input generation fpath file."""
 
         logger.info('Writing NRWAL outputs to: {}'.format(self._gen_fpath))
+        write_all = self.analysis_mask.all()
 
         with Outputs(self._gen_fpath, 'a') as f:
             meta_attrs = f.attrs['meta']
@@ -611,28 +646,33 @@ class RevNrwal:
             f._set_meta('meta', self.meta_out, attrs=meta_attrs)
 
             for dset, arr in self._out.items():
+                if len(arr.shape) == 1:
+                    data = np.full(len(self.meta_source), np.nan,
+                                   dtype=np.float32)
+                else:
+                    full_shape = (len(self.time_index),
+                                  len(self.meta_source))
+                    data = np.full(full_shape, np.nan, dtype=np.float32)
+
+                dset_attrs = {'scale_factor': 1}
+                dset_dtype = np.float32
                 if dset in f.dsets:
-                    logger.info('Loading "{}" from source'.format(dset))
-                    data = f[dset]
+                    logger.info('Found "{}" in file, loading data and '
+                                'overwriting data for {} out of {} sites.'
+                                .format(dset, self.analysis_mask.sum(),
+                                        len(self.analysis_mask)))
                     dset_attrs = f.attrs[dset]
                     dset_dtype = f.dtypes[dset]
-                else:
-                    dset_attrs = {'scale_factor': 1}
-                    dset_dtype = np.float32
-                    if len(arr.shape) == 1:
-                        data = np.full(len(self.meta_source), np.nan,
-                                       dtype=np.float32)
-                    else:
-                        full_shape = (len(self.time_index),
-                                      len(self.meta_source))
-                        data = np.full(full_shape, np.nan, dtype=np.float32)
+                    if not write_all:
+                        data = f[dset]
 
                 if len(arr.shape) == 1:
                     data[self.analysis_mask] = arr
                 else:
                     data[:, self.analysis_mask] = arr
 
-                logger.info('Writing "{}"'.format(dset))
+                logger.info('Writing final "{}" to: {}'
+                            .format(dset, self._gen_fpath))
                 f._add_dset(dset, data, dset_dtype, attrs=dset_attrs)
 
         logger.info('Finished writing NRWAL outputs to: {}'
@@ -648,6 +688,8 @@ class RevNrwal:
         ----------
         gen_fpath : str
             Full filepath to reV generation or rep_profiles h5 output file.
+            Anything in the output_request is added and/or manipulated in this
+            file.
         site_data : str | pd.DataFrame
             Site-specific input data for NRWAL calculation. String should be a
             filepath that points to a csv, DataFrame is pre-extracted data.

@@ -50,7 +50,8 @@ class RevNrwalConfig(AnalysisConfig):
 
     @property
     def gen_fpath(self):
-        """Base generation fpath(s)"""
+        """Base generation fpath(s) used as input data files. Anything in the
+        output_request is added and/or manipulated in this file(s)."""
         return self._gen_fpath
 
     @property
