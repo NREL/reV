@@ -192,6 +192,7 @@ class AbstractAggregation(ABC):
         self._min_area = min_area
         self._gids = gids
         self._excl_area = self._get_excl_area(excl_fpath, excl_area=excl_area)
+        self._shape = None
 
         if pre_extract_inclusions:
             self._inclusion_mask = \
@@ -222,6 +223,21 @@ class AbstractAggregation(ABC):
             self._gids = np.array(self._gids)
 
         return self._gids
+
+    @property
+    def shape(self):
+        """Get the shape of the full exclusions raster.
+
+        Returns
+        -------
+        tuple
+        """
+        if self._shape is None:
+            with SupplyCurveExtent(self._excl_fpath,
+                                   resolution=self._resolution) as sc:
+                self._shape = sc.exclusions.shape
+
+        return self._shape
 
     @staticmethod
     def _get_excl_area(excl_fpath, excl_area=None):
@@ -288,7 +304,7 @@ class AbstractAggregation(ABC):
         gids : list | ndarray
             sc point gids corresponding to inclusion mask
         excl_shape : tuple
-            Exclusion layers shape
+            Full exclusion layers shape
         """
         if isinstance(inclusion_mask, dict):
             assert len(inclusion_mask) == len(gids)
