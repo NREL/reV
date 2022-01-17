@@ -69,7 +69,7 @@ def test_single_serial(gid=33):
                                    ga_time=5,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
-                                   max_workers=1, sites_per_worker=1)
+                                   max_workers=1)
 
         assert gid in out
         assert 'cf_profile-2012' in out[gid]
@@ -113,6 +113,6 @@ if __name__ == '__main__':
                                    min_spacing='5x', ga_time=20,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
-                                   max_workers=1, sites_per_worker=2)
+                                   max_workers=1)
         print(out)
         print(list(out.keys()))

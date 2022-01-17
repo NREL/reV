@@ -99,7 +99,7 @@ class PointsControl:
 
     def __len__(self):
         """Len is the number of possible iterations aka splits."""
-        return np.ceil(len(self.project_points) / self.sites_per_split)
+        return int(np.ceil(len(self.project_points) / self.sites_per_split))
 
     @property
     def N(self):

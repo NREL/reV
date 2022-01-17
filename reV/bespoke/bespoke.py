@@ -67,6 +67,7 @@ class BespokeSingleFarm:
         # TODO
         objective_function :
         cost_function :
+
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -114,10 +115,13 @@ class BespokeSingleFarm:
             min_spacing = float(min_spacing.strip('x')) * rotor_diameter
 
         if not isinstance(min_spacing, (int, float)):
-            msg = ('min_spacing must be numeric but received: {}, {}'
-                   .format(min_spacing, type(min_spacing)))
-            logger.error(msg)
-            raise TypeError(msg)
+            try:
+                min_spacing = float(min_spacing)
+            except Exception as e:
+                msg = ('min_spacing must be numeric but received: {}, {}'
+                       .format(min_spacing, type(min_spacing)))
+                logger.error(msg)
+                raise TypeError(msg) from e
 
         self.objective_function = objective_function
         self.cost_function = cost_function
@@ -562,6 +566,7 @@ class BespokeWindFarms(AbstractAggregation):
         # TODO
         objective_function :
         cost_function :
+
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -664,6 +669,7 @@ class BespokeWindFarms(AbstractAggregation):
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, gids=None,
+                   exclusion_shape=None, slice_lookup=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -680,13 +686,14 @@ class BespokeWindFarms(AbstractAggregation):
 
         out = {}
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-            exclusion_shape = sc.exclusions.shape
             if gids is None:
                 gids = sc.valid_sc_points(tm_dset)
             elif np.issubdtype(type(gids), np.number):
                 gids = [gids]
-
-            slice_lookup = sc.get_slice_lookup(gids)
+            if slice_lookup is None:
+                slice_lookup = sc.get_slice_lookup(gids)
+            if exclusion_shape is None:
+                exclusion_shape = sc.exclusions.shape
 
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
 
@@ -766,7 +773,7 @@ class BespokeWindFarms(AbstractAggregation):
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
                                    resolution=self._resolution) as sc:
-                assert sc.exclusions.shape == self._inclusion_mask.shape
+                assert self.shape == self._inclusion_mask.shape
                 slice_lookup = sc.get_slice_lookup(self.gids)
 
         futures = []
@@ -802,7 +809,9 @@ class BespokeWindFarms(AbstractAggregation):
                     min_area=self._min_area,
                     resolution=self._resolution,
                     excl_area=self._excl_area,
-                    gids=gid))
+                    gids=gid,
+                    exclusion_shape=self.shape,
+                    slice_lookup=slice_lookup))
 
             # gather results
             for future in as_completed(futures):
@@ -829,8 +838,7 @@ class BespokeWindFarms(AbstractAggregation):
             excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None,
-            pre_extract_inclusions=False, max_workers=None,
-            sites_per_worker=100):
+            pre_extract_inclusions=False, max_workers=None):
         """Run the bespoke wind farm optimization in serial or parallel.
         See BespokeWindFarms docstring for parameter description.
         """
@@ -871,7 +879,6 @@ class BespokeWindFarms(AbstractAggregation):
                                     gids=gid)
                 out.update(si)
         else:
-            out = bsp.run_parallel(max_workers=max_workers,
-                                   sites_per_worker=sites_per_worker)
+            out = bsp.run_parallel(max_workers=max_workers)
 
         return out
