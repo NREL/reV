@@ -280,8 +280,9 @@ class ProjectPoints:
         return config_id, copy.deepcopy(self.sam_inputs[config_id])
 
     def __repr__(self):
-        msg = ("{} for sites {} through {}"
-               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
+        msg = ("{} with {} sites from gid {} through {}"
+               .format(self.__class__.__name__, len(self),
+                       self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):
