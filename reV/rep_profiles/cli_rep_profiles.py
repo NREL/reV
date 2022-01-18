@@ -155,7 +155,8 @@ def from_config(ctx, config_file, verbose):
 @click.option('--reg_cols', '-rc', type=STRLIST, required=True,
               help='List of column rev summary column labels to define '
               'regions to get rep profiles for. If you want a profile for '
-              'each supply curve point, set "reg_cols" to a primary key such ' 'as "sc_gid."')
+              'each supply curve point, set "reg_cols" to a primary key such ' 
+              'as "sc_gid."')
 @click.option('--cf_dset', '-cf', type=str, default='cf_profile',
               show_default=True,
               help='Capacity factor dataset in gen_fpath to get profiles from')
