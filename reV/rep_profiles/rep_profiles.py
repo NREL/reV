@@ -406,6 +406,7 @@ class RegionRepProfile:
 
         if any(data):
             if isinstance(data[0], str):
+                # pylint: disable=simplifiable-condition
                 if ('[' and ']' in data[0]) or ('(' and ')' in data[0]):
                     data = [json.loads(s) for s in data]
 
