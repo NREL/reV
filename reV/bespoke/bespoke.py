@@ -546,11 +546,13 @@ class BespokeWindFarms(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        points : int | slice | list | str | PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object. Can
-            also be a single site integer values. Points csv should have 'gid'
-            and 'config' column, the config maps to the sam_configs dict keys.
+        points : int | slice | list | str | PointsControl | None
+            Slice or list specifying project points, string pointing to a
+            project points csv, or a fully instantiated PointsControl object.
+            Can also be a single site integer value. Points csv should have
+            'gid' and 'config' column, the config maps to the sam_configs dict
+            keys. If this is None, all available reV supply curve points are
+            included (or sliced by points_range).
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
@@ -622,9 +624,9 @@ class BespokeWindFarms(AbstractAggregation):
 
         BespokeSingleFarm.check_dependencies()
 
-        pc = Gen.get_pc(points, points_range, sam_configs,
-                        tech='windpower', sites_per_worker=1)
-        self._project_points = pc.project_points
+        self._project_points = self._parse_points(excl_fpath, tm_dset,
+                                                  resolution, points,
+                                                  points_range, sam_configs)
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -641,6 +643,60 @@ class BespokeWindFarms(AbstractAggregation):
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._check_files()
+
+    @staticmethod
+    def _parse_points(excl_fpath, tm_dset, resolution,
+                      points, points_range, sam_configs):
+        """Parse a project points object using either an explicit project
+        points file or if points=None get all available supply curve points
+        based on the exclusion file + resolution + techmap
+
+        Parameters
+        ----------
+        excl_fpath : str | list | tuple
+            Filepath to exclusions h5 with techmap dataset
+            (can be one or more filepaths).
+        tm_dset : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        resolution : int, optional
+            SC resolution, must be input in combination with gid. Prefered
+            option is to use the row/col slices to define the SC point instead,
+            by default None
+        points : int | slice | list | str | PointsControl | None
+            Slice or list specifying project points, string pointing to a
+            project points csv, or a fully instantiated PointsControl object.
+            Can also be a single site integer value. Points csv should have
+            'gid' and 'config' column, the config maps to the sam_configs dict
+            keys. If this is None, all available reV supply curve points are
+            included (or sliced by points_range).
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. The list is the (Beginning, end) (inclusive/exclusive,
+            respectively) index split parameters for ProjectPoints.split()
+            method.
+        sam_configs : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
+            pre loaded SAMConfig object.
+
+        Returns
+        -------
+        project_points : reV.config.project_points.ProjectPoints
+            Project points object laying out the supply curve gids to analyze.
+        """
+
+        if points is None:
+            with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
+                points = sc.valid_sc_points(tm_dset).tolist()
+
+        pc = Gen.get_pc(points, points_range, sam_configs,
+                        tech='windpower', sites_per_worker=1)
+        project_points = pc.project_points
+
+        return project_points
 
     def _check_files(self):
         """Do a preflight check on input files"""

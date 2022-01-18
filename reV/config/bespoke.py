@@ -7,12 +7,10 @@ Created on Jan 2022
 @author: gbuster
 """
 import logging
-import numpy as np
 
 from reV.config.output_request import SAMOutputRequest
 from reV.config.base_analysis_config import AnalysisConfig
-from reV.config.sam_config import SAMConfig
-from reV.config.project_points import PointsControl, ProjectPoints
+from reV.utilities.exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -34,48 +32,17 @@ class BespokeConfig(AnalysisConfig):
         super().__init__(config)
         self._pc = None
 
-    def parse_sam_config(self):
-        """Get the SAM configuration object.
+    def _preflight(self):
+        """Run preflight checks for missing REQUIREMENTS and also check special
+        bespoke inputs."""
+        super()._preflight()
 
-        Returns
-        -------
-        sam_gen : reV.config.sam.SAMConfig
-            SAM config object. This object emulates a dictionary.
-        """
-        return SAMConfig(self['sam_files'])
-
-    def parse_points_control(self):
-        """Get the generation points control object.
-
-        Returns
-        -------
-        points_control : reV.config.project_points.PointsControl
-            PointsControl object based on specified project points and
-            execution control option.
-        """
-        if self._pc is None:
-            # make an instance of project points
-            pp = ProjectPoints(self.project_points, self['sam_files'],
-                               tech='windpower')
-
-            sites_per_worker = int(1e9)
-            if (self.execution_control.option == 'peregrine'
-                    or self.execution_control.option == 'eagle'):
-                # sites per split on peregrine or eagle is the number of sites
-                # in project points / number of nodes. This is for the initial
-                # division of the project sites between HPC nodes (jobs)
-                sites_per_worker = int(np.ceil(
-                    len(pp) / self.execution_control.nodes))
-
-            elif self.execution_control.option == 'local':
-                # sites per split on local is number of sites / # of processes
-                sites_per_worker = int(np.ceil(
-                    len(pp) / self.execution_control.max_workers))
-
-            # make an instance of points control and set to protected attribute
-            self._pc = PointsControl(pp, sites_per_split=sites_per_worker)
-
-        return self._pc
+        if self.project_points is None and len(self.sam_files) > 1:
+            msg = ('If project_points is None, only one sam_files entry '
+                   'should be present, but received {} sam_files: {}'
+                   .format(len(self.sam_files), self.sam_files))
+            logger.error(msg)
+            raise ConfigError(msg)
 
     @property
     def excl_fpath(self):
@@ -112,8 +79,9 @@ class BespokeConfig(AnalysisConfig):
 
     @property
     def project_points(self):
-        """
-        project_points input
+        """This can be None to use all available reV supply curve points or a
+        string pointing to a project points csv. Points csv should have 'gid'
+        and 'config' column, the config maps to the sam_configs dict keys.
 
         Returns
         -------
@@ -124,14 +92,18 @@ class BespokeConfig(AnalysisConfig):
 
     @property
     def sam_files(self):
-        """
-        SAM config files
+        """SAM config files. This should be a dictionary mapping config ids
+        (keys) to config filepaths. If points is None, only one entry should be
+        present and can be a single string filepath (no dict necessary).
 
         Returns
         -------
         dict
         """
-        return self['sam_files']
+        sf = self['sam_files']
+        if isinstance(sf, str):
+            sf = {'default': sf}
+        return sf
 
     @property
     def min_spacing(self):

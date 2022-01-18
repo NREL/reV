@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import numpy as np
+import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
@@ -82,6 +83,40 @@ def test_single_serial(gid=33):
         assert 'annual_energy-means' in out[gid]
         assert len(out[gid]['cf_profile-2012']) == 8760
         assert len(out[gid]['cf_profile-2013']) == 8760
+
+
+def test_bespoke_points():
+    """Test the bespoke points input options"""
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        points = None
+        points_range = None
+        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+                                            points_range, SAM)
+
+        assert len(pp) == 100
+        for gid in pp.gids:
+            assert pp[gid][0] == SAM
+
+        points = None
+        points_range = (0, 10)
+        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+                                            points_range, {'default': SAM})
+        assert len(pp) == 10
+        for gid in pp.gids:
+            assert pp[gid][0] == 'default'
+
+        points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
+        points_range = None
+        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+                                            points_range, {'default': SAM})
+        assert len(pp) == 3
+        for gid in pp.gids:
+            assert pp[gid][0] == 'default'
 
 
 if __name__ == '__main__':
