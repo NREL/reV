@@ -67,7 +67,7 @@ setup(
                              "cli_sc_aggregation:main"),
                             ("reV-supply-curve=reV.supply_curve."
                              "cli_supply_curve:main"),
-                            "reV-offshore=reV.offshore.cli_offshore:main",
+                            "reV-nrwal=reV.nrwal.cli_nrwal:main",
                             ("reV-rep-profiles=reV.rep_profiles."
                              "cli_rep_profiles:main"),
                             "reV-QA-QC=reV.qa_qc.cli_qa_qc:main",

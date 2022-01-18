@@ -12,10 +12,10 @@ semi-submersible which is not realistic, especially for shallow waters.
 reV Offshore Module Description
 -------------------------------
 
-The pipeline includes the offshore module, which is run after the generation
-module. The offshore module takes the gross generation (gross capacity factor,
-set offshore turbine losses to zero!) and uses NRWAL to calculate generation
-losses and LCOE.
+The pipeline includes the reV-NRWAL module (replaced the historical
+reV-offshore module), which is run after the generation module. The offshore
+module takes the gross generation (gross capacity factor, set offshore turbine
+losses to zero!) and uses NRWAL to calculate generation losses and LCOE.
 
 Example NRWAL configs slightly modified for use with reV can be seen in this
 example. The primary modification for usage in reV is that NRWAL typically

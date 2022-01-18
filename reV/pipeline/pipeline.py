@@ -28,7 +28,7 @@ class Pipeline:
 
     COMMANDS = ('generation',
                 'econ',
-                'offshore',
+                'nrwal',
                 'collect',
                 'multi-year',
                 'supply-curve-aggregation',
