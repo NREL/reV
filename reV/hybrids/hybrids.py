@@ -223,7 +223,7 @@ class Hybridization:
         """
         return self._profiles
 
-    def _init_h5_out(self, fout, save_hybrid_rev_summary=True,
+    def _init_h5_out(self, fout, save_hybrid_meta=True,
                      scaled_precision=False):
         """Initialize an output h5 file for n_profiles
 
@@ -231,7 +231,7 @@ class Hybridization:
         ----------
         fout : str
             None or filepath to output h5 file.
-        save_hybrid_rev_summary : bool
+        save_hybrid_meta : bool
             Flag to save hybridized reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
@@ -265,36 +265,36 @@ class Hybridization:
         Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
                         meta, time_index=self.time_index)
 
-        if save_hybrid_rev_summary:
+        if save_hybrid_meta:
             with Outputs(fout, mode='a') as out:
-                rev_sum = to_records_array(self._hybrid_rev_summary)
-                out._create_dset('hybrid_rev_summary', rev_sum.shape,
-                                 rev_sum.dtype, data=rev_sum)
+                hybrid_meta = to_records_array(self._hybrid_meta)
+                out._create_dset('meta', hybrid_meta.shape,
+                                 hybrid_meta.dtype, data=hybrid_meta)
 
-    def _write_h5_out(self, fout, save_hybrid_rev_summary=True):
+    def _write_h5_out(self, fout, save_hybrid_meta=True):
         """Write profiles and meta to an output file.
 
         Parameters
         ----------
         fout : str
             None or filepath to output h5 file.
-        save_hybrid_rev_summary : bool
+        save_hybrid_meta : bool
             Flag to save hybridized reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
         """
         with Outputs(fout, mode='a') as out:
 
-            if 'hybrid_rev_summary' in out.datasets and \
-                    save_hybrid_rev_summary:
-                rev_sum = to_records_array(self._rev_summary)
-                out['hybrid_rev_summary'] = rev_sum
+            if 'hybrid_meta' in out.datasets and \
+                    save_hybrid_meta:
+                hybrid_meta = to_records_array(self._hybrid_meta)
+                out['meta'] = hybrid_meta
 
             for i in range(self._n_profiles):
                 dset = 'rep_profiles_{}'.format(i)
                 out[dset] = self.profiles[i]
 
-    def save_profiles(self, fout, save_rev_summary=True,
+    def save_profiles(self, fout, save_hybrid_meta=True,
                       scaled_precision=False):
         """Initialize fout and save profiles.
 
@@ -302,27 +302,27 @@ class Hybridization:
         ----------
         fout : str
             None or filepath to output h5 file.
-        save_rev_summary : bool
+        save_hybrid_meta : bool
             Flag to save full reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
         """
 
-        self._init_h5_out(fout, save_rev_summary=save_rev_summary,
+        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
                           scaled_precision=scaled_precision)
-        self._write_h5_out(fout, save_rev_summary=save_rev_summary)
+        self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
 
         logger.info('Running {} rep profile calculations in serial.'
                     .format(len(self.meta)))
-        for i, row in self.hybrid_rev_summary.iterrows():
+        for i, row in self.hybrid_hybrid_meta.iterrows():
             logger.debug('Working on profile {} out of {}'
-                         .format(i + 1, len(self.hybrid_rev_summary)))
+                         .format(i + 1, len(self.hybrid_hybrid_meta)))
             # out = self._hybridize_profile(row)
             logger.info('Profile {} out of {} complete '
-                        .format(i + 1, len(self.hybrid_rev_summary)))
+                        .format(i + 1, len(self.hybrid_hybrid_meta)))
 
     def _run_parallel(self, max_workers=None, pool_size=72):
         """Compute all representative profiles in parallel.
@@ -340,8 +340,8 @@ class Hybridization:
         logger.info('Kicking off {} rep profile futures.'
                     .format(len(self.meta)))
 
-        iter_chunks = np.array_split(self.hybrid_rev_summary.index.values,
-                                     np.ceil(len(self.hybrid_rev_summary)
+        iter_chunks = np.array_split(self.hybrid_meta.index.values,
+                                     np.ceil(len(self.hybrid_meta)
                                              / pool_size))
         n_complete = 0
         for iter_chunk in iter_chunks:
@@ -368,7 +368,7 @@ class Hybridization:
                                 .format(n_complete, len(self.meta)))
                     log_mem(logger, log_level='DEBUG')
 
-    def _run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+    def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
              max_workers=None):
         """
         Run hybridization of profiles in serial or parallel and save to disc
@@ -377,8 +377,8 @@ class Hybridization:
         ----------
         fout : str, optional
             filepath to output h5 file, by default None
-        save_rev_summary : bool, optional
-            Flag to save full reV SC table to rep profile output.,
+        save_hybrid_meta : bool, optional
+            Flag to save hybrid reV SC table to rep profile output.,
             by default True
         scaled_precision : bool, optional
             Flag to scale cf_profiles by 1000 and save as uint16.,
@@ -393,13 +393,13 @@ class Hybridization:
             self._run_parallel(max_workers=max_workers)
 
         if fout is not None:
-            self.save_profiles(fout, save_rev_summary=save_rev_summary,
+            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
                                scaled_precision=scaled_precision)
 
         logger.info('Hybridization of representative profiles complete!')
 
     @classmethod
-    def run(cls, gen_fpath, fout=None, save_rev_summary=True,
+    def run(cls, gen_fpath, fout=None, save_hybrid_meta=True,
             scaled_precision=False, max_workers=None):
         """Run hybridization by merging the profiles of each SC region.
 
@@ -409,7 +409,7 @@ class Hybridization:
             Filepath to reV gen output file to extract "cf_profile" from.
         fout : str, optional
             filepath to output h5 file, by default None.
-        save_rev_summary : bool, optional
+        save_hybrid_meta : bool, optional
             Flag to save full reV SC table to rep profile output.,
             by default True.
         scaled_precision : bool, optional
@@ -433,7 +433,7 @@ class Hybridization:
 
         rp = cls(gen_fpath)
 
-        rp._run(fout=fout, save_rev_summary=save_rev_summary,
+        rp._run(fout=fout, save_hybrid_meta=save_hybrid_meta,
                 scaled_precision=scaled_precision, max_workers=max_workers)
 
-        return rp._profiles, rp._hybrid_rev_summary, rp._time_index
+        return rp._profiles, rp.hybrid_meta, rp.hybrid_time_index
