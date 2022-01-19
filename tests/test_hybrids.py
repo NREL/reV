@@ -20,6 +20,18 @@ WIND_FPATH = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_wind.h5')
 SOLAR_FPATH_30_MIN = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_30_min.h5')
+SOLAR_FPATH_MULT = os.path.join(
+    TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
+
+
+def test_invalid_num_profiles():
+    with pytest.raises(ValueError) as excinfo:
+        Hybridization(SOLAR_FPATH_MULT, WIND_FPATH)
+
+        msg = ("This module is not intended for hybridization of "
+               "multiple representative profiles. Please re-run "
+               "on a single aggregated profile.")
+        assert msg in str(excinfo.value)
 
 
 def test_invalid_time_index_overlap():

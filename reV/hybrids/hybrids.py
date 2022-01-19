@@ -10,6 +10,7 @@ import json
 import logging
 import numpy as np
 import os
+import re
 import pandas as pd
 from scipy import stats
 from warnings import warn
@@ -37,7 +38,7 @@ class Hybridization:
 
     DROPPED_COLUMNS = set(['gid'])
     MERGE_COLUMN = 'sc_point_gid'
-    PROFILE_DSET_NAME = 'rep_profiles_0'
+    PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
 
     def __init__(self, solar_fpath, wind_fpath):
         """
@@ -65,8 +66,9 @@ class Hybridization:
         self._solar_time_index = None
         self._wind_time_index = None
         self._hybrid_time_index = None
+        self.__profile_reg_check = re.compile(self.PROFILE_DSET_REGEX)
 
-        self._verify_time_index()
+        self._validate_input_files()
         # self._hybridize_summary()
         # self._init_profiles()
 
@@ -122,12 +124,30 @@ class Hybridization:
                                       dtype=np.float32)
                           for k in range(n_profiles)}
 
-    def _verify_time_index(self):
+    def _validate_input_files(self):
+        self._validate_time_index()
+        self._validate_num_profiles()
+
+    def _validate_time_index(self):
         if len(self.hybrid_time_index) < 8760:
             msg = ("The length of the merged time index ({}) is less than "
                    "8760. Please ensure that the input profiles have a "
                    "time index that overlaps >= 8760 times.")
             raise ValueError(msg.format(len(self.hybrid_time_index)))
+
+    def _validate_num_profiles(self):
+        for fp in [self._solar_fpath, self._wind_fpath]:
+            with Resource(fp) as res:
+                profile_dset_names = [
+                    n for n in res.dsets
+                    if self.__profile_reg_check.match(n)
+                ]
+                if len(profile_dset_names) > 1:
+                    msg = ("Found more than one profile in {!r}: {}. "
+                           "This module is not intended for hybridization of "
+                           "multiple representative profiles. Please re-run "
+                           "on a single aggregated profile.")
+                    raise ValueError(msg.format(fp, profile_dset_names))
 
     @property
     def solar_meta(self):
