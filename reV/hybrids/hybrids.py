@@ -117,12 +117,13 @@ class Hybridization:
         self._hybrid_meta.rename(col_name_map, inplace=True, axis=1)
         self._hybrid_meta.to_csv("combined.csv")
 
-    def _init_profiles(self, n_profiles=1):
+    def _init_profiles(self):
         """Initialize the output rep profiles attribute."""
-        self._profiles = {k: np.zeros((len(self.time_index),
-                                       len(self._hybrid_meta)),
-                                      dtype=np.float32)
-                          for k in range(n_profiles)}
+        prof_names = ['hybrid', 'solar_time_built', 'wind_time_built']
+        self._profiles = {
+            k: np.zeros((len(self.hybrid_time_index), len(self._hybrid_meta)),
+                        dtype=np.float32)
+            for k in prof_names}
 
     def _validate_input_files(self):
         """Validate the input files.
@@ -353,12 +354,12 @@ class Hybridization:
 
         logger.info('Running {} rep profile calculations in serial.'
                     .format(len(self.meta)))
-        for i, row in self.hybrid_hybrid_meta.iterrows():
+        for i, row in self.hybrid_meta.iterrows():
             logger.debug('Working on profile {} out of {}'
-                         .format(i + 1, len(self.hybrid_hybrid_meta)))
+                         .format(i + 1, len(self.hybrid_meta)))
             # out = self._hybridize_profile(row)
             logger.info('Profile {} out of {} complete '
-                        .format(i + 1, len(self.hybrid_hybrid_meta)))
+                        .format(i + 1, len(self.hybrid_meta)))
 
     def _run_parallel(self, max_workers=None, pool_size=72):
         """Compute all representative profiles in parallel.
@@ -459,12 +460,12 @@ class Hybridization:
         -------
         profiles : dict
             dict of n_profile-keyed arrays with shape (time, n) for the
-            representative profiles for each region.
-        meta : pd.DataFrame
+            hybridized profiles for each region.
+        hybrid_meta : pd.DataFrame
             Meta dataframes recording the regions and the selected rep profile
             gid.
-        time_index : pd.DatatimeIndex
-            Datetime Index for represntative profiles
+        hybrid_time_index : pd.DatatimeIndex
+            Datetime Index for hybridized profiles
         """
 
         rp = cls(gen_fpath)
