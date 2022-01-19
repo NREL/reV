@@ -62,9 +62,11 @@ class Hybridization:
         self._solar_meta = None
         self._wind_meta = None
         self._hybrid_meta = None
-        self._time_index = None
+        self._solar_time_index = None
+        self._wind_time_index = None
+        self._hybrid_time_index = None
 
-        # self._set_time_index()
+        self._verify_time_index()
         # self._hybridize_summary()
         # self._init_profiles()
 
@@ -120,6 +122,13 @@ class Hybridization:
                                       dtype=np.float32)
                           for k in range(n_profiles)}
 
+    def _verify_time_index(self):
+        if len(self.hybrid_time_index) < 8760:
+            msg = ("The length of the merged time index ({}) is less than "
+                   "8760. Please ensure that the input profiles have a "
+                   "time index that overlaps >= 8760 times.")
+            raise ValueError(msg.format(len(self.hybrid_time_index)))
+
     @property
     def solar_meta(self):
         """Summary for the solar representative profiles.
@@ -155,30 +164,52 @@ class Hybridization:
         Returns
         -------
         hybrid_meta : pd.DataFrame
-            Summary for the hybridized representative profiles. 
+            Summary for the hybridized representative profiles.
             At the very least, this has a column that the data was merged on.
         """
         return self._hybrid_meta
 
     @property
-    def time_index(self):
-        """Get the time index for the rep profiles.
+    def solar_time_index(self):
+        """Get the time index for the solar rep profiles.
 
         Returns
         -------
-        time_index : pd.datetimeindex
-            Time index sourced from the reV gen file.
+        solar_time_index : pd.datetimeindex
+            Time index sourced from the solar reV gen file.
         """
-        if self._time_index is None:
+        if self._solar_time_index is None:
             with Resource(self._solar_fpath) as res:
-                ds = 'time_index'
-                if parse_year(self._cf_dset, option='bool'):
-                    year = parse_year(self._cf_dset, option='raise')
-                    ds += '-{}'.format(year)
+                self._solar_time_index = res.time_index
+        return self._solar_time_index
 
-                self._time_index = res._get_time_index(ds, slice(None))
+    @property
+    def wind_time_index(self):
+        """Get the time index for the wind rep profiles.
 
-        return self._time_index
+        Returns
+        -------
+        wind_time_index : pd.datetimeindex
+            Time index sourced from the wind reV gen file.
+        """
+        if self._wind_time_index is None:
+            with Resource(self._wind_fpath) as res:
+                self._wind_time_index = res.time_index
+        return self._wind_time_index
+
+    @property
+    def hybrid_time_index(self):
+        """Get the time index for the hybrid rep profiles.
+
+        Returns
+        -------
+        hybrid_time_index : pd.datetimeindex
+            Time index for the hybrid rep profiles.
+        """
+        if self._hybrid_time_index is None:
+            self._hybrid_time_index = self.solar_time_index.join(
+                self.wind_time_index, how='inner')
+        return self._hybrid_time_index
 
     @property
     def profiles(self):
