@@ -125,10 +125,19 @@ class Hybridization:
                           for k in range(n_profiles)}
 
     def _validate_input_files(self):
+        """Validate the input files.
+        """
         self._validate_time_index()
         self._validate_num_profiles()
 
     def _validate_time_index(self):
+        """Validate the hybrid time index to be of len >= 8760.
+
+        Raises
+        ------
+        ValueError
+            If len(time_index) < 8760 for the hybrid profile.
+        """
         if len(self.hybrid_time_index) < 8760:
             msg = ("The length of the merged time index ({}) is less than "
                    "8760. Please ensure that the input profiles have a "
@@ -136,6 +145,13 @@ class Hybridization:
             raise ValueError(msg.format(len(self.hybrid_time_index)))
 
     def _validate_num_profiles(self):
+        """Validate the number of input profiles.
+
+        Raises
+        ------
+        ValueError
+            If # of rep_profiles > 1.
+        """
         for fp in [self._solar_fpath, self._wind_fpath]:
             with Resource(fp) as res:
                 profile_dset_names = [

@@ -25,6 +25,7 @@ SOLAR_FPATH_MULT = os.path.join(
 
 
 def test_invalid_num_profiles():
+    """Test input files with an invalid number of profiles (>1). """
     with pytest.raises(ValueError) as excinfo:
         Hybridization(SOLAR_FPATH_MULT, WIND_FPATH)
 
@@ -35,6 +36,7 @@ def test_invalid_num_profiles():
 
 
 def test_invalid_time_index_overlap():
+    """Test input files with an invalid time index overlap. """
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         fout_wind = os.path.join(td, 'rep_profiles_wind.h5')
@@ -50,6 +52,7 @@ def test_invalid_time_index_overlap():
 
 
 def test_valid_time_index_overlap():
+    """Test input files with a valid time index overlap. """
 
     h = Hybridization(SOLAR_FPATH_30_MIN, WIND_FPATH)
 
@@ -62,6 +65,25 @@ def test_valid_time_index_overlap():
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None)):
+    """Generate a test file from existing input file.
+
+    The new test file can have a subset of the data of the original file.
+
+    Parameters
+    ----------
+    in_fp : str
+        Filepath to input file containing a meta, time_index, and at least one
+        rep_profile.
+    out_fp : str
+        Filepath for new output file. This file will contain some subset of
+        the data of the imput file.
+    p_slice : slice, optional
+        Point-slice object representing the indices of the points to keep in
+        the new file, by default slice(None).
+    t_slice : [type], optional
+        Time-slice object representing the indices of the time indices to keep
+        in the new file, by default slice(None).
+    """
     with Resource(in_fp) as res:
         dset_names = [d for d in res.dsets if d not in ('meta', 'time_index')]
         shapes = res.shapes
