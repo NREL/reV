@@ -35,7 +35,11 @@ class Hybridization:
          'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind']
     )
 
-    def __init__(self, solar_fpath, wind_fpath, merge_col='sc_point_gid'):
+    DROPPED_COLUMNS = set(['gid'])
+    MERGE_COLUMN = 'sc_point_gid'
+    PROFILE_DSET_NAME = 'rep_profiles_0'
+
+    def __init__(self, solar_fpath, wind_fpath):
         """
         Parameters
         ----------
@@ -45,26 +49,23 @@ class Hybridization:
         wind_fpath : str
             Filepath to rep profile output file to extract wind profiles and
             summaries from.
-        merge_col : str
-            Column label in both summary tables that contains gids to perform
-            the data merge on.
         """
 
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
                     .format(solar_fpath))
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
                     .format(wind_fpath))
-        logger.info('Running hybridization rep profiles with merge_col: "{}"'
-                    .format(merge_col))
 
         self._solar_fpath = solar_fpath
         self._wind_fpath = wind_fpath
-        self._merge_col = merge_col
         self._profiles = None
-        self._hybrid_rev_summary = None
+        self._solar_meta = None
+        self._wind_meta = None
+        self._hybrid_meta = None
         self._time_index = None
 
-        self._hybridize_summary()
+        # self._set_time_index()
+        # self._hybridize_summary()
         # self._init_profiles()
 
     def _hybridize_summary(self):
@@ -75,7 +76,7 @@ class Hybridization:
             wind_meta = res.meta
 
         col_name_map = {
-            c.lower().replace(" ", "_"): c 
+            c.lower().replace(" ", "_"): c
             for c in solar_meta.columns.values
         }
 
@@ -97,39 +98,67 @@ class Hybridization:
         wc = set(wind_meta.columns.values)
         duplicate_cols = sc & wc
 
-        if self._merge_col.lower().replace(" ", "_") not in duplicate_cols:
+        if self.MERGE_COLUMN.lower().replace(" ", "_") not in duplicate_cols:
             msg = "Merge column {} missing from one or both summaries!"
-            raise ValueError(msg.format(self._merge_col))
+            raise ValueError(msg.format(self.MERGE_COLUMN))
 
-        self._hybrid_rev_summary = solar_meta.merge(
-            wind_meta, on=self._merge_col.lower().replace(" ", "_"),
+        self._hybrid_meta = solar_meta.merge(
+            wind_meta, on=self.MERGE_COLUMN.lower().replace(" ", "_"),
             suffixes=[None, '_x']
         )
-        self._hybrid_rev_summary.drop(
-            [n for n in self._hybrid_rev_summary.columns if "_x" in n],
+        self._hybrid_meta.drop(
+            [n for n in self._hybrid_meta.columns if "_x" in n],
             axis=1, inplace=True
         )
-        self._hybrid_rev_summary.rename(col_name_map, inplace=True, axis=1)
-        self._hybrid_rev_summary.to_csv("combined.csv")
+        self._hybrid_meta.rename(col_name_map, inplace=True, axis=1)
+        self._hybrid_meta.to_csv("combined.csv")
 
     def _init_profiles(self, n_profiles=1):
         """Initialize the output rep profiles attribute."""
         self._profiles = {k: np.zeros((len(self.time_index),
-                                       len(self._hybrid_rev_summary)),
+                                       len(self._hybrid_meta)),
                                       dtype=np.float32)
                           for k in range(n_profiles)}
 
     @property
-    def hybrid_rev_summaryy(self):
+    def solar_meta(self):
+        """Summary for the solar representative profiles.
+
+        Returns
+        -------
+        solar_meta : pd.DataFrame
+            Summary for the solar representative profiles.
+        """
+        if self._solar_meta is None:
+            with Resource(self._solar_fpath) as res:
+                self._solar_meta = res.meta
+        return self._solar_meta
+
+    @property
+    def wind_meta(self):
+        """Summary for the wind representative profiles.
+
+        Returns
+        -------
+        wind_meta : pd.DataFrame
+            Summary for the wind representative profiles.
+        """
+        if self._wind_meta is None:
+            with Resource(self._wind_fpath) as res:
+                self._wind_meta = res.meta
+        return self._wind_meta
+
+    @property
+    def hybrid_meta(self):
         """Hybridized summary for the representative profiles.
 
         Returns
         -------
-        meta : pd.DataFrame
-            Summary for the representative profiles. At the very least,
-            this has a column that the data was merged on.
+        hybrid_meta : pd.DataFrame
+            Summary for the hybridized representative profiles. 
+            At the very least, this has a column that the data was merged on.
         """
-        return self._hybrid_rev_summary
+        return self._hybrid_meta
 
     @property
     def time_index(self):
