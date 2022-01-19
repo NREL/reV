@@ -93,6 +93,8 @@ class Hybridization:
         self._wind_time_index = None
         self._hybrid_time_index = None
         self.__profile_reg_check = re.compile(self.PROFILE_DSET_REGEX)
+        self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
+        self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
 
         self._validate_input_files()
         # self._hybridize_summary()
@@ -156,27 +158,28 @@ class Hybridization:
         self._validate_time_index()
         self._validate_num_profiles()
         self._validate_merge_col_exists()
+        self._validate_unique_merge_col()
 
     def _validate_time_index(self):
         """Validate the hybrid time index to be of len >= 8760.
 
         Raises
         ------
-        ValueError
+        FileInputError
             If len(time_index) < 8760 for the hybrid profile.
         """
         if len(self.hybrid_time_index) < 8760:
             msg = ("The length of the merged time index ({}) is less than "
                    "8760. Please ensure that the input profiles have a "
                    "time index that overlaps >= 8760 times.")
-            raise ValueError(msg.format(len(self.hybrid_time_index)))
+            raise FileInputError(msg.format(len(self.hybrid_time_index)))
 
     def _validate_num_profiles(self):
         """Validate the number of input profiles.
 
         Raises
         ------
-        ValueError
+        FileInputError
             If # of rep_profiles > 1.
         """
         for fp in [self._solar_fpath, self._wind_fpath]:
@@ -190,30 +193,57 @@ class Hybridization:
                            "This module is not intended for hybridization of "
                            "multiple representative profiles. Please re-run "
                            "on a single aggregated profile.")
-                    raise ValueError(msg.format(fp, profile_dset_names))
+                    raise FileInputError(msg.format(fp, profile_dset_names))
 
     def _validate_merge_col_exists(self):
         """Validate the existence of the merge column.
 
         Raises
         ------
-        ValueError
+        FileInputError
             If merge column is missing from either the solar or
-            tghe wind meta data.
+            the wind meta data.
         """
-        solar_cols = set(ColNameFormatter.fmt(c)
-                         for c in self.solar_meta.columns.values)
-        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in solar_cols:
+        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__solar_cols:
             msg = ("Cannot hybridize: merge column {!r} missing from the "
                    "solar meta data! ({!r})")
-            raise ValueError(msg.format(self.MERGE_COLUMN, self._solar_fpath))
+            raise FileInputError(
+                msg.format(self.MERGE_COLUMN, self._solar_fpath))
 
-        wind_cols = set(ColNameFormatter.fmt(c)
-                        for c in self.wind_meta.columns.values)
-        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in wind_cols:
+        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__wind_cols:
             msg = ("Cannot hybridize: merge column {!r} missing from the "
                    "wind meta data! ({!r})")
-            raise ValueError(msg.format(self.MERGE_COLUMN, self._wind_fpath))
+            raise FileInputError(
+                msg.format(self.MERGE_COLUMN, self._wind_fpath))
+
+    def _validate_unique_merge_col(self):
+        """Validate the existence of unique values in the merge column.
+
+        Raises
+        ------
+        FileInputError
+            If merge column contains duplicate values  in either the solar or
+            the wind meta data.
+        """
+        msg = ("Duplicate {}s were found. This is likely due to resource "
+               "class binning, which is not supported at this time. "
+               "Please re-run supply curve aggregation without "
+               "resource class binning and ensure there are no duplicate "
+               "values in {!r}. File: {!r}")
+
+        merge_col = self.solar_meta.columns[
+            self.__solar_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
+        ].item()
+        if not self.solar_meta[merge_col].is_unique:
+            raise FileInputError(
+                msg.format(merge_col, merge_col, self._solar_fpath))
+
+        merge_col = self.wind_meta.columns[
+            self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
+        ].item()
+        if not self.wind_meta[merge_col].is_unique:
+            raise FileInputError(
+                msg.format(merge_col, merge_col, self._wind_fpath))
 
     @property
     def solar_meta(self):

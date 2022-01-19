@@ -9,6 +9,7 @@ import json
 import tempfile
 
 from reV.hybrids.hybrids import Hybridization
+from reV.utilities.exceptions import FileInputError
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
@@ -24,6 +25,19 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
 
 
+def test_duplicate_merge_column_values():
+    """Test duplicate values in merge column.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
+        make_test_file(SOLAR_FPATH, fout_solar, duplicate_rows=True)
+
+        with pytest.raises(FileInputError) as excinfo:
+            Hybridization(fout_solar, WIND_FPATH)
+
+        assert "Duplicate" in str(excinfo.value)
+
+
 def test_merge_columns_missings():
     """Test missing merge column. """
     with tempfile.TemporaryDirectory() as td:
@@ -31,16 +45,17 @@ def test_merge_columns_missings():
         make_test_file(SOLAR_FPATH, fout_solar,
                        drop_cols=[Hybridization.MERGE_COLUMN])
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(FileInputError) as excinfo:
             Hybridization(fout_solar, WIND_FPATH)
 
         msg = "Cannot hybridize: merge column"
         assert msg in str(excinfo.value)
+        assert "missing" in str(excinfo.value)
 
 
 def test_invalid_num_profiles():
     """Test input files with an invalid number of profiles (>1). """
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(FileInputError) as excinfo:
         Hybridization(SOLAR_FPATH_MULT, WIND_FPATH)
 
         msg = ("This module is not intended for hybridization of "
@@ -57,7 +72,7 @@ def test_invalid_time_index_overlap():
         make_test_file(SOLAR_FPATH, fout_solar, t_slice=slice(0, 1500))
         make_test_file(WIND_FPATH, fout_wind, t_slice=slice(1000, 3000))
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(FileInputError) as excinfo:
             Hybridization(fout_solar, fout_wind)
 
         msg = ("Please ensure that the input profiles have a "
@@ -79,7 +94,7 @@ def test_valid_time_index_overlap():
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
-                   drop_cols=None):
+                   drop_cols=None, duplicate_rows=False):
     """Generate a test file from existing input file.
 
     The new test file can have a subset of the data of the original file.
@@ -101,6 +116,9 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
     drop_cols : single label or list-like, optional
         Iterable object representing the columns to drop from `meta`, by
         default None.
+    duplicate_rows : bool, optional
+        Option to duplicate the first half of all rows in meta DataFrame,
+        by default False.
     """
     with Resource(in_fp) as res:
         dset_names = [d for d in res.dsets if d not in ('meta', 'time_index')]
@@ -108,6 +126,10 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
         meta = res.meta.iloc[p_slice]
         if drop_cols is not None:
             meta.drop(columns=drop_cols, inplace=True)
+        if duplicate_rows:
+            n_rows, __ = meta.shape
+            half_n_rows = n_rows // 2
+            meta.iloc[-half_n_rows:] = meta.iloc[:half_n_rows].values
         shapes['meta'] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))
