@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""reVX hybrids tests.
+"""reV hybrids tests.
 """
 import os
 import pytest
@@ -20,8 +20,6 @@ WIND_FPATH = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_wind.h5')
 SOLAR_FPATH_30_MIN = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_30_min.h5')
-WIND_FPATH_30_MIN = os.path.join(
-    TESTDATADIR, 'rep_profiles_out', 'rep_profiles_wind_30_min.h5')
 
 
 def test_invalid_time_index_overlap():
@@ -37,6 +35,18 @@ def test_invalid_time_index_overlap():
         msg = ("Please ensure that the input profiles have a "
                "time index that overlaps >= 8760 times.")
         assert msg in str(excinfo.value)
+
+
+def test_valid_time_index_overlap():
+
+    h = Hybridization(SOLAR_FPATH_30_MIN, WIND_FPATH)
+
+    with Resource(SOLAR_FPATH_30_MIN) as res:
+        assert (res.time_index == h.solar_time_index).all()
+
+    with Resource(WIND_FPATH) as res:
+        assert (res.time_index == h.wind_time_index).all()
+        assert len(res.time_index) == len(h.hybrid_time_index)
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None)):
