@@ -13,6 +13,7 @@ import os
 import re
 import pandas as pd
 from scipy import stats
+from string import ascii_letters
 from warnings import warn
 
 
@@ -26,6 +27,14 @@ from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import parse_year, to_records_array
 
 logger = logging.getLogger(__name__)
+
+
+class ColNameFormatter:
+    ALLOWED = set(ascii_letters)
+
+    @classmethod
+    def fmt(cls, n):
+        return ''.join(c for c in n if c in cls.ALLOWED).lower()
 
 
 class Hybridization:
@@ -129,6 +138,7 @@ class Hybridization:
         """
         self._validate_time_index()
         self._validate_num_profiles()
+        self._validate_merge_col_exists()
 
     def _validate_time_index(self):
         """Validate the hybrid time index to be of len >= 8760.
@@ -164,6 +174,21 @@ class Hybridization:
                            "multiple representative profiles. Please re-run "
                            "on a single aggregated profile.")
                     raise ValueError(msg.format(fp, profile_dset_names))
+
+    def _validate_merge_col_exists(self):
+        solar_cols = set(ColNameFormatter.fmt(c)
+                         for c in self.solar_meta.columns.values)
+        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in solar_cols:
+            msg = ("Cannot hybridize: merge column {!r} missing from the "
+                   "solar meta data! ({!r})")
+            raise ValueError(msg.format(self.MERGE_COLUMN, self._solar_fpath))
+
+        wind_cols = set(ColNameFormatter.fmt(c)
+                        for c in self.wind_meta.columns.values)
+        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in wind_cols:
+            msg = ("Cannot hybridize: merge column {!r} missing from the "
+                   "wind meta data! ({!r})")
+            raise ValueError(msg.format(self.MERGE_COLUMN, self._wind_fpath))
 
     @property
     def solar_meta(self):

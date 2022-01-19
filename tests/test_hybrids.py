@@ -24,6 +24,19 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
 
 
+def test_merge_columns_missings():
+    with tempfile.TemporaryDirectory() as td:
+        fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
+        make_test_file(SOLAR_FPATH, fout_solar,
+                       drop_cols=[Hybridization.MERGE_COLUMN])
+
+        with pytest.raises(ValueError) as excinfo:
+            Hybridization(fout_solar, WIND_FPATH)
+
+        msg = "Cannot hybridize: merge column"
+        assert msg in str(excinfo.value)
+
+
 def test_invalid_num_profiles():
     """Test input files with an invalid number of profiles (>1). """
     with pytest.raises(ValueError) as excinfo:
@@ -64,7 +77,8 @@ def test_valid_time_index_overlap():
         assert len(res.time_index) == len(h.hybrid_time_index)
 
 
-def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None)):
+def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
+                   drop_cols=None):
     """Generate a test file from existing input file.
 
     The new test file can have a subset of the data of the original file.
@@ -80,14 +94,19 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None)):
     p_slice : slice, optional
         Point-slice object representing the indices of the points to keep in
         the new file, by default slice(None).
-    t_slice : [type], optional
+    t_slice : slice, optional
         Time-slice object representing the indices of the time indices to keep
         in the new file, by default slice(None).
+    drop_cols : single label or list-like, optional
+        Iterable object representing the columns to drop from `meta`, by
+        default None.
     """
     with Resource(in_fp) as res:
         dset_names = [d for d in res.dsets if d not in ('meta', 'time_index')]
         shapes = res.shapes
         meta = res.meta.iloc[p_slice]
+        if drop_cols is not None:
+            meta.drop(columns=drop_cols, inplace=True)
         shapes['meta'] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))
