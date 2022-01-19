@@ -57,11 +57,11 @@ class ColNameFormatter:
 class Hybridization:
     """Framework to handle hybridization for one resource region"""
 
-    NON_DUPLICATE_COLS = set(
-        ['latitude', 'longitude', 'country', 'state', 'county', 'elevation',
-         'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind']
-    )
-    DROPPED_COLUMNS = set(['gid'])
+    NON_DUPLICATE_COLS = {
+        'latitude', 'longitude', 'country', 'state', 'county', 'elevation',
+        'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind'
+    }
+    DROPPED_COLUMNS = ['gid']
     MERGE_COLUMN = 'sc_point_gid'
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
@@ -95,62 +95,9 @@ class Hybridization:
         self.__profile_reg_check = re.compile(self.PROFILE_DSET_REGEX)
         self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
         self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
+        self.__col_name_map = None
 
         self._validate_input_files()
-        # self._hybridize_summary()
-        # self._init_profiles()
-
-    def _hybridize_summary(self):
-        with Resource(self._solar_fpath) as res:
-            solar_meta = res.meta
-
-        with Resource(self._wind_fpath) as res:
-            wind_meta = res.meta
-
-        col_name_map = {
-            c.lower().replace(" ", "_"): c
-            for c in solar_meta.columns.values
-        }
-
-        solar_meta.columns = [
-            col_name.lower().replace(" ", "_")
-            if col_name.lower().replace(" ", "_") in self.NON_DUPLICATE_COLS
-            else '{}_solar'.format(col_name)
-            for col_name in solar_meta.columns.values
-        ]
-
-        wind_meta.columns = [
-            col_name.lower().replace(" ", "_")
-            if col_name.lower().replace(" ", "_") in self.NON_DUPLICATE_COLS
-            else '{}_wind'.format(col_name)
-            for col_name in wind_meta.columns.values
-        ]
-
-        sc = set(solar_meta.columns.values)
-        wc = set(wind_meta.columns.values)
-        duplicate_cols = sc & wc
-
-        if self.MERGE_COLUMN.lower().replace(" ", "_") not in duplicate_cols:
-            msg = "Merge column {} missing from one or both summaries!"
-            raise ValueError(msg.format(self.MERGE_COLUMN))
-
-        self._hybrid_meta = solar_meta.merge(
-            wind_meta, on=self.MERGE_COLUMN.lower().replace(" ", "_"),
-            suffixes=[None, '_x']
-        )
-        self._hybrid_meta.drop(
-            [n for n in self._hybrid_meta.columns if "_x" in n],
-            axis=1, inplace=True
-        )
-        self._hybrid_meta.rename(col_name_map, inplace=True, axis=1)
-        self._hybrid_meta.to_csv("combined.csv")
-
-    def _init_profiles(self):
-        """Initialize the output rep profiles attribute."""
-        self._profiles = {
-            k: np.zeros((len(self.hybrid_time_index), len(self._hybrid_meta)),
-                        dtype=np.float32)
-            for k in self.OUTPUT_PROFILE_NAMES}
 
     def _validate_input_files(self):
         """Validate the input files.
@@ -329,15 +276,132 @@ class Hybridization:
 
     @property
     def profiles(self):
-        """Get the arrays of representative CF profiles corresponding to meta.
+        """Get the arrays of the hybridized representative profiles.
 
         Returns
         -------
         profiles : dict
             dict of n_profile-keyed arrays with shape (time, n) for the
-            representative profiles for each region.
+            hybridized representative profiles for each region.
         """
         return self._profiles
+
+    def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
+             max_workers=None):
+        """
+        Run hybridization of profiles in serial or parallel and save to disc
+
+        Parameters
+        ----------
+        fout : str, optional
+            filepath to output h5 file, by default None
+        save_hybrid_meta : bool, optional
+            Flag to save hybrid reV SC table to rep profile output.,
+            by default True
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
+            Number of parallel workers. 1 will run serial, None will use all
+            available., by default None
+        """
+
+        self._hybridize_summary()
+        # self._init_profiles()
+
+        # if max_workers == 1:
+        #     self._run_serial()
+        # else:
+        #     self._run_parallel(max_workers=max_workers)
+
+        # if fout is not None:
+        #     self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
+        #                        scaled_precision=scaled_precision)
+
+        # logger.info('Hybridization of representative profiles complete!')
+
+    def _hybridize_summary(self):
+        self._format_meta_pre_merge()
+        self._hybrid_meta = self.solar_meta.merge(
+            self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
+            suffixes=[None, '_x']
+        )
+        self._verify_lat_long_match_post_merge()
+        self._format_meta_post_merge()
+        print(self._hybrid_meta.columns)
+        # self._hybrid_meta.to_csv("combined.csv")
+
+    def _format_meta_pre_merge(self):
+        """Prepare solar and wind meta for merging. """
+        self.__col_name_map = {
+            ColNameFormatter.fmt(c): c
+            for c in self.solar_meta.columns.values
+        }
+
+        self._rename_cols(self.solar_meta, prefix='solar')
+        self._rename_cols(self.wind_meta, prefix='wind')
+
+    def _format_meta_post_merge(self):
+        """Format hybrid meta after merging. """
+        self._hybrid_meta.drop(
+            [n for n in self._hybrid_meta.columns if "_x" in n]
+            + self.DROPPED_COLUMNS,
+            axis=1, inplace=True, errors='ignore'
+        )
+        self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
+        self._hybrid_meta = self._hybrid_meta[
+            sorted(self._hybrid_meta.columns, key=self._column_sorting_key)
+        ]
+
+    def _column_sorting_key(self, c):
+        """Helper function to sort hybrid meta columns. """
+        first_index = 0
+        if c.startswith('hybrid'):
+            first_index = 1
+        elif c.startswith('solar'):
+            first_index = 2
+        elif c.startswith('wind'):
+            first_index = 3
+        elif c == self.MERGE_COLUMN:
+            first_index = -1
+        return first_index, self._hybrid_meta.columns.get_loc(c)
+
+    def _rename_cols(self, df, prefix):
+        """Replace column names with the ColNameFormatter.fmt is needed. """
+        df.columns = [
+            ColNameFormatter.fmt(col_name)
+            if col_name in self.NON_DUPLICATE_COLS
+            else '{}_{}'.format(prefix, col_name)
+            for col_name in df.columns.values
+        ]
+
+    def _verify_lat_long_match_post_merge(self):
+        """Verify that all the lat/lon values match post merge."""
+        lat = self._verify_col_match_post_merge(col_name='latitude')
+        lon = self._verify_col_match_post_merge(col_name='longitude')
+        if not lat or not lon:
+            msg = ("Detected mismatched coordinate values (latitude or "
+                   "longitude) post merge. Please ensure that all matching "
+                   "values of {!r} correspond to the same values of latitude "
+                   "and longitude across the input files {!r} and {!r}")
+            raise FileInputError(msg.format(self.MERGE_COLUMN,
+                                            self._solar_fpath,
+                                            self._wind_fpath))
+
+    def _verify_col_match_post_merge(self, col_name):
+        """Verify that all the values in a column match post merge. """
+        c1, c2 = col_name, '{}_x'.format(col_name)
+        if c1 in self._hybrid_meta.columns and c2 in self._hybrid_meta.columns:
+            return (self._hybrid_meta[c1] == self._hybrid_meta[c2]).all()
+        else:
+            return True
+
+    def _init_profiles(self):
+        """Initialize the output rep profiles attribute."""
+        self._profiles = {
+            k: np.zeros((len(self.hybrid_time_index), len(self._hybrid_meta)),
+                        dtype=np.float32)
+            for k in self.OUTPUT_PROFILE_NAMES}
 
     def _init_h5_out(self, fout, save_hybrid_meta=True,
                      scaled_precision=False):
@@ -484,45 +548,19 @@ class Hybridization:
                                 .format(n_complete, len(self.meta)))
                     log_mem(logger, log_level='DEBUG')
 
-    def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
-             max_workers=None):
-        """
-        Run hybridization of profiles in serial or parallel and save to disc
-
-        Parameters
-        ----------
-        fout : str, optional
-            filepath to output h5 file, by default None
-        save_hybrid_meta : bool, optional
-            Flag to save hybrid reV SC table to rep profile output.,
-            by default True
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
-        """
-        if max_workers == 1:
-            self._run_serial()
-        else:
-            self._run_parallel(max_workers=max_workers)
-
-        if fout is not None:
-            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
-                               scaled_precision=scaled_precision)
-
-        logger.info('Hybridization of representative profiles complete!')
-
     @classmethod
-    def run(cls, gen_fpath, fout=None, save_hybrid_meta=True,
+    def run(cls, solar_fpath, wind_fpath, fout=None, save_hybrid_meta=True,
             scaled_precision=False, max_workers=None):
         """Run hybridization by merging the profiles of each SC region.
 
         Parameters
         ----------
-        gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
+        solar_fpath : str
+            Filepath to rep profile output file to extract solar profiles and
+            summaries from.
+        wind_fpath : str
+            Filepath to rep profile output file to extract wind profiles and
+            summaries from.
         fout : str, optional
             filepath to output h5 file, by default None.
         save_hybrid_meta : bool, optional
@@ -537,7 +575,7 @@ class Hybridization:
 
         Returns
         -------
-        profiles : dict
+        hybrid_profiles : dict
             dict of n_profile-keyed arrays with shape (time, n) for the
             hybridized profiles for each region.
         hybrid_meta : pd.DataFrame
@@ -547,9 +585,9 @@ class Hybridization:
             Datetime Index for hybridized profiles
         """
 
-        rp = cls(gen_fpath)
+        rp = cls(solar_fpath, wind_fpath)
 
         rp._run(fout=fout, save_hybrid_meta=save_hybrid_meta,
                 scaled_precision=scaled_precision, max_workers=max_workers)
 
-        return rp._profiles, rp.hybrid_meta, rp.hybrid_time_index
+        # return rp._profiles, rp.hybrid_meta, rp.hybrid_time_index

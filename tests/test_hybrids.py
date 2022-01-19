@@ -25,9 +25,20 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
 
 
+def test_duplicate_lat_long_values():
+    """Test duplicate lat/long values corresponding to unique merge column. """
+    with tempfile.TemporaryDirectory() as td:
+        fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
+        make_test_file(SOLAR_FPATH, fout_solar, duplicate_coord_values=True)
+
+        with pytest.raises(FileInputError) as excinfo:
+            Hybridization.run(fout_solar, WIND_FPATH)
+
+        assert "Detected mismatched coordinate values" in str(excinfo.value)
+
+
 def test_duplicate_merge_column_values():
-    """Test duplicate values in merge column.
-    """
+    """Test duplicate values in merge column. """
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar, duplicate_rows=True)
@@ -94,7 +105,8 @@ def test_valid_time_index_overlap():
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
-                   drop_cols=None, duplicate_rows=False):
+                   drop_cols=None, duplicate_rows=False,
+                   duplicate_coord_values=False):
     """Generate a test file from existing input file.
 
     The new test file can have a subset of the data of the original file.
@@ -119,6 +131,9 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
     duplicate_rows : bool, optional
         Option to duplicate the first half of all rows in meta DataFrame,
         by default False.
+    duplicate_coord_values : bool, optional
+        Option to randomly duplicate coordinate values (lat and lon) in the
+        meta DataFrame, by default False.
     """
     with Resource(in_fp) as res:
         dset_names = [d for d in res.dsets if d not in ('meta', 'time_index')]
@@ -130,6 +145,9 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
             n_rows, __ = meta.shape
             half_n_rows = n_rows // 2
             meta.iloc[-half_n_rows:] = meta.iloc[:half_n_rows].values
+        if duplicate_coord_values:
+            meta.loc[0, 'latitude'] = meta['latitude'].iloc[-1]
+            meta.loc[0, 'latitude'] = meta['latitude'].iloc[-1]
         shapes['meta'] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))
