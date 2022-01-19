@@ -35,10 +35,10 @@ class Hybridization:
         ['latitude', 'longitude', 'country', 'state', 'county', 'elevation',
          'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind']
     )
-
     DROPPED_COLUMNS = set(['gid'])
     MERGE_COLUMN = 'sc_point_gid'
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
+    OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
 
     def __init__(self, solar_fpath, wind_fpath):
         """
@@ -119,11 +119,10 @@ class Hybridization:
 
     def _init_profiles(self):
         """Initialize the output rep profiles attribute."""
-        prof_names = ['hybrid', 'solar_time_built', 'wind_time_built']
         self._profiles = {
             k: np.zeros((len(self.hybrid_time_index), len(self._hybrid_meta)),
                         dtype=np.float32)
-            for k in prof_names}
+            for k in self.OUTPUT_PROFILE_NAMES}
 
     def _validate_input_files(self):
         """Validate the input files.
