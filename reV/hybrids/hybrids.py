@@ -1,0 +1,379 @@
+# -*- coding: utf-8 -*-
+"""Hybridization utilities.
+
+@author: ppinchuk
+"""
+
+from concurrent.futures import as_completed
+from copy import deepcopy
+import json
+import logging
+import numpy as np
+import os
+import pandas as pd
+from scipy import stats
+from warnings import warn
+
+
+from reV.handlers.outputs import Outputs
+from reV.utilities.exceptions import FileInputError, DataShapeError
+from reV.utilities import log_versions
+
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.loggers import log_mem
+from rex.utilities.utilities import parse_year, to_records_array
+
+logger = logging.getLogger(__name__)
+
+
+class Hybridization:
+    """Framework to handle hybridization for one resource region"""
+
+    NON_DUPLICATE_COLS = set(
+        ['latitude', 'longitude', 'country', 'state', 'county', 'elevation',
+         'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind']
+    )
+
+    def __init__(self, solar_fpath, wind_fpath, merge_col='sc_point_gid'):
+        """
+        Parameters
+        ----------
+        solar_fpath : str
+            Filepath to rep profile output file to extract solar profiles and
+            summaries from.
+        wind_fpath : str
+            Filepath to rep profile output file to extract wind profiles and
+            summaries from.
+        merge_col : str
+            Column label in both summary tables that contains gids to perform
+            the data merge on.
+        """
+
+        logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
+                    .format(solar_fpath))
+        logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
+                    .format(wind_fpath))
+        logger.info('Running hybridization rep profiles with merge_col: "{}"'
+                    .format(merge_col))
+
+        self._solar_fpath = solar_fpath
+        self._wind_fpath = wind_fpath
+        self._merge_col = merge_col
+        self._profiles = None
+        self._hybrid_rev_summary = None
+        self._time_index = None
+
+        self._hybridize_summary()
+        # self._init_profiles()
+
+    def _hybridize_summary(self):
+        with Resource(self._solar_fpath) as res:
+            solar_meta = res.meta
+
+        with Resource(self._wind_fpath) as res:
+            wind_meta = res.meta
+
+        col_name_map = {
+            c.lower().replace(" ", "_"): c 
+            for c in solar_meta.columns.values
+        }
+
+        solar_meta.columns = [
+            col_name.lower().replace(" ", "_")
+            if col_name.lower().replace(" ", "_") in self.NON_DUPLICATE_COLS
+            else '{}_solar'.format(col_name)
+            for col_name in solar_meta.columns.values
+        ]
+
+        wind_meta.columns = [
+            col_name.lower().replace(" ", "_")
+            if col_name.lower().replace(" ", "_") in self.NON_DUPLICATE_COLS
+            else '{}_wind'.format(col_name)
+            for col_name in wind_meta.columns.values
+        ]
+
+        sc = set(solar_meta.columns.values)
+        wc = set(wind_meta.columns.values)
+        duplicate_cols = sc & wc
+
+        if self._merge_col.lower().replace(" ", "_") not in duplicate_cols:
+            msg = "Merge column {} missing from one or both summaries!"
+            raise ValueError(msg.format(self._merge_col))
+
+        self._hybrid_rev_summary = solar_meta.merge(
+            wind_meta, on=self._merge_col.lower().replace(" ", "_"),
+            suffixes=[None, '_x']
+        )
+        self._hybrid_rev_summary.drop(
+            [n for n in self._hybrid_rev_summary.columns if "_x" in n],
+            axis=1, inplace=True
+        )
+        self._hybrid_rev_summary.rename(col_name_map, inplace=True, axis=1)
+        self._hybrid_rev_summary.to_csv("combined.csv")
+
+    def _init_profiles(self, n_profiles=1):
+        """Initialize the output rep profiles attribute."""
+        self._profiles = {k: np.zeros((len(self.time_index),
+                                       len(self._hybrid_rev_summary)),
+                                      dtype=np.float32)
+                          for k in range(n_profiles)}
+
+    @property
+    def hybrid_rev_summaryy(self):
+        """Hybridized summary for the representative profiles.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            Summary for the representative profiles. At the very least,
+            this has a column that the data was merged on.
+        """
+        return self._hybrid_rev_summary
+
+    @property
+    def time_index(self):
+        """Get the time index for the rep profiles.
+
+        Returns
+        -------
+        time_index : pd.datetimeindex
+            Time index sourced from the reV gen file.
+        """
+        if self._time_index is None:
+            with Resource(self._solar_fpath) as res:
+                ds = 'time_index'
+                if parse_year(self._cf_dset, option='bool'):
+                    year = parse_year(self._cf_dset, option='raise')
+                    ds += '-{}'.format(year)
+
+                self._time_index = res._get_time_index(ds, slice(None))
+
+        return self._time_index
+
+    @property
+    def profiles(self):
+        """Get the arrays of representative CF profiles corresponding to meta.
+
+        Returns
+        -------
+        profiles : dict
+            dict of n_profile-keyed arrays with shape (time, n) for the
+            representative profiles for each region.
+        """
+        return self._profiles
+
+    def _init_h5_out(self, fout, save_hybrid_rev_summary=True,
+                     scaled_precision=False):
+        """Initialize an output h5 file for n_profiles
+
+        Parameters
+        ----------
+        fout : str
+            None or filepath to output h5 file.
+        save_hybrid_rev_summary : bool
+            Flag to save hybridized reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
+        """
+        dsets = []
+        shapes = {}
+        attrs = {}
+        chunks = {}
+        dtypes = {}
+
+        for i in range(self._n_profiles):
+            dset = 'rep_profiles_{}'.format(i)
+            dsets.append(dset)
+            shapes[dset] = self.profiles[0].shape
+            chunks[dset] = None
+
+            if scaled_precision:
+                attrs[dset] = {'scale_factor': 1000}
+                dtypes[dset] = np.uint16
+            else:
+                attrs[dset] = None
+                dtypes[dset] = self.profiles[0].dtype
+
+        meta = self.meta.copy()
+        for c in meta.columns:
+            try:
+                meta[c] = pd.to_numeric(meta[c])
+            except ValueError:
+                pass
+
+        Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
+                        meta, time_index=self.time_index)
+
+        if save_hybrid_rev_summary:
+            with Outputs(fout, mode='a') as out:
+                rev_sum = to_records_array(self._hybrid_rev_summary)
+                out._create_dset('hybrid_rev_summary', rev_sum.shape,
+                                 rev_sum.dtype, data=rev_sum)
+
+    def _write_h5_out(self, fout, save_hybrid_rev_summary=True):
+        """Write profiles and meta to an output file.
+
+        Parameters
+        ----------
+        fout : str
+            None or filepath to output h5 file.
+        save_hybrid_rev_summary : bool
+            Flag to save hybridized reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
+        """
+        with Outputs(fout, mode='a') as out:
+
+            if 'hybrid_rev_summary' in out.datasets and \
+                    save_hybrid_rev_summary:
+                rev_sum = to_records_array(self._rev_summary)
+                out['hybrid_rev_summary'] = rev_sum
+
+            for i in range(self._n_profiles):
+                dset = 'rep_profiles_{}'.format(i)
+                out[dset] = self.profiles[i]
+
+    def save_profiles(self, fout, save_rev_summary=True,
+                      scaled_precision=False):
+        """Initialize fout and save profiles.
+
+        Parameters
+        ----------
+        fout : str
+            None or filepath to output h5 file.
+        save_rev_summary : bool
+            Flag to save full reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
+        """
+
+        self._init_h5_out(fout, save_rev_summary=save_rev_summary,
+                          scaled_precision=scaled_precision)
+        self._write_h5_out(fout, save_rev_summary=save_rev_summary)
+
+    def _run_serial(self):
+        """Compute all representative profiles in serial."""
+
+        logger.info('Running {} rep profile calculations in serial.'
+                    .format(len(self.meta)))
+        for i, row in self.hybrid_rev_summary.iterrows():
+            logger.debug('Working on profile {} out of {}'
+                         .format(i + 1, len(self.hybrid_rev_summary)))
+            # out = self._hybridize_profile(row)
+            logger.info('Profile {} out of {} complete '
+                        .format(i + 1, len(self.hybrid_rev_summary)))
+
+    def _run_parallel(self, max_workers=None, pool_size=72):
+        """Compute all representative profiles in parallel.
+
+        Parameters
+        ----------
+        max_workers : int | None
+            Number of parallel workers. 1 will run serial, None will use all
+            available.
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
+        """
+
+        logger.info('Kicking off {} rep profile futures.'
+                    .format(len(self.meta)))
+
+        iter_chunks = np.array_split(self.hybrid_rev_summary.index.values,
+                                     np.ceil(len(self.hybrid_rev_summary)
+                                             / pool_size))
+        n_complete = 0
+        for iter_chunk in iter_chunks:
+            logger.debug('Starting process pool...')
+            futures = {}
+            loggers = [__name__, 'reV']
+            with SpawnProcessPool(max_workers=max_workers,
+                                  loggers=loggers) as exe:
+                for i in iter_chunk:
+                    row = self.meta.loc[i, :]
+
+                    future = exe.submit(
+                        # self._hybridize_profile,
+                        row
+                    )
+
+                    futures[future] = [i, region_dict]
+
+                for future in as_completed(futures):
+                    i, region_dict = futures[future]
+                    out = future.result()
+                    n_complete += 1
+                    logger.info('Future {} out of {} complete '
+                                .format(n_complete, len(self.meta)))
+                    log_mem(logger, log_level='DEBUG')
+
+    def _run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+             max_workers=None):
+        """
+        Run hybridization of profiles in serial or parallel and save to disc
+
+        Parameters
+        ----------
+        fout : str, optional
+            filepath to output h5 file, by default None
+        save_rev_summary : bool, optional
+            Flag to save full reV SC table to rep profile output.,
+            by default True
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
+            Number of parallel workers. 1 will run serial, None will use all
+            available., by default None
+        """
+        if max_workers == 1:
+            self._run_serial()
+        else:
+            self._run_parallel(max_workers=max_workers)
+
+        if fout is not None:
+            self.save_profiles(fout, save_rev_summary=save_rev_summary,
+                               scaled_precision=scaled_precision)
+
+        logger.info('Hybridization of representative profiles complete!')
+
+    @classmethod
+    def run(cls, gen_fpath, fout=None, save_rev_summary=True,
+            scaled_precision=False, max_workers=None):
+        """Run hybridization by merging the profiles of each SC region.
+
+        Parameters
+        ----------
+        gen_fpath : str
+            Filepath to reV gen output file to extract "cf_profile" from.
+        fout : str, optional
+            filepath to output h5 file, by default None.
+        save_rev_summary : bool, optional
+            Flag to save full reV SC table to rep profile output.,
+            by default True.
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
+            Number of parallel workers. 1 will run serial, None will use all
+            available., by default None.
+
+        Returns
+        -------
+        profiles : dict
+            dict of n_profile-keyed arrays with shape (time, n) for the
+            representative profiles for each region.
+        meta : pd.DataFrame
+            Meta dataframes recording the regions and the selected rep profile
+            gid.
+        time_index : pd.DatatimeIndex
+            Datetime Index for represntative profiles
+        """
+
+        rp = cls(gen_fpath)
+
+        rp._run(fout=fout, save_rev_summary=save_rev_summary,
+                scaled_precision=scaled_precision, max_workers=max_workers)
+
+        return rp._profiles, rp._hybrid_rev_summary, rp._time_index
