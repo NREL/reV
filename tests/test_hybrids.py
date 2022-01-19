@@ -25,6 +25,7 @@ SOLAR_FPATH_MULT = os.path.join(
 
 
 def test_merge_columns_missings():
+    """Test missing merge column. """
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar,

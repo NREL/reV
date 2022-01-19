@@ -30,10 +30,27 @@ logger = logging.getLogger(__name__)
 
 
 class ColNameFormatter:
+    """Column name formatting helper class. """
     ALLOWED = set(ascii_letters)
 
     @classmethod
     def fmt(cls, n):
+        """Format an input column name to remove excess chars and whitespace.
+
+        This method should help facilitate the merging of column names
+        between two DataFrames.
+
+        Parameters
+        ----------
+        n : str
+            Input column name.
+
+        Returns
+        -------
+        str
+            The column name with all charactes except ascii stripped
+            and all lowercase.
+        """
         return ''.join(c for c in n if c in cls.ALLOWED).lower()
 
 
@@ -176,6 +193,14 @@ class Hybridization:
                     raise ValueError(msg.format(fp, profile_dset_names))
 
     def _validate_merge_col_exists(self):
+        """Validate the existence of the merge column.
+
+        Raises
+        ------
+        ValueError
+            If merge column is missing from either the solar or
+            tghe wind meta data.
+        """
         solar_cols = set(ColNameFormatter.fmt(c)
                          for c in self.solar_meta.columns.values)
         if ColNameFormatter.fmt(self.MERGE_COLUMN) not in solar_cols:
