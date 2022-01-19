@@ -19,7 +19,7 @@ class RepProfilesConfig(AnalysisConfig):
     """Representative Profiles config."""
 
     NAME = 'rep_profiles'
-    REQUIREMENTS = ('gen_fpath', 'rev_summary')
+    REQUIREMENTS = ('gen_fpath', 'rev_summary', 'reg_cols')
 
     def __init__(self, config):
         """
@@ -142,8 +142,7 @@ class RepProfilesConfig(AnalysisConfig):
         profile per region closest to the meanoid."""
         aggregate = bool(self.get('aggregate_profiles', False))
         if aggregate:
-            self.check_overwrite_keys('aggregate_profiles', 'reg_cols',
-                                      'rep_method', 'err_method', 'weight',
-                                      'n_profiles')
+            self.check_overwrite_keys('aggregate_profiles', 'rep_method'
+                                      'err_method', 'n_profiles')
 
         return aggregate
