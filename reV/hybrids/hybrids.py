@@ -51,7 +51,9 @@ def hybrid_col(col_name):
     --------
     Writing and registering a new hybridization:
 
-    >>> from reV.hybrids import hybrid_col
+    >>> from reV.hybrids import hybrid_col, Hybridization
+    >>> SOLAR_FPATH = '/path/to/input/solar/file.h5
+    >>> WIND_FPATH = '/path/to/input/wind/file.h5
     >>>
     >>> @hybrid_col('scaled_elevation')
     >>> def some_new_hybrid_func(h):
