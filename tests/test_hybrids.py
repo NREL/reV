@@ -9,7 +9,7 @@ import json
 import tempfile
 
 from reV.hybrids.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
-from reV.utilities.exceptions import FileInputError
+from reV.utilities.exceptions import FileInputError, OutputWarning
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
@@ -23,6 +23,21 @@ SOLAR_FPATH_30_MIN = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_30_min.h5')
 SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
+
+
+def test_warning_for_improper_data_output_from_hybrid_method():
+    """Test that hybrid function with incorrect output throws warning. """
+
+    @hybrid_col('scaled_elevation')
+    def some_new_hybrid_func(h):
+        return [0]
+
+    with pytest.warns(OutputWarning) as record:
+        Hybridization.run(SOLAR_FPATH, WIND_FPATH)
+
+    warn_msg = record[0].message.args[0]
+    assert "Unable to add" in warn_msg
+    assert "column to hybrid meta" in warn_msg
 
 
 def test_hybrid_col_decorator():

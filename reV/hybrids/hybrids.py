@@ -18,7 +18,7 @@ from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import FileInputError, DataShapeError
+from reV.utilities.exceptions import FileInputError, OutputWarning
 from reV.utilities import log_versions
 
 from rex.resource import Resource
@@ -436,7 +436,15 @@ class Hybridization:
         for new_col_name, method in HYBRID_METHODS.items():
             out = method(self)
             if out is not None:
-                self._hybrid_meta[new_col_name] = out
+                try:
+                    self._hybrid_meta[new_col_name] = out
+                except ValueError as e:
+                    msg = ("Unable to add {!r} column to hybrid meta. The "
+                           "following exception was raised when adding "
+                           "the data output by '{}': {!r}.")
+                    w = msg.format(new_col_name, method.__name__, e)
+                    logger.warning(w)
+                    warn(w, OutputWarning)
 
         self._sort_hybrid_meta_cols()
 
