@@ -18,8 +18,8 @@ from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (FileInputError, InputWarning,
-                                      OutputWarning)
+from reV.utilities.exceptions import (FileInputError, InputError,
+                                      InputWarning, OutputWarning)
 from reV.utilities import log_versions
 
 from rex.resource import Resource
@@ -94,7 +94,7 @@ class ColNameFormatter:
 
 
 class Hybridization:
-    """Framework to handle hybridization for one resource region"""
+    """Framework to handle hybridization of representative profiles."""
 
     NON_DUPLICATE_COLS = {
         'latitude', 'longitude', 'country', 'state', 'county', 'elevation',
@@ -102,11 +102,15 @@ class Hybridization:
     }
     DROPPED_COLUMNS = ['gid']
     MERGE_COLUMN = 'sc_point_gid'
+    SOLAR_PREFIX = 'solar_'
+    WIND_PREFIX = 'wind_'
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
+    _INTERNAL_COL_PREFIX = '_h_internal'
 
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
-                 allow_wind_only=False, fillna=None):
+                 allow_wind_only=False, fillna=None, allowed_ratio=None,
+                 ratio_cols=('solar_capacity', 'wind_capacity')):
         """
         Parameters
         ----------
@@ -126,6 +130,16 @@ class Hybridization:
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
             meta, by default None.
+        allowed_ratio : float | tuple, optional
+            Option to set a ratio or ratio bounds (in two-tuple form) on the
+            `ratio_cols`. This number would limit the hybridization values to
+            the ratio value. By default, None (no limit).
+        ratio_cols : tuple, optional
+            Option to specify the columns used to calculate the ratio that is
+            limited by the `allowed_ratio` input. If `allowed_ratio` is None,
+            this input does nothing. The names of the columns should be
+            prefixed with one of the prefixes defined as class variables.
+            By default ('solar_capacity', 'wind_capacity').
         """
 
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
@@ -138,12 +152,18 @@ class Hybridization:
                     'allow_wind_only: "{}"'.format(allow_wind_only))
         logger.info('Running hybridization rep profiles with fillna: "{}"'
                     .format(fillna))
+        logger.info('Running hybridization rep profiles with '
+                    'allowed_ratio: "{}"'.format(allowed_ratio))
+        logger.info('Running hybridization rep profiles with ratio_cols: "{}"'
+                    .format(ratio_cols))
 
         self._solar_fpath = solar_fpath
         self._wind_fpath = wind_fpath
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
         self._fillna = fillna or {}
+        self._allowed_ratio = allowed_ratio
+        self._ratio_cols = ratio_cols
         self._profiles = None
         self._solar_meta = None
         self._wind_meta = None
@@ -151,21 +171,27 @@ class Hybridization:
         self._solar_time_index = None
         self._wind_time_index = None
         self._hybrid_time_index = None
+        self.__merge_col_overlap = None
         self.__profile_reg_check = re.compile(self.PROFILE_DSET_REGEX)
         self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
         self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
+        self.__hybrid_meta_cols = None
         self.__col_name_map = None
 
-        self._validate_input_files()
+        self._validate_input()
 
-    def _validate_input_files(self):
-        """Validate the input files.
-        """
+    def _validate_input(self):
+        """Validate the user input and input files. """
+
         self._validate_time_index()
         self._validate_num_profiles()
         self._validate_merge_col_exists()
         self._validate_unique_merge_col()
         self._validate_merge_col_overlaps()
+        self._validate_ratio_cols_length()
+        self._validate_ratio_cols_prefixed()
+        self._validate_ratio_cols_exist()
+        self._validate_ratio()
 
     def _validate_time_index(self):
         """Validate the hybrid time index to be of len >= 8760.
@@ -276,8 +302,9 @@ class Hybridization:
             self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
         ].item()
         wind_vals = set(self.wind_meta[merge_col].values)
+        self.__merge_col_overlap = solar_vals & wind_vals
 
-        if not (solar_vals & wind_vals):
+        if not self.__merge_col_overlap:
             msg = ("No overlap detected in the values of {!r} across the "
                    "input files. Please ensure that at least one of the "
                    "{!r} values is the same for input files {!r} and {!r}")
@@ -285,6 +312,96 @@ class Hybridization:
                            self._wind_fpath)
             logger.error(e)
             raise FileInputError(e)
+
+    def _validate_ratio_cols_length(self):
+        """Ensure exactly two ratio column names are provided.
+
+        Raises
+        ------
+        InputError
+            If len(ratio_cols) != 2, or ratio_cols does not have a "len".
+        """
+        try:
+            if len(self._ratio_cols) != 2:
+                raise Exception
+        except Exception:
+            msg = ("Input for 'allowed_ratio' not understood: {!r}. "
+                   "Please make sure this value is a two-tuple containg"
+                   "prefixed column names.")
+            e = msg.format(self._ratio_cols)
+            logger.error(e)
+            raise InputError(e) from None
+
+    def _validate_ratio_cols_prefixed(self):
+        """Ensure the ratio columns are formatted correctly.
+
+        Raises
+        ------
+        InputError
+            If ratio columns are not prefixed correctly.
+        """
+
+        if self._allowed_ratio is None:
+            return
+
+        for col in self._ratio_cols:
+            missing_solar_prefix = not col.startswith(self.SOLAR_PREFIX)
+            missing_wind_prefix = not col.startswith(self.WIND_PREFIX)
+            if missing_solar_prefix and missing_wind_prefix:
+                msg = ("Input ratio column {!r} does not start with a valid "
+                       "prefix: {!r}. Please ensure that the ratio column "
+                       "names specify the correct resource prefix.")
+                e = msg.format(col, (self.SOLAR_PREFIX, self.WIND_PREFIX))
+                logger.error(e)
+                raise InputError(e)
+
+    def _validate_ratio_cols_exist(self):
+        """Ensure the ratio columns exist if a ratio is specified.
+
+        Raises
+        ------
+        FileInputError
+            If ratio columns are not found in the meta data.
+        """
+
+        if self._allowed_ratio is None:
+            return
+
+        for col in self._ratio_cols:
+            no_prefix_name = "_".join(col.split('_')[1:])
+            fmt_name = ColNameFormatter.fmt(no_prefix_name)
+            col_in_solar = fmt_name in self.__solar_cols
+            col_in_wind = fmt_name in self.__wind_cols
+            if not col_in_solar and not col_in_wind:
+                msg = ("Input ratio column {!r} not found in either meta "
+                       "data! Please check the input files {!r} and {!r}")
+                e = msg.format(no_prefix_name, self._solar_fpath,
+                               self._wind_fpath)
+                logger.error(e)
+                raise FileInputError(e)
+
+    def _validate_ratio(self):
+        """Ensure the ratio value is input correctly.
+
+        Raises
+        ------
+        InputError
+            If ratio is not one of: `None`, float, or len 2 container.
+        """
+        if self._allowed_ratio is None:
+            self._allowed_ratio = (0, float('inf'))
+            return
+
+        try:
+            if len(self._allowed_ratio) > 2:
+                msg = ("Input for 'allowed_ratio' not understood: {!r}. "
+                       "Please make sure this value is one of: `None`, "
+                       "float, or len 2 container.")
+                e = msg.format(self._allowed_ratio)
+                logger.error(e)
+                raise InputError(e)
+        except TypeError:
+            self._allowed_ratio = (self._allowed_ratio, self._allowed_ratio)
 
     @property
     def solar_meta(self):
@@ -324,7 +441,10 @@ class Hybridization:
             Summary for the hybridized representative profiles.
             At the very least, this has a column that the data was merged on.
         """
-        return self._hybrid_meta
+        if self.__hybrid_meta_cols is None:
+            return self._hybrid_meta
+        else:
+            return self._hybrid_meta[self.__hybrid_meta_cols]
 
     @property
     def solar_time_index(self):
@@ -386,11 +506,18 @@ class Hybridization:
 
         Returns
         -------
-        data : Series
-            A series of data containing the aggregated capacity.
+        data : Series | None
+            A series of data containing the aggregated capacity, or `None`
+            if the capacity columns are missing.
         """
-        total_cap = (self.hybrid_meta['solar_capacity']
-                     + self.hybrid_meta['wind_capacity'])
+
+        sc, wc = 'hybrid_solar_capacity', 'hybrid_wind_capacity'
+        missing_solar_cap = sc not in self.hybrid_meta.columns
+        missing_wind_cap = wc not in self.hybrid_meta.columns
+        if missing_solar_cap or missing_wind_cap:
+            return None
+
+        total_cap = self.hybrid_meta[sc] + self.hybrid_meta[wc]
         return total_cap
 
     @hybrid_col('hybrid_cf')
@@ -399,13 +526,24 @@ class Hybridization:
 
         Returns
         -------
-        data : Series
-            A series of data containing the aggregated capacity.
+        data : Series | None
+            A series of data containing the aggregated capacity, or `None`
+            if the capacity and/or mean_cf columns are missing.
         """
-        solar_cf_weighted = (self.hybrid_meta['solar_capacity']
-                             * self.hybrid_meta['solar_mean_cf'])
-        wind_cf_weighted = (self.hybrid_meta['wind_capacity']
-                            * self.hybrid_meta['wind_mean_cf'])
+
+        sc, wc = 'hybrid_solar_capacity', 'hybrid_wind_capacity'
+        scf, wcf = 'solar_mean_cf', 'wind_mean_cf'
+        missing_solar_cap = sc not in self.hybrid_meta.columns
+        missing_wind_cap = wc not in self.hybrid_meta.columns
+        missing_solar_mean_cf = scf not in self.hybrid_meta.columns
+        missing_wind_mean_cf = wcf not in self.hybrid_meta.columns
+        missing_any = (missing_solar_cap or missing_wind_cap
+                       or missing_solar_mean_cf or missing_wind_mean_cf)
+        if missing_any:
+            return None
+
+        solar_cf_weighted = self.hybrid_meta[sc] * self.hybrid_meta[scf]
+        wind_cf_weighted = self.hybrid_meta[wc] * self.hybrid_meta[wcf]
         total_capacity = self.aggregate_capacity()
         hybrid_cf = (solar_cf_weighted + wind_cf_weighted) / total_capacity
         return hybrid_cf
@@ -438,11 +576,11 @@ class Hybridization:
         # else:
         #     self._run_parallel(max_workers=max_workers)
 
-        # if fout is not None:
-        #     self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
-        #                        scaled_precision=scaled_precision)
+        if fout is not None:
+            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
+                               scaled_precision=scaled_precision)
 
-        # logger.info('Hybridization of representative profiles complete!')
+        logger.info('Hybridization of representative profiles complete!')
 
     def _hybridize_meta(self):
         """Combine the solar and wind metas and run hybridize methods."""
@@ -451,6 +589,7 @@ class Hybridization:
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
         self._fillna_meta_cols()
+        self._limit_by_ratio()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
 
@@ -461,8 +600,17 @@ class Hybridization:
             for c in self.solar_meta.columns.values
         }
 
-        self._rename_cols(self.solar_meta, prefix='solar')
-        self._rename_cols(self.wind_meta, prefix='wind')
+        self._rename_cols(self.solar_meta, prefix=self.SOLAR_PREFIX)
+        self._rename_cols(self.wind_meta, prefix=self.WIND_PREFIX)
+
+    def _rename_cols(self, df, prefix):
+        """Replace column names with the ColNameFormatter.fmt is needed. """
+        df.columns = [
+            ColNameFormatter.fmt(col_name)
+            if col_name in self.NON_DUPLICATE_COLS
+            else '{}{}'.format(prefix, col_name)
+            for col_name in df.columns.values
+        ]
 
     def _merge_solar_wind_meta(self):
         """Merge the wind and solar meta DetaFrames. """
@@ -506,9 +654,11 @@ class Hybridization:
 
     def _sort_hybrid_meta_cols(self):
         """Sort the columns of the hybrid meta. """
-        self._hybrid_meta = self._hybrid_meta[
-            sorted(self._hybrid_meta.columns, key=self._column_sorting_key)
-        ]
+        self.__hybrid_meta_cols = sorted(
+            [c for c in self._hybrid_meta.columns
+             if not c.startswith(self._INTERNAL_COL_PREFIX)],
+            key=self._column_sorting_key
+        )
 
     def _column_sorting_key(self, c):
         """Helper function to sort hybrid meta columns. """
@@ -522,15 +672,6 @@ class Hybridization:
         elif c == self.MERGE_COLUMN:
             first_index = -1
         return first_index, self._hybrid_meta.columns.get_loc(c)
-
-    def _rename_cols(self, df, prefix):
-        """Replace column names with the ColNameFormatter.fmt is needed. """
-        df.columns = [
-            ColNameFormatter.fmt(col_name)
-            if col_name in self.NON_DUPLICATE_COLS
-            else '{}_{}'.format(prefix, col_name)
-            for col_name in df.columns.values
-        ]
 
     def _verify_lat_long_match_post_merge(self):
         """Verify that all the lat/lon values match post merge."""
@@ -559,16 +700,34 @@ class Hybridization:
             return True
 
     def _fillna_meta_cols(self):
+        """Fill N/A values as specified by user. """
         for col_name, fill_value in self._fillna.items():
             if col_name in self._hybrid_meta.columns:
                 self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
             else:
                 msg = ("Skipping fill values for {!r}: Unable to find column "
                        "in hybrid meta. Did you forget to prefilx with "
-                       "'solar_' or 'wind_'? ")
-                w = msg.format(col_name)
+                       "{!r} or {!r}? ")
+                w = msg.format(col_name, self.SOLAR_PREFIX, self.WIND_PREFIX)
                 logger.warning(w)
                 warn(w, InputWarning)
+
+    def _limit_by_ratio(self):
+        """ Limit the ratio columns based on input ratio. """
+        c1, c2 = self._ratio_cols
+        min_r, max_r = self._allowed_ratio
+        overlap_idx = self._hybrid_meta[self.MERGE_COLUMN].isin(
+            self.__merge_col_overlap
+        )
+        hc1 = self._hybrid_meta[c1].copy()
+        hc2 = self._hybrid_meta[c2].copy()
+        ratios = (hc1.loc[overlap_idx] / hc2.loc[overlap_idx])
+        ratio_too_low = (ratios < min_r) & overlap_idx
+        ratio_too_high = (ratios > max_r) & overlap_idx
+        hc1.loc[ratio_too_high] = hc2.loc[ratio_too_high].values * max_r
+        hc2.loc[ratio_too_low] = hc1.loc[ratio_too_low].values / min_r
+        self._hybrid_meta["hybrid_{}".format(c1)] = hc1.values
+        self._hybrid_meta["hybrid_{}".format(c2)] = hc2.values
 
     def _add_hybrid_cols(self):
         """Add new hybrid columns using registered hybrid methods. """
@@ -677,9 +836,10 @@ class Hybridization:
             Flag to scale cf_profiles by 1000 and save as uint16.
         """
 
-        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
-                          scaled_precision=scaled_precision)
-        self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
+        self.hybrid_meta.to_csv(fout)
+        # self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
+        #                   scaled_precision=scaled_precision)
+        # self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
@@ -739,7 +899,8 @@ class Hybridization:
 
     @classmethod
     def run(cls, solar_fpath, wind_fpath, allow_solar_only=False,
-            allow_wind_only=False, fillna=None, fout=None,
+            allow_wind_only=False, fillna=None, allowed_ratio=None,
+            ratio_cols=('solar_capacity', 'wind_capacity'), fout=None,
             save_hybrid_meta=True, scaled_precision=False, max_workers=None):
         """Run hybridization by merging the profiles of each SC region.
 
@@ -761,6 +922,15 @@ class Hybridization:
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
             meta, by default None.
+        allowed_ratio : float | tuple, optional
+            Option to set a ratio or ratio bounds (in two-tuple form) on the
+            `ratio_cols`. This number would limit the hybridization values to
+            the ratio value. By default, None (no limit).
+        ratio_cols : tuple, optional
+            Option to specify the columns used to calculate the ratio that is
+            limited by the `allowed_ratio` input. If `allowed_ratio` is None,
+            this input does nothing.
+            By default ('solar_capacity', 'wind_capacity').
         fout : str, optional
             filepath to output h5 file, by default None.
         save_hybrid_meta : bool, optional
@@ -786,7 +956,8 @@ class Hybridization:
         """
 
         rp = cls(solar_fpath, wind_fpath, allow_solar_only=allow_solar_only,
-                 allow_wind_only=allow_wind_only, fillna=fillna)
+                 allow_wind_only=allow_wind_only, fillna=fillna,
+                 allowed_ratio=allowed_ratio, ratio_cols=ratio_cols)
 
         rp._run(fout=fout, save_hybrid_meta=save_hybrid_meta,
                 scaled_precision=scaled_precision, max_workers=max_workers)

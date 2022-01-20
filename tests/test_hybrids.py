@@ -9,7 +9,7 @@ import json
 import tempfile
 
 from reV.hybrids.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
-from reV.utilities.exceptions import FileInputError, OutputWarning
+from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
@@ -23,6 +23,22 @@ SOLAR_FPATH_30_MIN = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_30_min.h5')
 SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
+
+
+def test_allowed_ratio():
+    """Test that the hybrid meta limits the ratio columns correctly. """
+    __, hybrid_meta, __ = Hybridization.run(
+        SOLAR_FPATH, WIND_FPATH, allowed_ratio=(0.5, 1.5)
+    )
+
+    ratios = (hybrid_meta['hybrid_solar_capacity']
+              / hybrid_meta['hybrid_wind_capacity'])
+
+    assert ((ratios * 1000).astype(int).between(500, 1500)).all()
+    assert (hybrid_meta['hybrid_solar_capacity']
+            <= hybrid_meta['solar_capacity']).all()
+    assert (hybrid_meta['hybrid_wind_capacity']
+            <= hybrid_meta['wind_capacity']).all()
 
 
 def test_fillna_values():
@@ -103,6 +119,51 @@ def test_duplicate_lat_long_values():
             Hybridization.run(fout_solar, WIND_FPATH)
 
         assert "Detected mismatched coordinate values" in str(excinfo.value)
+
+
+def test_invalid_ratio_input():
+    """Test improper ratio input. """
+
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH, allowed_ratio=(1, 2, 3))
+
+    assert "Input for `allowed_ratio` not understood" in str(excinfo.value)
+
+
+def test_ratio_column_missing():
+    """Test missing ratio column. """
+
+    cols = ('solar_col_dne', 'wind_capacity')
+    with pytest.raises(FileInputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH,
+                      allowed_ratio=1, ratio_cols=cols)
+
+    assert "Input ratio column" in str(excinfo.value)
+    assert "not found" in str(excinfo.value)
+
+
+def test_invalid_ratio_column_name():
+    """Test invalid inputs for ratio columns. """
+
+    cols = ('unprefixed_col', 'wind_capacity')
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH,
+                      allowed_ratio=1, ratio_cols=cols)
+
+    assert "Input ratio column" in str(excinfo.value)
+    assert "does not start with a valid prefix" in str(excinfo.value)
+
+
+def test_invalid_ratio_column_len():
+    """Test invalid number of input ratio columns. """
+
+    cols = ('solar_capacity', 'wind_capacity', 'a_third_col')
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH,
+                      allowed_ratio=1, ratio_cols=cols)
+
+    assert "Input for 'allowed_ratio' not understood" in str(excinfo.value)
+    assert "Please make sure this value is a two-tuple" in str(excinfo.value)
 
 
 def test_no_overlap_in_merge_column_values():
