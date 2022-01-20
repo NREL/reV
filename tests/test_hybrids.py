@@ -25,6 +25,26 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
 
 
+@pytest.mark.parametrize("input_combination, na_vals",
+                         [((False, False), (False, False)),
+                          ((True, False), (False, True)),
+                          ((False, True), (True, False)),
+                          ((True, True), (True, True))])
+def test_all_allow_solar_allow_wind_combinations(input_combination, na_vals):
+
+    allow_solar_only, allow_wind_only = input_combination
+    __, hybrid_meta, __ = Hybridization.run(
+        SOLAR_FPATH, WIND_FPATH, allow_solar_only=allow_solar_only,
+        allow_wind_only=allow_wind_only
+    )
+    for col_name, should_have_na_vals in zip(['solar_sc_gid', 'wind_sc_gid'],
+                                             na_vals):
+        if should_have_na_vals:
+            assert hybrid_meta[col_name].isna().values.any()
+        else:
+            assert not hybrid_meta[col_name].isna().values.any()
+
+
 def test_warning_for_improper_data_output_from_hybrid_method():
     """Test that hybrid function with incorrect output throws warning. """
 
@@ -47,13 +67,12 @@ def test_hybrid_col_decorator():
     def some_new_hybrid_func(h):
         return h.hybrid_meta['elevation'] * 1000
 
-    h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-    h._run()
+    __, hybrid_meta, __ = Hybridization.run(SOLAR_FPATH, WIND_FPATH)
 
     assert 'scaled_elevation' in HYBRID_METHODS
-    assert 'scaled_elevation' in h.hybrid_meta.columns
-    assert (h.hybrid_meta['elevation'] * 1000
-            == h.hybrid_meta['scaled_elevation']).all()
+    assert 'scaled_elevation' in hybrid_meta.columns
+    assert (hybrid_meta['elevation'] * 1000
+            == hybrid_meta['scaled_elevation']).all()
 
 
 def test_duplicate_lat_long_values():

@@ -105,7 +105,8 @@ class Hybridization:
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
 
-    def __init__(self, solar_fpath, wind_fpath, fillna=None):
+    def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
+                 allow_wind_only=False, fillna=None):
         """
         Parameters
         ----------
@@ -115,6 +116,12 @@ class Hybridization:
         wind_fpath : str
             Filepath to rep profile output file to extract wind profiles and
             summaries from.
+        allow_solar_only : bool, optional
+            Option to allow SC points with only solar capcity (no wind), by
+            default False.
+        allow_wind_only : bool, optional
+            Option to allow SC points with only wind capcity (no solar), by
+            default False.
         fillna : dict, optional
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
@@ -125,11 +132,17 @@ class Hybridization:
                     .format(solar_fpath))
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
                     .format(wind_fpath))
+        logger.info('Running hybridization rep profiles with '
+                    'allow_solar_only: "{}"'.format(allow_solar_only))
+        logger.info('Running hybridization rep profiles with '
+                    'allow_wind_only: "{}"'.format(allow_wind_only))
         logger.info('Running hybridization rep profiles with fillna: "{}"'
                     .format(fillna))
 
         self._solar_fpath = solar_fpath
         self._wind_fpath = wind_fpath
+        self._allow_solar_only = allow_solar_only
+        self._allow_wind_only = allow_wind_only
         self._fillna = fillna or {}
         self._profiles = None
         self._solar_meta = None
@@ -456,8 +469,18 @@ class Hybridization:
         """Merge the wind and solar meta DetaFrames. """
         self._hybrid_meta = self.solar_meta.merge(
             self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
-            suffixes=[None, '_x'],  # how='outer'
+            suffixes=[None, '_x'], how=self._merge_type()
         )
+
+    def _merge_type(self):
+        """Determine the type of merge to use for meta based on user input. """
+        if self._allow_solar_only and self._allow_wind_only:
+            return 'outer'
+        elif self._allow_solar_only and not self._allow_wind_only:
+            return 'left'
+        elif not self._allow_solar_only and self._allow_wind_only:
+            return 'right'
+        return 'inner'
 
     def _format_meta_post_merge(self):
         """Format hybrid meta after merging. """
@@ -716,7 +739,8 @@ class Hybridization:
                     log_mem(logger, log_level='DEBUG')
 
     @classmethod
-    def run(cls, solar_fpath, wind_fpath, fillna, fout=None,
+    def run(cls, solar_fpath, wind_fpath, allow_solar_only=False,
+            allow_wind_only=False, fillna=None, fout=None,
             save_hybrid_meta=True, scaled_precision=False, max_workers=None):
         """Run hybridization by merging the profiles of each SC region.
 
@@ -728,6 +752,12 @@ class Hybridization:
         wind_fpath : str
             Filepath to rep profile output file to extract wind profiles and
             summaries from.
+        allow_solar_only : bool, optional
+            Option to allow SC points with only solar capcity (no wind), by
+            default False.
+        allow_wind_only : bool, optional
+            Option to allow SC points with only wind capcity (no solar), by
+            default False.
         fillna : dict, optional
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
@@ -756,9 +786,10 @@ class Hybridization:
             Datetime Index for hybridized profiles
         """
 
-        rp = cls(solar_fpath, wind_fpath)
+        rp = cls(solar_fpath, wind_fpath, allow_solar_only=allow_solar_only,
+                 allow_wind_only=allow_wind_only, fillna=fillna)
 
         rp._run(fout=fout, save_hybrid_meta=save_hybrid_meta,
                 scaled_precision=scaled_precision, max_workers=max_workers)
 
-        # return rp._profiles, rp.hybrid_meta, rp.hybrid_time_index
+        return rp._profiles, rp.hybrid_meta, rp.hybrid_time_index
