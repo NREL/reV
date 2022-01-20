@@ -120,7 +120,9 @@ class Hybridization:
             msg = ("The length of the merged time index ({}) is less than "
                    "8760. Please ensure that the input profiles have a "
                    "time index that overlaps >= 8760 times.")
-            raise FileInputError(msg.format(len(self.hybrid_time_index)))
+            e = msg.format(len(self.hybrid_time_index))
+            logger.error(e)
+            raise FileInputError(e)
 
     def _validate_num_profiles(self):
         """Validate the number of input profiles.
@@ -141,7 +143,9 @@ class Hybridization:
                            "This module is not intended for hybridization of "
                            "multiple representative profiles. Please re-run "
                            "on a single aggregated profile.")
-                    raise FileInputError(msg.format(fp, profile_dset_names))
+                    e = msg.format(fp, profile_dset_names)
+                    logger.error(e)
+                    raise FileInputError(e)
 
     def _validate_merge_col_exists(self):
         """Validate the existence of the merge column.
@@ -155,14 +159,16 @@ class Hybridization:
         if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__solar_cols:
             msg = ("Cannot hybridize: merge column {!r} missing from the "
                    "solar meta data! ({!r})")
-            raise FileInputError(
-                msg.format(self.MERGE_COLUMN, self._solar_fpath))
+            e = msg.format(self.MERGE_COLUMN, self._solar_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
         if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__wind_cols:
             msg = ("Cannot hybridize: merge column {!r} missing from the "
                    "wind meta data! ({!r})")
-            raise FileInputError(
-                msg.format(self.MERGE_COLUMN, self._wind_fpath))
+            e = msg.format(self.MERGE_COLUMN, self._wind_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
     def _validate_unique_merge_col(self):
         """Validate the existence of unique values in the merge column.
@@ -183,15 +189,17 @@ class Hybridization:
             self.__solar_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
         ].item()
         if not self.solar_meta[merge_col].is_unique:
-            raise FileInputError(
-                msg.format(merge_col, merge_col, self._solar_fpath))
+            e = msg.format(merge_col, merge_col, self._solar_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
         merge_col = self.wind_meta.columns[
             self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
         ].item()
         if not self.wind_meta[merge_col].is_unique:
-            raise FileInputError(
-                msg.format(merge_col, merge_col, self._wind_fpath))
+            e = msg.format(merge_col, merge_col, self._wind_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
     def _validate_merge_col_overlaps(self):
         """Validate the existence of overlap in the merge column values.
@@ -214,9 +222,10 @@ class Hybridization:
             msg = ("No overlap detected in the values of {!r} across the "
                    "input files. Please ensure that at least one of the "
                    "{!r} values is the same for input files {!r} and {!r}")
-            raise FileInputError(msg.format(merge_col, merge_col,
-                                            self._solar_fpath,
-                                            self._wind_fpath))
+            e = msg.format(merge_col, merge_col, self._solar_fpath,
+                           self._wind_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
     @property
     def solar_meta(self):
@@ -410,9 +419,10 @@ class Hybridization:
                    "longitude) post merge. Please ensure that all matching "
                    "values of {!r} correspond to the same values of latitude "
                    "and longitude across the input files {!r} and {!r}")
-            raise FileInputError(msg.format(self.MERGE_COLUMN,
-                                            self._solar_fpath,
-                                            self._wind_fpath))
+            e = msg.format(self.MERGE_COLUMN, self._solar_fpath,
+                           self._wind_fpath)
+            logger.error(e)
+            raise FileInputError(e)
 
     def _verify_col_match_post_merge(self, col_name):
         """Verify that all the values in a column match post merge. """
