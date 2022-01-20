@@ -327,6 +327,40 @@ class Hybridization:
         """
         return self._profiles
 
+    @hybridizer
+    def aggregate_capacity(self):
+        """Compute the total capcity by summing the individual capacities.
+
+        Returns
+        -------
+        name : str
+            Name of new hybrid column - 'hybrid_capacity'
+        data : Series
+            A series of data containing the aggregated capacity.
+        """
+        total_cap = (self.hybrid_meta['solar_capacity']
+                     + self.hybrid_meta['wind_capacity'])
+        return 'hybrid_capacity', total_cap
+
+    @hybridizer
+    def aggregate_capacity_factor(self):
+        """Compute the capacity-weighted mean capcity factor.
+
+        Returns
+        -------
+        name : str
+            Name of new hybrid column - 'hybrid_f'
+        data : Series
+            A series of data containing the aggregated capacity.
+        """
+        solar_cf_weighted = (self.hybrid_meta['solar_capacity']
+                             * self.hybrid_meta['solar_mean_cf'])
+        wind_cf_weighted = (self.hybrid_meta['wind_capacity']
+                            * self.hybrid_meta['wind_mean_cf'])
+        __, total_capacity = self.aggregate_capacity()
+        hybrid_cf = (solar_cf_weighted + wind_cf_weighted) / total_capacity
+        return 'hybrid_cf', hybrid_cf
+
     def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
              max_workers=None):
         """
