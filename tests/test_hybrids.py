@@ -8,7 +8,7 @@ import numpy as np
 import json
 import tempfile
 
-from reV.hybrids.hybrids import Hybridization
+from reV.hybrids.hybrids import Hybridization, hybridizer
 from reV.utilities.exceptions import FileInputError
 from reV import Outputs, TESTDATADIR
 
@@ -23,6 +23,19 @@ SOLAR_FPATH_30_MIN = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_30_min.h5')
 SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
+
+
+def test_hybridizer_decorator():
+    """Test that function decorated with 'hybridizer' adds to hybrid meta. """
+
+    @hybridizer
+    def some_new_hybrid_func(h):
+        return 'scaled_elevation', h.hybrid_meta['elevation'] * 1000
+
+    hbz = Hybridization(SOLAR_FPATH, WIND_FPATH)
+    hbz._run()
+
+    assert 'scaled_elevation' in hbz.hybrid_meta.columns
 
 
 def test_duplicate_lat_long_values():

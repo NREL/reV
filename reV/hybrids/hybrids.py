@@ -27,6 +27,12 @@ from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import parse_year, to_records_array
 
 logger = logging.getLogger(__name__)
+HYBRID_METHODS = []
+
+
+def hybridizer(func):
+    HYBRID_METHODS.append(func)
+    return func
 
 
 class ColNameFormatter:
@@ -341,7 +347,7 @@ class Hybridization:
             available., by default None
         """
 
-        self._hybridize_summary()
+        self._hybridize_meta()
         # self._init_profiles()
 
         # if max_workers == 1:
@@ -355,7 +361,8 @@ class Hybridization:
 
         # logger.info('Hybridization of representative profiles complete!')
 
-    def _hybridize_summary(self):
+    def _hybridize_meta(self):
+        """Combine the solar and wind metas and run hybridize methods."""
         self._format_meta_pre_merge()
         self._hybrid_meta = self.solar_meta.merge(
             self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
@@ -363,8 +370,14 @@ class Hybridization:
         )
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
-        print(self._hybrid_meta.columns)
-        # self._hybrid_meta.to_csv("combined.csv")
+
+        for method in HYBRID_METHODS:
+            out = method(self)
+            if out is not None:
+                new_col_name, new_col_data = out
+                self._hybrid_meta[new_col_name] = new_col_data
+
+        self._sort_hybrid_meta_cols()
 
     def _format_meta_pre_merge(self):
         """Prepare solar and wind meta for merging. """
@@ -384,6 +397,9 @@ class Hybridization:
             axis=1, inplace=True, errors='ignore'
         )
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
+
+    def _sort_hybrid_meta_cols(self):
+        """Sort the columns of the hybrid meta. """
         self._hybrid_meta = self._hybrid_meta[
             sorted(self._hybrid_meta.columns, key=self._column_sorting_key)
         ]
