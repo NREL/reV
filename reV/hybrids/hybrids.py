@@ -453,11 +453,11 @@ class Hybridization:
         """Format hybrid meta after merging. """
 
         duplicate_cols = [n for n in self._hybrid_meta.columns if "_x" in n]
-        self._propogate_duplicate_cols(duplicate_cols)
+        self._propagate_duplicate_cols(duplicate_cols)
         self._drop_cols(duplicate_cols)
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
 
-    def _propogate_duplicate_cols(self, duplicate_cols):
+    def _propagate_duplicate_cols(self, duplicate_cols):
         """Fill missing column values from outer merge. """
         for duplicate in duplicate_cols:
             no_sufflix = "_".join(duplicate.split("_")[:-1])
