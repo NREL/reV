@@ -18,7 +18,8 @@ from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import FileInputError, OutputWarning
+from reV.utilities.exceptions import (FileInputError, InputWarning,
+                                      OutputWarning)
 from reV.utilities import log_versions
 
 from rex.resource import Resource
@@ -104,7 +105,7 @@ class Hybridization:
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
 
-    def __init__(self, solar_fpath, wind_fpath):
+    def __init__(self, solar_fpath, wind_fpath, fillna=None):
         """
         Parameters
         ----------
@@ -114,15 +115,22 @@ class Hybridization:
         wind_fpath : str
             Filepath to rep profile output file to extract wind profiles and
             summaries from.
+        fillna : dict, optional
+            Dictionary containing column_name, fill_value pairs reprenting any
+            fill values that should be applied after merging the wind and solar
+            meta, by default None.
         """
 
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
                     .format(solar_fpath))
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
                     .format(wind_fpath))
+        logger.info('Running hybridization rep profiles with fillna: "{}"'
+                    .format(fillna))
 
         self._solar_fpath = solar_fpath
         self._wind_fpath = wind_fpath
+        self._fillna = fillna or {}
         self._profiles = None
         self._solar_meta = None
         self._wind_meta = None
@@ -429,8 +437,10 @@ class Hybridization:
         self._merge_solar_wind_meta()
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
+        self._fillna_meta_cols()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
+        # self.hybrid_meta.to_csv('combined_inner.csv')
 
     def _format_meta_pre_merge(self):
         """Prepare solar and wind meta for merging. """
@@ -525,6 +535,18 @@ class Hybridization:
             return (compare_df[c1] == compare_df[c2]).all()
         else:
             return True
+
+    def _fillna_meta_cols(self):
+        for col_name, fill_value in self._fillna.items():
+            if col_name in self._hybrid_meta.columns:
+                self._hybrid_meta[col_name].fillna(fill_value)
+            else:
+                msg = ("Skipping fill values for {!r}: Unable to find column "
+                       "in hybrid meta. Did you forget to prefilx with "
+                       "'solar_' or 'wind_'? ")
+                w = msg.format(col_name)
+                logger.warning(w)
+                warn(w, InputWarning)
 
     def _add_hybrid_cols(self):
         """Add new hybrid columns using registered hybrid methods. """
@@ -694,8 +716,8 @@ class Hybridization:
                     log_mem(logger, log_level='DEBUG')
 
     @classmethod
-    def run(cls, solar_fpath, wind_fpath, fout=None, save_hybrid_meta=True,
-            scaled_precision=False, max_workers=None):
+    def run(cls, solar_fpath, wind_fpath, fillna, fout=None,
+            save_hybrid_meta=True, scaled_precision=False, max_workers=None):
         """Run hybridization by merging the profiles of each SC region.
 
         Parameters
@@ -706,6 +728,10 @@ class Hybridization:
         wind_fpath : str
             Filepath to rep profile output file to extract wind profiles and
             summaries from.
+        fillna : dict, optional
+            Dictionary containing column_name, fill_value pairs reprenting any
+            fill values that should be applied after merging the wind and solar
+            meta, by default None.
         fout : str, optional
             filepath to output h5 file, by default None.
         save_hybrid_meta : bool, optional
