@@ -25,12 +25,29 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, 'rep_profiles_out', 'rep_profiles_solar_multiple.h5')
 
 
+def test_fillna_values():
+    """Test that N/A values are filled properly based on user input. """
+
+    fill_vals = {'solar_capacity': 0, 'wind_capacity': -1}
+
+    __, hybrid_meta, __ = Hybridization.run(
+        SOLAR_FPATH, WIND_FPATH, allow_solar_only=True,
+        allow_wind_only=True, fillna=fill_vals
+    )
+
+    assert not hybrid_meta['solar_capacity'].isna().values.any()
+    assert not hybrid_meta['wind_capacity'].isna().values.any()
+    assert (hybrid_meta['solar_capacity'].values == 0).any()
+    assert (hybrid_meta['wind_capacity'].values == -1).any()
+
+
 @pytest.mark.parametrize("input_combination, na_vals",
                          [((False, False), (False, False)),
                           ((True, False), (False, True)),
                           ((False, True), (True, False)),
                           ((True, True), (True, True))])
 def test_all_allow_solar_allow_wind_combinations(input_combination, na_vals):
+    """Test that "allow_x_only" options perform the intended merges. """
 
     allow_solar_only, allow_wind_only = input_combination
     __, hybrid_meta, __ = Hybridization.run(
@@ -77,6 +94,7 @@ def test_hybrid_col_decorator():
 
 def test_duplicate_lat_long_values():
     """Test duplicate lat/long values corresponding to unique merge column. """
+
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar, duplicate_coord_values=True)
@@ -89,6 +107,7 @@ def test_duplicate_lat_long_values():
 
 def test_no_overlap_in_merge_column_values():
     """Test duplicate values in merge column. """
+
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         fout_wind = os.path.join(td, 'rep_profiles_wind.h5')
@@ -103,6 +122,7 @@ def test_no_overlap_in_merge_column_values():
 
 def test_duplicate_merge_column_values():
     """Test duplicate values in merge column. """
+
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar, duplicate_rows=True)
@@ -115,6 +135,7 @@ def test_duplicate_merge_column_values():
 
 def test_merge_columns_missings():
     """Test missing merge column. """
+
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar,
@@ -130,6 +151,7 @@ def test_merge_columns_missings():
 
 def test_invalid_num_profiles():
     """Test input files with an invalid number of profiles (>1). """
+
     with pytest.raises(FileInputError) as excinfo:
         Hybridization(SOLAR_FPATH_MULT, WIND_FPATH)
 
@@ -141,6 +163,7 @@ def test_invalid_num_profiles():
 
 def test_invalid_time_index_overlap():
     """Test input files with an invalid time index overlap. """
+
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         fout_wind = os.path.join(td, 'rep_profiles_wind.h5')

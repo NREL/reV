@@ -453,7 +453,6 @@ class Hybridization:
         self._fillna_meta_cols()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
-        # self.hybrid_meta.to_csv('combined_inner.csv')
 
     def _format_meta_pre_merge(self):
         """Prepare solar and wind meta for merging. """
@@ -562,7 +561,7 @@ class Hybridization:
     def _fillna_meta_cols(self):
         for col_name, fill_value in self._fillna.items():
             if col_name in self._hybrid_meta.columns:
-                self._hybrid_meta[col_name].fillna(fill_value)
+                self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
             else:
                 msg = ("Skipping fill values for {!r}: Unable to find column "
                        "in hybrid meta. Did you forget to prefilx with "
