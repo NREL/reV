@@ -27,12 +27,44 @@ from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import parse_year, to_records_array
 
 logger = logging.getLogger(__name__)
-HYBRID_METHODS = []
+HYBRID_METHODS = {}
 
 
-def hybridizer(func):
-    HYBRID_METHODS.append(func)
-    return func
+def hybrid_col(col_name):
+    """A decorator factory that facitilitates the registry of new hybrids.
+
+    This decorator takes a column name as input and registers the decorated
+    function as a method that computes a hybrid variable. During the
+    hybridization step, the registered function (which takes an instance
+    of the hybridization object as input) will be run and its output
+    will be stored in the new hybrid meta DataFrame under the registered column
+    name.
+
+    Parameters
+    ----------
+    col_name : str
+        Name of the new hybrid column. This should typically start with
+        "hybrid_".
+
+    Examples
+    --------
+    Writing and registering a new hybridization:
+
+    >>> from reV.hybrids import hybrid_col
+    >>>
+    >>> @hybrid_col('scaled_elevation')
+    >>> def some_new_hybrid_func(h):
+    >>>     return h.hybrid_meta['elevation'] * 1000
+    >>>
+    >>> h = Hybridization(SOLAR_FPATH, WIND_FPATH)
+    >>> h._run()
+    >>> assert 'scaled_elevation' in h.hybrid_meta.columns
+
+    """
+    def _register(func):
+        HYBRID_METHODS[col_name] = func
+        return func
+    return _register
 
 
 class ColNameFormatter:
@@ -327,29 +359,25 @@ class Hybridization:
         """
         return self._profiles
 
-    @hybridizer
+    @hybrid_col('hybrid_capacity')
     def aggregate_capacity(self):
         """Compute the total capcity by summing the individual capacities.
 
         Returns
         -------
-        name : str
-            Name of new hybrid column - 'hybrid_capacity'
         data : Series
             A series of data containing the aggregated capacity.
         """
         total_cap = (self.hybrid_meta['solar_capacity']
                      + self.hybrid_meta['wind_capacity'])
-        return 'hybrid_capacity', total_cap
+        return total_cap
 
-    @hybridizer
+    @hybrid_col('hybrid_cf')
     def aggregate_capacity_factor(self):
         """Compute the capacity-weighted mean capcity factor.
 
         Returns
         -------
-        name : str
-            Name of new hybrid column - 'hybrid_f'
         data : Series
             A series of data containing the aggregated capacity.
         """
@@ -357,9 +385,9 @@ class Hybridization:
                              * self.hybrid_meta['solar_mean_cf'])
         wind_cf_weighted = (self.hybrid_meta['wind_capacity']
                             * self.hybrid_meta['wind_mean_cf'])
-        __, total_capacity = self.aggregate_capacity()
+        total_capacity = self.aggregate_capacity()
         hybrid_cf = (solar_cf_weighted + wind_cf_weighted) / total_capacity
-        return 'hybrid_cf', hybrid_cf
+        return hybrid_cf
 
     def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
              max_workers=None):
@@ -400,16 +428,15 @@ class Hybridization:
         self._format_meta_pre_merge()
         self._hybrid_meta = self.solar_meta.merge(
             self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
-            suffixes=[None, '_x']
+            suffixes=[None, '_x'],  # how='outer'
         )
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
 
-        for method in HYBRID_METHODS:
+        for new_col_name, method in HYBRID_METHODS.items():
             out = method(self)
             if out is not None:
-                new_col_name, new_col_data = out
-                self._hybrid_meta[new_col_name] = new_col_data
+                self._hybrid_meta[new_col_name] = out
 
         self._sort_hybrid_meta_cols()
 
