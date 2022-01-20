@@ -597,6 +597,7 @@ class Hybridization:
         self._limit_by_ratio()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
+        self._hybrid_meta.to_csv('combined.csv')
 
     def _format_meta_pre_merge(self):
         """Prepare solar and wind meta for merging. """
@@ -725,8 +726,8 @@ class Hybridization:
                 logger.warning(w)
                 warn(w, InputWarning)
 
-        self.solar_meta[self.__solar_rpi_n].fillna(-1, inplace=True)
-        self.wind_meta[self.__wind_rpi_n].fillna(-1, inplace=True)
+        self._hybrid_meta[self.__solar_rpi_n].fillna(-1, inplace=True)
+        self._hybrid_meta[self.__wind_rpi_n].fillna(-1, inplace=True)
 
     def _limit_by_ratio(self):
         """ Limit the ratio columns based on input ratio. """
