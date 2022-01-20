@@ -460,9 +460,16 @@ class Hybridization:
 
     def _format_meta_post_merge(self):
         """Format hybrid meta after merging. """
+
+        duplicate_cols = [n for n in self._hybrid_meta.columns if "_x" in n]
+        for duplicate in duplicate_cols:
+            no_sufflix = "_".join(duplicate.split("_")[:-1])
+            null_idx = self._hybrid_meta[no_sufflix].isnull()
+            non_null_vals = self._hybrid_meta.loc[null_idx, duplicate].values
+            self._hybrid_meta.loc[null_idx, no_sufflix] = non_null_vals
+
         self._hybrid_meta.drop(
-            [n for n in self._hybrid_meta.columns if "_x" in n]
-            + self.DROPPED_COLUMNS,
+            duplicate_cols + self.DROPPED_COLUMNS,
             axis=1, inplace=True, errors='ignore'
         )
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
@@ -510,10 +517,14 @@ class Hybridization:
             raise FileInputError(e)
 
     def _verify_col_match_post_merge(self, col_name):
-        """Verify that all the values in a column match post merge. """
+        """Verify that all (non-null) values in a column match post merge. """
         c1, c2 = col_name, '{}_x'.format(col_name)
         if c1 in self._hybrid_meta.columns and c2 in self._hybrid_meta.columns:
-            return (self._hybrid_meta[c1] == self._hybrid_meta[c2]).all()
+            compare_df = self._hybrid_meta[
+                (self._hybrid_meta[c1].notnull())
+                & (self._hybrid_meta[c2].notnull())
+            ]
+            return (compare_df[c1] == compare_df[c2]).all()
         else:
             return True
 
