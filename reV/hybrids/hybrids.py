@@ -57,9 +57,8 @@ def hybrid_col(col_name):
     >>> def some_new_hybrid_func(h):
     >>>     return h.hybrid_meta['elevation'] * 1000
     >>>
-    >>> h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-    >>> h._run()
-    >>> assert 'scaled_elevation' in h.hybrid_meta.columns
+    >>> __, hybrid_meta, __ = Hybridization.run(SOLAR_FPATH, WIND_FPATH)
+    >>> assert 'scaled_elevation' in hybrid_meta.columns
 
     """
     def _register(func):
