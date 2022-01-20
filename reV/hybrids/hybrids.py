@@ -180,6 +180,8 @@ class Hybridization:
         self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
         self.__hybrid_meta_cols = None
         self.__col_name_map = None
+        self.__solar_rpi_n = '{}_solar_rpidx'.format(self._INTERNAL_COL_PREFIX)
+        self.__wind_rpi_n = '{}_wind_rpidx'.format(self._INTERNAL_COL_PREFIX)
 
         self._validate_input()
 
@@ -606,6 +608,8 @@ class Hybridization:
         self._rename_cols(self.solar_meta, prefix=self.SOLAR_PREFIX)
         self._rename_cols(self.wind_meta, prefix=self.WIND_PREFIX)
 
+        self._save_rep_prof_index_internally()
+
     def _rename_cols(self, df, prefix):
         """Replace column names with the ColNameFormatter.fmt is needed. """
         df.columns = [
@@ -614,6 +618,12 @@ class Hybridization:
             else '{}{}'.format(prefix, col_name)
             for col_name in df.columns.values
         ]
+
+    def _save_rep_prof_index_internally(self):
+        """Save rep profiles index in hybrid meta for access later. """
+
+        self.solar_meta[self.__solar_rpi_n] = self.solar_meta.index
+        self.wind_meta[self.__wind_rpi_n] = self.wind_meta.index
 
     def _merge_solar_wind_meta(self):
         """Merge the wind and solar meta DetaFrames. """
@@ -714,6 +724,9 @@ class Hybridization:
                 w = msg.format(col_name, self.SOLAR_PREFIX, self.WIND_PREFIX)
                 logger.warning(w)
                 warn(w, InputWarning)
+
+        self.solar_meta[self.__solar_rpi_n].fillna(-1, inplace=True)
+        self.wind_meta[self.__wind_rpi_n].fillna(-1, inplace=True)
 
     def _limit_by_ratio(self):
         """ Limit the ratio columns based on input ratio. """
