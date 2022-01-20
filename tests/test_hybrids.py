@@ -44,16 +44,16 @@ def test_allowed_ratio():
 def test_fillna_values():
     """Test that N/A values are filled properly based on user input. """
 
-    fill_vals = {'solar_capacity': 0, 'wind_capacity': -1}
+    fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
 
     __, hybrid_meta, __ = Hybridization.run(
         SOLAR_FPATH, WIND_FPATH, allow_solar_only=True,
         allow_wind_only=True, fillna=fill_vals
     )
 
-    assert not hybrid_meta['solar_capacity'].isna().values.any()
+    assert not hybrid_meta['solar_n_gids'].isna().values.any()
     assert not hybrid_meta['wind_capacity'].isna().values.any()
-    assert (hybrid_meta['solar_capacity'].values == 0).any()
+    assert (hybrid_meta['solar_n_gids'].values == 0).any()
     assert (hybrid_meta['wind_capacity'].values == -1).any()
 
 
@@ -127,7 +127,7 @@ def test_invalid_ratio_input():
     with pytest.raises(InputError) as excinfo:
         Hybridization(SOLAR_FPATH, WIND_FPATH, allowed_ratio=(1, 2, 3))
 
-    assert "Input for `allowed_ratio` not understood" in str(excinfo.value)
+    assert "Input for 'allowed_ratio' not understood" in str(excinfo.value)
 
 
 def test_ratio_column_missing():
