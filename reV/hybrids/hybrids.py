@@ -106,6 +106,7 @@ class Hybridization:
         self._validate_num_profiles()
         self._validate_merge_col_exists()
         self._validate_unique_merge_col()
+        self._validate_merge_col_overlaps()
 
     def _validate_time_index(self):
         """Validate the hybrid time index to be of len >= 8760.
@@ -191,6 +192,31 @@ class Hybridization:
         if not self.wind_meta[merge_col].is_unique:
             raise FileInputError(
                 msg.format(merge_col, merge_col, self._wind_fpath))
+
+    def _validate_merge_col_overlaps(self):
+        """Validate the existence of overlap in the merge column values.
+
+        Raises
+        ------
+        FileInputError
+            If merge column values do not overlap between the tow input files.
+        """
+        merge_col = self.solar_meta.columns[
+            self.__solar_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
+        ].item()
+        solar_vals = set(self.solar_meta[merge_col].values)
+        merge_col = self.wind_meta.columns[
+            self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
+        ].item()
+        wind_vals = set(self.wind_meta[merge_col].values)
+
+        if not (solar_vals & wind_vals):
+            msg = ("No overlap detected in the values of {!r} across the "
+                   "input files. Please ensure that at least one of the "
+                   "{!r} values is the same for input files {!r} and {!r}")
+            raise FileInputError(msg.format(merge_col, merge_col,
+                                            self._solar_fpath,
+                                            self._wind_fpath))
 
     @property
     def solar_meta(self):

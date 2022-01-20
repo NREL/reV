@@ -37,6 +37,20 @@ def test_duplicate_lat_long_values():
         assert "Detected mismatched coordinate values" in str(excinfo.value)
 
 
+def test_no_overlap_in_merge_column_values():
+    """Test duplicate values in merge column. """
+    with tempfile.TemporaryDirectory() as td:
+        fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
+        fout_wind = os.path.join(td, 'rep_profiles_wind.h5')
+        make_test_file(SOLAR_FPATH, fout_solar, p_slice=slice(0, 3))
+        make_test_file(WIND_FPATH, fout_wind, p_slice=slice(90, 100))
+
+        with pytest.raises(FileInputError) as excinfo:
+            Hybridization(fout_solar, fout_wind)
+
+        assert "No overlap detected in the values" in str(excinfo.value)
+
+
 def test_duplicate_merge_column_values():
     """Test duplicate values in merge column. """
     with tempfile.TemporaryDirectory() as td:
