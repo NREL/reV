@@ -104,6 +104,8 @@ class Hybridization:
     MERGE_COLUMN = 'sc_point_gid'
     SOLAR_PREFIX = 'solar_'
     WIND_PREFIX = 'wind_'
+    DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
+                           'solar_mean_cf': 0, 'wind_mean_cf': 0}
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     OUTPUT_PROFILE_NAMES = ['hybrid', 'solar_time_built', 'wind_time_built']
     _INTERNAL_COL_PREFIX = '_h_internal'
@@ -161,7 +163,7 @@ class Hybridization:
         self._wind_fpath = wind_fpath
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
-        self._fillna = fillna or {}
+        self.DEFAULT_FILL_VALUES.update(fillna or {})
         self._allowed_ratio = allowed_ratio
         self._ratio_cols = ratio_cols
         self._profiles = None
@@ -393,7 +395,7 @@ class Hybridization:
             return
 
         try:
-            if len(self._allowed_ratio) > 2:
+            if len(self._allowed_ratio) != 2:
                 msg = ("Input for 'allowed_ratio' not understood: {!r}. "
                        "Please make sure this value is one of: `None`, "
                        "float, or len 2 container.")
@@ -701,7 +703,7 @@ class Hybridization:
 
     def _fillna_meta_cols(self):
         """Fill N/A values as specified by user. """
-        for col_name, fill_value in self._fillna.items():
+        for col_name, fill_value in self.DEFAULT_FILL_VALUES.items():
             if col_name in self._hybrid_meta.columns:
                 self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
             else:
