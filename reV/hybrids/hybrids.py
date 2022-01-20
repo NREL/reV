@@ -426,26 +426,10 @@ class Hybridization:
     def _hybridize_meta(self):
         """Combine the solar and wind metas and run hybridize methods."""
         self._format_meta_pre_merge()
-        self._hybrid_meta = self.solar_meta.merge(
-            self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
-            suffixes=[None, '_x'],  # how='outer'
-        )
+        self._merge_solar_wind_meta()
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
-
-        for new_col_name, method in HYBRID_METHODS.items():
-            out = method(self)
-            if out is not None:
-                try:
-                    self._hybrid_meta[new_col_name] = out
-                except ValueError as e:
-                    msg = ("Unable to add {!r} column to hybrid meta. The "
-                           "following exception was raised when adding "
-                           "the data output by '{}': {!r}.")
-                    w = msg.format(new_col_name, method.__name__, e)
-                    logger.warning(w)
-                    warn(w, OutputWarning)
-
+        self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
 
     def _format_meta_pre_merge(self):
@@ -458,21 +442,35 @@ class Hybridization:
         self._rename_cols(self.solar_meta, prefix='solar')
         self._rename_cols(self.wind_meta, prefix='wind')
 
+    def _merge_solar_wind_meta(self):
+        """Merge the wind and solar meta DetaFrames. """
+        self._hybrid_meta = self.solar_meta.merge(
+            self.wind_meta, on=ColNameFormatter.fmt(self.MERGE_COLUMN),
+            suffixes=[None, '_x'],  # how='outer'
+        )
+
     def _format_meta_post_merge(self):
         """Format hybrid meta after merging. """
 
         duplicate_cols = [n for n in self._hybrid_meta.columns if "_x" in n]
+        self._propogate_duplicate_cols(duplicate_cols)
+        self._drop_cols(duplicate_cols)
+        self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
+
+    def _propogate_duplicate_cols(self, duplicate_cols):
+        """Fill missing column values from outer merge. """
         for duplicate in duplicate_cols:
             no_sufflix = "_".join(duplicate.split("_")[:-1])
             null_idx = self._hybrid_meta[no_sufflix].isnull()
             non_null_vals = self._hybrid_meta.loc[null_idx, duplicate].values
             self._hybrid_meta.loc[null_idx, no_sufflix] = non_null_vals
 
+    def _drop_cols(self, duplicate_cols):
+        """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns. """
         self._hybrid_meta.drop(
             duplicate_cols + self.DROPPED_COLUMNS,
             axis=1, inplace=True, errors='ignore'
         )
-        self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
 
     def _sort_hybrid_meta_cols(self):
         """Sort the columns of the hybrid meta. """
@@ -527,6 +525,21 @@ class Hybridization:
             return (compare_df[c1] == compare_df[c2]).all()
         else:
             return True
+
+    def _add_hybrid_cols(self):
+        """Add new hybrid columns using registered hybrid methods. """
+        for new_col_name, method in HYBRID_METHODS.items():
+            out = method(self)
+            if out is not None:
+                try:
+                    self._hybrid_meta[new_col_name] = out
+                except ValueError as e:
+                    msg = ("Unable to add {!r} column to hybrid meta. The "
+                           "following exception was raised when adding "
+                           "the data output by '{}': {!r}.")
+                    w = msg.format(new_col_name, method.__name__, e)
+                    logger.warning(w)
+                    warn(w, OutputWarning)
 
     def _init_profiles(self):
         """Initialize the output rep profiles attribute."""
