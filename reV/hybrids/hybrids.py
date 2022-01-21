@@ -5,14 +5,10 @@
 """
 
 from concurrent.futures import as_completed
-from copy import deepcopy
-import json
 import logging
 import numpy as np
-import os
 import re
 import pandas as pd
-from scipy import stats
 from string import ascii_letters
 from warnings import warn
 
@@ -20,12 +16,11 @@ from warnings import warn
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (FileInputError, InputError,
                                       InputWarning, OutputWarning)
-from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
-from rex.utilities.utilities import parse_year, to_records_array
+from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 HYBRID_METHODS = {}
