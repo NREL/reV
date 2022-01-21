@@ -378,6 +378,27 @@ def test_valid_time_index_overlap():
         assert len(res.time_index) == len(h.hybrid_time_index)
 
 
+def test_write_to_file():
+    """Test hybrid rep profiles with file write."""
+    with tempfile.TemporaryDirectory() as td:
+        fout = os.path.join(td, 'temp_hybrid_profiles.h5')
+        *p_out, __, __ = Hybridization.run(
+            SOLAR_FPATH, WIND_FPATH, fout=fout
+        )
+        with Resource(fout) as res:
+            for name, p in zip(Hybridization.OUTPUT_PROFILE_NAMES, p_out):
+                dtype = res.get_dset_properties(name)[1]
+                attrs = res.get_attrs(name)
+                disk_profiles = res[name]
+
+                assert np.issubdtype(dtype, np.float32)
+                assert attrs['units'] == 'MW'
+                assert np.allclose(p, disk_profiles)
+
+            disk_dsets = res.datasets
+            assert 'rep_profiles_0' not in disk_dsets
+
+
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
                    drop_cols=None, duplicate_rows=False,
                    duplicate_coord_values=False):
