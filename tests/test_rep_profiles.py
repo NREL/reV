@@ -9,8 +9,7 @@ import json
 import tempfile
 
 from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
-                                           RepresentativeMethods,
-                                           AggregatedRepProfiles)
+                                           RepresentativeMethods)
 from reV import TESTDATADIR
 
 from rex.resource import Resource
@@ -153,10 +152,11 @@ def test_agg_profile():
                                 'gid_counts': gid_counts,
                                 'timezone': timezone})
 
-    profiles = AggregatedRepProfiles.run(GEN_FPATH, rev_summary,
-                                         cf_dset='cf_profile',
-                                         scaled_precision=False,
-                                         max_workers=None)[0]
+    profiles = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
+                               cf_dset='cf_profile',
+                               scaled_precision=False,
+                               err_method=None,
+                               max_workers=None)[0]
 
     for index in rev_summary.index:
         gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])

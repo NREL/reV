@@ -258,7 +258,7 @@ class RepresentativeMethods:
             Method identifier for calculation of error from the representative
             profile (e.g. "rmse", "mae", "mbe"). If this is None, the
             representative meanoid / medianoid profile will be returned
-            directly
+            directly.
         n_profiles : int
             Number of representative profiles to save to fout.
 
@@ -266,9 +266,10 @@ class RepresentativeMethods:
         -------
         profiles : np.ndarray
             (time, n_profiles) array for the most representative profile(s)
-        i_reps : list
+        i_reps : list | None
             List (length of n_profiles) with column Index in profiles of the
-            representative profile(s).
+            representative profile(s). If err_method is None, this value is
+            also set to None.
         """
         inst = cls(profiles, weights=weights, rep_method=rep_method,
                    err_method=err_method)
@@ -405,6 +406,7 @@ class RegionRepProfile:
 
         if any(data):
             if isinstance(data[0], str):
+                # pylint: disable=simplifiable-condition
                 if ('[' and ']' in data[0]) or ('(' and ')' in data[0]):
                     data = [json.loads(s) for s in data]
 
@@ -982,7 +984,10 @@ class RepProfiles(RepProfilesBase):
                 for n in range(profiles.shape[1]):
                     self._profiles[n][:, i] = profiles[:, n]
 
-                    if len(ggids) == 1:
+                    if ggids is None:
+                        self._meta.at[i, 'rep_gen_gid'] = None
+                        self._meta.at[i, 'rep_res_gid'] = None
+                    elif len(ggids) == 1:
                         self._meta.at[i, 'rep_gen_gid'] = ggids[0]
                         self._meta.at[i, 'rep_res_gid'] = rgids[0]
                     else:
@@ -1052,7 +1057,10 @@ class RepProfiles(RepProfilesBase):
                     for n in range(profiles.shape[1]):
                         self._profiles[n][:, i] = profiles[:, n]
 
-                    if len(ggids) == 1:
+                    if ggids is None:
+                        self._meta.at[i, 'rep_gen_gid'] = None
+                        self._meta.at[i, 'rep_res_gid'] = None
+                    elif len(ggids) == 1:
                         self._meta.at[i, 'rep_gen_gid'] = ggids[0]
                         self._meta.at[i, 'rep_res_gid'] = rgids[0]
                     else:
@@ -1157,187 +1165,3 @@ class RepProfiles(RepProfilesBase):
                 scaled_precision=scaled_precision, max_workers=max_workers)
 
         return rp._profiles, rp._meta, rp._time_index
-
-
-class AggregatedRepProfiles(RepProfilesBase):
-    """Framework for calculating the aggregate representative supply curve
-    cf profiles based on an area-weighted aggregation of contributing profiles.
-    """
-
-    def __init__(self, gen_fpath, rev_summary, gid_col='gen_gids',
-                 cf_dset='cf_profile', weight='gid_counts'):
-        """
-        Parameters
-        ----------
-        gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
-        rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
-        cf_dset : str
-            Dataset name to pull generation profiles from.
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
-        """
-
-        logger.info('Calculating the weighted aggregate (meanoid) '
-                    'representative profiles for each supply curve point.')
-
-        super().__init__(gen_fpath, rev_summary, reg_cols=None,
-                         gid_col=gid_col, cf_dset=cf_dset,
-                         rep_method='meanoid', err_method=None,
-                         weight=weight, n_profiles=1)
-
-        self._meta = self._rev_summary
-        self._init_profiles()
-
-    def _run_serial(self):
-        """Compute all representative profiles in serial."""
-
-        logger.info('Running {} aggregate rep profile calculations in serial.'
-                    .format(len(self.meta)))
-        meta_static = deepcopy(self.meta)
-        for i, row in meta_static.iterrows():
-            row = pd.DataFrame(row).T
-
-            profile = RegionRepProfile.get_region_rep_profile(
-                self._gen_fpath, row, gid_col=self._gid_col,
-                rep_method=self._rep_method, err_method=self._err_method,
-                weight=self._weight, n_profiles=self._n_profiles)[0]
-
-            logger.info('Profile {} out of {} complete.'
-                        .format(i + 1, len(meta_static)))
-
-            self._profiles[0][:, i] = profile.flatten()
-
-    def _run_parallel(self, max_workers=None, pool_size=72):
-        """Compute all representative profiles in parallel.
-
-        Parameters
-        ----------
-        max_workers : int | None
-            Number of parallel workers. 1 will run serial, None will use all
-            available.
-        pool_size : int
-            Number of futures to submit to a single process pool for
-            parallel futures.
-        """
-
-        logger.info('Kicking off {} aggregate rep profile futures.'
-                    .format(len(self.meta)))
-
-        iter_chunks = np.array_split(self.meta.index.values,
-                                     np.ceil(len(self.meta) / pool_size))
-        n_complete = 0
-        for iter_chunk in iter_chunks:
-            logger.debug('Starting process pool...')
-            futures = {}
-            loggers = [__name__, 'reV']
-            with SpawnProcessPool(max_workers=max_workers,
-                                  loggers=loggers) as exe:
-                for i in iter_chunk:
-                    row = self.meta.loc[i, :]
-                    row = pd.DataFrame(row).T
-                    future = exe.submit(
-                        RegionRepProfile.get_region_rep_profile,
-                        self._gen_fpath, row,
-                        gid_col=self._gid_col,
-                        cf_dset=self._cf_dset,
-                        rep_method=self._rep_method,
-                        err_method=self._err_method,
-                        weight=self._weight,
-                        n_profiles=self._n_profiles)
-
-                    futures[future] = i
-
-                for future in as_completed(futures):
-                    i = futures[future]
-                    profile = future.result()[0]
-                    n_complete += 1
-                    logger.info('Future {} out of {} complete.'
-                                .format(n_complete, len(self.meta)))
-                    log_mem(logger, log_level='DEBUG')
-
-                    self._profiles[0][:, i] = profile.flatten()
-
-    def _run(self, fout=None, scaled_precision=False,
-             max_workers=None):
-        """
-        Run representative profiles in serial or parallel and save to disc
-
-        Parameters
-        ----------
-        fout : str, optional
-            filepath to output h5 file, by default None
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
-        """
-        if max_workers == 1:
-            self._run_serial()
-        else:
-            self._run_parallel(max_workers=max_workers)
-
-        if fout is not None:
-            self.save_profiles(fout, scaled_precision=scaled_precision,
-                               save_rev_summary=False)
-
-        logger.info('Representative aggregate profiles complete!')
-
-    @classmethod
-    def run(cls, gen_fpath, rev_summary, gid_col='gen_gids',
-            cf_dset='cf_profile', weight='gid_counts', fout=None,
-            scaled_precision=False, max_workers=None):
-        """Run representative profiles by calculating the weighted aggregate
-        (meanoid) profile for each SC point.
-
-        Parameters
-        ----------
-        gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
-        rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
-        cf_dset : str
-            Dataset name to pull generation profiles from.
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
-        fout : str, optional
-            filepath to output h5 file, by default None
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
-
-        Returns
-        -------
-        profiles : dict
-            dict of n_profile-keyed arrays with shape (time, n) for the
-            representative profiles for each supply curve point (n).
-            For the AggregateRepProfile class, this only has one key: 0.
-        meta : pd.DataFrame
-            Meta dataframe (reV supply curve summary).
-        time_index : pd.DatatimeIndex
-            Datetime Index for represntative profiles
-        """
-
-        arp = cls(gen_fpath, rev_summary, gid_col=gid_col, cf_dset=cf_dset,
-                  weight=weight)
-
-        arp._run(fout=fout, scaled_precision=scaled_precision,
-                 max_workers=max_workers)
-
-        return arp._profiles, arp._meta, arp._time_index
