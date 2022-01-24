@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import tempfile
 
-from reV.hybrids.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
+from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV import Outputs, TESTDATADIR
 
