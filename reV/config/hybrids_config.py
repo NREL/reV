@@ -43,7 +43,7 @@ class HybridsConfig(AnalysisConfig):
         return fpath
 
     @property
-    def solar_fpath(self):
+    def wind_fpath(self):
         """Get the wind data filepath"""
 
         fpath = self['wind_fpath']
