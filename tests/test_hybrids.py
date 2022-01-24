@@ -33,11 +33,17 @@ def test_parallel_run():
     out_serial = Hybridization.run(SOLAR_FPATH, WIND_FPATH, max_workers=1)
     out_parallel = Hybridization.run(SOLAR_FPATH, WIND_FPATH, max_workers=10)
 
-    for out_s, out_p in zip(out_serial[:3], out_parallel[:3]):
+    *out_serial, serial_h_meta, serial_h_time_index = out_serial
+    *out_parallel, parallel_h_meta, parallel_h_time_index = out_parallel
+
+    for out_s, out_p in zip(out_serial, out_parallel):
         assert (out_s == out_p).all()
 
-    assert (out_s[3] == out_p[3]).all().all()
-    assert (out_s[4] == out_p[4]).all()
+    serial_h_meta.fillna(-999, inplace=True)
+    parallel_h_meta.fillna(-999, inplace=True)
+    assert (serial_h_meta == parallel_h_meta).all().all()
+
+    assert (serial_h_time_index == parallel_h_time_index).all()
 
 
 def test_hybridization_profile_output_single_resource():
@@ -206,7 +212,7 @@ def test_warning_for_improper_data_output_from_hybrid_method():
     """Test that hybrid function with incorrect output throws warning. """
 
     @hybrid_col('scaled_elevation')
-    def some_new_hybrid_func(h):
+    def some_new_hybrid_func(__):
         return [0]
 
     with pytest.warns(OutputWarning) as record:
