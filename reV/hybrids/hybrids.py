@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Hybridization utilities.
+"""reV Hybridization module.
 
 @author: ppinchuk
 """
@@ -26,7 +26,7 @@ from rex.utilities.utilities import to_records_array
 logger = logging.getLogger(__name__)
 
 
-class HybridsConfig:
+class HybridizationConfig:
     MERGE_COLUMN = 'sc_point_gid'
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     SOLAR_PREFIX = 'solar_'
@@ -38,6 +38,9 @@ class HybridsConfig:
     DROPPED_COLUMNS = ['gid']
     DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
                            'solar_mean_cf': 0, 'wind_mean_cf': 0}
+    OUTPUT_PROFILE_NAMES = ['hybrid_profile',
+                            'solar_hybrid_profile_component',
+                            'wind_hybrid_profile_component']
 
 
 class ColNameFormatter:
@@ -88,7 +91,9 @@ class HybridsData:
         self._solar_time_index = None
         self._wind_time_index = None
         self._hybrid_time_index = None
-        self.__profile_reg_check = re.compile(HybridsConfig.PROFILE_DSET_REGEX)
+        self.__profile_reg_check = re.compile(
+            HybridizationConfig.PROFILE_DSET_REGEX
+        )
         self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
         self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
 
@@ -228,7 +233,7 @@ class HybridsData:
                     msg = ("Did not find any data sets matching the regex: "
                            "{!r} in {!r}. Please ensure that the profile data "
                            "exists and that the data set is named correctly.")
-                    e = msg.format(HybridsConfig.PROFILE_DSET_REGEX, fp)
+                    e = msg.format(HybridizationConfig.PROFILE_DSET_REGEX, fp)
                     logger.error(e)
                     raise FileInputError(e)
                 elif len(profile_dset_names) > 1:
@@ -254,12 +259,12 @@ class HybridsData:
         msg = ("Cannot hybridize: merge column {!r} missing from the "
                "{} meta data! ({!r})")
 
-        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        mc = ColNameFormatter.fmt(HybridizationConfig.MERGE_COLUMN)
         for cols, fp, res in zip([self.__solar_cols, self.__wind_cols],
                                  [self.solar_fpath, self.wind_fpath],
                                  ['solar', 'wind']):
             if mc not in cols:
-                e = msg.format(HybridsConfig.MERGE_COLUMN, res, fp)
+                e = msg.format(HybridizationConfig.MERGE_COLUMN, res, fp)
                 logger.error(e)
                 raise FileInputError(e)
 
@@ -278,7 +283,7 @@ class HybridsData:
                "resource class binning and ensure there are no duplicate "
                "values in {!r}. File: {!r}")
 
-        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        mc = ColNameFormatter.fmt(HybridizationConfig.MERGE_COLUMN)
         for ds, cols, fp in zip([self.solar_meta, self.wind_meta],
                                 [self.__solar_cols, self.__wind_cols],
                                 [self.solar_fpath, self.wind_fpath]):
@@ -296,7 +301,7 @@ class HybridsData:
         FileInputError
             If merge column values do not overlap between the tow input files.
         """
-        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        mc = ColNameFormatter.fmt(HybridizationConfig.MERGE_COLUMN)
         merge_col = self.solar_meta.columns[self.__solar_cols == mc].item()
         solar_vals = set(self.solar_meta[merge_col].values)
         merge_col = self.wind_meta.columns[self.__wind_cols == mc].item()
@@ -350,7 +355,8 @@ class MetaHybridizer:
         self.data = data
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
-        self._fillna = {**HybridsConfig.DEFAULT_FILL_VALUES, **(fillna or {})}
+        self._fillna = {**HybridizationConfig.DEFAULT_FILL_VALUES,
+                        **(fillna or {})}
         self._allowed_ratio = allowed_ratio
         self._ratio_cols = ratio_cols
         self._hybrid_meta = None
@@ -420,18 +426,18 @@ class MetaHybridizer:
 
         for col in self._ratio_cols:
             missing_solar_prefix = not col.startswith(
-                HybridsConfig.SOLAR_PREFIX
+                HybridizationConfig.SOLAR_PREFIX
             )
             missing_wind_prefix = not col.startswith(
-                HybridsConfig.WIND_PREFIX
+                HybridizationConfig.WIND_PREFIX
             )
             if missing_solar_prefix and missing_wind_prefix:
                 msg = ("Input ratio column {!r} does not start with a valid "
                        "prefix: {!r}. Please ensure that the ratio column "
                        "names specify the correct resource prefix.")
                 e = msg.format(col,
-                               (HybridsConfig.SOLAR_PREFIX,
-                                HybridsConfig.WIND_PREFIX))
+                               (HybridizationConfig.SOLAR_PREFIX,
+                                HybridizationConfig.WIND_PREFIX))
                 logger.error(e)
                 raise InputError(e)
 
@@ -499,9 +505,9 @@ class MetaHybridizer:
         }
 
         self._rename_cols(self.data.solar_meta,
-                          prefix=HybridsConfig.SOLAR_PREFIX)
+                          prefix=HybridizationConfig.SOLAR_PREFIX)
         self._rename_cols(self.data.wind_meta,
-                          prefix=HybridsConfig.WIND_PREFIX)
+                          prefix=HybridizationConfig.WIND_PREFIX)
 
         self._save_rep_prof_index_internally()
 
@@ -509,7 +515,7 @@ class MetaHybridizer:
         """Replace column names with the ColNameFormatter.fmt is needed. """
         df.columns = [
             ColNameFormatter.fmt(col_name)
-            if col_name in HybridsConfig.NON_DUPLICATE_COLS
+            if col_name in HybridizationConfig.NON_DUPLICATE_COLS
             else '{}{}'.format(prefix, col_name)
             for col_name in df.columns.values
         ]
@@ -524,7 +530,7 @@ class MetaHybridizer:
         """Merge the wind and solar meta DetaFrames. """
         self._hybrid_meta = self.data.solar_meta.merge(
             self.data.wind_meta,
-            on=ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN),
+            on=ColNameFormatter.fmt(HybridizationConfig.MERGE_COLUMN),
             suffixes=[None, '_x'], how=self._merge_type()
         )
 
@@ -558,7 +564,7 @@ class MetaHybridizer:
     def _drop_cols(self, duplicate_cols):
         """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns. """
         self._hybrid_meta.drop(
-            duplicate_cols + HybridsConfig.DROPPED_COLUMNS,
+            duplicate_cols + HybridizationConfig.DROPPED_COLUMNS,
             axis=1, inplace=True, errors='ignore'
         )
 
@@ -579,7 +585,7 @@ class MetaHybridizer:
             first_index = 2
         elif c.startswith('wind'):
             first_index = 3
-        elif c == HybridsConfig.MERGE_COLUMN:
+        elif c == HybridizationConfig.MERGE_COLUMN:
             first_index = -1
         return first_index, self._hybrid_meta.columns.get_loc(c)
 
@@ -592,8 +598,8 @@ class MetaHybridizer:
                    "longitude) post merge. Please ensure that all matching "
                    "values of {!r} correspond to the same values of latitude "
                    "and longitude across the input files {!r} and {!r}")
-            e = msg.format(HybridsConfig.MERGE_COLUMN, self.data.solar_fpath,
-                           self.data.wind_fpath)
+            e = msg.format(HybridizationConfig.MERGE_COLUMN,
+                           self.data.solar_fpath, self.data.wind_fpath)
             logger.error(e)
             raise FileInputError(e)
 
@@ -618,8 +624,8 @@ class MetaHybridizer:
                 msg = ("Skipping fill values for {!r}: Unable to find column "
                        "in hybrid meta. Did you forget to prefilx with "
                        "{!r} or {!r}? ")
-                w = msg.format(col_name, HybridsConfig.SOLAR_PREFIX,
-                               HybridsConfig.WIND_PREFIX)
+                w = msg.format(col_name, HybridizationConfig.SOLAR_PREFIX,
+                               HybridizationConfig.WIND_PREFIX)
                 logger.warning(w)
                 warn(w, InputWarning)
 
@@ -630,7 +636,7 @@ class MetaHybridizer:
         """ Limit the ratio columns based on input ratio. """
         c1, c2 = self._ratio_cols
         min_r, max_r = self._allowed_ratio
-        overlap_idx = self._hybrid_meta[HybridsConfig.MERGE_COLUMN].isin(
+        overlap_idx = self._hybrid_meta[HybridizationConfig.MERGE_COLUMN].isin(
             self.data.merge_col_overlap_values
         )
         hc1 = self._hybrid_meta[c1].copy()
@@ -856,22 +862,6 @@ class RepProfileHybridizer:
 class Hybridization:
     """Framework to handle hybridization of SC and corresponding profiles."""
 
-    NON_DUPLICATE_COLS = {
-        'latitude', 'longitude', 'country', 'state', 'county', 'elevation',
-        'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind'
-    }
-    DROPPED_COLUMNS = ['gid']
-    MERGE_COLUMN = 'sc_point_gid'
-    SOLAR_PREFIX = 'solar_'
-    WIND_PREFIX = 'wind_'
-    DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
-                           'solar_mean_cf': 0, 'wind_mean_cf': 0}
-    PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
-    OUTPUT_PROFILE_NAMES = ['hybrid_profile',
-                            'solar_hybrid_profile_component',
-                            'wind_hybrid_profile_component']
-    _INTERNAL_COL_PREFIX = '_h_internal'
-
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
                  allow_wind_only=False, fillna=None, allowed_ratio=None,
                  ratio_cols=('solar_capacity', 'wind_capacity')):
@@ -1051,7 +1041,7 @@ class Hybridization:
         self._profiles = {
             k: np.zeros((len(self.hybrid_time_index), len(self.hybrid_meta)),
                         dtype=np.float32)
-            for k in self.OUTPUT_PROFILE_NAMES}
+            for k in HybridizationConfig.OUTPUT_PROFILE_NAMES}
 
     def _init_h5_out(self, fout, save_hybrid_meta=True,
                      scaled_precision=False):
@@ -1157,7 +1147,7 @@ class Hybridization:
             logger.info('Profile {} out of {} complete '
                         .format(i + 1, len(self.hybrid_meta)))
 
-            for k, p in zip(self.OUTPUT_PROFILE_NAMES, out):
+            for k, p in zip(HybridizationConfig.OUTPUT_PROFILE_NAMES, out):
                 self._profiles[k][:, i] = p
 
     def _run_parallel(self, max_workers=None, pool_size=72):
@@ -1211,7 +1201,9 @@ class Hybridization:
                                 .format(n_complete, len(self.hybrid_meta)))
                     log_mem(logger, log_level='DEBUG')
 
-                    for k, p in zip(self.OUTPUT_PROFILE_NAMES, out):
+                    for k, p in zip(
+                        HybridizationConfig.OUTPUT_PROFILE_NAMES, out
+                    ):
                         self._profiles[k][:, i] = p
 
     @classmethod

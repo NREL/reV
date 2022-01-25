@@ -7,6 +7,7 @@ import numpy as np
 import tempfile
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
+from reV.hybrids.hybrids import HybridizationConfig
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV import Outputs, TESTDATADIR
 
@@ -330,7 +331,7 @@ def test_merge_columns_missings():
     with tempfile.TemporaryDirectory() as td:
         fout_solar = os.path.join(td, 'rep_profiles_solar.h5')
         make_test_file(SOLAR_FPATH, fout_solar,
-                       drop_cols=[Hybridization.MERGE_COLUMN])
+                       drop_cols=[HybridizationConfig.MERGE_COLUMN])
 
         with pytest.raises(FileInputError) as excinfo:
             Hybridization(fout_solar, WIND_FPATH)
@@ -390,7 +391,9 @@ def test_write_to_file():
             SOLAR_FPATH, WIND_FPATH, fout=fout
         )
         with Resource(fout) as res:
-            for name, p in zip(Hybridization.OUTPUT_PROFILE_NAMES, p_out):
+            for name, p in zip(
+                HybridizationConfig.OUTPUT_PROFILE_NAMES, p_out
+            ):
                 dtype = res.get_dset_properties(name)[1]
                 attrs = res.get_attrs(name)
                 disk_profiles = res[name]
