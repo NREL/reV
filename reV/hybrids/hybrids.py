@@ -375,7 +375,7 @@ class MetaHybridizer:
             Summary for the hybridized representative profiles.
             At the very least, this has a column that the data was merged on.
         """
-        if self.__hybrid_meta_cols is None:
+        if self._hybrid_meta is None or self.__hybrid_meta_cols is None:
             return self._hybrid_meta
         else:
             return self._hybrid_meta[self.__hybrid_meta_cols]
