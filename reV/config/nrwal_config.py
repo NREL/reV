@@ -4,6 +4,7 @@ reV-NRWAL config.
 
 @author: gbuster
 """
+from glob import glob
 import logging
 
 from reV.config.base_analysis_config import AnalysisConfig
@@ -42,6 +43,14 @@ class RevNrwalConfig(AnalysisConfig):
             fpaths = Pipeline.parse_previous(
                 self.dirout, 'nrwal', target='fpath',
                 target_module='generation')
+
+        if isinstance(fpaths, str) and '*' in fpaths:
+            fpaths = glob(fpaths)
+            if not any(fpaths):
+                msg = ('Could not find any file paths for '
+                       'gen_fpath glob pattern.')
+                logger.error(msg)
+                raise RuntimeError(msg)
 
         if len(fpaths) == 1:
             fpaths = fpaths[0]
