@@ -47,6 +47,7 @@ class ProjectPointsType(click.ParamType):
 
     def convert(self, value, param, ctx):
         """Convert value to slice or list, or return as string."""
+        print('Receiveed data: {} with type {}'.format(value, type(value)))
         if isinstance(value, str):
             if 'slice' in value:
                 # project points is a slice
@@ -63,6 +64,7 @@ class ProjectPointsType(click.ParamType):
                                                   '"', "'"])
                 if value == 'None':
                     return None
+
                 list0 = value.split(',')
                 return [int(x) for x in list0]
 
@@ -80,5 +82,14 @@ class ProjectPointsType(click.ParamType):
                       .format(value, type(value)), param, ctx)
 
 
+class SupplyCurvePointsType(ProjectPointsType):
+    def convert(self, value, param, ctx):
+        if str(value).lower() == 'none':
+            return None
+        else:
+            return super().convert(value, param, ctx)
+
+
 SAMFILES = SAMFilesType()
 PROJECTPOINTS = ProjectPointsType()
+SCPOINTS = SupplyCurvePointsType()

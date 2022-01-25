@@ -93,8 +93,9 @@ class PointsControl:
         return next_pc
 
     def __repr__(self):
-        msg = ("{} for sites {} through {}"
-               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
+        msg = ("{} with {} sites from gid {} through {}"
+               .format(self.__class__.__name__, len(self.project_points),
+                       self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):
