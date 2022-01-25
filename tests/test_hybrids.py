@@ -7,7 +7,7 @@ import numpy as np
 import tempfile
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
-from reV.hybrids.hybrids import HybridizationConfig
+from reV.hybrids.hybrids import HybridizationConfig, HybridsData
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV import Outputs, TESTDATADIR
 
@@ -409,6 +409,31 @@ def test_write_to_file():
 
             disk_dsets = res.datasets
             assert 'rep_profiles_0' not in disk_dsets
+
+
+def test_hybrids_data_content():
+    """Test HybridsData class content. """
+
+    fv = -999
+    h_data = HybridsData(SOLAR_FPATH, WIND_FPATH)
+
+    with Resource(SOLAR_FPATH) as sr, Resource(WIND_FPATH) as wr:
+        assert (h_data.solar_meta.fillna(fv) == sr.meta.fillna(fv)).all().all()
+        assert (h_data.wind_meta.fillna(fv) == wr.meta.fillna(fv)).all().all()
+        assert (h_data.solar_time_index == sr.time_index).all()
+        assert (h_data.wind_time_index == wr.time_index).all()
+        hyb_idx = sr.time_index.join(wr.time_index, how='inner')
+        assert (h_data.hybrid_time_index == hyb_idx).all()
+
+
+def test_hybrids_data_contains_col():
+    """Test the 'contains_col' method of HybridsData for accuracy."""
+
+    h_data = HybridsData(SOLAR_FPATH, WIND_FPATH)
+    assert h_data.contains_col('trans_capacity')
+    assert h_data.contains_col('dist_mi')
+    assert h_data.contains_col('dist_km')
+    assert not h_data.contains_col('dne_col_for_test')
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
