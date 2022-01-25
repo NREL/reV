@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 class HybridizationConfig:
+    """Values for global Hybridization parameters. """
+
     MERGE_COLUMN = 'sc_point_gid'
     PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
     SOLAR_PREFIX = 'solar_'
@@ -511,7 +513,8 @@ class MetaHybridizer:
 
         self._save_rep_prof_index_internally()
 
-    def _rename_cols(self, df, prefix):
+    @staticmethod
+    def _rename_cols(df, prefix):
         """Replace column names with the ColNameFormatter.fmt is needed. """
         df.columns = [
             ColNameFormatter.fmt(col_name)
