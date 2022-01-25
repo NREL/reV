@@ -88,8 +88,7 @@ class RepProfileHybridizer:
         self._hti = hybrid_time_idx
         self._fp = {'solar': solar_fpath, 'wind': wind_fpath}
         self._ri = {'solar': solar_rep_idx, 'wind': wind_rep_idx}
-        self._rpdn = {r: dn for r, dn in
-                      zip(['solar', 'wind'], rep_profile_dset_names)}
+        self._rpdn = dict(zip(['solar', 'wind'], rep_profile_dset_names))
         self._source_cf_profiles = {}
 
     def _set_source_cf_profile(self, resource):
