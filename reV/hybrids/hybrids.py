@@ -40,9 +40,7 @@ class HybridizationConfig:
     DROPPED_COLUMNS = ['gid']
     DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
                            'solar_mean_cf': 0, 'wind_mean_cf': 0}
-    OUTPUT_PROFILE_NAMES = ['hybrid_profile',
-                            'solar_hybrid_profile_component',
-                            'wind_hybrid_profile_component']
+    OUTPUT_PROFILE_NAMES = ['hybrid_profile', 'solar_profile', 'wind_profile']
 
 
 class ColNameFormatter:
@@ -345,14 +343,25 @@ class MetaHybridizer:
             meta. Note that column names will likely have to be prefixed
             with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
-            Option to set a ratio or ratio bounds (in two-tuple form) on the
-            `ratio_cols`. This number would limit the hybridization values to
-            the ratio value. By default, None (no limit).
+            Option to set a single ratio or ratio bounds (in two-tuple form)
+            on the `ratio_cols`. A single value is treated as both an upper
+            and a lower bound. This input limits the ratio of the values
+            of the input `ratio_cols` (ratio is always computed with the
+            first column as the numerator and the second column as the
+            denomiator). For example, `allowed_ratio=1` would limit
+            the values of the `ratio_cols` to always be equal. On the other
+            hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
+            between half and double (e.g., if `ratio_cols` are the capacity
+            columns, no capacity value would be more than double the other).
+            By default, None (no limit).
         ratio_cols : tuple, optional
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
             this input does nothing. The names of the columns should be
             prefixed with one of the prefixes defined as class variables.
+            The order of the colum names specifies the way the ratio is
+            calculated: the first column is always treated as the ratio
+            numerator and the second column is the ratio denominator.
             By default ('solar_capacity', 'wind_capacity').
         """
         self.data = data
@@ -615,7 +624,7 @@ class MetaHybridizer:
                 (self._hybrid_meta[c1].notnull())
                 & (self._hybrid_meta[c2].notnull())
             ]
-            return (compare_df[c1] == compare_df[c2]).all()
+            return np.allclose(compare_df[c1], compare_df[c2])
         else:
             return True
 
@@ -639,7 +648,7 @@ class MetaHybridizer:
     def _limit_by_ratio(self):
         """ Limit the ratio columns based on input ratio. """
         c1, c2 = self._ratio_cols
-        min_r, max_r = self._allowed_ratio
+        min_r, max_r = sorted(self._allowed_ratio)
         overlap_idx = self._hybrid_meta[HybridizationConfig.MERGE_COLUMN].isin(
             self.data.merge_col_overlap_values
         )
@@ -890,14 +899,25 @@ class Hybridization:
             meta. Note that column names will likely have to be prefixed
             with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
-            Option to set a ratio or ratio bounds (in two-tuple form) on the
-            `ratio_cols`. This number would limit the hybridization values to
-            the ratio value. By default, None (no limit).
+            Option to set a single ratio or ratio bounds (in two-tuple form)
+            on the `ratio_cols`. A single value is treated as both an upper
+            and a lower bound. This input limits the ratio of the values
+            of the input `ratio_cols` (ratio is always computed with the
+            first column as the numerator and the second column as the
+            denomiator). For example, `allowed_ratio=1` would limit
+            the values of the `ratio_cols` to always be equal. On the other
+            hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
+            between half and double (e.g., if `ratio_cols` are the capacity
+            columns, no capacity value would be more than double the other).
+            By default, None (no limit).
         ratio_cols : tuple, optional
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
             this input does nothing. The names of the columns should be
             prefixed with one of the prefixes defined as class variables.
+            The order of the colum names specifies the way the ratio is
+            calculated: the first column is always treated as the ratio
+            numerator and the second column is the ratio denominator.
             By default ('solar_capacity', 'wind_capacity').
         """
 
@@ -1238,13 +1258,25 @@ class Hybridization:
             meta. Note that column names will likely have to be prefixed
             with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
-            Option to set a ratio or ratio bounds (in two-tuple form) on the
-            `ratio_cols`. This number would limit the hybridization values to
-            the ratio value. By default, None (no limit).
+            Option to set a single ratio or ratio bounds (in two-tuple form)
+            on the `ratio_cols`. A single value is treated as both an upper
+            and a lower bound. This input limits the ratio of the values
+            of the input `ratio_cols` (ratio is always computed with the
+            first column as the numerator and the second column as the
+            denomiator). For example, `allowed_ratio=1` would limit
+            the values of the `ratio_cols` to always be equal. On the other
+            hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
+            between half and double (e.g., if `ratio_cols` are the capacity
+            columns, no capacity value would be more than double the other).
+            By default, None (no limit).
         ratio_cols : tuple, optional
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
-            this input does nothing.
+            this input does nothing. The names of the columns should be
+            prefixed with one of the prefixes defined as class variables.
+            The order of the colum names specifies the way the ratio is
+            calculated: the first column is always treated as the ratio
+            numerator and the second column is the ratio denominator.
             By default ('solar_capacity', 'wind_capacity').
         fout : str, optional
             filepath to output h5 file, by default None.
