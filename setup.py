@@ -58,6 +58,7 @@ setup(
     entry_points={
         "console_scripts": ["reV=reV.cli:main",
                             "reV-batch=reV.batch.cli_batch:main",
+                            "reV-bespoke=reV.bespoke.cli_bespoke:main",
                             "reV-collect=reV.handlers.cli_collect:main",
                             "reV-econ=reV.econ.cli_econ:main",
                             "reV-gen=reV.generation.cli_gen:main",
