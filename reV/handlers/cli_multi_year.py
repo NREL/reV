@@ -341,7 +341,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
 
     status = Status.retrieve_job_status(os.path.dirname(my_file),
                                         module=ModuleName.MULTI_YEAR,
-                                        job_name=name, hardware='eagle',
+                                        job_name=name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Multi-year CLI failed to submit jobs!'
@@ -372,7 +372,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         Status.add_job(
             os.path.dirname(my_file), module=ModuleName.MULTI_YEAR,
             job_name=name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'fout': os.path.basename(my_file),
                        'dirout': os.path.dirname(my_file)})
 

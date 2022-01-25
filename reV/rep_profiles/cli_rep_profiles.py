@@ -341,7 +341,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     status = Status.retrieve_job_status(out_dir,
                                         module=ModuleName.REP_PROFILES,
                                         job_name=name,
-                                        hardware='eagle',
+                                        hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Rep profiles CLI failed to submit jobs!'
@@ -367,7 +367,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         Status.add_job(
             out_dir, module=ModuleName.REP_PROFILES,
             job_name=name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'fout': '{}.h5'.format(name), 'dirout': out_dir})
 
     click.echo(msg)

@@ -160,12 +160,12 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
             config.dirout, module=ModuleName.GENERATION, job_name=name_year
         )
         if status != 'successful':
+            job_attrs = {'hardware': 'local', 'fout': fout,
+                         'dirout': config.dirout}
             Status.add_job(
                 config.dirout, module=ModuleName.GENERATION,
                 job_name=name_year, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': fout,
-                           'dirout': config.dirout})
+                job_attrs=job_attrs)
             ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
                        timeout=config.timeout,
@@ -732,7 +732,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
         status = Status.retrieve_job_status(dirout,
                                             module=ModuleName.GENERATION,
                                             job_name=node_name,
-                                            hardware='eagle',
+                                            hardware='slurm',
                                             subprocess_manager=slurm_manager)
 
         msg = 'Generation CLI failed to submit jobs!'
@@ -765,7 +765,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
             Status.add_job(
                 dirout, module=ModuleName.GENERATION,
                 job_name=node_name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)

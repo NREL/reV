@@ -333,7 +333,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file),
                                         module=ModuleName.COLLECT,
-                                        job_name=name, hardware='eagle',
+                                        job_name=name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Collect CLI failed to submit jobs!'
@@ -365,7 +365,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         Status.add_job(
             os.path.dirname(h5_file), module=ModuleName.COLLECT,
             job_name=name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'fout': os.path.basename(h5_file),
                        'dirout': os.path.dirname(h5_file)})
 

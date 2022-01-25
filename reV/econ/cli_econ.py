@@ -538,7 +538,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
         status = Status.retrieve_job_status(dirout,
                                             module=ModuleName.ECON,
                                             job_name=node_name,
-                                            hardware='eagle',
+                                            hardware='slurm',
                                             subprocess_manager=slurm_manager)
 
         msg = 'Econ CLI failed to submit jobs!'
@@ -571,7 +571,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
             Status.add_job(
                 dirout, module=ModuleName.ECON,
                 job_name=node_name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)

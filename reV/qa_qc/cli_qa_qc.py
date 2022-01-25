@@ -694,7 +694,7 @@ def launch_slurm(config, verbose):
 
     slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, module=ModuleName.QA_QC,
-                                        job_name=config.name, hardware='eagle',
+                                        job_name=config.name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'QA-QC CLI failed to submit jobs!'
@@ -726,7 +726,7 @@ def launch_slurm(config, verbose):
         Status.add_job(
             out_dir, module=ModuleName.QA_QC,
             job_name=config.name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'dirout': out_dir})
 
     click.echo(msg)

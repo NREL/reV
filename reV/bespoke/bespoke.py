@@ -25,7 +25,7 @@ from reV.utilities import log_versions
 
 from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
-from rex.utilities.loggers import log_mem
+from rex.utilities.loggers import log_mem, create_dirs
 from rex.utilities.utilities import parse_year
 from rex.utilities.execution import SpawnProcessPool
 
@@ -619,14 +619,19 @@ class BespokeWindFarms(AbstractAggregation):
 
         log_versions(logger)
         logger.info('Initializing BespokeWindFarms...')
-        logger.debug('Exclusion filepath: {}'.format(excl_fpath))
+        logger.info('Resource filepath: {}'.format(res_fpath))
+        logger.info('Exclusion filepath: {}'.format(excl_fpath))
         logger.debug('Exclusion dict: {}'.format(excl_dict))
+        logger.info('Bespoke objective function: {}'
+                    .format(objective_function))
+        logger.info('Bespoke cost function: {}'.format(objective_function))
 
         BespokeSingleFarm.check_dependencies()
 
-        self._project_points = self._parse_points(excl_fpath, tm_dset,
+        self._points_control = self._parse_points(excl_fpath, tm_dset,
                                                   resolution, points,
                                                   points_range, sam_configs)
+        self._project_points = self._points_control.project_points
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -642,11 +647,16 @@ class BespokeWindFarms(AbstractAggregation):
         self._output_request = output_request
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
+        self._outputs = {}
         self._check_files()
+
+        logger.info('Initialized BespokeWindFarms with project points: {}'
+                    .format(self._project_points))
 
     @staticmethod
     def _parse_points(excl_fpath, tm_dset, resolution,
-                      points, points_range, sam_configs):
+                      points, points_range, sam_configs, sites_per_worker=1,
+                      workers=None):
         """Parse a project points object using either an explicit project
         points file or if points=None get all available supply curve points
         based on the exclusion file + resolution + techmap
@@ -681,22 +691,30 @@ class BespokeWindFarms(AbstractAggregation):
             CSV. Values are either a JSON SAM config file or dictionary of SAM
             config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
+        sites_per_worker : int | None
+            Number of sites to run per project points split.
+        workers : int | None
+            Optional input that will calculate the sites_per_worker based on
+            the number of points
 
         Returns
         -------
-        project_points : reV.config.project_points.ProjectPoints
-            Project points object laying out the supply curve gids to analyze.
+        PointsControl : reV.config.project_points.PointsControl
+            Project points control object laying out the supply curve gids to
+            analyze.
         """
 
         if points is None:
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
                 points = sc.valid_sc_points(tm_dset).tolist()
 
-        pc = Gen.get_pc(points, points_range, sam_configs,
-                        tech='windpower', sites_per_worker=1)
-        project_points = pc.project_points
+        if workers is not None:
+            sites_per_worker = int(np.ceil(len(points) / workers))
 
-        return project_points
+        pc = Gen.get_pc(points, points_range, sam_configs,
+                        tech='windpower', sites_per_worker=sites_per_worker)
+
+        return pc
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -715,6 +733,39 @@ class BespokeWindFarms(AbstractAggregation):
         # just check that this file exists, cannot check res_fpath if *glob
         with MultiYearWindResource(self._res_fpath) as f:
             assert any(f.dsets)
+
+    @property
+    def outputs(self):
+        """Saved outputs for the multi wind plant bespoke optimization. Keys
+        are reV supply curve gids and values are nested dicts of output data.
+
+        Returns
+        -------
+        dict
+        """
+        return self._outputs
+
+    @staticmethod
+    def save_outputs(out_fpath):
+        """Save Bespoke Wind Plant optimization outputs to disk.
+
+        Parameters
+        ----------
+        out_fpath : str
+            Full filepath to an output .h5 file to save Bespoke data to. The
+            parent directories will be created if they do not already exist.
+        """
+
+        if not out_fpath.endswith('.h5'):
+            out_fpath += '.h5'
+
+        out_dir = os.path.dirname(out_fpath)
+        if not os.path.exists(out_dir):
+            create_dirs(out_dir)
+
+        # TODO: save self.outputs to disk
+
+        logger.info('Saved output data to: {}'.format(out_fpath))
 
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset,
@@ -894,7 +945,8 @@ class BespokeWindFarms(AbstractAggregation):
             excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None,
-            pre_extract_inclusions=False, max_workers=None):
+            pre_extract_inclusions=False, max_workers=None,
+            out_fpath=None):
         """Run the bespoke wind farm optimization in serial or parallel.
         See BespokeWindFarms docstring for parameter description.
         """
@@ -916,7 +968,6 @@ class BespokeWindFarms(AbstractAggregation):
                   pre_extract_inclusions=pre_extract_inclusions)
 
         if max_workers == 1:
-            out = {}
             for gid in bsp.gids:
                 si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
                                     bsp._project_points[gid][1],
@@ -933,8 +984,11 @@ class BespokeWindFarms(AbstractAggregation):
                                     resolution=bsp._resolution,
                                     excl_area=bsp._excl_area,
                                     gids=gid)
-                out.update(si)
+                bsp._outputs.update(si)
         else:
-            out = bsp.run_parallel(max_workers=max_workers)
+            bsp._outputs = bsp.run_parallel(max_workers=max_workers)
 
-        return out
+        if out_fpath is not None:
+            bsp.save_outputs(out_fpath)
+
+        return bsp

@@ -309,7 +309,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(out_dir, module=ModuleName.NRWAL,
-                                        job_name=name, hardware='eagle',
+                                        job_name=name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'NRWAL CLI failed to submit jobs!'
@@ -338,7 +338,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
 
         Status.add_job(
             out_dir, module=ModuleName.NRWAL, job_name=name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
