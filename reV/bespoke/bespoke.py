@@ -9,8 +9,8 @@ import logging
 import pandas as pd
 import numpy as np
 import os
-import sys
 import psutil
+from importlib import import_module
 from numbers import Number
 from concurrent.futures import as_completed
 
@@ -396,7 +396,9 @@ class BespokeSingleFarm:
 
         missing = []
         for name in cls.DEPENDENCIES:
-            if name not in sys.modules:
+            try:
+                import_module(name)
+            except ModuleNotFoundError:
                 missing.append(name)
 
         if any(missing):
@@ -404,7 +406,7 @@ class BespokeSingleFarm:
                    'dependencies that were not found in the active '
                    'environment: {}'.format(missing))
             logger.error(msg)
-            raise ImportError(msg)
+            raise ModuleNotFoundError(msg)
 
     def run_wind_plant_ts(self):
         """Run the wind plant multi-year timeseries analysis and export output
@@ -705,6 +707,8 @@ class BespokeWindFarms(AbstractAggregation):
         """
 
         if points is None:
+            logger.info('Points input is None, parsing available points '
+                        'from exclusion file and techmap dataset.')
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
                 points = sc.valid_sc_points(tm_dset).tolist()
 
@@ -966,6 +970,10 @@ class BespokeWindFarms(AbstractAggregation):
                   resolution=resolution,
                   excl_area=excl_area,
                   pre_extract_inclusions=pre_extract_inclusions)
+
+        # parallel job distribution test.
+        if objective_function == 'test':
+            return True
 
         if max_workers == 1:
             for gid in bsp.gids:

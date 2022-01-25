@@ -157,9 +157,12 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
         name_year = make_fout(name, year).replace('.h5', '')
         ctx.obj['NAME'] = name_year
         status = Status.retrieve_job_status(
-            config.dirout, module=ModuleName.GENERATION, job_name=name_year
-        )
-        if status != 'successful':
+            config.dirout, module=ModuleName.GENERATION, job_name=name_year)
+        if status == 'successful':
+            logger.info('reV Generation job with name "{}" was already '
+                        'successfully run in directory: {}'
+                        .format(name, config.out_dir))
+        else:
             job_attrs = {'hardware': 'local', 'fout': fout,
                          'dirout': config.dirout}
             Status.add_job(

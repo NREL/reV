@@ -146,13 +146,15 @@ class Status(dict):
         """
         status = None
         options = {'eagle': self.subprocess_manager.check_status,
+                   'slurm': self.subprocess_manager.check_status,
                    'local': None}
         if job_id:
             try:
                 method = options[self.hardware]
             except KeyError as e:
                 msg = ('Could not check job on the requested hardware: '
-                       '"{}".'.format(self.hardware))
+                       '"{}", available options are: {}.'
+                       .format(self.hardware, list(options.keys())))
                 logger.error(msg)
                 raise KeyError(msg) from e
             if method is None:
@@ -222,9 +224,10 @@ class Status(dict):
         # look for completion file.
         current = self._check_job_file(self._status_dir, job_name)
 
-        # Update status data dict recursively if job file was found
+        # Update status data dict and file if job file was found
         if current is not None:
             self.data = self.update_dict(self.data, current)
+            self._dump()
 
         # check job status via hardware if job file not found.
         elif module in self.data:
@@ -255,16 +258,16 @@ class Status(dict):
     def subprocess_manager(self):
         """Get the subprocess manager object based on the hardware spec."""
 
-        if (self._subprocess_manager is None
-                and self._hardware in ('eagle', 'slurm')):
-            self._subprocess_manager = SLURM()
-        elif self._subprocess_manager is None and self._hardware == 'local':
-            self._subprocess_manager = SubprocessManager
-        elif self._subprocess_manager is None:
-            msg = ('Cannot recognize requested hardware: {}'
-                   .format(self._hardware))
-            logger.error(msg)
-            raise ValueError(msg)
+        if self._subprocess_manager is None:
+            if self._hardware in ('eagle', 'slurm'):
+                self._subprocess_manager = SLURM()
+            elif self._hardware == 'local':
+                self._subprocess_manager = SubprocessManager
+            else:
+                msg = ('Cannot recognize requested hardware: {}'
+                       .format(self._hardware))
+                logger.error(msg)
+                raise ValueError(msg)
 
         return self._subprocess_manager
 

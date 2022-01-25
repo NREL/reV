@@ -33,7 +33,6 @@ class BespokeConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         super().__init__(config)
-        self._pc = None
 
     def _preflight(self):
         """Run preflight checks for missing REQUIREMENTS and also check special
@@ -63,7 +62,7 @@ class BespokeConfig(AnalysisConfig):
         -------
         str
         """
-        return self['resource_file']
+        return self['res_fpath']
 
     @property
     def tm_dset(self):
@@ -145,23 +144,23 @@ class BespokeConfig(AnalysisConfig):
 
     @property
     def ws_bins(self):
-        """Get the windspeed binning arguments This should be a 3-entry tuple
-        with (start, stop, step) for the windspeed binning of the wind joint
-        probability distribution. The stop value is inclusive, so ws_bins=(0,
-        20, 5) would result in four bins with bin edges (0, 5, 10, 15, 20).
-        Default is (0, 20, 5).
+        """Get the windspeed binning arguments This should be a 3-entry list
+        with [start, stop, step] for the windspeed binning of the wind joint
+        probability distribution. The stop value is inclusive, so ws_bins=[0,
+        20, 5] would result in four bins with bin edges [0, 5, 10, 15, 20].
+        Default is [0, 20, 5].
         """
-        return self.get('ws_bins', (0, 20, 5))
+        return self.get('ws_bins', [0, 20, 5])
 
     @property
     def wd_bins(self):
         """Get the winddirection binning arguments This should be a 3-entry
-        tuple with (start, stop, step) for the winddirection binning of the
+        list with [start, stop, step] for the winddirection binning of the
         wind joint probability distribution. The stop value is inclusive, so
-        ws_bins=(0, 360, 90) would result in four bins with bin edges (0, 90,
-        180, 270, 360). Default is (0, 360, 45).
+        ws_bins=[0, 360, 90] would result in four bins with bin edges [0, 90,
+        180, 270, 360]. Default is [0, 360, 45].
         """
-        return self.get('wd_bins', (0, 360, 45))
+        return self.get('wd_bins', [0, 360, 45])
 
     @property
     def excl_dict(self):

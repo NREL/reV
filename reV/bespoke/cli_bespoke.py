@@ -8,11 +8,12 @@ import logging
 import os
 import pprint
 import time
+import re
 
 from reV.bespoke.bespoke import BespokeWindFarms
 from reV.config.bespoke import BespokeConfig
 from reV.pipeline.status import Status
-from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV.utilities.cli_dtypes import SAMFILES, SCPOINTS
 from reV import __version__
 
 from rex.utilities.cli_dtypes import (FLOAT, INT, STR, INTLIST, FLOATLIST,
@@ -55,33 +56,34 @@ def main(ctx, name, verbose):
 def from_config(ctx, config_file, points_range, verbose):
     """Run reV gen from a config file."""
     name = ctx.obj['NAME']
-    verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    config = BespokeConfig(config_file)
+    config = (config_file if isinstance(config_file, BespokeConfig)
+              else BespokeConfig(config_file))
+
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    verbose = True if config.log_level == logging.DEBUG else False
 
     if points_range is not None:
         config['points_range'] = points_range
 
     # take name from config if not default
-    if config.name.lower() != 'rev':
+    if str(config.name).lower() != 'rev':
         name = config.name
         ctx.obj['NAME'] = name
-
-    # Enforce verbosity if logging level is specified in the config
-    if config.log_level == logging.DEBUG:
-        verbose = True
 
     # make output directory if does not exist
     if not os.path.exists(config.out_dir):
         os.makedirs(config.out_dir)
 
     # initialize loggers.
-    init_mult(name, config.log_dir, modules=[__name__, 'reV', 'rex'],
-              verbose=verbose)
+    node_tag = re.search('_node[0-9]*', name)
+    if node_tag is None:
+        init_mult(name, config.log_dir, modules=[__name__, 'reV', 'rex'],
+                  verbose=verbose)
 
     # Initial log statements
-    logger.info('Running reV Bespoke from config file: "{}"'
-                .format(config_file))
+    logger.info('Running reV Bespoke job with name "{}" from config file: "{}"'
+                .format(name, config_file))
     logger.info('Target output directory: "{}"'.format(config.out_dir))
     logger.info('Target logging directory: "{}"'.format(config.log_dir))
     logger.info('Source resource file: "{}"'.format(config.res_fpath))
@@ -126,10 +128,9 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
 
-    workers = 1
-    if (config.points_range is None
-            and config.execution_control.option in ('eagle', 'slurm')):
-        workers = config.execution_control.nodes
+    is_multi_node = (config.execution_control.option in ('eagle', 'slurm')
+                     and config.points_range is None)
+    workers = config.execution_control.nodes if is_multi_node else 1
 
     pc = BespokeWindFarms._parse_points(config.excl_fpath, config.tm_dset,
                                         config.resolution,
@@ -143,19 +144,28 @@ def from_config(ctx, config_file, points_range, verbose):
         logger.info('Distributing the {} Bespoke project points to {} jobs.'
                     .format(len(pc.project_points), len(pc)))
         for i, pc_sub in enumerate(pc):
+            logger.info('Creating distributed job submission for: {}'
+                        .format(pc_sub.project_points))
             ctx.obj['NAME'] = name + '_node{}'.format(str(i).zfill(2))
-            ctx.invoke(from_config, config_file, pc_sub.split_range, verbose)
+            config._name = name + '_node{}'.format(str(i).zfill(2))
+            ctx.invoke(from_config, config_file=config,
+                       points_range=pc_sub.split_range, verbose=verbose)
 
     else:
+        fout = name + '.h5'
+        out_fpath = os.path.join(config.out_dir, fout)
+        ctx.obj['OUT_FPATH'] = out_fpath
         if config.execution_control.option == 'local':
             logger.info('Running Bespoke project with {} points '
                         'corresponding to points_range {}.'
                         .format(len(pc.project_points), config.points_range))
             status = Status.retrieve_job_status(config.out_dir, 'bespoke',
                                                 name)
-            if status != 'successful':
-                fout = name + '.h5'
-                out_fpath = os.path.join(config.out_dir, fout)
+            if status == 'successful':
+                logger.info('Bespoke job with name "{}" was already '
+                            'successfully run in directory: {}'
+                            .format(name, config.out_dir))
+            else:
                 job_attrs = {'hardware': 'local', 'fout': fout,
                              'dirout': config.out_dir}
                 Status.add_job(config.out_dir, 'bespoke', name, replace=True,
@@ -189,15 +199,15 @@ def from_config(ctx, config_file, points_range, verbose):
                            )
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-            ctx.invoke(slurm, nodes=config.execution_control.nodes,
+            ctx.invoke(slurm,
                        alloc=config.execution_control.allocation,
                        walltime=config.execution_control.walltime,
-                       memory=config.execution_control.memory,
                        feature=config.execution_control.feature,
-                       conda_env=config.execution_control.conda_env,
+                       memory=config.execution_control.memory,
                        module=config.execution_control.module,
+                       conda_env=config.execution_control.conda_env,
                        stdout_path=os.path.join(config.log_dir, 'stdout'),
-                       verbose=verbose)
+                       )
 
 
 @main.command()
@@ -208,14 +218,14 @@ def valid_config_keys():
     click.echo(', '.join(get_class_properties(BespokeConfig)))
 
 
-@main.group()
+@main.group(invoke_without_command=True)
 @click.option('--excl_fpath', '-exf', type=STR_OR_LIST, required=True,
               help='Single exclusions file (.h5) or a '
               'list of exclusion files (.h5, .h5).')
 @click.option('--res_fpath', '-rf', type=STR, required=True,
-              help='reV resource data file (e.g. WTK or NSRDB .h5 file). '
+              help='reV resource data file (e.g. WTK .h5 file). '
               'Can include a unix-style wildcard to source multiple years of '
-              'data, e.g. res_fpath="/datasets/NSRDB/v3/nsrdb_200*.h5".')
+              'data, e.g. res_fpath="/datasets/WIND/conus/v1.0.0/wtk_*.h5"')
 @click.option('--out_fpath', '-of', type=STR, required=True,
               help='Filepath to save output data. Must be a .h5 path.')
 @click.option('--tm_dset', '-tm', type=STR, required=True,
@@ -226,7 +236,7 @@ def valid_config_keys():
 @click.option('--cost_function', '-cos', required=True, type=STR,
               help='Bespoke wind plant optimization cost function.')
 @click.option('--points', '-p',
-              default=None, type=PROJECTPOINTS, show_default=True,
+              default=None, type=SCPOINTS, show_default=True,
               help='Project points to analyze. This can either be a string '
               'pointing to a csv with "gid" and "config" columns, or None '
               '(default) which will analyze all supply curve points in the '
@@ -252,19 +262,19 @@ def valid_config_keys():
               default=['cf_mean', 'system_capacity'], show_default=True,
               help=('List of requested output variable names from SAM.'))
 @click.option('--ws_bins', '-ws',
-              default=(0, 20, 5), type=FLOATLIST, show_default=True,
+              default=[0, 20, 5], type=FLOATLIST, show_default=True,
               help='Get the windspeed binning arguments This should be a '
-              '3-entry tuple with (start, stop, step) for the windspeed '
+              '3-entry list with [start, stop, step] for the windspeed '
               'binning of the wind joint probability distribution. The stop '
-              'value is inclusive, so ws_bins=(0, 20, 5) would result in '
-              'four bins with bin edges (0, 5, 10, 15, 20)')
+              'value is inclusive, so ws_bins=[0, 20, 5] would result in '
+              'four bins with bin edges [0, 5, 10, 15, 20]')
 @click.option('--wd_bins', '-wd',
-              default=(0, 360, 45), type=FLOATLIST, show_default=True,
+              default=[0, 360, 45], type=FLOATLIST, show_default=True,
               help='Get the winddirection binning arguments This should be a '
-              '3-entry tuple with (start, stop, step) for the winddirection '
+              '3-entry list with [start, stop, step] for the winddirection '
               'binning of the wind joint probability distribution. The stop '
-              'value is inclusive, so ws_bins=(0, 360, 90) would result in '
-              'four bins with bin edges (0, 90, 180, 270, 360)')
+              'value is inclusive, so ws_bins=[0, 360, 90] would result in '
+              'four bins with bin edges [0, 90, 180, 270, 360]')
 @click.option('--excl_dict', '-exd', type=STR, default=None,
               show_default=True,
               help='String representation of a dictionary of exclusion '
