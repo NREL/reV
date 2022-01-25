@@ -342,7 +342,8 @@ class MetaHybridizer:
         fillna : dict, optional
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
-            meta, by default None.
+            meta. Note that column names will likely have to be prefixed
+            with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
             Option to set a ratio or ratio bounds (in two-tuple form) on the
             `ratio_cols`. This number would limit the hybridization values to
@@ -886,7 +887,8 @@ class Hybridization:
         fillna : dict, optional
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
-            meta, by default None.
+            meta. Note that column names will likely have to be prefixed
+            with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
             Option to set a ratio or ratio bounds (in two-tuple form) on the
             `ratio_cols`. This number would limit the hybridization values to
@@ -1233,7 +1235,8 @@ class Hybridization:
         fillna : dict, optional
             Dictionary containing column_name, fill_value pairs reprenting any
             fill values that should be applied after merging the wind and solar
-            meta, by default None.
+            meta. Note that column names will likely have to be prefixed
+            with "solar_" or "wind_". By default None.
         allowed_ratio : float | tuple, optional
             Option to set a ratio or ratio bounds (in two-tuple form) on the
             `ratio_cols`. This number would limit the hybridization values to
