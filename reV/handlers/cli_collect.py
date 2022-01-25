@@ -327,7 +327,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         cmd = sh_script + '\n' + cmd
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name, hardware='eagle',
+                                        name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -356,7 +356,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': os.path.basename(h5_file),
                            'dirout': os.path.dirname(h5_file)})
 

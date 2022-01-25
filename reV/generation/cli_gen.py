@@ -162,11 +162,10 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
         status = Status.retrieve_job_status(config.dirout, 'generation',
                                             name_year)
         if status != 'successful':
-            Status.add_job(
-                config.dirout, 'generation', name_year, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': fout,
-                           'dirout': config.dirout})
+            job_attrs = {'hardware': 'local', 'fout': fout,
+                         'dirout': config.dirout}
+            Status.add_job(config.dirout, 'generation', name_year,
+                           replace=True, job_attrs=job_attrs)
             ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
                        timeout=config.timeout,
@@ -731,7 +730,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
             cmd = sh_script + '\n' + cmd
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name,
-                                            hardware='eagle',
+                                            hardware='slurm',
                                             subprocess_manager=slurm_manager)
 
         if status == 'successful':
@@ -761,7 +760,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'generation', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'slurm',
                                'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)
