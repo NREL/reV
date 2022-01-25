@@ -223,7 +223,7 @@ def bespoke(ctx, verbose):
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])
-        ctx.invoke(run_my_from_config, config_file=config_file,
+        ctx.invoke(run_bespoke_from_config, config_file=config_file,
                    verbose=verbose)
 
 
@@ -233,7 +233,7 @@ def valid_bespoke_keys(ctx):
     """
     Valid Bespoke config keys
     """
-    ctx.invoke(my_keys)
+    ctx.invoke(bespoke_keys)
 
 
 @main.group(invoke_without_command=True)
