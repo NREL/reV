@@ -329,7 +329,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name,
-                                        hardware='eagle',
+                                        hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -352,7 +352,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                    .format(name, out))
             Status.add_job(
                 out_dir, 'rep-profiles', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': '{}.h5'.format(name), 'dirout': out_dir})
 
     click.echo(msg)

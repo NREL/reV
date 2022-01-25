@@ -529,7 +529,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
                            append=append, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name,
-                                            hardware='eagle',
+                                            hardware='slurm',
                                             subprocess_manager=slurm_manager)
 
         if status == 'successful':
@@ -559,7 +559,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'econ', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'slurm',
                                'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)

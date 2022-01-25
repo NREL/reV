@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 class BespokeConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
+
+    NAME = 'bespoke'
+
     REQUIREMENTS = ('excl_fpath', 'res_fpath', 'tm_dset', 'objective_function',
                     'cost_function', 'project_points', 'sam_files',
                     )
@@ -89,6 +92,14 @@ class BespokeConfig(AnalysisConfig):
             ProjectPoints object
         """
         return self['project_points']
+
+    @property
+    def points_range(self):
+        """An optional input that specifies the (start, end) index (inclusive,
+        exclusive) of the project points to analyze. If this is specified, the
+        requested points are analyzed on a single worker.
+        """
+        return self.get('points_range', None)
 
     @property
     def sam_files(self):

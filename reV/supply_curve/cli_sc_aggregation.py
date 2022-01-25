@@ -175,7 +175,7 @@ def from_config(ctx, config_file, verbose):
               'input.')
 @click.option('--tm_dset', '-tm', type=STR, required=True,
               help='Dataset in the exclusions file that maps the exclusions '
-              'to the resource being analyzed.')
+              'to the resource data file being analyzed.')
 @click.option('--econ_fpath', '-ef', type=STR, default=None,
               show_default=True,
               help='reV econ output file (optional argument that can be '
@@ -188,11 +188,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('--excl_dict', '-exd', type=STR, default=None,
               show_default=True,
               help=('String representation of a dictionary of exclusion '
-                    'LayerMask arguments {layer: {kwarg: value}} where layer '
-                    'is a dataset in excl_fpath and kwarg can be '
-                    '"inclusion_range", "exclude_values", "include_values", '
-                    '"inclusion_weights", "force_inclusion_values", '
-                    '"use_as_weights", "exclude_nodata", and/or "weight".'))
+              'LayerMask arguments {layer: {kwarg: value}} where layer '
+              'is a dataset in excl_fpath and kwarg can be '
+              '"inclusion_range", "exclude_values", "include_values", '
+              '"inclusion_weights", "force_inclusion_values", '
+              '"use_as_weights", "exclude_nodata", and/or "weight".'))
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
               show_default=True,
               help='Dataset to determine the resource class '
@@ -219,7 +219,7 @@ def from_config(ctx, config_file, verbose):
               show_default=True,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
-@click.option('--excl_area', '-ea', type=FLOAT, default=0.0081,
+@click.option('--excl_area', '-ea', type=FLOAT, default=None,
               show_default=True,
               help='Area of an exclusion pixel in km2. None will try to '
               'infer the area from the profile transform attribute in '
@@ -573,7 +573,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
-                                        name, hardware='eagle',
+                                        name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -596,7 +596,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                    .format(name, out))
             Status.add_job(
                 out_dir, 'supply-curve-aggregation', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)

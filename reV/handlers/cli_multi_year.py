@@ -338,7 +338,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
-                                        name, hardware='eagle',
+                                        name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -364,7 +364,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(my_file), 'multi-year', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': os.path.basename(my_file),
                            'dirout': os.path.dirname(my_file)})
 

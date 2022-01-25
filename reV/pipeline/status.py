@@ -22,7 +22,7 @@ class Status(dict):
 
     FROZEN_STATUS = ('successful', 'failed')
 
-    def __init__(self, status_dir, name=None, hardware='eagle',
+    def __init__(self, status_dir, name=None, hardware='slurm',
                  subprocess_manager=None):
         """
         Parameters
@@ -33,8 +33,9 @@ class Status(dict):
             Optional job name for status. Will look for the file
             "{name}_status.json" in the status_dir.
         hardware : str
-            Name of hardware that this pipeline is being run on: eagle, local.
-            Defaults to "eagle". This specifies how job are queried for status.
+            Name of hardware that this pipeline is being run on: eagle, slurm,
+            local. Defaults to "slurm". This specifies how job are queried for
+            status.
         subprocess_manager : None | SLURM
             Optional initialized subprocess manager to use to check job
             statuses. This can be input with cached queue data to avoid
@@ -149,11 +150,11 @@ class Status(dict):
         if job_id:
             try:
                 method = options[self.hardware]
-            except KeyError:
+            except KeyError as e:
                 msg = ('Could not check job on the requested hardware: '
                        '"{}".'.format(self.hardware))
                 logger.error(msg)
-                raise KeyError(msg)
+                raise KeyError(msg) from e
             if method is None:
                 status = None
             else:
@@ -254,9 +255,10 @@ class Status(dict):
     def subprocess_manager(self):
         """Get the subprocess manager object based on the hardware spec."""
 
-        if self._subprocess_manager is None and self._hardware == 'eagle':
+        if (self._subprocess_manager is None
+                and self._hardware in ('eagle', 'slurm')):
             self._subprocess_manager = SLURM()
-        if self._subprocess_manager is None and self._hardware == 'local':
+        elif self._subprocess_manager is None and self._hardware == 'local':
             self._subprocess_manager = SubprocessManager
         elif self._subprocess_manager is None:
             msg = ('Cannot recognize requested hardware: {}'
@@ -477,7 +479,7 @@ class Status(dict):
 
     @classmethod
     def retrieve_job_status(cls, status_dir, module, job_name,
-                            hardware='eagle', subprocess_manager=None):
+                            hardware='slurm', subprocess_manager=None):
         """Update and retrieve job status.
 
         Parameters
@@ -489,8 +491,9 @@ class Status(dict):
         job_name : str
             Unique job name identification.
         hardware : str
-            Name of hardware that this pipeline is being run on: eagle, local.
-            Defaults to "eagle". This specifies how job are queried for status.
+            Name of hardware that this pipeline is being run on: eagle, slurm,
+            local. Defaults to "slurm". This specifies how job are queried for
+            status.
         subprocess_manager : None | SLURM
             Optional initialized subprocess manager to use to check job
             statuses. This can be input with cached queue data to avoid
