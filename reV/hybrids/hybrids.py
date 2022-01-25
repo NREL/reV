@@ -26,6 +26,259 @@ from rex.utilities.utilities import to_records_array
 logger = logging.getLogger(__name__)
 
 
+class HybridsConfig:
+    MERGE_COLUMN = 'sc_point_gid'
+    PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
+
+
+class HybridsData:
+    """Hybrids input data container. """
+
+    def __init__(self, solar_fpath, wind_fpath):
+        """
+        Parameters
+        ----------
+        solar_fpath : str
+            Filepath to rep profile output file to extract solar profiles and
+            summaries from.
+        wind_fpath : str
+            Filepath to rep profile output file to extract wind profiles and
+            summaries from.
+        """
+        self.solar_fpath = solar_fpath
+        self.wind_fpath = wind_fpath
+        self.profile_dset_names = []
+        self.merge_col_overlap_values = set()
+        self._solar_meta = None
+        self._wind_meta = None
+        self._solar_time_index = None
+        self._wind_time_index = None
+        self._hybrid_time_index = None
+        self.__profile_reg_check = re.compile(HybridsConfig.PROFILE_DSET_REGEX)
+        self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
+        self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
+
+    @property
+    def solar_meta(self):
+        """Summary for the solar representative profiles.
+
+        Returns
+        -------
+        solar_meta : pd.DataFrame
+            Summary for the solar representative profiles.
+        """
+        if self._solar_meta is None:
+            with Resource(self.solar_fpath) as res:
+                self._solar_meta = res.meta
+        return self._solar_meta
+
+    @property
+    def wind_meta(self):
+        """Summary for the wind representative profiles.
+
+        Returns
+        -------
+        wind_meta : pd.DataFrame
+            Summary for the wind representative profiles.
+        """
+        if self._wind_meta is None:
+            with Resource(self.wind_fpath) as res:
+                self._wind_meta = res.meta
+        return self._wind_meta
+
+    @property
+    def solar_time_index(self):
+        """Get the time index for the solar rep profiles.
+
+        Returns
+        -------
+        solar_time_index : pd.datetimeindex
+            Time index sourced from the solar reV gen file.
+        """
+        if self._solar_time_index is None:
+            with Resource(self.solar_fpath) as res:
+                self._solar_time_index = res.time_index
+        return self._solar_time_index
+
+    @property
+    def wind_time_index(self):
+        """Get the time index for the wind rep profiles.
+
+        Returns
+        -------
+        wind_time_index : pd.datetimeindex
+            Time index sourced from the wind reV gen file.
+        """
+        if self._wind_time_index is None:
+            with Resource(self.wind_fpath) as res:
+                self._wind_time_index = res.time_index
+        return self._wind_time_index
+
+    @property
+    def hybrid_time_index(self):
+        """Get the time index for the hybrid rep profiles.
+
+        Returns
+        -------
+        hybrid_time_index : pd.datetimeindex
+            Time index for the hybrid rep profiles.
+        """
+        if self._hybrid_time_index is None:
+            self._hybrid_time_index = self.solar_time_index.join(
+                self.wind_time_index, how='inner')
+        return self._hybrid_time_index
+
+    def contains_col(self, col_name):
+        """Check if input column name exists in either meta data set.
+
+        Parameters
+        ----------
+        col_name : str
+            Name of column to check for.
+
+        Returns
+        -------
+        bool
+            Whether or not the column is found in either meta data set.
+        """
+        fmt_name = ColNameFormatter.fmt(col_name)
+        col_in_solar = fmt_name in self.__solar_cols
+        col_in_wind = fmt_name in self.__wind_cols
+        return col_in_solar or col_in_wind
+
+    def validate(self):
+        """Validate the input data.
+
+        This method checks for a minimum time index length, a unique
+        profile, and unique merge column that overlaps between both data
+        sets.
+
+        """
+        self._validate_time_index()
+        self._validate_num_profiles()
+        self._validate_merge_col_exists()
+        self._validate_unique_merge_col()
+        self._validate_merge_col_overlaps()
+
+    def _validate_time_index(self):
+        """Validate the hybrid time index to be of len >= 8760.
+
+        Raises
+        ------
+        FileInputError
+            If len(time_index) < 8760 for the hybrid profile.
+        """
+        if len(self.hybrid_time_index) < 8760:
+            msg = ("The length of the merged time index ({}) is less than "
+                   "8760. Please ensure that the input profiles have a "
+                   "time index that overlaps >= 8760 times.")
+            e = msg.format(len(self.hybrid_time_index))
+            logger.error(e)
+            raise FileInputError(e)
+
+    def _validate_num_profiles(self):
+        """Validate the number of input profiles.
+
+        Raises
+        ------
+        FileInputError
+            If # of rep_profiles > 1.
+        """
+        for fp in [self.solar_fpath, self.wind_fpath]:
+            with Resource(fp) as res:
+                profile_dset_names = [
+                    n for n in res.dsets
+                    if self.__profile_reg_check.match(n)
+                ]
+                if not profile_dset_names:
+                    msg = ("Did not find any data sets matching the regex: "
+                           "{!r} in {!r}. Please ensure that the profile data "
+                           "exists and that the data set is named correctly.")
+                    e = msg.format(HybridsConfig.PROFILE_DSET_REGEX, fp)
+                    logger.error(e)
+                    raise FileInputError(e)
+                elif len(profile_dset_names) > 1:
+                    msg = ("Found more than one profile in {!r}: {}. "
+                           "This module is not intended for hybridization of "
+                           "multiple representative profiles. Please re-run "
+                           "on a single aggregated profile.")
+                    e = msg.format(fp, profile_dset_names)
+                    logger.error(e)
+                    raise FileInputError(e)
+                else:
+                    self.profile_dset_names += profile_dset_names
+
+    def _validate_merge_col_exists(self):
+        """Validate the existence of the merge column.
+
+        Raises
+        ------
+        FileInputError
+            If merge column is missing from either the solar or
+            the wind meta data.
+        """
+        msg = ("Cannot hybridize: merge column {!r} missing from the "
+               "{} meta data! ({!r})")
+
+        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        for cols, fp, res in zip([self.__solar_cols, self.__wind_cols],
+                                 [self.solar_fpath, self.wind_fpath],
+                                 ['solar', 'wind']):
+            if mc not in cols:
+                e = msg.format(HybridsConfig.MERGE_COLUMN, res, fp)
+                logger.error(e)
+                raise FileInputError(e)
+
+    def _validate_unique_merge_col(self):
+        """Validate the existence of unique values in the merge column.
+
+        Raises
+        ------
+        FileInputError
+            If merge column contains duplicate values  in either the solar or
+            the wind meta data.
+        """
+        msg = ("Duplicate {}s were found. This is likely due to resource "
+               "class binning, which is not supported at this time. "
+               "Please re-run supply curve aggregation without "
+               "resource class binning and ensure there are no duplicate "
+               "values in {!r}. File: {!r}")
+
+        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        for ds, cols, fp in zip([self.solar_meta, self.wind_meta],
+                                [self.__solar_cols, self.__wind_cols],
+                                [self.solar_fpath, self.wind_fpath]):
+            merge_col = ds.columns[cols == mc].item()
+            if not ds[merge_col].is_unique:
+                e = msg.format(merge_col, merge_col, fp)
+                logger.error(e)
+                raise FileInputError(e)
+
+    def _validate_merge_col_overlaps(self):
+        """Validate the existence of overlap in the merge column values.
+
+        Raises
+        ------
+        FileInputError
+            If merge column values do not overlap between the tow input files.
+        """
+        mc = ColNameFormatter.fmt(HybridsConfig.MERGE_COLUMN)
+        merge_col = self.solar_meta.columns[self.__solar_cols == mc].item()
+        solar_vals = set(self.solar_meta[merge_col].values)
+        merge_col = self.wind_meta.columns[self.__wind_cols == mc].item()
+        wind_vals = set(self.wind_meta[merge_col].values)
+        self.merge_col_overlap_values = solar_vals & wind_vals
+
+        if not self.merge_col_overlap_values:
+            msg = ("No overlap detected in the values of {!r} across the "
+                   "input files. Please ensure that at least one of the "
+                   "{!r} values is the same for input files {!r} and {!r}")
+            e = msg.format(merge_col, merge_col, self.solar_fpath,
+                           self.wind_fpath)
+            logger.error(e)
+            raise FileInputError(e)
+
+
 class ColNameFormatter:
     """Column name formatting helper class. """
     ALLOWED = set(ascii_letters)
@@ -278,25 +531,15 @@ class Hybridization:
         logger.info('Running hybridization rep profiles with ratio_cols: "{}"'
                     .format(ratio_cols))
 
-        self._solar_fpath = solar_fpath
-        self._wind_fpath = wind_fpath
+        self.data = HybridsData(solar_fpath, wind_fpath)
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
         self.DEFAULT_FILL_VALUES.update(fillna or {})
         self._allowed_ratio = allowed_ratio
         self._ratio_cols = ratio_cols
         self._profiles = None
-        self._solar_meta = None
-        self._wind_meta = None
         self._hybrid_meta = None
         self._solar_time_index = None
-        self._wind_time_index = None
-        self._hybrid_time_index = None
-        self.__merge_col_overlap = None
-        self.__profile_reg_check = re.compile(self.PROFILE_DSET_REGEX)
-        self.__profile_dset_names = []
-        self.__solar_cols = self.solar_meta.columns.map(ColNameFormatter.fmt)
-        self.__wind_cols = self.wind_meta.columns.map(ColNameFormatter.fmt)
         self.__hybrid_meta_cols = None
         self.__col_name_map = None
         self.__solar_rpi_n = '{}_solar_rpidx'.format(self._INTERNAL_COL_PREFIX)
@@ -307,144 +550,11 @@ class Hybridization:
     def _validate_input(self):
         """Validate the user input and input files. """
 
-        self._validate_time_index()
-        self._validate_num_profiles()
-        self._validate_merge_col_exists()
-        self._validate_unique_merge_col()
-        self._validate_merge_col_overlaps()
+        self.data.validate()
         self._validate_ratio_cols_length()
         self._validate_ratio_cols_prefixed()
         self._validate_ratio_cols_exist()
         self._validate_ratio()
-
-    def _validate_time_index(self):
-        """Validate the hybrid time index to be of len >= 8760.
-
-        Raises
-        ------
-        FileInputError
-            If len(time_index) < 8760 for the hybrid profile.
-        """
-        if len(self.hybrid_time_index) < 8760:
-            msg = ("The length of the merged time index ({}) is less than "
-                   "8760. Please ensure that the input profiles have a "
-                   "time index that overlaps >= 8760 times.")
-            e = msg.format(len(self.hybrid_time_index))
-            logger.error(e)
-            raise FileInputError(e)
-
-    def _validate_num_profiles(self):
-        """Validate the number of input profiles.
-
-        Raises
-        ------
-        FileInputError
-            If # of rep_profiles > 1.
-        """
-        for fp in [self._solar_fpath, self._wind_fpath]:
-            with Resource(fp) as res:
-                profile_dset_names = [
-                    n for n in res.dsets
-                    if self.__profile_reg_check.match(n)
-                ]
-                if not profile_dset_names:
-                    msg = ("Did not find any data sets matching the regex: "
-                           "{!r} in {!r}. Please ensure that the profile data "
-                           "exists and that the data set is named correctly.")
-                    e = msg.format(self.PROFILE_DSET_REGEX, fp)
-                    logger.error(e)
-                    raise FileInputError(e)
-                elif len(profile_dset_names) > 1:
-                    msg = ("Found more than one profile in {!r}: {}. "
-                           "This module is not intended for hybridization of "
-                           "multiple representative profiles. Please re-run "
-                           "on a single aggregated profile.")
-                    e = msg.format(fp, profile_dset_names)
-                    logger.error(e)
-                    raise FileInputError(e)
-                else:
-                    self.__profile_dset_names += profile_dset_names
-
-    def _validate_merge_col_exists(self):
-        """Validate the existence of the merge column.
-
-        Raises
-        ------
-        FileInputError
-            If merge column is missing from either the solar or
-            the wind meta data.
-        """
-        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__solar_cols:
-            msg = ("Cannot hybridize: merge column {!r} missing from the "
-                   "solar meta data! ({!r})")
-            e = msg.format(self.MERGE_COLUMN, self._solar_fpath)
-            logger.error(e)
-            raise FileInputError(e)
-
-        if ColNameFormatter.fmt(self.MERGE_COLUMN) not in self.__wind_cols:
-            msg = ("Cannot hybridize: merge column {!r} missing from the "
-                   "wind meta data! ({!r})")
-            e = msg.format(self.MERGE_COLUMN, self._wind_fpath)
-            logger.error(e)
-            raise FileInputError(e)
-
-    def _validate_unique_merge_col(self):
-        """Validate the existence of unique values in the merge column.
-
-        Raises
-        ------
-        FileInputError
-            If merge column contains duplicate values  in either the solar or
-            the wind meta data.
-        """
-        msg = ("Duplicate {}s were found. This is likely due to resource "
-               "class binning, which is not supported at this time. "
-               "Please re-run supply curve aggregation without "
-               "resource class binning and ensure there are no duplicate "
-               "values in {!r}. File: {!r}")
-
-        merge_col = self.solar_meta.columns[
-            self.__solar_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
-        ].item()
-        if not self.solar_meta[merge_col].is_unique:
-            e = msg.format(merge_col, merge_col, self._solar_fpath)
-            logger.error(e)
-            raise FileInputError(e)
-
-        merge_col = self.wind_meta.columns[
-            self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
-        ].item()
-        if not self.wind_meta[merge_col].is_unique:
-            e = msg.format(merge_col, merge_col, self._wind_fpath)
-            logger.error(e)
-            raise FileInputError(e)
-
-    def _validate_merge_col_overlaps(self):
-        """Validate the existence of overlap in the merge column values.
-
-        Raises
-        ------
-        FileInputError
-            If merge column values do not overlap between the tow input files.
-        """
-        merge_col = self.solar_meta.columns[
-            self.__solar_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
-        ].item()
-        solar_vals = set(self.solar_meta[merge_col].values)
-        merge_col = self.wind_meta.columns[
-            self.__wind_cols == ColNameFormatter.fmt(self.MERGE_COLUMN)
-        ].item()
-        wind_vals = set(self.wind_meta[merge_col].values)
-        self.__merge_col_overlap = solar_vals & wind_vals
-
-        if not self.__merge_col_overlap:
-            msg = ("No overlap detected in the values of {!r} across the "
-                   "input files. Please ensure that at least one of the "
-                   "{!r} values is the same for input files {!r} and {!r}")
-            e = msg.format(merge_col, merge_col, self._solar_fpath,
-                           self._wind_fpath)
-            logger.error(e)
-            raise FileInputError(e)
 
     def _validate_ratio_cols_length(self):
         """Ensure exactly two ratio column names are provided.
@@ -502,14 +612,11 @@ class Hybridization:
 
         for col in self._ratio_cols:
             no_prefix_name = "_".join(col.split('_')[1:])
-            fmt_name = ColNameFormatter.fmt(no_prefix_name)
-            col_in_solar = fmt_name in self.__solar_cols
-            col_in_wind = fmt_name in self.__wind_cols
-            if not col_in_solar and not col_in_wind:
+            if not self.data.contains_col(no_prefix_name):
                 msg = ("Input ratio column {!r} not found in either meta "
                        "data! Please check the input files {!r} and {!r}")
-                e = msg.format(no_prefix_name, self._solar_fpath,
-                               self._wind_fpath)
+                e = msg.format(no_prefix_name, self.data.solar_fpath,
+                               self.data.wind_fpath)
                 logger.error(e)
                 raise FileInputError(e)
 
@@ -545,10 +652,7 @@ class Hybridization:
         solar_meta : pd.DataFrame
             Summary for the solar representative profiles.
         """
-        if self._solar_meta is None:
-            with Resource(self._solar_fpath) as res:
-                self._solar_meta = res.meta
-        return self._solar_meta
+        return self.data.solar_meta
 
     @property
     def wind_meta(self):
@@ -559,10 +663,7 @@ class Hybridization:
         wind_meta : pd.DataFrame
             Summary for the wind representative profiles.
         """
-        if self._wind_meta is None:
-            with Resource(self._wind_fpath) as res:
-                self._wind_meta = res.meta
-        return self._wind_meta
+        return self.data.wind_meta
 
     @property
     def hybrid_meta(self):
@@ -588,10 +689,7 @@ class Hybridization:
         solar_time_index : pd.datetimeindex
             Time index sourced from the solar reV gen file.
         """
-        if self._solar_time_index is None:
-            with Resource(self._solar_fpath) as res:
-                self._solar_time_index = res.time_index
-        return self._solar_time_index
+        return self.data.solar_time_index
 
     @property
     def wind_time_index(self):
@@ -602,10 +700,7 @@ class Hybridization:
         wind_time_index : pd.datetimeindex
             Time index sourced from the wind reV gen file.
         """
-        if self._wind_time_index is None:
-            with Resource(self._wind_fpath) as res:
-                self._wind_time_index = res.time_index
-        return self._wind_time_index
+        return self.data.wind_time_index
 
     @property
     def hybrid_time_index(self):
@@ -616,10 +711,7 @@ class Hybridization:
         hybrid_time_index : pd.datetimeindex
             Time index for the hybrid rep profiles.
         """
-        if self._hybrid_time_index is None:
-            self._hybrid_time_index = self.solar_time_index.join(
-                self.wind_time_index, how='inner')
-        return self._hybrid_time_index
+        return self.data.hybrid_time_index
 
     @property
     def profiles(self):
@@ -774,8 +866,8 @@ class Hybridization:
                    "longitude) post merge. Please ensure that all matching "
                    "values of {!r} correspond to the same values of latitude "
                    "and longitude across the input files {!r} and {!r}")
-            e = msg.format(self.MERGE_COLUMN, self._solar_fpath,
-                           self._wind_fpath)
+            e = msg.format(self.MERGE_COLUMN, self.data.solar_fpath,
+                           self.data.wind_fpath)
             logger.error(e)
             raise FileInputError(e)
 
@@ -812,7 +904,7 @@ class Hybridization:
         c1, c2 = self._ratio_cols
         min_r, max_r = self._allowed_ratio
         overlap_idx = self._hybrid_meta[self.MERGE_COLUMN].isin(
-            self.__merge_col_overlap
+            self.data.merge_col_overlap_values
         )
         hc1 = self._hybrid_meta[c1].copy()
         hc2 = self._hybrid_meta[c2].copy()
@@ -941,10 +1033,10 @@ class Hybridization:
                          .format(i + 1, len(self.hybrid_meta)))
 
             out = RepProfileHybridizer.get_hybrid_rep_profiles(
-                self._solar_fpath, self._wind_fpath,
+                self.data.solar_fpath, self.data.wind_fpath,
                 row['hybrid_solar_capacity'], row['hybrid_wind_capacity'],
                 int(row[self.__solar_rpi_n]), int(row[self.__wind_rpi_n]),
-                self.hybrid_time_index, self.__profile_dset_names)
+                self.hybrid_time_index, self.data.profile_dset_names)
 
             logger.info('Profile {} out of {} complete '
                         .format(i + 1, len(self.hybrid_meta)))
@@ -984,13 +1076,13 @@ class Hybridization:
 
                     future = exe.submit(
                         RepProfileHybridizer.get_hybrid_rep_profiles,
-                        self._solar_fpath, self._wind_fpath,
+                        self.data.solar_fpath, self.data.wind_fpath,
                         row['hybrid_solar_capacity'],
                         row['hybrid_wind_capacity'],
                         int(row[self.__solar_rpi_n]),
                         int(row[self.__wind_rpi_n]),
                         self.hybrid_time_index,
-                        self.__profile_dset_names
+                        self.data.profile_dset_names
                     )
 
                     futures[future] = i
