@@ -36,7 +36,8 @@ def hybrid_col(col_name):
     >>> SOLAR_FPATH = '/path/to/input/solar/file.h5
     >>> WIND_FPATH = '/path/to/input/wind/file.h5
     >>>
-    >>> __, hybrid_meta, __ = Hybridization.run(SOLAR_FPATH, WIND_FPATH)
+    >>> h = Hybridization(SOLAR_FPATH, WIND_FPATH)
+    >>> __, hybrid_meta, __ = h.run()
     >>> assert 'scaled_elevation' in hybrid_meta.columns
 
     """

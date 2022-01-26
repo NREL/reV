@@ -1012,38 +1012,40 @@ class Hybridization:
         """
         return self._profiles
 
-    def _run(self, fout=None, save_hybrid_meta=True, scaled_precision=False,
-             max_workers=None):
+    def run(self, fout=None, save_hybrid_meta=True):
         """Run hybridization of profiles and save to disc.
 
         Parameters
         ----------
         fout : str, optional
-            filepath to output h5 file, by default None.
+            Filepath to output h5 file, by default None.
         save_hybrid_meta : bool, optional
-            Flag to save full reV SC table to rep profile output.,
+            Flag to save hybrid SC table to hybrid rep profile output,
             by default True.
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False.
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None.
+
+        Returns
+        -------
+        hybrid_profiles : dict
+            Hybridized representative profiles.
+        solar_profiles : dict
+            Solar portion of hybridized representative profiles.
+        wind_profiles : dict
+            Wind portion of hybridized representative profiles.
+        hybrid_meta : pd.DataFrame
+            Hybridized meta dataframe.
+        hybrid_time_index : pd.DatatimeIndex
+            Hybridized DatetimeIndex for output profiles.
         """
 
         self.meta_hybridizer.hybridize()
         self._init_profiles()
-
-        if max_workers == 1:
-            self._run_serial()
-        else:
-            self._run_parallel(max_workers=max_workers)
+        out = self._run()
 
         if fout is not None:
-            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
-                               scaled_precision=scaled_precision)
+            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta)
 
         logger.info('Hybridization of representative profiles complete!')
+        return out
 
     def _init_profiles(self):
         """Initialize the output rep profiles attribute."""
@@ -1052,18 +1054,42 @@ class Hybridization:
                         dtype=np.float32)
             for k in OUTPUT_PROFILE_NAMES}
 
-    def _init_h5_out(self, fout, save_hybrid_meta=True,
-                     scaled_precision=False):
+    def _run(self):
+        """Compute all hybridized profiles."""
+
+        logger.info('Running {} hybrid profile calculations in serial.'
+                    .format(len(self.hybrid_meta)))
+
+        for i, row in self.hybrid_meta.iterrows():
+            logger.debug('Working on profile {} out of {}'
+                         .format(i + 1, len(self.hybrid_meta)))
+
+            prof_idxs = self.meta_hybridizer.profile_indices_at_loc(i)
+            out = RepProfileHybridizer.get_hybrid_rep_profiles(
+                self.data.solar_fpath, self.data.wind_fpath,
+                row['hybrid_solar_capacity'], row['hybrid_wind_capacity'],
+                *prof_idxs,
+                self.hybrid_time_index, self.data.profile_dset_names)
+
+            logger.info('Profile {} out of {} complete '
+                        .format(i + 1, len(self.hybrid_meta)))
+
+            for k, p in zip(OUTPUT_PROFILE_NAMES, out):
+                self._profiles[k][:, i] = p
+
+        return (*self.profiles.values(),
+                self.hybrid_meta,
+                self.hybrid_time_index)
+
+    def _init_h5_out(self, fout, save_hybrid_meta=True):
         """Initialize an output h5 file for hybrid profiles.
 
         Parameters
         ----------
         fout : str
-            None or filepath to output h5 file.
+            Filepath to output h5 file.
         save_hybrid_meta : bool
-            Flag to save hybrid meta table to hybrid rep profile output.
-        scaled_precision : bool
-            Flag to scale hybrid profiles by 1000 and save as uint16.
+            Flag to save hybrid SC table to hybrid rep profile output.
         """
         dsets = []
         shapes = {}
@@ -1076,12 +1102,7 @@ class Hybridization:
             shapes[dset] = data.shape
             chunks[dset] = None
             attrs[dset] = {Outputs.UNIT_ATTR: "MW"}
-
-            if scaled_precision:
-                attrs[dset].update({'scale_factor': 1000})
-                dtypes[dset] = np.uint16
-            else:
-                dtypes[dset] = data.dtype
+            dtypes[dset] = data.dtype
 
         meta = self.hybrid_meta.copy()
         for c in meta.columns:
@@ -1105,9 +1126,9 @@ class Hybridization:
         Parameters
         ----------
         fout : str
-            None or filepath to output h5 file.
+            Filepath to output h5 file.
         save_hybrid_meta : bool
-            Flag to save hybrid meta table to hybrid rep profile output.
+            Flag to save hybrid SC table to hybrid rep profile output.
         """
 
         with Outputs(fout, mode='a') as out:
@@ -1118,175 +1139,16 @@ class Hybridization:
             for dset, data in self.profiles.items():
                 out[dset] = data
 
-    def save_profiles(self, fout, save_hybrid_meta=True,
-                      scaled_precision=False):
+    def save_profiles(self, fout, save_hybrid_meta=True):
         """Initialize fout and save profiles.
 
         Parameters
         ----------
         fout : str
-            None or filepath to output h5 file.
+            Filepath to output h5 file.
         save_hybrid_meta : bool
             Flag to save hybrid SC table to hybrid rep profile output.
-        scaled_precision : bool
-            Flag to scale hybrid profiles by 1000 and save as uint16.
         """
 
-        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
-                          scaled_precision=scaled_precision)
+        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
         self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
-
-    def _run_serial(self):
-        """Compute all hybridized profiles in serial."""
-
-        logger.info('Running {} hybrid profile calculations in serial.'
-                    .format(len(self.hybrid_meta)))
-
-        for i, row in self.hybrid_meta.iterrows():
-            logger.debug('Working on profile {} out of {}'
-                         .format(i + 1, len(self.hybrid_meta)))
-
-            prof_idxs = self.meta_hybridizer.profile_indices_at_loc(i)
-            out = RepProfileHybridizer.get_hybrid_rep_profiles(
-                self.data.solar_fpath, self.data.wind_fpath,
-                row['hybrid_solar_capacity'], row['hybrid_wind_capacity'],
-                *prof_idxs,
-                self.hybrid_time_index, self.data.profile_dset_names)
-
-            logger.info('Profile {} out of {} complete '
-                        .format(i + 1, len(self.hybrid_meta)))
-
-            for k, p in zip(OUTPUT_PROFILE_NAMES, out):
-                self._profiles[k][:, i] = p
-
-    def _run_parallel(self, max_workers=None, pool_size=72):
-        """Compute all hybridized profiles in parallel.
-
-        Parameters
-        ----------
-        max_workers : int | None
-            Number of parallel workers. 1 will run serial, None will use all
-            available.
-        pool_size : int
-            Number of futures to submit to a single process pool for
-            parallel futures.
-        """
-
-        logger.info('Kicking off {} hybrid profile futures.'
-                    .format(len(self.hybrid_meta)))
-
-        iter_chunks = np.array_split(
-            self.hybrid_meta.index.values,
-            np.ceil(len(self.hybrid_meta) / pool_size)
-        )
-        n_complete = 0
-        for iter_chunk in iter_chunks:
-            logger.debug('Starting process pool...')
-            futures = {}
-            loggers = [__name__, 'reV']
-            with SpawnProcessPool(max_workers=max_workers,
-                                  loggers=loggers) as exe:
-                for i in iter_chunk:
-                    row = self.hybrid_meta.loc[i, :]
-                    prof_idxs = self.meta_hybridizer.profile_indices_at_loc(i)
-
-                    future = exe.submit(
-                        RepProfileHybridizer.get_hybrid_rep_profiles,
-                        self.data.solar_fpath, self.data.wind_fpath,
-                        row['hybrid_solar_capacity'],
-                        row['hybrid_wind_capacity'],
-                        *prof_idxs,
-                        self.hybrid_time_index,
-                        self.data.profile_dset_names
-                    )
-
-                    futures[future] = i
-
-                for future in as_completed(futures):
-                    i = futures[future]
-                    out = future.result()
-                    n_complete += 1
-                    logger.info('Future {} out of {} complete '
-                                .format(n_complete, len(self.hybrid_meta)))
-                    log_mem(logger, log_level='DEBUG')
-
-                    for k, p in zip(OUTPUT_PROFILE_NAMES, out):
-                        self._profiles[k][:, i] = p
-
-    @classmethod
-    def run(cls, solar_fpath, wind_fpath, allow_solar_only=False,
-            allow_wind_only=False, fillna=None, allowed_ratio=None,
-            ratio_cols=('solar_capacity', 'wind_capacity'), fout=None,
-            save_hybrid_meta=True, scaled_precision=False, max_workers=None):
-        """Run hybridization by merging the profiles of each SC region.
-
-        Parameters
-        ----------
-        solar_fpath : str
-            Filepath to rep profile output file to extract solar profiles and
-            summaries from.
-        wind_fpath : str
-            Filepath to rep profile output file to extract wind profiles and
-            summaries from.
-        allow_solar_only : bool, optional
-            Option to allow SC points with only solar capcity (no wind), by
-            default False.
-        allow_wind_only : bool, optional
-            Option to allow SC points with only wind capcity (no solar), by
-            default False.
-        fillna : dict, optional
-            Dictionary containing column_name, fill_value pairs reprenting any
-            fill values that should be applied after merging the wind and solar
-            meta. Note that column names will likely have to be prefixed
-            with "solar_" or "wind_". By default None.
-        allowed_ratio : float | tuple, optional
-            Option to set a single ratio or ratio bounds (in two-tuple form)
-            on the `ratio_cols`. A single value is treated as both an upper
-            and a lower bound. This input limits the ratio of the values
-            of the input `ratio_cols` (ratio is always computed with the
-            first column as the numerator and the second column as the
-            denomiator). For example, `allowed_ratio=1` would limit
-            the values of the `ratio_cols` to always be equal. On the other
-            hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
-            between half and double (e.g., if `ratio_cols` are the capacity
-            columns, no capacity value would be more than double the other).
-            By default, None (no limit).
-        ratio_cols : tuple, optional
-            Option to specify the columns used to calculate the ratio that is
-            limited by the `allowed_ratio` input. If `allowed_ratio` is None,
-            this input does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            The order of the colum names specifies the way the ratio is
-            calculated: the first column is always treated as the ratio
-            numerator and the second column is the ratio denominator.
-            By default ('solar_capacity', 'wind_capacity').
-        fout : str, optional
-            filepath to output h5 file, by default None.
-        save_hybrid_meta : bool, optional
-            Flag to save full reV SC table to rep profile output.,
-            by default True.
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False.
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None.
-
-        Returns
-        -------
-        hybrid_profiles : dict
-            dict of hybridized representative profiles.
-        hybrid_meta : pd.DataFrame
-            Hybridized meta dataframe.
-        hybrid_time_index : pd.DatatimeIndex
-            Hybridized DatetimeIndex for output profiles.
-        """
-
-        rp = cls(solar_fpath, wind_fpath, allow_solar_only=allow_solar_only,
-                 allow_wind_only=allow_wind_only, fillna=fillna,
-                 allowed_ratio=allowed_ratio, ratio_cols=ratio_cols)
-
-        rp._run(fout=fout, save_hybrid_meta=save_hybrid_meta,
-                scaled_precision=scaled_precision, max_workers=max_workers)
-
-        return (*rp.profiles.values(), rp.hybrid_meta, rp.hybrid_time_index)

@@ -100,7 +100,6 @@ def from_config(ctx, config_file, verbose):
                        ratio_cols=config.ratio_cols,
                        out_dir=config.dirout,
                        log_dir=config.logdir,
-                       max_workers=config.execution_control.max_workers,
                        verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
@@ -114,7 +113,6 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['RATIO_COLS'] = config.ratio_cols
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
-        ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['VERBOSE'] = verbose
 
         ctx.invoke(slurm,
@@ -169,16 +167,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               show_default=True,
               help='Directory to save rep profile logs.')
-@click.option('--max_workers', '-mw', type=INT, default=None,
-              show_default=True,
-              help='Number of parallel workers. 1 will run in serial. '
-              'None will use all available.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
-           fillna, allowed_ratio, ratio_cols, out_dir, log_dir, max_workers,
-           verbose):
+           fillna, allowed_ratio, ratio_cols, out_dir, log_dir, verbose):
     """reV hybridization CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SOLAR_FPATH'] = solar_fpath
@@ -190,7 +183,6 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['RATIO_COLS'] = ratio_cols
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
-    ctx.obj['MAX_WORKERS'] = max_workers
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
@@ -205,15 +197,15 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
             fillna = dict_str_load(fillna)
 
         try:
-            Hybridization.run(
+            h = Hybridization(
                 solar_fpath, wind_fpath,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna,
                 allowed_ratio=allowed_ratio,
                 ratio_cols=ratio_cols,
-                fout=fout, max_workers=max_workers
             )
+            h.run(fout=fout)
 
         except Exception as e:
             msg = ('Hybridization of rep profiles failed. Received the '
@@ -235,7 +227,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
 
 def get_node_cmd(name, solar_fpath, wind_fpath, allow_solar_only,
                  allow_wind_only, fillna, allowed_ratio, ratio_cols, out_dir,
-                 log_dir, max_workers, verbose):
+                 log_dir, verbose):
     """Get a CLI call command for the hybrids cli."""
 
     args = ['-s {}'.format(SLURM.s(solar_fpath)),
@@ -245,7 +237,6 @@ def get_node_cmd(name, solar_fpath, wind_fpath, allow_solar_only,
             '-rc {}'.format(SLURM.s(ratio_cols)),
             '-od {}'.format(SLURM.s(out_dir)),
             '-ld {}'.format(SLURM.s(log_dir)),
-            '-mw {}'.format(SLURM.s(max_workers)),
             ]
 
     if allow_solar_only:
@@ -305,7 +296,6 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     ratio_cols = ctx.obj['RATIO_COLS']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
-    max_workers = ctx.obj['MAX_WORKERS']
     verbose = ctx.obj['VERBOSE']
 
     if stdout_path is None:
@@ -313,7 +303,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
     cmd = get_node_cmd(name, solar_fpath, wind_fpath, allow_solar_only,
                        allow_wind_only, fillna, allowed_ratio, ratio_cols,
-                       out_dir, log_dir, max_workers, verbose)
+                       out_dir, log_dir, verbose)
 
     if sh_script:
         cmd = sh_script + '\n' + cmd
