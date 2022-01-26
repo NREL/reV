@@ -14,7 +14,7 @@ from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeWindFarms
 from reV.supply_curve.tech_mapping import TechMapping
 
-from rex import init_logger
+from rex import init_logger, Resource
 
 pytest.importorskip("shapely")
 pytest.importorskip("rasterio")
@@ -125,34 +125,30 @@ def test_bespoke_points():
 
 if __name__ == '__main__':
     init_logger('reV', log_level='DEBUG')
-    points = np.arange(33, 40)
-    points = [33]  # 39% included
+    gid = 33
+
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-
-    with open(SAM, 'r') as f:
-        sam_sys_inputs = json.load(f)
-
-    sam_sys_inputs['wind_farm_wake_model'] = 2
-    sam_configs = {'default': sam_sys_inputs}
-
-    rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
-
     with tempfile.TemporaryDirectory() as td:
+        out_fpath = './bespoke_out.h5'
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
+        points = [gid]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    objective_function, cost_function,
-                                   points, sam_configs,
-                                   min_spacing='5x', ga_time=20,
+                                   points, SAM_CONFIGS,
+                                   ga_time=5,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
-                                   max_workers=1)
+                                   max_workers=1,
+                                   out_fpath=out_fpath)
         out = bsp.outputs
-        print(out)
-        print(list(out.keys()))
+
+        with Resource(out_fpath) as f:
+            print(list(f))
+

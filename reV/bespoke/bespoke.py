@@ -6,9 +6,11 @@ reV bespoke wind plant analysis tools
 # TODO check on outputs
 import h5py
 import logging
+import copy
 import pandas as pd
 import numpy as np
 import os
+import json
 import psutil
 from importlib import import_module
 from numbers import Number
@@ -16,6 +18,7 @@ from concurrent.futures import as_completed
 
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
+from reV.handlers.outputs import Outputs
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
@@ -38,13 +41,14 @@ class BespokeSingleFarm:
     """
 
     DEPENDENCIES = ('shapely', 'rasterio')
+    OUT_ATTRS = copy.deepcopy(Gen.OUT_ATTRS)
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
                  objective_function, cost_function,
                  min_spacing='5x', ga_time=20,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
-                 excl_dict=None, inclusion_mask=None,
+                 excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
                  close=True):
         """
@@ -96,6 +100,10 @@ class BespokeSingleFarm:
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. The shape of this will be checked against the input
             resolution.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -152,6 +160,7 @@ class BespokeSingleFarm:
                                     close=close)
 
         self._parse_output_req()
+        self._data_layers = data_layers
 
     def __str__(self):
         s = ('BespokeSingleFarm for reV SC gid {} with resolution {}'
@@ -248,14 +257,26 @@ class BespokeSingleFarm:
         -------
         pd.Series
         """
-        self._meta = pd.Series({'latitude': self.sc_point.latitude,
-                                'longitude': self.sc_point.longitude,
-                                'timezone': self.sc_point.timezone,
-                                'country': self.sc_point.country,
-                                'state': self.sc_point.state,
-                                'county': self.sc_point.county,
-                                'elevation': self.sc_point.elevation},
-                               name=self.sc_point.gid)
+        if self._meta is None:
+            res_gids = json.dumps([int(g) for g in self.sc_point.h5_gid_set])
+            gid_counts = json.dumps([float(np.round(n, 1))
+                                     for n in self.sc_point.gid_counts])
+
+            self._meta = pd.Series(
+                {'sc_point_gid': self.sc_point.gid,
+                 'latitude': self.sc_point.latitude,
+                 'longitude': self.sc_point.longitude,
+                 'timezone': self.sc_point.timezone,
+                 'country': self.sc_point.country,
+                 'state': self.sc_point.state,
+                 'county': self.sc_point.county,
+                 'elevation': self.sc_point.elevation,
+                 'offshore': self.sc_point.offshore,
+                 'res_gids': res_gids,
+                 'gid_counts': gid_counts,
+                 'n_gids': self.sc_point.n_gids,
+                 'area_sq_km': self.sc_point.area,
+                 }, name=self.sc_point.gid)
         return self._meta
 
     @property
@@ -469,24 +490,44 @@ class BespokeSingleFarm:
         # TODO need to add:
         # total cell area
         # cell capacity density
-        self._outputs["turbine_x_coords"] = self.plant_optimizer.turbine_x
-        self._outputs["turbine_y_coords"] = self.plant_optimizer.turbine_y
-        self._outputs["packed_x"] = self.plant_optimizer.x_locations
-        self._outputs["packed_y"] = self.plant_optimizer.y_locations
+
+        txc = [float(np.round(c)) for c in self.plant_optimizer.turbine_x]
+        tyc = [float(np.round(c)) for c in self.plant_optimizer.turbine_y]
+        pxc = [float(np.round(c)) for c in self.plant_optimizer.x_locations]
+        pyc = [float(np.round(c)) for c in self.plant_optimizer.y_locations]
+
+        txc = json.dumps(txc)
+        tyc = json.dumps(tyc)
+        pxc = json.dumps(pxc)
+        pyc = json.dumps(pyc)
+
+        self._meta["turbine_x_coords"] = txc
+        self._meta["turbine_y_coords"] = tyc
+        self._outputs["possible_x_coords"] = pxc
+        self._outputs["possible_y_coords"] = pyc
+
+        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
+        self._outputs["packing_polygons"] = \
+            self.plant_optimizer.packing_polygons
+
         self._outputs["n_turbines"] = self.plant_optimizer.nturbs
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
-        self._outputs["included_area"] = self.plant_optimizer.area
-        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
-        self._outputs["sam_sys_inputs"] = self.sam_sys_inputs
         self._outputs["bespoke_aep"] = self.plant_optimizer.aep
         self._outputs["bespoke_objective"] = self.plant_optimizer.objective
         self._outputs["bespoke_annual_cost"] = \
             self.cost_function(self.plant_optimizer.capacity)
-        self._outputs["packing_polygons"] = \
-            self.plant_optimizer.packing_polygons
         self._outputs["included_area_capacity_density"] =\
             self.plant_optimizer.capacity_density
+
         return self.outputs
+
+    def agg_data_layers(self):
+        """Aggregate optional data layers if requested and save to self.meta"""
+        if self._data_layers is not None:
+            point_summary = self.meta.to_dict()
+            point_summary = self.sc_point.agg_data_layers(point_summary,
+                                                          self._data_layers)
+            self._meta = pd.Series(point_summary)
 
     @property
     def outputs(self):
@@ -508,16 +549,17 @@ class BespokeSingleFarm:
 
         Returns
         -------
-        out : dict
-            Output dictionary containing turbine locations and other
-            information
+        bsp : BespokeSingleFarm
+            Bespoke single farm object. Includes bsp.outputs dictionary and
+            bsp.meta Series.
         """
 
-        with cls(*args, **kwargs) as bsp_plant:
-            out = bsp_plant.run_plant_optimization()
-            out = bsp_plant.run_wind_plant_ts()
+        with cls(*args, **kwargs) as bsp:
+            _ = bsp.run_plant_optimization()
+            _ = bsp.run_wind_plant_ts()
+            bsp.agg_data_layers()
 
-        return out
+        return bsp
 
 
 class BespokeWindFarms(AbstractAggregation):
@@ -533,7 +575,7 @@ class BespokeWindFarms(AbstractAggregation):
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None,
+                 resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False):
         """
         Parameters
@@ -609,6 +651,10 @@ class BespokeWindFarms(AbstractAggregation):
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath,
             by default None
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
         gids : list, optional
             List of supply curve point gids to get summary for (can use to
             subset if running in parallel), or None for all gids in the SC
@@ -649,6 +695,7 @@ class BespokeWindFarms(AbstractAggregation):
         self._output_request = output_request
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
+        self._data_layers = data_layers
         self._outputs = {}
         self._check_files()
 
@@ -741,7 +788,7 @@ class BespokeWindFarms(AbstractAggregation):
     @property
     def outputs(self):
         """Saved outputs for the multi wind plant bespoke optimization. Keys
-        are reV supply curve gids and values are nested dicts of output data.
+        are reV supply curve gids and values are BespokeSingleFarm objects.
 
         Returns
         -------
@@ -749,8 +796,7 @@ class BespokeWindFarms(AbstractAggregation):
         """
         return self._outputs
 
-    @staticmethod
-    def save_outputs(out_fpath):
+    def save_outputs(self, out_fpath):
         """Save Bespoke Wind Plant optimization outputs to disk.
 
         Parameters
@@ -767,7 +813,53 @@ class BespokeWindFarms(AbstractAggregation):
         if not os.path.exists(out_dir):
             create_dirs(out_dir)
 
-        # TODO: save self.outputs to disk
+        gids = sorted(list(self.outputs.keys()))
+        sample = self.outputs[gids[0]]
+        years = sorted(list(set(sample.res_df.index.year)))
+        meta = pd.concat([self.outputs[g].meta for g in gids])
+        meta = meta if len(gids) > 1 else pd.DataFrame(meta).T
+
+        with Outputs(out_fpath, mode='w') as f:
+            f._set_meta('meta', meta, attrs={})
+
+            for year in years:
+                mask = sample.res_df.index.year == year
+                ti = sample.res_df.index[mask]
+                ti = WindPower.ensure_res_len(ti, ti)
+                f._set_time_index('time_index-{}'.format(year), ti, attrs={})
+                f._set_time_index('time_index', ti, attrs={})
+
+            for dset, single in sample.outputs.items():
+                full_arr = None
+                if isinstance(single, Number):
+                    full_arr = np.zeros((len(gids),), type(single))
+                elif isinstance(single, (list, tuple, np.ndarray)):
+                    full_arr = np.zeros((len(single), len(gids)),
+                                        dtype=type(single[0]))
+
+                if full_arr is not None:
+                    for i, gid in enumerate(gids):
+                        if len(full_arr.shape) == 1:
+                            full_arr[i] = self.outputs[gid].outputs[dset]
+                        else:
+                            full_arr[:, i] = self.outputs[gid].outputs[dset]
+
+                    dset_no_year = dset
+                    if parse_year(dset, option='boolean'):
+                        year = parse_year(dset)
+                        dset_no_year = dset.replace('-{}'.format(year), '')
+
+                    attrs = BespokeSingleFarm.OUT_ATTRS.get(dset_no_year, {})
+                    attrs = copy.deepcopy(attrs)
+                    dtype = attrs.pop('dtype', np.float32)
+                    chunks = attrs.pop('chunks', None)
+                    try:
+                        f.write_dataset(dset, full_arr, dtype, chunks=chunks,
+                                        attrs=attrs)
+                    except Exception as e:
+                        msg = 'Failed to write "{}" to disk.'.format(dset)
+                        logger.exception(msg)
+                        raise IOError(msg) from e
 
         logger.info('Saved output data to: {}'.format(out_fpath))
 
@@ -779,8 +871,8 @@ class BespokeWindFarms(AbstractAggregation):
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,
-                   resolution=64, excl_area=0.0081, gids=None,
-                   exclusion_shape=None, slice_lookup=None,
+                   resolution=64, excl_area=0.0081, data_layers=None,
+                   gids=None, exclusion_shape=None, slice_lookup=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -822,7 +914,7 @@ class BespokeWindFarms(AbstractAggregation):
                     inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
                 try:
-                    gid_out = BespokeSingleFarm.run(
+                    gid_bsp_plant = BespokeSingleFarm.run(
                         gid,
                         fh.exclusions,
                         fh.h5,
@@ -839,6 +931,7 @@ class BespokeWindFarms(AbstractAggregation):
                         inclusion_mask=gid_inclusions,
                         resolution=resolution,
                         excl_area=excl_area,
+                        data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
                         close=False)
 
@@ -855,7 +948,7 @@ class BespokeWindFarms(AbstractAggregation):
                                  '{} out of {} points complete'
                                  .format(n_finished, len(gids)))
                     log_mem(logger)
-                    out[gid] = gid_out
+                    out[gid] = gid_bsp_plant
 
         return out
 
@@ -920,6 +1013,7 @@ class BespokeWindFarms(AbstractAggregation):
                     min_area=self._min_area,
                     resolution=self._resolution,
                     excl_area=self._excl_area,
+                    data_layers=self._data_layers,
                     gids=gid,
                     exclusion_shape=self.shape,
                     slice_lookup=slice_lookup))
@@ -948,7 +1042,7 @@ class BespokeWindFarms(AbstractAggregation):
             ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None,
             area_filter_kernel='queen', min_area=None,
-            resolution=64, excl_area=None,
+            resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
             out_fpath=None):
         """Run the bespoke wind farm optimization in serial or parallel.
@@ -969,6 +1063,7 @@ class BespokeWindFarms(AbstractAggregation):
                   min_area=min_area,
                   resolution=resolution,
                   excl_area=excl_area,
+                  data_layers=data_layers,
                   pre_extract_inclusions=pre_extract_inclusions)
 
         # parallel job distribution test.
@@ -991,6 +1086,7 @@ class BespokeWindFarms(AbstractAggregation):
                                     min_area=bsp._min_area,
                                     resolution=bsp._resolution,
                                     excl_area=bsp._excl_area,
+                                    data_layers=bsp._data_layers,
                                     gids=gid)
                 bsp._outputs.update(si)
         else:

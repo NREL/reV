@@ -326,12 +326,14 @@ class Outputs(BaseResource):
                 self.h5.attrs[k] = v
 
     @staticmethod
-    def _check_data_dtype(data, dtype, attrs=None):
+    def _check_data_dtype(dset_name, data, dtype, attrs=None):
         """
         Check data dtype and scale if needed
 
         Parameters
         ----------
+        dset_name : str
+            Name of dataset being written to disk
         data : ndarray
             Data to be written to disc
         dtype : str
@@ -355,18 +357,22 @@ class Outputs(BaseResource):
                  and not np.issubdtype(data.dtype, np.integer))
         if scale:
             if scale_factor != 1 and not np.issubdtype(dtype, np.integer):
-                raise HandlerRuntimeError('Output dtype must be an integer in '
-                                          'order to apply scale factor {}".'
-                                          .format(scale_factor))
+                msg = ('Output dtype for "{}" must be an integer in '
+                       'order to apply scale factor {}".'
+                       .format(dset_name, scale_factor))
+                logger.error(msg)
+                raise HandlerRuntimeError(msg)
 
             if not np.issubdtype(data.dtype, np.dtype(dtype)):
                 # apply scale factor and dtype
                 data = np.round(data * scale_factor).astype(dtype)
 
-        elif not np.issubdtype(data.dtype, np.dtype(dtype)):
-            raise HandlerRuntimeError('A scale_factor is needed to'
-                                      'scale "{}" data to "{}".'
-                                      .format(data.dtype, dtype))
+        elif (not np.issubdtype(data.dtype, np.dtype(dtype))
+                and not np.issubdtype(np.dtype(dtype), np.floating)):
+            msg = ('A scale_factor is needed to scale '
+                   '"{}" of type "{}" to "{}".'
+                   .format(dset_name, data.dtype, dtype))
+            raise HandlerRuntimeError(msg)
 
         return data
 
@@ -502,7 +508,7 @@ class Outputs(BaseResource):
         attrs = self.get_attrs(ds_name)
         ds_slice = parse_slice(ds_slice)
         self.h5[ds_name][ds_slice] = self._check_data_dtype(
-            arr, dtype, attrs=attrs)
+            ds_name, arr, dtype, attrs=attrs)
 
     def _check_chunks(self, chunks, data=None):
         """
@@ -585,17 +591,25 @@ class Outputs(BaseResource):
 
             if attrs is not None:
                 for key, value in attrs.items():
-                    ds.attrs[key] = value
+                    try:
+                        ds.attrs[key] = value
+                    except Exception as e:
+                        msg = ('Could not save datset "{}" attribute "{}" '
+                               'to value: {}'.format(ds_name, key, value))
+                        logger.error(msg)
+                        raise IOError(msg) from e
 
             if data is not None:
                 ds[...] = data
 
-    def _check_dset_shape(self, dset_data):
+    def _check_dset_shape(self, dset_name, dset_data):
         """
         Check to ensure that dataset array is of the proper shape
 
         Parameters
         ----------
+        dset_name : str
+            Dataset name being written to disk.
         dset_data : ndarray
             Dataset data array
         """
@@ -605,18 +619,22 @@ class Outputs(BaseResource):
             if shape:
                 shape = (shape,)
                 if dset_shape != shape:
-                    raise HandlerValueError("1D data with shape {} is not of "
-                                            "the proper spatial shape:"
-                                            " {}".format(dset_shape, shape))
+                    msg = ('1D dataset "{}" with shape {} is not of '
+                           'the proper spatial shape: {}'
+                           .format(dset_name, dset_shape, shape))
+                    logger.error(msg)
+                    raise HandlerValueError(msg)
             else:
                 raise HandlerRuntimeError("'meta' has not been loaded")
         else:
             shape = self.shape
             if shape:
                 if dset_shape != shape:
-                    raise HandlerValueError("2D data with shape {} is not of "
-                                            "the proper spatiotemporal shape:"
-                                            " {}".format(dset_shape, shape))
+                    msg = ('2D dataset "{}" with shape {} is not of the '
+                           'proper spatiotemporal shape: {}'
+                           .format(dset_name, dset_shape, shape))
+                    logger.error(msg)
+                    raise HandlerValueError(msg)
             else:
                 raise HandlerRuntimeError("'meta' and 'time_index' have not "
                                           "been loaded")
@@ -639,9 +657,9 @@ class Outputs(BaseResource):
         attrs : dict
             Attributes to be set. May include 'scale_factor'.
         """
-        self._check_dset_shape(data)
+        self._check_dset_shape(dset_name, data)
 
-        data = self._check_data_dtype(data, dtype, attrs=attrs)
+        data = self._check_data_dtype(dset_name, data, dtype, attrs=attrs)
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)

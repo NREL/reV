@@ -71,7 +71,7 @@ class MultiYear(Outputs):
 
     def _copy_time_index(self, source_h5):
         """
-        Copy time_index from source_h5 to time_index_{year} in multiyear .h5
+        Copy time_index from source_h5 to time_index-{year} in multiyear .h5
 
         Parameters
         ----------
