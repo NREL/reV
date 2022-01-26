@@ -411,7 +411,7 @@ class MetaHybridizer:
                 raise Exception
         except Exception:
             msg = ("Input for 'allowed_ratio' not understood: {!r}. "
-                   "Please make sure this value is a two-tuple containg"
+                   "Please make sure this value is a two-tuple containing "
                    "prefixed column names.")
             e = msg.format(self._ratio_cols)
             logger.error(e)
