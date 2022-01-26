@@ -819,8 +819,8 @@ class Hybridization:
 
         Returns
         -------
-        solar_time_index : pd.datetimeindex
-            Time index sourced from the solar reV gen file.
+        solar_time_index : pd.Datetimeindex
+            Time index sourced from the solar rep profile file.
         """
         return self.data.solar_time_index
 
@@ -830,8 +830,8 @@ class Hybridization:
 
         Returns
         -------
-        wind_time_index : pd.datetimeindex
-            Time index sourced from the wind reV gen file.
+        wind_time_index : pd.Datetimeindex
+            Time index sourced from the wind rep profile file.
         """
         return self.data.wind_time_index
 
@@ -841,7 +841,7 @@ class Hybridization:
 
         Returns
         -------
-        hybrid_time_index : pd.datetimeindex
+        hybrid_time_index : pd.Datetimeindex
             Time index for the hybrid rep profiles.
         """
         return self.data.hybrid_time_index
@@ -853,7 +853,7 @@ class Hybridization:
         Returns
         -------
         profiles : dict
-            dict of hybridized representative profiles.
+            Dict of hybridized representative profiles.
         """
         return self._profiles
 
@@ -870,16 +870,9 @@ class Hybridization:
 
         Returns
         -------
-        hybrid_profiles : dict
-            Hybridized representative profiles.
-        solar_profiles : dict
-            Solar portion of hybridized representative profiles.
-        wind_profiles : dict
-            Wind portion of hybridized representative profiles.
-        hybrid_meta : pd.DataFrame
-            Hybridized meta dataframe.
-        hybrid_time_index : pd.DatatimeIndex
-            Hybridized DatetimeIndex for output profiles.
+        `Hybridization`
+            Instance of Hybridization object (itself) containing the
+            hybridized meta and profiles as attributes.
         """
 
         self.meta_hybridizer.hybridize()
