@@ -83,7 +83,9 @@ class ProjectPointsType(click.ParamType):
 
 
 class SupplyCurvePointsType(ProjectPointsType):
+    """Project points for the reV Supply Curve grid"""
     def convert(self, value, param, ctx):
+        """Convert value to slice or list, or return as string."""
         if str(value).lower() == 'none':
             return None
         else:
