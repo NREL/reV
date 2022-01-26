@@ -5,13 +5,18 @@ import os
 import pytest
 import numpy as np
 import tempfile
+import json
+
+from click.testing import CliRunner
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
+from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
+from rex.utilities.loggers import LOGGERS
 
 
 SOLAR_FPATH = os.path.join(
@@ -26,6 +31,12 @@ with Resource(SOLAR_FPATH) as res:
     SOLAR_SCPGIDS = set(res.meta['sc_point_gid'])
 with Resource(WIND_FPATH) as res:
     WIND_SCPGIDS = set(res.meta['sc_point_gid'])
+
+
+@pytest.fixture(scope="module")
+def runner():
+    """Cli runner helper utility. """
+    return CliRunner()
 
 
 def test_hybridization_profile_output_single_resource():
@@ -434,6 +445,88 @@ def test_hybrids_data_contains_col():
     assert h_data.contains_col('dist_mi')
     assert h_data.contains_col('dist_km')
     assert not h_data.contains_col('dne_col_for_test')
+
+
+@pytest.mark.parametrize("input_files", [
+    (SOLAR_FPATH, WIND_FPATH),
+    (SOLAR_FPATH_30_MIN, WIND_FPATH)
+])
+@pytest.mark.parametrize("ratio_cols", [
+    ('solar_capacity', 'wind_capacity'),
+    ('solar_area_sq_km', 'wind_area_sq_km')
+])
+@pytest.mark.parametrize("ratio", [None, (0.5, 1.5), (0.3, 3.6)])
+@pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
+def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
+                                 input_combination):
+    """Test hybrids cli from config"""
+
+    fv = -999
+    sfp, wfp = input_files
+    allow_solar_only, allow_wind_only = input_combination
+    fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
+
+    with tempfile.TemporaryDirectory() as td:
+        config = {
+            "analysis_years": 2012,
+            "solar_fpath": sfp,
+            "wind_fpath": wfp,
+            "directories": {
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "nodes": 1,
+                "option": "local",
+                "sites_per_worker": 10
+            },
+            "log_level": "INFO",
+            "name": "hybrids-test",
+            "allow_solar_only": allow_solar_only,
+            "allow_wind_only": allow_wind_only,
+            "fillna": {
+                'solar_n_gids': 0,
+                'wind_capacity': -1
+            }
+        }
+        if ratio_cols is not None:
+            config['ratio_cols'] = ratio_cols
+        if ratio is not None:
+            config['allowed_ratio'] = ratio
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        with runner.isolated_filesystem():
+            result = runner.invoke(main, ['-c', config_path, 'hybrids'])
+
+        if result.exit_code != 0:
+            import traceback
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        LOGGERS.clear()
+
+        h = Hybridization(
+            sfp, wfp,
+            allow_solar_only=allow_solar_only,
+            allow_wind_only=allow_wind_only,
+            fillna=fill_vals,
+            allowed_ratio=ratio, ratio_cols=ratio_cols
+        ).run()
+
+        out_fpath = os.path.join(td, 'hybrids-test.h5')
+        with Outputs(out_fpath, 'r') as f:
+            for dset_name in OUTPUT_PROFILE_NAMES:
+                assert dset_name in f.dsets
+
+            meta_from_file = f.meta.fillna(fv).replace('nan', fv)
+            assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
+            assert np.all(f.time_index == h.hybrid_time_index)
+
+        LOGGERS.clear()
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
