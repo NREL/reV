@@ -661,199 +661,44 @@ class MetaHybridizer:
                     logger.warning(w)
                     warn(w, OutputWarning)
 
-    def profile_indices_at_loc(self, loc):
-        """Find the solar/wind rep profile indices for a row location.
-
-        Parameters
-        ----------
-        loc : int
-            Index of the hybrid meta DataFrame for the desired rep
-            profile indices.
-
+    @property
+    def solar_profile_indices_map(self):
+        """Map hybrid to solar rep indices.
         Returns
         -------
-        solar_rep_profile_index
-            Index of the solar rep profile corresponding to the hybrid
-            meta row, or -1 if no solar rep profile exists for that row.
+        hybrid_indicies : np.ndarray
+            Index values corresponding to hybrid rep profiles.
+        solar_indicies : np.ndarray
+            Index values of the solar rep profiles corresponding
+            to the hybrid rep profile indicies.
+        """
 
-        wind_rep_profile_index
-            Index of the wind rep profile corresponding to the hybrid
-            meta row, or -1 if no wind rep profile exists for that row.
+        if self._hybrid_meta is None:
+            return np.array([]), np.array([])
 
-        Raises
-        ------
-        RuntimeError
-            If `hybridize` method has not been run (and therefore
-            the hybrid meta d.n.e.).
+        idxs = self._hybrid_meta[self.__solar_rpi_n].astype(int)
+        idxs = idxs[idxs >= 0]
+
+        return idxs.index.values, idxs.values
+
+    @property
+    def wind_profile_indices_map(self):
+        """Map hybrid to wind rep indices.
+        Returns
+        -------
+        hybrid_indicies : np.ndarray
+            Index values corresponding to hybrid rep profiles.
+        wind_indicies : np.ndarray
+            Index values of the wind rep profiles corresponding
+            to the hybrid rep profile indicies.
         """
         if self._hybrid_meta is None:
-            e = ("Profile indexes do not exist because hybridized meta "
-                 "has not been generated! Please run the `hybridize` "
-                 "method before requesting profile indices!")
-            logger.error(e)
-            raise RuntimeError(e)
+            return np.array([]), np.array([])
 
-        row = self._hybrid_meta.loc[loc, :]
-        return int(row[self.__solar_rpi_n]), int(row[self.__wind_rpi_n])
+        idxs = self._hybrid_meta[self.__wind_rpi_n].astype(int)
+        idxs = idxs[idxs >= 0]
 
-
-class RepProfileHybridizer:
-    """Framework to handle hybridization of representative profiles."""
-
-    def __init__(self, solar_fpath, wind_fpath, hybrid_solar_capacity,
-                 hybrid_wind_capacity, solar_rep_idx, wind_rep_idx,
-                 hybrid_time_idx, rep_profile_dset_names):
-        """
-        Parameters
-        ----------
-        solar_fpath : str
-            Filepath to rep profile output file to extract solar profiles and
-            summaries from.
-        wind_fpath : str
-            Filepath to rep profile output file to extract wind profiles and
-            summaries from.
-        hybrid_solar_capacity : float
-            Built-out hybrid solar capacity. Used as a weight for profile
-            aggregation (meanoid).
-        hybrid_wind_capacity : float
-            Built-out hybrid wind capacity. Used as a weight for profile
-            aggregation (meanoid).
-        solar_rep_idx : int
-            Index of the solar representative profile.
-        wind_rep_idx : int
-            Index of the wind representative profile.
-        hybrid_time_idx : pd.DatetimeIndex
-            DatetimeIndex for the hybrid profile.
-        rep_profile_dset_names : iterable of length 2
-            Iterable containing the rep profile names for solar and wind,
-            in that order.
-        """
-
-        self.hybrid_solar_capacity = hybrid_solar_capacity
-        self.hybrid_wind_capacity = hybrid_wind_capacity
-        self._hti = hybrid_time_idx
-        self._fp = {'solar': solar_fpath, 'wind': wind_fpath}
-        self._ri = {'solar': solar_rep_idx, 'wind': wind_rep_idx}
-        self._rpdn = dict(zip(['solar', 'wind'], rep_profile_dset_names))
-        self._source_cf_profiles = {}
-
-    def _set_source_cf_profile(self, resource):
-        """Extract source profile data, if needeed. """
-        if self._source_cf_profiles.get(resource) is None:
-            self._source_cf_profiles[resource] = np.zeros(len(self._hti),
-                                                          dtype=np.float32)
-            if self._ri[resource] >= 0:
-                with Resource(self._fp[resource]) as res:
-                    self._source_cf_profiles[resource] = res[
-                        self._rpdn[resource],
-                        res.time_index.isin(self._hti),
-                        self._ri[resource]
-                    ]
-
-    @property
-    def solar_cf_profile(self):
-        """Retrieve the solar cf profile array from the input h5 file.
-
-        Returns
-        -------
-        profile : np.array
-            Timeseries array of solar cf profile data.
-        """
-        self._set_source_cf_profile('solar')
-        return self._source_cf_profiles['solar']
-
-    @property
-    def wind_cf_profile(self):
-        """Retrieve the wind cf profile array from the input h5 file.
-
-        Returns
-        -------
-        profile : np.array
-            Timeseries array of wind cf profile data.
-        """
-        self._set_source_cf_profile('wind')
-        return self._source_cf_profiles['wind']
-
-    @property
-    def solar_built_capacity(self):
-        """Calculate the built-out solar representative profile array.
-
-        Returns
-        -------
-        profile : np.array
-            Timeseries array of built-out solar capacity.
-        """
-        return self.solar_cf_profile * self.hybrid_solar_capacity
-
-    @property
-    def wind_built_capacity(self):
-        """Calculate the built-out wind representative profile array.
-
-        Returns
-        -------
-        profile : np.array
-            Timeseries array of built-out wind capacity.
-        """
-        return self.wind_cf_profile * self.hybrid_wind_capacity
-
-    @property
-    def hybrid_built_capacity(self):
-        """Calculate the built-out hybrid representative profile array.
-
-        Returns
-        -------
-        profile : np.array
-            Timeseries array of built-out bybrid capacity.
-        """
-        return self.solar_built_capacity + self.wind_built_capacity
-
-    @classmethod
-    def get_hybrid_rep_profiles(cls, solar_fpath, wind_fpath,
-                                hybrid_solar_capacity, hybrid_wind_capacity,
-                                solar_rep_idx, wind_rep_idx, hybrid_time_idx,
-                                rep_profile_dset_names):
-        """Class method for parallelization of rep profile calc.
-
-        Parameters
-        ----------
-        solar_fpath : str
-            Filepath to rep profile output file to extract solar profiles and
-            summaries from.
-        wind_fpath : str
-            Filepath to rep profile output file to extract wind profiles and
-            summaries from.
-        hybrid_solar_capacity : float
-            Built-out hybrid solar capacity. Used as a weight for profile
-            aggregation (meanoid).
-        hybrid_wind_capacity : float
-            Built-out hybrid wind capacity. Used as a weight for profile
-            aggregation (meanoid).
-        solar_rep_idx : int
-            Index of the solar representative profile.
-        wind_rep_idx : int
-            Index of the wind representative profile.
-        hybrid_time_idx : pd.DatetimeIndex
-            DatetimeIndex for the hybrid profile.
-        rep_profile_dset_names : iterable of length 2
-            Iterable containing the rep profile names for solar and wind,
-            in that order.
-
-        Returns
-        -------
-        hybrid_built_capacity : np.array
-            Array with data for the built-out hybrid capacity over time.
-        solar_built_capacity : np.array
-            Array with data for the built-out solar capacity over time.
-        wind_built_capacity : np.array
-            Array with data for the built-out wind capacity over time.
-        """
-        r = cls(solar_fpath, wind_fpath, hybrid_solar_capacity,
-                hybrid_wind_capacity, solar_rep_idx, wind_rep_idx,
-                hybrid_time_idx, rep_profile_dset_names)
-
-        return (r.hybrid_built_capacity,
-                r.solar_built_capacity,
-                r.wind_built_capacity)
+        return idxs.index.values, idxs.values
 
 
 class Hybridization:
@@ -1057,27 +902,37 @@ class Hybridization:
     def _run(self):
         """Compute all hybridized profiles."""
 
-        logger.info('Running {} hybrid profile calculations in serial.'
-                    .format(len(self.hybrid_meta)))
+        logger.info('Running hybrid profile calculations.')
 
-        for i, row in self.hybrid_meta.iterrows():
-            logger.debug('Working on profile {} out of {}'
-                         .format(i + 1, len(self.hybrid_meta)))
+        for params in self.__rep_profile_hybridization_params:
+            col, (hybrid_idxs, solar_idxs), fpath, p_name, dset_name = params
+            capacity = self.hybrid_meta.loc[hybrid_idxs, col].values
 
-            prof_idxs = self.meta_hybridizer.profile_indices_at_loc(i)
-            out = RepProfileHybridizer.get_hybrid_rep_profiles(
-                self.data.solar_fpath, self.data.wind_fpath,
-                row['hybrid_solar_capacity'], row['hybrid_wind_capacity'],
-                *prof_idxs,
-                self.hybrid_time_index, self.data.profile_dset_names)
+            with Resource(fpath) as res:
+                data = res[dset_name,
+                           res.time_index.isin(self.hybrid_time_index)]
+                self._profiles[p_name][:, hybrid_idxs] = (data[:, solar_idxs]
+                                                          * capacity)
 
-            logger.info('Profile {} out of {} complete '
-                        .format(i + 1, len(self.hybrid_meta)))
+        hp_name, sp_name, wp_name = OUTPUT_PROFILE_NAMES
+        self._profiles[hp_name] = (self._profiles[sp_name]
+                                   + self._profiles[wp_name])
 
-            for k, p in zip(OUTPUT_PROFILE_NAMES, out):
-                self._profiles[k][:, i] = p
+        logger.info('Profile hybridization complete.')
 
         return self
+
+    @property
+    def __rep_profile_hybridization_params(self):
+        """Zip the rep profile hybridization parameters. """
+
+        cap_col_names = ['hybrid_solar_capacity', 'hybrid_wind_capacity']
+        idx_maps = [self.meta_hybridizer.solar_profile_indices_map,
+                    self.meta_hybridizer.wind_profile_indices_map]
+        fpaths = [self.data.solar_fpath, self.data.wind_fpath]
+        zipped = zip(cap_col_names, idx_maps, fpaths, OUTPUT_PROFILE_NAMES[1:],
+                     self.data.profile_dset_names)
+        return zipped
 
     def _init_h5_out(self, fout, save_hybrid_meta=True):
         """Initialize an output h5 file for hybrid profiles.

@@ -160,6 +160,25 @@ def test_allowed_ratio(ratio_cols, ratio, bounds):
                   <= h.hybrid_meta[denominator_col])
 
 
+def test_rep_profile_idx_map():
+    """Test that rep profile index mappings are correct shape. """
+    h = Hybridization(SOLAR_FPATH, WIND_FPATH, allow_wind_only=True)
+
+    for h_idxs, r_idxs in (h.meta_hybridizer.solar_profile_indices_map,
+                           h.meta_hybridizer.wind_profile_indices_map):
+        assert h_idxs.size == 0
+        assert r_idxs.size == 0
+
+    h.meta_hybridizer.hybridize()
+
+    for idxs, shape in zip((h.meta_hybridizer.solar_profile_indices_map,
+                            h.meta_hybridizer.wind_profile_indices_map),
+                           (53, 100)):
+        h_idxs, r_idxs = idxs
+        assert h_idxs.size == shape
+        assert r_idxs.size == shape
+
+
 def test_fillna_values():
     """Test that N/A values are filled properly based on user input. """
 
@@ -494,4 +513,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 
 if __name__ == '__main__':
-    test_hybrids_data_content()
+    execute_pytest()
