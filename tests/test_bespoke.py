@@ -64,13 +64,14 @@ def test_single_serial(gid=33):
         points = [gid]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
+        bsp = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    objective_function, cost_function,
                                    points, SAM_CONFIGS,
                                    ga_time=5,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1)
+        out = bsp.outputs
 
         assert gid in out
         assert 'cf_profile-2012' in out[gid]
@@ -95,8 +96,9 @@ def test_bespoke_points():
 
         points = None
         points_range = None
-        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
                                             points_range, SAM)
+        pp = pc.project_points
 
         assert len(pp) == 100
         for gid in pp.gids:
@@ -104,16 +106,18 @@ def test_bespoke_points():
 
         points = None
         points_range = (0, 10)
-        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
                                             points_range, {'default': SAM})
+        pp = pc.project_points
         assert len(pp) == 10
         for gid in pp.gids:
             assert pp[gid][0] == 'default'
 
         points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
         points_range = None
-        pp = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindFarms._parse_points(excl_fp, TM_DSET, 64, points,
                                             points_range, {'default': SAM})
+        pp = pc.project_points
         assert len(pp) == 3
         for gid in pp.gids:
             assert pp[gid][0] == 'default'
@@ -142,12 +146,13 @@ if __name__ == '__main__':
         res_fp = res_fp.format('*')
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        out = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
+        bsp = BespokeWindFarms.run(excl_fp, res_fp, TM_DSET,
                                    objective_function, cost_function,
                                    points, sam_configs,
                                    min_spacing='5x', ga_time=20,
                                    excl_dict=EXCL_DICT,
                                    output_request=output_request,
                                    max_workers=1)
+        out = bsp.outputs
         print(out)
         print(list(out.keys()))
