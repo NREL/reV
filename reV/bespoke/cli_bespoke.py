@@ -60,8 +60,8 @@ def from_config(ctx, config_file, points_range, verbose):
     config = (config_file if isinstance(config_file, BespokeConfig)
               else BespokeConfig(config_file))
 
+    verbose = config.log_level == logging.DEBUG
     verbose = any([verbose, ctx.obj['VERBOSE']])
-    verbose = True if config.log_level == logging.DEBUG else False
 
     if points_range is not None:
         config['points_range'] = points_range
