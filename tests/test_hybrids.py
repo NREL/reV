@@ -138,8 +138,8 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
     ('solar_area_sq_km', 'wind_area_sq_km')
 ])
 @pytest.mark.parametrize("ratio, bounds", [
-    ((0.5, 1.5), (500, 1500)),
-    ((0.3, 3.6), (300, 3600))
+    ((0.5, 1.5), (0.5 - 1e6, 1.5 + 1e6)),
+    ((0.3, 3.6), (0.3 - 1e6, 3.6 + 1e6))
 ])
 def test_allowed_ratio(ratio_cols, ratio, bounds):
     """Test that the hybrid meta limits the ratio columns correctly. """
@@ -149,13 +149,15 @@ def test_allowed_ratio(ratio_cols, ratio, bounds):
         ratio_cols=ratio_cols,
     ).run()
 
-    c1, c2 = ratio_cols
-    ratios = (h.hybrid_meta['hybrid_{}'.format(c1)]
-              / h.hybrid_meta['hybrid_{}'.format(c2)])
+    numerator_col, denominator_col = ratio_cols
+    ratios = (h.hybrid_meta['hybrid_{}'.format(numerator_col)]
+              / h.hybrid_meta['hybrid_{}'.format(denominator_col)])
 
-    assert ((ratios * 1000).astype(int).between(*bounds)).all()
-    assert (h.hybrid_meta['hybrid_{}'.format(c1)] <= h.hybrid_meta[c1]).all()
-    assert (h.hybrid_meta['hybrid_{}'.format(c2)] <= h.hybrid_meta[c2]).all()
+    assert np.all(ratios.between(*bounds))
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(numerator_col)]
+                  <= h.hybrid_meta[numerator_col])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(denominator_col)]
+                  <= h.hybrid_meta[denominator_col])
 
 
 def test_fillna_values():
@@ -168,10 +170,10 @@ def test_fillna_values():
         allow_wind_only=True, fillna=fill_vals
     ).run()
 
-    assert not h.hybrid_meta['solar_n_gids'].isna().values.any()
-    assert not h.hybrid_meta['wind_capacity'].isna().values.any()
-    assert (h.hybrid_meta['solar_n_gids'].values == 0).any()
-    assert (h.hybrid_meta['wind_capacity'].values == -1).any()
+    assert not np.any(h.hybrid_meta['solar_n_gids'].isna())
+    assert not np.any(h.hybrid_meta['wind_capacity'].isna())
+    assert np.any(h.hybrid_meta['solar_n_gids'].values == 0)
+    assert np.any(h.hybrid_meta['wind_capacity'].values == -1)
 
 
 @pytest.mark.parametrize("input_combination, na_vals",
@@ -192,9 +194,9 @@ def test_all_allow_solar_allow_wind_combinations(input_combination, na_vals):
     for col_name, should_have_na_vals in zip(['solar_sc_gid', 'wind_sc_gid'],
                                              na_vals):
         if should_have_na_vals:
-            assert h.hybrid_meta[col_name].isna().values.any()
+            assert np.any(h.hybrid_meta[col_name].isna())
         else:
-            assert not h.hybrid_meta[col_name].isna().values.any()
+            assert not np.any(h.hybrid_meta[col_name].isna())
 
 
 def test_warning_for_improper_data_output_from_hybrid_method():
@@ -223,8 +225,8 @@ def test_hybrid_col_decorator():
 
     assert 'scaled_elevation' in HYBRID_METHODS
     assert 'scaled_elevation' in h.hybrid_meta.columns
-    assert (h.hybrid_meta['elevation'] * 1000
-            == h.hybrid_meta['scaled_elevation']).all()
+    assert np.allclose(h.hybrid_meta['elevation'] * 1000,
+                       h.hybrid_meta['scaled_elevation'])
 
 
 def test_duplicate_lat_long_values():
@@ -363,10 +365,10 @@ def test_valid_time_index_overlap():
     h = Hybridization(SOLAR_FPATH_30_MIN, WIND_FPATH)
 
     with Resource(SOLAR_FPATH_30_MIN) as res:
-        assert (res.time_index == h.solar_time_index).all()
+        assert np.all(res.time_index == h.solar_time_index)
 
     with Resource(WIND_FPATH) as res:
-        assert (res.time_index == h.wind_time_index).all()
+        assert np.all(res.time_index == h.wind_time_index)
         assert len(res.time_index) == len(h.hybrid_time_index)
 
 
@@ -397,12 +399,12 @@ def test_hybrids_data_content():
     h_data = HybridsData(SOLAR_FPATH, WIND_FPATH)
 
     with Resource(SOLAR_FPATH) as sr, Resource(WIND_FPATH) as wr:
-        assert (h_data.solar_meta.fillna(fv) == sr.meta.fillna(fv)).all().all()
-        assert (h_data.wind_meta.fillna(fv) == wr.meta.fillna(fv)).all().all()
-        assert (h_data.solar_time_index == sr.time_index).all()
-        assert (h_data.wind_time_index == wr.time_index).all()
+        assert np.all(h_data.solar_meta.fillna(fv) == sr.meta.fillna(fv))
+        assert np.all(h_data.wind_meta.fillna(fv) == wr.meta.fillna(fv))
+        assert np.all(h_data.solar_time_index == sr.time_index)
+        assert np.all(h_data.wind_time_index == wr.time_index)
         hyb_idx = sr.time_index.join(wr.time_index, how='inner')
-        assert (h_data.hybrid_time_index == hyb_idx).all()
+        assert np.all(h_data.hybrid_time_index == hyb_idx)
 
 
 def test_hybrids_data_contains_col():
@@ -474,7 +476,7 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
             d = 'rep_profiles_0'
             assert out._h5[d].shape == (len(res.time_index[t_slice]),
                                         len(meta))
-            assert (out[d].sum(axis=0) > 0).all()
+            assert np.all(out[d].sum(axis=0) > 0)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
@@ -492,4 +494,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 
 if __name__ == '__main__':
-    execute_pytest()
+    test_hybrids_data_content()
