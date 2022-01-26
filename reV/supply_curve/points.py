@@ -642,6 +642,162 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         return agg
 
+    @staticmethod
+    def _mode(data):
+        """
+        Compute the mode of the data vector and return a single value
+
+        Parameters
+        ----------
+        data : ndarray
+            data layer vector to compute mode for
+
+        Returns
+        -------
+        float | int
+            Mode of data
+        """
+        if not data.size:
+            return None
+        else:
+            return stats.mode(data).mode[0]
+
+    @staticmethod
+    def _categorize(data, incl_mult):
+        """
+        Extract the sum of inclusion scalar values (where 1 is
+        included, 0 is excluded, and 0.7 is included with 70 percent of
+        available land) for each unique (categorical value) in data
+
+        Parameters
+        ----------
+        data : ndarray
+            Vector of categorical values
+        incl_mult : ndarray
+            Vector of inclusion values
+
+        Returns
+        -------
+        str
+            Jsonified string of the dictionary mapping categorical values to
+            total inclusions
+        """
+
+        data = {category: float(incl_mult[(data == category)].sum())
+                for category in np.unique(data)}
+        data = jsonify_dict(data)
+
+        return data
+
+    @classmethod
+    def _agg_data_layer_method(cls, data, incl_mult, method):
+        """Aggregate the data array using specified method.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        incl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
+        method : str
+            Aggregation method (mode, mean, max, min, sum, category)
+
+        Returns
+        -------
+        data : float | int | str | None
+            Result of applying method to data.
+        """
+        method_func = {'mode': cls._mode,
+                       'mean': np.mean,
+                       'max': np.max,
+                       'min': np.min,
+                       'sum': np.sum,
+                       'category': cls._categorize}
+
+        if data is not None:
+            method = method.lower()
+            if method not in method_func:
+                e = ('Cannot recognize data layer agg method: '
+                     '"{}". Can only {}'.format(method, list(method_func)))
+                logger.error(e)
+                raise ValueError(e)
+
+            if len(data.shape) > 1:
+                data = data.flatten()
+
+            if data.shape != incl_mult.shape:
+                e = ('Cannot aggregate data with shape that doesnt '
+                     'match excl mult!')
+                logger.error(e)
+                raise DataShapeError(e)
+
+            if method == 'category':
+                data = method_func['category'](data, incl_mult)
+            elif method in ['mean', 'sum']:
+                data = data * incl_mult
+                data = method_func[method](data)
+            else:
+                data = method_func[method](data)
+
+        return data
+
+    def agg_data_layers(self, summary, data_layers):
+        """Perform additional data layer aggregation. If there is no valid data
+        in the included area, the data layer will be taken from the full SC
+        point extent (ignoring exclusions). If there is still no valid data,
+        a warning will be raised and the data layer will have a NaN/None value.
+
+        Parameters
+        ----------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point. A new entry for
+            each data layer is added.
+        """
+
+        if data_layers is not None:
+            for name, attrs in data_layers.items():
+
+                if 'fobj' not in attrs:
+                    with ExclusionLayers(attrs['fpath']) as f:
+                        raw = f[attrs['dset'], self.rows, self.cols]
+                        nodata = f.get_nodata_value(attrs['dset'])
+                else:
+                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
+                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
+
+                data = raw.flatten()[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask].copy()
+
+                if nodata is not None:
+                    valid_data_mask = (data != nodata)
+                    data = data[valid_data_mask]
+                    incl_mult = incl_mult[valid_data_mask]
+
+                    if not data.size:
+                        m = ('Data layer "{}" has no valid data for '
+                             'SC point gid {} because of exclusions '
+                             'and/or nodata values in the data layer.'
+                             .format(name, self._gid))
+                        logger.debug(m)
+
+                data = self._agg_data_layer_method(data, incl_mult,
+                                                   attrs['method'])
+                summary[name] = data
+
+        return summary
+
 
 class AggregationSupplyCurvePoint(SupplyCurvePoint):
     """Generic single SC point to aggregate data from an h5 file."""
@@ -1545,108 +1701,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         return _mean_h5_dsets_data
 
-    @staticmethod
-    def _mode(data):
-        """
-        Compute the mode of the data vector and return a single value
-
-        Parameters
-        ----------
-        data : ndarray
-            data layer vector to compute mode for
-
-        Returns
-        -------
-        float | int
-            Mode of data
-        """
-        if not data.size:
-            return None
-        else:
-            return stats.mode(data).mode[0]
-
-    @staticmethod
-    def _categorize(data, incl_mult):
-        """
-        Extract the sum of inclusion scalar values (where 1 is
-        included, 0 is excluded, and 0.7 is included with 70 percent of
-        available land) for each unique (categorical value) in data
-
-        Parameters
-        ----------
-        data : ndarray
-            Vector of categorical values
-        incl_mult : ndarray
-            Vector of inclusion values
-
-        Returns
-        -------
-        str
-            Jsonified string of the dictionary mapping categorical values to
-            total inclusions
-        """
-
-        data = {category: float(incl_mult[(data == category)].sum())
-                for category in np.unique(data)}
-        data = jsonify_dict(data)
-
-        return data
-
-    @classmethod
-    def _agg_data_layer_method(cls, data, incl_mult, method):
-        """Aggregate the data array using specified method.
-
-        Parameters
-        ----------
-        data : np.ndarray | None
-            Data array that will be flattened and operated on using method.
-            This must be the included data. Exclusions should be applied
-            before this method.
-        incl_mult : np.ndarray | None
-            Scalar exclusion data for methods with exclusion-weighted
-            aggregation methods. Shape must match input data.
-        method : str
-            Aggregation method (mode, mean, max, min, sum, category)
-
-        Returns
-        -------
-        data : float | int | str | None
-            Result of applying method to data.
-        """
-        method_func = {'mode': cls._mode,
-                       'mean': np.mean,
-                       'max': np.max,
-                       'min': np.min,
-                       'sum': np.sum,
-                       'category': cls._categorize}
-
-        if data is not None:
-            method = method.lower()
-            if method not in method_func:
-                e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only {}'.format(method, list(method_func)))
-                logger.error(e)
-                raise ValueError(e)
-
-            if len(data.shape) > 1:
-                data = data.flatten()
-
-            if data.shape != incl_mult.shape:
-                e = ('Cannot aggregate data with shape that doesnt '
-                     'match excl mult!')
-                logger.error(e)
-                raise DataShapeError(e)
-
-            if method == 'category':
-                data = method_func['category'](data, incl_mult)
-            elif method in ['mean', 'sum']:
-                data = data * incl_mult
-                data = method_func[method](data)
-            else:
-                data = method_func[method](data)
-
-        return data
-
     def _apply_exclusions(self):
         """Apply exclusions by masking the generation and resource gid arrays.
         This removes all res/gen entries that are masked by the exclusions or
@@ -1695,60 +1749,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             boolean_exclude = (boolean_exclude | rex)
 
         return boolean_exclude
-
-    def agg_data_layers(self, summary, data_layers):
-        """Perform additional data layer aggregation. If there is no valid data
-        in the included area, the data layer will be taken from the full SC
-        point extent (ignoring exclusions). If there is still no valid data,
-        a warning will be raised and the data layer will have a NaN/None value.
-
-        Parameters
-        ----------
-        summary : dict
-            Dictionary of summary outputs for this sc point.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-
-        Returns
-        -------
-        summary : dict
-            Dictionary of summary outputs for this sc point. A new entry for
-            each data layer is added.
-        """
-
-        if data_layers is not None:
-            for name, attrs in data_layers.items():
-
-                if 'fobj' not in attrs:
-                    with ExclusionLayers(attrs['fpath']) as f:
-                        raw = f[attrs['dset'], self.rows, self.cols]
-                        nodata = f.get_nodata_value(attrs['dset'])
-                else:
-                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
-                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
-
-                data = raw.flatten()[self.bool_mask]
-                incl_mult = self.include_mask_flat[self.bool_mask].copy()
-
-                if nodata is not None:
-                    valid_data_mask = (data != nodata)
-                    data = data[valid_data_mask]
-                    incl_mult = incl_mult[valid_data_mask]
-
-                    if not data.size:
-                        m = ('Data layer "{}" has no valid data for '
-                             'SC point gid {} because of exclusions '
-                             'and/or nodata values in the data layer.'
-                             .format(name, self._gid))
-                        logger.debug(m)
-
-                data = self._agg_data_layer_method(data, incl_mult,
-                                                   attrs['method'])
-                summary[name] = data
-
-        return summary
 
     def point_summary(self, args=None):
         """
