@@ -340,7 +340,8 @@ class Collector:
         project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected. None if points list is
-            to be ignored (collect all data in h5_files)
+            to be ignored (collect all data in h5_files without checking that
+            all gids are there)
         file_prefix : str
             .h5 file prefix, if None collect all files in h5_dir
         clobber : bool

@@ -223,8 +223,7 @@ def test_econ_from_config(runner):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['-c', config_path,
-                                      'econ'])
+        result = runner.invoke(main, ['-c', config_path, 'econ'])
         if result.exit_code != 0:
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))

@@ -129,9 +129,11 @@ def from_config(ctx, config_file, verbose):
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
               help='Directory containing h5 files to collect.')
-@click.option('--project_points', '-pp', type=STR, required=True,
+@click.option('--project_points', '-pp', type=STR, required=False,
               help='Project points file representing the full '
-              'collection scope.')
+              'collection scope. This doesnt have to be provided '
+              'if points list is to be ignored (collect all data '
+              'in h5_files without checking that all gids are there)')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected.')
 @click.option('--file_prefix', '-fp', type=STR, default=None,

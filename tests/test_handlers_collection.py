@@ -7,11 +7,16 @@ import numpy as np
 import os
 import pytest
 import tempfile
+from click.testing import CliRunner
+import json
+import traceback
+import shutil
 
+from reV.cli import main
 from reV.handlers.collection import Collector
 from reV import TESTDATADIR
 
-from rex.utilities.loggers import init_logger
+from rex.utilities.loggers import init_logger, LOGGERS
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
@@ -150,6 +155,53 @@ def test_means_lcoe():
         with h5py.File(h5_file, 'r') as f:
             assert 'cf_mean' in f
             assert 'lcoe_fcr' in f
+
+
+def test_cli():
+    """Test the collection command line interface"""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as td:
+        config = {
+            "directories": {
+                "collect_directory": H5_DIR,
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "option": "local"
+            },
+            "log_level": "DEBUG",
+            "dsets": [
+                "cf_profile"
+            ],
+            "project_points": None,
+            "file_prefixes": ['peregrine_2012']
+        }
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['-c', config_path, 'collect'])
+
+        if result.exit_code != 0:
+            print('Collect cli failed')
+            print('Temp dir files: ', os.listdir(td))
+            log_file = os.path.join(td, 'collect.log')
+            with open(log_file, 'r') as f:
+                print(f.read())
+            log_file = os.path.join(td, 'collect_peregrine_2012.log')
+            with open(log_file, 'r') as f:
+                print(f.read())
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        for fn in os.listdir(os.path.join(H5_DIR, 'chunk_files')):
+            shutil.move(os.path.join(H5_DIR, 'chunk_files/', fn),
+                        os.path.join(H5_DIR, fn))
+        shutil.rmtree(os.path.join(H5_DIR, 'chunk_files/'))
+        LOGGERS.clear()
 
 
 def execute_pytest(capture='all', flags='-rapP'):
