@@ -631,20 +631,32 @@ class MetaHybridizer:
 
     def _limit_by_ratio(self):
         """ Limit the ratio columns based on input ratio. """
-        c1, c2 = self._ratio_cols
-        min_r, max_r = sorted(self._allowed_ratio)
+        numerator_col, denominator_col = self._ratio_cols
+        min_ratio, max_ratio = sorted(self._allowed_ratio)
         overlap_idx = self._hybrid_meta[MERGE_COLUMN].isin(
             self.data.merge_col_overlap_values
         )
-        hc1 = self._hybrid_meta[c1].copy()
-        hc2 = self._hybrid_meta[c2].copy()
-        ratios = (hc1.loc[overlap_idx] / hc2.loc[overlap_idx])
-        ratio_too_low = (ratios < min_r) & overlap_idx
-        ratio_too_high = (ratios > max_r) & overlap_idx
-        hc1.loc[ratio_too_high] = hc2.loc[ratio_too_high].values * max_r
-        hc2.loc[ratio_too_low] = hc1.loc[ratio_too_low].values / min_r
-        self._hybrid_meta["hybrid_{}".format(c1)] = hc1.values
-        self._hybrid_meta["hybrid_{}".format(c2)] = hc2.values
+
+        numerator_vals = self._hybrid_meta[numerator_col].copy()
+        denominator_vals = self._hybrid_meta[denominator_col].copy()
+
+        ratios = (
+            numerator_vals.loc[overlap_idx] / denominator_vals.loc[overlap_idx]
+        )
+        ratio_too_low = (ratios < min_ratio) & overlap_idx
+        ratio_too_high = (ratios > max_ratio) & overlap_idx
+
+        numerator_vals.loc[ratio_too_high] = (
+            denominator_vals.loc[ratio_too_high].values * max_ratio
+        )
+        denominator_vals.loc[ratio_too_low] = (
+            numerator_vals.loc[ratio_too_low].values / min_ratio
+        )
+
+        h_num_name = "hybrid_{}".format(numerator_col)
+        h_denom_name = "hybrid_{}".format(denominator_col)
+        self._hybrid_meta[h_num_name] = numerator_vals.values
+        self._hybrid_meta[h_denom_name] = denominator_vals.values
 
     def _add_hybrid_cols(self):
         """Add new hybrid columns using registered hybrid methods. """
