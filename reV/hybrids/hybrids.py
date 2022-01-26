@@ -897,6 +897,16 @@ class Hybridization:
 
         logger.info('Running hybrid profile calculations.')
 
+        self._compute_hybridized_resource_profiles()
+        self._compute_hybridized_profiles_from_components()
+
+        logger.info('Profile hybridization complete.')
+
+        return self
+
+    def _compute_hybridized_resource_profiles(self):
+        """Compute the resource components of the hybridized profiles. """
+
         for params in self.__rep_profile_hybridization_params:
             col, (hybrid_idxs, solar_idxs), fpath, p_name, dset_name = params
             capacity = self.hybrid_meta.loc[hybrid_idxs, col].values
@@ -906,14 +916,6 @@ class Hybridization:
                            res.time_index.isin(self.hybrid_time_index)]
                 self._profiles[p_name][:, hybrid_idxs] = (data[:, solar_idxs]
                                                           * capacity)
-
-        hp_name, sp_name, wp_name = OUTPUT_PROFILE_NAMES
-        self._profiles[hp_name] = (self._profiles[sp_name]
-                                   + self._profiles[wp_name])
-
-        logger.info('Profile hybridization complete.')
-
-        return self
 
     @property
     def __rep_profile_hybridization_params(self):
@@ -926,6 +928,13 @@ class Hybridization:
         zipped = zip(cap_col_names, idx_maps, fpaths, OUTPUT_PROFILE_NAMES[1:],
                      self.data.profile_dset_names)
         return zipped
+
+    def _compute_hybridized_profiles_from_components(self):
+        """Compute the hybridized profiles from the resource components. """
+
+        hp_name, sp_name, wp_name = OUTPUT_PROFILE_NAMES
+        self._profiles[hp_name] = (self._profiles[sp_name]
+                                   + self._profiles[wp_name])
 
     def _init_h5_out(self, fout, save_hybrid_meta=True):
         """Initialize an output h5 file for hybrid profiles.
