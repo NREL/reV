@@ -4,10 +4,14 @@ reV hybrids profile config
 
 @author: ppinchuk
 """
+import os
+import glob
 import logging
 
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
+
+from rex.utilities import parse_year
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +40,7 @@ class HybridsConfig(AnalysisConfig):
         fpath = self['solar_fpath']
         _raise_err_if_pipeline(fpath)
 
-        return fpath
+        return _glob_to_yearly_dict(fpath)
 
     @property
     def wind_fpath(self):
@@ -45,7 +49,7 @@ class HybridsConfig(AnalysisConfig):
         fpath = self['wind_fpath']
         _raise_err_if_pipeline(fpath)
 
-        return fpath
+        return _glob_to_yearly_dict(fpath)
 
     @property
     def allow_solar_only(self):
@@ -80,3 +84,19 @@ def _raise_err_if_pipeline(fpath):
         msg = 'Cannot run hybrids module as a pipeline job.'
         logger.error(msg)
         raise PipelineError(msg)
+
+
+def _glob_to_yearly_dict(fpath):
+    """Glob the filepaths into a dictionary based on years. """
+    paths = {}
+    for fp in glob.glob(fpath):
+        fname = os.path.basename(fp)
+
+        try:
+            year = parse_year(fname)
+        except RuntimeError:
+            year = None
+
+        paths.setdefault(year, []).append(fp)
+
+    return paths

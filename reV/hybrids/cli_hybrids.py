@@ -80,49 +80,90 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'hybrids', name)
+    solar_glob_paths, wind_glob_paths = config.solar_fpath, config.wind_fpath
+    all_years = set(solar_glob_paths) | set(wind_glob_paths)
+    common_years = set(solar_glob_paths) & set(wind_glob_paths)
+    if not all_years:
+        msg = "No files found that match the input: {!r} and/or {!r}"
+        e = msg.format(config['solar_fpath'], config['wind_fpath'])
+        logger.error(e)
+        raise RuntimeError(e)
 
-        if status != 'successful':
-            Status.add_job(
-                config.dirout, 'hybrids', name, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': '{}.h5'.format(name),
-                           'dirout': config.dirout})
+    solar_fpaths = []
+    wind_fpaths = []
+    names = []
+    for year in all_years:
+        if year not in common_years:
+            msg = ("No corresponding {} file found for {} input file (s): "
+                   "{!r} (year: {}). Skipping this input!")
+            resources = (['solar', 'wind'] if year not in solar_glob_paths else
+                         ['wind', 'solar'])
+            paths = (solar_glob_paths.get(year, [])
+                     + wind_glob_paths.get(year, []))
+            w = msg.format(*resources, paths, year)
+            logger.warning(w)
+            RuntimeWarning(w)
+            continue
 
-            ctx.invoke(direct,
-                       solar_fpath=config.solar_fpath,
-                       wind_fpath=config.wind_fpath,
-                       allow_solar_only=config.allow_solar_only,
-                       allow_wind_only=config.allow_wind_only,
-                       fillna=config.fillna,
-                       allowed_ratio=config.allowed_ratio,
-                       ratio_cols=config.ratio_cols,
-                       out_dir=config.dirout,
-                       log_dir=config.logdir,
-                       verbose=verbose)
+        for fpaths in (solar_glob_paths, wind_glob_paths):
+            if len(fpaths[year]) > 1:
+                msg = ("Ambiguous number of files found for year {}: {!r} "
+                       "Please ensure there is only one input file per year. "
+                       "Skipping this input!")
+                w = msg.format(year, fpaths[year])
+                logger.warning(w)
+                RuntimeWarning(w)
+                break
+        else:
+            solar_fpaths += solar_glob_paths[year]
+            wind_fpaths += wind_glob_paths[year]
+            names += ["{}_{}".format(name, year) if year is not None else name]
 
-    elif config.execution_control.option in ('eagle', 'slurm'):
-        ctx.obj['NAME'] = name
-        ctx.obj['SOLAR_FPATH'] = config.solar_fpath
-        ctx.obj['WIND_FPATH'] = config.wind_fpath
-        ctx.obj['ALLOW_SOLAR_ONLY'] = config.allow_solar_only
-        ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
-        ctx.obj['FILLNA'] = config.fillna
-        ctx.obj['ALLOWED_RATIO'] = config.allowed_ratio
-        ctx.obj['RATIO_COLS'] = config.ratio_cols
-        ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['LOG_DIR'] = config.logdir
-        ctx.obj['VERBOSE'] = verbose
+    for name, solar_fpath, wind_fpath in zip(names, solar_fpaths, wind_fpaths):
 
-        ctx.invoke(slurm,
-                   alloc=config.execution_control.allocation,
-                   memory=config.execution_control.memory,
-                   walltime=config.execution_control.walltime,
-                   feature=config.execution_control.feature,
-                   conda_env=config.execution_control.conda_env,
-                   module=config.execution_control.module,
-                   sh_script=config.execution_control.sh_script)
+        if config.execution_control.option == 'local':
+            status = Status.retrieve_job_status(config.dirout, 'hybrids', name)
+
+            if status != 'successful':
+                Status.add_job(
+                    config.dirout, 'hybrids', name, replace=True,
+                    job_attrs={'hardware': 'local',
+                               'fout': '{}.h5'.format(name),
+                               'dirout': config.dirout})
+
+                ctx.invoke(direct,
+                           solar_fpath=solar_fpath,
+                           wind_fpath=wind_fpath,
+                           allow_solar_only=config.allow_solar_only,
+                           allow_wind_only=config.allow_wind_only,
+                           fillna=config.fillna,
+                           allowed_ratio=config.allowed_ratio,
+                           ratio_cols=config.ratio_cols,
+                           out_dir=config.dirout,
+                           log_dir=config.logdir,
+                           verbose=verbose)
+
+        elif config.execution_control.option in ('eagle', 'slurm'):
+            ctx.obj['NAME'] = name
+            ctx.obj['SOLAR_FPATH'] = solar_fpath
+            ctx.obj['WIND_FPATH'] = wind_fpath
+            ctx.obj['ALLOW_SOLAR_ONLY'] = config.allow_solar_only
+            ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
+            ctx.obj['FILLNA'] = config.fillna
+            ctx.obj['ALLOWED_RATIO'] = config.allowed_ratio
+            ctx.obj['RATIO_COLS'] = config.ratio_cols
+            ctx.obj['OUT_DIR'] = config.dirout
+            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['VERBOSE'] = verbose
+
+            ctx.invoke(slurm,
+                       alloc=config.execution_control.allocation,
+                       memory=config.execution_control.memory,
+                       walltime=config.execution_control.walltime,
+                       feature=config.execution_control.feature,
+                       conda_env=config.execution_control.conda_env,
+                       module=config.execution_control.module,
+                       sh_script=config.execution_control.sh_script)
 
 
 @main.group(invoke_without_command=True)
