@@ -34,11 +34,7 @@ class HybridsConfig(AnalysisConfig):
         """Get the solar data filepath"""
 
         fpath = self['solar_fpath']
-
-        if fpath == 'PIPELINE':
-            msg = 'Cannot run hybrids module as a pipeline job.'
-            logger.error(msg)
-            raise PipelineError(msg)
+        _raise_err_if_pipeline(fpath)
 
         return fpath
 
@@ -47,11 +43,7 @@ class HybridsConfig(AnalysisConfig):
         """Get the wind data filepath"""
 
         fpath = self['wind_fpath']
-
-        if fpath == 'PIPELINE':
-            msg = 'Cannot run hybrids module as a pipeline job.'
-            logger.error(msg)
-            raise PipelineError(msg)
+        _raise_err_if_pipeline(fpath)
 
         return fpath
 
@@ -79,3 +71,12 @@ class HybridsConfig(AnalysisConfig):
     def ratio_cols(self):
         """Get the columns used to calculate the ratio."""
         return self.get('ratio_cols', self._default_ratio_cols)
+
+
+def _raise_err_if_pipeline(fpath):
+    """Raise error if fpath input is 'PIPELINE'. """
+
+    if fpath == 'PIPELINE':
+        msg = 'Cannot run hybrids module as a pipeline job.'
+        logger.error(msg)
+        raise PipelineError(msg)
