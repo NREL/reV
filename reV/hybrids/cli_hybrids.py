@@ -224,10 +224,20 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         Status.make_job_file(out_dir, 'hybrids', name, status)
 
 
-def get_node_cmd(name, solar_fpath, wind_fpath, allow_solar_only,
-                 allow_wind_only, fillna, allowed_ratio, ratio_cols, out_dir,
-                 log_dir, verbose):
+def get_node_cmd(ctx):
     """Get a CLI call command for the hybrids cli."""
+
+    name = ctx.obj['NAME']
+    solar_fpath = ctx.obj['SOLAR_FPATH']
+    wind_fpath = ctx.obj['WIND_FPATH']
+    allow_solar_only = ctx.obj['ALLOW_SOLAR_ONLY']
+    allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
+    fillna = ctx.obj['FILLNA']
+    allowed_ratio = ctx.obj['ALLOWED_RATIO']
+    ratio_cols = ctx.obj['RATIO_COLS']
+    out_dir = ctx.obj['OUT_DIR']
+    log_dir = ctx.obj['LOG_DIR']
+    verbose = ctx.obj['VERBOSE']
 
     args = ['-s {}'.format(SLURM.s(solar_fpath)),
             '-w {}'.format(SLURM.s(wind_fpath)),
@@ -286,23 +296,13 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     """slurm (Eagle) submission tool for reV representative profiles."""
 
     name = ctx.obj['NAME']
-    solar_fpath = ctx.obj['SOLAR_FPATH']
-    wind_fpath = ctx.obj['WIND_FPATH']
-    allow_solar_only = ctx.obj['ALLOW_SOLAR_ONLY']
-    allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
-    fillna = ctx.obj['FILLNA']
-    allowed_ratio = ctx.obj['ALLOWED_RATIO']
-    ratio_cols = ctx.obj['RATIO_COLS']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
-    verbose = ctx.obj['VERBOSE']
 
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, solar_fpath, wind_fpath, allow_solar_only,
-                       allow_wind_only, fillna, allowed_ratio, ratio_cols,
-                       out_dir, log_dir, verbose)
+    cmd = get_node_cmd(ctx)
 
     if sh_script:
         cmd = sh_script + '\n' + cmd
