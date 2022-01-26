@@ -37,25 +37,25 @@ gcf:
 
 # CapEx Equations
 cost_reductions:
-  2019::cost_reductions::fixed
+  osw_2019::cost_reductions::fixed
 turbine:
-  2019::turbine::tower + 2019::turbine::rna * (1 - cost_reductions::rna_2017)
+  osw_2019::turbine::tower + osw_2019::turbine::rna * (1 - cost_reductions::rna_2017)
 turbine_install:
-  2019::turbine_install::monopile_8MW * (1 - cost_reductions::turbine_install_2017)
+  osw_2019::turbine_install::monopile_8MW * (1 - cost_reductions::turbine_install_2017)
 substructure:
-  (2015::monopile::transition_piece + 2015::fixed::outfitting_lt_8MW) * (1 - cost_reductions::substructure_2017)
+  (osw_2015::monopile::transition_piece + osw_2015::fixed::outfitting_lt_8MW) * (1 - cost_reductions::substructure_2017)
 foundation:
-  2015::monopile::foundation * (1 - cost_reductions::foundation_2017)
+  osw_2015::monopile::foundation * (1 - cost_reductions::foundation_2017)
 sub_install:
-  2015::monopile::install_8MW * (1 - cost_reductions::sub_and_found_install_2017)
+  osw_2015::monopile::install_8MW * (1 - cost_reductions::sub_and_found_install_2017)
 pslt:
-  2015::monopile::pslt_8MW
+  osw_2015::monopile::pslt_8MW
 array:
-  2015::array::fixed * (1 - cost_reductions::array_cable_2017)
+  osw_2015::array::fixed * (1 - cost_reductions::array_cable_2017)
 export:
-  2019::export::fixed * (1 - cost_reductions::export_cable_2017)
+  osw_2019::export::fixed * (1 - cost_reductions::export_cable_2017)
 grid:
-  2015::grid::grid_connection
+  osw_2015::grid::grid_connection
 
 # CapEx Aggregation
 support:
@@ -101,7 +101,7 @@ capex:
 operations:
   18880383 * (1 - cost_reductions::operations_2017)
 maintenance:
-  2015::maintenance::fixed * (1 - cost_reductions::maintenance_2017)
+  osw_2015::maintenance::fixed * (1 - cost_reductions::maintenance_2017)
 opex:
   (operations + maintenance) * (1 - cost_reductions::opex_2017)
 
@@ -113,17 +113,17 @@ adjusted_gcf:
 adjusted_gcf_profile:
   (cf_profile_raw * (0.006 * turbine_capacity + 0.9691)) * (1 + cost_reductions::gross_aep_2017)
 wake:
-  2015::losses::wake
+  osw_2015::losses::wake
 elec:
-  2015::losses::electrical
+  osw_2015::losses::electrical
 avail:
-  2015::losses::avail_fixed
+  osw_2015::losses::avail_fixed
 environmental:
   0.0159
-  # 2015::losses::environmental
+  # osw_2015::losses::environmental
 technical:
   0.01
-  # 2015::losses::technical_fixed
+  # osw_2015::losses::technical_fixed
 site_specific:
   1 - (1 - wake) * (1 - elec) * (1 - avail)
 total_losses:
