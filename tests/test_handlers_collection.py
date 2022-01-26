@@ -2,6 +2,7 @@
 """
 pytests for output collection
 """
+from glob import glob
 import h5py
 import numpy as np
 import os
@@ -16,6 +17,7 @@ from reV.cli import main
 from reV.handlers.collection import Collector
 from reV import TESTDATADIR
 
+from rex import Resource
 from rex.utilities.loggers import init_logger, LOGGERS
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
@@ -202,6 +204,38 @@ def test_cli():
                         os.path.join(H5_DIR, fn))
         shutil.rmtree(os.path.join(H5_DIR, 'chunk_files/'))
         LOGGERS.clear()
+
+
+def test_collect_duplicates():
+    """Test the collection of duplicate gids as in the case with reV-gen
+    with a gid_map input."""
+    with tempfile.TemporaryDirectory() as td:
+
+        source_fps = sorted(glob(H5_DIR + '/pv_gen_2018*.h5'))
+        assert len(source_fps) > 1
+
+        h5_file = os.path.join(td, 'collection.h5')
+        Collector.collect(h5_file, H5_DIR, None, 'cf_profile',
+                          dset_out=None, file_prefix='pv_gen_2018')
+
+        with Resource(h5_file) as res:
+            test_cf = res['cf_profile']
+            test_meta = res.meta
+
+        i0 = 0
+        for fp in source_fps:
+            with Resource(fp) as res:
+                truth_cf = res['cf_profile']
+                truth_meta = res.meta
+
+            collect_slice = slice(i0, i0 + len(truth_meta))
+
+            assert np.allclose(test_cf[:, collect_slice], truth_cf)
+            for col in ('latitude', 'longitude', 'gid'):
+                test_meta_col = test_meta[col].values[collect_slice]
+                assert np.allclose(test_meta_col, truth_meta[col].values)
+
+            i0 += len(truth_meta)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
