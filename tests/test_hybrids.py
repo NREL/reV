@@ -43,8 +43,9 @@ def test_hybridization_profile_output_single_resource():
 
     weighted_solar = solar_cap * solar_test_profile
 
-    h = Hybridization(SOLAR_FPATH, WIND_FPATH, allow_solar_only=True)
-    hp, hsp, hwp, h_meta, __ = h.run()
+    h = Hybridization(SOLAR_FPATH, WIND_FPATH, allow_solar_only=True).run()
+    hp, hsp, hwp, = h.profiles.values()
+    h_meta = h.hybrid_meta
     h_idx = np.where(h_meta['sc_point_gid'] == sc_point_gid)[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar)
@@ -74,8 +75,9 @@ def test_hybridization_profile_output():
     weighted_solar = solar_cap * solar_test_profile
     weighted_wind = wind_cap * wind_test_profile
 
-    h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-    hp, hsp, hwp, h_meta, __ = h.run()
+    h = Hybridization(SOLAR_FPATH, WIND_FPATH).run()
+    hp, hsp, hwp, = h.profiles.values()
+    h_meta = h.hybrid_meta
     h_idx = np.where(h_meta['sc_point_gid'] == common_sc_point_gid)[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar + weighted_wind)
@@ -89,20 +91,21 @@ def test_hybridization_output_shapes(input_files):
     """Test that the output shapes are as expected. """
 
     sfp, wfp = input_files
-    h = Hybridization(sfp, wfp)
-    out = h.run()
+    h = Hybridization(sfp, wfp).run()
+    out = [*h.profiles.values(), h.hybrid_meta, h.hybrid_time_index]
     expected_shapes = [(8760, 53)] * 3 + [(53, 73), (8760,)]
     for arr, expected_shape in zip(out, expected_shapes):
         assert arr.shape == expected_shape
 
-    h = Hybridization(sfp, wfp, allow_solar_only=True)
-    out = h.run()
+    h = Hybridization(sfp, wfp, allow_solar_only=True).run()
+    out = [*h.profiles.values(), h.hybrid_meta, h.hybrid_time_index]
     expected_shapes = [(8760, 100)] * 3 + [(100, 73), (8760,)]
     for arr, expected_shape in zip(out, expected_shapes):
         assert arr.shape == expected_shape
 
-    h = Hybridization(sfp, wfp, allow_solar_only=True, allow_wind_only=True)
-    out = h.run()
+    h = Hybridization(sfp, wfp,
+                      allow_solar_only=True, allow_wind_only=True).run()
+    out = [*h.profiles.values(), h.hybrid_meta, h.hybrid_time_index]
     expected_shapes = [(8760, 147)] * 3 + [(147, 73), (8760,)]
     for arr, expected_shape in zip(out, expected_shapes):
         assert arr.shape == expected_shape
@@ -125,10 +128,9 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
         SOLAR_FPATH, WIND_FPATH,
         allow_solar_only=allow_solar_only,
         allow_wind_only=allow_wind_only,
-    )
-    *__, hybrid_meta, __ = h.run()
-    assert hybrid_meta.shape == expected_shape
-    assert set(hybrid_meta['sc_point_gid']) == overlap
+    ).run()
+    assert h.hybrid_meta.shape == expected_shape
+    assert set(h.hybrid_meta['sc_point_gid']) == overlap
 
 
 @pytest.mark.parametrize("ratio_cols", [
@@ -145,16 +147,15 @@ def test_allowed_ratio(ratio_cols, ratio, bounds):
         SOLAR_FPATH, WIND_FPATH,
         allowed_ratio=ratio,
         ratio_cols=ratio_cols,
-    )
-    *__, hybrid_meta, __ = h.run()
+    ).run()
 
     c1, c2 = ratio_cols
-    ratios = (hybrid_meta['hybrid_{}'.format(c1)]
-              / hybrid_meta['hybrid_{}'.format(c2)])
+    ratios = (h.hybrid_meta['hybrid_{}'.format(c1)]
+              / h.hybrid_meta['hybrid_{}'.format(c2)])
 
     assert ((ratios * 1000).astype(int).between(*bounds)).all()
-    assert (hybrid_meta['hybrid_{}'.format(c1)] <= hybrid_meta[c1]).all()
-    assert (hybrid_meta['hybrid_{}'.format(c2)] <= hybrid_meta[c2]).all()
+    assert (h.hybrid_meta['hybrid_{}'.format(c1)] <= h.hybrid_meta[c1]).all()
+    assert (h.hybrid_meta['hybrid_{}'.format(c2)] <= h.hybrid_meta[c2]).all()
 
 
 def test_fillna_values():
@@ -165,13 +166,12 @@ def test_fillna_values():
     h = Hybridization(
         SOLAR_FPATH, WIND_FPATH, allow_solar_only=True,
         allow_wind_only=True, fillna=fill_vals
-    )
-    *__, hybrid_meta, __ = h.run()
+    ).run()
 
-    assert not hybrid_meta['solar_n_gids'].isna().values.any()
-    assert not hybrid_meta['wind_capacity'].isna().values.any()
-    assert (hybrid_meta['solar_n_gids'].values == 0).any()
-    assert (hybrid_meta['wind_capacity'].values == -1).any()
+    assert not h.hybrid_meta['solar_n_gids'].isna().values.any()
+    assert not h.hybrid_meta['wind_capacity'].isna().values.any()
+    assert (h.hybrid_meta['solar_n_gids'].values == 0).any()
+    assert (h.hybrid_meta['wind_capacity'].values == -1).any()
 
 
 @pytest.mark.parametrize("input_combination, na_vals",
@@ -187,15 +187,14 @@ def test_all_allow_solar_allow_wind_combinations(input_combination, na_vals):
         SOLAR_FPATH, WIND_FPATH,
         allow_solar_only=allow_solar_only,
         allow_wind_only=allow_wind_only,
-    )
-    *__, hybrid_meta, __ = h.run()
+    ).run()
 
     for col_name, should_have_na_vals in zip(['solar_sc_gid', 'wind_sc_gid'],
                                              na_vals):
         if should_have_na_vals:
-            assert hybrid_meta[col_name].isna().values.any()
+            assert h.hybrid_meta[col_name].isna().values.any()
         else:
-            assert not hybrid_meta[col_name].isna().values.any()
+            assert not h.hybrid_meta[col_name].isna().values.any()
 
 
 def test_warning_for_improper_data_output_from_hybrid_method():
@@ -206,8 +205,7 @@ def test_warning_for_improper_data_output_from_hybrid_method():
         return [0]
 
     with pytest.warns(OutputWarning) as record:
-        h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-        h.run()
+        Hybridization(SOLAR_FPATH, WIND_FPATH).run()
 
     warn_msg = record[0].message.args[0]
     assert "Unable to add" in warn_msg
@@ -221,13 +219,12 @@ def test_hybrid_col_decorator():
     def some_new_hybrid_func(h):
         return h.hybrid_meta['elevation'] * 1000
 
-    h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-    *__, hybrid_meta, __ = h.run()
+    h = Hybridization(SOLAR_FPATH, WIND_FPATH).run()
 
     assert 'scaled_elevation' in HYBRID_METHODS
-    assert 'scaled_elevation' in hybrid_meta.columns
-    assert (hybrid_meta['elevation'] * 1000
-            == hybrid_meta['scaled_elevation']).all()
+    assert 'scaled_elevation' in h.hybrid_meta.columns
+    assert (h.hybrid_meta['elevation'] * 1000
+            == h.hybrid_meta['scaled_elevation']).all()
 
 
 def test_duplicate_lat_long_values():
@@ -238,8 +235,7 @@ def test_duplicate_lat_long_values():
         make_test_file(SOLAR_FPATH, fout_solar, duplicate_coord_values=True)
 
         with pytest.raises(FileInputError) as excinfo:
-            h = Hybridization(fout_solar, WIND_FPATH)
-            h.run()
+            Hybridization(fout_solar, WIND_FPATH).run()
 
         assert "Detected mismatched coordinate values" in str(excinfo.value)
 
@@ -378,10 +374,10 @@ def test_write_to_file():
     """Test hybrid rep profiles with file write."""
     with tempfile.TemporaryDirectory() as td:
         fout = os.path.join(td, 'temp_hybrid_profiles.h5')
-        h = Hybridization(SOLAR_FPATH, WIND_FPATH)
-        *p_out, __, __ = h.run(fout=fout)
+        h = Hybridization(SOLAR_FPATH, WIND_FPATH).run(fout=fout)
+
         with Resource(fout) as res:
-            for name, p in zip(OUTPUT_PROFILE_NAMES, p_out):
+            for name, p in zip(OUTPUT_PROFILE_NAMES, h.profiles.values()):
                 dtype = res.get_dset_properties(name)[1]
                 attrs = res.get_attrs(name)
                 disk_profiles = res[name]

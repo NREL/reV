@@ -197,15 +197,14 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
             fillna = dict_str_load(fillna)
 
         try:
-            h = Hybridization(
+            Hybridization(
                 solar_fpath, wind_fpath,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna,
                 allowed_ratio=allowed_ratio,
                 ratio_cols=ratio_cols,
-            )
-            h.run(fout=fout)
+            ).run(fout=fout)
 
         except Exception as e:
             msg = ('Hybridization of rep profiles failed. Received the '

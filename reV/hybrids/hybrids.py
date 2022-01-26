@@ -1077,9 +1077,7 @@ class Hybridization:
             for k, p in zip(OUTPUT_PROFILE_NAMES, out):
                 self._profiles[k][:, i] = p
 
-        return (*self.profiles.values(),
-                self.hybrid_meta,
-                self.hybrid_time_index)
+        return self
 
     def _init_h5_out(self, fout, save_hybrid_meta=True):
         """Initialize an output h5 file for hybrid profiles.
