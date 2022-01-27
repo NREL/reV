@@ -51,6 +51,9 @@ class DatasetCollector:
         self._source_files = source_files
         self._gids = gids
 
+        self._file_gid_map = {fp: self.parse_meta(fp)['gid'].values.tolist()
+                              for fp in self._source_files}
+
         self._dset_in = dset_in
         if dset_out is None:
             dset_out = dset_in
@@ -64,6 +67,27 @@ class DatasetCollector:
                      .format(self._mem_avail))
         logger.debug('Site memory requirement is: {} bytes'
                      .format(self._site_mem_req))
+
+    @property
+    def gids(self):
+        """
+        List of gids corresponding to all sites to be combined
+
+        Returns
+        -------
+        list
+        """
+        return self._gids
+
+    @property
+    def duplicate_gids(self):
+        """Return boolean True if there are duplicate gids being collected.
+
+        Returns
+        -------
+        bool
+        """
+        return len(self.gids) > len(set(self.gids))
 
     @staticmethod
     def parse_meta(h5_file):
@@ -251,13 +275,28 @@ class DatasetCollector:
         fp_source : str
             Source filepath
         """
-        out_slice = self._get_gid_slice(self._gids, source_gids,
-                                        os.path.basename(fp_source))
 
-        source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
-        source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
-        source_slice = slice(source_i0, source_i1 + 1)
-        source_indexer = np.isin(source_gids, self._gids)
+        if self.duplicate_gids:
+            msg = 'Cannot collect duplicate gids in multiple chunks'
+            assert len(all_source_gids) == len(source_gids), msg
+            out_i0 = 0
+            for fp in self._source_files:
+                if fp == fp_source:
+                    break
+                else:
+                    out_i0 += len(self._file_gid_map[fp])
+            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
+            out_slice = slice(out_i0, out_i1)
+            source_slice = slice(None)
+            source_indexer = np.isin(source_gids, self._gids)
+
+        else:
+            out_slice = self._get_gid_slice(self._gids, source_gids,
+                                            os.path.basename(fp_source))
+            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+            source_slice = slice(source_i0, source_i1 + 1)
+            source_indexer = np.isin(source_gids, self._gids)
 
         logger.debug('\t- Running low mem collection of "{}" for '
                      'output site {} from source site {} and file : {}'
@@ -278,10 +317,11 @@ class DatasetCollector:
                 f_out[self._dset_out, :, out_slice] = data
 
         except Exception as e:
-            logger.exception('Failed to collect source file {}. '
-                             'Raised the following exception:\n{}'
-                             .format(os.path.basename(fp_source), e))
-            raise e
+            msg = ('Failed to collect "{}" from source file {}. '
+                   'Raised the following exception:\n{}'
+                   .format(self._dset_in, os.path.basename(fp_source), e))
+            logger.exception(msg)
+            raise CollectionRuntimeError(msg) from e
 
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
@@ -340,7 +380,8 @@ class Collector:
         project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected. None if points list is
-            to be ignored (collect all data in h5_files)
+            to be ignored (collect all data in h5_files without checking that
+            all gids are there)
         file_prefix : str
             .h5 file prefix, if None collect all files in h5_dir
         clobber : bool
@@ -395,8 +436,8 @@ class Collector:
                                  .format(file))
                     h5_files.append(os.path.join(h5_dir, file))
         h5_files = sorted(h5_files)
-        logger.debug('Final list of {} source files: {}'
-                     .format(len(h5_files), h5_files))
+        logger.info('Collecting list of {} source files: {}'
+                    .format(len(h5_files), h5_files))
         return h5_files
 
     @staticmethod
@@ -462,8 +503,21 @@ class Collector:
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
         meta = pd.concat(meta, axis=0)
-        gids = list(set(meta['gid'].values.tolist()))
-        gids = sorted([int(g) for g in gids])
+        gids = list(meta['gid'].values.astype(int).tolist())
+
+        if len(gids) > len(set(gids)):
+            msg = 'Duplicate GIDs were found in source files!'
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
+        if not sorted(gids) == gids:
+            msg = ('Collection was run without project points file and with '
+                   'non-ordered meta data GIDs! This can cause issues with '
+                   'the collection ordering. Please check your data '
+                   'carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         return gids
 
     def get_dset_shape(self, dset_name):
@@ -506,6 +560,16 @@ class Collector:
         list
         """
         return self._gids
+
+    @property
+    def duplicate_gids(self):
+        """Return boolean True if there are duplicate gids being collected.
+
+        Returns
+        -------
+        bool
+        """
+        return len(self.gids) > len(set(self.gids))
 
     def combine_time_index(self):
         """
@@ -556,9 +620,14 @@ class Collector:
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
             logger.warning(m)
             warn(m, CollectionWarning)
-            meta = meta.drop_duplicates(subset='gid', keep='last')
 
-        meta = meta.sort_values('gid')
+        if not all(sorted(meta['gid'].values) == meta['gid'].values):
+            msg = ('Collection was run with non-ordered meta data GIDs! '
+                   'This can cause issues with the collection ordering. '
+                   'Please check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         meta = meta.reset_index(drop=True)
 
         return meta
