@@ -529,16 +529,16 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
         LOGGERS.clear()
 
 
-def test_hybrids_cli_ambiguous_fpath_input(runner):
-    """Test for correct behavior when filepath input is ambiguous. """
-
-    ambiguous_solar_fpath_name = os.path.join(
-        TESTDATADIR, 'rep_profiles_out', 'rep_profiles_sol*.h5'
-    )
+@pytest.mark.parametrize("bad_fpath", [
+    os.path.join(TESTDATADIR, 'rep_profiles_out', 'rep_profiles_sol*.h5'),
+    os.path.join(TESTDATADIR, 'rep_profiles_out', 'rep_profiles_dne.h5'),
+])
+def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
+    """Test cli when filepath input is ambiguous or invalid. """
 
     with tempfile.TemporaryDirectory() as td:
         config = {
-            "solar_fpath": ambiguous_solar_fpath_name,
+            "solar_fpath": bad_fpath,
             "wind_fpath": WIND_FPATH,
             "directories": {
                 "log_directory": td,
