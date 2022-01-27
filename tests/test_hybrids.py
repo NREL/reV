@@ -149,6 +149,8 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
     ('solar_area_sq_km', 'wind_area_sq_km')
 ])
 @pytest.mark.parametrize("ratio, bounds", [
+    (0.5, (0.5 - 1e6, 0.5 + 1e6)),
+    (1, (1 - 1e6, 1 + 1e6)),
     ((0.5, 1.5), (0.5 - 1e6, 1.5 + 1e6)),
     ((0.3, 3.6), (0.3 - 1e6, 3.6 + 1e6))
 ])
