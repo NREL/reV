@@ -80,45 +80,7 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    solar_glob_paths, wind_glob_paths = config.solar_fpath, config.wind_fpath
-    all_years = set(solar_glob_paths) | set(wind_glob_paths)
-    common_years = set(solar_glob_paths) & set(wind_glob_paths)
-    if not all_years:
-        msg = "No files found that match the input: {!r} and/or {!r}"
-        e = msg.format(config['solar_fpath'], config['wind_fpath'])
-        logger.error(e)
-        raise RuntimeError(e)
-
-    solar_fpaths = []
-    wind_fpaths = []
-    names = []
-    for year in all_years:
-        if year not in common_years:
-            msg = ("No corresponding {} file found for {} input file "
-                   "(year: '{}'): {!r}. No hybridization performed for "
-                   "this input!")
-            resources = (['solar', 'wind'] if year not in solar_glob_paths else
-                         ['wind', 'solar'])
-            paths = (solar_glob_paths.get(year, [])
-                     + wind_glob_paths.get(year, []))
-            w = msg.format(*resources, paths, year)
-            logger.warning(w)
-            RuntimeWarning(w)
-            continue
-
-        for fpaths in (solar_glob_paths, wind_glob_paths):
-            if len(fpaths[year]) > 1:
-                msg = ("Ambiguous number of files found for year '{}': {!r} "
-                       "Please ensure there is only one input file per year. "
-                       "No hybridization performed for this input!")
-                w = msg.format(year, fpaths[year])
-                logger.warning(w)
-                RuntimeWarning(w)
-                break
-        else:
-            solar_fpaths += solar_glob_paths[year]
-            wind_fpaths += wind_glob_paths[year]
-            names += ["{}_{}".format(name, year) if year is not None else name]
+    names, solar_fpaths, wind_fpaths = _get_paths_from_config(config, name)
 
     for name, solar_fpath, wind_fpath in zip(names, solar_fpaths, wind_fpaths):
 
@@ -165,6 +127,52 @@ def from_config(ctx, config_file, verbose):
                        conda_env=config.execution_control.conda_env,
                        module=config.execution_control.module,
                        sh_script=config.execution_control.sh_script)
+
+
+def _get_paths_from_config(config, name):
+    """Pair solar and wind files and corresponding process names. """
+
+    solar_glob_paths, wind_glob_paths = config.solar_fpath, config.wind_fpath
+    all_years = set(solar_glob_paths) | set(wind_glob_paths)
+    common_years = set(solar_glob_paths) & set(wind_glob_paths)
+    if not all_years:
+        msg = "No files found that match the input: {!r} and/or {!r}"
+        e = msg.format(config['solar_fpath'], config['wind_fpath'])
+        logger.error(e)
+        raise RuntimeError(e)
+
+    solar_fpaths = []
+    wind_fpaths = []
+    names = []
+    for year in all_years:
+        if year not in common_years:
+            msg = ("No corresponding {} file found for {} input file "
+                   "(year: '{}'): {!r}. No hybridization performed for "
+                   "this input!")
+            resources = (['solar', 'wind'] if year not in solar_glob_paths else
+                         ['wind', 'solar'])
+            paths = (solar_glob_paths.get(year, [])
+                     + wind_glob_paths.get(year, []))
+            w = msg.format(*resources, paths, year)
+            logger.warning(w)
+            RuntimeWarning(w)
+            continue
+
+        for fpaths in (solar_glob_paths, wind_glob_paths):
+            if len(fpaths[year]) > 1:
+                msg = ("Ambiguous number of files found for year '{}': {!r} "
+                       "Please ensure there is only one input file per year. "
+                       "No hybridization performed for this input!")
+                w = msg.format(year, fpaths[year])
+                logger.warning(w)
+                RuntimeWarning(w)
+                break
+        else:
+            solar_fpaths += solar_glob_paths[year]
+            wind_fpaths += wind_glob_paths[year]
+            names += ["{}_{}".format(name, year) if year is not None else name]
+
+    return names, solar_fpaths, wind_fpaths
 
 
 @main.group(invoke_without_command=True)
