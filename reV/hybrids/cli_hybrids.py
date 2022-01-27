@@ -84,6 +84,7 @@ def from_config(ctx, config_file, verbose):
 
     for name, solar_fpath, wind_fpath in zip(names, solar_fpaths, wind_fpaths):
 
+        ctx.obj['NAME'] = name
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(config.dirout, 'hybrids', name)
 
@@ -107,7 +108,6 @@ def from_config(ctx, config_file, verbose):
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-            ctx.obj['NAME'] = name
             ctx.obj['SOLAR_FPATH'] = solar_fpath
             ctx.obj['WIND_FPATH'] = wind_fpath
             ctx.obj['ALLOW_SOLAR_ONLY'] = config.allow_solar_only
