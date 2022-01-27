@@ -529,6 +529,49 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
         LOGGERS.clear()
 
 
+def test_hybrids_cli_ambiguous_fpath_input(runner):
+    """Test for correct behavior when filepath input is ambiguous. """
+
+    ambiguous_solar_fpath_name = os.path.join(
+        TESTDATADIR, 'rep_profiles_out', 'rep_profiles_sol*.h5'
+    )
+
+    with tempfile.TemporaryDirectory() as td:
+        config = {
+            "solar_fpath": ambiguous_solar_fpath_name,
+            "wind_fpath": WIND_FPATH,
+            "directories": {
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "nodes": 1,
+                "option": "local",
+                "sites_per_worker": 10
+            },
+            "log_level": "INFO",
+            "name": "hybrids-test",
+        }
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['-c', config_path, 'hybrids'])
+
+        if result.exit_code != 0:
+            import traceback
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            LOGGERS.clear()
+            raise RuntimeError(msg)
+
+        assert "WARNING" in result.stdout
+        assert 'hybrids-test.h5' not in os.listdir(td)
+
+        LOGGERS.clear()
+
+
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
                    drop_cols=None, duplicate_rows=False,
                    duplicate_coord_values=False):
