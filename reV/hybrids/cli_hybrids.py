@@ -95,7 +95,8 @@ def from_config(ctx, config_file, verbose):
     for year in all_years:
         if year not in common_years:
             msg = ("No corresponding {} file found for {} input file (s): "
-                   "{!r} (year: {}). Skipping this input!")
+                   "{!r} (year: '{}'). No hybridization performed for this "
+                   "input!")
             resources = (['solar', 'wind'] if year not in solar_glob_paths else
                          ['wind', 'solar'])
             paths = (solar_glob_paths.get(year, [])
@@ -107,9 +108,9 @@ def from_config(ctx, config_file, verbose):
 
         for fpaths in (solar_glob_paths, wind_glob_paths):
             if len(fpaths[year]) > 1:
-                msg = ("Ambiguous number of files found for year {}: {!r} "
+                msg = ("Ambiguous number of files found for year '{}': {!r} "
                        "Please ensure there is only one input file per year. "
-                       "Skipping this input!")
+                       "No hybridization performed for this input!")
                 w = msg.format(year, fpaths[year])
                 logger.warning(w)
                 RuntimeWarning(w)
