@@ -586,8 +586,14 @@ class Outputs(BaseResource):
 
             if ds_name not in self.datasets:
                 chunks = self._check_chunks(chunks, data=data)
-                ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
-                                            chunks=chunks)
+                try:
+                    ds = self.h5.create_dataset(ds_name, shape=shape,
+                                                dtype=dtype, chunks=chunks)
+                except Exception as e:
+                    msg = ('Could not create dataset "{}" in file!'
+                           .format(ds_name))
+                    logger.error(msg)
+                    raise IOError(msg) from e
 
             if attrs is not None:
                 for key, value in attrs.items():

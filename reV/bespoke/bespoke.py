@@ -27,6 +27,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
 from reV.utilities import log_versions
 
 from rex.joint_pd.joint_pd import JointPD
+from rex.renewable_resource import WindResource
 from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.loggers import log_mem, create_dirs
 from rex.utilities.utilities import parse_year
@@ -35,9 +36,9 @@ from rex.utilities.execution import SpawnProcessPool
 logger = logging.getLogger(__name__)
 
 
-class BespokeSingleFarm:
-    """Framework for analyzing and optimized a wind farm layout specific to the
-    local wind resource and exclusions for a single reV supply curve point.
+class BespokeSinglePlant:
+    """Framework for analyzing and optimized a wind plant layout specific to
+    the local wind resource and exclusions for a single reV supply curve point.
     """
 
     DEPENDENCIES = ('shapely', 'rasterio')
@@ -117,6 +118,14 @@ class BespokeSingleFarm:
         close : bool
             Flag to close object file handlers on exit.
         """
+        logger.debug('Initializing BespokeSinglePlant for gid {}...'
+                     .format(gid))
+        logger.debug('Resource filepath: {}'.format(res))
+        logger.debug('Exclusion filepath: {}'.format(excl))
+        logger.debug('Exclusion dict: {}'.format(excl_dict))
+        logger.debug('Bespoke objective function: {}'
+                     .format(objective_function))
+        logger.debug('Bespoke cost function: {}'.format(objective_function))
 
         if isinstance(min_spacing, str) and min_spacing.endswith('x'):
             rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
@@ -151,6 +160,9 @@ class BespokeSingleFarm:
         self._plant_optm = None
         self._outputs = {}
 
+        Handler = self.get_wind_handler(res)
+        res = res if not isinstance(res, str) else Handler(res)
+
         self._sc_point = AggSCPoint(gid, excl, res, tm_dset,
                                     excl_dict=excl_dict,
                                     inclusion_mask=inclusion_mask,
@@ -163,12 +175,12 @@ class BespokeSingleFarm:
         self._data_layers = data_layers
 
     def __str__(self):
-        s = ('BespokeSingleFarm for reV SC gid {} with resolution {}'
+        s = ('BespokeSinglePlant for reV SC gid {} with resolution {}'
              .format(self.sc_point.gid, self.sc_point.resolution))
         return s
 
     def __repr__(self):
-        s = ('BespokeSingleFarm for reV SC gid {} with resolution {}'
+        s = ('BespokeSinglePlant for reV SC gid {} with resolution {}'
              .format(self.sc_point.gid, self.sc_point.resolution))
         return s
 
@@ -222,13 +234,14 @@ class BespokeSingleFarm:
         -------
         float
         """
-        return np.sqrt(self.sc_point._excl_area) * 1000.0
+        return np.sqrt(self.sc_point.pixel_area) * 1000.0
 
     @property
     def sam_sys_inputs(self):
         """Get the SAM windpower system inputs. If the wind plant has not yet
         been optimized, this returns the initial SAM config. If the wind plant
-        has been optimized, this returns the final SAM plant config.
+        has been optimized using the wind_plant_pd object, this returns the
+        final optimized SAM plant config.
 
         Returns
         -------
@@ -312,6 +325,10 @@ class BespokeSingleFarm:
             temp = self.sc_point.exclusion_weighted_mean(temp)
             pres = self.sc_point.exclusion_weighted_mean(pres)
 
+            # convert mbar to atm
+            if np.nanmax(pres) > 1000:
+                pres *= 9.86923e-6
+
             self._res_df = pd.DataFrame({'temperature': temp,
                                          'pressure': pres,
                                          'windspeed': ws,
@@ -327,6 +344,21 @@ class BespokeSingleFarm:
         list
         """
         return sorted(list(self.res_df.index.year.unique()))
+
+    @property
+    def annual_time_indexes(self):
+        """Get an ordered list of single-year time index objects that matches
+        the profile outputs from the wind_plant_ts object.
+
+        Returns
+        -------
+        list
+        """
+        tis = []
+        for year in self.years:
+            ti = self.res_df.index[(self.res_df.index.year == year)]
+            tis.append(WindPower.ensure_res_len(ti, ti))
+        return tis
 
     @property
     def wind_dist(self):
@@ -357,10 +389,29 @@ class BespokeSingleFarm:
 
         return self._wind_dist, self._ws_edges, self._wd_edges
 
+    def initialize_wind_plant_ts(self):
+        """Initialize the annual wind plant timeseries analysis object(s) using
+        the annual resource data and the sam system inputs from the optimized
+        plant.
+
+        Returns
+        -------
+        wind_plant_ts : dict
+            Annual reV.SAM.generation.WindPower object(s) keyed by year.
+        """
+        wind_plant_ts = {}
+        for year in self.years:
+            res_df = self.res_df[(self.res_df.index.year == year)]
+            i_wp = WindPower(res_df, self.meta,
+                             copy.deepcopy(self.sam_sys_inputs),
+                             output_request=self._out_req)
+            wind_plant_ts[year] = i_wp
+        return wind_plant_ts
+
     @property
     def wind_plant_pd(self):
-        """reV WindPowerPD compute object based on wind joint probability
-        distribution
+        """reV WindPowerPD compute object for plant layout optimization based
+        on wind joint probability distribution
 
         Returns
         -------
@@ -376,19 +427,13 @@ class BespokeSingleFarm:
 
     @property
     def wind_plant_ts(self):
-        """reV WindPower compute object based on wind resource timeseries data
+        """reV WindPower compute object(s) based on wind resource timeseries
+        data keyed by year
 
         Returns
         -------
-        reV.SAM.generation.WindPower
+        dict
         """
-        if self._wind_plant_ts is None:
-            self._wind_plant_ts = {}
-            for year in self.years:
-                i_wp = WindPower(self.res_df[(self.res_df.index.year == year)],
-                                 self.meta, self.sam_sys_inputs,
-                                 output_request=self._out_req)
-                self._wind_plant_ts[year] = i_wp
         return self._wind_plant_ts
 
     @property
@@ -411,6 +456,29 @@ class BespokeSingleFarm:
                                              self.ga_time)
         return self._plant_optm
 
+    @staticmethod
+    def get_wind_handler(res):
+        """Get a wind resource handler for a resource filepath.
+
+        Parameters
+        ----------
+        res : str
+            Resource filepath to wtk .h5 file. Can include * wildcards
+            for multi year resource.
+
+        Returns
+        -------
+        handler : WindResource | MultiYearWindResource
+            Wind resource handler or multi year handler
+        """
+        handler = res
+        if isinstance(res, str):
+            if '*' in res:
+                handler = MultiYearWindResource
+            else:
+                handler = WindResource
+        return handler
+
     @classmethod
     def check_dependencies(cls):
         """Check special dependencies for bespoke"""
@@ -429,6 +497,29 @@ class BespokeSingleFarm:
             logger.error(msg)
             raise ModuleNotFoundError(msg)
 
+    @staticmethod
+    def _check_sys_inputs(plant1, plant2,
+                          ignore=('wind_resource_model_choice',
+                                  'wind_resource_data')):
+        """Check two reV-SAM models for matching system inputs.
+
+        Parameters
+        ----------
+        plant1/plant2 : reV.SAM.generation.WindPower
+            Two WindPower analysis objects to check.
+        """
+        bad = []
+        for k, v in plant1.sam_sys_inputs.items():
+            if k not in plant2.sam_sys_inputs:
+                bad.append(k)
+            elif str(v) != str(plant2.sam_sys_inputs[k]):
+                bad.append(k)
+        bad = [b for b in bad if b not in ignore]
+        if any(bad):
+            msg = 'Inputs no longer match: {}'.format(bad)
+            logger.error(msg)
+            raise RuntimeError(msg)
+
     def run_wind_plant_ts(self):
         """Run the wind plant multi-year timeseries analysis and export output
         requests to outputs property.
@@ -436,12 +527,16 @@ class BespokeSingleFarm:
         Returns
         -------
         outputs : dict
-            Output dictionary for the full BespokeSingleFarm object. The
+            Output dictionary for the full BespokeSinglePlant object. The
             multi-year timeseries data is also exported to the
-            BespokeSingleFarm.outputs property.
+            BespokeSinglePlant.outputs property.
         """
 
+        logger.debug('Running {} years of SAM timeseries analysis for {}'
+                     .format(len(self.years), self))
+        self._wind_plant_ts = self.initialize_wind_plant_ts()
         for year, plant in self.wind_plant_ts.items():
+            self._check_sys_inputs(plant, self.wind_plant_pd)
             try:
                 plant.run_gen_and_econ()
             except Exception as e:
@@ -463,6 +558,7 @@ class BespokeSingleFarm:
                 means[base_str + 'means'] = np.mean(all_values)
 
         self._outputs.update(means)
+        logger.debug('Timeseries analysis complete!')
 
         return self.outputs
 
@@ -473,11 +569,12 @@ class BespokeSingleFarm:
         Returns
         -------
         outputs : dict
-            Output dictionary for the full BespokeSingleFarm object. The
+            Output dictionary for the full BespokeSinglePlant object. The
             layout optimization output data is also exported to the
-            BespokeSingleFarm.outputs property.
+            BespokeSinglePlant.outputs property.
         """
 
+        logger.debug('Running plant layout optimization for {}'.format(self))
         try:
             self.plant_optimizer.place_turbines()
         except Exception as e:
@@ -491,10 +588,10 @@ class BespokeSingleFarm:
         # total cell area
         # cell capacity density
 
-        txc = [float(np.round(c)) for c in self.plant_optimizer.turbine_x]
-        tyc = [float(np.round(c)) for c in self.plant_optimizer.turbine_y]
-        pxc = [float(np.round(c)) for c in self.plant_optimizer.x_locations]
-        pyc = [float(np.round(c)) for c in self.plant_optimizer.y_locations]
+        txc = [int(np.round(c)) for c in self.plant_optimizer.turbine_x]
+        tyc = [int(np.round(c)) for c in self.plant_optimizer.turbine_y]
+        pxc = [int(np.round(c)) for c in self.plant_optimizer.x_locations]
+        pyc = [int(np.round(c)) for c in self.plant_optimizer.y_locations]
 
         txc = json.dumps(txc)
         tyc = json.dumps(tyc)
@@ -519,19 +616,24 @@ class BespokeSingleFarm:
         self._outputs["included_area_capacity_density"] =\
             self.plant_optimizer.capacity_density
 
+        logger.debug('Plant layout optimization complete!')
+
         return self.outputs
 
     def agg_data_layers(self):
         """Aggregate optional data layers if requested and save to self.meta"""
         if self._data_layers is not None:
+            logger.debug('Aggregating {} extra data layers.'
+                         .format(len(self._data_layers)))
             point_summary = self.meta.to_dict()
             point_summary = self.sc_point.agg_data_layers(point_summary,
                                                           self._data_layers)
             self._meta = pd.Series(point_summary)
+            logger.debug('Finished aggregating extra data layers.')
 
     @property
     def outputs(self):
-        """Saved outputs for the single wind farm bespoke optimization.
+        """Saved outputs for the single wind plant bespoke optimization.
 
         Returns
         -------
@@ -541,7 +643,7 @@ class BespokeSingleFarm:
 
     @classmethod
     def run(cls, *args, **kwargs):
-        """Run the bespoke optimization for a single wind farm.
+        """Run the bespoke optimization for a single wind plant.
 
         Parameters
         ----------
@@ -549,8 +651,8 @@ class BespokeSingleFarm:
 
         Returns
         -------
-        bsp : BespokeSingleFarm
-            Bespoke single farm object. Includes bsp.outputs dictionary and
+        bsp : BespokeSinglePlant
+            Bespoke single plant object. Includes bsp.outputs dictionary and
             bsp.meta Series.
         """
 
@@ -562,8 +664,8 @@ class BespokeSingleFarm:
         return bsp
 
 
-class BespokeWindFarms(AbstractAggregation):
-    """Framework for analyzing optimized wind farm layouts specific to the
+class BespokeWindPlants(AbstractAggregation):
+    """Framework for analyzing optimized wind plant layouts specific to the
     local wind resource and exclusions for the full reV supply curve grid.
     """
 
@@ -666,7 +768,7 @@ class BespokeWindFarms(AbstractAggregation):
         """
 
         log_versions(logger)
-        logger.info('Initializing BespokeWindFarms...')
+        logger.info('Initializing BespokeWindPlants...')
         logger.info('Resource filepath: {}'.format(res_fpath))
         logger.info('Exclusion filepath: {}'.format(excl_fpath))
         logger.debug('Exclusion dict: {}'.format(excl_dict))
@@ -674,7 +776,7 @@ class BespokeWindFarms(AbstractAggregation):
                     .format(objective_function))
         logger.info('Bespoke cost function: {}'.format(objective_function))
 
-        BespokeSingleFarm.check_dependencies()
+        BespokeSinglePlant.check_dependencies()
 
         self._points_control = self._parse_points(excl_fpath, tm_dset,
                                                   resolution, points,
@@ -699,7 +801,7 @@ class BespokeWindFarms(AbstractAggregation):
         self._outputs = {}
         self._check_files()
 
-        logger.info('Initialized BespokeWindFarms with project points: {}'
+        logger.info('Initialized BespokeWindPlants with project points: {}'
                     .format(self._project_points))
 
     @staticmethod
@@ -782,19 +884,45 @@ class BespokeWindFarms(AbstractAggregation):
                                              self._excl_fpath))
 
         # just check that this file exists, cannot check res_fpath if *glob
-        with MultiYearWindResource(self._res_fpath) as f:
+        Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
+        with Handler(self._res_fpath) as f:
             assert any(f.dsets)
 
     @property
     def outputs(self):
         """Saved outputs for the multi wind plant bespoke optimization. Keys
-        are reV supply curve gids and values are BespokeSingleFarm objects.
+        are reV supply curve gids and values are BespokeSinglePlant objects.
 
         Returns
         -------
         dict
         """
         return self._outputs
+
+    @property
+    def completed_gids(self):
+        """Get a sorted list of completed BespokeSinglePlant gids
+
+        Returns
+        -------
+        list
+        """
+        return sorted(list(self.outputs.keys()))
+
+    @property
+    def meta(self):
+        """Meta data for all completed BespokeSinglePlant objects.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        meta = [self.outputs[g].meta for g in self.completed_gids]
+        if len(self.completed_gids) > 1:
+            meta = pd.concat(meta, axis=1).T
+        else:
+            meta = pd.DataFrame(meta[0]).T
+        return meta
 
     def save_outputs(self, out_fpath):
         """Save Bespoke Wind Plant optimization outputs to disk.
@@ -813,32 +941,27 @@ class BespokeWindFarms(AbstractAggregation):
         if not os.path.exists(out_dir):
             create_dirs(out_dir)
 
-        gids = sorted(list(self.outputs.keys()))
-        sample = self.outputs[gids[0]]
-        years = sorted(list(set(sample.res_df.index.year)))
-        meta = pd.concat([self.outputs[g].meta for g in gids])
-        meta = meta if len(gids) > 1 else pd.DataFrame(meta).T
+        sample = self.outputs[self.completed_gids[0]]
 
         with Outputs(out_fpath, mode='w') as f:
-            f._set_meta('meta', meta, attrs={})
-
-            for year in years:
-                mask = sample.res_df.index.year == year
-                ti = sample.res_df.index[mask]
-                ti = WindPower.ensure_res_len(ti, ti)
+            f._set_meta('meta', self.meta, attrs={})
+            for year, ti in zip(sample.years, sample.annual_time_indexes):
                 f._set_time_index('time_index-{}'.format(year), ti, attrs={})
                 f._set_time_index('time_index', ti, attrs={})
 
             for dset, single in sample.outputs.items():
+                # initialize output data array for all wind plants
                 full_arr = None
                 if isinstance(single, Number):
-                    full_arr = np.zeros((len(gids),), type(single))
+                    shape = (len(self.completed_gids),)
+                    full_arr = np.zeros(shape, type(single))
                 elif isinstance(single, (list, tuple, np.ndarray)):
-                    full_arr = np.zeros((len(single), len(gids)),
-                                        dtype=type(single[0]))
+                    shape = (len(single), len(self.completed_gids))
+                    full_arr = np.zeros(shape, dtype=type(single[0]))
 
+                # collect data from all wind plants
                 if full_arr is not None:
-                    for i, gid in enumerate(gids):
+                    for i, gid in enumerate(self.completed_gids):
                         if len(full_arr.shape) == 1:
                             full_arr[i] = self.outputs[gid].outputs[dset]
                         else:
@@ -849,7 +972,7 @@ class BespokeWindFarms(AbstractAggregation):
                         year = parse_year(dset)
                         dset_no_year = dset.replace('-{}'.format(year), '')
 
-                    attrs = BespokeSingleFarm.OUT_ATTRS.get(dset_no_year, {})
+                    attrs = BespokeSinglePlant.OUT_ATTRS.get(dset_no_year, {})
                     attrs = copy.deepcopy(attrs)
                     dtype = attrs.pop('dtype', np.float32)
                     chunks = attrs.pop('chunks', None)
@@ -876,10 +999,10 @@ class BespokeWindFarms(AbstractAggregation):
                    ):
         """
         Standalone serial method to run bespoke optimization.
-        See BespokeWindFarms docstring for parameter description.
+        See BespokeWindPlants docstring for parameter description.
 
         This method can only take a single sam_sys_inputs... For a spatially
-        variant gid-to-config mapping, see the BespokeWindFarms class methods.
+        variant gid-to-config mapping, see the BespokeWindPlants class methods.
 
         Returns
         -------
@@ -899,12 +1022,13 @@ class BespokeWindFarms(AbstractAggregation):
                 exclusion_shape = sc.exclusions.shape
 
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
+        Handler = BespokeSinglePlant.get_wind_handler(res_fpath)
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {'excl_dict': excl_dict,
                        'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
-                       'h5_handler': MultiYearWindResource
+                       'h5_handler': Handler,
                        }
 
         with AggFileHandler(excl_fpath, res_fpath, **file_kwargs) as fh:
@@ -914,7 +1038,7 @@ class BespokeWindFarms(AbstractAggregation):
                     inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
                 try:
-                    gid_bsp_plant = BespokeSingleFarm.run(
+                    gid_bsp_plant = BespokeSinglePlant.run(
                         gid,
                         fh.exclusions,
                         fh.h5,
@@ -1045,8 +1169,8 @@ class BespokeWindFarms(AbstractAggregation):
             resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
             out_fpath=None):
-        """Run the bespoke wind farm optimization in serial or parallel.
-        See BespokeWindFarms docstring for parameter description.
+        """Run the bespoke wind plant optimization in serial or parallel.
+        See BespokeWindPlants docstring for parameter description.
         """
 
         bsp = cls(excl_fpath, res_fpath, tm_dset,

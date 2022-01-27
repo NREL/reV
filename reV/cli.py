@@ -218,7 +218,7 @@ def valid_batch_keys(ctx):
               help='Flag to turn on debug logging.')
 @click.pass_context
 def bespoke(ctx, verbose):
-    """Run reV bespoke optimization using the config file."""
+    """Run reV bespoke wind plant optimization using the config file."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])
