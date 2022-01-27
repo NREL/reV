@@ -20,7 +20,7 @@ from reV.utilities.exceptions import (SupplyCurveInputError,
                                       DataShapeError,
                                       OutputWarning)
 
-from rex.resource import Resource
+from rex.resource import Resource, BaseResource
 from rex.multi_time_resource import MultiTimeResource
 from rex.utilities.utilities import jsonify_dict
 
@@ -175,7 +175,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
     """Generic single SC point based on exclusions, resolution, and techmap"""
 
     def __init__(self, gid, excl, tm_dset, excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
                  close=True):
         """
         Parameters
@@ -198,8 +198,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -344,6 +345,21 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return self._centroid
 
     @property
+    def pixel_area(self):
+        """The area in km2 of a single exclusion pixel. If this value was not
+        provided on initialization, it is determined from the profile of the
+        exclusion file.
+
+        Returns
+        -------
+        float
+        """
+        if self._excl_area is None:
+            with ExclusionLayers(self._excl_fpath) as f:
+                self._excl_area = f.pixel_area
+        return self._excl_area
+
+    @property
     def area(self):
         """Get the non-excluded resource area of the supply curve point in the
         current resource class.
@@ -354,7 +370,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Non-excluded resource/generation area in square km.
         """
         mask = self._gids != -1
-        area = np.sum(self.include_mask_flat[mask]) * self._excl_area
+        area = np.sum(self.include_mask_flat[mask]) * self.pixel_area
 
         return area
 
@@ -804,7 +820,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
     def __init__(self, gid, excl, agg_h5, tm_dset,
                  excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
                  close=True, gen_index=None, apply_exclusions=True):
         """
         Parameters
@@ -829,8 +845,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -891,7 +908,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if isinstance(h5, str):
             h5_fpath = h5
             h5 = None
-        elif issubclass(h5.__class__, Resource):
+        elif issubclass(h5.__class__, BaseResource):
             h5_fpath = h5.h5_file
         elif issubclass(h5.__class__, MultiTimeResource):
             h5_fpath = h5.h5_files
@@ -985,7 +1002,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         _h5 : Resource
             Resource h5 handler object.
         """
-        if self._h5 is None:
+        if self._h5 is None and '*' in self._h5_fpath:
+            self._h5 = MultiTimeResource(self._h5_fpath)
+        elif self._h5 is None:
             self._h5 = Resource(self._h5_fpath)
 
         return self._h5
@@ -1112,7 +1131,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     @classmethod
     def run(cls, gid, excl, agg_h5, tm_dset, *agg_dset, agg_method='mean',
             excl_dict=None, inclusion_mask=None,
-            resolution=64, excl_area=0.0081,
+            resolution=64, excl_area=None,
             exclusion_shape=None, close=True, gen_index=None):
         """
         Compute exclusions weight mean for the sc point from data
@@ -1145,8 +1164,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -1204,7 +1224,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index,
                  excl_dict=None, inclusion_mask=None,
-                 res_class_dset=None, res_class_bin=None, excl_area=0.0081,
+                 res_class_dset=None, res_class_bin=None, excl_area=None,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
                  exclusion_shape=None, close=False, friction_layer=None,
@@ -1240,8 +1260,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
             (resource) "gid" and "power_density columns".
@@ -1840,7 +1861,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                   excl_dict=None, inclusion_mask=None,
                   res_class_dset=None, res_class_bin=None,
-                  excl_area=0.0081, power_density=None,
+                  excl_area=None, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
                   close=False, friction_layer=None, args=None,
@@ -1876,8 +1897,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
             (resource) "gid" and "power_density columns".

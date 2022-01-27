@@ -266,7 +266,8 @@ class AbstractSamGeneration(RevPySam, ABC):
         return self['capacity_factor'] / 100
 
     def cf_profile(self):
-        """Get hourly capacity factor (frac) profile in orig timezone.
+        """Get hourly capacity factor (frac) profile in local timezone.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -297,7 +298,8 @@ class AbstractSamGeneration(RevPySam, ABC):
         return self['kwh_per_kw']
 
     def gen_profile(self):
-        """Get power generation profile (orig timezone) in kW.
+        """Get power generation profile (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -308,8 +310,9 @@ class AbstractSamGeneration(RevPySam, ABC):
         return np.array(self['gen'], dtype=np.float32)
 
     def collect_outputs(self, output_lookup=None):
-        """
-        Collect SAM gen output_request. Rolls outputs to UTC if appropriate.
+        """Collect SAM output_request, convert timeseries outputs to UTC, and
+        save outputs to self.outputs property.
+
 
         Parameters
         ----------
@@ -358,7 +361,6 @@ class AbstractSamGeneration(RevPySam, ABC):
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
-            lcoe.outputs_to_utc_arr()
             self.outputs.update(lcoe.outputs)
 
         elif so_out_reqs is not None:
@@ -367,7 +369,6 @@ class AbstractSamGeneration(RevPySam, ABC):
             so.assign_inputs()
             so.execute()
             so.collect_outputs()
-            so.outputs_to_utc_arr()
             self.outputs.update(so.outputs)
 
     def run(self):
@@ -377,7 +378,6 @@ class AbstractSamGeneration(RevPySam, ABC):
         self.assign_inputs()
         self.execute()
         self.collect_outputs()
-        self.outputs_to_utc_arr()
 
     @classmethod
     def reV_run(cls, points_control, res_file, site_df,
@@ -696,7 +696,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         return self['capacity_factor'] / 100
 
     def cf_profile(self):
-        """Get hourly capacity factor (frac) profile in orig timezone.
+        """Get hourly capacity factor (frac) profile in local timezone.
+        See self.outputs attribute for collected output data in UTC.
 
         NOTE: PV capacity factor is the AC power production / the DC nameplate
 
@@ -710,8 +711,9 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         return self.gen_profile() / self.sam_sys_inputs['system_capacity']
 
     def gen_profile(self):
-        """Get AC inverter power generation profile (orig timezone) in kW.
+        """Get AC inverter power generation profile (local timezone) in kW.
         This is an alias of the "ac" SAM output variable.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -722,7 +724,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         return self.ac()
 
     def ac(self):
-        """Get AC inverter power generation profile (orig timezone) in kW.
+        """Get AC inverter power generation profile (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -734,7 +737,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
     def dc(self):
         """
-        Get DC array power generation profile (orig timezone) in kW.
+        Get DC array power generation profile (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -747,7 +751,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
     def clipped_power(self):
         """
         Get the clipped DC power generated behind the inverter
-        (orig timezone) in kW.
+        (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -766,7 +771,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         """Get the executed default pysam object."""
 
     def collect_outputs(self, output_lookup=None):
-        """Collect SAM gen output_request.
+        """Collect SAM output_request, convert timeseries outputs to UTC, and
+        save outputs to self.outputs property.
 
         Parameters
         ----------
@@ -830,7 +836,8 @@ class PvSamv1(AbstractSamPv):
     PYSAM = PySamDetailedPv
 
     def ac(self):
-        """Get AC inverter power generation profile (orig timezone) in kW.
+        """Get AC inverter power generation profile (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -842,7 +849,8 @@ class PvSamv1(AbstractSamPv):
 
     def dc(self):
         """
-        Get DC array power generation profile (orig timezone) in kW.
+        Get DC array power generation profile (local timezone) in kW.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -871,7 +879,8 @@ class TcsMoltenSalt(AbstractSamSolar):
 
     def cf_profile(self):
         """Get absolute value hourly capacity factor (frac) profile in
-        orig timezone.
+        local timezone.
+        See self.outputs attribute for collected output data in UTC.
 
         Returns
         -------
@@ -1183,6 +1192,7 @@ class WindPower(AbstractSamGeneration):
 
         # add resource data to self.data and clear
         self['wind_resource_data'] = data_dict
+        self['wind_resource_model_choice'] = 0
 
     @staticmethod
     def default():

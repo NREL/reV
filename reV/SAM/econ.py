@@ -281,7 +281,9 @@ class Economic(RevPySam):
         return cf_tr
 
     def collect_outputs(self):
-        """Collect SAM econ output_request."""
+        """Collect SAM output_request, convert timeseries outputs to UTC, and
+        save outputs to self.outputs property.
+        """
 
         output_lookup = {'ppa_price': self.ppa_price,
                          'project_return_aftertax_npv': self.npv,
@@ -326,7 +328,6 @@ class Economic(RevPySam):
         sim.assign_inputs()
         sim.execute()
         sim.collect_outputs()
-        sim.outputs_to_utc_arr()
 
         return sim.outputs
 
@@ -517,7 +518,9 @@ class SingleOwner(Economic):
         return DefaultSingleOwner.default()
 
     def collect_outputs(self):
-        """Collect SAM output_request, including windbos results."""
+        """Collect SAM output_request, convert timeseries outputs to UTC, and
+        save outputs to self.outputs property. This includes windbos outputs.
+        """
 
         windbos_out_vars = [v for v in self.output_request
                             if v in self.windbos_outputs]
