@@ -94,9 +94,9 @@ def from_config(ctx, config_file, verbose):
     names = []
     for year in all_years:
         if year not in common_years:
-            msg = ("No corresponding {} file found for {} input file (s): "
-                   "{!r} (year: '{}'). No hybridization performed for this "
-                   "input!")
+            msg = ("No corresponding {} file found for {} input file "
+                   "(year: '{}'): {!r}. No hybridization performed for "
+                   "this input!")
             resources = (['solar', 'wind'] if year not in solar_glob_paths else
                          ['wind', 'solar'])
             paths = (solar_glob_paths.get(year, [])
