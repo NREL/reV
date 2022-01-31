@@ -268,15 +268,16 @@ class BespokeSinglePlant:
 
         Returns
         -------
-        pd.Series
+        pd.DataFrame
         """
         if self._meta is None:
             res_gids = json.dumps([int(g) for g in self.sc_point.h5_gid_set])
             gid_counts = json.dumps([float(np.round(n, 1))
                                      for n in self.sc_point.gid_counts])
 
-            self._meta = pd.Series(
+            self._meta = pd.DataFrame(
                 {'sc_point_gid': self.sc_point.gid,
+                 'gid': self.sc_point.gid,
                  'latitude': self.sc_point.latitude,
                  'longitude': self.sc_point.longitude,
                  'timezone': self.sc_point.timezone,
@@ -289,7 +290,7 @@ class BespokeSinglePlant:
                  'gid_counts': gid_counts,
                  'n_gids': self.sc_point.n_gids,
                  'area_sq_km': self.sc_point.area,
-                 }, name=self.sc_point.gid)
+                 }, index=[self.sc_point.gid])
         return self._meta
 
     @property
@@ -600,8 +601,8 @@ class BespokeSinglePlant:
 
         self._meta["turbine_x_coords"] = txc
         self._meta["turbine_y_coords"] = tyc
-        self._outputs["possible_x_coords"] = pxc
-        self._outputs["possible_y_coords"] = pyc
+        self._meta["possible_x_coords"] = pxc
+        self._meta["possible_y_coords"] = pyc
 
         self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
         self._outputs["packing_polygons"] = \
@@ -628,7 +629,7 @@ class BespokeSinglePlant:
             point_summary = self.meta.to_dict()
             point_summary = self.sc_point.agg_data_layers(point_summary,
                                                           self._data_layers)
-            self._meta = pd.Series(point_summary)
+            self._meta = pd.DataFrame(point_summary)
             logger.debug('Finished aggregating extra data layers.')
 
     @property
@@ -651,9 +652,9 @@ class BespokeSinglePlant:
 
         Returns
         -------
-        bsp : BespokeSinglePlant
-            Bespoke single plant object. Includes bsp.outputs dictionary and
-            bsp.meta Series.
+        bsp : dict
+            Bespoke single plant outputs namespace keyed by dataset name
+            including a dataset "meta" for the BespokeSinglePlant meta data.
         """
 
         with cls(*args, **kwargs) as bsp:
@@ -661,7 +662,13 @@ class BespokeSinglePlant:
             _ = bsp.run_wind_plant_ts()
             bsp.agg_data_layers()
 
-        return bsp
+            meta = bsp.meta
+            out = bsp.outputs
+            out['meta'] = meta
+            for year, ti in zip(bsp.years, bsp.annual_time_indexes):
+                out['time_index-{}'.format(year)] = ti
+
+        return out
 
 
 class BespokeWindPlants(AbstractAggregation):
@@ -891,7 +898,8 @@ class BespokeWindPlants(AbstractAggregation):
     @property
     def outputs(self):
         """Saved outputs for the multi wind plant bespoke optimization. Keys
-        are reV supply curve gids and values are BespokeSinglePlant objects.
+        are reV supply curve gids and values are BespokeSinglePlant.outputs
+        dictionaries.
 
         Returns
         -------
@@ -917,11 +925,11 @@ class BespokeWindPlants(AbstractAggregation):
         -------
         pd.DataFrame
         """
-        meta = [self.outputs[g].meta for g in self.completed_gids]
+        meta = [self.outputs[g]['meta'] for g in self.completed_gids]
         if len(self.completed_gids) > 1:
-            meta = pd.concat(meta, axis=1).T
+            meta = pd.concat(meta, axis=0)
         else:
-            meta = pd.DataFrame(meta[0]).T
+            meta = meta[0]
         return meta
 
     def _init_fout(self, out_fpath, sample):
@@ -932,9 +940,9 @@ class BespokeWindPlants(AbstractAggregation):
         out_fpath : str
             Full filepath to an output .h5 file to save Bespoke data to. The
             parent directories will be created if they do not already exist.
-        sample : BespokeSinglePlant
-            A single sample BespokeSinglePlant object that has been run and
-            has outputs.
+        sample : dict
+            A single sample BespokeSinglePlant output dict that has been run
+            and has output data.
 
         Returns
         -------
@@ -952,9 +960,11 @@ class BespokeWindPlants(AbstractAggregation):
 
         with Outputs(out_fpath, mode='w') as f:
             f._set_meta('meta', self.meta, attrs={})
-            for year, ti in zip(sample.years, sample.annual_time_indexes):
-                f._set_time_index('time_index-{}'.format(year), ti, attrs={})
-                f._set_time_index('time_index', ti, attrs={})
+            ti_dsets = [d for d in sample.keys()
+                        if d.startswith('time_index-')]
+            for dset in ti_dsets:
+                f._set_time_index(dset, sample[dset], attrs={})
+                f._set_time_index('time_index', sample[dset], attrs={})
 
         return out_fpath
 
@@ -967,9 +977,9 @@ class BespokeWindPlants(AbstractAggregation):
         dset : str
             Dataset to collect, this should be an output dataset present in
             BespokeSinglePlant.outputs
-        sample : BespokeSinglePlant
-            A single sample BespokeSinglePlant object that has been run and
-            has outputs.
+        sample : dict
+            A single sample BespokeSinglePlant output dict that has been run
+            and has output data.
 
         Returns
         -------
@@ -978,23 +988,30 @@ class BespokeWindPlants(AbstractAggregation):
             data (n_time, n_plant) for all BespokeSinglePlant objects
         """
 
-        single_arr = sample.outputs[dset]
+        single_arr = sample[dset]
         # initialize output data array for all wind plants
         full_arr = None
+        shape = None
         if isinstance(single_arr, Number):
             shape = (len(self.completed_gids),)
             full_arr = np.zeros(shape, type(single_arr))
         elif isinstance(single_arr, (list, tuple, np.ndarray)):
             shape = (len(single_arr), len(self.completed_gids))
             full_arr = np.zeros(shape, dtype=type(single_arr[0]))
+        else:
+            msg = ('Not writing dataset "{}" of type "{}" to disk.'
+                   .format(dset, type(single_arr)))
+            logger.info(msg)
 
         # collect data from all wind plants
         if full_arr is not None:
+            logger.info('Collecting dataset "{}" with final shape {}'
+                        .format(dset, shape))
             for i, gid in enumerate(self.completed_gids):
                 if len(full_arr.shape) == 1:
-                    full_arr[i] = self.outputs[gid].outputs[dset]
+                    full_arr[i] = self.outputs[gid][dset]
                 else:
-                    full_arr[:, i] = self.outputs[gid].outputs[dset]
+                    full_arr[:, i] = self.outputs[gid][dset]
 
         return full_arr
 
@@ -1011,26 +1028,29 @@ class BespokeWindPlants(AbstractAggregation):
         sample = self.outputs[self.completed_gids[0]]
         out_fpath = self._init_fout(out_fpath, sample)
 
-        with Outputs(out_fpath, mode='w') as f:
-            for dset in sample.outputs.keys():
+        dsets = [d for d in sample.keys()
+                 if not d.startswith('time_index-')
+                 and d != 'meta']
+        with Outputs(out_fpath, mode='a') as f:
+            for dset in dsets:
                 full_arr = self._collect_out_arr(dset, sample)
+                if full_arr is not None:
+                    dset_no_year = dset
+                    if parse_year(dset, option='boolean'):
+                        year = parse_year(dset)
+                        dset_no_year = dset.replace('-{}'.format(year), '')
 
-                dset_no_year = dset
-                if parse_year(dset, option='boolean'):
-                    year = parse_year(dset)
-                    dset_no_year = dset.replace('-{}'.format(year), '')
-
-                attrs = BespokeSinglePlant.OUT_ATTRS.get(dset_no_year, {})
-                attrs = copy.deepcopy(attrs)
-                dtype = attrs.pop('dtype', np.float32)
-                chunks = attrs.pop('chunks', None)
-                try:
-                    f.write_dataset(dset, full_arr, dtype, chunks=chunks,
-                                    attrs=attrs)
-                except Exception as e:
-                    msg = 'Failed to write "{}" to disk.'.format(dset)
-                    logger.exception(msg)
-                    raise IOError(msg) from e
+                    attrs = BespokeSinglePlant.OUT_ATTRS.get(dset_no_year, {})
+                    attrs = copy.deepcopy(attrs)
+                    dtype = attrs.pop('dtype', np.float32)
+                    chunks = attrs.pop('chunks', None)
+                    try:
+                        f.write_dataset(dset, full_arr, dtype, chunks=chunks,
+                                        attrs=attrs)
+                    except Exception as e:
+                        msg = 'Failed to write "{}" to disk.'.format(dset)
+                        logger.exception(msg)
+                        raise IOError(msg) from e
 
         logger.info('Saved output data to: {}'.format(out_fpath))
 
@@ -1086,7 +1106,7 @@ class BespokeWindPlants(AbstractAggregation):
                     inclusion_mask, gid, slice_lookup,
                     resolution=resolution)
                 try:
-                    gid_bsp_plant = BespokeSinglePlant.run(
+                    bsp_plant_out = BespokeSinglePlant.run(
                         gid,
                         fh.exclusions,
                         fh.h5,
@@ -1120,7 +1140,7 @@ class BespokeWindPlants(AbstractAggregation):
                                  '{} out of {} points complete'
                                  .format(n_finished, len(gids)))
                     log_mem(logger)
-                    out[gid] = gid_bsp_plant
+                    out[gid] = bsp_plant_out
 
         return out
 

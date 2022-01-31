@@ -638,7 +638,7 @@ class Outputs(BaseResource):
         """
         dset_shape = dset_data.shape
         if len(dset_shape) == 1:
-            shape = len(self)
+            shape = len(self.meta)
             if shape:
                 shape = (shape,)
                 if dset_shape != shape:
