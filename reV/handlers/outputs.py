@@ -570,6 +570,7 @@ class Outputs(BaseResource):
         replace : bool
             If previous dataset exists with the same name, it will be replaced.
         """
+        ds = None
         if self.writable:
             if ds_name in self.datasets and replace:
                 del self.h5[ds_name]
@@ -596,17 +597,33 @@ class Outputs(BaseResource):
                     raise IOError(msg) from e
 
             if attrs is not None:
-                for key, value in attrs.items():
-                    try:
-                        ds.attrs[key] = value
-                    except Exception as e:
-                        msg = ('Could not save datset "{}" attribute "{}" '
-                               'to value: {}'.format(ds_name, key, value))
-                        logger.error(msg)
-                        raise IOError(msg) from e
+                self._create_ds_attrs(ds, ds_name, attrs)
 
             if data is not None:
                 ds[...] = data
+
+    @staticmethod
+    def _create_ds_attrs(ds, ds_name, attrs):
+        """Create dataset attributes.
+
+        Parameters
+        ----------
+        ds : h5py.Dataset
+            Dataset object to write attributes to.
+        ds_name : str
+            Dataset name for logging / debugging
+        attrs : dict | None
+            Dataset attributes to write (None if no attributes to write).
+        """
+        if attrs is not None:
+            for key, value in attrs.items():
+                try:
+                    ds.attrs[key] = value
+                except Exception as e:
+                    msg = ('Could not save datset "{}" attribute "{}" '
+                           'to value: {}'.format(ds_name, key, value))
+                    logger.error(msg)
+                    raise IOError(msg) from e
 
     def _check_dset_shape(self, dset_name, dset_data):
         """

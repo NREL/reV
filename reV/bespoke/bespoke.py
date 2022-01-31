@@ -924,6 +924,80 @@ class BespokeWindPlants(AbstractAggregation):
             meta = pd.DataFrame(meta[0]).T
         return meta
 
+    def _init_fout(self, out_fpath, sample):
+        """Initialize the bespoke output h5 file with meta and time index dsets
+
+        Parameters
+        ----------
+        out_fpath : str
+            Full filepath to an output .h5 file to save Bespoke data to. The
+            parent directories will be created if they do not already exist.
+        sample : BespokeSinglePlant
+            A single sample BespokeSinglePlant object that has been run and
+            has outputs.
+
+        Returns
+        -------
+        out_fpath : str
+            Full filepath to desired .h5 output file, the .h5 extension has
+            been added if it was not already present.
+        """
+
+        if not out_fpath.endswith('.h5'):
+            out_fpath += '.h5'
+
+        out_dir = os.path.dirname(out_fpath)
+        if not os.path.exists(out_dir):
+            create_dirs(out_dir)
+
+        with Outputs(out_fpath, mode='w') as f:
+            f._set_meta('meta', self.meta, attrs={})
+            for year, ti in zip(sample.years, sample.annual_time_indexes):
+                f._set_time_index('time_index-{}'.format(year), ti, attrs={})
+                f._set_time_index('time_index', ti, attrs={})
+
+        return out_fpath
+
+    def _collect_out_arr(self, dset, sample):
+        """Collect single-plant data arrays into complete arrays with data from
+        all BespokeSinglePlant objects.
+
+        Parameters
+        ----------
+        dset : str
+            Dataset to collect, this should be an output dataset present in
+            BespokeSinglePlant.outputs
+        sample : BespokeSinglePlant
+            A single sample BespokeSinglePlant object that has been run and
+            has outputs.
+
+        Returns
+        -------
+        full_arr : np.ndarray
+            Full data array either 1D for scalar data or 2D for timeseries
+            data (n_time, n_plant) for all BespokeSinglePlant objects
+        """
+
+        single_arr = sample.outputs[dset]
+        # initialize output data array for all wind plants
+        full_arr = None
+        if isinstance(single_arr, Number):
+            shape = (len(self.completed_gids),)
+            full_arr = np.zeros(shape, type(single_arr))
+        elif isinstance(single_arr, (list, tuple, np.ndarray)):
+            shape = (len(single_arr), len(self.completed_gids))
+            full_arr = np.zeros(shape, dtype=type(single_arr[0]))
+
+        # collect data from all wind plants
+        if full_arr is not None:
+            for i, gid in enumerate(self.completed_gids):
+                if len(full_arr.shape) == 1:
+                    full_arr[i] = self.outputs[gid].outputs[dset]
+                else:
+                    full_arr[:, i] = self.outputs[gid].outputs[dset]
+
+        return full_arr
+
     def save_outputs(self, out_fpath):
         """Save Bespoke Wind Plant optimization outputs to disk.
 
@@ -934,55 +1008,29 @@ class BespokeWindPlants(AbstractAggregation):
             parent directories will be created if they do not already exist.
         """
 
-        if not out_fpath.endswith('.h5'):
-            out_fpath += '.h5'
-
-        out_dir = os.path.dirname(out_fpath)
-        if not os.path.exists(out_dir):
-            create_dirs(out_dir)
-
         sample = self.outputs[self.completed_gids[0]]
+        out_fpath = self._init_fout(out_fpath, sample)
 
         with Outputs(out_fpath, mode='w') as f:
-            f._set_meta('meta', self.meta, attrs={})
-            for year, ti in zip(sample.years, sample.annual_time_indexes):
-                f._set_time_index('time_index-{}'.format(year), ti, attrs={})
-                f._set_time_index('time_index', ti, attrs={})
+            for dset in sample.outputs.keys():
+                full_arr = self._collect_out_arr(dset, sample)
 
-            for dset, single in sample.outputs.items():
-                # initialize output data array for all wind plants
-                full_arr = None
-                if isinstance(single, Number):
-                    shape = (len(self.completed_gids),)
-                    full_arr = np.zeros(shape, type(single))
-                elif isinstance(single, (list, tuple, np.ndarray)):
-                    shape = (len(single), len(self.completed_gids))
-                    full_arr = np.zeros(shape, dtype=type(single[0]))
+                dset_no_year = dset
+                if parse_year(dset, option='boolean'):
+                    year = parse_year(dset)
+                    dset_no_year = dset.replace('-{}'.format(year), '')
 
-                # collect data from all wind plants
-                if full_arr is not None:
-                    for i, gid in enumerate(self.completed_gids):
-                        if len(full_arr.shape) == 1:
-                            full_arr[i] = self.outputs[gid].outputs[dset]
-                        else:
-                            full_arr[:, i] = self.outputs[gid].outputs[dset]
-
-                    dset_no_year = dset
-                    if parse_year(dset, option='boolean'):
-                        year = parse_year(dset)
-                        dset_no_year = dset.replace('-{}'.format(year), '')
-
-                    attrs = BespokeSinglePlant.OUT_ATTRS.get(dset_no_year, {})
-                    attrs = copy.deepcopy(attrs)
-                    dtype = attrs.pop('dtype', np.float32)
-                    chunks = attrs.pop('chunks', None)
-                    try:
-                        f.write_dataset(dset, full_arr, dtype, chunks=chunks,
-                                        attrs=attrs)
-                    except Exception as e:
-                        msg = 'Failed to write "{}" to disk.'.format(dset)
-                        logger.exception(msg)
-                        raise IOError(msg) from e
+                attrs = BespokeSinglePlant.OUT_ATTRS.get(dset_no_year, {})
+                attrs = copy.deepcopy(attrs)
+                dtype = attrs.pop('dtype', np.float32)
+                chunks = attrs.pop('chunks', None)
+                try:
+                    f.write_dataset(dset, full_arr, dtype, chunks=chunks,
+                                    attrs=attrs)
+                except Exception as e:
+                    msg = 'Failed to write "{}" to disk.'.format(dset)
+                    logger.exception(msg)
+                    raise IOError(msg) from e
 
         logger.info('Saved output data to: {}'.format(out_fpath))
 
