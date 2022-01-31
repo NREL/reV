@@ -8,6 +8,8 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
+from rex import Resource
+
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
@@ -82,7 +84,9 @@ class CollectionConfig(AnalysisConfig):
 
     @property
     def dsets(self):
-        """Get dset names to collect.
+        """Get dset names to collect. This can be set as "PIPELINE" in the
+        config, which will pull all of the non-time-index and non-meta dataset
+        names from one of the output files in the previous pipeline step.
 
         Returns
         -------
@@ -91,7 +95,17 @@ class CollectionConfig(AnalysisConfig):
         """
 
         if self._dsets is None:
-            self._dsets = SAMOutputRequest(self['dsets'])
+            self._dsets = self['dsets']
+            if isinstance(self._dsets, str) and self._dsets == 'PIPELINE':
+                files = Pipeline.parse_previous(self.dirout, 'collect',
+                                                target='fout')
+                with Resource(files[0]) as res:
+                    self._dsets = [d for d in res
+                                   if not d.startswith('time_index')
+                                   and d != 'meta']
+
+            self._dsets = SAMOutputRequest(self._dsets)
+
         return self._dsets
 
     def _parse_pipeline_prefixes(self):

@@ -11,6 +11,7 @@ from reV.pipeline.pipeline import Pipeline
 from reV.utilities.exceptions import ConfigError
 from reV.utilities import ModuleName
 
+from rex import Resource
 from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
@@ -122,10 +123,39 @@ class MultiYearGroup:
         self._source_files = source_files
         self._source_dir = source_dir
         self._source_prefix = source_prefix
-        self._dsets = SAMOutputRequest(dsets)
         self._pass_through_dsets = None
         if pass_through_dsets is not None:
             self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
+
+        self._dsets = self._parse_dsets(dsets)
+
+    def _parse_dsets(self, dsets):
+        """Parse a multi-year dataset collection request. Can handle PIPELINE
+        argument which will find all datasets from one of the files being
+        collected ignoring meta, time index, and pass_through_dsets
+
+        Parameters
+        ----------
+        dsets : str | list
+            One or more datasets to collect, or "PIPELINE"
+
+        Returns
+        -------
+        dsets : SAMOutputRequest
+            Dataset list object.
+        """
+        if isinstance(dsets, str) and dsets == 'PIPELINE':
+            files = Pipeline.parse_previous(self._dirout, 'collect',
+                                            target='fout')
+            with Resource(files[0]) as res:
+                dsets = [d for d in res
+                         if not d.startswith('time_index')
+                         and d != 'meta'
+                         and d not in self.pass_through_dsets]
+
+        dsets = SAMOutputRequest(dsets)
+
+        return dsets
 
     @property
     def name(self):
