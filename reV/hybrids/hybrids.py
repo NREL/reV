@@ -4,7 +4,6 @@
 @author: ppinchuk
 """
 
-from concurrent.futures import as_completed
 import logging
 import numpy as np
 import re
@@ -19,8 +18,6 @@ from reV.utilities.exceptions import (FileInputError, InputError,
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
 
 from rex.resource import Resource
-from rex.utilities.execution import SpawnProcessPool
-from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
