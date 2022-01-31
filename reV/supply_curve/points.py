@@ -20,7 +20,7 @@ from reV.utilities.exceptions import (SupplyCurveInputError,
                                       DataShapeError,
                                       OutputWarning)
 
-from rex.resource import Resource
+from rex.resource import Resource, BaseResource
 from rex.multi_time_resource import MultiTimeResource
 from rex.utilities.utilities import jsonify_dict
 
@@ -175,7 +175,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
     """Generic single SC point based on exclusions, resolution, and techmap"""
 
     def __init__(self, gid, excl, tm_dset, excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
                  close=True):
         """
         Parameters
@@ -198,8 +198,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -344,6 +345,21 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return self._centroid
 
     @property
+    def pixel_area(self):
+        """The area in km2 of a single exclusion pixel. If this value was not
+        provided on initialization, it is determined from the profile of the
+        exclusion file.
+
+        Returns
+        -------
+        float
+        """
+        if self._excl_area is None:
+            with ExclusionLayers(self._excl_fpath) as f:
+                self._excl_area = f.pixel_area
+        return self._excl_area
+
+    @property
     def area(self):
         """Get the non-excluded resource area of the supply curve point in the
         current resource class.
@@ -354,7 +370,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Non-excluded resource/generation area in square km.
         """
         mask = self._gids != -1
-        area = np.sum(self.include_mask_flat[mask]) * self._excl_area
+        area = np.sum(self.include_mask_flat[mask]) * self.pixel_area
 
         return area
 
@@ -642,13 +658,169 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         return agg
 
+    @staticmethod
+    def _mode(data):
+        """
+        Compute the mode of the data vector and return a single value
+
+        Parameters
+        ----------
+        data : ndarray
+            data layer vector to compute mode for
+
+        Returns
+        -------
+        float | int
+            Mode of data
+        """
+        if not data.size:
+            return None
+        else:
+            return stats.mode(data).mode[0]
+
+    @staticmethod
+    def _categorize(data, incl_mult):
+        """
+        Extract the sum of inclusion scalar values (where 1 is
+        included, 0 is excluded, and 0.7 is included with 70 percent of
+        available land) for each unique (categorical value) in data
+
+        Parameters
+        ----------
+        data : ndarray
+            Vector of categorical values
+        incl_mult : ndarray
+            Vector of inclusion values
+
+        Returns
+        -------
+        str
+            Jsonified string of the dictionary mapping categorical values to
+            total inclusions
+        """
+
+        data = {category: float(incl_mult[(data == category)].sum())
+                for category in np.unique(data)}
+        data = jsonify_dict(data)
+
+        return data
+
+    @classmethod
+    def _agg_data_layer_method(cls, data, incl_mult, method):
+        """Aggregate the data array using specified method.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        incl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
+        method : str
+            Aggregation method (mode, mean, max, min, sum, category)
+
+        Returns
+        -------
+        data : float | int | str | None
+            Result of applying method to data.
+        """
+        method_func = {'mode': cls._mode,
+                       'mean': np.mean,
+                       'max': np.max,
+                       'min': np.min,
+                       'sum': np.sum,
+                       'category': cls._categorize}
+
+        if data is not None:
+            method = method.lower()
+            if method not in method_func:
+                e = ('Cannot recognize data layer agg method: '
+                     '"{}". Can only {}'.format(method, list(method_func)))
+                logger.error(e)
+                raise ValueError(e)
+
+            if len(data.shape) > 1:
+                data = data.flatten()
+
+            if data.shape != incl_mult.shape:
+                e = ('Cannot aggregate data with shape that doesnt '
+                     'match excl mult!')
+                logger.error(e)
+                raise DataShapeError(e)
+
+            if method == 'category':
+                data = method_func['category'](data, incl_mult)
+            elif method in ['mean', 'sum']:
+                data = data * incl_mult
+                data = method_func[method](data)
+            else:
+                data = method_func[method](data)
+
+        return data
+
+    def agg_data_layers(self, summary, data_layers):
+        """Perform additional data layer aggregation. If there is no valid data
+        in the included area, the data layer will be taken from the full SC
+        point extent (ignoring exclusions). If there is still no valid data,
+        a warning will be raised and the data layer will have a NaN/None value.
+
+        Parameters
+        ----------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point. A new entry for
+            each data layer is added.
+        """
+
+        if data_layers is not None:
+            for name, attrs in data_layers.items():
+
+                if 'fobj' not in attrs:
+                    with ExclusionLayers(attrs['fpath']) as f:
+                        raw = f[attrs['dset'], self.rows, self.cols]
+                        nodata = f.get_nodata_value(attrs['dset'])
+                else:
+                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
+                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
+
+                data = raw.flatten()[self.bool_mask]
+                incl_mult = self.include_mask_flat[self.bool_mask].copy()
+
+                if nodata is not None:
+                    valid_data_mask = (data != nodata)
+                    data = data[valid_data_mask]
+                    incl_mult = incl_mult[valid_data_mask]
+
+                    if not data.size:
+                        m = ('Data layer "{}" has no valid data for '
+                             'SC point gid {} because of exclusions '
+                             'and/or nodata values in the data layer.'
+                             .format(name, self._gid))
+                        logger.debug(m)
+
+                data = self._agg_data_layer_method(data, incl_mult,
+                                                   attrs['method'])
+                summary[name] = data
+
+        return summary
+
 
 class AggregationSupplyCurvePoint(SupplyCurvePoint):
     """Generic single SC point to aggregate data from an h5 file."""
 
     def __init__(self, gid, excl, agg_h5, tm_dset,
                  excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
                  close=True, gen_index=None, apply_exclusions=True):
         """
         Parameters
@@ -673,8 +845,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -735,7 +908,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if isinstance(h5, str):
             h5_fpath = h5
             h5 = None
-        elif issubclass(h5.__class__, Resource):
+        elif issubclass(h5.__class__, BaseResource):
             h5_fpath = h5.h5_file
         elif issubclass(h5.__class__, MultiTimeResource):
             h5_fpath = h5.h5_files
@@ -829,7 +1002,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         _h5 : Resource
             Resource h5 handler object.
         """
-        if self._h5 is None:
+        if self._h5 is None and '*' in self._h5_fpath:
+            self._h5 = MultiTimeResource(self._h5_fpath)
+        elif self._h5 is None:
             self._h5 = Resource(self._h5_fpath)
 
         return self._h5
@@ -956,7 +1131,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     @classmethod
     def run(cls, gid, excl, agg_h5, tm_dset, *agg_dset, agg_method='mean',
             excl_dict=None, inclusion_mask=None,
-            resolution=64, excl_area=0.0081,
+            resolution=64, excl_area=None,
             exclusion_shape=None, close=True, gen_index=None):
         """
         Compute exclusions weight mean for the sc point from data
@@ -989,8 +1164,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -1048,7 +1224,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index,
                  excl_dict=None, inclusion_mask=None,
-                 res_class_dset=None, res_class_bin=None, excl_area=0.0081,
+                 res_class_dset=None, res_class_bin=None, excl_area=None,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
                  exclusion_shape=None, close=False, friction_layer=None,
@@ -1084,8 +1260,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
             (resource) "gid" and "power_density columns".
@@ -1545,108 +1722,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         return _mean_h5_dsets_data
 
-    @staticmethod
-    def _mode(data):
-        """
-        Compute the mode of the data vector and return a single value
-
-        Parameters
-        ----------
-        data : ndarray
-            data layer vector to compute mode for
-
-        Returns
-        -------
-        float | int
-            Mode of data
-        """
-        if not data.size:
-            return None
-        else:
-            return stats.mode(data).mode[0]
-
-    @staticmethod
-    def _categorize(data, incl_mult):
-        """
-        Extract the sum of inclusion scalar values (where 1 is
-        included, 0 is excluded, and 0.7 is included with 70 percent of
-        available land) for each unique (categorical value) in data
-
-        Parameters
-        ----------
-        data : ndarray
-            Vector of categorical values
-        incl_mult : ndarray
-            Vector of inclusion values
-
-        Returns
-        -------
-        str
-            Jsonified string of the dictionary mapping categorical values to
-            total inclusions
-        """
-
-        data = {category: float(incl_mult[(data == category)].sum())
-                for category in np.unique(data)}
-        data = jsonify_dict(data)
-
-        return data
-
-    @classmethod
-    def _agg_data_layer_method(cls, data, incl_mult, method):
-        """Aggregate the data array using specified method.
-
-        Parameters
-        ----------
-        data : np.ndarray | None
-            Data array that will be flattened and operated on using method.
-            This must be the included data. Exclusions should be applied
-            before this method.
-        incl_mult : np.ndarray | None
-            Scalar exclusion data for methods with exclusion-weighted
-            aggregation methods. Shape must match input data.
-        method : str
-            Aggregation method (mode, mean, max, min, sum, category)
-
-        Returns
-        -------
-        data : float | int | str | None
-            Result of applying method to data.
-        """
-        method_func = {'mode': cls._mode,
-                       'mean': np.mean,
-                       'max': np.max,
-                       'min': np.min,
-                       'sum': np.sum,
-                       'category': cls._categorize}
-
-        if data is not None:
-            method = method.lower()
-            if method not in method_func:
-                e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only {}'.format(method, list(method_func)))
-                logger.error(e)
-                raise ValueError(e)
-
-            if len(data.shape) > 1:
-                data = data.flatten()
-
-            if data.shape != incl_mult.shape:
-                e = ('Cannot aggregate data with shape that doesnt '
-                     'match excl mult!')
-                logger.error(e)
-                raise DataShapeError(e)
-
-            if method == 'category':
-                data = method_func['category'](data, incl_mult)
-            elif method in ['mean', 'sum']:
-                data = data * incl_mult
-                data = method_func[method](data)
-            else:
-                data = method_func[method](data)
-
-        return data
-
     def _apply_exclusions(self):
         """Apply exclusions by masking the generation and resource gid arrays.
         This removes all res/gen entries that are masked by the exclusions or
@@ -1695,60 +1770,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             boolean_exclude = (boolean_exclude | rex)
 
         return boolean_exclude
-
-    def agg_data_layers(self, summary, data_layers):
-        """Perform additional data layer aggregation. If there is no valid data
-        in the included area, the data layer will be taken from the full SC
-        point extent (ignoring exclusions). If there is still no valid data,
-        a warning will be raised and the data layer will have a NaN/None value.
-
-        Parameters
-        ----------
-        summary : dict
-            Dictionary of summary outputs for this sc point.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-
-        Returns
-        -------
-        summary : dict
-            Dictionary of summary outputs for this sc point. A new entry for
-            each data layer is added.
-        """
-
-        if data_layers is not None:
-            for name, attrs in data_layers.items():
-
-                if 'fobj' not in attrs:
-                    with ExclusionLayers(attrs['fpath']) as f:
-                        raw = f[attrs['dset'], self.rows, self.cols]
-                        nodata = f.get_nodata_value(attrs['dset'])
-                else:
-                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
-                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
-
-                data = raw.flatten()[self.bool_mask]
-                incl_mult = self.include_mask_flat[self.bool_mask].copy()
-
-                if nodata is not None:
-                    valid_data_mask = (data != nodata)
-                    data = data[valid_data_mask]
-                    incl_mult = incl_mult[valid_data_mask]
-
-                    if not data.size:
-                        m = ('Data layer "{}" has no valid data for '
-                             'SC point gid {} because of exclusions '
-                             'and/or nodata values in the data layer.'
-                             .format(name, self._gid))
-                        logger.debug(m)
-
-                data = self._agg_data_layer_method(data, incl_mult,
-                                                   attrs['method'])
-                summary[name] = data
-
-        return summary
 
     def point_summary(self, args=None):
         """
@@ -1840,7 +1861,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                   excl_dict=None, inclusion_mask=None,
                   res_class_dset=None, res_class_bin=None,
-                  excl_area=0.0081, power_density=None,
+                  excl_area=None, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
                   close=False, friction_layer=None, args=None,
@@ -1876,8 +1897,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
             (resource) "gid" and "power_density columns".

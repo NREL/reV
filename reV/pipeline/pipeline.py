@@ -26,7 +26,8 @@ class Pipeline:
 
     CMD_BASE = 'python -m reV.cli -c {fp_config} {command}'
 
-    COMMANDS = ('generation',
+    COMMANDS = ('bespoke',
+                'generation',
                 'econ',
                 'nrwal',
                 'collect',

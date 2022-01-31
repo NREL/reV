@@ -735,7 +735,8 @@ class RevPySam(Sam):
                     self.outputs[key] = output
 
     def collect_outputs(self, output_lookup):
-        """Collect SAM output_request.
+        """Collect SAM output_request, convert timeseries outputs to UTC, and
+        save outputs to self.outputs property.
 
         Parameters
         ----------
@@ -759,6 +760,8 @@ class RevPySam(Sam):
                    .format(bad_requests, self.pysam))
             logger.error(msg)
             raise SAMExecutionError(msg)
+
+        self.outputs_to_utc_arr()
 
     def assign_inputs(self):
         """Assign the self.sam_sys_inputs attribute to the PySAM object."""

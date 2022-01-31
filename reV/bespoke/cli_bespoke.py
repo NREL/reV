@@ -10,7 +10,7 @@ import pprint
 import time
 import re
 
-from reV.bespoke.bespoke import BespokeWindFarms
+from reV.bespoke.bespoke import BespokeWindPlants
 from reV.config.bespoke import BespokeConfig
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, SCPOINTS
@@ -132,13 +132,13 @@ def from_config(ctx, config_file, points_range, verbose):
                      and config.points_range is None)
     workers = config.execution_control.nodes if is_multi_node else 1
 
-    pc = BespokeWindFarms._parse_points(config.excl_fpath, config.tm_dset,
-                                        config.resolution,
-                                        config.project_points,
-                                        config.points_range,
-                                        config.sam_files,
-                                        sites_per_worker=1,
-                                        workers=workers)
+    pc = BespokeWindPlants._parse_points(config.excl_fpath, config.tm_dset,
+                                         config.resolution,
+                                         config.project_points,
+                                         config.points_range,
+                                         config.sam_files,
+                                         sites_per_worker=1,
+                                         workers=workers)
 
     if len(pc) > 1:
         logger.info('Distributing the {} Bespoke project points to {} jobs.'
@@ -358,23 +358,24 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
 
         try:
             # Execute the Bespoke module with smart data flushing.
-            BespokeWindFarms.run(excl_fpath, res_fpath, tm_dset,
-                                 objective_function, cost_function,
-                                 points, sam_files,
-                                 points_range=points_range,
-                                 min_spacing=min_spacing,
-                                 ga_time=ga_time,
-                                 output_request=output_request,
-                                 ws_bins=ws_bins,
-                                 wd_bins=wd_bins,
-                                 excl_dict=excl_dict,
-                                 area_filter_kernel=area_filter_kernel,
-                                 min_area=min_area,
-                                 resolution=resolution,
-                                 excl_area=excl_area,
-                                 pre_extract_inclusions=pre_extract_inclusions,
-                                 max_workers=max_workers,
-                                 out_fpath=out_fpath)
+            BespokeWindPlants.run(
+                excl_fpath, res_fpath, tm_dset,
+                objective_function, cost_function,
+                points, sam_files,
+                points_range=points_range,
+                min_spacing=min_spacing,
+                ga_time=ga_time,
+                output_request=output_request,
+                ws_bins=ws_bins,
+                wd_bins=wd_bins,
+                excl_dict=excl_dict,
+                area_filter_kernel=area_filter_kernel,
+                min_area=min_area,
+                resolution=resolution,
+                excl_area=excl_area,
+                pre_extract_inclusions=pre_extract_inclusions,
+                max_workers=max_workers,
+                out_fpath=out_fpath)
         except Exception as e:
             msg = ('reV Bespoke optimization failed. Received the '
                    'following error:\n{}'.format(e))
