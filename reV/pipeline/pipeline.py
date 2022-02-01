@@ -35,6 +35,7 @@ class Pipeline:
                 'supply-curve',
                 'rep-profiles',
                 'qa-qc',
+                'hybrids',
                 )
 
     RETURN_CODES = {0: 'successful',
