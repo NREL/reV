@@ -566,10 +566,10 @@ class MetaHybridizer:
     def _propagate_duplicate_cols(self, duplicate_cols):
         """Fill missing column values from outer merge. """
         for duplicate in duplicate_cols:
-            no_sufflix = "_".join(duplicate.split("_")[:-1])
-            null_idx = self._hybrid_meta[no_sufflix].isnull()
+            no_suffix = "_".join(duplicate.split("_")[:-1])
+            null_idx = self._hybrid_meta[no_suffix].isnull()
             non_null_vals = self._hybrid_meta.loc[null_idx, duplicate].values
-            self._hybrid_meta.loc[null_idx, no_sufflix] = non_null_vals
+            self._hybrid_meta.loc[null_idx, no_suffix] = non_null_vals
 
     def _drop_cols(self, duplicate_cols):
         """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns. """
@@ -632,7 +632,7 @@ class MetaHybridizer:
                 self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
             else:
                 msg = ("Skipping fill values for {!r}: Unable to find column "
-                       "in hybrid meta. Did you forget to prefilx with "
+                       "in hybrid meta. Did you forget to prefix with "
                        "{!r} or {!r}? ")
                 w = msg.format(col_name, SOLAR_PREFIX, WIND_PREFIX)
                 logger.warning(w)
@@ -690,12 +690,12 @@ class MetaHybridizer:
         """Map hybrid to solar rep indices.
         Returns
         -------
-        hybrid_indicies : np.ndarray
+        hybrid_indices : np.ndarray
             Index values corresponding to hybrid rep profiles.
-        solar_indicies : np.ndarray
+        solar_indices : np.ndarray
             Index values of the solar rep profiles corresponding
-            to the hybrid rep profile indicies.
-        """
+            to the hybrid rep profile indices.
+        # """
 
         if self._hybrid_meta is None:
             return np.array([]), np.array([])
@@ -710,11 +710,11 @@ class MetaHybridizer:
         """Map hybrid to wind rep indices.
         Returns
         -------
-        hybrid_indicies : np.ndarray
+        hybrid_indices : np.ndarray
             Index values corresponding to hybrid rep profiles.
-        wind_indicies : np.ndarray
+        wind_indices : np.ndarray
             Index values of the wind rep profiles corresponding
-            to the hybrid rep profile indicies.
+            to the hybrid rep profile indices.
         """
         if self._hybrid_meta is None:
             return np.array([]), np.array([])

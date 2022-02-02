@@ -298,7 +298,7 @@ def test_ratio_column_missing():
 def test_invalid_ratio_column_name():
     """Test invalid inputs for ratio columns. """
 
-    cols = ('unprefixed_col', 'wind_capacity')
+    cols = ('un_prefixed_col', 'wind_capacity')
     with pytest.raises(InputError) as excinfo:
         Hybridization(SOLAR_FPATH, WIND_FPATH,
                       allowed_ratio=1, ratio_cols=cols)
@@ -347,7 +347,7 @@ def test_duplicate_merge_column_values():
         assert "Duplicate" in str(excinfo.value)
 
 
-def test_merge_columns_missings():
+def test_merge_columns_missing():
     """Test missing merge column. """
 
     with tempfile.TemporaryDirectory() as td:
@@ -588,7 +588,7 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
         rep_profile.
     out_fp : str
         Filepath for new output file. This file will contain some subset of
-        the data of the imput file.
+        the data of the input file.
     p_slice : slice, optional
         Point-slice object representing the indices of the points to keep in
         the new file, by default slice(None).
