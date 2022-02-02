@@ -557,6 +557,7 @@ class MetaHybridizer:
         self._verify_lat_long_match_post_merge()
         self._format_meta_post_merge()
         self._fillna_meta_cols()
+        self._apply_limits()
         self._limit_by_ratio()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
@@ -679,20 +680,33 @@ class MetaHybridizer:
             return True
 
     def _fillna_meta_cols(self):
-        """Fill N/A values as specified by user. """
+        """Fill N/A values as specified by user (and internals). """
         for col_name, fill_value in self._fillna.items():
             if col_name in self._hybrid_meta.columns:
                 self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
             else:
-                msg = ("Skipping fill values for {!r}: Unable to find column "
-                       "in hybrid meta. Did you forget to prefix with "
-                       "{!r} or {!r}? ")
-                w = msg.format(col_name, SOLAR_PREFIX, WIND_PREFIX)
-                logger.warning(w)
-                warn(w, InputWarning)
+                self.__warn_missing_col(col_name, action='fill')
 
         self._hybrid_meta[self.__solar_rpi_n].fillna(-1, inplace=True)
         self._hybrid_meta[self.__wind_rpi_n].fillna(-1, inplace=True)
+
+    @staticmethod
+    def __warn_missing_col(col_name, action):
+        """Warn that a column the user request an action for is missing. """
+        msg = ("Skipping {} values for {!r}: Unable to find column "
+               "in hybrid meta. Did you forget to prefix with "
+               "{!r} or {!r}? ")
+        w = msg.format(action, col_name, SOLAR_PREFIX, WIND_PREFIX)
+        logger.warning(w)
+        warn(w, InputWarning)
+
+    def _apply_limits(self):
+        """Clip column values as specified by user. """
+        for col_name, max_value in self._limits.items():
+            if col_name in self._hybrid_meta.columns:
+                self._hybrid_meta[col_name].clip(upper=max_value, inplace=True)
+            else:
+                self.__warn_missing_col(col_name, action='limit')
 
     def _limit_by_ratio(self):
         """ Limit the ratio columns based on input ratio. """
