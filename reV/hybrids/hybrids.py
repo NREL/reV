@@ -57,7 +57,7 @@ class ColNameFormatter:
         Returns
         -------
         str
-            The column name with all charactes except ascii stripped
+            The column name with all characters except ascii stripped
             and all lowercase.
         """
         return ''.join(c for c in n if c in cls.ALLOWED).lower()
@@ -317,7 +317,8 @@ class MetaHybridizer:
     _INTERNAL_COL_PREFIX = '_h_internal'
 
     def __init__(self, data, allow_solar_only=False,
-                 allow_wind_only=False, fillna=None, allowed_ratio=None,
+                 allow_wind_only=False, fillna=None,
+                 limits=None, allowed_ratio=None,
                  ratio_cols=('solar_capacity', 'wind_capacity')):
         """
         Parameters
@@ -335,13 +336,24 @@ class MetaHybridizer:
             fill values that should be applied after merging the wind and solar
             meta. Note that column names will likely have to be prefixed
             with "solar_" or "wind_". By default None.
+        limits : dict, optional
+            Option to specify mapping (in the form of a dictionary) of
+            {colum_name: max_value} representing the upper limit (maximum
+            value) for the values of a column in the merged meta. For example,
+            `limits={'solar_capacity': 100}` would limit all the values of the
+            solar capacity in the merged meta to a maximum value of 100.
+            This limit is applied *BEFORE* ratio calculations. The names of
+            the columns should match the column names in the merged meta, so
+            they are likely prefixed with one of the prefixes defined at the
+            top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
+            None (no limits applied).
         allowed_ratio : float | tuple, optional
             Option to set a single ratio or ratio bounds (in two-tuple form)
             on the `ratio_cols`. A single value is treated as both an upper
             and a lower bound. This input limits the ratio of the values
             of the input `ratio_cols` (ratio is always computed with the
             first column as the numerator and the second column as the
-            denomiator). For example, `allowed_ratio=1` would limit
+            denominator). For example, `allowed_ratio=1` would limit
             the values of the `ratio_cols` to always be equal. On the other
             hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
             between half and double (e.g., if `ratio_cols` are the capacity
@@ -351,7 +363,7 @@ class MetaHybridizer:
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
             this input does nothing. The names of the columns should
-            match the column names in the mnerged meta, so they are likely
+            match the column names in the merged meta, so they are likely
             prefixed with one of the prefixes defined at the top of this
             module (SOLAR_PREFIX or WIND_PREFIX). The order of the column names
             specifies the way the ratio is calculated: the first column is
@@ -525,7 +537,7 @@ class MetaHybridizer:
         self.data.wind_meta[self.__wind_rpi_n] = self.data.wind_meta.index
 
     def _merge_solar_wind_meta(self):
-        """Merge the wind and solar meta DetaFrames. """
+        """Merge the wind and solar meta DataFrames. """
         self._hybrid_meta = self.data.solar_meta.merge(
             self.data.wind_meta,
             on=ColNameFormatter.fmt(MERGE_COLUMN),
@@ -717,7 +729,8 @@ class Hybridization:
     """Framework to handle hybridization of SC and corresponding profiles."""
 
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
-                 allow_wind_only=False, fillna=None, allowed_ratio=None,
+                 allow_wind_only=False, fillna=None,
+                 limits=None, allowed_ratio=None,
                  ratio_cols=('solar_capacity', 'wind_capacity')):
         """
         Parameters
@@ -739,13 +752,24 @@ class Hybridization:
             fill values that should be applied after merging the wind and solar
             meta. Note that column names will likely have to be prefixed
             with "solar_" or "wind_". By default None.
+        limits : dict, optional
+            Option to specify mapping (in the form of a dictionary) of
+            {colum_name: max_value} representing the upper limit (maximum
+            value) for the values of a column in the merged meta. For example,
+            `limits={'solar_capacity': 100}` would limit all the values of the
+            solar capacity in the merged meta to a maximum value of 100.
+            This limit is applied *BEFORE* ratio calculations. The names of
+            the columns should match the column names in the merged meta, so
+            they are likely prefixed with one of the prefixes defined at the
+            top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
+            None (no limits applied).
         allowed_ratio : float | tuple, optional
             Option to set a single ratio or ratio bounds (in two-tuple form)
             on the `ratio_cols`. A single value is treated as both an upper
             and a lower bound. This input limits the ratio of the values
             of the input `ratio_cols` (ratio is always computed with the
             first column as the numerator and the second column as the
-            denomiator). For example, `allowed_ratio=1` would limit
+            denominator). For example, `allowed_ratio=1` would limit
             the values of the `ratio_cols` to always be equal. On the other
             hand, `allowed_ratio=(0.5, 1.5)` would limit the ratio to be
             between half and double (e.g., if `ratio_cols` are the capacity
@@ -755,7 +779,7 @@ class Hybridization:
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
             this input does nothing. The names of the columns should
-            match the column names in the mnerged meta, so they are likely
+            match the column names in the merged meta, so they are likely
             prefixed with one of the prefixes defined at the top of this
             module (SOLAR_PREFIX or WIND_PREFIX). The order of the column names
             specifies the way the ratio is calculated: the first column is
@@ -773,6 +797,8 @@ class Hybridization:
                     'allow_wind_only: "{}"'.format(allow_wind_only))
         logger.info('Running hybridization rep profiles with fillna: "{}"'
                     .format(fillna))
+        logger.info('Running hybridization rep profiles with limits: "{}"'
+                    .format(limits))
         logger.info('Running hybridization rep profiles with '
                     'allowed_ratio: "{}"'.format(allowed_ratio))
         logger.info('Running hybridization rep profiles with ratio_cols: "{}"'
@@ -781,7 +807,7 @@ class Hybridization:
         self.data = HybridsData(solar_fpath, wind_fpath)
         self.meta_hybridizer = MetaHybridizer(
             data=self.data, allow_solar_only=allow_solar_only,
-            allow_wind_only=allow_wind_only, fillna=fillna,
+            allow_wind_only=allow_wind_only, fillna=fillna, limits=limits,
             allowed_ratio=allowed_ratio, ratio_cols=ratio_cols
         )
         self._profiles = None

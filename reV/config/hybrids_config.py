@@ -67,6 +67,11 @@ class HybridsConfig(AnalysisConfig):
         return self.get('fillna', None)
 
     @property
+    def limits(self):
+        """Get the mapping for limiting hybrid meta values. """
+        return self.get('limits', None)
+
+    @property
     def allowed_ratio(self):
         """Get the allowed ratio (or ratio bounds) for the input columns. """
         return self.get('allowed_ratio', None)
