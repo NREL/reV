@@ -240,7 +240,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['ALLOW_SOLAR_ONLY'] = allow_solar_only
     ctx.obj['ALLOW_WIND_ONLY'] = allow_wind_only
     ctx.obj['FILLNA'] = fillna
-    ctx.obj['ALLOWED_RATIO'] = allowed_ratio
+    ctx.obj['ALLOWED_RATIO'] = _format_ratio_input(allowed_ratio)
     ctx.obj['RATIO_COLS'] = ratio_cols
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
@@ -283,6 +283,13 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
                   'runtime': runtime,
                   'finput': [solar_fpath, wind_fpath]}
         Status.make_job_file(out_dir, 'hybrids', name, status)
+
+
+def _format_ratio_input(ratio):
+    """Format the ratio input to be a float if it is a list of len=1. """
+    if ratio is not None and len(ratio) == 1:
+        ratio = ratio[0]
+    return ratio
 
 
 def get_node_cmd(ctx):
