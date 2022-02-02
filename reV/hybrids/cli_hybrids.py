@@ -196,21 +196,32 @@ def _get_paths_from_config(config, name):
                     'values for a row consisting purely of solar capacity).'))
 @click.option('--allowed_ratio', '-r', type=FLOATLIST, default=None,
               show_default=True,
-              help='List of two floats representing the lower and upper '
-              'bounds on the ratio of the two columns specified with the '
-              '"ratio_cols" input, which are set to solar/wind capacity by '
-              'default. The same value can be used as the upper and lower '
-              'bound to represent a single ratio.')
+              help='A single ratio value (float) or ratio bounds (list '
+                   'of two floats) used to limit the ratio of the '
+                   'of the values of the columns specified by the '
+                   '`ratio_cols` input. A single value is treated '
+                   'as both an upper and a lower bound. The ratio '
+                   'is always computed with the first column as the '
+                   'numerator and the second column as the denomiator. '
+                   'For example, `--allowed_ratio 1` would limit the '
+                   'values of the `ratio_cols` to always be equal. '
+                   'On the other hand, `--allowed_ratio [0.5, 1.5]` '
+                   'would limit the ratio to be between half and double '
+                   '(e.g., if `ratio_cols` are the capacity columns, '
+                   'no capacity value would be more than double the other). '
+                   'By default, None (no limit).')
 @click.option('--ratio_cols', '-rc', type=STRLIST,
               default=['solar_capacity', 'wind_capacity'],
               show_default=True,
               help='List of two column names representing the columns '
-              'used to compute the ratio that is bound by the "ratio" '
-              'input. These should be the column names of the merged meta, '
-              'so they are likely prefixed by "solar_" or "wind_". The '
-              'ratio is computed by dividing the values of the first column '
-              'by the val;ues of the second column. This input has no effect '
-              'if the "ratio" input is not used (i.e. set to `None`).')
+                   'used to calculate the ratio that is limited by the '
+                   '`--allowed_ratio` input. If `--allowed_ratio` is None, '
+                   'this input does nothing. The names of the columns should '
+                   'match the column names in the mnerged meta, so they are '
+                   'likely prefixed by "solar_" or "wind_". The order of the '
+                   'column names specifies the way the ratio is calculated: '
+                   'the first column is always treated as the ratio numerator '
+                   'and the second column is the ratio denominator.')
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
               help='Directory to save rep profile output h5.')

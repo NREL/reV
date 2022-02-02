@@ -350,12 +350,13 @@ class MetaHybridizer:
         ratio_cols : tuple, optional
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
-            this input does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            The order of the colum names specifies the way the ratio is
-            calculated: the first column is always treated as the ratio
-            numerator and the second column is the ratio denominator.
-            By default ('solar_capacity', 'wind_capacity').
+            this input does nothing. The names of the columns should
+            match the column names in the mnerged meta, so they are likely
+            prefixed with one of the prefixes defined at the top of this
+            module (SOLAR_PREFIX or WIND_PREFIX). The order of the column names
+            specifies the way the ratio is calculated: the first column is
+            always treated as the ratio numerator and the second column is the
+            ratio denominator. By default ('solar_capacity', 'wind_capacity').
         """
         self.data = data
         self._allow_solar_only = allow_solar_only
@@ -753,12 +754,13 @@ class Hybridization:
         ratio_cols : tuple, optional
             Option to specify the columns used to calculate the ratio that is
             limited by the `allowed_ratio` input. If `allowed_ratio` is None,
-            this input does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            The order of the colum names specifies the way the ratio is
-            calculated: the first column is always treated as the ratio
-            numerator and the second column is the ratio denominator.
-            By default ('solar_capacity', 'wind_capacity').
+            this input does nothing. The names of the columns should
+            match the column names in the mnerged meta, so they are likely
+            prefixed with one of the prefixes defined at the top of this
+            module (SOLAR_PREFIX or WIND_PREFIX). The order of the column names
+            specifies the way the ratio is calculated: the first column is
+            always treated as the ratio numerator and the second column is the
+            ratio denominator. By default ('solar_capacity', 'wind_capacity').
         """
 
         logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
