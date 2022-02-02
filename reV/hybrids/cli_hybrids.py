@@ -11,7 +11,7 @@ import time
 
 from reV.config.hybrids_config import HybridsConfig
 from reV.pipeline.status import Status
-from reV.hybrids import Hybridization
+from reV.hybrids.hybrids import Hybridization, SOLAR_PREFIX, WIND_PREFIX
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -101,6 +101,7 @@ def from_config(ctx, config_file, verbose):
                            allow_solar_only=config.allow_solar_only,
                            allow_wind_only=config.allow_wind_only,
                            fillna=config.fillna,
+                           limits=config.limits,
                            allowed_ratio=config.allowed_ratio,
                            ratio_cols=config.ratio_cols,
                            out_dir=config.dirout,
@@ -113,6 +114,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['ALLOW_SOLAR_ONLY'] = config.allow_solar_only
             ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
             ctx.obj['FILLNA'] = config.fillna
+            ctx.obj['LIMITS'] = config.limits
             ctx.obj['ALLOWED_RATIO'] = config.allowed_ratio
             ctx.obj['RATIO_COLS'] = config.ratio_cols
             ctx.obj['OUT_DIR'] = config.dirout
@@ -189,11 +191,25 @@ def _get_paths_from_config(config, name):
 @click.option('--fillna', '-fna', type=STR, default=None,
               show_default=True,
               help=('String representation of a dictionary of fill values '
-                    'for merged columns {col_name: val} where "col_name" '
-                    'is the name of a merged column (prefixed by "solar_" '
-                    'or "wind_") and "val" is the values used to fill any '
+                    'for merged columns {{col_name: val}} where "col_name" '
+                    'is the name of a merged column (prefixed by {!r} '
+                    'or {!r}) and "val" is the values used to fill any '
                     'n.a. values resulting from a merge (e.g. wind column '
-                    'values for a row consisting purely of solar capacity).'))
+                    'values for a row consisting purely of solar capacity).'
+                    .format(SOLAR_PREFIX, WIND_PREFIX)))
+@click.option('--limits', '-l', type=STR, default=None,
+              show_default=True,
+              help='String representation of a dictionary specifying mapping '
+                   'of {{colum_name: max_value}} representing the upper limit '
+                   '(maximum value) for the values of a column in the merged '
+                   'meta. For example, `--limits {{"solar_capacity": 100}}` '
+                   'would limit all the values of the solar capacity in the '
+                   'merged meta to a maximum value of 100. This limit is '
+                   'applied *BEFORE* ratio calculations. The names of '
+                   'the columns should match the column names in the merged '
+                   'meta, so they are likely prefixed by {!r} or {!r}. '
+                   'By default, None (no limits applied).'
+                   .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--allowed_ratio', '-r', type=FLOATLIST, default=None,
               show_default=True,
               help='A single ratio value (float) or ratio bounds (list '
@@ -218,10 +234,11 @@ def _get_paths_from_config(config, name):
                    '`--allowed_ratio` input. If `--allowed_ratio` is None, '
                    'this input does nothing. The names of the columns should '
                    'match the column names in the merged meta, so they are '
-                   'likely prefixed by "solar_" or "wind_". The order of the '
+                   'likely prefixed by {!r} or {!r}. The order of the '
                    'column names specifies the way the ratio is calculated: '
                    'the first column is always treated as the ratio numerator '
-                   'and the second column is the ratio denominator.')
+                   'and the second column is the ratio denominator.'
+                   .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
               help='Directory to save rep profile output h5.')
@@ -232,7 +249,8 @@ def _get_paths_from_config(config, name):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
-           fillna, allowed_ratio, ratio_cols, out_dir, log_dir, verbose):
+           fillna, limits, allowed_ratio, ratio_cols, out_dir, log_dir,
+           verbose):
     """reV hybridization CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SOLAR_FPATH'] = solar_fpath
@@ -240,6 +258,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['ALLOW_SOLAR_ONLY'] = allow_solar_only
     ctx.obj['ALLOW_WIND_ONLY'] = allow_wind_only
     ctx.obj['FILLNA'] = fillna
+    ctx.obj['LIMITS'] = limits
     ctx.obj['ALLOWED_RATIO'] = _format_ratio_input(allowed_ratio)
     ctx.obj['RATIO_COLS'] = ratio_cols
     ctx.obj['OUT_DIR'] = out_dir
@@ -257,12 +276,15 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         if isinstance(fillna, str):
             fillna = dict_str_load(fillna)
 
+        if isinstance(limits, str):
+            limits = dict_str_load(limits)
+
         try:
             Hybridization(
                 solar_fpath, wind_fpath,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
-                fillna=fillna,
+                fillna=fillna, limits=limits,
                 allowed_ratio=allowed_ratio,
                 ratio_cols=ratio_cols,
             ).run(fout=fout)
@@ -301,6 +323,7 @@ def get_node_cmd(ctx):
     allow_solar_only = ctx.obj['ALLOW_SOLAR_ONLY']
     allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
     fillna = ctx.obj['FILLNA']
+    limits = ctx.obj['LIMITS']
     allowed_ratio = ctx.obj['ALLOWED_RATIO']
     ratio_cols = ctx.obj['RATIO_COLS']
     out_dir = ctx.obj['OUT_DIR']
@@ -310,6 +333,7 @@ def get_node_cmd(ctx):
     args = ['-s {}'.format(SLURM.s(solar_fpath)),
             '-w {}'.format(SLURM.s(wind_fpath)),
             '-fna {}'.format(SLURM.s(fillna)),
+            '-l {}'.format(SLURM.s(limits)),
             '-r {}'.format(SLURM.s(allowed_ratio)),
             '-rc {}'.format(SLURM.s(ratio_cols)),
             '-od {}'.format(SLURM.s(out_dir)),

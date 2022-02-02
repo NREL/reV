@@ -500,6 +500,7 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
     sfp, wfp = input_files
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
+    limits = {'solar_capacity': 100}
 
     with tempfile.TemporaryDirectory() as td:
         config = {
@@ -522,6 +523,9 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
             "fillna": {
                 'solar_n_gids': 0,
                 'wind_capacity': -1
+            },
+            'limits': {
+                'solar_capacity': 100
             }
         }
         if ratio_cols is not None:
@@ -548,7 +552,7 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
             sfp, wfp,
             allow_solar_only=allow_solar_only,
             allow_wind_only=allow_wind_only,
-            fillna=fill_vals,
+            fillna=fill_vals, limits=limits,
             allowed_ratio=ratio, ratio_cols=ratio_cols
         ).run()
 
