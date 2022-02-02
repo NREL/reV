@@ -33,7 +33,9 @@ NON_DUPLICATE_COLS = {
 DROPPED_COLUMNS = ['gid']
 DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
                        'solar_mean_cf': 0, 'wind_mean_cf': 0}
-OUTPUT_PROFILE_NAMES = ['hybrid_profile', 'solar_profile', 'wind_profile']
+OUTPUT_PROFILE_NAMES = ['hybrid_profile',
+                        'hybrid_solar_profile',
+                        'hybrid_wind_profile']
 
 
 class ColNameFormatter:
