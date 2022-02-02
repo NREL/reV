@@ -208,6 +208,17 @@ def test_fillna_values():
     assert np.any(h.hybrid_meta['wind_capacity'].values == -1)
 
 
+def test_invalid_fillna_column_name():
+    """Test invalid inputs for fillna columns. """
+
+    test_fillna = {'un_prefixed_col': 0, 'wind_capacity': 10}
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH, fillna=test_fillna)
+
+    assert "Input fillna column" in str(excinfo.value)
+    assert "does not start with a valid prefix" in str(excinfo.value)
+
+
 @pytest.mark.parametrize("input_combination, na_vals",
                          [((False, False), (False, False)),
                           ((True, False), (False, True)),

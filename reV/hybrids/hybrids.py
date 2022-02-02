@@ -4,7 +4,9 @@
 @author: ppinchuk
 """
 
+from configparser import MissingSectionHeaderError
 import logging
+from tkinter import S
 import numpy as np
 import re
 import pandas as pd
@@ -405,10 +407,29 @@ class MetaHybridizer:
         the `allowed_ratio` is correctly formatted.
 
         """
+        self._validate_fillna_cols_prefixed()
         self._validate_ratio_cols_length()
         self._validate_ratio_cols_prefixed()
         self._validate_ratio_cols_exist()
         self._validate_ratio()
+
+    def _validate_fillna_cols_prefixed(self):
+        """Ensure the fillna columns are formatted correctly.
+
+        This check is important because the fillna step happens
+        after the meta has been merged (so columns are already prefixed),
+        but before the hybrid columns are computed. As a result, the fillna
+        columns _must_ have a valid prefix.
+
+        Raises
+        ------
+        InputError
+            If fillna columns are not prefixed correctly.
+        """
+        for col in self._fillna:
+            self.__validate_col_prefix(
+                col, (SOLAR_PREFIX, WIND_PREFIX), input_name='fillna'
+            )
 
     def _validate_ratio_cols_length(self):
         """Ensure exactly two ratio column names are provided.
@@ -432,6 +453,11 @@ class MetaHybridizer:
     def _validate_ratio_cols_prefixed(self):
         """Ensure the ratio columns are formatted correctly.
 
+        This check is important because the ratio limit step happens
+        after the meta has been merged (so columns are already prefixed),
+        but before the hybrid columns are computed. As a result, the ratio
+        columns _must_ have a valid prefix.
+
         Raises
         ------
         InputError
@@ -442,15 +468,22 @@ class MetaHybridizer:
             return
 
         for col in self._ratio_cols:
-            missing_solar_prefix = not col.startswith(SOLAR_PREFIX)
-            missing_wind_prefix = not col.startswith(WIND_PREFIX)
-            if missing_solar_prefix and missing_wind_prefix:
-                msg = ("Input ratio column {!r} does not start with a valid "
-                       "prefix: {!r}. Please ensure that the ratio column "
-                       "names specify the correct resource prefix.")
-                e = msg.format(col, (SOLAR_PREFIX, WIND_PREFIX))
-                logger.error(e)
-                raise InputError(e)
+            self.__validate_col_prefix(
+                col, (SOLAR_PREFIX, WIND_PREFIX), input_name='ratio'
+            )
+
+    @staticmethod
+    def __validate_col_prefix(col, prefixes, input_name):
+        """Validate the the col starts with the correct prefix. """
+
+        missing = [not col.startswith(p) for p in prefixes]
+        if all(missing):
+            msg = ("Input {0} column {1!r} does not start with a valid "
+                   "prefix: {2!r}. Please ensure that the {0} column "
+                   "names specify the correct resource prefix.")
+            e = msg.format(input_name, col, prefixes)
+            logger.error(e)
+            raise InputError(e)
 
     def _validate_ratio_cols_exist(self):
         """Ensure the ratio columns exist if a ratio is specified.
