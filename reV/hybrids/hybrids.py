@@ -376,6 +376,7 @@ class MetaHybridizer:
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
         self._fillna = {**DEFAULT_FILL_VALUES, **(fillna or {})}
+        self._limits = limits or {}
         self._allowed_ratio = allowed_ratio
         self._ratio_cols = ratio_cols
         self._hybrid_meta = None
@@ -407,11 +408,43 @@ class MetaHybridizer:
         the `allowed_ratio` is correctly formatted.
 
         """
+        self._validate_limits_cols_prefixed()
         self._validate_fillna_cols_prefixed()
         self._validate_ratio_cols_length()
         self._validate_ratio_cols_prefixed()
         self._validate_ratio_cols_exist()
         self._validate_ratio()
+
+    def _validate_limits_cols_prefixed(self):
+        """Ensure the limits columns are formatted correctly.
+
+        This check is important because the limiting happens
+        after the meta has been merged (so columns are already prefixed),
+        but before the hybrid columns are computed. As a result, the limits
+        columns _must_ have a valid prefix.
+
+        Raises
+        ------
+        InputError
+            If limits columns are not prefixed correctly.
+        """
+        for col in self._limits:
+            self.__validate_col_prefix(
+                col, (SOLAR_PREFIX, WIND_PREFIX), input_name='limits'
+            )
+
+    @staticmethod
+    def __validate_col_prefix(col, prefixes, input_name):
+        """Validate the the col starts with the correct prefix. """
+
+        missing = [not col.startswith(p) for p in prefixes]
+        if all(missing):
+            msg = ("Input {0} column {1!r} does not start with a valid "
+                   "prefix: {2!r}. Please ensure that the {0} column "
+                   "names specify the correct resource prefix.")
+            e = msg.format(input_name, col, prefixes)
+            logger.error(e)
+            raise InputError(e)
 
     def _validate_fillna_cols_prefixed(self):
         """Ensure the fillna columns are formatted correctly.
@@ -471,19 +504,6 @@ class MetaHybridizer:
             self.__validate_col_prefix(
                 col, (SOLAR_PREFIX, WIND_PREFIX), input_name='ratio'
             )
-
-    @staticmethod
-    def __validate_col_prefix(col, prefixes, input_name):
-        """Validate the the col starts with the correct prefix. """
-
-        missing = [not col.startswith(p) for p in prefixes]
-        if all(missing):
-            msg = ("Input {0} column {1!r} does not start with a valid "
-                   "prefix: {2!r}. Please ensure that the {0} column "
-                   "names specify the correct resource prefix.")
-            e = msg.format(input_name, col, prefixes)
-            logger.error(e)
-            raise InputError(e)
 
     def _validate_ratio_cols_exist(self):
         """Ensure the ratio columns exist if a ratio is specified.

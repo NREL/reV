@@ -192,6 +192,28 @@ def test_rep_profile_idx_map():
         assert r_idxs.size == shape
 
 
+def test_limits_values():
+    """Test that column values are properly limited on user input. """
+
+    limits = {'solar_capacity': 100, 'wind_capacity': 0.5}
+
+    h = Hybridization(SOLAR_FPATH, WIND_FPATH, limits=limits).run()
+
+    assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
+    assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
+
+
+def test_invalid_limits_column_name():
+    """Test invalid inputs for limits columns. """
+
+    test_limits = {'un_prefixed_col': 0, 'wind_capacity': 10}
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH, limits=test_limits)
+
+    assert "Input limits column" in str(excinfo.value)
+    assert "does not start with a valid prefix" in str(excinfo.value)
+
+
 def test_fillna_values():
     """Test that N/A values are filled properly based on user input. """
 
