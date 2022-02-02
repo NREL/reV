@@ -537,8 +537,7 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        with runner.isolated_filesystem():
-            result = runner.invoke(main, ['-c', config_path, 'hybrids'])
+        result = runner.invoke(main, ['-c', config_path, 'hybrids'])
 
         if result.exit_code != 0:
             import traceback
