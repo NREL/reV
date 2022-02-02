@@ -11,12 +11,14 @@ from click.testing import CliRunner
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
+from reV.hybrids.cli_hybrids import main as hybrids_cli_main
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
 from rex.utilities.loggers import LOGGERS
+from rex.utilities.hpc import SLURM
 
 
 SOLAR_FPATH = os.path.join(
@@ -606,6 +608,78 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
 
         assert "WARNING" in result.stdout
         assert 'hybrids-test.h5' not in os.listdir(td)
+
+        LOGGERS.clear()
+
+
+@pytest.mark.parametrize("input_files", [
+    (SOLAR_FPATH, WIND_FPATH),
+    (SOLAR_FPATH_30_MIN, WIND_FPATH)
+])
+@pytest.mark.parametrize("ratio_cols", [
+    ('solar_capacity', 'wind_capacity'),
+    ('solar_area_sq_km', 'wind_area_sq_km')
+])
+@pytest.mark.parametrize("ratio", [None, (0.5, 1.5), (0.3, 3.6)])
+@pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
+def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
+                            input_combination):
+    """Test hybrids cli 'direct' command. """
+
+    fv = -999
+    sfp, wfp = input_files
+    allow_solar_only, allow_wind_only = input_combination
+    fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
+    limits = {'solar_capacity': 100}
+
+    with tempfile.TemporaryDirectory() as td:
+
+        args = ['-s {}'.format(SLURM.s(sfp)),
+                '-w {}'.format(SLURM.s(wfp)),
+                '-fna {}'.format(SLURM.s(fill_vals)),
+                '-l {}'.format(SLURM.s(limits)),
+                '-rc {}'.format(SLURM.s(ratio_cols)),
+                '-od {}'.format(SLURM.s(td)),
+                '-ld {}'.format(SLURM.s(td)),
+                ]
+
+        if ratio is not None:
+            args.append('-r {}'.format(SLURM.s(ratio)))
+
+        if allow_solar_only:
+            args.append('-so')
+
+        if allow_wind_only:
+            args.append('-wo')
+
+        cmd = '-n {} direct {}'.format(SLURM.s("hybrids-test"), ' '.join(args))
+        print(cmd)
+        result = runner.invoke(hybrids_cli_main, cmd)
+
+        if result.exit_code != 0:
+            import traceback
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        LOGGERS.clear()
+
+        h = Hybridization(
+            sfp, wfp,
+            allow_solar_only=allow_solar_only,
+            allow_wind_only=allow_wind_only,
+            fillna=fill_vals, limits=limits,
+            allowed_ratio=ratio, ratio_cols=ratio_cols
+        ).run()
+
+        out_fpath = os.path.join(td, 'hybrids-test.h5')
+        with Outputs(out_fpath, 'r') as f:
+            for dset_name in OUTPUT_PROFILE_NAMES:
+                assert dset_name in f.dsets
+
+            meta_from_file = f.meta.fillna(fv).replace('nan', fv)
+            assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
+            assert np.all(f.time_index == h.hybrid_time_index)
 
         LOGGERS.clear()
 
