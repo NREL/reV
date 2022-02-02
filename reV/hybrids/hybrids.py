@@ -936,14 +936,14 @@ class Hybridization:
 
         logger.info('Running hybrid profile calculations.')
 
-        self._compute_hybridized_resource_profiles()
+        self._compute_hybridized_profile_components()
         self._compute_hybridized_profiles_from_components()
 
         logger.info('Profile hybridization complete.')
 
         return self
 
-    def _compute_hybridized_resource_profiles(self):
+    def _compute_hybridized_profile_components(self):
         """Compute the resource components of the hybridized profiles. """
 
         for params in self.__rep_profile_hybridization_params:
