@@ -113,7 +113,7 @@ def from_config(ctx, config_file, verbose):
                            save_raw=config.save_raw,
                            meta_gid_col=config.meta_gid_col,
                            site_meta_cols=config.site_meta_cols,
-                           logdir=config.logdir,
+                           log_dir=config.logdir,
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
