@@ -378,13 +378,24 @@ def convert_ratio_dict_to_cli_input(input_dict):
         String that can be appended to cli call with the input
         dictionary formatted as necessary. Empty string if dict is
         empty.
+
+    Examples
+    --------
+    If you need to format an input dictionary to work with the cli, you
+    can do it like so:
+
+    >>> test_dict = {('a', 'b'): 2, ('c', 'd'): [5, 7], ('e', 'f'): (5, 7)}
+    >>> out = convert_ratio_dict_to_cli_input(test_dict)
+    >>> print('{}'.format(out))
+    "{\"['a', 'b']\": [2, 2], \"['c', 'd']\": [5, 7], \"['e', 'f']\": [5, 7]}"
+
     """
     kv_strings = []
     for k, v in input_dict.items():
         try:
             v = list(v)
         except TypeError:
-            v = [v]
+            v = [v, v]
         kv_strings.append(
             "\\\"['{}', '{}']\\\": {!r}".format(*k, v)
         )
