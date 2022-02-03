@@ -4,10 +4,7 @@
 @author: ppinchuk
 """
 
-from configparser import MissingSectionHeaderError
-from http.client import NotConnected
 import logging
-from tkinter import S
 import numpy as np
 import re
 import pandas as pd
