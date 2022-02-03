@@ -218,12 +218,6 @@ def _get_paths_from_config(config, name):
                    'mapping of "{{\\"[\'numerator_column\', '
                    '\'denominator_column\']\\": ratio}}" representing a limit '
                    'on the ratio of the values of the specified columns. '
-                   'The input format is particularly important because it is '
-                   'parsed as a JSON dict (in particular, the dict keys must '
-                   'use escaped double quotes and multiple ratio values must '
-                   'be input as a square-bracketed list -- if you need help '
-                   'with the formatting, check the docstring of the function '
-                   '`convert_ratio_dict_to_cli_input`).'
                    'The names of the columns should match the column names in '
                    'the merged meta, so they are likely prefixed by {!r} or '
                    '{!r}. The order of the column names specifies the way the '
@@ -239,7 +233,13 @@ def _get_paths_from_config(config, name):
                    '`--ratios "{{\\"[\'solar_capacity\', \'wind_capacity\']'
                    '\\": [0.5, 1.5]}}\'` would limit the solar and wind '
                    'capacity ratio to be between half and double (e.g., '
-                   'no capacity value would be more than double the other).'
+                   'no capacity value would be more than double the other). '
+                   'The input format is particularly important because it is '
+                   'parsed as a JSON dict (in particular, the dict keys must '
+                   'use escaped double quotes and multiple ratio values must '
+                   'be input as a square-bracketed list -- if you need help '
+                   'with the formatting, check the docstring of the function '
+                   '`convert_ratio_dict_to_cli_input`).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
