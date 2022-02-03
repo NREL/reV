@@ -12,7 +12,6 @@ from click.testing import CliRunner
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
-from reV.hybrids.cli_hybrids import convert_ratio_dict_to_cli_input
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
@@ -530,7 +529,15 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
         }
 
         if ratio_cols is not None:
-            config['ratios'] = {"['{}', '{}']".format(*ratio_cols): ratio}
+            num, denom = ratio_cols
+            min_r, max_r = ratio
+            config_dict = {
+                'numerator_col': num,
+                'denominator_col': denom,
+                'min_ratio': min_r,
+                'max_ratio': max_r
+            }
+            config['ratio'] = config_dict
 
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:
@@ -641,9 +648,16 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
                 '-ld {}'.format(SLURM.s(td)),
                 ]
 
-        if ratios:
-            ratios_as_str = convert_ratio_dict_to_cli_input(ratios)
-            args.append('-r {}'.format(ratios_as_str))
+        if ratio_cols is not None:
+            num, denom = ratio_cols
+            min_r, max_r = ratio
+            config_dict = {
+                'numerator_col': num,
+                'denominator_col': denom,
+                'min_ratio': min_r,
+                'max_ratio': max_r
+            }
+            args.append('-r {}'.format(SLURM.s(config_dict)))
 
         if allow_solar_only:
             args.append('-so')

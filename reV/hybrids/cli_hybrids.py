@@ -8,9 +8,8 @@ import click
 import logging
 import pprint
 import time
-import json
 
-from reV.config.hybrids_config import HybridsConfig, convert_str_keys_to_tuples
+from reV.config.hybrids_config import HybridsConfig
 from reV.pipeline.status import Status
 from reV.hybrids.hybrids import Hybridization, SOLAR_PREFIX, WIND_PREFIX
 from reV import __version__
@@ -104,7 +103,7 @@ def from_config(ctx, config_file, verbose):
                            allow_wind_only=config.allow_wind_only,
                            fillna=config.fillna,
                            limits=config.limits,
-                           ratios=config.ratios,
+                           ratio=config.ratio,
                            out_dir=config.dirout,
                            log_dir=config.logdir,
                            verbose=verbose)
@@ -116,7 +115,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
             ctx.obj['FILLNA'] = config.fillna
             ctx.obj['LIMITS'] = config.limits
-            ctx.obj['RATIOS'] = config.ratios
+            ctx.obj['RATIO'] = config.ratio
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -212,34 +211,29 @@ def _get_paths_from_config(config, name):
                    'meta, so they are likely prefixed by {!r} or {!r}. '
                    'By default, None (no limits applied).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
-@click.option('--ratios', '-r', type=STR, default=None,
+@click.option('--ratio', '-r', type=STR, default=None,
               show_default=True,
-              help='String representation of a (JSON) dictionary specifying a '
-                   'mapping of "{{\\"[\'numerator_column\', '
-                   '\'denominator_column\']\\": ratio}}" representing a limit '
-                   'on the ratio of the values of the specified columns. '
+              help='String representation of a dictionary with exactly four '
+                   'key entries: {{"numerator_col": "col_name", '
+                   '"denominator_col": "col_name", "min_ratio": min_value, '
+                   '"max_ratio": max_value}}. This mapping specifies a limit '
+                   'on the ratio of the values of the input columns. '
                    'The names of the columns should match the column names in '
                    'the merged meta, so they are likely prefixed by {!r} or '
-                   '{!r}. The order of the column names specifies the way the '
-                   'ratio is calculated: the first column is always '
-                   'treated as the ratio numerator and the second column is '
-                   'the ratio denominator. The ratio value can be a single '
-                   'value or an iterable of length two representing the lower '
-                   'and upper ratio bounds merged meta. A single value is '
-                   'treated as both an upper and a lower bound. For example, '
-                   '`--ratios "{{\\"[\'solar_capacity\', \'wind_capacity\']'
-                   '\\": 1}}"` would limit the solar and wind capacities to '
-                   'always be equal. On the other hand, '
-                   '`--ratios "{{\\"[\'solar_capacity\', \'wind_capacity\']'
-                   '\\": [0.5, 1.5]}}\'` would limit the solar and wind '
-                   'capacity ratio to be between half and double (e.g., '
-                   'no capacity value would be more than double the other). '
-                   'The input format is particularly important because it is '
-                   'parsed as a JSON dict (in particular, the dict keys must '
-                   'use escaped double quotes and multiple ratio values must '
-                   'be input as a square-bracketed list -- if you need help '
-                   'with the formatting, check the docstring of the function '
-                   '`convert_ratio_dict_to_cli_input`).'
+                   '{!r}. The ratio is calculated by dividing the numerator '
+                   'column by the denominator: numerator_col/denominator_col. '
+                   'The ratio values represent the lower and upper bounds '
+                   'on the computed ratio values. The same value can be used '
+                   'for both the upper and the lower bound. For example, '
+                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
+                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
+                   '1, \'max_ratio\': 1}}"` would limit the solar and wind '
+                   'capacities to always be equal. On the other hand, '
+                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
+                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
+                   '0.5, \'max_ratio\': 1.5}}"` would limit the solar and '
+                   'wind capacity ratio to be between half and double (e.g., '
+                   'no capacity value would be more than double the other).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
@@ -251,7 +245,7 @@ def _get_paths_from_config(config, name):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
-           fillna, limits, ratios, out_dir, log_dir, verbose):
+           fillna, limits, ratio, out_dir, log_dir, verbose):
     """reV hybridization CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SOLAR_FPATH'] = solar_fpath
@@ -260,7 +254,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['ALLOW_WIND_ONLY'] = allow_wind_only
     ctx.obj['FILLNA'] = fillna
     ctx.obj['LIMITS'] = limits
-    ctx.obj['RATIOS'] = ratios
+    ctx.obj['RATIO'] = ratio
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -279,19 +273,11 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         if isinstance(limits, str):
             limits = dict_str_load(limits)
 
-        if isinstance(ratios, str):
-            ratios = json.loads(ratios)
-            try:
-                ratios = convert_str_keys_to_tuples(ratios)
-            except json.decoder.JSONDecodeError:
-                msg = ('One of the keys of "ratios" input is not in proper '
-                       'JSON format! Please ensure that the tuple key values '
-                       'are represented with square brackets and that the '
-                       'column names are in double quotation marks. Here is '
-                       'an example of a valid "ratios" key: '
-                       '`\\"[\'solar_capacity\', \'wind_capacity\']\\"`.')
-                logger.error(msg)
-                raise InputError(msg) from None
+        if isinstance(ratio, str):
+            ratio = dict_str_load(ratio)
+
+        if ratio is not None:
+            ratio = convert_cli_ratio_dict_to_hybrids_input_dict(ratio)
 
         try:
             Hybridization(
@@ -299,7 +285,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna, limits=limits,
-                ratios=ratios
+                ratios=ratio
             ).run(fout=fout)
 
         except Exception as e:
@@ -330,7 +316,7 @@ def get_node_cmd(ctx):
     allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
     fillna = ctx.obj['FILLNA']
     limits = ctx.obj['LIMITS']
-    ratios = ctx.obj['RATIOS']
+    ratio = ctx.obj['RATIO']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -343,9 +329,8 @@ def get_node_cmd(ctx):
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
-    if ratios:
-        ratios_as_str = convert_ratio_dict_to_cli_input(ratios)
-        args.append('-r {}'.format(ratios_as_str))
+    if ratio is not None:
+        args.append('-r {}'.format(SLURM.s(ratio)))
 
     if allow_solar_only:
         args.append('-so')
@@ -363,51 +348,41 @@ def get_node_cmd(ctx):
     return cmd
 
 
-def convert_ratio_dict_to_cli_input(input_dict):
-    """Convert input ratio dict to cli-formatted string.
+def convert_cli_ratio_dict_to_hybrids_input_dict(input_dict):
+    """Convert cli input to dictionary expected by Hybridization class.
 
     Parameters
     ----------
     input_dict : dict
-        A dictionary with tuples of len 2 as keys and
-        values as floats or lists. This dictionary will
-        be converted to a string representation that is
-        ready to be used with the cli.
+        Input cli dictionary with the following required keys:
+        ['numerator_col', 'denominator_col', 'min_ratio', 'max_ratio'].
+        The values of these keys is not validated.
 
     Returns
     -------
-    str
-        String that can be appended to cli call with the input
-        dictionary formatted as necessary. Empty string if dict is
-        empty.
+    dict
+        Input dictionary formatted to be used as input to Hybridization
+        class: keys are tuples of the column names, and the values are
+        the ratio bounds.
 
-    Examples
-    --------
-    If you need to format an input dictionary to work with the cli, you
-    can do it like so:
-
-    >>> test_dict = {('a', 'b'): 2, ('c', 'd'): [5, 7], ('e', 'f'): (5, 7)}
-    >>> out = convert_ratio_dict_to_cli_input(test_dict)
-    >>> print('{}'.format(out))
-    "{\"['a', 'b']\": [2, 2], \"['c', 'd']\": [5, 7], \"['e', 'f']\": [5, 7]}"
-
+    Raises
+    ------
+    InputError
+        If the input dictionary is missing one of the required keys:
+        ['numerator_col', 'denominator_col', 'min_ratio', 'max_ratio'].
     """
-    kv_strings = []
-    for k, v in input_dict.items():
-        try:
-            v = list(v)
-        except TypeError:
-            v = [v, v]
-        kv_strings.append(
-            "\\\"['{}', '{}']\\\": {!r}".format(*k, v)
-        )
+    expected_keys = ['numerator_col', 'denominator_col',
+                     'min_ratio', 'max_ratio']
+    for key_name in expected_keys:
+        if key_name not in input_dict:
+            msg = "Key {!r} (required) not found in input ratio dictionary!"
+            e = msg.format(key_name)
+            logger.error(e)
+            raise InputError(e) from None
 
-    if kv_strings:
-        ratios_as_str = ", ".join(kv_strings)
-        ratios_as_str = "".join(["{", ratios_as_str, "}"])
-        return '"{}"'.format(ratios_as_str)
-    else:
-        return ''
+    new_key = input_dict['numerator_col'], input_dict['denominator_col']
+    new_value = input_dict['min_ratio'], input_dict['max_ratio']
+    return {new_key: new_value}
 
 
 @direct.command()

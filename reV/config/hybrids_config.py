@@ -7,7 +7,6 @@ reV hybrids profile config
 import os
 import glob
 import logging
-import json
 
 from reV.utilities.exceptions import PipelineError, ConfigError
 from reV.config.base_analysis_config import AnalysisConfig
@@ -73,23 +72,9 @@ class HybridsConfig(AnalysisConfig):
         return self.get('limits', None)
 
     @property
-    def ratios(self):
+    def ratio(self):
         """Get the ratio limit input mapping. """
-        ratios = self.get('ratios', None)
-        if ratios is not None:
-            try:
-                ratios = convert_str_keys_to_tuples(ratios)
-            except json.decoder.JSONDecodeError:
-                msg = ('One of the keys of "ratios" input is not in proper '
-                       'JSON format! Please ensure that the tuple key values '
-                       'are represented with square brackets and that the '
-                       'column names are in quotation marks. Here is '
-                       'an example of a valid "ratios" key: '
-                       '`["solar_capacity", \'wind_capacity\']`.')
-                logger.error(msg)
-                raise ConfigError(msg) from None
-
-        return ratios
+        return self.get('ratio', None)
 
 
 def _raise_err_if_pipeline(fpath):
@@ -115,21 +100,3 @@ def _glob_to_yearly_dict(fpath):
         paths.setdefault(year, []).append(fp)
 
     return paths
-
-
-def convert_str_keys_to_tuples(input_dict):
-    """Load a json dict with tuples as keys.
-
-    Parameters
-    ----------
-    input_dict : dict
-        Dictionary with keys that represent tuples in the format
-        `"['col_name', 'col_name2', ...]"`.
-
-    Returns
-    -------
-    dict
-        The input dictionary with the keys converted from str to tuple.
-    """
-    return {tuple(json.loads(k.replace("'", '"'))): v
-            for k, v in input_dict.items()}
