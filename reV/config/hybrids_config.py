@@ -8,7 +8,7 @@ import os
 import glob
 import logging
 
-from reV.utilities.exceptions import PipelineError, ConfigError
+from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 
 from rex.utilities import parse_year
