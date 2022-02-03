@@ -8,16 +8,18 @@ import click
 import logging
 import pprint
 import time
+import json
 
-from reV.config.hybrids_config import HybridsConfig
+from reV.config.hybrids_config import HybridsConfig, convert_str_keys_to_tuples
 from reV.pipeline.status import Status
 from reV.hybrids.hybrids import Hybridization, SOLAR_PREFIX, WIND_PREFIX
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
-from rex.utilities.cli_dtypes import STR, INT, STRLIST, FLOATLIST
+from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import get_class_properties, dict_str_load
+from reV.utilities.exceptions import InputError
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +104,7 @@ def from_config(ctx, config_file, verbose):
                            allow_wind_only=config.allow_wind_only,
                            fillna=config.fillna,
                            limits=config.limits,
-                           allowed_ratio=config.allowed_ratio,
-                           ratio_cols=config.ratio_cols,
+                           ratios=config.ratios,
                            out_dir=config.dirout,
                            log_dir=config.logdir,
                            verbose=verbose)
@@ -115,8 +116,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
             ctx.obj['FILLNA'] = config.fillna
             ctx.obj['LIMITS'] = config.limits
-            ctx.obj['ALLOWED_RATIO'] = config.allowed_ratio
-            ctx.obj['RATIO_COLS'] = config.ratio_cols
+            ctx.obj['RATIOS'] = config.ratios
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -200,10 +200,10 @@ def _get_paths_from_config(config, name):
                     .format(SOLAR_PREFIX, WIND_PREFIX)))
 @click.option('--limits', '-l', type=STR, default=None,
               show_default=True,
-              help='String representation of a dictionary specifying mapping '
-                   'of "{{\'colum_name\': max_value}}" representing the upper '
-                   'limit (maximum value) for the values of a column in the '
-                   'merged meta. For example, '
+              help='String representation of a dictionary specifying a '
+                   'mapping of "{{\'colum_name\': max_value}}" representing '
+                   'the upper limit (maximum value) for the values of a '
+                   'column in the merged meta. For example, '
                    '`--limits "{{\'solar_capacity\': 100}}"` '
                    'would limit all the values of the solar capacity in the '
                    'merged meta to a maximum value of 100. This limit is '
@@ -212,34 +212,32 @@ def _get_paths_from_config(config, name):
                    'meta, so they are likely prefixed by {!r} or {!r}. '
                    'By default, None (no limits applied).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
-@click.option('--allowed_ratio', '-r', type=FLOATLIST, default=None,
+@click.option('--ratios', '-r', type=STR, default=None,
               show_default=True,
-              help='A single ratio value (float) or ratio bounds (list '
-                   'of two floats) used to limit the ratio of the '
-                   'of the values of the columns specified by the '
-                   '`ratio_cols` input. A single value is treated '
-                   'as both an upper and a lower bound. The ratio '
-                   'is always computed with the first column as the '
-                   'numerator and the second column as the denominator. '
-                   'For example, `--allowed_ratio "1"` would limit the '
-                   'values of the `ratio_cols` to always be equal. '
-                   'On the other hand, `--allowed_ratio "[0.5, 1.5]"` '
-                   'would limit the ratio to be between half and double '
-                   '(e.g., if `ratio_cols` are the capacity columns, '
-                   'no capacity value would be more than double the other). '
-                   'By default, None (no limit).')
-@click.option('--ratio_cols', '-rc', type=STRLIST,
-              default=['solar_capacity', 'wind_capacity'],
-              show_default=True,
-              help='List of two column names representing the columns '
-                   'used to calculate the ratio that is limited by the '
-                   '`--allowed_ratio` input. If `--allowed_ratio` is None, '
-                   'this input does nothing. The names of the columns should '
-                   'match the column names in the merged meta, so they are '
-                   'likely prefixed by {!r} or {!r}. The order of the '
-                   'column names specifies the way the ratio is calculated: '
-                   'the first column is always treated as the ratio numerator '
-                   'and the second column is the ratio denominator.'
+              help='String representation of a (JSON) dictionary specifying a '
+                   'mapping of "{{\\"[\'numerator_column\', '
+                   '\'denominator_column\']\\": ratio}}" representing a limit '
+                   'on the ratio of the values of the specified columns. '
+                   'The input format is particularly important because it is '
+                   'parsed as a JSON dict (in particular, the dict keys must '
+                   'use escaped double quotes and multiple ratio values must '
+                   'be input as a square-bracketed list). '
+                   'The names of the columns should match the column names in '
+                   'the merged meta, so they are likely prefixed by {!r} or '
+                   '{!r}. The order of the column names specifies the way the '
+                   'ratio is calculated: the first column is always '
+                   'treated as the ratio numerator and the second column is '
+                   'the ratio denominator. The ratio value can be a single '
+                   'value or an iterable of length two representing the lower '
+                   'and upper ratio bounds merged meta. A single value is '
+                   'treated as both an upper and a lower bound. For example, '
+                   '`--ratios "{{\\"[\'solar_capacity\', \'wind_capacity\']'
+                   '\\": 1}}"` would limit the solar and wind capacities to '
+                   'always be equal. On the other hand, '
+                   '`--ratios "{{\\"[\'solar_capacity\', \'wind_capacity\']'
+                   '\\": [0.5, 1.5]}}\'` would limit the solar and wind '
+                   'capacity ratio to be between half and double (e.g., '
+                   'no capacity value would be more than double the other).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
@@ -251,8 +249,7 @@ def _get_paths_from_config(config, name):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
-           fillna, limits, allowed_ratio, ratio_cols, out_dir, log_dir,
-           verbose):
+           fillna, limits, ratios, out_dir, log_dir, verbose):
     """reV hybridization CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SOLAR_FPATH'] = solar_fpath
@@ -261,8 +258,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['ALLOW_WIND_ONLY'] = allow_wind_only
     ctx.obj['FILLNA'] = fillna
     ctx.obj['LIMITS'] = limits
-    ctx.obj['ALLOWED_RATIO'] = _format_ratio_input(allowed_ratio)
-    ctx.obj['RATIO_COLS'] = ratio_cols
+    ctx.obj['RATIOS'] = ratios
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -281,14 +277,27 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         if isinstance(limits, str):
             limits = dict_str_load(limits)
 
+        if isinstance(ratios, str):
+            ratios = json.loads(ratios)
+            try:
+                ratios = convert_str_keys_to_tuples(ratios)
+            except json.decoder.JSONDecodeError:
+                msg = ('One of the keys of "ratios" input is not in proper '
+                       'JSON format! Please ensure that the tuple key values '
+                       'are represented with square brackets and that the '
+                       'column names are in double quotation marks. Here is '
+                       'an example of a valid "ratios" key: '
+                       '`\\"[\'solar_capacity\', \'wind_capacity\']\\"`.')
+                logger.error(msg)
+                raise InputError(msg) from None
+
         try:
             Hybridization(
                 solar_fpath, wind_fpath,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna, limits=limits,
-                allowed_ratio=allowed_ratio,
-                ratio_cols=ratio_cols,
+                ratios=ratios
             ).run(fout=fout)
 
         except Exception as e:
@@ -309,13 +318,6 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         Status.make_job_file(out_dir, 'hybrids', name, status)
 
 
-def _format_ratio_input(ratio):
-    """Format the ratio input to be a float if it is a list of len=1. """
-    if ratio is not None and len(ratio) == 1:
-        ratio = ratio[0]
-    return ratio
-
-
 def get_node_cmd(ctx):
     """Get a CLI call command for the hybrids cli."""
 
@@ -326,8 +328,7 @@ def get_node_cmd(ctx):
     allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
     fillna = ctx.obj['FILLNA']
     limits = ctx.obj['LIMITS']
-    allowed_ratio = ctx.obj['ALLOWED_RATIO']
-    ratio_cols = ctx.obj['RATIO_COLS']
+    ratios = ctx.obj['RATIOS']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -336,8 +337,7 @@ def get_node_cmd(ctx):
             '-w {}'.format(SLURM.s(wind_fpath)),
             '-fna {}'.format(SLURM.s(fillna)),
             '-l {}'.format(SLURM.s(limits)),
-            '-r {}'.format(SLURM.s(allowed_ratio)),
-            '-rc {}'.format(SLURM.s(ratio_cols)),
+            '-r {}'.format(SLURM.s(ratios)),
             '-od {}'.format(SLURM.s(out_dir)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
