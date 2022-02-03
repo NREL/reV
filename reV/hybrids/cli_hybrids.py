@@ -337,10 +337,13 @@ def get_node_cmd(ctx):
             '-w {}'.format(SLURM.s(wind_fpath)),
             '-fna {}'.format(SLURM.s(fillna)),
             '-l {}'.format(SLURM.s(limits)),
-            '-r {}'.format(SLURM.s(ratios)),
             '-od {}'.format(SLURM.s(out_dir)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
+
+    if ratios:
+        ratios_as_str = convert_ratio_dict_to_cli_input(ratios)
+        args.append('-r {}'.format(ratios_as_str))
 
     if allow_solar_only:
         args.append('-so')
@@ -356,6 +359,42 @@ def get_node_cmd(ctx):
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
+
+
+def convert_ratio_dict_to_cli_input(input_dict):
+    """Convert input ratio dict to cli-formatted string.
+
+    Parameters
+    ----------
+    input_dict : dict
+        A dictionary with tuples of len 2 as keys and
+        values as floats or lists. This dictionary will
+        be converted to a string representation that is
+        ready to be used with the cli.
+
+    Returns
+    -------
+    str
+        String that can be appended to cli call with the input
+        dictionary formatted as necessary. Empty string if dict is
+        empty.
+    """
+    kv_strings = []
+    for k, v in input_dict.items():
+        try:
+            v = list(v)
+        except TypeError:
+            v = [v]
+        kv_strings.append(
+            "\\\"['{}', '{}']\\\": {!r}".format(*k, v)
+        )
+
+    if kv_strings:
+        ratios_as_str = ", ".join(kv_strings)
+        ratios_as_str = "".join(["{", ratios_as_str, "}"])
+        return '"{}"'.format(ratios_as_str)
+    else:
+        return ''
 
 
 @direct.command()

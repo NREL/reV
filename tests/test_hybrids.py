@@ -12,6 +12,7 @@ from click.testing import CliRunner
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
+from reV.hybrids.cli_hybrids import convert_ratio_dict_to_cli_input
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
@@ -640,10 +641,9 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
                 '-ld {}'.format(SLURM.s(td)),
                 ]
 
-        if ratio_cols is not None:
-            json_ratios = ("{{\\\"['{}', '{}']\\\": [{}, {}]}}"
-                           .format(*ratio_cols, *ratio))
-            args.append('-r "{}"'.format(json_ratios))
+        if ratios:
+            ratios_as_str = convert_ratio_dict_to_cli_input(ratios)
+            args.append('-r {}'.format(ratios_as_str))
 
         if allow_solar_only:
             args.append('-so')
