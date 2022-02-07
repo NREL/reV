@@ -1,0 +1,7 @@
+# Constants
+input_constant_3:
+  17.91 * 1000
+
+# Equations
+some_equation_2:
+  (input_constant_3 ** 2) / (1.5 * 4235/input_constant_3)

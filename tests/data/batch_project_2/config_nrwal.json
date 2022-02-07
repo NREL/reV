@@ -1,0 +1,29 @@
+{
+    "directories": {
+        "log_directory": "/path/to/out/dir/logs",
+        "output_directory": "/path/to/out/dir/"
+    },
+    "execution_control": {
+        "allocation": "rev",
+        "option": "eagle",
+        "feature": "-p debug",
+        "walltime": 0.15
+    },
+    "gen_fpath": "PIPELINE",
+    "meta_gid_col": "meta_col",
+    "log_level": "INFO",
+    "nrwal_configs": {
+        "hybrid": "./test.yaml"
+    },
+    "site_meta_cols": [
+        "push_through_col"
+    ],
+    "output_request": [
+        "requested_output"
+    ],
+    "sam_files": {
+        "hybrid": "./config_sam.json"
+    },
+    "site_data": "/path/to/site_data.csv",
+    "name": "nrwal-tests"
+}
