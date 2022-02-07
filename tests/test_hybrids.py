@@ -146,6 +146,32 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
     assert set(h.hybrid_meta['sc_point_gid']) == overlap
 
 
+def test_limits_and_ratios_output_values():
+    """Test that limits and ratios are properly applied in succession. """
+
+    limits = {'solar_capacity': 50, 'wind_capacity': 0.5}
+    ratio_cols = ('solar_capacity', 'wind_capacity')
+    ratios = {ratio_cols: (0.3, 3.6)}
+    bounds = (0.3 - 1e6, 3.6 + 1e6)
+
+    h = Hybridization(
+        SOLAR_FPATH, WIND_FPATH,
+        limits=limits,
+        ratios=ratios
+    ).run()
+
+    numerator_col, denominator_col = ratio_cols
+    ratios = (h.hybrid_meta['hybrid_{}'.format(numerator_col)]
+              / h.hybrid_meta['hybrid_{}'.format(denominator_col)])
+    assert np.all(ratios.between(*bounds))
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(numerator_col)]
+                  <= h.hybrid_meta[numerator_col])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(denominator_col)]
+                  <= h.hybrid_meta[denominator_col])
+    assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
+    assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
+
+
 @pytest.mark.parametrize("ratio_cols", [
     ('solar_capacity', 'wind_capacity'),
     ('solar_area_sq_km', 'wind_area_sq_km')
