@@ -623,8 +623,7 @@ class FileToMod(ABC):
     """Abstract base class representing a file that is modded by BatchJob. """
 
     def __init__(self, file_path):
-        """[summary]
-
+        """
         Parameters
         ----------
         file_path : str
