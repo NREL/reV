@@ -12,11 +12,13 @@ Created on Mon Jun 10 13:49:53 2019
 import pandas as pd
 import copy
 import json
+import yaml
 import os
 import shutil
 import itertools
 import logging
 from warnings import warn
+from abc import ABC, abstractmethod
 
 from reV.config.batch import BatchConfig
 from reV.pipeline.cli_pipeline import pipeline_monitor_background
@@ -360,13 +362,14 @@ class BatchJob:
         return out
 
     @classmethod
-    def _mod_json(cls, fpath, fpath_out, arg_mods):
+    def _mod_json(cls, file, fpath_out, arg_mods):
         """Import and modify the contents of a json. Dump to new file.
 
         Parameters
         ---------
-        fpath : str
-            File path to json to be imported/modified
+        file : `FileToMod`
+            Instance of a `FileToMod` object representing the
+            input file that will be imported/modified.
         fpath_out : str
             File path to dump new modified json.
         arg_mods : dict
@@ -374,11 +377,9 @@ class BatchJob:
             implement in the json
         """
 
-        data = safe_json_load(fpath)
-        data = cls._mod_dict(data, arg_mods)
-
-        with open(fpath_out, 'w') as f:
-            json.dump(data, f, indent=4, separators=(',', ': '))
+        data = file.load()
+        file.data = cls._mod_dict(data, arg_mods)
+        file.write(fpath_out)
 
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
@@ -450,9 +451,9 @@ class BatchJob:
             # modify json and dump to new path
             logger.debug('Copying and modifying run json file '
                          '"{}" to job: "{}"'.format(fn, job_name))
-            self._mod_json(os.path.join(source_dir, fn),
-                           os.path.join(destination_dir, fn),
-                           arg_comb)
+            fn_in = os.path.join(source_dir, fn)
+            fn_out = os.path.join(destination_dir, fn)
+            self._mod_json(JSONFileToMod(fn_in), fn_out, arg_comb)
 
         else:
             # straight copy of non-mod and non-json
@@ -600,3 +601,33 @@ class BatchJob:
             if not dry_run:
                 b._run_pipelines(monitor_background=monitor_background,
                                  verbose=verbose)
+
+
+class FileToMod(ABC):
+    """Abstract base class representing a file that is modded by BatchJob. """
+
+    def __init__(self, file_path):
+        super().__init__()
+        self.file_path = file_path
+        self.data = None
+
+    @abstractmethod
+    def load(self):
+        """Load the file contents."""
+
+    @abstractmethod
+    def write(self, file_name_out):
+        """Write data out in the correct file format. """
+
+
+class JSONFileToMod(FileToMod):
+
+    def load(self):
+        """Load the JSON file contents."""
+        self.data = safe_json_load(self.file_path)
+        return self.data
+
+    def write(self, file_name_out):
+        """Write data out in the correct file format. """
+        with open(file_name_out, 'w') as f:
+            json.dump(self.data, f, indent=4, separators=(',', ': '))
