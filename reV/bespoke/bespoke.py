@@ -215,6 +215,60 @@ class BespokeSinglePlant:
                 self._out_req.remove(req)
                 self._outputs[req] = self.res_df[dset].mean()
 
+    def get_weighted_res_ts(self, dset):
+        """Special method for calculating the exclusion-weighted mean resource
+        timeseries data for the BespokeSinglePlant.
+
+        Returns
+        -------
+        data : np.ndarray
+            Timeseries data of shape (n_time,) for the wind plant weighted by
+            the plant inclusions mask.
+        """
+        gids = self.sc_point.h5_gid_set
+        data = self.sc_point.h5[dset, :, gids]
+
+        weights = np.zeros(len(gids))
+        for i, gid in enumerate(gids):
+            mask = self.sc_point._h5_gids == gid
+            weights[i] = self.sc_point.include_mask_flat[mask].sum()
+
+        weights /= weights.sum()
+        data *= weights
+        data = np.sum(data, axis=1)
+
+        return data
+
+    def get_weighted_res_dir(self):
+        """Special method for calculating the exclusion-weighted mean wind
+        direction for the BespokeSinglePlant
+
+        Returns
+        -------
+        mean_wind_dirs : np.ndarray
+            Timeseries array of winddirection data in shape (n_time,) in units
+            of degrees from north.
+        """
+
+        dset = f'winddirection_{self.hub_height}m'
+        gids = self.sc_point.h5_gid_set
+        dirs = self.sc_point.h5[dset, :, gids]
+        angles = np.radians(dirs, dtype=np.float32)
+
+        weights = np.zeros(len(gids))
+        for i, gid in enumerate(gids):
+            mask = self.sc_point._h5_gids == gid
+            weights[i] = self.sc_point.include_mask_flat[mask].sum()
+
+        weights /= weights.sum()
+        sin = np.sum(np.sin(angles) * weights, axis=1)
+        cos = np.sum(np.cos(angles) * weights, axis=1)
+
+        mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
+        mean_wind_dirs[(mean_wind_dirs < 0)] += 360
+
+        return mean_wind_dirs
+
     @property
     def include_mask(self):
         """Get the supply curve point 2D inclusion mask (included is 1,
@@ -316,15 +370,11 @@ class BespokeSinglePlant:
         """
         if self._res_df is None:
             ti = self.sc_point.h5.time_index
-            wd = self.sc_point.h5['winddirection_{}m'.format(self.hub_height)]
-            ws = self.sc_point.h5['windspeed_{}m'.format(self.hub_height)]
-            temp = self.sc_point.h5['temperature_{}m'.format(self.hub_height)]
-            pres = self.sc_point.h5['pressure_{}m'.format(self.hub_height)]
 
-            wd = self.sc_point.mean_wind_dirs(wd)
-            ws = self.sc_point.exclusion_weighted_mean(ws)
-            temp = self.sc_point.exclusion_weighted_mean(temp)
-            pres = self.sc_point.exclusion_weighted_mean(pres)
+            wd = self.get_weighted_res_dir()
+            ws = self.get_weighted_res_ts(f'windspeed_{self.hub_height}m')
+            temp = self.get_weighted_res_ts(f'temperature_{self.hub_height}m')
+            pres = self.get_weighted_res_ts(f'pressure_{self.hub_height}m')
 
             # convert mbar to atm
             if np.nanmax(pres) > 1000:
