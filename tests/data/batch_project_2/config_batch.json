@@ -29,8 +29,8 @@
                 19.04
             ],
             "some_equation": [
-                "np.exp(input_constant_1, input_constant_2)",
-                "np.sum(input_constant_1, input_constant_2)",
+                "np.exp(input_constant_1, input_constant_2) + another_input_constant",
+                "np.sum(input_constant_1, input_constant_2, another_input_constant)",
                 "input_constant_1 * input_constant_2 // 5"
             ],
             "some_equation_2": [

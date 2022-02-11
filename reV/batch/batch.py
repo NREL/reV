@@ -667,4 +667,4 @@ class YAMLFileToMod(FileToMod):
     def write(self, file_name_out):
         """Write data out in the correct file format. """
         with open(file_name_out, 'w') as f:
-            yaml.dump(self.data, f, indent=2)
+            yaml.dump(self.data, f, indent=2, sort_keys=False)

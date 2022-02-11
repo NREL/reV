@@ -47,6 +47,28 @@ def save_test_dir():
     os.chdir(previous_dir)
 
 
+def test_batch_job_setup_with_yaml_files_no_sort(save_test_dir):
+    """Test the creation and deletion of a batch job directory with yaml files,
+    and ensure that the output yaml files are NOT sorted."""
+
+    count_0 = len(os.listdir(BATCH_DIR_2))
+    assert count_0 == 7, 'Unknown starting files detected!'
+
+    BatchJob.run(FP_CONFIG_2, dry_run=True)
+    job_dir = os.path.join(BATCH_DIR_2, 'set1_ic10_ic31/')
+    with open(os.path.join(job_dir, 'test.yaml'), 'r') as fh:
+        key_order = [line.split(':')[0] for line in fh]
+
+    correct_key_order = ['input_constant_1', 'input_constant_2',
+                         'another_input_constant', 'some_equation']
+    e_msg = "Output YAML file does not have correct key order!"
+    assert key_order == correct_key_order, e_msg
+
+    BatchJob.run(FP_CONFIG_2, delete=True)
+    count_1 = len(os.listdir(BATCH_DIR_2))
+    assert count_1 == count_0, 'Batch did not clear all job files!'
+
+
 def test_batch_job_setup_with_yaml_files(save_test_dir):
     """Test the creation and deletion of a batch job directory with yaml files.
     Does not test batch execution which will require slurm."""
@@ -257,7 +279,7 @@ def execute_pytest(capture='all', flags='-rapP'):
         Which tests to show logs and results for.
     """
 
-    fname = os.path.basename(__file__)
+    fname = __file__
     pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
 
 
