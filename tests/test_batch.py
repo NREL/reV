@@ -47,7 +47,7 @@ def save_test_dir():
     os.chdir(previous_dir)
 
 
-# pylint: disableW0613
+# pylint: disable=W0613
 def test_batch_job_setup_with_yaml_files_no_sort(save_test_dir):
     """Test the creation and deletion of a batch job directory with yaml files,
     and ensure that the output yaml files are NOT sorted."""
@@ -70,7 +70,7 @@ def test_batch_job_setup_with_yaml_files_no_sort(save_test_dir):
     assert count_1 == count_0, 'Batch did not clear all job files!'
 
 
-# pylint: disableW0613
+# pylint: disable=W0613
 def test_batch_job_setup_with_yaml_files(save_test_dir):
     """Test the creation and deletion of a batch job directory with yaml files.
     Does not test batch execution which will require slurm."""
@@ -121,7 +121,7 @@ def test_batch_job_setup_with_yaml_files(save_test_dir):
     assert count_2 == count_0, 'Batch did not clear all job files!'
 
 
-# pylint: disableW0613
+# pylint: disable=W0613
 def test_invalid_mod_file_input(save_test_dir):
     """Test that error is raised for unknown file input type. """
 
@@ -137,7 +137,7 @@ def test_invalid_mod_file_input(save_test_dir):
         BatchJob.run(bad_config_file, delete=True)
 
 
-# pylint: disableW0613
+# pylint: disable=W0613
 def test_batch_job_setup(save_test_dir):
     """Test the creation and deletion of a batch job directory.
     Does not test batch execution which will require slurm."""
@@ -237,7 +237,7 @@ def test_batch_csv_config():
         assert found
 
 
-# pylint: disableW0613
+# pylint: disable=W0613
 def test_batch_csv_setup(save_test_dir):
     """Test a batch project setup from csv config"""
 
