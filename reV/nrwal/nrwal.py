@@ -569,7 +569,7 @@ class RevNrwal:
     def _value_to_array(self, value, name):
         """Turn the input into numpy array if it isn't already."""
         if np.issubdtype(type(value), np.number):
-            value *= np.ones(len(self._site_data))
+            value *= np.ones(len(self.analysis_gids), dtype=np.float32)
 
         if not isinstance(value, np.ndarray):
             msg = ('NRWAL key "{}" returned bad type of "{}", needs to be '
