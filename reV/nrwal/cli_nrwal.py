@@ -245,8 +245,8 @@ def get_node_cmd(name, gen_fpath, site_data, sam_files, nrwal_configs,
     if verbose:
         args.append('-v')
 
-    cmd = ('python -m reV.nrwal.cli_nrwal -n {} direct {}'
-           .format(SLURM.s(name), ' '.join(args)))
+    cmd = ('python -m reV.nrwal.cli_nrwal direct {}'
+           .format(' '.join(args)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd

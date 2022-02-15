@@ -305,8 +305,8 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
     if verbose:
         args.append('-v')
 
-    cmd = ('python -m reV.supply_curve.cli_supply_curve -n {} direct {}'
-           .format(SLURM.s(name), ' '.join(args)))
+    cmd = ('python -m reV.supply_curve.cli_supply_curve direct {}'
+           .format(' '.join(args)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd

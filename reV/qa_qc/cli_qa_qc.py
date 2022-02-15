@@ -515,8 +515,7 @@ def get_h5_cmd(name, h5_file, out_dir, sub_dir, dsets, group, process_size,
     if terminal:
         args += '-t '
 
-    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} rev-h5 {}'
-           .format(SLURM.s(name), args))
+    cmd = 'python -m reV.qa_qc.cli_qa_qc rev-h5 {}'.format(args)
 
     return cmd
 
@@ -551,8 +550,7 @@ def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     if terminal:
         args += '-t '
 
-    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} supply-curve {}'
-           .format(SLURM.s(name), args))
+    cmd = 'python -m reV.qa_qc.cli_qa_qc supply-curve {}'.format(args)
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
@@ -581,8 +579,7 @@ def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
     if terminal:
         args.append('-t')
 
-    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} exclusions {}'
-           .format(SLURM.s(name), ' '.join(args)))
+    cmd = 'python -m reV.qa_qc.cli_qa_qc exclusions {}'.format(' '.join(args))
 
     return cmd
 

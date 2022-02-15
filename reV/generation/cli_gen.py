@@ -600,9 +600,6 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
             python -m reV.generation.cli_gen [args] direct [args] local [args]
     """
 
-    # mark a cli arg string for main() in this module
-    arg_main = '-n {}'.format(SLURM.s(name))
-
     # make a cli arg string for direct() in this module
     arg_direct = ['-t {}'.format(SLURM.s(tech)),
                   '-p {}'.format(SLURM.s(points)),
@@ -634,9 +631,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.generation.cli_gen '
-           '{arg_main} direct {arg_direct} local {arg_loc}'
-           .format(arg_main=arg_main,
-                   arg_direct=' '.join(arg_direct),
+           'direct {arg_direct} local {arg_loc}'
+           .format(arg_direct=' '.join(arg_direct),
                    arg_loc=' '.join(arg_loc)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 

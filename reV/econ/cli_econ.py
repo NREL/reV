@@ -413,8 +413,6 @@ def get_node_cmd(name, sam_files, cf_file, out_fpath, year=None,
         appropriately formatted arguments based on input args:
             python -m reV.econ.cli_econ [args] direct [args] local [args]
     """
-    # mark a cli arg string for main() in this module
-    arg_main = '-n {}'.format(SLURM.s(name))
 
     # make a cli arg string for direct() in this module
     arg_direct = [
@@ -443,9 +441,8 @@ def get_node_cmd(name, sam_files, cf_file, out_fpath, year=None,
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.econ.cli_econ '
-           '{arg_main} direct {arg_direct} local {arg_loc}'
-           .format(arg_main=arg_main,
-                   arg_direct=' '.join(arg_direct),
+           'direct {arg_direct} local {arg_loc}'
+           .format(arg_direct=' '.join(arg_direct),
                    arg_loc=' '.join(arg_loc)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
