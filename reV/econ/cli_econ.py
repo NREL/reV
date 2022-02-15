@@ -29,17 +29,14 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-econ', type=STR,
-              show_default=True,
-              help='reV Economics job name, by default "reV-econ".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, verbose):
+def main(ctx, verbose):
     """reV Economics Command Line Interface"""
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
-    ctx.obj['NAME'] = name
+    ctx.obj['NAME'] = os.path.basename(os.getcwd())
 
 
 @main.command()
@@ -59,16 +56,13 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV econ from a config file."""
-    name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # Instantiate the config object
     config = EconConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
