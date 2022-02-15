@@ -16,16 +16,12 @@ from rex.utilities.execution import SubprocessManager
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-pipeline', type=STR,
-              show_default=True,
-              help='reV pipeline name, by default "reV-pipeline".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, verbose):
+def main(ctx, verbose):
     """reV Pipeline Command Line Interface"""
     ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
 
