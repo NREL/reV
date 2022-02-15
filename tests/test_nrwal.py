@@ -137,6 +137,49 @@ def test_nrwal():
         assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
 
 
+def test_nrwal_constant_eq_output_request():
+    """Test the reV nrwal module, calculating offshore wind lcoe and losses
+    from reV generation outputs and using the NRWAL library"""
+    with tempfile.TemporaryDirectory() as td:
+        for fn in os.listdir(SOURCE_DIR):
+            shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
+
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config,
+                       'offshore': offshore_config}
+        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+
+        with Outputs(gen_fpath, 'a') as f:
+            f.time_index = pd.date_range('20100101', '20110101',
+                                         closed='right', freq='1h')
+            f._add_dset('cf_profile', np.random.random(f.shape),
+                        np.uint32, attrs={'scale_factor': 1000},
+                        chunks=(None, 10))
+            f._add_dset('fixed_charge_rate',
+                        0.09 * np.ones(f.shape[1], dtype=np.float32),
+                        np.float32, attrs={'scale_factor': 1},
+                        chunks=None)
+
+        with Outputs(gen_fpath, 'r') as f:
+            meta_raw = f.meta
+            mask = meta_raw.offshore == 1
+
+        output_request = ['cf_mean', 'cf_profile',
+                          'lease_price', 'lease_price_mil']
+
+        RevNrwal.run(gen_fpath, site_data, sam_configs, nrwal_configs,
+                     output_request, site_meta_cols=['depth'])
+
+        with Outputs(gen_fpath, 'r') as f:
+            lease_price = f['lease_price']
+            scaled_lease_price = f['lease_price_mil']
+
+        assert np.allclose(lease_price[mask] / 1e6, scaled_lease_price[mask])
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
@@ -154,4 +197,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 
 if __name__ == '__main__':
-    execute_pytest()
+    test_nrwal_constant_eq_output_request()
