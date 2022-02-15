@@ -26,16 +26,13 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-QA_QC', type=STR,
-              show_default=True,
-              help='reV QA/QC name, by default "reV-QA/QC".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, verbose):
+def main(ctx, verbose):
     """reV QA/QC Command Line Interface"""
     ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    ctx.obj['NAME'] = os.path.basename(os.getcwd())
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -382,15 +379,12 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV QA/QC from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = QaQcConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     verbose = config.log_level == logging.DEBUG
