@@ -197,4 +197,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 
 if __name__ == '__main__':
-    test_nrwal_constant_eq_output_request()
+    execute_pytest()
