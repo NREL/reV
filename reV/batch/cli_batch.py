@@ -15,16 +15,13 @@ from reV import __version__
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-batch', type=STR,
-              help='reV batch name, by default "reV-batch".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, verbose):
+def main(ctx, verbose):
     """reV Batch Command Line Interface"""
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
-    ctx.obj['NAME'] = name
 
 
 @main.command()
