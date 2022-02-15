@@ -588,7 +588,6 @@ class RevNrwal:
                         .format(i + 1, len(self._nrwal_configs), cid,
                                 output_mask.sum(), len(output_mask)))
 
-#            breakpoint()
             nrwal_out = nrwal_config.eval(inputs=self._nrwal_inputs)
 
             # pylint: disable=C0201
