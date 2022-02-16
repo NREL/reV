@@ -58,6 +58,7 @@ setup(
     entry_points={
         "console_scripts": ["reV=reV.cli:main",
                             "reV-batch=reV.batch.cli_batch:main",
+                            "reV-bespoke=reV.bespoke.cli_bespoke:main",
                             "reV-collect=reV.handlers.cli_collect:main",
                             "reV-econ=reV.econ.cli_econ:main",
                             "reV-gen=reV.generation.cli_gen:main",
@@ -67,7 +68,7 @@ setup(
                              "cli_sc_aggregation:main"),
                             ("reV-supply-curve=reV.supply_curve."
                              "cli_supply_curve:main"),
-                            "reV-offshore=reV.offshore.cli_offshore:main",
+                            "reV-nrwal=reV.nrwal.cli_nrwal:main",
                             ("reV-rep-profiles=reV.rep_profiles."
                              "cli_rep_profiles:main"),
                             "reV-QA-QC=reV.qa_qc.cli_qa_qc:main",

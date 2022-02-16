@@ -35,7 +35,6 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
         self._default_cf_dset = 'cf_mean-means'
         self._default_lcoe_dset = 'lcoe_fcr-means'
-        self._default_resolution = 64
         self._default_area_filter_kernel = 'queen'
         self._default_points_per_worker = 10
 
@@ -140,7 +139,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def excl_dict(self):
-        """Get the exclusions dictionary"""
+        """Get the exclusions dictionary. Default is None (all included)."""
         return self.get('excl_dict', None)
 
     @property
@@ -175,12 +174,13 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def resolution(self):
-        """Get the SC resolution"""
-        return self.get('resolution', self._default_resolution)
+        """Get the SC resolution. Default is 64."""
+        return self.get('resolution', 64)
 
     @property
     def excl_area(self):
-        """Get the exclusion pixel area in km2"""
+        """Get the exclusion pixel area in km2. Default is None which will
+        determine the area from the exclusion file projection profile."""
         return self.get('excl_area', None)
 
     @property
@@ -191,12 +191,14 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def area_filter_kernel(self):
-        """Get the minimum area filter kernel name ('queen' or 'rook')."""
+        """Get the minimum area filter kernel name ('queen' or 'rook'). Default
+        is queen but the area filter kernel isnt active unless min_area != 0"""
         return self.get('area_filter_kernel', self._default_area_filter_kernel)
 
     @property
     def min_area(self):
-        """Get the minimum area filter minimum area in km2."""
+        """Get the minimum area filter minimum area in km2. Default is None
+        (not active)."""
         return self.get('min_area', None)
 
     @property

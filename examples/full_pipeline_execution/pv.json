@@ -12,6 +12,6 @@
   "losses": 14.07566,
   "module_type": 0,
   "system_capacity": 20000,
-  "tilt": "latitude",
+  "tilt": 0.0,
   "variable_operating_cost": 0
 }

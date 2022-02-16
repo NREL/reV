@@ -7,6 +7,8 @@ import logging
 
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
+from reV.bespoke.cli_bespoke import from_config as run_bespoke_from_config
+from reV.bespoke.cli_bespoke import valid_config_keys as bespoke_keys
 from reV.handlers.cli_collect import from_config as run_collect_from_config
 from reV.handlers.cli_collect import valid_config_keys as collect_keys
 from reV.handlers.cli_multi_year import from_config as run_my_from_config
@@ -15,8 +17,8 @@ from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.econ.cli_econ import valid_config_keys as econ_keys
 from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.generation.cli_gen import valid_config_keys as gen_keys
-from reV.offshore.cli_offshore import from_config as run_offshore_from_config
-from reV.offshore.cli_offshore import valid_config_keys as offshore_keys
+from reV.nrwal.cli_nrwal import from_config as run_nrwal_from_config
+from reV.nrwal.cli_nrwal import valid_config_keys as nrwal_keys
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 from reV.pipeline.cli_pipeline import valid_config_keys as pipeline_keys
 from reV.rep_profiles.cli_rep_profiles import from_config as run_rp_from_config
@@ -103,22 +105,22 @@ def valid_econ_keys(ctx):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def offshore(ctx, verbose):
-    """Offshore gen/econ aggregation with NRWAL."""
+def nrwal(ctx, verbose):
+    """Generic reV-NRWAL analysis."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])
-        ctx.invoke(run_offshore_from_config, config_file=config_file,
+        ctx.invoke(run_nrwal_from_config, config_file=config_file,
                    verbose=verbose)
 
 
-@offshore.command()
+@nrwal.command()
 @click.pass_context
-def valid_offshore_keys(ctx):
+def valid_nrwal_keys(ctx):
     """
-    Valid offshore config keys
+    Valid nrwal config keys
     """
-    ctx.invoke(offshore_keys)
+    ctx.invoke(nrwal_keys)
 
 
 @main.group(invoke_without_command=True)
@@ -210,6 +212,28 @@ def valid_batch_keys(ctx):
     Valid Batch config keys
     """
     ctx.invoke(batch_keys)
+
+
+@main.group(invoke_without_command=True)
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def bespoke(ctx, verbose):
+    """Run reV bespoke wind plant optimization using the config file."""
+    if ctx.invoked_subcommand is None:
+        config_file = ctx.obj['CONFIG_FILE']
+        verbose = any([verbose, ctx.obj['VERBOSE']])
+        ctx.invoke(run_bespoke_from_config, config_file=config_file,
+                   verbose=verbose)
+
+
+@bespoke.command()
+@click.pass_context
+def valid_bespoke_keys(ctx):
+    """
+    Valid Bespoke config keys
+    """
+    ctx.invoke(bespoke_keys)
 
 
 @main.group(invoke_without_command=True)

@@ -29,7 +29,7 @@ class DatasetCollector:
     output file.
     """
     def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None,
-                 mem_util_lim=0.7):
+                 mem_util_lim=0.7, pass_through=False):
         """
         Parameters
         ----------
@@ -46,10 +46,18 @@ class DatasetCollector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         self._h5_file = h5_file
         self._source_files = source_files
         self._gids = gids
+        self._pass_through = pass_through
+
+        self._file_gid_map = {fp: self.parse_meta(fp)['gid'].values.tolist()
+                              for fp in self._source_files}
 
         self._dset_in = dset_in
         if dset_out is None:
@@ -64,6 +72,27 @@ class DatasetCollector:
                      .format(self._mem_avail))
         logger.debug('Site memory requirement is: {} bytes'
                      .format(self._site_mem_req))
+
+    @property
+    def gids(self):
+        """
+        List of gids corresponding to all sites to be combined
+
+        Returns
+        -------
+        list
+        """
+        return self._gids
+
+    @property
+    def duplicate_gids(self):
+        """Return boolean True if there are duplicate gids being collected.
+
+        Returns
+        -------
+        bool
+        """
+        return len(self.gids) > len(set(self.gids))
 
     @staticmethod
     def parse_meta(h5_file):
@@ -251,13 +280,28 @@ class DatasetCollector:
         fp_source : str
             Source filepath
         """
-        out_slice = self._get_gid_slice(self._gids, source_gids,
-                                        os.path.basename(fp_source))
 
-        source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
-        source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
-        source_slice = slice(source_i0, source_i1 + 1)
-        source_indexer = np.isin(source_gids, self._gids)
+        if self.duplicate_gids:
+            msg = 'Cannot collect duplicate gids in multiple chunks'
+            assert len(all_source_gids) == len(source_gids), msg
+            out_i0 = 0
+            for fp in self._source_files:
+                if fp == fp_source:
+                    break
+                else:
+                    out_i0 += len(self._file_gid_map[fp])
+            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
+            out_slice = slice(out_i0, out_i1)
+            source_slice = slice(None)
+            source_indexer = np.isin(source_gids, self._gids)
+
+        else:
+            out_slice = self._get_gid_slice(self._gids, source_gids,
+                                            os.path.basename(fp_source))
+            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+            source_slice = slice(source_i0, source_i1 + 1)
+            source_indexer = np.isin(source_gids, self._gids)
 
         logger.debug('\t- Running low mem collection of "{}" for '
                      'output site {} from source site {} and file : {}'
@@ -278,28 +322,36 @@ class DatasetCollector:
                 f_out[self._dset_out, :, out_slice] = data
 
         except Exception as e:
-            logger.exception('Failed to collect source file {}. '
-                             'Raised the following exception:\n{}'
-                             .format(os.path.basename(fp_source), e))
-            raise e
+            msg = ('Failed to collect "{}" from source file {}. '
+                   'Raised the following exception:\n{}'
+                   .format(self._dset_in, os.path.basename(fp_source), e))
+            logger.exception(msg)
+            raise CollectionRuntimeError(msg) from e
 
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
         with Outputs(self._h5_file, mode='a') as f_out:
-            for fp in self._source_files:
-                with Outputs(fp, mode='r') as f_source:
-                    x = self._get_source_gid_chunks(f_source)
-                    all_source_gids, source_gid_chunks = x
 
-                    for source_gids in source_gid_chunks:
-                        self._collect_chunk(all_source_gids, source_gids,
-                                            f_out, f_source, fp)
+            if self._pass_through:
+                with Outputs(self._source_files[0], mode='r') as f_source:
+                    data = f_source[self._dset_in]
+                    f_out[self._dset_out] = data
 
-                log_mem(logger, log_level='DEBUG')
+            else:
+                for fp in self._source_files:
+                    with Outputs(fp, mode='r') as f_source:
+                        x = self._get_source_gid_chunks(f_source)
+                        all_source_gids, source_gid_chunks = x
+
+                        for source_gids in source_gid_chunks:
+                            self._collect_chunk(all_source_gids, source_gids,
+                                                f_out, f_source, fp)
+
+                    log_mem(logger, log_level='DEBUG')
 
     @classmethod
     def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None,
-                     mem_util_lim=0.7):
+                     mem_util_lim=0.7, pass_through=False):
         """Collect a single dataset from a list of source files into a final
         output file.
 
@@ -318,9 +370,13 @@ class DatasetCollector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out,
-                 mem_util_lim=mem_util_lim)
+                 mem_util_lim=mem_util_lim, pass_through=pass_through)
         dc._collect()
 
 
@@ -340,7 +396,8 @@ class Collector:
         project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected. None if points list is
-            to be ignored (collect all data in h5_files)
+            to be ignored (collect all data in h5_files without checking that
+            all gids are there)
         file_prefix : str
             .h5 file prefix, if None collect all files in h5_dir
         clobber : bool
@@ -395,8 +452,8 @@ class Collector:
                                  .format(file))
                     h5_files.append(os.path.join(h5_dir, file))
         h5_files = sorted(h5_files)
-        logger.debug('Final list of {} source files: {}'
-                     .format(len(h5_files), h5_files))
+        logger.info('Collecting list of {} source files: {}'
+                    .format(len(h5_files), h5_files))
         return h5_files
 
     @staticmethod
@@ -462,8 +519,21 @@ class Collector:
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
         meta = pd.concat(meta, axis=0)
-        gids = list(set(meta['gid'].values.tolist()))
-        gids = sorted([int(g) for g in gids])
+        gids = list(meta['gid'].values.astype(int).tolist())
+
+        if len(gids) > len(set(gids)):
+            msg = 'Duplicate GIDs were found in source files!'
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
+        if not sorted(gids) == gids:
+            msg = ('Collection was run without project points file and with '
+                   'non-ordered meta data GIDs! This can cause issues with '
+                   'the collection ordering. Please check your data '
+                   'carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         return gids
 
     def get_dset_shape(self, dset_name):
@@ -507,23 +577,29 @@ class Collector:
         """
         return self._gids
 
+    @property
+    def duplicate_gids(self):
+        """Return boolean True if there are duplicate gids being collected.
+
+        Returns
+        -------
+        bool
+        """
+        return len(self.gids) > len(set(self.gids))
+
     def combine_time_index(self):
         """
-        Extract time_index, None if not present in .h5 files
+        Extract all time_index datasets, None if not present in .h5 files
         """
-        with Outputs(self.h5_files[0], mode='r') as f:
-            if 'time_index' in f.datasets:
-                time_index = f.time_index
-                attrs = f.get_attrs('time_index')
-            else:
+        with Outputs(self.h5_files[0], mode='r') as f_source:
+            with Outputs(self._h5_out, mode='a') as f_out:
+                ti_dsets = [d for d in list(f_source)
+                            if d.startswith('time_index')]
                 time_index = None
-                warn("'time_index' was not processed as it is not "
-                     "present in .h5 files to be combined.",
-                     CollectionWarning)
-
-        if time_index is not None:
-            with Outputs(self._h5_out, mode='a') as f:
-                f._set_time_index('time_index', time_index, attrs=attrs)
+                for name in ti_dsets:
+                    time_index = f_source._get_time_index(name, slice(None))
+                    attrs = f_source.get_attrs(name)
+                    f_out._set_time_index(name, time_index, attrs=attrs)
 
     def _check_meta(self, meta):
         """
@@ -556,9 +632,14 @@ class Collector:
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
             logger.warning(m)
             warn(m, CollectionWarning)
-            meta = meta.drop_duplicates(subset='gid', keep='last')
 
-        meta = meta.sort_values('gid')
+        if not all(sorted(meta['gid'].values) == meta['gid'].values):
+            msg = ('Collection was run with non-ordered meta data GIDs! '
+                   'This can cause issues with the collection ordering. '
+                   'Please check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         meta = meta.reset_index(drop=True)
 
         return meta
@@ -629,7 +710,7 @@ class Collector:
 
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
-                file_prefix=None, mem_util_lim=0.7):
+                file_prefix=None, mem_util_lim=0.7, pass_through=False):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -653,6 +734,10 @@ class Collector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -673,7 +758,8 @@ class Collector:
 
         DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
                                       dset_name, dset_out=dset_out,
-                                      mem_util_lim=mem_util_lim)
+                                      mem_util_lim=mem_util_lim,
+                                      pass_through=pass_through)
 
         logger.debug("\t- Collection of '{}' complete".format(dset_name))
 

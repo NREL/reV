@@ -78,22 +78,14 @@ conda env:
 
 .. code-block:: bash
 
-    conda activate /shared-projects/rev/modulefiles/conda_env/
+    conda activate /shared-projects/rev/modulefiles/conda/envs/rev/
 
 or
 
 .. code-block:: bash
 
-    source activate /shared-projects/rev/modulefiles/conda_env/
+    source activate /shared-projects/rev/modulefiles/conda/envs/rev/
 
-.. or module:
-
-.. .. code-block:: bash
-
-..     module use /shared-projects/rev/modulefiles
-..     module load reV
-
-.. **NOTE: Loading the reV module can take several minutes**
 
 Launching a run
 ---------------
@@ -111,7 +103,7 @@ Tips
 
 .. code-block:: bash
 
-    reV -c "/scratch/user/rev/config_pipeline.json" generation
+    reV -c "/scratch/user/rev/config_gen.json" generation
 
 General Run times and Node configuration on Eagle
 -------------------------------------------------

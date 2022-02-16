@@ -730,7 +730,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081, cap_cost_scale=None, recalc_lcoe=True):
+                   excl_area=None, cap_cost_scale=None, recalc_lcoe=True):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -805,8 +805,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None, optional
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath, by default None
         cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
@@ -937,6 +938,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     .format(self.gids[0], self.gids[-1], self._resolution,
                             max_workers, len(chunks)))
 
+        slice_lookup = None
         if self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
                                    resolution=self._resolution) as sc:

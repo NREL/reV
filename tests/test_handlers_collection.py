@@ -2,16 +2,23 @@
 """
 pytests for output collection
 """
+from glob import glob
 import h5py
 import numpy as np
 import os
 import pytest
 import tempfile
+from click.testing import CliRunner
+import json
+import traceback
+import shutil
 
+from reV.cli import main
 from reV.handlers.collection import Collector
 from reV import TESTDATADIR
 
-from rex.utilities.loggers import init_logger
+from rex import Resource
+from rex.utilities.loggers import init_logger, LOGGERS
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
@@ -150,6 +157,85 @@ def test_means_lcoe():
         with h5py.File(h5_file, 'r') as f:
             assert 'cf_mean' in f
             assert 'lcoe_fcr' in f
+
+
+def test_cli():
+    """Test the collection command line interface"""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as td:
+        config = {
+            "directories": {
+                "collect_directory": H5_DIR,
+                "log_directory": td,
+                "output_directory": td
+            },
+            "execution_control": {
+                "option": "local"
+            },
+            "log_level": "DEBUG",
+            "dsets": [
+                "cf_profile"
+            ],
+            "project_points": None,
+            "file_prefixes": ['peregrine_2012']
+        }
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['-c', config_path, 'collect'])
+
+        if result.exit_code != 0:
+            print('Collect cli failed')
+            print('Temp dir files: ', os.listdir(td))
+            log_file = os.path.join(td, 'collect.log')
+            with open(log_file, 'r') as f:
+                print(f.read())
+            log_file = os.path.join(td, 'collect_peregrine_2012.log')
+            with open(log_file, 'r') as f:
+                print(f.read())
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        for fn in os.listdir(os.path.join(H5_DIR, 'chunk_files')):
+            shutil.move(os.path.join(H5_DIR, 'chunk_files/', fn),
+                        os.path.join(H5_DIR, fn))
+        shutil.rmtree(os.path.join(H5_DIR, 'chunk_files/'))
+        LOGGERS.clear()
+
+
+def test_collect_duplicates():
+    """Test the collection of duplicate gids as in the case with reV-gen
+    with a gid_map input."""
+    with tempfile.TemporaryDirectory() as td:
+
+        source_fps = sorted(glob(H5_DIR + '/pv_gen_2018*.h5'))
+        assert len(source_fps) > 1
+
+        h5_file = os.path.join(td, 'collection.h5')
+        Collector.collect(h5_file, H5_DIR, None, 'cf_profile',
+                          dset_out=None, file_prefix='pv_gen_2018')
+
+        with Resource(h5_file) as res:
+            test_cf = res['cf_profile']
+            test_meta = res.meta
+
+        i0 = 0
+        for fp in source_fps:
+            with Resource(fp) as res:
+                truth_cf = res['cf_profile']
+                truth_meta = res.meta
+
+            collect_slice = slice(i0, i0 + len(truth_meta))
+
+            assert np.allclose(test_cf[:, collect_slice], truth_cf)
+            for col in ('latitude', 'longitude', 'gid'):
+                test_meta_col = test_meta[col].values[collect_slice]
+                assert np.allclose(test_meta_col, truth_meta[col].values)
+
+            i0 += len(truth_meta)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -690,9 +690,12 @@ def launch_slurm(config, verbose):
     stdout_path = os.path.join(config.logdir, 'stdout/')
     node_cmd = get_multiple_cmds(config, out_dir, log_file, verbose)
 
+    if config.execution_control.sh_script:
+        node_cmd = config.execution_control.sh_script + '\n' + cmd
+
     slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
-                                        hardware='eagle',
+                                        hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -721,7 +724,7 @@ def launch_slurm(config, verbose):
                    .format(config.name, out))
             Status.add_job(
                 out_dir, 'qa-qc', config.name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'dirout': out_dir})
 
     click.echo(msg)

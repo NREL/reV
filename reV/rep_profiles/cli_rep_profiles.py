@@ -11,7 +11,7 @@ import time
 
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
-from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
+from reV.rep_profiles.rep_profiles import RepProfiles
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -143,7 +143,8 @@ def from_config(ctx, config_file, verbose):
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        conda_env=config.execution_control.conda_env,
-                       module=config.execution_control.module)
+                       module=config.execution_control.module,
+                       sh_script=config.execution_control.sh_script)
 
 
 @main.group(invoke_without_command=True)
@@ -151,10 +152,11 @@ def from_config(ctx, config_file, verbose):
               help='Filepath to reV gen file.')
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
               required=True, help='Filepath to reV SC summary (agg) file.')
-@click.option('--reg_cols', '-rc', type=STRLIST, default=None,
-              show_default=True,
+@click.option('--reg_cols', '-rc', type=STRLIST, required=True,
               help='List of column rev summary column labels to define '
-              'regions to get rep profiles for.')
+              'regions to get rep profiles for. If you want a profile for '
+              'each supply curve point, set "reg_cols" to a primary key such '
+              'as "sc_gid."')
 @click.option('--cf_dset', '-cf', type=str, default='cf_profile',
               show_default=True,
               help='Capacity factor dataset in gen_fpath to get profiles from')
@@ -188,7 +190,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to calculate the aggregate (weighted meanoid) '
               'profile for each supply curve point. This behavior is instead '
               'of finding the single profile per region closest to the '
-              'meanoid.')
+              'meanoid. If you use this flag, you must set "reg_cols" to a '
+              'primary key such as "sc_gid".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -220,9 +223,9 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         fout = os.path.join(out_dir, fn_out)
 
         if aggregate_profiles:
-            AggregatedRepProfiles.run(gen_fpath, rev_summary, cf_dset=cf_dset,
-                                      weight=weight, fout=fout,
-                                      max_workers=max_workers)
+            RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                            err_method=None, weight=weight, fout=fout,
+                            max_workers=max_workers)
         else:
             RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                             rep_method=rep_method, err_method=err_method,
@@ -295,9 +298,12 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               show_default=True,
               help='Subprocess standard output path. Default is in out_dir.')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.pass_context
 def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
-          stdout_path):
+          stdout_path, sh_script):
     """slurm (Eagle) submission tool for reV representative profiles."""
 
     name = ctx.obj['NAME']
@@ -323,13 +329,16 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                        out_dir, log_dir, max_workers, aggregate_profiles,
                        verbose)
 
+    if sh_script:
+        cmd = sh_script + '\n' + cmd
+
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name,
-                                        hardware='eagle',
+                                        hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -352,7 +361,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                    .format(name, out))
             Status.add_job(
                 out_dir, 'rep-profiles', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': '{}.h5'.format(name), 'dirout': out_dir})
 
     click.echo(msg)

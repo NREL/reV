@@ -4,7 +4,6 @@ reV Project Points Configuration
 """
 import copy
 import logging
-from math import ceil
 import numpy as np
 import os
 import pandas as pd
@@ -94,13 +93,14 @@ class PointsControl:
         return next_pc
 
     def __repr__(self):
-        msg = ("{} for sites {} through {}"
-               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
+        msg = ("{} with {} sites from gid {} through {}"
+               .format(self.__class__.__name__, len(self.project_points),
+                       self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):
         """Len is the number of possible iterations aka splits."""
-        return ceil(len(self.project_points) / self.sites_per_split)
+        return int(np.ceil(len(self.project_points) / self.sites_per_split))
 
     @property
     def N(self):
@@ -170,7 +170,7 @@ class PointsControl:
         ----------
         i0/i1 : int
             Beginning/end (inclusive/exclusive, respectively) index split
-            parameters for ProjectPoints.split.
+            parameters for ProjectPoints.split() method.
         project_points : reV.config.ProjectPoints
             Project points instance that will be split.
         sites_per_split : int
@@ -281,8 +281,9 @@ class ProjectPoints:
         return config_id, copy.deepcopy(self.sam_inputs[config_id])
 
     def __repr__(self):
-        msg = ("{} for sites {} through {}"
-               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
+        msg = ("{} with {} sites from gid {} through {}"
+               .format(self.__class__.__name__, len(self),
+                       self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):

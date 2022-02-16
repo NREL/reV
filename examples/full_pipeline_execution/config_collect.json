@@ -19,6 +19,5 @@
   },
   "file_prefixes": "PIPELINE",
   "log_level": "INFO",
-  "parallel": false,
   "project_points": "./nsrdb_conus_project_points.csv"
 }

@@ -1,0 +1,22 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "option": "slurm"
+  },
+  "groups": {
+    "none": {
+      "dsets": [
+        "cf_mean",
+        "cf_profile",
+        "lcoe_fcr"
+      ],
+      "source_dir": "./",
+      "source_files": "PIPELINE",
+      "source_prefix": ""
+    }
+  },
+  "log_level": "INFO"
+}

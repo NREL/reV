@@ -134,7 +134,8 @@ def from_config(ctx, config_file, verbose):
                    walltime=config.execution_control.walltime,
                    feature=config.execution_control.feature,
                    conda_env=config.execution_control.conda_env,
-                   module=config.execution_control.module)
+                   module=config.execution_control.module,
+                   sh_script=config.execution_control.sh_script)
 
 
 @main.group(invoke_without_command=True)
@@ -339,9 +340,12 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               show_default=True,
               help='Subprocess standard output path. Default is in out_dir.')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.pass_context
 def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
-          stdout_path):
+          stdout_path, sh_script):
     """slurm (eagle) submission tool for reV supply curve."""
     name = ctx.obj['NAME']
     sc_points = ctx.obj['SC_POINTS']
@@ -371,13 +375,16 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
                        offshore_compete, max_workers, out_dir, log_dir,
                        simple, line_limited, verbose)
 
+    if sh_script:
+        cmd = sh_script + '\n' + cmd
+
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name,
-                                        hardware='eagle',
+                                        hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -400,7 +407,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
                    .format(name, out))
             Status.add_job(
                 out_dir, 'supply-curve', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)

@@ -1,0 +1,18 @@
+{
+  "directories": {
+    "collect_directory": "PIPELINE",
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "dsets": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr"
+  ],
+  "execution_control": {
+    "option": "slurm"
+  },
+  "file_prefixes": "PIPELINE",
+  "log_level": "INFO",
+  "project_points": "./wtk_points_front_range.csv"
+}

@@ -5,6 +5,7 @@ reV Configuration for Execution Options
 import logging
 
 from reV.config.base_config import BaseConfig
+from reV.utilities.exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,11 @@ class BaseExecutionConfig(BaseConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-        super().__init__(config_dict)
 
         self._default_option = 'local'
         self._default_nodes = 1
         self._default_mem_util_lim = 0.4
+        super().__init__(config_dict)
 
     @property
     def option(self):
@@ -86,10 +87,20 @@ class BaseExecutionConfig(BaseConfig):
 
         return mem_util_lim
 
+    @property
+    def sh_script(self):
+        """Get the "sh_script" entry which is a string that contains extra
+        shell script commands to run before the reV commands.
+
+        Returns
+        -------
+        str
+        """
+        return self.get('sh_script', '')
+
 
 class HPCConfig(BaseExecutionConfig):
     """Class to handle HPC configuration inputs."""
-    REQUIREMENTS = ('allocation', )
 
     @property
     def allocation(self):
@@ -101,7 +112,7 @@ class HPCConfig(BaseExecutionConfig):
             Name of the HPC allocation account for the specified job.
         """
 
-        return self['allocation']
+        return self.get('allocation', None)
 
     @property
     def feature(self):
@@ -147,18 +158,19 @@ class HPCConfig(BaseExecutionConfig):
 class SlurmConfig(HPCConfig):
     """Class to handle SLURM (Eagle) configuration inputs."""
 
-    def __init__(self, config_dict):
-        """
-        Parameters
-        ----------
-        config_dict : str | dict
-            File path to config json (str), serialized json object (str),
-            or dictionary with pre-extracted config.
-        """
+    def _preflight(self):
+        """Run a preflight check on the config."""
+        if self.option == 'eagle':
+            if self.allocation is None:
+                msg = 'Eagle execution config must have an "allocation" input'
+                logger.error(msg)
+                raise ConfigError(msg)
+            if self.walltime is None:
+                msg = 'Eagle execution config must have an "walltime" input'
+                logger.error(msg)
+                raise ConfigError(msg)
 
-        super().__init__(config_dict)
-
-        self._default_hpc_walltime = 1
+        super()._preflight()
 
     @property
     def memory(self):
@@ -180,4 +192,4 @@ class SlurmConfig(HPCConfig):
         _hpc_walltime : int
             Requested single node job time in hours.
         """
-        return float(self.get('walltime', self._default_hpc_walltime))
+        return self.get('walltime', None)

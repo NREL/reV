@@ -1,0 +1,29 @@
+{
+  "analysis_years": [
+    2007,
+    2008
+  ],
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "nodes": 8,
+    "option": "slurm",
+    "sites_per_worker": 100,
+    "max_workers": 1,
+    "sh_script": "sh ~/start_hsds.sh"
+  },
+  "log_level": "INFO",
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr"
+  ],
+  "project_points": "./wtk_points_front_range.csv",
+  "resource_file": "/nrel/wtk/conus/wtk_conus_{}.h5",
+  "sam_files": {
+    "def": "./windpower.json"
+  },
+  "technology": "windpower"
+}

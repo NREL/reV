@@ -161,12 +161,15 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
         ctx.obj['NAME'] = name_year
         status = Status.retrieve_job_status(config.dirout, 'generation',
                                             name_year)
-        if status != 'successful':
-            Status.add_job(
-                config.dirout, 'generation', name_year, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': fout,
-                           'dirout': config.dirout})
+        if status == 'successful':
+            logger.info('reV Generation job with name "{}" was already '
+                        'successfully run in directory: {}'
+                        .format(name, config.out_dir))
+        else:
+            job_attrs = {'hardware': 'local', 'fout': fout,
+                         'dirout': config.dirout}
+            Status.add_job(config.dirout, 'generation', name_year,
+                           replace=True, job_attrs=job_attrs)
             ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
                        timeout=config.timeout,
@@ -185,6 +188,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
+                   sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 
 
@@ -673,11 +677,14 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
-          stdout_path, verbose):
+          stdout_path, sh_script, verbose):
     """Run generation on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -723,8 +730,11 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                            gid_map=gid_map,
                            verbose=verbose)
 
+        if sh_script:
+            cmd = sh_script + '\n' + cmd
+
         status = Status.retrieve_job_status(dirout, 'generation', node_name,
-                                            hardware='eagle',
+                                            hardware='slurm',
                                             subprocess_manager=slurm_manager)
 
         if status == 'successful':
@@ -754,7 +764,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'generation', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'slurm',
                                'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)

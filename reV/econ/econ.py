@@ -458,8 +458,11 @@ class Econ(BaseGen):
             kwargs['econ_fun'] = econ._fun
             if max_workers == 1:
                 logger.debug('Running serial econ for: {}'.format(pc))
-                for pc_sub in pc:
+                for i, pc_sub in enumerate(pc):
                     econ.out = econ.run(pc_sub, **kwargs)
+                    logger.info('Finished reV econ serial compute for: {} '
+                                '(iteration {} out of {})'
+                                .format(pc_sub, i + 1, len(pc)))
                 econ.flush()
             else:
                 logger.debug('Running parallel econ for: {}'.format(pc))

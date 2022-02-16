@@ -36,8 +36,8 @@ class AnalysisConfig(BaseConfig):
 
         self._analysis_years = None
         self._ec = None
-        self._dirout = self.config_dir
-        self._logdir = './logs/'
+        self._out_dir = self.config_dir
+        self._log_dir = './logs/'
 
         self._preflight()
 
@@ -98,34 +98,54 @@ class AnalysisConfig(BaseConfig):
         return self._analysis_years
 
     @property
-    def dirout(self):
+    def out_dir(self):
         """Get the output directory, look for key "output_directory" in the
         "directories" config group.
 
         Returns
         -------
-        dirout : str
-            Target path for reV output files.
+        str
         """
         if 'directories' in self:
-            self._dirout = self['directories'].get('output_directory',
-                                                   self._dirout)
-        return self._dirout
+            self._out_dir = self['directories'].get('output_directory',
+                                                    self._out_dir)
+        return self._out_dir
 
     @property
-    def logdir(self):
+    def dirout(self):
+        """Get the output directory, look for key "output_directory" in the
+        "directories" config group. Legacy alias for out_dir property.
+
+        Returns
+        -------
+        str
+        """
+        return self.out_dir
+
+    @property
+    def log_dir(self):
         """Get the logging directory, look for key "log_directory" in the
         "directories" config group.
 
         Returns
         -------
-        logdir : str
-            Target path for reV log files.
+        str
         """
         if 'directories' in self:
-            self._logdir = self['directories'].get('log_directory',
-                                                   self._logdir)
-        return self._logdir
+            self._log_dir = self['directories'].get('log_directory',
+                                                    self._log_dir)
+        return self._log_dir
+
+    @property
+    def logdir(self):
+        """Get the logging directory, look for key "log_directory" in the
+        "directories" config group. Legacy alias for log_dir property.
+
+        Returns
+        -------
+        str
+        """
+        return self.log_dir
 
     @property
     def execution_control(self):

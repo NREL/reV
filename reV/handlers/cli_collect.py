@@ -120,6 +120,7 @@ def from_config(ctx, config_file, verbose):
                        conda_env=config.execution_control.conda_env,
                        module=config.execution_control.module,
                        stdout_path=os.path.join(config.logdir, 'stdout'),
+                       sh_script=config.execution_control.sh_script,
                        verbose=verbose)
 
 
@@ -128,9 +129,11 @@ def from_config(ctx, config_file, verbose):
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
               help='Directory containing h5 files to collect.')
-@click.option('--project_points', '-pp', type=STR, required=True,
+@click.option('--project_points', '-pp', type=STR, required=False,
               help='Project points file representing the full '
-              'collection scope.')
+              'collection scope. This doesnt have to be provided '
+              'if points list is to be ignored (collect all data '
+              'in h5_files without checking that all gids are there)')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected.')
 @click.option('--file_prefix', '-fp', type=STR, default=None,
@@ -292,11 +295,14 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               show_default=True,
               help='Subprocess standard output path. Default is ./out/stdout')
+@click.option('--sh_script', '-sh', default=None, type=STR,
+              show_default=True,
+              help='Extra shell script commands to run before the reV call.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
-                  stdout_path, verbose):
+                  stdout_path, sh_script, verbose):
     """Run collection on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -317,9 +323,11 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, log_dir=log_dir,
                        purge_chunks=purge_chunks, verbose=verbose)
+    if sh_script:
+        cmd = sh_script + '\n' + cmd
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name, hardware='eagle',
+                                        name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     if status == 'successful':
@@ -348,7 +356,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': os.path.basename(h5_file),
                            'dirout': os.path.dirname(h5_file)})
 

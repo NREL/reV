@@ -124,16 +124,13 @@ class PlaceTurbines():
         """
         x = [bool(y) for y in x]
         n_turbines = np.sum(x)
-        self.wind_plant.sam_sys_inputs["wind_farm_xCoordinates"] = \
-            self.x_locations[x]
-        self.wind_plant.sam_sys_inputs["wind_farm_yCoordinates"] = \
-            self.y_locations[x]
+        self.wind_plant["wind_farm_xCoordinates"] = self.x_locations[x]
+        self.wind_plant["wind_farm_yCoordinates"] = self.y_locations[x]
 
         system_capacity = n_turbines * self.turbine_capacity
-        self.wind_plant.sam_sys_inputs["system_capacity"] = system_capacity
+        self.wind_plant["system_capacity"] = system_capacity
 
         self.wind_plant.assign_inputs()
-
         self.wind_plant.execute()
         aep = self.wind_plant.annual_energy()
         cost = self.cost_function(system_capacity)
@@ -176,11 +173,11 @@ class PlaceTurbines():
         self.area = self.full_polygons.area
         self.capacity_density = self.capacity / self.area * 1E3
 
-        self.wind_plant.sam_sys_inputs["wind_farm_xCoordinates"] = \
+        self.wind_plant["wind_farm_xCoordinates"] = \
             self.x_locations[optimized_design_variables]
-        self.wind_plant.sam_sys_inputs["wind_farm_yCoordinates"] = \
+        self.wind_plant["wind_farm_yCoordinates"] = \
             self.y_locations[optimized_design_variables]
-        self.wind_plant.sam_sys_inputs["system_capacity"] = self.capacity
+        self.wind_plant["system_capacity"] = self.capacity
         self.wind_plant.assign_inputs()
         self.wind_plant.execute()
         self.aep = self.wind_plant.annual_energy()
