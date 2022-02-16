@@ -8,7 +8,8 @@ from warnings import warn
 
 from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
-from reV.utilities.exceptions import ConfigError, ConfigWarning
+from reV.utilities.exceptions import (ConfigError, ConfigWarning,
+                                      reVDeprecationWarning)
 
 from rex.utilities.utilities import get_class_properties
 
@@ -38,6 +39,7 @@ class AnalysisConfig(BaseConfig):
         self._ec = None
         self._dirout = self.config_dir
         self._logdir = './logs/'
+        self.__config_fn = config
 
         self._preflight()
 
@@ -186,7 +188,14 @@ class AnalysisConfig(BaseConfig):
             elif self.NAME is not None:
                 self._name += '_{}'.format(self.NAME)
 
-            # name specified by user config
-            self._name = str(self.get('name', self._name))
+            # Throw warning if user still has 'name' key in config
+            if self.get('name') is not None:
+                msg = ("Specifying a job name using config key 'name' is "
+                       "deprecated. Job names are now inferred from the run "
+                       "directory name. To silence this warning, remove "
+                       "the 'name' key from the {!r} config file.'"
+                       .format(self.__config_fn))
+                logger.warning(msg)
+                warn(reVDeprecationWarning(msg))
 
         return self._name

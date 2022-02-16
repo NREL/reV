@@ -38,10 +38,9 @@ class BaseConfig(dict):
         self.str_rep = {'REVDIR': REVDIR,
                         'TESTDATADIR': TESTDATADIR,
                         }
-
+        self.name = 'rev'
         self._config_dir = None
         self._log_level = None
-        self._name = None
         self._parse_config(config)
 
         self._preflight()
@@ -95,21 +94,6 @@ class BaseConfig(dict):
             self._log_level = levels[x.upper()]
 
         return self._log_level
-
-    @property
-    def name(self):
-        """Get the project name from the "name" key.
-
-        Returns
-        -------
-        name : str
-            Config-specified project control name.
-        """
-
-        if self._name is None:
-            self._name = self.get('name', 'rev')
-
-        return self._name
 
     def _preflight(self):
         """Run a preflight check on the config."""

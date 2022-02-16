@@ -135,20 +135,3 @@ class PipelineConfig(AnalysisConfig):
             raise ConfigError('Pipeline has not yet been initialized.')
 
         return os.path.join(self._dirout, '{}_status.json'.format(self.name))
-
-    @property
-    def name(self):
-        """Get the pipeline name.
-
-        Returns
-        -------
-        _name : str
-            reV pipeline name.
-        """
-        if self._name is None:
-            self._name = os.path.basename(os.path.normpath(self.dirout))
-            if 'name' in self:
-                if self['name']:
-                    self._name = self['name']
-
-        return self._name
