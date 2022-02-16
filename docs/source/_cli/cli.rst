@@ -8,7 +8,7 @@ Command Line Interfaces (CLIs)
    reV-econ
    reV-gen
    reV-multiyear
-   reV-offshore
+   reV-nrwal
    reV-pipeline
    reV-project-points
    reV-QA-QC
