@@ -51,7 +51,6 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = MultiYearConfig(config_file)
