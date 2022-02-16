@@ -38,7 +38,7 @@ class BaseConfig(dict):
         self.str_rep = {'REVDIR': REVDIR,
                         'TESTDATADIR': TESTDATADIR,
                         }
-        self.name = 'rev'
+        self._name = None
         self._config_dir = None
         self._log_level = None
         self._parse_config(config)
@@ -94,6 +94,17 @@ class BaseConfig(dict):
             self._log_level = levels[x.upper()]
 
         return self._log_level
+
+    @property
+    def name(self):
+        """Get the job name, defaults to 'rev'.
+
+        Returns
+        -------
+        name : str
+            reV job name.
+        """
+        return self._name or 'rev'
 
     def _preflight(self):
         """Run a preflight check on the config."""
