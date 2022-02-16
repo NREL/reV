@@ -22,6 +22,7 @@ import traceback
 from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV import TESTDATADIR
 
 from rex.utilities.loggers import LOGGERS
@@ -409,8 +410,7 @@ def test_cli_basic_agg():
             "tm_dset": "techmap_ri",
             "res_fpath": RES,
             'excl_dict': EXCL_DICT,
-            'resolution': 32,
-            'name': 'agg'
+            'resolution': 32
         }
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:
@@ -430,8 +430,13 @@ def test_cli_basic_agg():
             raise RuntimeError(msg)
 
         fn_list = os.listdir(td)
-        assert 'jobstatus_agg.json' in fn_list
-        assert 'agg.csv' in fn_list
+        dirname = os.path.basename(td)
+        status_fn = ('jobstatus_{}_{}.json'
+                     .format(dirname, SupplyCurveAggregationConfig.NAME))
+        out_csv_fn = ('{}_{}.csv'
+                      .format(dirname, SupplyCurveAggregationConfig.NAME))
+        assert status_fn in fn_list
+        assert out_csv_fn in fn_list
 
 
 def execute_pytest(capture='all', flags='-rapP'):

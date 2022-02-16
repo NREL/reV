@@ -19,7 +19,6 @@
     "gen_2"
   ],
   "log_level": "DEBUG",
-  "name": "rev",
   "parallel": false,
   "project_points": "./project_points_100.csv"
 }

@@ -13,7 +13,6 @@
   },
   "log_level": "DEBUG",
   "n_profiles": 4,
-  "name": "rev",
   "reg_cols": [
     "state"
   ]

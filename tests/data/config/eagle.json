@@ -14,7 +14,6 @@
     "walltime": 0.5
   },
   "log_level": "DEBUG",
-  "name": "rev",
   "output_request": [
     "cf_mean",
     "cf_profile",

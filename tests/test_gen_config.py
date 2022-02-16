@@ -57,7 +57,6 @@ def get_r1_profiles(year=2012, tech='pv'):
 def test_gen_from_config(runner, tech):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
     with tempfile.TemporaryDirectory() as td:
-        job_name = 'config_test_{}'.format(tech)
 
         if tech == 'pv':
             fconfig = 'local_pv.json'
@@ -92,8 +91,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         config_obj = GenConfig(config_path)
 
-        result = runner.invoke(main, ['-n', job_name,
-                                      '-c', config_path,
+        result = runner.invoke(main, ['-c', config_path,
                                       'generation'])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
@@ -104,7 +102,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
         flist = os.listdir(config_obj.dirout)
         print(flist)
         for fname in flist:
-            if job_name in fname and fname.endswith('.h5'):
+            if fname.endswith('.h5'):
                 path = os.path.join(config_obj.dirout, fname)
                 with Outputs(path, 'r') as cf:
 

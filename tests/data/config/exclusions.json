@@ -42,6 +42,5 @@
   "filter": "queen",
   "fout": "exclusions.tif",
   "log_level": "DEBUG",
-  "name": "rev_exclusions",
   "use_blocks": true
 }

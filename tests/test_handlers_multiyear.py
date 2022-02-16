@@ -15,6 +15,7 @@ import traceback
 from reV.handlers.cli_multi_year import main
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
+from reV.config.multi_year import MultiYearConfig
 from reV import TESTDATADIR
 
 from rex import Resource
@@ -150,10 +151,11 @@ def test_cli(runner):
                                                              'pass_through_2'],
                                       "source_dir": temp,
                                       "source_prefix": "gen_ri_pv"}},
-                  "name": "my_test",
                   "log_level": "INFO"}
 
-        my_out = os.path.join(temp, "{}.h5".format(config['name']))
+        dirname = os.path.basename(temp)
+        fn = "{}_{}.h5".format(dirname, MultiYearConfig.NAME)
+        my_out = os.path.join(temp, fn)
         temp_h5_files = [os.path.join(temp, os.path.basename(fp))
                          for fp in H5_FILES]
         for fp, fp_temp in zip(H5_FILES, temp_h5_files):
