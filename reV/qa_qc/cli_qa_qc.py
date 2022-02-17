@@ -682,7 +682,7 @@ def launch_slurm(config, verbose):
     node_cmd = get_multiple_cmds(config, out_dir, log_file, verbose)
 
     if config.execution_control.sh_script:
-        node_cmd = config.execution_control.sh_script + '\n' + cmd
+        node_cmd = config.execution_control.sh_script + '\n' + node_cmd
 
     slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
