@@ -141,10 +141,19 @@ def plot_windrose(wind_directions, wind_speeds, wind_frequencies, ax=None,
         bottom = 0.0
         for j in range(nspeeds):
             if i == 0:
-                ax.bar(wind_directions[i], wind_frequencies[j, i],
-                       bottom=bottom, width=width, edgecolor="black",
-                       color=[colors[j]], label="%s m/s" % int(wind_speeds[j])
-                       )
+                if j < nspeeds - 1:
+                    ax.bar(wind_directions[i], wind_frequencies[j, i],
+                           bottom=bottom, width=width, edgecolor="black",
+                           color=[colors[j]],
+                           label="%s-%s m/s" % (int(wind_speeds[j]),
+                                                int(wind_speeds[j + 1]))
+                           )
+                else:
+                    ax.bar(wind_directions[i], wind_frequencies[j, i],
+                           bottom=bottom, width=width, edgecolor="black",
+                           color=[colors[j]],
+                           label="%s+ m/s" % int(wind_speeds[j])
+                           )
             else:
                 ax.bar(wind_directions[i], wind_frequencies[j, i],
                        bottom=bottom, width=width, edgecolor="black",

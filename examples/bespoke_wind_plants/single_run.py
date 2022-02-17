@@ -4,7 +4,7 @@ An example single run to get bespoke wind plant layout
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from reV.bespoke.bespoke import BespokeWindFarms
+from reV.bespoke.bespoke import BespokeSinglePlant
 from reV.bespoke.plotting_functions import plot_poly, plot_turbines,\
     plot_windrose
 from reV import TESTDATADIR
@@ -19,6 +19,7 @@ SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
+AGG_DSET = ('cf_mean', 'cf_profile')
 
 # note that this differs from the
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
@@ -28,34 +29,31 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': False}}
 
+with open(SAM, 'r') as f:
+    SAM_SYS_INPUTS = json.load(f)
 
-if __name__ == '__main__':
+SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
+SAM_SYS_INPUTS['wind_farm_losses_percent'] = 0
+del SAM_SYS_INPUTS['wind_resource_filename']
+TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
+SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 
-    def cost_function(x):
-        """dummy cost function"""
-        R = 0.1
-        return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
 
-    def objective_function(aep, cost):
-        """dummy objective function"""
-        return cost / aep
+def cost_function(x):
+    """dummy cost function"""
+    R = 0.1
+    return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
 
-    ga_time = 20.0
 
-    with open(SAM, 'r') as f:
-        sam_sys_inputs = json.load(f)
+def objective_function(aep, cost):
+    """dummy objective function"""
+    return cost / aep
 
-    rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
-    min_spacing = 5 * rotor_diameter
 
-    gid = 34  # 39% included
-    # gid = 34
-    ws_dset = 'windspeed_88m'
-    wd_dset = 'winddirection_88m'
+if __name__ == "__main__":
 
-    with open(SAM, 'r') as f:
-        sam_sys_inputs = json.load(f)
-
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    gid = 33
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -64,60 +62,52 @@ if __name__ == '__main__':
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET,
-                        max_workers=1)
-        out = BespokeWindFarms.run_serial(excl_fp, res_fp, TM_DSET, ws_dset,
-                                          wd_dset, sam_sys_inputs,
-                                          objective_function, cost_function,
-                                          min_spacing, ga_time,
-                                          excl_dict=EXCL_DICT, gids=gid)
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cost_function,
+                                 ga_time=120,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+        results = bsp.run_plant_optimization()
 
-    results = out[gid]
-    print("nturbs: ", results["nturbs"])
-    print("plant_capacity: ", results["plant_capacity"])
-    print("non_excluded_area: ", results["non_excluded_area"])
-    print("non_excluded_capacity_density: ",
-          results["non_excluded_capacity_density"])
-    print("aep: ", results["aep"])
-    print("objective: ", results["objective"])
-    print("annual_cost: ", results["annual_cost"])
+    # print(results)
+    # print(type(results))
+    # print(results.keys())
+    print("nturbs: ", results["n_turbines"])
+    print("system_capacity: ", results["system_capacity"])
+    # print("non_excluded_area: ", results["non_excluded_area"])
+    # print("non_excluded_capacity_density: ",
+    #       results["non_excluded_capacity_density"])
+    print("bespoke_aep: ", results["bespoke_aep"])
+    print("bespoke_objective: ", results["bespoke_objective"])
+    print("bespoke_annual_cost: ", results["bespoke_annual_cost"])
+
+    rotor_diameter = bsp.sam_sys_inputs["wind_turbine_rotor_diameter"]
 
     plt.figure(1)
-    ax = plot_windrose(results["wd_sample_points"],
-                       results["ws_sample_points"],
-                       results["wind_dist"])
+    ax = plot_windrose(np.arange(bsp._wd_bins[0], bsp._wd_bins[1],
+                       bsp._wd_bins[2]),
+                       np.arange(bsp._ws_bins[0], bsp._ws_bins[1],
+                       bsp._ws_bins[2]),
+                       bsp._wind_dist)
     plt.title("wind rose")
 
     plt.figure(2)
     ax = plot_poly(results["full_polygons"])
-    ax = plot_turbines(results["packed_x"],
-                       results["packed_y"], rotor_diameter / 2,
-                       ax=ax)
-    plt.axis("equal")
-    plt.title("full polys, packed points")
-
-    plt.figure(3)
-    ax = plot_poly(results["full_polygons"])
-    ax = plot_turbines(results["turbine_x_coords"],
-                       results["turbine_y_coords"], rotor_diameter / 2,
-                       ax=ax)
+    ax = plot_turbines(bsp.plant_optimizer.turbine_x,
+                       bsp.plant_optimizer.turbine_y,
+                       rotor_diameter / 2, ax=ax)
     plt.axis("equal")
     plt.title("full polys, turbines")
 
-    plt.figure(4)
+    plt.figure(3)
     ax = plot_poly(results["packing_polygons"])
-    ax = plot_turbines(results["packed_x"],
-                       results["packed_y"], rotor_diameter / 2,
-                       ax=ax)
+    ax = plot_turbines(bsp.plant_optimizer.x_locations,
+                       bsp.plant_optimizer.y_locations,
+                       rotor_diameter / 2, ax=ax)
     plt.axis("equal")
     plt.title("packed polys, packed points")
-
-    plt.figure(5)
-    ax = plot_poly(results["packing_polygons"])
-    ax = plot_turbines(results["turbine_x_coords"],
-                       results["turbine_y_coords"], rotor_diameter / 2,
-                       ax=ax)
-    plt.axis("equal")
-    plt.title("packed polys, turbines")
 
     plt.show()

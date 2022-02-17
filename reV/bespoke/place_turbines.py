@@ -99,7 +99,13 @@ class PlaceTurbines():
 
         boundary_poly = \
             Polygon(((minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)))
-        self.packing_polygons = boundary_poly.intersection(self.full_polygons)
+        packing_polygons = boundary_poly.intersection(self.full_polygons)
+        if isinstance(packing_polygons, MultiPolygon):
+            self.packing_polygons = packing_polygons
+        elif isinstance(packing_polygons, Polygon):
+            self.packing_polygons = MultiPolygon([packing_polygons])
+        else:
+            self.packing_polygons = MultiPolygon([])
 
     def initialize_packing(self):
         """run the turbine packing algorithm (maximizing plant capacity) to
