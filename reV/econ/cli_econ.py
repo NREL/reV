@@ -240,7 +240,7 @@ def direct(ctx, sam_files, cf_file, year, points, site_data,
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['APPEND'] = append
-    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.obj['VERBOSE'] = any([verbose, ctx.obj['VERBOSE']])
 
 
 @direct.command()
