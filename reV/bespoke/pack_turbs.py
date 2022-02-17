@@ -37,30 +37,32 @@ class PackTurbines():
         self.turbine_x and self.turbine_y
         """
 
-        can_add_more = True
-        leftover = MultiPolygon(self.safe_polygons)
-        while can_add_more:
-            nareas = len(leftover.geoms)
-            if nareas > 0:
-                areas = np.zeros(len(leftover.geoms))
-                for i in range(nareas):
-                    areas[i] = leftover.geoms[i].area
-                smallest_area = leftover.geoms[np.argmin(areas)]
-                exterior_coords = smallest_area.exterior.coords[:]
-                x, y = get_xy(exterior_coords)
-                metric = self.weight_x * x + y
-                self.turbine_x = np.append(self.turbine_x,
-                                           x[np.argmin(metric)])
-                self.turbine_y = np.append(self.turbine_y,
-                                           y[np.argmin(metric)])
-                new_turbine = Point(x[np.argmin(metric)], y[np.argmin(metric)]
-                                    ).buffer(self.min_spacing)
-            else:
-                break
+        if self.safe_polygons.area > 0.0:
+            can_add_more = True
+            leftover = MultiPolygon(self.safe_polygons)
+            while can_add_more:
+                nareas = len(leftover.geoms)
+                if nareas > 0:
+                    areas = np.zeros(len(leftover.geoms))
+                    for i in range(nareas):
+                        areas[i] = leftover.geoms[i].area
+                    smallest_area = leftover.geoms[np.argmin(areas)]
+                    exterior_coords = smallest_area.exterior.coords[:]
+                    x, y = get_xy(exterior_coords)
+                    metric = self.weight_x * x + y
+                    self.turbine_x = np.append(self.turbine_x,
+                                               x[np.argmin(metric)])
+                    self.turbine_y = np.append(self.turbine_y,
+                                               y[np.argmin(metric)])
+                    new_turbine = Point(x[np.argmin(metric)],
+                                        y[np.argmin(metric)]
+                                        ).buffer(self.min_spacing)
+                else:
+                    break
 
-            leftover = leftover.difference(new_turbine)
-            if isinstance(leftover, Polygon):
-                leftover = MultiPolygon([leftover])
+                leftover = leftover.difference(new_turbine)
+                if isinstance(leftover, Polygon):
+                    leftover = MultiPolygon([leftover])
 
     def clear(self):
         """Reset the packing algorithm by clearing the x and y turbine arrays
