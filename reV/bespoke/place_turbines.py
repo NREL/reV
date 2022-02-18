@@ -25,14 +25,11 @@ class PlaceTurbines():
             should have everything in the plant defined, such that only the
             turbine coordinates and plant capacity need to be defined during
             the optimization.
-        objective_function: function(aep, cost)
-            the objective function for wind plant layout optimization. Should
-            be a function of the plant aep and annual cost. As per optimization
-            convention, this function will be minimized.
-        cost_function : function(capacity)
+        objective_function: str
+            the objective function for wind plant layout optimization.
+        cost_function : str
             the cost function for wind plant layout optimization. Should
-            be a function of the plant capacity, and returns the annual
-            plant costs.
+            return the annual plant costs.
         exclusions : ExclusionMaskFromDict
             The exclusions that define where turbines can be placed. Contains
             exclusions.latitude, exclusions.longitude, and exclusions.mask
@@ -69,12 +66,24 @@ class PlaceTurbines():
         self.capacity_density = 0.0
         self.aep = 0.0
         self.objective = 0.0
+        self.annual_cost = 0.0
+
+        self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
+        self._preflight(self.objective_function)
+        self._preflight(self.cost_function)
+
+    def _preflight(self, eqn):
+        """Run preflight checks on the equation string."""
+        for substr in self.ILLEGAL:
+            if substr in str(eqn):
+                msg = ('Will not evaluate string which contains "{}": {}'
+                       .format(substr, eqn))
+                raise ValueError(msg)
 
     def define_exclusions(self):
         """From the exclusions data, create a shapely MultiPolygon as
         self.safe_polygons that defines where turbines can be placed.
         """
-
         shapes = rasterio.features.shapes(np.floor(self.include_mask))
         polygons = [Polygon(shape[0]["coordinates"][0]) for shape in shapes
                     if shape[1] == 1]
@@ -139,9 +148,12 @@ class PlaceTurbines():
         self.wind_plant.assign_inputs()
         self.wind_plant.execute()
         aep = self.wind_plant.annual_energy()
-        cost = self.cost_function(system_capacity)
 
-        return self.objective_function(aep, cost)
+        # cost = self.cost_function(system_capacity)
+        cost = eval(self.cost_function, globals(), locals())
+        objective = eval(self.objective_function, globals(), locals())
+
+        return objective
 
     def optimize(self):
         """use a genetic algorithm to optimize wind plant layout for the user
@@ -188,7 +200,9 @@ class PlaceTurbines():
         self.wind_plant.execute()
         self.aep = self.wind_plant.annual_energy()
 
+        system_capacity = self.capacity
         self.objective = ga.optimized_function_value
+        self.annual_cost = eval(self.cost_function, globals(), locals())
 
     def place_turbines(self):
         """run all functions to define bespoke wind plant turbine layouts

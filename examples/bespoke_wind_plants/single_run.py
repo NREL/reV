@@ -39,18 +39,22 @@ TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 
 
-def cost_function(x):
-    """dummy cost function"""
-    R = 0.1
-    return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
+# def cost_function(x):
+#     """dummy cost function"""
+#     R = 0.1
+#     return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
 
 
-def objective_function(aep, cost):
-    """dummy objective function"""
-    return cost / aep
+# def objective_function(aep, cost):
+#     """dummy objective function"""
+#     return cost / aep
 
 
 if __name__ == "__main__":
+
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
 
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
     gid = 33
@@ -66,7 +70,7 @@ if __name__ == "__main__":
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=120,
+                                 ga_time=20,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
@@ -86,28 +90,25 @@ if __name__ == "__main__":
 
     rotor_diameter = bsp.sam_sys_inputs["wind_turbine_rotor_diameter"]
 
-    plt.figure(1)
     ax = plot_windrose(np.arange(bsp._wd_bins[0], bsp._wd_bins[1],
                        bsp._wd_bins[2]),
                        np.arange(bsp._ws_bins[0], bsp._ws_bins[1],
                        bsp._ws_bins[2]),
                        bsp._wind_dist)
-    plt.title("wind rose")
+    ax.set_title("wind rose")
 
-    plt.figure(2)
     ax = plot_poly(results["full_polygons"])
     ax = plot_turbines(bsp.plant_optimizer.turbine_x,
                        bsp.plant_optimizer.turbine_y,
                        rotor_diameter / 2, ax=ax)
-    plt.axis("equal")
-    plt.title("full polys, turbines")
+    ax.axis("equal")
+    ax.set_title("full polys, turbines")
 
-    plt.figure(3)
     ax = plot_poly(results["packing_polygons"])
     ax = plot_turbines(bsp.plant_optimizer.x_locations,
                        bsp.plant_optimizer.y_locations,
                        rotor_diameter / 2, ax=ax)
-    plt.axis("equal")
-    plt.title("packed polys, packed points")
+    ax.axis("equal")
+    ax.set_title("packed polys, packed points")
 
     plt.show()

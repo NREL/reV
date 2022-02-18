@@ -662,9 +662,11 @@ class BespokeSinglePlant:
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
         self._outputs["bespoke_aep"] = self.plant_optimizer.aep
         self._outputs["bespoke_objective"] = self.plant_optimizer.objective
+        # self._outputs["bespoke_annual_cost"] = \
+        #     self.cost_function(self.plant_optimizer.capacity)
         self._outputs["bespoke_annual_cost"] = \
-            self.cost_function(self.plant_optimizer.capacity)
-        self._outputs["included_area_capacity_density"] =\
+            self.plant_optimizer.annual_cost
+        self._outputs["included_area_capacity_density"] = \
             self.plant_optimizer.capacity_density
 
         logger.debug('Plant layout optimization complete!')
