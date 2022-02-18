@@ -46,17 +46,6 @@ TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 
 
-def cost_function(x):
-    """dummy cost function"""
-    R = 0.1
-    return 200 * x * np.exp(-x / 1E5 * R + (1 - R))
-
-
-def objective_function(aep, cost):
-    """dummy objective function"""
-    return cost / aep
-
-
 def test_bespoke_points():
     """Test the bespoke points input options"""
     with tempfile.TemporaryDirectory() as td:
@@ -96,6 +85,9 @@ def test_bespoke_points():
 def test_single(gid=33):
     """Test a single wind plant bespoke optimization run"""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -168,6 +160,9 @@ def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
