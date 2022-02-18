@@ -67,14 +67,14 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV multi-year from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
 
     ctx.obj['MY_FILE'] = config.my_file
     if config.execution_control.option == 'local':
@@ -99,7 +99,7 @@ def from_config(ctx, config_file, verbose):
                    memory=config.execution_control.memory,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   stdout_path=os.path.join(config.log_directory, 'stdout'),
                    group_params=json.dumps(config.group_params),
                    sh_script=config.execution_control.sh_script,
                    verbose=verbose)

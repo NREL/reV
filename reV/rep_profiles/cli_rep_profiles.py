@@ -63,14 +63,14 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV representative profiles from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -109,7 +109,7 @@ def from_config(ctx, config_file, verbose):
                            err_method=config.err_method,
                            weight=config.weight,
                            out_dir=config.dirout,
-                           log_dir=config.logdir,
+                           log_dir=config.log_directory,
                            n_profiles=config.n_profiles,
                            max_workers=config.execution_control.max_workers,
                            aggregate_profiles=config.aggregate_profiles,
@@ -126,7 +126,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['WEIGHT'] = config.weight
             ctx.obj['N_PROFILES'] = config.n_profiles
             ctx.obj['OUT_DIR'] = config.dirout
-            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['LOG_DIR'] = config.log_directory
             ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
             ctx.obj['AGGREGATE_PROFILES'] = config.aggregate_profiles
             ctx.obj['VERBOSE'] = verbose

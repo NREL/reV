@@ -63,14 +63,14 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -96,7 +96,7 @@ def from_config(ctx, config_file, verbose):
                        downwind=config.downwind,
                        max_workers=config.execution_control.max_workers,
                        out_dir=config.dirout,
-                       log_dir=config.logdir,
+                       log_dir=config.log_directory,
                        simple=config.simple,
                        line_limited=config.line_limited,
                        verbose=verbose)
@@ -117,7 +117,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['OFFSHORE_COMPETE'] = config.offshore_compete
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['LOG_DIR'] = config.log_directory
         ctx.obj['SIMPLE'] = config.simple
         ctx.obj['LINE_LIMITED'] = config.line_limited
         ctx.obj['VERBOSE'] = verbose

@@ -93,13 +93,13 @@ class AnalysisConfig(BaseConfig):
         return self._analysis_years
 
     @property
-    def logdir(self):
+    def log_directory(self):
         """Get the logging directory, look for key "log_directory" in the
         config.
 
         Returns
         -------
-        logdir : str
+        log_directory : str
             Target path for reV log files.
         """
         return self.get('log_directory', './logs/')

@@ -73,14 +73,14 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
     cf_files = config.parse_cf_files()
     # Initial log statements
     logger.info('Running reV Econ from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
@@ -96,7 +96,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SAM_FILES'] = config.parse_sam_config()
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
-    ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['LOGDIR'] = config.log_directory
     ctx.obj['APPEND'] = config.append
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
@@ -180,7 +180,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
                    feature=config.execution_control.feature,
                    module=config.execution_control.module,
                    conda_env=config.execution_control.conda_env,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   stdout_path=os.path.join(config.log_directory, 'stdout'),
                    sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 

@@ -68,14 +68,14 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve aggregation from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -114,7 +114,7 @@ def from_config(ctx, config_file, verbose):
                 out_dir=config.dirout,
                 max_workers=config.execution_control.max_workers,
                 sites_per_worker=config.execution_control.sites_per_worker,
-                log_dir=config.logdir,
+                log_dir=config.log_directory,
                 recalc_lcoe=config.recalc_lcoe,
                 pre_extract_inclusions=config.pre_extract_inclusions,
                 verbose=verbose)
@@ -145,7 +145,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['SITES_PER_WORKER'] = spw
-        ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['LOG_DIR'] = config.log_directory
         ctx.obj['RECALC_LCOE'] = config.recalc_lcoe
         ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
         ctx.obj['VERBOSE'] = verbose

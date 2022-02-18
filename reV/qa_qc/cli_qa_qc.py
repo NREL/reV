@@ -390,14 +390,14 @@ def from_config(ctx, config_file, verbose):
     verbose = config.log_level == logging.DEBUG
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -419,7 +419,7 @@ def from_config(ctx, config_file, verbose):
                 fpath = module_config.fpath
                 if module.lower() == 'exclusions':
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.h5', '.log'))
                     afk = module_config.area_filter_kernel
                     ctx.invoke(exclusions,
@@ -438,7 +438,7 @@ def from_config(ctx, config_file, verbose):
 
                 elif fpath.endswith('.h5'):
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.h5', '.log'))
                     max_workers = config.execution_control.max_workers
                     ctx.invoke(reV_h5,
@@ -457,7 +457,7 @@ def from_config(ctx, config_file, verbose):
 
                 elif fpath.endswith('.csv'):
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.csv', '.log'))
                     ctx.invoke(supply_curve,
                                sc_table=fpath,
@@ -677,8 +677,8 @@ def launch_slurm(config, verbose):
     """
 
     out_dir = config.dirout
-    log_file = os.path.join(config.logdir, config.name + '.log')
-    stdout_path = os.path.join(config.logdir, 'stdout/')
+    log_file = os.path.join(config.log_directory, config.name + '.log')
+    stdout_path = os.path.join(config.log_directory, 'stdout/')
     node_cmd = get_multiple_cmds(config, out_dir, log_file, verbose)
 
     if config.execution_control.sh_script:
