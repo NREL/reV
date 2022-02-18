@@ -395,10 +395,7 @@ def test_cli_basic_agg():
         excl_fp = os.path.join(td, 'excl.h5')
         shutil.copy(EXCL, excl_fp)
         config = {
-            "directories": {
-                "log_directory": td,
-                "output_directory": td
-            },
+            "log_directory": td,
             "execution_control": {
                 "option": "local",
                 "max_workers": 1,

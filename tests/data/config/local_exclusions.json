@@ -1,8 +1,5 @@
 {
-  "directories": {
-    "log_directory": "TESTDATADIR/ri_excl_reV2",
-    "output_directory": "TESTDATADIR/ri_excl_reV2"
-  },
+  "log_directory": "TESTDATADIR/ri_excl_reV2",
   "exclusions": [
     {
       "band": 1,

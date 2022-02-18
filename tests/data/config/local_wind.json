@@ -1,9 +1,6 @@
 {
   "analysis_years": 2012,
-  "directories": {
-    "log_directory": "TESTDATADIR/ri_wind_reV2",
-    "output_directory": "TESTDATADIR/ri_wind_reV2"
-  },
+  "log_directory": "TESTDATADIR/ri_wind_reV2",
   "execution_control": {
     "max_workers": 2,
     "nodes": 1,

@@ -165,11 +165,8 @@ def test_cli():
 
     with tempfile.TemporaryDirectory() as td:
         config = {
-            "directories": {
-                "collect_directory": H5_DIR,
-                "log_directory": td,
-                "output_directory": td
-            },
+            "collect_directory": H5_DIR,
+            "log_directory": td,
             "execution_control": {
                 "option": "local"
             },

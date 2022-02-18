@@ -200,10 +200,7 @@ def test_econ_from_config(runner):
         config = {
             "analysis_years": 2012,
             "cf_file": cf_file,
-            "directories": {
-                "log_directory": td,
-                "output_directory": td
-            },
+            "log_directory": td,
             "execution_control": {
                 "nodes": 1,
                 "option": "local",

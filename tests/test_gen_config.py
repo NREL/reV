@@ -82,8 +82,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
         config['project_points'] = project_points
         config['resource_file'] = resource_file
         config['sam_files'] = sam_files
-        config['directories']['log_directory'] = td
-        config['directories']['output_directory'] = td
+        config['log_directory'] = td
 
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:

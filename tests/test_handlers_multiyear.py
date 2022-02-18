@@ -143,8 +143,7 @@ def test_cli(runner):
     """Test multi year collection cli with pass through of some datasets."""
 
     with tempfile.TemporaryDirectory() as temp:
-        config = {"directories": {"log_directory": temp,
-                                  "output_directory": temp},
+        config = {"log_directory": temp,
                   "execution_control": {"option": "local"},
                   "groups": {"none": {"dsets": ["cf_mean"],
                                       "pass_through_dsets": ['pass_through_1',
