@@ -75,14 +75,15 @@ def from_config(ctx, config_file, verbose):
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))
-    logger.info('Target collection directory: "{}"'.format(config.coldir))
+    logger.info('Target collection directory: "{}"'
+                .format(config.collect_directory))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['H5_DIR'] = config.coldir
+    ctx.obj['H5_DIR'] = config.collect_directory
     ctx.obj['LOG_DIR'] = config.logdir
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points

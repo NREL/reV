@@ -273,6 +273,9 @@ class EconConfig(SAMAnalysisConfig):
         """
         super().__init__(config)
         self._cf_files = None
+        self._super_dirout = self.dirout
+        if self.append:
+            self.dirout = os.path.dirname(self.parse_cf_files()[0])
 
     @property
     def cf_file(self):
@@ -284,22 +287,6 @@ class EconConfig(SAMAnalysisConfig):
         str
         """
         return self['cf_file']
-
-    @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group. Overwritten if append is True.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        self._dirout = super().dirout
-        if self.append:
-            self._dirout = os.path.dirname(self.parse_cf_files()[0])
-
-        return self._dirout
 
     @property
     def append(self):
@@ -330,7 +317,7 @@ class EconConfig(SAMAnalysisConfig):
                 self._cf_files = [fname.format(year) for
                                   year in self.analysis_years]
             elif 'PIPELINE' in fname:
-                self._cf_files = Pipeline.parse_previous(super().dirout,
+                self._cf_files = Pipeline.parse_previous(self._super_dirout,
                                                          'econ',
                                                          target='fpath')
             else:

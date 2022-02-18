@@ -38,16 +38,15 @@ class CollectionConfig(AnalysisConfig):
         self._coldir = self.dirout
 
     @property
-    def coldir(self):
+    def collect_directory(self):
         """Get the directory to collect files from.
 
         Returns
         -------
-        coldir : str
+        collect_directory : str
             Target path to collect h5 files from.
         """
-        self._coldir = self['directories'].get('collect_directory',
-                                               self._coldir)
+        self._coldir = self.get('collect_directory', self._coldir)
 
         if self._coldir == 'PIPELINE':
             self._coldir = Pipeline.parse_previous(self.dirout, 'collect',

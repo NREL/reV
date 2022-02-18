@@ -37,8 +37,7 @@ class AnalysisConfig(BaseConfig):
 
         self._analysis_years = None
         self._ec = None
-        self._dirout = self.config_dir
-        self._logdir = './logs/'
+        self.dirout = self.config_dir
         self.__config_fn = config
 
         self._preflight()
@@ -48,12 +47,6 @@ class AnalysisConfig(BaseConfig):
 
     def _analysis_config_preflight(self):
         """Check for required config blocks"""
-
-        if 'directories' not in self:
-            w = ('reV config does not have "directories" block, '
-                 'default directories being used.')
-            logger.warning(w)
-            warn(w, ConfigWarning)
 
         if 'execution_control' not in self:
             e = 'reV config must have "execution_control" block!'
@@ -73,7 +66,7 @@ class AnalysisConfig(BaseConfig):
             config key/entry
         """
         props = get_class_properties(cls)
-        props.append('directories')
+        props.append('log_directory')
         return props
 
     @property
@@ -100,34 +93,16 @@ class AnalysisConfig(BaseConfig):
         return self._analysis_years
 
     @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        if 'directories' in self:
-            self._dirout = self['directories'].get('output_directory',
-                                                   self._dirout)
-        return self._dirout
-
-    @property
     def logdir(self):
         """Get the logging directory, look for key "log_directory" in the
-        "directories" config group.
+        config.
 
         Returns
         -------
         logdir : str
             Target path for reV log files.
         """
-        if 'directories' in self:
-            self._logdir = self['directories'].get('log_directory',
-                                                   self._logdir)
-        return self._logdir
+        return self.get('log_directory', './logs/')
 
     @property
     def execution_control(self):

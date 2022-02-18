@@ -65,7 +65,7 @@ class PipelineConfig(AnalysisConfig):
                               'directory but received {} different '
                               'directories.'.format(len(set(dirouts))))
         else:
-            self._dirout = dirouts[0]
+            self.dirout = dirouts[0]
 
         if len(set(names)) != len(names):
             raise ConfigError('Pipeline steps must have a unique job names '
@@ -131,7 +131,7 @@ class PipelineConfig(AnalysisConfig):
         _status_file : str
             reV status file path.
         """
-        if self._dirout is None:
+        if self.dirout is None:
             raise ConfigError('Pipeline has not yet been initialized.')
 
-        return os.path.join(self._dirout, '{}_status.json'.format(self.name))
+        return os.path.join(self.dirout, '{}_status.json'.format(self.name))
