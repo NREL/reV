@@ -81,7 +81,9 @@ def _raise_err_if_pipeline(fpath):
     """Raise error if fpath input is 'PIPELINE'. """
 
     if fpath == 'PIPELINE':
-        msg = 'Cannot run hybrids module as a pipeline job.'
+        msg = ('Hybrids module cannot infer fpath from "PIPELINE" - '
+               'input is ambiguous. Please specify both the solar and '
+               'wind fpath before running hybrids module.')
         logger.error(msg)
         raise PipelineError(msg)
 
