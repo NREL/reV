@@ -11,7 +11,6 @@ import pandas as pd
 from string import ascii_letters
 from warnings import warn
 from collections import namedtuple
-from enum import Enum, auto
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (FileInputError, InputError,
