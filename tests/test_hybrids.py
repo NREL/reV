@@ -10,7 +10,8 @@ import json
 from click.testing import CliRunner
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
-from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
+from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN, HYBRID_METHODS,
+                                 OUTPUT_PROFILE_NAMES, RatioColumns)
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
@@ -150,7 +151,7 @@ def test_limits_and_ratios_output_values():
     """Test that limits and ratios are properly applied in succession. """
 
     limits = {'solar_capacity': 50, 'wind_capacity': 0.5}
-    ratio_cols = ('solar_capacity', 'wind_capacity')
+    ratio_cols = RatioColumns('solar_capacity', 'wind_capacity')
     ratios = {ratio_cols: (0.3, 3.6)}
     bounds = (0.3 - 1e6, 3.6 + 1e6)
 
@@ -160,14 +161,13 @@ def test_limits_and_ratios_output_values():
         ratios=ratios
     ).run()
 
-    numerator_col, denominator_col = ratio_cols
-    ratios = (h.hybrid_meta['hybrid_{}'.format(numerator_col)]
-              / h.hybrid_meta['hybrid_{}'.format(denominator_col)])
+    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
     assert np.all(ratios.between(*bounds))
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(numerator_col)]
-                  <= h.hybrid_meta[numerator_col])
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(denominator_col)]
-                  <= h.hybrid_meta[denominator_col])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+                  <= h.hybrid_meta[ratio_cols.num])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)]
+                  <= h.hybrid_meta[ratio_cols.denom])
     assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
     assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
 
@@ -184,20 +184,20 @@ def test_limits_and_ratios_output_values():
 ])
 def test_ratios_input(ratio_cols, ratio, bounds):
     """Test that the hybrid meta limits the ratio columns correctly. """
+    ratio_cols = RatioColumns(*ratio_cols)
     h = Hybridization(
         SOLAR_FPATH, WIND_FPATH,
         ratios={ratio_cols: ratio}
     ).run()
 
-    numerator_col, denominator_col = ratio_cols
-    ratios = (h.hybrid_meta['hybrid_{}'.format(numerator_col)]
-              / h.hybrid_meta['hybrid_{}'.format(denominator_col)])
+    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
 
     assert np.all(ratios.between(*bounds))
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(numerator_col)]
-                  <= h.hybrid_meta[numerator_col])
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(denominator_col)]
-                  <= h.hybrid_meta[denominator_col])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+                  <= h.hybrid_meta[ratio_cols.num])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)]
+                  <= h.hybrid_meta[ratio_cols.denom])
 
 
 def test_rep_profile_idx_map():
@@ -337,7 +337,7 @@ def test_duplicate_lat_long_values():
 def test_invalid_ratio_input():
     """Test improper ratios input. """
 
-    cols = ('solar_capacity', 'wind_capacity')
+    cols = RatioColumns('solar_capacity', 'wind_capacity')
     with pytest.raises(InputError) as excinfo:
         Hybridization(
             SOLAR_FPATH, WIND_FPATH, ratios={cols: (1, 2, 3)}
@@ -350,7 +350,7 @@ def test_invalid_ratio_input():
 def test_ratio_column_missing():
     """Test missing ratio column. """
 
-    cols = ('solar_col_dne', 'wind_capacity')
+    cols = RatioColumns('solar_col_dne', 'wind_capacity')
     with pytest.raises(FileInputError) as excinfo:
         Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
 
@@ -361,23 +361,12 @@ def test_ratio_column_missing():
 def test_invalid_ratio_column_name():
     """Test invalid inputs for ratio columns. """
 
-    cols = ('un_prefixed_col', 'wind_capacity')
+    cols = RatioColumns('un_prefixed_col', 'wind_capacity')
     with pytest.raises(InputError) as excinfo:
         Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
 
     assert "Input ratios column" in str(excinfo.value)
     assert "does not start with a valid prefix" in str(excinfo.value)
-
-
-def test_invalid_ratio_column_len():
-    """Test invalid number of input ratio columns. """
-
-    cols = ('solar_capacity', 'wind_capacity', 'a_third_col')
-    with pytest.raises(InputError) as excinfo:
-        Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
-
-    assert ("Key ('solar_capacity', 'wind_capacity', 'a_third_col') for input "
-            "'ratios' not understood") in str(excinfo.value)
 
 
 def test_no_overlap_in_merge_column_values():
@@ -530,7 +519,10 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
     limits = {'solar_capacity': 100}
-    ratios = {ratio_cols: ratio} if ratio_cols is not None else None
+    if ratio_cols is None:
+        ratios = None
+    else:
+        ratios = {RatioColumns(*ratio_cols): ratio}
 
     with tempfile.TemporaryDirectory() as td:
         config = {
@@ -570,14 +562,14 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
             json.dump(config, f)
 
         result = runner.invoke(main, ['-c', config_path, 'hybrids'])
+        LOGGERS.clear()
 
         if result.exit_code != 0:
             import traceback
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
+            LOGGERS.clear()
             raise RuntimeError(msg)
-
-        LOGGERS.clear()
 
         h = Hybridization(
             sfp, wfp,
@@ -628,6 +620,7 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
             json.dump(config, f)
 
         result = runner.invoke(main, ['-c', config_path, 'hybrids'])
+        LOGGERS.clear()
 
         if result.exit_code != 0:
             import traceback
@@ -662,7 +655,10 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
     limits = {'solar_capacity': 100}
-    ratios = {ratio_cols: ratio} if ratio_cols is not None else None
+    if ratio_cols is None:
+        ratios = None
+    else:
+        ratios = {RatioColumns(*ratio_cols): ratio}
 
     with tempfile.TemporaryDirectory() as td:
 
@@ -693,14 +689,14 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
 
         cmd = '-n {} direct {}'.format(SLURM.s("hybrids-test"), ' '.join(args))
         result = runner.invoke(hybrids_cli_main, cmd)
+        LOGGERS.clear()
 
         if result.exit_code != 0:
             import traceback
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
+            LOGGERS.clear()
             raise RuntimeError(msg)
-
-        LOGGERS.clear()
 
         h = Hybridization(
             sfp, wfp,

@@ -9,7 +9,7 @@ import logging
 import pprint
 import time
 
-from reV.config.hybrids_config import HybridsConfig
+from reV.config.hybrids_config import HybridsConfig, parse_ratio_input
 from reV.pipeline.status import Status
 from reV.hybrids.hybrids import Hybridization, SOLAR_PREFIX, WIND_PREFIX
 from reV import __version__
@@ -18,7 +18,6 @@ from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import get_class_properties, dict_str_load
-from reV.utilities.exceptions import InputError
 
 logger = logging.getLogger(__name__)
 
@@ -227,13 +226,24 @@ def _get_paths_from_config(config, name):
                    'for both the upper and the lower bound. For example, '
                    '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
                    '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
-                   '1, \'max_ratio\': 1}}"` would limit the solar and wind '
-                   'capacities to always be equal. On the other hand, '
+                   '1, \'max_ratio\': 1}}"` would adjust both the solar and '
+                   'wind capacities to always be equal. On the other hand, '
                    '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
                    '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
-                   '0.5, \'max_ratio\': 1.5}}"` would limit the solar and '
-                   'wind capacity ratio to be between half and double (e.g., '
-                   'no capacity value would be more than double the other).'
+                   '0.5, \'max_ratio\': 1.5}}"` would adjust both the solar '
+                   'and wind capacities such that the solar and wind capacity '
+                   'ratio is always between halfand double (e.g., no capacity '
+                   'value would be more than double the other).'
+                   'You may also specify a \'fixed\' key whose value is the '
+                   'name of a column that should remain fixed during the '
+                   'ratio calculation. For example, '
+                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
+                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
+                   '0.5, \'max_ratio\': 1.5, \'fixed\': \'wind_capacity\'}}"` '
+                   'would limit the solar and wind capacities to be between '
+                   'half and double **without altering the value of the '
+                   'Wind_capacity** (e.g. only the solar capacity would be '
+                   'adjusted).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
@@ -274,10 +284,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
             limits = dict_str_load(limits)
 
         if isinstance(ratio, str):
-            ratio = dict_str_load(ratio)
-
-        if ratio is not None:
-            ratio = convert_cli_ratio_dict_to_hybrids_input_dict(ratio)
+            ratio = parse_ratio_input(ratio)
 
         try:
             Hybridization(
@@ -346,43 +353,6 @@ def get_node_cmd(ctx):
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
-
-
-def convert_cli_ratio_dict_to_hybrids_input_dict(input_dict):
-    """Convert cli input to dictionary expected by Hybridization class.
-
-    Parameters
-    ----------
-    input_dict : dict
-        Input cli dictionary with the following required keys:
-        ['numerator_col', 'denominator_col', 'min_ratio', 'max_ratio'].
-        The values of these keys is not validated.
-
-    Returns
-    -------
-    dict
-        Input dictionary formatted to be used as input to Hybridization
-        class: keys are tuples of the column names, and the values are
-        the ratio bounds.
-
-    Raises
-    ------
-    InputError
-        If the input dictionary is missing one of the required keys:
-        ['numerator_col', 'denominator_col', 'min_ratio', 'max_ratio'].
-    """
-    expected_keys = ['numerator_col', 'denominator_col',
-                     'min_ratio', 'max_ratio']
-    for key_name in expected_keys:
-        if key_name not in input_dict:
-            msg = "Key {!r} (required) not found in input ratio dictionary!"
-            e = msg.format(key_name)
-            logger.error(e)
-            raise InputError(e) from None
-
-    new_key = input_dict['numerator_col'], input_dict['denominator_col']
-    new_value = input_dict['min_ratio'], input_dict['max_ratio']
-    return {new_key: new_value}
 
 
 @direct.command()
