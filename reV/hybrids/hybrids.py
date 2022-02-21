@@ -419,6 +419,7 @@ class MetaHybridizer:
         self._validate_ratio_cols_type()
         self._validate_ratio_cols_prefixed()
         self._validate_ratio_cols_exist()
+        self._validate_ratio_cols_fixed_input()
         self._validate_ratio()
 
     def _validate_limits_cols_prefixed(self):
@@ -471,7 +472,7 @@ class MetaHybridizer:
             )
 
     def _validate_ratio_cols_type(self):
-        """Ensure exactly two ratio column names are provided.
+        """Ensure that the ratio column keys are `RatioColumns` instances.
 
         Raises
         ------
@@ -527,6 +528,24 @@ class MetaHybridizer:
                                    self.data.wind_fpath)
                     logger.error(e)
                     raise FileInputError(e)
+
+    def _validate_ratio_cols_fixed_input(self):
+        """Ensure `fixed` input is one of the two ratio columns`.
+
+        Raises
+        ------
+        InputError
+            If `fixed` input is not one of the ratio columns.
+        """
+
+        for cols in self._ratios:
+            if cols.fixed is not None and cols.fixed not in cols[0:2]:
+                msg = ("Fixed column {!r} is not one of the input ratio "
+                       "columns: {}. Please ensure that the `fixed` input "
+                       "matches one of the ratio columns.")
+                e = msg.format(cols.fixed, cols[0:2])
+                logger.error(e)
+                raise InputError(e) from None
 
     def _validate_ratio(self):
         """Ensure the ratio value is input correctly.

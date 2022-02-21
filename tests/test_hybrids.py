@@ -420,6 +420,19 @@ def test_invalid_ratio_column_name():
     assert "does not start with a valid prefix" in str(excinfo.value)
 
 
+def test_invalid_fixed_ratio_column_name():
+    """Test invalid inputs for fixed ratio column. """
+
+    cols = RatioColumns(
+        'solar_capacity', 'wind_capacity', fixed='non-matching-col'
+    )
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
+
+    assert "Fixed column 'non-matching-col'" in str(excinfo.value)
+    assert "is not one of the input ratio columns" in str(excinfo.value)
+
+
 def test_no_overlap_in_merge_column_values():
     """Test duplicate values in merge column. """
 
