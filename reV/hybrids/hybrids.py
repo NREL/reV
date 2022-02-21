@@ -709,18 +709,20 @@ class MetaHybridizer:
                 self.__warn_missing_col(col_name, action='limit')
 
     def _limit_by_ratios(self):
-        """ Limit the ratio columns based on input ratio. """
+        """ Limit all ratio columns based on input ratio. """
+
+        for cols, ratios in self._ratios.items():
+            self._limit_by_ratio(cols, ratios)
+
+    def _limit_by_ratio(self, ratio_cols, ratios):
+        """ Limit the given pair of ratio columns based on input ratio. """
+
+        numerator_col, denominator_col, fixed_col = ratio_cols
+        min_ratio, max_ratio = sorted(ratios)
+
         overlap_idx = self._hybrid_meta[MERGE_COLUMN].isin(
             self.data.merge_col_overlap_values
         )
-        for cols, ratios in self._ratios.items():
-            self._limit_by_ratio(overlap_idx, cols.num, cols.denom, ratios)
-
-    def _limit_by_ratio(self, overlap_idx, numerator_col, denominator_col,
-                        ratios):
-        """ Limit the ratio columns based on input ratio. """
-
-        min_ratio, max_ratio = sorted(ratios)
 
         numerator_vals = self._hybrid_meta[numerator_col].copy()
         denominator_vals = self._hybrid_meta[denominator_col].copy()
@@ -732,12 +734,34 @@ class MetaHybridizer:
         ratio_too_low = (ratios < min_ratio) & overlap_idx
         ratio_too_high = (ratios > max_ratio) & overlap_idx
 
-        numerator_vals.loc[ratio_too_high] = (
-            denominator_vals.loc[ratio_too_high].values * max_ratio
-        )
-        denominator_vals.loc[ratio_too_low] = (
-            numerator_vals.loc[ratio_too_low].values / min_ratio
-        )
+        if fixed_col == numerator_col:
+            denominator_vals.loc[ratio_too_low] = (
+                numerator_vals.loc[ratio_too_low].values / min_ratio
+            )
+            if any(ratio_too_high):
+                msg = ("Detected ratio values above the given bounds ({}) but "
+                       "unable to adjust because ratio numerator column {!r} "
+                       "is fixed.".format(max_ratio, numerator_col))
+                logger.warning(msg)
+                warn(InputWarning(msg))
+
+        elif fixed_col == denominator_col:
+            numerator_vals.loc[ratio_too_high] = (
+                denominator_vals.loc[ratio_too_high].values * max_ratio
+            )
+            if any(ratio_too_low):
+                msg = ("Detected ratio values below the given bounds ({}) but "
+                       "unable to adjust because ratio denominator column "
+                       "{!r} is fixed.".format(min_ratio, denominator_col))
+                logger.warning(msg)
+                warn(InputWarning(msg))
+        else:
+            numerator_vals.loc[ratio_too_high] = (
+                denominator_vals.loc[ratio_too_high].values * max_ratio
+            )
+            denominator_vals.loc[ratio_too_low] = (
+                numerator_vals.loc[ratio_too_low].values / min_ratio
+            )
 
         h_num_name = "hybrid_{}".format(numerator_col)
         h_denom_name = "hybrid_{}".format(denominator_col)
