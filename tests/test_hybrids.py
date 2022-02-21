@@ -10,7 +10,7 @@ import json
 from click.testing import CliRunner
 
 from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
-from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN, HYBRID_METHODS,
+from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN,
                                  OUTPUT_PROFILE_NAMES, RatioColumns)
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
 from reV.utilities.exceptions import (FileInputError, InputError,
