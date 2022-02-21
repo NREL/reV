@@ -7,7 +7,7 @@ HYBRID_METHODS = {}
 
 
 def hybrid_col(col_name):
-    """A decorator factory that facitilitates the registry of new hybrids.
+    """A decorator factory that facilitates the registry of new hybrids.
 
     This decorator takes a column name as input and registers the decorated
     function as a method that computes a hybrid variable. During the
@@ -62,7 +62,7 @@ def aggregate_solar_capacity(h):
     h : `reV.hybrids.Hybridization`
         Instance of `reV.hybrids.Hybridization` class containing the
         attribute `hybrid_meta`, which is a DataFrame containing
-        hybrdidized meta data.
+        hybridized meta data.
 
     Returns
     -------
@@ -95,7 +95,7 @@ def aggregate_wind_capacity(h):
     h : `reV.hybrids.Hybridization`
         Instance of `reV.hybrids.Hybridization` class containing the
         attribute `hybrid_meta`, which is a DataFrame containing
-        hybrdidized meta data.
+        hybridized meta data.
 
     Returns
     -------
@@ -121,7 +121,7 @@ def aggregate_capacity(h):
     h : `reV.hybrids.Hybridization`
         Instance of `reV.hybrids.Hybridization` class containing the
         attribute `hybrid_meta`, which is a DataFrame containing
-        hybrdidized meta data.
+        hybridized meta data.
 
     Returns
     -------
@@ -149,7 +149,7 @@ def aggregate_capacity_factor(h):
     h : `reV.hybrids.Hybridization`
         Instance of `reV.hybrids.Hybridization` class containing the
         attribute `hybrid_meta`, which is a DataFrame containing
-        hybrdidized meta data.
+        hybridized meta data.
 
     Returns
     -------
