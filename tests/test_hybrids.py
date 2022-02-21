@@ -569,8 +569,9 @@ def test_hybrids_data_contains_col():
 ])
 @pytest.mark.parametrize("ratio_cols", [
     None,
-    ('solar_capacity', 'wind_capacity'),
-    ('solar_area_sq_km', 'wind_area_sq_km')
+    ('solar_capacity', 'wind_capacity', None),
+    ('solar_capacity', 'wind_capacity', 'wind_capacity'),
+    ('solar_area_sq_km', 'wind_area_sq_km', None)
 ])
 @pytest.mark.parametrize("ratio", [(0.5, 1.5), (0.3, 3.6)])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
@@ -611,7 +612,7 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
         }
 
         if ratio_cols is not None:
-            num, denom = ratio_cols
+            num, denom, fixed_col = ratio_cols
             min_r, max_r = ratio
             config_dict = {
                 'numerator_col': num,
@@ -619,6 +620,8 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
                 'min_ratio': min_r,
                 'max_ratio': max_r
             }
+            if fixed_col is not None:
+                config_dict['fixed'] = fixed_col
             config['ratio'] = config_dict
 
         config_path = os.path.join(td, 'config.json')
