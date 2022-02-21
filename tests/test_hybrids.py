@@ -13,7 +13,8 @@ from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
 from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN, HYBRID_METHODS,
                                  OUTPUT_PROFILE_NAMES, RatioColumns)
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
-from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
+from reV.utilities.exceptions import (FileInputError, InputError,
+                                      OutputWarning, InputWarning)
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
@@ -147,6 +148,33 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
     assert set(h.hybrid_meta['sc_point_gid']) == overlap
 
 
+def test_limits_and_ratios_output_values_with_fixed_ratio_col():
+    """Test that limits and ratios are properly applied in succession. """
+
+    limits = {'solar_capacity': 50, 'wind_capacity': 0.5}
+    ratio_cols = RatioColumns(
+        'solar_capacity', 'wind_capacity', fixed='wind_capacity'
+    )
+    ratios = {ratio_cols: (0.3, 3.6)}
+    bounds = (0.3 - 1e6, 3.6 + 1e6)
+
+    h = Hybridization(
+        SOLAR_FPATH, WIND_FPATH,
+        limits=limits,
+        ratios=ratios
+    ).run()
+
+    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
+    assert np.all(ratios <= bounds[-1])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
+                  <= h.hybrid_meta[ratio_cols.num])
+    assert np.allclose(h.hybrid_meta['hybrid_{}'.format(ratio_cols.fixed)],
+                       h.hybrid_meta[ratio_cols.fixed])
+    assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
+    assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
+
+
 def test_limits_and_ratios_output_values():
     """Test that limits and ratios are properly applied in succession. """
 
@@ -174,7 +202,9 @@ def test_limits_and_ratios_output_values():
 
 @pytest.mark.parametrize("ratio_cols", [
     ('solar_capacity', 'wind_capacity'),
-    ('solar_area_sq_km', 'wind_area_sq_km')
+    ('solar_area_sq_km', 'wind_area_sq_km'),
+    ('solar_capacity', 'wind_capacity', 'solar_capacity'),
+    ('solar_capacity', 'wind_capacity', 'wind_capacity'),
 ])
 @pytest.mark.parametrize("ratio, bounds", [
     (0.5, (0.5 - 1e6, 0.5 + 1e6)),
@@ -185,19 +215,40 @@ def test_limits_and_ratios_output_values():
 def test_ratios_input(ratio_cols, ratio, bounds):
     """Test that the hybrid meta limits the ratio columns correctly. """
     ratio_cols = RatioColumns(*ratio_cols)
-    h = Hybridization(
-        SOLAR_FPATH, WIND_FPATH,
-        ratios={ratio_cols: ratio}
-    ).run()
+    if ratio_cols.fixed is None:
+        h = Hybridization(
+            SOLAR_FPATH, WIND_FPATH,
+            ratios={ratio_cols: ratio}
+        ).run()
+    else:
+        with pytest.warns(InputWarning) as record:
+            h = Hybridization(
+                SOLAR_FPATH, WIND_FPATH,
+                ratios={ratio_cols: ratio}
+            ).run()
+        warn_msg = record[0].message.args[0]
+        assert "Detected ratio values" in warn_msg
+        assert "but unable to adjust because ratio" in warn_msg
 
     ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
               / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
 
-    assert np.all(ratios.between(*bounds))
     assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
                   <= h.hybrid_meta[ratio_cols.num])
     assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)]
                   <= h.hybrid_meta[ratio_cols.denom])
+
+    if ratio_cols.fixed is None:
+        assert np.all(ratios.between(*bounds))
+    else:
+        assert np.allclose(
+            h.hybrid_meta['hybrid_{}'.format(ratio_cols.fixed)],
+            h.hybrid_meta[ratio_cols.fixed]
+        )
+        if ratio_cols.fixed == ratio_cols.num:
+            assert np.all(ratios >= bounds[0])
+        else:
+            assert np.all(ratios <= bounds[-1])
 
 
 def test_rep_profile_idx_map():
