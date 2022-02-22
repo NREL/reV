@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import json
 import tempfile
+from pandas.testing import assert_frame_equal
 
 from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
                                            RepresentativeMethods)
@@ -152,11 +153,11 @@ def test_agg_profile():
                                 'gid_counts': gid_counts,
                                 'timezone': timezone})
 
-    profiles = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
-                               cf_dset='cf_profile',
-                               scaled_precision=False,
-                               err_method=None,
-                               max_workers=None)[0]
+    profiles, p_meta, __ = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
+                                           cf_dset='cf_profile',
+                                           scaled_precision=False,
+                                           err_method=None,
+                                           max_workers=None)
 
     for index in rev_summary.index:
         gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
@@ -175,6 +176,15 @@ def test_agg_profile():
         truth = truth / weights.sum()
 
         assert np.allclose(profiles[0][:, index], truth)
+
+    passthrough_cols = ['gen_gids', 'res_gids', 'gid_counts']
+    for col in passthrough_cols:
+        assert col in p_meta
+
+    assert_frame_equal(
+        rev_summary[passthrough_cols],
+        p_meta[passthrough_cols]
+    )
 
 
 def test_many_regions():

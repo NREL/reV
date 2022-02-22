@@ -5,6 +5,7 @@ Test resource up and down scaling
 """
 
 import os
+import json
 import h5py
 import pytest
 import numpy as np
@@ -18,12 +19,18 @@ def test_time_index_step():
     # get full file paths.
     baseline = os.path.join(TESTDATADIR, 'gen_out',
                             'gen_profiles_hr_2017.h5')
-    sam_files = os.path.join(TESTDATADIR, 'SAM',
-                             'naris_pv_1axis_inv13_hr.json')
     res_file = os.path.join(TESTDATADIR, 'nsrdb', 'nsrdb_surfrad_2017.h5')
 
+    sam_files = os.path.join(TESTDATADIR, 'SAM',
+                             'naris_pv_1axis_inv13.json')
+    with open(sam_files) as f:
+        sam_config = json.load(f)
+
+    sam_config['time_index_step'] = 2
+    sam_input = {'default': sam_config}
+
     # run reV 2.0 generation
-    gen = Gen.reV_run('pvwattsv5', slice(0, None), sam_files, res_file,
+    gen = Gen.reV_run('pvwattsv5', slice(0, None), sam_input, res_file,
                       output_request=('cf_mean', 'cf_profile'),
                       max_workers=1, sites_per_worker=100,
                       out_fpath=None)

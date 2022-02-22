@@ -225,6 +225,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         if aggregate_profiles:
             RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                             err_method=None, weight=weight, fout=fout,
+                            save_rev_summary=False,
                             max_workers=max_workers)
         else:
             RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,

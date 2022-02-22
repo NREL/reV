@@ -35,6 +35,10 @@ tax_rate:
 gcf:
   cf_mean_raw
 
+# Scale lease price
+lease_price_mil:
+  lease_price / 1000000
+
 # CapEx Equations
 cost_reductions:
   osw_2019::cost_reductions::fixed

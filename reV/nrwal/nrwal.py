@@ -509,6 +509,8 @@ class RevNrwal:
             gids.
         """
         value = nrwal_out[name]
+        value = self._value_to_array(value, name)
+
         if len(value.shape) == 1:
             self._out[name][output_mask] = value[output_mask]
 
@@ -561,16 +563,20 @@ class RevNrwal:
             assert not any(value.variables), msg
             value = value.eval()
 
+        value = self._value_to_array(value, name)
+        self._out[name][output_mask] = value[output_mask]
+
+    def _value_to_array(self, value, name):
+        """Turn the input into numpy array if it isn't already."""
         if np.issubdtype(type(value), np.number):
-            value *= np.ones(len(self._site_data))
+            value *= np.ones(len(self.analysis_gids), dtype=np.float32)
 
         if not isinstance(value, np.ndarray):
             msg = ('NRWAL key "{}" returned bad type of "{}", needs to be '
                    'numeric or an output array.'.format(name, type(value)))
             logger.error(msg)
             raise TypeError(msg)
-
-        self._out[name][output_mask] = value[output_mask]
+        return value
 
     def run_nrwal(self):
         """Run analysis via the NRWAL analysis library"""
@@ -582,7 +588,6 @@ class RevNrwal:
                         .format(i + 1, len(self._nrwal_configs), cid,
                                 output_mask.sum(), len(output_mask)))
 
-#            breakpoint()
             nrwal_out = nrwal_config.eval(inputs=self._nrwal_inputs)
 
             # pylint: disable=C0201

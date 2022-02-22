@@ -921,10 +921,13 @@ class RepProfiles(RepProfilesBase):
     def _set_meta(self):
         """Set the rep profile meta data with each row being a unique
         combination of the region columns."""
-        self._meta = self._rev_summary.groupby(self._reg_cols)
-        self._meta = \
-            self._meta['timezone'].apply(lambda x: stats.mode(x).mode[0])
-        self._meta = self._meta.reset_index()
+        if self._err_method is None:
+            self._meta = self._rev_summary
+        else:
+            self._meta = self._rev_summary.groupby(self._reg_cols)
+            self._meta = \
+                self._meta['timezone'].apply(lambda x: stats.mode(x).mode[0])
+            self._meta = self._meta.reset_index()
 
         self._meta['rep_gen_gid'] = None
         self._meta['rep_res_gid'] = None
