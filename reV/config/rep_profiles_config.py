@@ -44,24 +44,19 @@ class RepProfilesConfig(AnalysisConfig):
         fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', 'collect', 'generation']
-            for target_module in target_modules:
+            targets = {'multi-year': 'fpath',
+                       'collect': 'fpath',
+                       'generation': 'fpath',
+                       'supply-curve-aggregation': 'gen_fpath'}
+            for target_module, target in targets.items():
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='fpath',
+                        self.dirout, 'rep-profiles', target=target,
                         target_module=target_module)[0]
                 except KeyError:
                     pass
                 else:
                     break
-
-            if fpath == 'PIPELINE':
-                try:
-                    fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='gen_fpath',
-                        target_module='supply-curve-aggregation')[0]
-                except KeyError:
-                    pass
 
             if fpath == 'PIPELINE':
                 msg = 'Could not parse gen_fpath from previous pipeline jobs.'
