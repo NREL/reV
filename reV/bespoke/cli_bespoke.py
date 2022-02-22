@@ -232,9 +232,23 @@ def valid_config_keys():
               help='Dataset in the exclusions file that maps the exclusions '
               'to the resource data file being analyzed.')
 @click.option('--objective_function', '-obj', required=True, type=STR,
-              help='Bespoke wind plant optimization objective function.')
+              help='The optimization objective function as a string, should'
+              'return the objective to be minimized during optimization.'
+              'Variables available are:'
+              '- n_turbines: the number of turbines'
+              '- system_capacity: wind plant capacity'
+              '- aep: annual energy production'
+              '- self.wind_plant: the SAM wind plant object, through which'
+              'all SAM variables can be accessed'
+              '- cost: the annual cost of the wind plant')
 @click.option('--cost_function', '-cos', required=True, type=STR,
-              help='Bespoke wind plant optimization cost function.')
+              help='The cost function as a string, returns the annual cost'
+              'of the wind farm. Variables available are:'
+              '- n_turbines: the number of turbines'
+              '- system_capacity: wind plant capacity'
+              '- aep: annual energy production'
+              '- self.wind_plant: the SAM wind plant object, through which'
+              'all SAM variables can be accessed')
 @click.option('--points', '-p',
               default=None, type=SCPOINTS, show_default=True,
               help='Project points to analyze. This can either be a string '
