@@ -481,7 +481,7 @@ def from_config(ctx, config_file, verbose):
         launch_slurm(config, verbose)
 
 
-def get_h5_cmd(name, h5_file, out_dir, sub_dir, dsets, group, process_size,
+def get_h5_cmd(h5_file, out_dir, sub_dir, dsets, group, process_size,
                max_workers, plot_type, cmap, log_file, verbose, terminal):
     """Build CLI call for reV_h5."""
 
@@ -520,7 +520,7 @@ def get_h5_cmd(name, h5_file, out_dir, sub_dir, dsets, group, process_size,
     return cmd
 
 
-def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
+def get_sc_cmd(sc_table, out_dir, sub_dir, columns, plot_type, cmap,
                lcoe, log_file, verbose, terminal):
     """Build CLI call for supply_curve."""
 
@@ -556,7 +556,7 @@ def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     return cmd
 
 
-def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
+def get_excl_cmd(excl_fpath, out_dir, sub_dir, excl_dict,
                  area_filter_kernel, min_area, plot_type, cmap, plot_step,
                  log_file, verbose, terminal):
     """Build CLI call for exclusions."""
@@ -619,8 +619,7 @@ def get_multiple_cmds(config, out_dir, log_file, verbose):
             if (i == len(config.module_names) - 1) and (j == len(fpaths) - 1):
                 terminal = True
             if module.lower() == 'exclusions':
-                node_cmd.append(get_excl_cmd(config.name,
-                                             module_config.excl_fpath,
+                node_cmd.append(get_excl_cmd(module_config.excl_fpath,
                                              out_dir,
                                              module_config.sub_dir,
                                              module_config.excl_dict,
@@ -634,7 +633,7 @@ def get_multiple_cmds(config, out_dir, log_file, verbose):
                                              terminal))
             elif fpath.endswith('.h5'):
                 max_workers = config.execution_control.max_workers
-                node_cmd.append(get_h5_cmd(config.name, fpath, out_dir,
+                node_cmd.append(get_h5_cmd(fpath, out_dir,
                                            module_config.sub_dir,
                                            module_config.dsets,
                                            module_config.group,
@@ -646,7 +645,7 @@ def get_multiple_cmds(config, out_dir, log_file, verbose):
                                            verbose,
                                            terminal))
             elif fpath.endswith('.csv'):
-                node_cmd.append(get_sc_cmd(config.name, fpath, out_dir,
+                node_cmd.append(get_sc_cmd(fpath, out_dir,
                                            module_config.sub_dir,
                                            module_config.columns,
                                            module_config.plot_type,

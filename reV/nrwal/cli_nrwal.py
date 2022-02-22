@@ -226,7 +226,7 @@ def direct(ctx, gen_fpath, site_data, sam_files, nrwal_configs,
                              name, status)
 
 
-def get_node_cmd(name, gen_fpath, site_data, sam_files, nrwal_configs,
+def get_node_cmd(gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw, meta_gid_col, site_meta_cols,
                  log_dir, verbose):
     """Get a CLI call command for the reV-NRWAL cli."""
@@ -292,7 +292,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, gen_fpath, site_data, sam_files, nrwal_configs,
+    cmd = get_node_cmd(gen_fpath, site_data, sam_files, nrwal_configs,
                        output_request, save_raw, meta_gid_col, site_meta_cols,
                        log_dir, verbose)
     if sh_script:

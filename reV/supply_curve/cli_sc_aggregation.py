@@ -444,7 +444,7 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
         Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 
-def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
+def get_node_cmd(excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  excl_dict, res_class_dset, res_class_bins,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
@@ -554,7 +554,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath,
+    cmd = get_node_cmd(excl_fpath, gen_fpath, econ_fpath, res_fpath,
                        tm_dset, excl_dict,
                        res_class_dset, res_class_bins,
                        cf_dset, lcoe_dset, h5_dsets, data_layers,

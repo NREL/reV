@@ -359,7 +359,7 @@ def get_node_pc(points, sam_files, nodes):
     return pc
 
 
-def get_node_cmd(name, sam_files, cf_file, out_fpath, year=None,
+def get_node_cmd(sam_files, cf_file, out_fpath, year=None,
                  site_data=None, points=slice(0, 100), points_range=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
                  logdir='./out/log_econ', output_request='lcoe_fcr',
@@ -368,8 +368,6 @@ def get_node_cmd(name, sam_files, cf_file, out_fpath, year=None,
 
     Parameters
     ----------
-    name : str
-        Name of the job to be submitted.
     sam_files : dict | str | list
         SAM input configuration ID(s) and file path(s). Keys are the SAM
         config ID(s), top level value is the SAM path. Can also be a single
