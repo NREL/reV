@@ -25,11 +25,24 @@ class PlaceTurbines():
             should have everything in the plant defined, such that only the
             turbine coordinates and plant capacity need to be defined during
             the optimization.
-        objective_function: str
-            the objective function for wind plant layout optimization.
+        objective_function : str
+            The objective function of the optimization as a string, should
+            return the objective to be minimized during layout optimization.
+            Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
+                - cost: the annual cost of the wind plant (from cost_function)
         cost_function : str
-            the cost function for wind plant layout optimization. Should
-            return the annual plant costs.
+            The cost function as a string, should return the annual cost
+            of the wind farm. Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
         exclusions : ExclusionMaskFromDict
             The exclusions that define where turbines can be placed. Contains
             exclusions.latitude, exclusions.longitude, and exclusions.mask
@@ -148,8 +161,6 @@ class PlaceTurbines():
         self.wind_plant.assign_inputs()
         self.wind_plant.execute()
         aep = self.wind_plant.annual_energy()
-
-        # cost = self.cost_function(system_capacity)
         cost = eval(self.cost_function, globals(), locals())
         objective = eval(self.objective_function, globals(), locals())
 

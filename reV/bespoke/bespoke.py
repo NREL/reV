@@ -68,11 +68,24 @@ class BespokeSinglePlant:
         sam_sys_inputs : dict
             SAM windpower compute module system inputs not including the
             wind resource data.
-
-        # TODO
-        objective_function :
-        cost_function :
-
+        objective_function : str
+            The objective function of the optimization as a string, should
+            return the objective to be minimized during layout optimization.
+            Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
+                - cost: the annual cost of the wind plant (from cost_function)
+        cost_function : str
+            The cost function as a string, should return the annual cost
+            of the wind farm. Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -662,8 +675,6 @@ class BespokeSinglePlant:
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
         self._outputs["bespoke_aep"] = self.plant_optimizer.aep
         self._outputs["bespoke_objective"] = self.plant_optimizer.objective
-        # self._outputs["bespoke_annual_cost"] = \
-        #     self.cost_function(self.plant_optimizer.capacity)
         self._outputs["bespoke_annual_cost"] = \
             self.plant_optimizer.annual_cost
         self._outputs["included_area_capacity_density"] = \
@@ -769,11 +780,24 @@ class BespokeWindPlants(AbstractAggregation):
             analyze. The list is the (Beginning, end) (inclusive/exclusive,
             respectively) index split parameters for ProjectPoints.split()
             method.
-
-        # TODO
-        objective_function :
-        cost_function :
-
+        objective_function : str
+            The objective function of the optimization as a string, should
+            return the objective to be minimized during layout optimization.
+            Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
+                - cost: the annual cost of the wind plant (from cost_function)
+        cost_function : str
+            The cost function as a string, should return the annual cost
+            of the wind farm. Variables available are:
+                - n_turbines: the number of turbines
+                - system_capacity: wind plant capacity
+                - aep: annual energy production
+                - self.wind_plant: the SAM wind plant object, through which
+                all SAM variables can be accessed
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
