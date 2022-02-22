@@ -1,0 +1,49 @@
+{
+    "pipeline_config": "./config_pipeline.json",
+    "sets": [
+      {
+        "args": {
+          "input_constant_1": [
+            "1476.54 * 1000",
+            "1476.54 * 2000",
+            "1476.54 * 3000"
+          ],
+          "input_constant_2": [
+              18.02
+          ],
+          "input_constant_3": [
+            "17.91 * 1000",
+            "17.91 * 10000"
+          ]
+        },
+        "files": [
+          "./test.yaml",
+          "./test.yml"
+        ],
+        "set_tag": "set1"
+      },
+      {
+        "args": {
+            "input_constant_2": [
+                18.02,
+                19.04
+            ],
+            "some_equation": [
+                "np.exp(input_constant_1, input_constant_2) + another_input_constant",
+                "np.sum(input_constant_1, input_constant_2, another_input_constant)",
+                "input_constant_1 * input_constant_2 // 5"
+            ],
+            "some_equation_2": [
+                "(input_constant_3 ** 2) / (1.5 * 4235/input_constant_3)",
+                "(input_constant_3 ** 4) / (3 * 42/input_constant_3)",
+                "(input_constant_3 ** 1.7)"
+          ]
+        },
+        "files": [
+          "./test.yaml",
+          "./test.yml"
+        ],
+        "set_tag": "set2"
+      }
+    ]
+  }
