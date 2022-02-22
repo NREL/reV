@@ -334,6 +334,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
                                         name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Multi-year CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -356,12 +357,13 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         if out:
             msg = ('Kicked off reV multi-year collection job "{}" '
                    '(SLURM jobid #{}).'.format(name, out))
-            # add job to reV status file.
-            Status.add_job(
-                os.path.dirname(my_file), 'multi-year', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': os.path.basename(my_file),
-                           'dirout': os.path.dirname(my_file)})
+
+        # add job to reV status file.
+        Status.add_job(
+            os.path.dirname(my_file), 'multi-year', name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': os.path.basename(my_file),
+                       'dirout': os.path.dirname(my_file)})
 
     click.echo(msg)
     logger.info(msg)

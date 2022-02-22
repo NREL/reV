@@ -688,6 +688,7 @@ def launch_slurm(config, verbose):
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'QA-QC CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -712,10 +713,11 @@ def launch_slurm(config, verbose):
             msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
                    .format(config.name, out))
-            Status.add_job(
-                out_dir, 'qa-qc', config.name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, 'qa-qc', config.name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

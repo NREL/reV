@@ -528,6 +528,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
                                             hardware='eagle',
                                             subprocess_manager=slurm_manager)
 
+        msg = 'Econ CLI failed to submit jobs!'
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
@@ -552,11 +553,12 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
             if out:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}).'
                        .format(node_name, out))
-                # add job to reV status file.
-                Status.add_job(
-                    dirout, 'econ', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
-                               'fout': fout_node, 'dirout': dirout})
+
+            # add job to reV status file.
+            Status.add_job(
+                dirout, 'econ', node_name, replace=True,
+                job_attrs={'job_id': out, 'hardware': 'eagle',
+                           'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)
         logger.info(msg)

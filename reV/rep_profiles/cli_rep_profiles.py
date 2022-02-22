@@ -336,6 +336,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Rep profiles CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -354,10 +355,11 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
             msg = ('Kicked off reV rep profiles job "{}" '
                    '(SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'rep-profiles', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.h5'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, 'rep-profiles', name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.h5'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

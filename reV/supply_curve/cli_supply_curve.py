@@ -381,6 +381,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Supply Curve CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -399,10 +400,11 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         if out:
             msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'supply-curve', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, 'supply-curve', name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

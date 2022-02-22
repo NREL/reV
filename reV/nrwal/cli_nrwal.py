@@ -307,6 +307,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'NRWAL CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -329,10 +330,11 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         if out:
             msg = ('Kicked off reV-NRWAL job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'nrwal', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, 'nrwal', name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

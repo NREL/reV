@@ -324,6 +324,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                                         name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Collect CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -347,12 +348,13 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         if out:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            # add job to reV status file.
-            Status.add_job(
-                os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': os.path.basename(h5_file),
-                           'dirout': os.path.dirname(h5_file)})
+
+        # add job to reV status file.
+        Status.add_job(
+            os.path.dirname(h5_file), 'collect', name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': os.path.basename(h5_file),
+                       'dirout': os.path.dirname(h5_file)})
 
     click.echo(msg)
     logger.info(msg)

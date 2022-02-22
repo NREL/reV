@@ -722,6 +722,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                                             hardware='eagle',
                                             subprocess_manager=slurm_manager)
 
+        msg = 'Generation CLI failed to submit jobs!'
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
@@ -746,11 +747,12 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
             if out:
                 msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}).'
                        .format(node_name, out))
-                # add job to reV status file.
-                Status.add_job(
-                    dirout, 'generation', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
-                               'fout': fout_node, 'dirout': dirout})
+
+            # add job to reV status file.
+            Status.add_job(
+                dirout, 'generation', node_name, replace=True,
+                job_attrs={'job_id': out, 'hardware': 'eagle',
+                           'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)
         logger.info(msg)
