@@ -60,6 +60,10 @@ class PipelineConfig(AnalysisConfig):
                 if 'name' in config:
                     names.append(config.name)
 
+        # The following two exceptions are just extra protection -
+        # the user can no longer change "dirout" or "name" as of 2/23/2022.
+        # All dirouts should now automatically be set to "./" and job names
+        # should be inferrred from the directory name
         if len(set(dirouts)) != 1:
             raise ConfigError('Pipeline steps must have a common output '
                               'directory but received {} different '
