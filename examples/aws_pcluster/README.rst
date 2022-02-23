@@ -23,10 +23,11 @@ Setting up an AWS Parallel Cluster
     * Seems like EBS is probably fine and FSx is unnecessary for non-IO-intensive reV modules. Generation will source resource data from HSDS and so is probably fine with EBS. SC-aggregation is probably fine with EBS if you set ``pre_extract_inclusions=True``.
 
 #. `Login to your cluster <https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop/07-logon-pc.html>`_ from your cloud9 IDE: ``pcluster ssh pcluster_name -i ~/.ssh/lab-3-key``
-#. Get `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ and install.
+#. Get `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_, install, and activate your conda environment.
 
     #. ``wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh``
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
+    #. ``source ~/.bashrc``
 
 #. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See instructions below for details.
 #. Install reV
