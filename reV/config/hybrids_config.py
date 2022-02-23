@@ -33,6 +33,7 @@ class HybridsConfig(AnalysisConfig):
         """
         super().__init__(config)
         self._default_ratio_cols = ('solar_capacity', 'wind_capacity')
+        self.ratio_json_dict = self.get('ratio', None)
 
     @property
     def solar_fpath(self):
@@ -75,7 +76,7 @@ class HybridsConfig(AnalysisConfig):
     @property
     def ratio(self):
         """Get the ratio limit input mapping. """
-        return parse_ratio_input(self.get('ratio', None))
+        return parse_ratio_input(self.ratio_json_dict)
 
 
 def parse_ratio_input(ratio):

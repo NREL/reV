@@ -114,7 +114,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
             ctx.obj['FILLNA'] = config.fillna
             ctx.obj['LIMITS'] = config.limits
-            ctx.obj['RATIO'] = config.ratio
+            ctx.obj['RATIO'] = config.ratio_json_dict
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
