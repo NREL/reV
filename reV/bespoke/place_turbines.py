@@ -107,27 +107,34 @@ class PlaceTurbines():
                                                  origin=(0, 0))
 
         safe_polygons = MultiPolygon(polygons)
-        minx, miny, maxx, maxy = safe_polygons.bounds
-        safe_polygons = shapely.affinity.translate(safe_polygons, xoff=-minx,
-                                                   yoff=-miny)
-        self.full_polygons = safe_polygons.buffer(0)
 
-        # add extra setback to cell boundary
-        minx, miny, maxx, maxy = self.full_polygons.bounds
-        minx += self.min_spacing / 2.0
-        miny += self.min_spacing / 2.0
-        maxx -= self.min_spacing / 2.0
-        maxy -= self.min_spacing / 2.0
-
-        boundary_poly = \
-            Polygon(((minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)))
-        packing_polygons = boundary_poly.intersection(self.full_polygons)
-        if isinstance(packing_polygons, MultiPolygon):
-            self.packing_polygons = packing_polygons
-        elif isinstance(packing_polygons, Polygon):
-            self.packing_polygons = MultiPolygon([packing_polygons])
-        else:
+        if safe_polygons.area == 0.0:
+            self.full_polygons = MultiPolygon([])
             self.packing_polygons = MultiPolygon([])
+        else:
+            minx, miny, maxx, maxy = safe_polygons.bounds
+            safe_polygons = shapely.affinity.translate(safe_polygons,
+                                                       xoff=-minx,
+                                                       yoff=-miny)
+            self.full_polygons = safe_polygons.buffer(0)
+
+            # add extra setback to cell boundary
+            minx, miny, maxx, maxy = self.full_polygons.bounds
+            minx += self.min_spacing / 2.0
+            miny += self.min_spacing / 2.0
+            maxx -= self.min_spacing / 2.0
+            maxy -= self.min_spacing / 2.0
+
+            boundary_poly = \
+                Polygon(((minx, miny), (minx, maxy), (maxx, maxy),
+                         (maxx, miny)))
+            packing_polygons = boundary_poly.intersection(self.full_polygons)
+            if isinstance(packing_polygons, MultiPolygon):
+                self.packing_polygons = packing_polygons
+            elif isinstance(packing_polygons, Polygon):
+                self.packing_polygons = MultiPolygon([packing_polygons])
+            else:
+                self.packing_polygons = MultiPolygon([])
 
     def initialize_packing(self):
         """run the turbine packing algorithm (maximizing plant capacity) to
