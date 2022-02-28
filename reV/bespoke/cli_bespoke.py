@@ -20,6 +20,7 @@ from rex.utilities.cli_dtypes import (FLOAT, INT, STR, INTLIST, FLOATLIST,
                                       STRLIST, STR_OR_LIST, STRFLOAT)
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_mult
+from rex.utilities.utilities import get_class_properties, dict_str_load
 
 logger = logging.getLogger(__name__)
 
@@ -369,6 +370,10 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
         logger.info('Bespoke local is being run with with job name "{}" and '
                     'resource file: {}. Target output path is: {}'
                     .format(name, res_fpath, out_fpath))
+
+        if isinstance(excl_dict, str):
+            excl_dict = dict_str_load(excl_dict)
+
         t0 = time.time()
 
         try:
