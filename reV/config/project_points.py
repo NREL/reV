@@ -506,9 +506,9 @@ class ProjectPoints:
         df = pd.DataFrame(columns=['gid', 'config'])
         if isinstance(points, int):
             points = [points]
-        if isinstance(points, (list, tuple)):
+        if isinstance(points, (list, tuple, np.ndarray)):
             # explicit site list, set directly
-            if any(isinstance(i, (list, tuple)) for i in points):
+            if any(isinstance(i, (list, tuple, np.ndarray)) for i in points):
                 msg = "Provided project points is not flat: {}!".format(points)
                 logger.error(msg)
                 raise RuntimeError(msg)
@@ -561,7 +561,7 @@ class ProjectPoints:
             df = cls._parse_csv(points)
         elif isinstance(points, dict):
             df = pd.DataFrame(points)
-        elif isinstance(points, (int, slice, list, tuple)):
+        elif isinstance(points, (int, slice, list, tuple, np.ndarray)):
             df = cls._parse_sites(points, res_file=res_file)
         elif isinstance(points, pd.DataFrame):
             df = points
