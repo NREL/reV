@@ -130,7 +130,7 @@ def from_config(ctx, config_file, points_range, verbose):
 
     is_multi_node = (config.execution_control.option in ('eagle', 'slurm')
                      and config.points_range is None)
-    workers = config.execution_control.nodes if is_multi_node else 1
+    workers = config.execution_control.max_workers if is_multi_node else 1
 
     pc = BespokeWindPlants._parse_points(config.excl_fpath,
                                          config.res_fpath,
