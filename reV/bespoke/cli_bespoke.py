@@ -20,7 +20,6 @@ from rex.utilities.cli_dtypes import (FLOAT, INT, STR, INTLIST, FLOATLIST,
                                       STRLIST, STR_OR_LIST, STRFLOAT)
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_mult
-from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +131,9 @@ def from_config(ctx, config_file, points_range, verbose):
                      and config.points_range is None)
     workers = config.execution_control.nodes if is_multi_node else 1
 
-    pc = BespokeWindPlants._parse_points(config.excl_fpath, config.tm_dset,
+    pc = BespokeWindPlants._parse_points(config.excl_fpath,
+                                         config.res_fpath,
+                                         config.tm_dset,
                                          config.resolution,
                                          config.project_points,
                                          config.points_range,
