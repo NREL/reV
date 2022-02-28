@@ -55,7 +55,8 @@ def test_bespoke_points():
 
         points = None
         points_range = None
-        pc = BespokeWindPlants._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
+                                             TM_DSET, 64, points,
                                              points_range, SAM)
         pp = pc.project_points
 
@@ -65,7 +66,8 @@ def test_bespoke_points():
 
         points = None
         points_range = (0, 10)
-        pc = BespokeWindPlants._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
+                                             TM_DSET, 64, points,
                                              points_range, {'default': SAM})
         pp = pc.project_points
         assert len(pp) == 10
@@ -74,7 +76,8 @@ def test_bespoke_points():
 
         points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
         points_range = None
-        pc = BespokeWindPlants._parse_points(excl_fp, TM_DSET, 64, points,
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
+                                             TM_DSET, 64, points,
                                              points_range, {'default': SAM})
         pp = pc.project_points
         assert len(pp) == 3

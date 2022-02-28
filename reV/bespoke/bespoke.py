@@ -16,6 +16,7 @@ from importlib import import_module
 from numbers import Number
 from concurrent.futures import as_completed
 
+from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
 from reV.handlers.outputs import Outputs
@@ -861,8 +862,8 @@ class BespokeWindPlants(AbstractAggregation):
 
         BespokeSinglePlant.check_dependencies()
 
-        self._points_control = self._parse_points(excl_fpath, tm_dset,
-                                                  resolution, points,
+        self._points_control = self._parse_points(excl_fpath, res_fpath,
+                                                  tm_dset, resolution, points,
                                                   points_range, sam_configs)
         self._project_points = self._points_control.project_points
 
@@ -888,7 +889,7 @@ class BespokeWindPlants(AbstractAggregation):
                     .format(self._project_points))
 
     @staticmethod
-    def _parse_points(excl_fpath, tm_dset, resolution,
+    def _parse_points(excl_fpath, res_fpath, tm_dset, resolution,
                       points, points_range, sam_configs, sites_per_worker=1,
                       workers=None):
         """Parse a project points object using either an explicit project
@@ -900,6 +901,10 @@ class BespokeWindPlants(AbstractAggregation):
         excl_fpath : str | list | tuple
             Filepath to exclusions h5 with techmap dataset
             (can be one or more filepaths).
+        res_fpath : str
+            Wind resource h5 filepath in NREL WTK format. Can also include
+            unix-style wildcards like /dir/wind_*.h5 for multiple years of
+            resource data.
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -943,6 +948,8 @@ class BespokeWindPlants(AbstractAggregation):
                         'from exclusion file and techmap dataset.')
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
                 points = sc.valid_sc_points(tm_dset).tolist()
+
+        points = ProjectPoints._parse_points(points, res_file=res_fpath)
 
         if workers is not None:
             sites_per_worker = int(np.ceil(len(points) / workers))
