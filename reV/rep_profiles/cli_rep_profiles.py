@@ -12,6 +12,7 @@ import time
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
 from reV.rep_profiles.rep_profiles import RepProfiles
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -92,11 +93,13 @@ def from_config(ctx, config_file, verbose):
     for name, gen_fpath, dset in zip(names, fpaths, dsets):
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'rep-profiles',
-                                                name)
+            status = Status.retrieve_job_status(
+                config.dirout, module=ModuleName.REP_PROFILES, job_name=name
+            )
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'rep-profiles', name, replace=True,
+                    config.dirout, module=ModuleName.REP_PROFILES,
+                    job_name=name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
@@ -236,7 +239,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': [gen_fpath, rev_summary]}
-        Status.make_job_file(out_dir, 'rep-profiles', name, status)
+        Status.make_job_file(out_dir, ModuleName.REP_PROFILES, name, status)
 
 
 def get_node_cmd(gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
@@ -332,7 +335,9 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'rep-profiles', name,
+    status = Status.retrieve_job_status(out_dir,
+                                        module=ModuleName.REP_PROFILES,
+                                        job_name=name,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
@@ -357,7 +362,8 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                    .format(name, out))
 
         Status.add_job(
-            out_dir, 'rep-profiles', name, replace=True,
+            out_dir, module=ModuleName.REP_PROFILES,
+            job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': '{}.h5'.format(name), 'dirout': out_dir})
 

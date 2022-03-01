@@ -5,6 +5,7 @@ reV QA/QC config
 import logging
 from warnings import warn
 
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
@@ -67,9 +68,9 @@ class QaQcConfig(AnalysisConfig):
     @property
     def rep_profiles(self):
         """Get the representative profile QA/QC inputs in the config dict."""
-        rep_profiles = self.modules.get('rep-profiles', None)
+        rep_profiles = self.modules.get(ModuleName.REP_PROFILES, None)
         if rep_profiles is not None:
-            rep_profiles = QaQcModule('rep-profiles', rep_profiles,
+            rep_profiles = QaQcModule(ModuleName.REP_PROFILES, rep_profiles,
                                       self.dirout)
 
         return rep_profiles

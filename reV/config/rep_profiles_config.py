@@ -8,6 +8,7 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
@@ -51,8 +52,8 @@ class RepProfilesConfig(AnalysisConfig):
             for target_module, target in targets.items():
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target=target,
-                        target_module=target_module)[0]
+                        self.dirout, module=ModuleName.REP_PROFILES,
+                        target=target, target_module=target_module)[0]
                 except KeyError:
                     pass
                 else:
@@ -84,8 +85,8 @@ class RepProfilesConfig(AnalysisConfig):
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='fpath',
-                        target_module=target_module)[0]
+                        self.dirout, module=ModuleName.REP_PROFILES,
+                        target='fpath', target_module=target_module)[0]
                 except KeyError:
                     pass
                 else:
