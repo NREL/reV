@@ -20,7 +20,7 @@ from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning,
                                       OffshoreWindInputWarning)
-from reV.utilities import log_versions
+from reV.utilities import log_versions, ModuleName
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -596,7 +596,7 @@ class BaseGen(ABC):
             PointsControl object instance.
         """
 
-        if tech not in cls.OPTIONS and tech.lower() != 'econ':
+        if tech not in cls.OPTIONS and tech.lower() != ModuleName.ECON:
             msg = ('Did not recognize reV-SAM technology string "{}". '
                    'Technology string options are: {}'
                    .format(tech, list(cls.OPTIONS.keys())))

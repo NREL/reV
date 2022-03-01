@@ -12,6 +12,7 @@ import logging
 from reV.utilities.exceptions import ConfigError, PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
+from reV.utilities import ModuleName
 from rex.multi_file_resource import MultiFileResource
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         fpath = self.get('econ_fpath', None)
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', 'collect', 'econ']
+            target_modules = ['multi-year', 'collect', ModuleName.ECON]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(

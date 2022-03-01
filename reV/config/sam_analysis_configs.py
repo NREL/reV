@@ -16,6 +16,7 @@ from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.utilities.exceptions import ConfigError
+from reV.utilities import ModuleName
 from reV.pipeline.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
@@ -261,7 +262,7 @@ class GenConfig(SAMAnalysisConfig):
 class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
 
-    NAME = 'econ'
+    NAME = ModuleName.ECON
 
     def __init__(self, config):
         """
@@ -317,9 +318,9 @@ class EconConfig(SAMAnalysisConfig):
                 self._cf_files = [fname.format(year) for
                                   year in self.analysis_years]
             elif 'PIPELINE' in fname:
-                self._cf_files = Pipeline.parse_previous(self._super_dirout,
-                                                         'econ',
-                                                         target='fpath')
+                self._cf_files = Pipeline.parse_previous(
+                    self._super_dirout, module=ModuleName.ECON, target='fpath'
+                )
             else:
                 # only one resource file request, still put in list
                 self._cf_files = [fname]

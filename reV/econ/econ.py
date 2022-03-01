@@ -16,6 +16,7 @@ from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.utilities.exceptions import ExecutionError, OffshoreWindInputWarning
+from reV.utilities import ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -219,7 +220,7 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = super().get_pc(points, points_range, sam_configs, 'econ',
+        pc = super().get_pc(points, points_range, sam_configs, ModuleName.ECON,
                             sites_per_worker=sites_per_worker,
                             res_file=cf_file)
 
