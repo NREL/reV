@@ -18,6 +18,7 @@ from reV.generation.generation import Gen
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
@@ -153,11 +154,13 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
         ctx.obj['NAME'] = name_year
-        status = Status.retrieve_job_status(config.dirout, 'generation',
-                                            name_year)
+        status = Status.retrieve_job_status(
+            config.dirout, module=ModuleName.GENERATION, job_name=name_year
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'generation', name_year, replace=True,
+                config.dirout, module=ModuleName.GENERATION,
+                job_name=name_year, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': fout,
                            'dirout': config.dirout})
@@ -446,7 +449,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     # add job to reV status file.
     status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
               'runtime': runtime, 'finput': res_file}
-    Status.make_job_file(dirout, 'generation', name, status)
+    Status.make_job_file(dirout, ModuleName.GENERATION, name, status)
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -718,7 +721,9 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
         if sh_script:
             cmd = sh_script + '\n' + cmd
 
-        status = Status.retrieve_job_status(dirout, 'generation', node_name,
+        status = Status.retrieve_job_status(dirout,
+                                            module=ModuleName.GENERATION,
+                                            job_name=node_name,
                                             hardware='eagle',
                                             subprocess_manager=slurm_manager)
 
@@ -750,7 +755,8 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
 
             # add job to reV status file.
             Status.add_job(
-                dirout, 'generation', node_name, replace=True,
+                dirout, module=ModuleName.GENERATION,
+                job_name=node_name, replace=True,
                 job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': fout_node, 'dirout': dirout})
 
