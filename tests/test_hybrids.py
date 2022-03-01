@@ -232,6 +232,16 @@ def test_ratios_input(ratio_cols, ratio_bounds, bounds):
     assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_denominator)]
                   <= h.hybrid_meta[ratio_denominator])
 
+    if 'capacity' in ratio:
+        max_solar_capacities = h.hybrid_meta['hybrid_solar_capacity']
+        max_solar_capacities = max_solar_capacities.values.reshape(1, -1)
+        assert np.all(h.profiles['hybrid_solar_profile']
+                      <= max_solar_capacities)
+        max_wind_capacities = h.hybrid_meta['hybrid_wind_capacity']
+        max_wind_capacities = max_wind_capacities.values.reshape(1, -1)
+        assert np.all(h.profiles['hybrid_wind_profile']
+                      <= max_wind_capacities)
+
 
 def test_rep_profile_idx_map():
     """Test that rep profile index mappings are correct shape. """
