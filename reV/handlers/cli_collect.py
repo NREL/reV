@@ -12,6 +12,7 @@ import time
 from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.pipeline.status import Status
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT
@@ -96,11 +97,15 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FILE_PREFIX'] = file_prefix
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'collect',
-                                                ctx.obj['NAME'])
+            status = Status.retrieve_job_status(
+                config.dirout,
+                module=ModuleName.COLLECT,
+                job_name=ctx.obj['NAME']
+            )
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'collect', ctx.obj['NAME'], replace=True,
+                    config.dirout, module=ModuleName.COLLECT,
+                    job_name=ctx.obj['NAME'], replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': file_prefix + '.h5',
                                'dirout': config.dirout})
@@ -209,7 +214,9 @@ def collect(ctx, verbose):
               'fout': os.path.basename(h5_file), 'job_status': 'successful',
               'runtime': runtime,
               'finput': os.path.join(h5_dir, '{}*.h5'.format(file_prefix))}
-    Status.make_job_file(os.path.dirname(h5_file), 'collect', name, status)
+    Status.make_job_file(
+        os.path.dirname(h5_file), ModuleName.COLLECT, name, status
+    )
 
 
 def get_node_cmd(h5_file, h5_dir, project_points, dsets,
@@ -320,8 +327,9 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     if sh_script:
         cmd = sh_script + '\n' + cmd
 
-    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name, hardware='eagle',
+    status = Status.retrieve_job_status(os.path.dirname(h5_file),
+                                        module=ModuleName.COLLECT,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Collect CLI failed to submit jobs!'
@@ -351,7 +359,8 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
         # add job to reV status file.
         Status.add_job(
-            os.path.dirname(h5_file), 'collect', name, replace=True,
+            os.path.dirname(h5_file), module=ModuleName.COLLECT,
+            job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': os.path.basename(h5_file),
                        'dirout': os.path.dirname(h5_file)})

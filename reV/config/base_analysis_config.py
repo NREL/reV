@@ -10,6 +10,7 @@ from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
 from reV.utilities.exceptions import (ConfigError, ConfigWarning,
                                       reVDeprecationWarning)
+from reV.utilities import ModuleName
 
 from rex.utilities.utilities import get_class_properties
 
@@ -156,7 +157,7 @@ class AnalysisConfig(BaseConfig):
             self._name = os.path.basename(os.path.normpath(self.dirout))
 
             # collect name is simple, will be added to what is being collected
-            if self.NAME == 'collect':
+            if self.NAME == ModuleName.COLLECT:
                 self._name = self.NAME
 
             # Analysis job name tag (helps ensure unique job name)

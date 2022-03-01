@@ -11,6 +11,7 @@ import logging
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
+from reV.utilities import ModuleName
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class CollectionConfig(AnalysisConfig):
     """File collection config."""
 
-    NAME = 'collect'
+    NAME = ModuleName.COLLECT
     REQUIREMENTS = ('dsets', 'file_prefixes')
 
     def __init__(self, config):
@@ -49,7 +50,8 @@ class CollectionConfig(AnalysisConfig):
         self._coldir = self.get('collect_directory', self._coldir)
 
         if self._coldir == 'PIPELINE':
-            self._coldir = Pipeline.parse_previous(self.dirout, 'collect',
+            self._coldir = Pipeline.parse_previous(self.dirout,
+                                                   module=ModuleName.COLLECT,
                                                    target='dirout')[0]
         return self._coldir
 
@@ -94,7 +96,7 @@ class CollectionConfig(AnalysisConfig):
 
     def _parse_pipeline_prefixes(self):
         """Parse reV pipeline for file prefixes from previous module."""
-        files = Pipeline.parse_previous(self.dirout, 'collect',
+        files = Pipeline.parse_previous(self.dirout, module=ModuleName.COLLECT,
                                         target='fout')
         for i, fname in enumerate(files):
             files[i] = '_'.join([c for c in fname.split('_')

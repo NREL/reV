@@ -50,9 +50,9 @@ class QaQcConfig(AnalysisConfig):
     @property
     def collect(self):
         """Get the collect QA/QC inputs in the config dict."""
-        collect = self.modules.get('collect', None)
+        collect = self.modules.get(ModuleName.COLLECT, None)
         if collect is not None:
-            collect = QaQcModule('collect', collect, self.dirout)
+            collect = QaQcModule(ModuleName.COLLECT, collect, self.dirout)
 
         return collect
 

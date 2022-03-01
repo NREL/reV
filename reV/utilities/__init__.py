@@ -9,6 +9,7 @@ from reV.version import __version__
 
 
 class ModuleName(str, Enum):
+    COLLECT = 'collect'
     ECON = 'econ'
     GENERATION = 'generation'
     REP_PROFILES = 'rep-profiles'
