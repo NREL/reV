@@ -487,7 +487,7 @@ class MetaHybridizer:
                        "`RatioColumns`")
                 e = msg.format(cols)
                 logger.error(e)
-                raise InputError(e) from None
+                raise InputError(e)
 
     def _validate_ratio_cols_prefixed(self):
         """Ensure the ratio columns are formatted correctly.
@@ -545,7 +545,7 @@ class MetaHybridizer:
                        "matches one of the ratio columns.")
                 e = msg.format(cols.fixed, cols[0:2])
                 logger.error(e)
-                raise InputError(e) from None
+                raise InputError(e)
 
     def _validate_ratio(self):
         """Ensure the ratio value is input correctly.
