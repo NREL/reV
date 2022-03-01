@@ -2,9 +2,14 @@
 """
 reV utilities.
 """
+from enum import Enum
 import PySAM
 from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
+
+
+class ModuleName(str, Enum):
+    REP_PROFILES = 'rep-profiles'
 
 
 def log_versions(logger):
