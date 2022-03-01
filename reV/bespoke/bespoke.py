@@ -20,6 +20,7 @@ from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
 from reV.handlers.outputs import Outputs
+from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
@@ -972,11 +973,11 @@ class BespokeWindPlants(AbstractAggregation):
                     'Could not find required exclusions file: '
                     '{}'.format(path))
 
-            with h5py.File(path, 'r') as f:
-                if self._tm_dset not in f:
-                    raise FileInputError('Could not find techmap dataset "{}" '
-                                         'in exclusions file: {}'
-                                         .format(self._tm_dset, path))
+        with ExclusionLayers(paths) as excl:
+            if self._tm_dset not in excl:
+                raise FileInputError('Could not find techmap dataset "{}" '
+                                     'in exclusions file: {}'
+                                     .format(self._tm_dset, path))
 
         # just check that this file exists, cannot check res_fpath if *glob
         Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
