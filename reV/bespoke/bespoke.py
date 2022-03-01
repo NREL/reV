@@ -4,7 +4,6 @@ reV bespoke wind plant analysis tools
 """
 # TODO update docstring
 # TODO check on outputs
-import h5py
 import logging
 import copy
 import pandas as pd
