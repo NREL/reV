@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class RepProfilesConfig(AnalysisConfig):
     """Representative Profiles config."""
 
-    NAME = 'rep_profiles'
+    NAME = ModuleName.REP_PROFILES
     REQUIREMENTS = ('gen_fpath', 'rev_summary', 'reg_cols')
 
     def __init__(self, config):
@@ -45,7 +45,7 @@ class RepProfilesConfig(AnalysisConfig):
         fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
-            targets = {'multi-year': 'fpath',
+            targets = {ModuleName.MULTI_YEAR: 'fpath',
                        ModuleName.COLLECT: 'fpath',
                        'generation': 'fpath',
                        'supply-curve-aggregation': 'gen_fpath'}
