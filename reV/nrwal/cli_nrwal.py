@@ -21,6 +21,7 @@ from reV.config.nrwal_config import RevNrwalConfig
 from reV.pipeline.status import Status
 from reV.nrwal.nrwal import RevNrwal
 from reV.utilities.cli_dtypes import SAMFILES
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, INT, STRLIST
@@ -90,11 +91,13 @@ def from_config(ctx, config_file, verbose):
         job_name = '{}_{}'.format(name, str(i).zfill(2))
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'nrwal',
-                                                job_name)
+            status = Status.retrieve_job_status(config.dirout,
+                                                module=ModuleName.NRWAL,
+                                                job_name=job_name)
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'nrwal', job_name, replace=True,
+                    config.dirout, module=ModuleName.NRWAL,
+                    job_names=job_name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}_nrwal.h5'.format(job_name),
                                'dirout': config.dirout,
@@ -222,7 +225,7 @@ def direct(ctx, gen_fpath, site_data, sam_files, nrwal_configs,
                   'fout': os.path.basename(gen_fpath),
                   'job_status': 'successful',
                   'runtime': runtime, 'finput': gen_fpath}
-        Status.make_job_file(os.path.dirname(gen_fpath), 'nrwal',
+        Status.make_job_file(os.path.dirname(gen_fpath), ModuleName.NRWAL,
                              name, status)
 
 
@@ -303,8 +306,8 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'nrwal', name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir, module=ModuleName.NRWAL,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
     msg = 'NRWAL CLI failed to submit jobs!'
@@ -332,7 +335,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
                    .format(name, out))
 
         Status.add_job(
-            out_dir, 'nrwal', name, replace=True,
+            out_dir, module=ModuleName.NRWAL, job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': '{}.csv'.format(name), 'dirout': out_dir})
 

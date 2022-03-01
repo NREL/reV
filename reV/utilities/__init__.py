@@ -13,6 +13,7 @@ class ModuleName(str, Enum):
     ECON = 'econ'
     GENERATION = 'generation'
     MULTI_YEAR = 'multi-year'
+    NRWAL = 'nrwal'
     REP_PROFILES = 'rep-profiles'
 
 

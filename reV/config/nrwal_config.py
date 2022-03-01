@@ -9,6 +9,7 @@ import logging
 
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
+from reV.utilities import ModuleName
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 class RevNrwalConfig(AnalysisConfig):
     """Offshore wind aggregation config."""
 
-    NAME = 'nrwal'
+    NAME = ModuleName.NRWAL
     REQUIREMENTS = ('gen_fpath', 'site_data', 'sam_files', 'nrwal_configs',
                     'output_request')
 
@@ -41,7 +42,7 @@ class RevNrwalConfig(AnalysisConfig):
         fpaths = self['gen_fpath']
         if fpaths == 'PIPELINE':
             fpaths = Pipeline.parse_previous(
-                self.dirout, 'nrwal', target='fpath',
+                self.dirout, module=ModuleName.NRWAL, target='fpath',
                 target_module='generation')
 
         if isinstance(fpaths, str) and '*' in fpaths:
