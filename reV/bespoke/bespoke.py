@@ -962,16 +962,21 @@ class BespokeWindPlants(AbstractAggregation):
     def _check_files(self):
         """Do a preflight check on input files"""
 
-        if not os.path.exists(self._excl_fpath):
-            raise FileNotFoundError('Could not find required exclusions file: '
-                                    '{}'.format(self._excl_fpath))
+        paths = self._excl_fpath
+        if isinstance(self._excl_fpath, str):
+            paths = [self._excl_fpath]
 
-        with h5py.File(self._excl_fpath, 'r') as f:
-            if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
+        for path in paths:
+            if not os.path.exists(path):
+                raise FileNotFoundError(
+                    'Could not find required exclusions file: '
+                    '{}'.format(path))
+
+            with h5py.File(path, 'r') as f:
+                if self._tm_dset not in f:
+                    raise FileInputError('Could not find techmap dataset "{}" '
+                                         'in exclusions file: {}'
+                                         .format(self._tm_dset, path))
 
         # just check that this file exists, cannot check res_fpath if *glob
         Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
