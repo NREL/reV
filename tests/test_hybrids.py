@@ -10,11 +10,9 @@ import json
 from click.testing import CliRunner
 
 from reV.hybrids import Hybridization, HYBRID_METHODS
-from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN,
-                                 OUTPUT_PROFILE_NAMES, RatioColumns)
+from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
-from reV.utilities.exceptions import (FileInputError, InputError,
-                                      OutputWarning, InputWarning)
+from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
@@ -59,6 +57,35 @@ def test_hybridization_profile_output_single_resource():
     weighted_solar = solar_cap * solar_test_profile
 
     h = Hybridization(SOLAR_FPATH, WIND_FPATH, allow_solar_only=True).run_all()
+    hp, hsp, hwp, = h.profiles.values()
+    h_meta = h.hybrid_meta
+    h_idx = np.where(h_meta['sc_point_gid'] == sc_point_gid)[0][0]
+
+    assert np.allclose(hp[:, h_idx], weighted_solar)
+    assert np.allclose(hsp[:, h_idx], weighted_solar)
+    assert np.allclose(hp[:, h_idx], hsp[:, h_idx])
+    assert np.allclose(hwp[:, h_idx], 0)
+
+
+def test_hybridization_profile_output_with_ratio_none():
+    """Test that the hybridization calculation is correct (1 resource). """
+
+    sc_point_gid = 40005
+
+    with Resource(SOLAR_FPATH) as res:
+        solar_idx = np.where(
+            res.meta['sc_point_gid'] == sc_point_gid
+        )[0][0]
+
+        solar_cap = res.meta.loc[solar_idx, 'capacity']
+        solar_test_profile = res['rep_profiles_0', :, solar_idx]
+
+    weighted_solar = solar_cap * solar_test_profile
+
+    h = Hybridization(
+        SOLAR_FPATH, WIND_FPATH, allow_solar_only=True,
+        ratio=None, ratio_bounds=None
+    ).run_all()
     hp, hsp, hwp, = h.profiles.values()
     h_meta = h.hybrid_meta
     h_idx = np.where(h_meta['sc_point_gid'] == sc_point_gid)[0][0]
@@ -148,107 +175,62 @@ def test_meta_hybridization(input_combination, expected_shape, overlap):
     assert set(h.hybrid_meta['sc_point_gid']) == overlap
 
 
-def test_limits_and_ratios_output_values_with_fixed_ratio_col():
-    """Test that limits and ratios are properly applied in succession. """
-
-    limits = {'solar_capacity': 50, 'wind_capacity': 0.5}
-    ratio_cols = RatioColumns(
-        'solar_capacity', 'wind_capacity', fixed='wind_capacity'
-    )
-    ratios = {ratio_cols: (0.3, 3.6)}
-    bounds = (0.3 - 1e6, 3.6 + 1e6)
-
-    h = Hybridization(
-        SOLAR_FPATH, WIND_FPATH,
-        limits=limits,
-        ratios=ratios
-    ).run_all()
-
-    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
-    assert np.all(ratios <= bounds[-1])
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-                  <= h.hybrid_meta[ratio_cols.num])
-    assert np.allclose(h.hybrid_meta['hybrid_{}'.format(ratio_cols.fixed)],
-                       h.hybrid_meta[ratio_cols.fixed])
-    assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
-    assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
-
-
 def test_limits_and_ratios_output_values():
     """Test that limits and ratios are properly applied in succession. """
 
     limits = {'solar_capacity': 50, 'wind_capacity': 0.5}
-    ratio_cols = RatioColumns('solar_capacity', 'wind_capacity')
-    ratios = {ratio_cols: (0.3, 3.6)}
+    ratio_numerator = 'solar_capacity'
+    ratio_denominator = 'wind_capacity'
+    ratio = '{}/{}'.format(ratio_numerator, ratio_denominator)
+    ratio_bounds = (0.3, 3.6)
     bounds = (0.3 - 1e6, 3.6 + 1e6)
 
     h = Hybridization(
         SOLAR_FPATH, WIND_FPATH,
         limits=limits,
-        ratios=ratios
+        ratio=ratio,
+        ratio_bounds=ratio_bounds
     ).run_all()
 
-    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
+    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_numerator)]
+              / h.hybrid_meta['hybrid_{}'.format(ratio_denominator)])
     assert np.all(ratios.between(*bounds))
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-                  <= h.hybrid_meta[ratio_cols.num])
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)]
-                  <= h.hybrid_meta[ratio_cols.denom])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_numerator)]
+                  <= h.hybrid_meta[ratio_numerator])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_denominator)]
+                  <= h.hybrid_meta[ratio_denominator])
     assert np.all(h.hybrid_meta['solar_capacity'] <= limits['solar_capacity'])
     assert np.all(h.hybrid_meta['wind_capacity'] <= limits['wind_capacity'])
 
 
 @pytest.mark.parametrize("ratio_cols", [
     ('solar_capacity', 'wind_capacity'),
-    ('solar_area_sq_km', 'wind_area_sq_km'),
-    ('solar_capacity', 'wind_capacity', 'solar_capacity'),
-    ('solar_capacity', 'wind_capacity', 'wind_capacity'),
+    ('solar_area_sq_km', 'wind_area_sq_km')
 ])
-@pytest.mark.parametrize("ratio, bounds", [
-    (0.5, (0.5 - 1e6, 0.5 + 1e6)),
-    (1, (1 - 1e6, 1 + 1e6)),
+@pytest.mark.parametrize("ratio_bounds, bounds", [
+    ((0.5, 0.5), (0.5 - 1e6, 0.5 + 1e6)),
+    ((1, 1), (1 - 1e6, 1 + 1e6)),
     ((0.5, 1.5), (0.5 - 1e6, 1.5 + 1e6)),
     ((0.3, 3.6), (0.3 - 1e6, 3.6 + 1e6))
 ])
-def test_ratios_input(ratio_cols, ratio, bounds):
+def test_ratios_input(ratio_cols, ratio_bounds, bounds):
     """Test that the hybrid meta limits the ratio columns correctly. """
-    ratio_cols = RatioColumns(*ratio_cols)
-    if ratio_cols.fixed is None:
-        h = Hybridization(
-            SOLAR_FPATH, WIND_FPATH,
-            ratios={ratio_cols: ratio}
-        ).run_all()
-    else:
-        with pytest.warns(InputWarning) as record:
-            h = Hybridization(
-                SOLAR_FPATH, WIND_FPATH,
-                ratios={ratio_cols: ratio}
-            ).run_all()
-        warn_msg = record[0].message.args[0]
-        assert "Detected ratio values" in warn_msg
-        assert "but unable to adjust because ratio" in warn_msg
+    ratio_numerator, ratio_denominator = ratio_cols
+    ratio = '{}/{}'.format(ratio_numerator, ratio_denominator)
+    h = Hybridization(
+        SOLAR_FPATH, WIND_FPATH,
+        ratio=ratio,
+        ratio_bounds=ratio_bounds
+    ).run_all()
 
-    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-              / h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)])
+    ratios = (h.hybrid_meta['hybrid_{}'.format(ratio_numerator)]
+              / h.hybrid_meta['hybrid_{}'.format(ratio_denominator)])
 
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.num)]
-                  <= h.hybrid_meta[ratio_cols.num])
-    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_cols.denom)]
-                  <= h.hybrid_meta[ratio_cols.denom])
-
-    if ratio_cols.fixed is None:
-        assert np.all(ratios.between(*bounds))
-    else:
-        assert np.allclose(
-            h.hybrid_meta['hybrid_{}'.format(ratio_cols.fixed)],
-            h.hybrid_meta[ratio_cols.fixed]
-        )
-        if ratio_cols.fixed == ratio_cols.num:
-            assert np.all(ratios >= bounds[0])
-        else:
-            assert np.all(ratios <= bounds[-1])
+    assert np.all(ratios.between(*bounds))
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_numerator)]
+                  <= h.hybrid_meta[ratio_numerator])
+    assert np.all(h.hybrid_meta['hybrid_{}'.format(ratio_denominator)]
+                  <= h.hybrid_meta[ratio_denominator])
 
 
 def test_rep_profile_idx_map():
@@ -385,52 +367,76 @@ def test_duplicate_lat_long_values():
         assert "Detected mismatched coordinate values" in str(excinfo.value)
 
 
-def test_invalid_ratio_input():
+def test_invalid_ratio_bounds_length_input():
     """Test improper ratios input. """
 
-    cols = RatioColumns('solar_capacity', 'wind_capacity')
+    ratio = 'solar_capacity/wind_capacity'
     with pytest.raises(InputError) as excinfo:
         Hybridization(
-            SOLAR_FPATH, WIND_FPATH, ratios={cols: (1, 2, 3)}
+            SOLAR_FPATH, WIND_FPATH, ratio=ratio, ratio_bounds=(1, 2, 3)
         )
 
-    assert ("Input for ratio of columns ('solar_capacity', 'wind_capacity') "
-            "not understood: (1, 2, 3).") in str(excinfo.value)
+    msg = ("Length of input for ratio_bounds is 3 "
+           "- but is required to be of length 2.")
+    assert msg in str(excinfo.value)
 
 
 def test_ratio_column_missing():
     """Test missing ratio column. """
 
-    cols = RatioColumns('solar_col_dne', 'wind_capacity')
+    ratio = 'solar_col_dne/wind_capacity'
     with pytest.raises(FileInputError) as excinfo:
-        Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
+        Hybridization(
+            SOLAR_FPATH, WIND_FPATH, ratio=ratio, ratio_bounds=(1, 1)
+        )
 
     assert "Input ratios column" in str(excinfo.value)
     assert "not found" in str(excinfo.value)
 
 
+@pytest.mark.parametrize("ratio", [None, ('solar_capacity', 'wind_capacity')])
+def test_ratio_not_string(ratio):
+    """Test ratio input is not string. """
+
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(
+            SOLAR_FPATH, WIND_FPATH, ratio=ratio, ratio_bounds=(1, 1)
+        )
+
+    assert "Ratio input type " in str(excinfo.value)
+    assert "not understood" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "ratio",
+    ['solar_capacity',
+     'solar_capacity/wind_capacity/solar_capacity']
+)
+def test_invalid_ratio_format(ratio):
+    """Test ratio input is not string. """
+
+    with pytest.raises(InputError) as excinfo:
+        Hybridization(
+            SOLAR_FPATH, WIND_FPATH, ratio=ratio, ratio_bounds=(1, 1)
+        )
+
+    long_msg = ("Please make sure the ratio input is a string in the form "
+                "'numerator_column_name/denominator_column_name'")
+    assert "Ratio input " in str(excinfo.value)
+    assert long_msg in str(excinfo.value)
+
+
 def test_invalid_ratio_column_name():
     """Test invalid inputs for ratio columns. """
 
-    cols = RatioColumns('un_prefixed_col', 'wind_capacity')
+    ratio = 'un_prefixed_col/wind_capacity'
     with pytest.raises(InputError) as excinfo:
-        Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
+        Hybridization(
+            SOLAR_FPATH, WIND_FPATH, ratio=ratio, ratio_bounds=(1, 1)
+        )
 
     assert "Input ratios column" in str(excinfo.value)
     assert "does not start with a valid prefix" in str(excinfo.value)
-
-
-def test_invalid_fixed_ratio_column_name():
-    """Test invalid inputs for fixed ratio column. """
-
-    cols = RatioColumns(
-        'solar_capacity', 'wind_capacity', fixed='non-matching-col'
-    )
-    with pytest.raises(InputError) as excinfo:
-        Hybridization(SOLAR_FPATH, WIND_FPATH, ratios={cols: 1})
-
-    assert "Fixed column 'non-matching-col'" in str(excinfo.value)
-    assert "is not one of the input ratio columns" in str(excinfo.value)
 
 
 def test_no_overlap_in_merge_column_values():
@@ -567,27 +573,20 @@ def test_hybrids_data_contains_col():
     (SOLAR_FPATH, WIND_FPATH),
     (SOLAR_FPATH_30_MIN, WIND_FPATH)
 ])
-@pytest.mark.parametrize("ratio_cols", [
-    None,
-    ('solar_capacity', 'wind_capacity', None),
-    ('solar_capacity', 'wind_capacity', 'wind_capacity'),
-    ('solar_area_sq_km', 'wind_area_sq_km', None)
+@pytest.mark.parametrize("ratio", [
+    'solar_capacity/wind_capacity',
+    'solar_area_sq_km/wind_area_sq_km'
 ])
-@pytest.mark.parametrize("ratio", [(0.5, 1.5), (0.3, 3.6)])
+@pytest.mark.parametrize("ratio_bounds", [None, (0.5, 1.5), (0.3, 3.6)])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
-def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
+def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
                                  input_combination):
     """Test hybrids cli from config"""
-
     fv = -999
     sfp, wfp = input_files
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
     limits = {'solar_capacity': 100}
-    if ratio_cols is None:
-        ratios = None
-    else:
-        ratios = {RatioColumns(*ratio_cols): ratio}
 
     with tempfile.TemporaryDirectory() as td:
         config = {
@@ -608,21 +607,10 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
             "allow_solar_only": allow_solar_only,
             "allow_wind_only": allow_wind_only,
             "fillna": fill_vals,
-            'limits': limits
+            'limits': limits,
+            'ratio': ratio,
+            'ratio_bounds': ratio_bounds
         }
-
-        if ratio_cols is not None:
-            num, denom, fixed_col = ratio_cols
-            min_r, max_r = ratio
-            config_dict = {
-                'numerator_col': num,
-                'denominator_col': denom,
-                'min_ratio': min_r,
-                'max_ratio': max_r
-            }
-            if fixed_col is not None:
-                config_dict['fixed'] = fixed_col
-            config['ratio'] = config_dict
 
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:
@@ -643,7 +631,8 @@ def test_hybrids_cli_from_config(runner, input_files, ratio_cols, ratio,
             allow_solar_only=allow_solar_only,
             allow_wind_only=allow_wind_only,
             fillna=fill_vals, limits=limits,
-            ratios=ratios
+            ratio=ratio,
+            ratio_bounds=ratio_bounds
         ).run_all()
 
         out_fpath = os.path.join(td, 'hybrids-test.h5')
@@ -706,14 +695,13 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
     (SOLAR_FPATH, WIND_FPATH),
     (SOLAR_FPATH_30_MIN, WIND_FPATH)
 ])
-@pytest.mark.parametrize("ratio_cols", [
-    None,
-    ('solar_capacity', 'wind_capacity'),
-    ('solar_area_sq_km', 'wind_area_sq_km')
+@pytest.mark.parametrize("ratio", [
+    'solar_capacity/wind_capacity',
+    'solar_area_sq_km/wind_area_sq_km'
 ])
-@pytest.mark.parametrize("ratio", [(0.5, 1.5), (0.3, 3.6)])
+@pytest.mark.parametrize("ratio_bounds", [None, (0.5, 1.5), (0.3, 3.6)])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
-def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
+def test_hybrids_cli_direct(runner, input_files, ratio, ratio_bounds,
                             input_combination):
     """Test hybrids cli 'direct' command. """
 
@@ -722,10 +710,6 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {'solar_n_gids': 0, 'wind_capacity': -1}
     limits = {'solar_capacity': 100}
-    if ratio_cols is None:
-        ratios = None
-    else:
-        ratios = {RatioColumns(*ratio_cols): ratio}
 
     with tempfile.TemporaryDirectory() as td:
 
@@ -735,18 +719,11 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
                 '-l {}'.format(SLURM.s(limits)),
                 '-od {}'.format(SLURM.s(td)),
                 '-ld {}'.format(SLURM.s(td)),
+                '-r {}'.format(SLURM.s(ratio))
                 ]
 
-        if ratio_cols is not None:
-            num, denom = ratio_cols
-            min_r, max_r = ratio
-            config_dict = {
-                'numerator_col': num,
-                'denominator_col': denom,
-                'min_ratio': min_r,
-                'max_ratio': max_r
-            }
-            args.append('-r {}'.format(SLURM.s(config_dict)))
+        if ratio_bounds is not None:
+            args.append('-rb {}'.format(SLURM.s(ratio_bounds)))
 
         if allow_solar_only:
             args.append('-so')
@@ -770,7 +747,8 @@ def test_hybrids_cli_direct(runner, input_files, ratio_cols, ratio,
             allow_solar_only=allow_solar_only,
             allow_wind_only=allow_wind_only,
             fillna=fill_vals, limits=limits,
-            ratios=ratios
+            ratio_bounds=ratio_bounds,
+            ratio=ratio
         ).run_all()
 
         out_fpath = os.path.join(td, 'hybrids-test.h5')

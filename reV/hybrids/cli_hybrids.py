@@ -9,13 +9,13 @@ import logging
 import pprint
 import time
 
-from reV.config.hybrids_config import HybridsConfig, parse_ratio_input
+from reV.config.hybrids_config import HybridsConfig
 from reV.pipeline.status import Status
 from reV.hybrids.hybrids import Hybridization, SOLAR_PREFIX, WIND_PREFIX
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
-from rex.utilities.cli_dtypes import STR, INT
+from rex.utilities.cli_dtypes import STR, INT, FLOATLIST
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import get_class_properties, dict_str_load
 
@@ -102,6 +102,7 @@ def from_config(ctx, config_file, verbose):
                            allow_wind_only=config.allow_wind_only,
                            fillna=config.fillna,
                            limits=config.limits,
+                           ratio_bounds=config.ratio_bounds,
                            ratio=config.ratio,
                            out_dir=config.dirout,
                            log_dir=config.logdir,
@@ -114,7 +115,8 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['ALLOW_WIND_ONLY'] = config.allow_wind_only
             ctx.obj['FILLNA'] = config.fillna
             ctx.obj['LIMITS'] = config.limits
-            ctx.obj['RATIO'] = config.ratio_json_dict
+            ctx.obj['RATIO_BOUNDS'] = config.ratio_bounds
+            ctx.obj['RATIO'] = config.ratio
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
@@ -210,40 +212,34 @@ def _get_paths_from_config(config, name):
                    'meta, so they are likely prefixed by {!r} or {!r}. '
                    'By default, None (no limits applied).'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
-@click.option('--ratio', '-r', type=STR, default=None,
+@click.option('--ratio_bounds', '-rb', type=FLOATLIST, default=None,
               show_default=True,
-              help='String representation of a dictionary with exactly four '
-                   'key entries: {{"numerator_col": "col_name", '
-                   '"denominator_col": "col_name", "min_ratio": min_value, '
-                   '"max_ratio": max_value}}. This mapping specifies a limit '
-                   'on the ratio of the values of the input columns. '
-                   'The names of the columns should match the column names in '
-                   'the merged meta, so they are likely prefixed by {!r} or '
-                   '{!r}. The ratio is calculated by dividing the numerator '
-                   'column by the denominator: numerator_col/denominator_col. '
-                   'The ratio values represent the lower and upper bounds '
-                   'on the computed ratio values. The same value can be used '
-                   'for both the upper and the lower bound. For example, '
-                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
-                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
-                   '1, \'max_ratio\': 1}}"` would adjust both the solar and '
-                   'wind capacities to always be equal. On the other hand, '
-                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
-                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
-                   '0.5, \'max_ratio\': 1.5}}"` would adjust both the solar '
-                   'and wind capacities such that the solar and wind capacity '
-                   'ratio is always between halfand double (e.g., no capacity '
-                   'value would be more than double the other).'
-                   'You may also specify a \'fixed\' key whose value is the '
-                   'name of a column that should remain fixed during the '
-                   'ratio calculation. For example, '
-                   '`--ratio "{{\'numerator_col\': \'solar_capacity\', '
-                   '\'denominator_col\': \'wind_capacity\', \'min_ratio\': '
-                   '0.5, \'max_ratio\': 1.5, \'fixed\': \'wind_capacity\'}}"` '
-                   'would limit the solar and wind capacities to be between '
-                   'half and double **without altering the value of the '
-                   'Wind_capacity** (e.g. only the solar capacity would be '
-                   'adjusted).'
+              help='List of two floats representing the lower and upper '
+                   'bounds on the ratio of the two columns specified with the '
+                   '`--ratio` input, which is set to "solar_capacity/'
+                   'wind_capacity" by default. The same value can be used as '
+                   'the upper and lower bound to represent a single ratio. '
+                   'For example, `--ratio_bounds=[0.5, 1.5]` would adjust the '
+                   'values of both of the `--ratio` columns such that their '
+                   'ratio is always between half and double (e.g., no value '
+                   'would be more than double the other). To specify a single '
+                   'ratio value, use the same value as the upper and lower '
+                   'bound. For example, `--ratio_bounds=(1, 1)` would adjust '
+                   'the values of both of the `ratio` columns such that their '
+                   'ratio is always equal.')
+@click.option('--ratio', '-r', type=STR,
+              default='solar_capacity/wind_capacity',
+              show_default=True,
+              help='String representation of the ratio calculation used to '
+                   'calculate the ratio that is limited by the `ratio_bounds`'
+                   'input. This string must be in the form '
+                   '"numerator_column_name/denominator_column_name". For '
+                   'example, `--ratio \'solar_capacity/wind_capacity\'` would '
+                   'limit the ratio of the solar to wind capacities as '
+                   'specified by the `ratio_bounds` input. If `ratio_bounds` '
+                   'is not specified, this input does nothing. The names of '
+                   'the columns should match the column names in the merged '
+                   'meta, so they are likely prefixed by {!r} or {!r}.'
                    .format(SOLAR_PREFIX, WIND_PREFIX))
 @click.option('--out_dir', '-od', type=STR, default='./',
               show_default=True,
@@ -255,7 +251,7 @@ def _get_paths_from_config(config, name):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
-           fillna, limits, ratio, out_dir, log_dir, verbose):
+           fillna, limits, ratio_bounds, ratio, out_dir, log_dir, verbose):
     """reV hybridization CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SOLAR_FPATH'] = solar_fpath
@@ -264,6 +260,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
     ctx.obj['ALLOW_WIND_ONLY'] = allow_wind_only
     ctx.obj['FILLNA'] = fillna
     ctx.obj['LIMITS'] = limits
+    ctx.obj['RATIO_BOUNDS'] = ratio_bounds
     ctx.obj['RATIO'] = ratio
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
@@ -283,16 +280,14 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
         if isinstance(limits, str):
             limits = dict_str_load(limits)
 
-        if isinstance(ratio, str):
-            ratio = parse_ratio_input(ratio)
-
         try:
             Hybridization(
                 solar_fpath, wind_fpath,
                 allow_solar_only=allow_solar_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna, limits=limits,
-                ratios=ratio
+                ratio_bounds=ratio_bounds,
+                ratio=ratio
             ).run_all(fout=fout)
 
         except Exception as e:
@@ -323,6 +318,7 @@ def get_node_cmd(ctx):
     allow_wind_only = ctx.obj['ALLOW_WIND_ONLY']
     fillna = ctx.obj['FILLNA']
     limits = ctx.obj['LIMITS']
+    ratio_bounds = ctx.obj['RATIO_BOUNDS']
     ratio = ctx.obj['RATIO']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
@@ -335,6 +331,9 @@ def get_node_cmd(ctx):
             '-od {}'.format(SLURM.s(out_dir)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
+
+    if ratio_bounds is not None:
+        args.append('-rb {}'.format(SLURM.s(ratio_bounds)))
 
     if ratio is not None:
         args.append('-r {}'.format(SLURM.s(ratio)))

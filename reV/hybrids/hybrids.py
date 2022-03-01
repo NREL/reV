@@ -320,7 +320,8 @@ class MetaHybridizer:
 
     def __init__(self, data, allow_solar_only=False,
                  allow_wind_only=False, fillna=None,
-                 limits=None, ratios=None):
+                 limits=None, ratio_bounds=None,
+                 ratio='solar_capacity/wind_capacity'):
         """
         Parameters
         ----------
@@ -348,43 +349,34 @@ class MetaHybridizer:
             they are likely prefixed with one of the prefixes defined at the
             top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
             None (no limits applied).
-        ratios : dict, optional
-            Option to set a single ratio or ratio bounds on pairs of columns
-            in the merged meta. A detailed explanation follows.
-            This input is a mapping (dictionary), and should have the form
-            {`RatioColumns`: ratio}. The key is an instance of the
-            RatioColumns tuple, which specifies the two column names used
-            in the ratio calculation and optionally specifies if a column name
-            is fixed in the ratio calculation (the "fixed" input should always
-            match the value of either "num" or "denom"). The names of the
-            columns should match the column names in the merged meta, so they
-            must be prefixed with one of the prefixes defined at the top of
-            this module (SOLAR_PREFIX or WIND_PREFIX). The value pointed to
-            by this key specifies the desired ratio or tre ratio bounds. The
-            ratio can be a single value or an iterable of length two (e.g. a
-            two-tuple) representing the lower and upper ratio bounds.
-            A single value is treated as both an upper and a lower bound.
-            For example,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity'): 1}`
-            would adjust both the solar and wind capacities to always be equal.
-            On the other hand,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity'):
-            (0.5, 1.5)}` would adjust both the solar and wind capacities
-            such that the solar and wind capacity ratio is always between half
-            and double (e.g., no capacity value would be more than double the
-            other). Finally,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity',
-            fixed='wind_capacity'): (0.5, 1.5)}` would limit the solar and
-            wind capacities to be between half and double **without altering
-            the value of the wind_capacity** (e.g. only the solar capacity
-            would be adjusted). By default, None (no limit).
+        ratio_bounds : tuple, optional
+            Option to set ratio bounds (in two-tuple form) on the columns of
+            the `ratio` input. For example, `ratio_bounds=(0.5, 1.5)`
+            would adjust the values of both of the `ratio` columns
+            such that their ratio is always between half and double (e.g., no
+            value would be more than double the other). To specify a single
+            ratio value, use the same value as the upper and lower bound. For
+            example, `ratio_bounds=(1, 1)` would adjust the values of both of
+            the `ratio` columns such that their ratio is always equal.
+            By default, None (no limit on the ratio).
+        ratio : str, optional
+            Option to specify the columns used to calculate the ratio that is
+            limited by the `ratio_bounds` input. This input is a string in the
+            form "numerator_column_name/denominator_column_name".
+            For example, `ratio='solar_capacity/wind_capacity'`
+            would limit the ratio of the solar to wind capacities as specified
+            by the `ratio_bounds` input. If `ratio_bounds` is None, this input
+            does nothing. The names of the columns should be
+            prefixed with one of the prefixes defined as class variables.
+            By default 'solar_capacity/wind_capacity'.
         """
         self.data = data
         self._allow_solar_only = allow_solar_only
         self._allow_wind_only = allow_wind_only
         self._fillna = {**DEFAULT_FILL_VALUES, **(fillna or {})}
         self._limits = limits or {}
-        self._ratios = ratios or {}
+        self._ratio_bounds = ratio_bounds
+        self._ratio = ratio
         self._hybrid_meta = None
         self.__hybrid_meta_cols = None
         self.__col_name_map = None
@@ -409,18 +401,12 @@ class MetaHybridizer:
     def validate_input(self):
         """Validate the input parameters.
 
-        This method validates that the input ratio columns are formatted
-        correctly and exist in the input data. It also verifies that
-        the `allowed_ratio` is correctly formatted.
-
+        This method validates that the input limit, fill, and ratio columns
+        are formatted correctly.
         """
         self._validate_limits_cols_prefixed()
         self._validate_fillna_cols_prefixed()
-        self._validate_ratio_cols_type()
-        self._validate_ratio_cols_prefixed()
-        self._validate_ratio_cols_exist()
-        self._validate_ratio_cols_fixed_input()
-        self._validate_ratio()
+        self._validate_ratio_input()
 
     def _validate_limits_cols_prefixed(self):
         """Ensure the limits columns are formatted correctly.
@@ -471,23 +457,90 @@ class MetaHybridizer:
                 col, (SOLAR_PREFIX, WIND_PREFIX), input_name='fillna'
             )
 
-    def _validate_ratio_cols_type(self):
-        """Ensure that the ratio column keys are `RatioColumns` instances.
+    def _validate_ratio_input(self):
+        """Validate the ratio input parameters.
+
+        This method validates that the input ratio columns are formatted
+        correctly and exist in the input data. It also verifies that
+        the `ratio_bounds` is correctly formatted.
+        """
+        if self._ratio_bounds is None:
+            return
+
+        self._validate_ratio_bounds()
+        self._validate_ratio_type()
+        self._validate_ratio_format()
+        self._validate_ratio_cols_prefixed()
+        self._validate_ratio_cols_exist()
+
+    def _validate_ratio_bounds(self):
+        """Ensure the ratio value is input correctly.
 
         Raises
         ------
         InputError
-            If ratio_cols is not an instance of `RatioColumns`.
+            If ratio is not a len 2 container of floats.
         """
 
-        for cols in self._ratios:
-            if not isinstance(cols, RatioColumns):
-                msg = ("Key {!r} for input 'ratios' not understood. "
-                       "Please make sure this value is an instance of "
-                       "`RatioColumns`")
-                e = msg.format(cols)
+        try:
+            if len(self._ratio_bounds) != 2:
+                msg = ("Length of input for ratio_bounds is {} - but is "
+                       "required to be of length 2. Please make sure this "
+                       "input is a len 2 container of floats. If you would "
+                       "like to specify a single ratio value, use the same "
+                       "float for both limits (i.e. ratio_bounds=(1, 1)).")
+                e = msg.format(len(self._ratio_bounds))
                 logger.error(e)
                 raise InputError(e)
+        except TypeError:
+            msg = ("Input for ratio_bounds not understood: {!r}. "
+                   "Please make sure this value is a len 2 container "
+                   "of floats.")
+            e = msg.format(self._ratio_bounds)
+            logger.error(e)
+            raise InputError(e) from None
+
+    def _validate_ratio_type(self):
+        """Ensure that the ratio input is a string.
+
+        Raises
+        ------
+        InputError
+            If `ratio` is not a string.
+        """
+        if not isinstance(self._ratio, str):
+            msg = ("Ratio input type {} not understood. Please make sure "
+                   "the ratio input is a string in the form "
+                   "'numerator_column_name/denominator_column_name'. Ratio "
+                   "input: {!r}")
+            e = msg.format(type(self._ratio), self._ratio)
+            logger.error(e)
+            raise InputError(e)
+
+    def _validate_ratio_format(self):
+        """Validate that the ratio input format is correct and can be parsed.
+
+        Raises
+        ------
+        InputError
+            If the '/' character is missing or of there are too many
+            '/' characters.
+        """
+        if '/' not in self._ratio:
+            msg = ("Ratio input {} does not contain the '/' character. "
+                   "Please make sure the ratio input is a string in the form "
+                   "'numerator_column_name/denominator_column_name'")
+            e = msg.format(self._ratio)
+            logger.error(e)
+            raise InputError(e)
+
+        if len(self._ratio_cols) != 2:
+            msg = ("Ratio input {} contains too many '/' characters. Please "
+                   "make sure the ratio input is a string in the form "
+                   "'numerator_column_name/denominator_column_name'.")
+            e = msg.format(self._ratio)
+            logger.error(e)
+            raise InputError(e)
 
     def _validate_ratio_cols_prefixed(self):
         """Ensure the ratio columns are formatted correctly.
@@ -503,11 +556,10 @@ class MetaHybridizer:
             If ratio columns are not prefixed correctly.
         """
 
-        for cols in self._ratios:
-            for col in [cols.num, cols.denom]:
-                self.__validate_col_prefix(
-                    col, (SOLAR_PREFIX, WIND_PREFIX), input_name='ratios'
-                )
+        for col in self._ratio_cols:
+            self.__validate_col_prefix(
+                col, (SOLAR_PREFIX, WIND_PREFIX), input_name='ratios'
+            )
 
     def _validate_ratio_cols_exist(self):
         """Ensure the ratio columns exist if a ratio is specified.
@@ -518,56 +570,22 @@ class MetaHybridizer:
             If ratio columns are not found in the meta data.
         """
 
-        for cols in self._ratios:
-            for col in [cols.num, cols.denom]:
-                no_prefix_name = "_".join(col.split('_')[1:])
-                if not self.data.contains_col(no_prefix_name):
-                    msg = ("Input ratios column {!r} not found in either meta "
-                           "data! Please check the input files {!r} and {!r}")
-                    e = msg.format(no_prefix_name, self.data.solar_fpath,
-                                   self.data.wind_fpath)
-                    logger.error(e)
-                    raise FileInputError(e)
-
-    def _validate_ratio_cols_fixed_input(self):
-        """Ensure `fixed` input is one of the two ratio columns`.
-
-        Raises
-        ------
-        InputError
-            If `fixed` input is not one of the ratio columns.
-        """
-
-        for cols in self._ratios:
-            if cols.fixed is not None and cols.fixed not in cols[0:2]:
-                msg = ("Fixed column {!r} is not one of the input ratio "
-                       "columns: {}. Please ensure that the `fixed` input "
-                       "matches one of the ratio columns.")
-                e = msg.format(cols.fixed, cols[0:2])
+        for col in self._ratio_cols:
+            no_prefix_name = "_".join(col.split('_')[1:])
+            if not self.data.contains_col(no_prefix_name):
+                msg = ("Input ratios column {!r} not found in either meta "
+                       "data! Please check the input files {!r} and {!r}")
+                e = msg.format(no_prefix_name, self.data.solar_fpath,
+                               self.data.wind_fpath)
                 logger.error(e)
-                raise InputError(e)
+                raise FileInputError(e)
 
-    def _validate_ratio(self):
-        """Ensure the ratio value is input correctly.
-
-        Raises
-        ------
-        InputError
-            If ratio is not a float or len 2 container of floats.
-        """
-
-        for cols, ratio in self._ratios.items():
-            try:
-                if len(ratio) != 2:
-                    msg = ("Input for ratio of columns ({!r}, {!r}) not "
-                           "understood: {!r}. Please make sure this "
-                           "value is either a float or len 2 container "
-                           "of floats.")
-                    e = msg.format(cols.num, cols.denom, ratio)
-                    logger.error(e)
-                    raise InputError(e)
-            except TypeError:
-                self._ratios[cols] = (float(ratio), float(ratio))
+    @property
+    def _ratio_cols(self):
+        """Get the ratio columns from the ratio input. """
+        if self._ratio is None:
+            return []
+        return self._ratio.strip().split('/')
 
     def hybridize(self):
         """Combine the solar and wind metas and run hybridize methods."""
@@ -577,7 +595,7 @@ class MetaHybridizer:
         self._format_meta_post_merge()
         self._fillna_meta_cols()
         self._apply_limits()
-        self._limit_by_ratios()
+        self._limit_by_ratio()
         self._add_hybrid_cols()
         self._sort_hybrid_meta_cols()
 
@@ -727,17 +745,14 @@ class MetaHybridizer:
             else:
                 self.__warn_missing_col(col_name, action='limit')
 
-    def _limit_by_ratios(self):
-        """ Limit all ratio columns based on input ratio. """
-
-        for cols, ratios in self._ratios.items():
-            self._limit_by_ratio(cols, ratios)
-
-    def _limit_by_ratio(self, ratio_cols, ratios):
+    def _limit_by_ratio(self):
         """ Limit the given pair of ratio columns based on input ratio. """
 
-        numerator_col, denominator_col, fixed_col = ratio_cols
-        min_ratio, max_ratio = sorted(ratios)
+        if self._ratio_bounds is None:
+            return
+
+        numerator_col, denominator_col = self._ratio_cols
+        min_ratio, max_ratio = sorted(self._ratio_bounds)
 
         overlap_idx = self._hybrid_meta[MERGE_COLUMN].isin(
             self.data.merge_col_overlap_values
@@ -753,34 +768,12 @@ class MetaHybridizer:
         ratio_too_low = (ratios < min_ratio) & overlap_idx
         ratio_too_high = (ratios > max_ratio) & overlap_idx
 
-        if fixed_col == numerator_col:
-            denominator_vals.loc[ratio_too_low] = (
-                numerator_vals.loc[ratio_too_low].values / min_ratio
-            )
-            if any(ratio_too_high):
-                msg = ("Detected ratio values above the given bounds ({}) but "
-                       "unable to adjust because ratio numerator column {!r} "
-                       "is fixed.".format(max_ratio, numerator_col))
-                logger.warning(msg)
-                warn(InputWarning(msg))
-
-        elif fixed_col == denominator_col:
-            numerator_vals.loc[ratio_too_high] = (
-                denominator_vals.loc[ratio_too_high].values * max_ratio
-            )
-            if any(ratio_too_low):
-                msg = ("Detected ratio values below the given bounds ({}) but "
-                       "unable to adjust because ratio denominator column "
-                       "{!r} is fixed.".format(min_ratio, denominator_col))
-                logger.warning(msg)
-                warn(InputWarning(msg))
-        else:
-            numerator_vals.loc[ratio_too_high] = (
-                denominator_vals.loc[ratio_too_high].values * max_ratio
-            )
-            denominator_vals.loc[ratio_too_low] = (
-                numerator_vals.loc[ratio_too_low].values / min_ratio
-            )
+        numerator_vals.loc[ratio_too_high] = (
+            denominator_vals.loc[ratio_too_high].values * max_ratio
+        )
+        denominator_vals.loc[ratio_too_low] = (
+            numerator_vals.loc[ratio_too_low].values / min_ratio
+        )
 
         h_num_name = "hybrid_{}".format(numerator_col)
         h_denom_name = "hybrid_{}".format(denominator_col)
@@ -847,7 +840,8 @@ class Hybridization:
 
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
                  allow_wind_only=False, fillna=None,
-                 limits=None, ratios=None):
+                 limits=None, ratio_bounds=None,
+                 ratio='solar_capacity/wind_capacity'):
         """
         Parameters
         ----------
@@ -879,58 +873,50 @@ class Hybridization:
             they are likely prefixed with one of the prefixes defined at the
             top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
             None (no limits applied).
-        ratios : dict, optional
-            Option to set a single ratio or ratio bounds on pairs of columns
-            in the merged meta. A detailed explanation follows.
-            This input is a mapping (dictionary), and should have the form
-            {`RatioColumns`: ratio}. The key is an instance of the
-            RatioColumns tuple, which specifies the two column names used
-            in the ratio calculation and optionally specifies if a column name
-            is fixed in the ratio calculation (the "fixed" input should always
-            match the value of either "num" or "denom"). The names of the
-            columns should match the column names in the merged meta, so they
-            must be prefixed with one of the prefixes defined at the top of
-            this module (SOLAR_PREFIX or WIND_PREFIX). The value pointed to
-            by this key specifies the desired ratio or tre ratio bounds. The
-            ratio can be a single value or an iterable of length two (e.g. a
-            two-tuple) representing the lower and upper ratio bounds.
-            A single value is treated as both an upper and a lower bound.
-            For example,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity'): 1}`
-            would adjust both the solar and wind capacities to always be equal.
-            On the other hand,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity'):
-            (0.5, 1.5)}` would adjust both the solar and wind capacities
-            such that the solar and wind capacity ratio is always between half
-            and double (e.g., no capacity value would be more than double the
-            other). Finally,
-            `ratios={RatioColumns('solar_capacity', 'wind_capacity',
-            fixed='wind_capacity'): (0.5, 1.5)}` would limit the solar and
-            wind capacities to be between half and double **without altering
-            the value of the wind_capacity** (e.g. only the solar capacity
-            would be adjusted). By default, None (no limit).
+        ratio_bounds : tuple, optional
+            Option to set ratio bounds (in two-tuple form) on the columns of
+            the `ratio` input. For example, `ratio_bounds=(0.5, 1.5)`
+            would adjust the values of both of the `ratio` columns
+            such that their ratio is always between half and double (e.g., no
+            value would be more than double the other). To specify a single
+            ratio value, use the same value as the upper and lower bound. For
+            example, `ratio_bounds=(1, 1)` would adjust the values of both of
+            the `ratio` columns such that their ratio is always equal.
+            By default, None (no limit on the ratio).
+        ratio : str, optional
+            Option to specify the columns used to calculate the ratio that is
+            limited by the `ratio_bounds` input. This input is a string in the
+            form "numerator_column_name/denominator_column_name".
+            For example, `ratio='solar_capacity/wind_capacity'`
+            would limit the ratio of the solar to wind capacities as specified
+            by the `ratio_bounds` input. If `ratio_bounds` is None, this input
+            does nothing. The names of the columns should be
+            prefixed with one of the prefixes defined as class variables.
+            By default 'solar_capacity/wind_capacity'.
         """
 
-        logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
-                    .format(solar_fpath))
-        logger.info('Running hybridization rep profiles with solar_fpath: "{}"'
-                    .format(wind_fpath))
-        logger.info('Running hybridization rep profiles with '
+        logger.info('Running hybridization of rep profiles with solar_fpath: '
+                    '"{}"'.format(solar_fpath))
+        logger.info('Running hybridization of rep profiles with solar_fpath: '
+                    '"{}"'.format(wind_fpath))
+        logger.info('Running hybridization of rep profiles with '
                     'allow_solar_only: "{}"'.format(allow_solar_only))
-        logger.info('Running hybridization rep profiles with '
+        logger.info('Running hybridization of rep profiles with '
                     'allow_wind_only: "{}"'.format(allow_wind_only))
-        logger.info('Running hybridization rep profiles with fillna: "{}"'
+        logger.info('Running hybridization of rep profiles with fillna: "{}"'
                     .format(fillna))
-        logger.info('Running hybridization rep profiles with limits: "{}"'
+        logger.info('Running hybridization of rep profiles with limits: "{}"'
                     .format(limits))
-        logger.info('Running hybridization rep profiles with ratios: "{}"'
-                    .format(ratios))
+        logger.info('Running hybridization of rep profiles with ratio_bounds: '
+                    '"{}"'.format(ratio_bounds))
+        logger.info('Running hybridization of rep profiles with ratio: "{}"'
+                    .format(ratio))
 
         self.data = HybridsData(solar_fpath, wind_fpath)
         self.meta_hybridizer = MetaHybridizer(
             data=self.data, allow_solar_only=allow_solar_only,
             allow_wind_only=allow_wind_only, fillna=fillna, limits=limits,
-            ratios=ratios
+            ratio_bounds=ratio_bounds, ratio=ratio
         )
         self._profiles = None
         self._validate_input()
