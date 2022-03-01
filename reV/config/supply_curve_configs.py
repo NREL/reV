@@ -78,7 +78,8 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'supply-curve-aggregation',
+                        self.dirout,
+                        module=ModuleName.SUPPLY_CURVE_AGGREGATION,
                         target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
@@ -111,7 +112,8 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'supply-curve-aggregation',
+                        self.dirout,
+                        module=ModuleName.SUPPLY_CURVE_AGGREGATION,
                         target='fpath',
                         target_module=target_module)[0]
                 except KeyError:

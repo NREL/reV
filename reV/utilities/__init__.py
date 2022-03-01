@@ -16,6 +16,7 @@ class ModuleName(str, Enum):
     NRWAL = 'nrwal'
     QA_QC = 'qa-qc'
     REP_PROFILES = 'rep-profiles'
+    SUPPLY_CURVE_AGGREGATION = 'supply-curve-aggregation'
 
 
 def log_versions(logger):

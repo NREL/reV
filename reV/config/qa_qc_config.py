@@ -79,10 +79,12 @@ class QaQcConfig(AnalysisConfig):
     @property
     def supply_curve_aggregation(self):
         """Get the aggregation QA/QC inputs in the config dict."""
-        aggregation = self.modules.get('supply-curve-aggregation', None)
+        aggregation = self.modules.get(ModuleName.SUPPLY_CURVE_AGGREGATION,
+                                       None)
         if aggregation is not None:
             aggregation = QaQcModule(
-                'aggregation', aggregation, self.dirout)
+                ModuleName.SUPPLY_CURVE_AGGREGATION, aggregation, self.dirout
+            )
 
         return aggregation
 
@@ -226,7 +228,7 @@ class QaQcModule:
                 excl_fpath = Pipeline.parse_previous(
                     self._out_root,
                     module=ModuleName.QA_QC, target='excl_fpath',
-                    target_module='supply-curve-aggregation')[0]
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 excl_fpath = None
                 msg = ('Could not parse excl_fpath from previous '
@@ -250,7 +252,7 @@ class QaQcModule:
                 excl_dict = Pipeline.parse_previous(
                     self._out_root,
                     module=ModuleName.QA_QC, target='excl_dict',
-                    target_module='supply-curve-aggregation')[0]
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 excl_dict = None
                 msg = ('Could not parse excl_dict from previous '
@@ -274,7 +276,7 @@ class QaQcModule:
                 area_filter_kernel = Pipeline.parse_previous(
                     self._out_root,
                     module=ModuleName.QA_QC, target='area_filter_kernel',
-                    target_module='supply-curve-aggregation')[0]
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 area_filter_kernel = self._default_area_filter_kernel
                 msg = ('Could not parse area_filter_kernel from previous '
@@ -299,7 +301,7 @@ class QaQcModule:
                 min_area = Pipeline.parse_previous(
                     self._out_root,
                     module=ModuleName.QA_QC, target='min_area',
-                    target_module='supply-curve-aggregation')[0]
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 min_area = None
                 msg = ('Could not parse min_area from previous '

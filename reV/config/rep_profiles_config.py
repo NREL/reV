@@ -48,7 +48,7 @@ class RepProfilesConfig(AnalysisConfig):
             targets = {ModuleName.MULTI_YEAR: 'fpath',
                        ModuleName.COLLECT: 'fpath',
                        'generation': 'fpath',
-                       'supply-curve-aggregation': 'gen_fpath'}
+                       ModuleName.SUPPLY_CURVE_AGGREGATION: 'gen_fpath'}
             for target_module, target in targets.items():
                 try:
                     fpath = Pipeline.parse_previous(

@@ -15,6 +15,7 @@ from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.multi_file_resource import MultiFileResource
@@ -80,12 +81,15 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout,
-                                            'supply-curve-aggregation',
-                                            name)
+        status = Status.retrieve_job_status(
+            config.dirout,
+            module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+            job_name=name
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'supply-curve-aggregation', name, replace=True,
+                config.dirout, module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
@@ -441,7 +445,8 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                   'area_filter_kernel': area_filter_kernel,
                   'min_area': min_area}
 
-        Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
+        Status.make_job_file(out_dir, ModuleName.SUPPLY_CURVE_AGGREGATION,
+                             name, status)
 
 
 def get_node_cmd(excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
@@ -573,9 +578,10 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
-                                        name, hardware='eagle',
-                                        subprocess_manager=slurm_manager)
+    status = Status.retrieve_job_status(
+        out_dir, module=ModuleName.SUPPLY_CURVE_AGGREGATION, job_name=name,
+        hardware='eagle', subprocess_manager=slurm_manager
+    )
 
     msg = 'SC Aggregation CLI failed to submit jobs!'
     if status == 'successful':
@@ -598,7 +604,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                    .format(name, out))
 
         Status.add_job(
-            out_dir, 'supply-curve-aggregation', name, replace=True,
+            out_dir, module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+            job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
