@@ -19,6 +19,10 @@ class ModuleName(str, Enum):
     SUPPLY_CURVE = 'supply-curve'
     SUPPLY_CURVE_AGGREGATION = 'supply-curve-aggregation'
 
+    @classmethod
+    def all_names(cls):
+        return {v.value for v in cls.__members__.values()}
+
 
 def log_versions(logger):
     """Log package versions:
