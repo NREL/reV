@@ -70,7 +70,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', ModuleName.COLLECT, 'generation']
+            target_modules = [
+                ModuleName.MULTI_YEAR,
+                ModuleName.COLLECT,
+                'generation'
+            ]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
@@ -100,7 +104,9 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
         if fpath == 'PIPELINE':
             target_modules = [
-                'multi-year', ModuleName.COLLECT, ModuleName.ECON
+                ModuleName.MULTI_YEAR,
+                ModuleName.COLLECT,
+                ModuleName.ECON
             ]
             for target_module in target_modules:
                 try:

@@ -12,6 +12,7 @@ import time
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
 from reV.pipeline.status import Status
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
@@ -80,10 +81,13 @@ def from_config(ctx, config_file, verbose):
     if config.execution_control.option == 'local':
 
         ctx.obj['NAME'] = name
-        status = Status.retrieve_job_status(config.dirout, 'multi-year', name)
+        status = Status.retrieve_job_status(
+            config.dirout, module=ModuleName.MULTI_YEAR, job_name=name
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'multi-year', name, replace=True,
+                config.dirout, module=ModuleName.MULTI_YEAR,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['MY_FILE'],
                            'dirout': config.dirout})
@@ -181,7 +185,7 @@ def multi_year(ctx, source_files, group, dsets, pass_through_dsets, verbose):
               'job_status': 'successful',
               'runtime': runtime,
               'finput': source_files}
-    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+    Status.make_job_file(os.path.dirname(my_file), ModuleName.MULTI_YEAR, name,
                          status)
 
 
@@ -244,7 +248,7 @@ def multi_year_groups(ctx, group_params, verbose):
               'fout': os.path.basename(my_file),
               'job_status': 'successful',
               'runtime': runtime}
-    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+    Status.make_job_file(os.path.dirname(my_file), ModuleName.MULTI_YEAR, name,
                          status)
 
 
@@ -330,8 +334,9 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
-                                        name, hardware='eagle',
+    status = Status.retrieve_job_status(os.path.dirname(my_file),
+                                        module=ModuleName.MULTI_YEAR,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Multi-year CLI failed to submit jobs!'
@@ -360,7 +365,8 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
 
         # add job to reV status file.
         Status.add_job(
-            os.path.dirname(my_file), 'multi-year', name, replace=True,
+            os.path.dirname(my_file), module=ModuleName.MULTI_YEAR,
+            job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': os.path.basename(my_file),
                        'dirout': os.path.dirname(my_file)})

@@ -9,6 +9,7 @@ from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
 from reV.utilities.exceptions import ConfigError
+from reV.utilities import ModuleName
 
 from rex.utilities.utilities import get_class_properties
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class MultiYearConfig(AnalysisConfig):
     """File collection config."""
 
-    NAME = 'multi-year'
+    NAME = ModuleName.MULTI_YEAR
 
     def __init__(self, config):
         """
@@ -149,9 +150,9 @@ class MultiYearGroup:
             if isinstance(self._source_files, (list, tuple)):
                 source_files = self._source_files
             elif self._source_files == "PIPELINE":
-                source_files = Pipeline.parse_previous(self._dirout,
-                                                       'multi-year',
-                                                       target='fpath')
+                source_files = Pipeline.parse_previous(
+                    self._dirout, module=ModuleName.MULTI_YEAR, target='fpath'
+                )
             else:
                 e = "source_files must be a list, tuple, or 'PIPELINE'"
                 logger.error(e)

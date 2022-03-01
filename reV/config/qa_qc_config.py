@@ -59,9 +59,10 @@ class QaQcConfig(AnalysisConfig):
     @property
     def multi_year(self):
         """Get the multi-year QA/QC inputs in the config dict."""
-        multi_year = self.modules.get('multi-year', None)
+        multi_year = self.modules.get(ModuleName.MULTI_YEAR, None)
         if multi_year is not None:
-            multi_year = QaQcModule('multi-year', multi_year, self.dirout)
+            multi_year = QaQcModule(ModuleName.MULTI_YEAR, multi_year,
+                                    self.dirout)
 
         return multi_year
 
