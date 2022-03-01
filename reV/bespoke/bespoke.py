@@ -976,8 +976,8 @@ class BespokeWindPlants(AbstractAggregation):
         with ExclusionLayers(paths) as excl:
             if self._tm_dset not in excl:
                 raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset, path))
+                                     'in the exclusions file(s): {}'
+                                     .format(self._tm_dset, paths))
 
         # just check that this file exists, cannot check res_fpath if *glob
         Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
