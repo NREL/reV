@@ -3,50 +3,8 @@
 
 @author: ppinchuk
 """
-HYBRID_METHODS = {}
 
 
-def hybrid_col(col_name):
-    """A decorator factory that facilitates the registry of new hybrids.
-
-    This decorator takes a column name as input and registers the decorated
-    function as a method that computes a hybrid variable. During the
-    hybridization step, the registered function (which takes an instance
-    of the hybridization object as input) will be run and its output
-    will be stored in the new hybrid meta DataFrame under the registered column
-    name.
-
-    Parameters
-    ----------
-    col_name : str
-        Name of the new hybrid column. This should typically start with
-        "hybrid_", though this is not a hard requirement.
-
-    Examples
-    --------
-    Writing and registering a new hybridization:
-
-    >>> @hybrid_col('scaled_elevation')
-    >>> def some_new_hybrid_func(h):
-    >>>     return h.hybrid_meta['elevation'] * 1000
-
-    You can then verify the correct column was added:
-
-    >>> from reV.hybrids import hybrid_col, Hybridization
-    >>> SOLAR_FPATH = '/path/to/input/solar/file.h5
-    >>> WIND_FPATH = '/path/to/input/wind/file.h5
-    >>>
-    >>> h = Hybridization(SOLAR_FPATH, WIND_FPATH).run()
-    >>> assert 'scaled_elevation' in h.hybrid_meta.columns
-
-    """
-    def _register(func):
-        HYBRID_METHODS[col_name] = func
-        return func
-    return _register
-
-
-@hybrid_col('hybrid_solar_capacity')
 def aggregate_solar_capacity(h):
     """Compute the total solar capcity allowed in hybridization.
 
@@ -79,7 +37,6 @@ def aggregate_solar_capacity(h):
     return h.hybrid_meta['solar_capacity']
 
 
-@hybrid_col('hybrid_wind_capacity')
 def aggregate_wind_capacity(h):
     """Compute the total wind capcity allowed in hybridization.
 
@@ -112,7 +69,6 @@ def aggregate_wind_capacity(h):
     return h.hybrid_meta['wind_capacity']
 
 
-@hybrid_col('hybrid_capacity')
 def aggregate_capacity(h):
     """Compute the total capcity by summing the individual capacities.
 
@@ -140,7 +96,6 @@ def aggregate_capacity(h):
     return total_cap
 
 
-@hybrid_col('hybrid_mean_cf')
 def aggregate_capacity_factor(h):
     """Compute the capacity-weighted mean capcity factor.
 
@@ -174,3 +129,11 @@ def aggregate_capacity_factor(h):
     total_capacity = aggregate_capacity(h)
     hybrid_cf = (solar_cf_weighted + wind_cf_weighted) / total_capacity
     return hybrid_cf
+
+
+HYBRID_METHODS = {
+    'hybrid_solar_capacity': aggregate_solar_capacity,
+    'hybrid_wind_capacity': aggregate_wind_capacity,
+    'hybrid_capacity': aggregate_capacity,
+    'hybrid_mean_cf': aggregate_capacity_factor
+}

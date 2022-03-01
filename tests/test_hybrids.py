@@ -9,7 +9,7 @@ import json
 
 from click.testing import CliRunner
 
-from reV.hybrids import Hybridization, hybrid_col, HYBRID_METHODS
+from reV.hybrids import Hybridization, HYBRID_METHODS
 from reV.hybrids.hybrids import (HybridsData, MERGE_COLUMN,
                                  OUTPUT_PROFILE_NAMES, RatioColumns)
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
@@ -345,9 +345,9 @@ def test_all_allow_solar_allow_wind_combinations(input_combination, na_vals):
 def test_warning_for_improper_data_output_from_hybrid_method():
     """Test that hybrid function with incorrect output throws warning. """
 
-    @hybrid_col('scaled_elevation')
     def some_new_hybrid_func(__):
         return [0]
+    HYBRID_METHODS['scaled_elevation'] = some_new_hybrid_func
 
     with pytest.warns(OutputWarning) as record:
         Hybridization(SOLAR_FPATH, WIND_FPATH).run()
@@ -357,12 +357,12 @@ def test_warning_for_improper_data_output_from_hybrid_method():
     assert "column to hybrid meta" in warn_msg
 
 
-def test_hybrid_col_decorator():
+def test_hybrid_col_additional_method():
     """Test that function decorated with 'hybrid_col' adds to hybrid meta. """
 
-    @hybrid_col('scaled_elevation')
     def some_new_hybrid_func(h):
         return h.hybrid_meta['elevation'] * 1000
+    HYBRID_METHODS['scaled_elevation'] = some_new_hybrid_func
 
     h = Hybridization(SOLAR_FPATH, WIND_FPATH).run()
 
