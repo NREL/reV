@@ -1018,7 +1018,7 @@ class Hybridization:
         """
         return self._profiles
 
-    def run(self, fout=None, save_hybrid_meta=True):
+    def run_all(self, fout=None, save_hybrid_meta=True):
         """Run hybridization of profiles and save to disc.
 
         Parameters
@@ -1036,15 +1036,46 @@ class Hybridization:
             hybridized meta and profiles as attributes.
         """
 
-        self.meta_hybridizer.hybridize()
-        self._init_profiles()
-        out = self._run()
+        self.run_meta()
+        self.run_profiles()
 
         if fout is not None:
             self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta)
 
         logger.info('Hybridization of representative profiles complete!')
-        return out
+        return self
+
+    def run_meta(self):
+        """Compute the hybridized profiles.
+
+        Returns
+        -------
+        `Hybridization`
+            Instance of Hybridization object (itself) containing the
+            hybridized meta as an attribute.
+        """
+        self.meta_hybridizer.hybridize()
+        return self
+
+    def run_profiles(self):
+        """Compute all hybridized profiles.
+
+        Returns
+        -------
+        `Hybridization`
+            Instance of Hybridization object (itself) containing the
+            hybridized profiles as attributes.
+        """
+
+        logger.info('Running hybrid profile calculations.')
+
+        self._init_profiles()
+        self._compute_hybridized_profile_components()
+        self._compute_hybridized_profiles_from_components()
+
+        logger.info('Profile hybridization complete.')
+
+        return self
 
     def _init_profiles(self):
         """Initialize the output rep profiles attribute."""
@@ -1052,18 +1083,6 @@ class Hybridization:
             k: np.zeros((len(self.hybrid_time_index), len(self.hybrid_meta)),
                         dtype=np.float32)
             for k in OUTPUT_PROFILE_NAMES}
-
-    def _run(self):
-        """Compute all hybridized profiles."""
-
-        logger.info('Running hybrid profile calculations.')
-
-        self._compute_hybridized_profile_components()
-        self._compute_hybridized_profiles_from_components()
-
-        logger.info('Profile hybridization complete.')
-
-        return self
 
     def _compute_hybridized_profile_components(self):
         """Compute the resource components of the hybridized profiles. """

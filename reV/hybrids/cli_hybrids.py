@@ -293,7 +293,7 @@ def direct(ctx, solar_fpath, wind_fpath, allow_solar_only, allow_wind_only,
                 allow_wind_only=allow_wind_only,
                 fillna=fillna, limits=limits,
                 ratios=ratio
-            ).run(fout=fout)
+            ).run_all(fout=fout)
 
         except Exception as e:
             msg = ('Hybridization of rep profiles failed. Received the '
