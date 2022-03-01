@@ -12,6 +12,7 @@ import time
 from reV.config.supply_curve_configs import SupplyCurveConfig
 from reV.pipeline.status import Status
 from reV.supply_curve.supply_curve import SupplyCurve
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -75,11 +76,13 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'supply-curve',
-                                            name)
+        status = Status.retrieve_job_status(config.dirout,
+                                            module=ModuleName.SUPPLY_CURVE,
+                                            job_name=name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'supply-curve', name, replace=True,
+                config.dirout, module=ModuleName.SUPPLY_CURVE,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
@@ -266,7 +269,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': finput}
-        Status.make_job_file(out_dir, 'supply-curve', name, status)
+        Status.make_job_file(out_dir, ModuleName.SUPPLY_CURVE, name, status)
 
 
 def get_node_cmd(sc_points, trans_table, fixed_charge_rate, sc_features,
@@ -377,8 +380,9 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'supply-curve', name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir,
+                                        module=ModuleName.SUPPLY_CURVE,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Supply Curve CLI failed to submit jobs!'
@@ -402,7 +406,8 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
                    .format(name, out))
 
         Status.add_job(
-            out_dir, 'supply-curve', name, replace=True,
+            out_dir, module=ModuleName.SUPPLY_CURVE,
+            job_name=name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'fout': '{}.csv'.format(name), 'dirout': out_dir})
 

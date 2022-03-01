@@ -91,10 +91,10 @@ class QaQcConfig(AnalysisConfig):
     @property
     def supply_curve(self):
         """Get the supply curve QA/QC inputs in the config dict."""
-        supply_curve = self.modules.get('supply-curve', None)
+        supply_curve = self.modules.get(ModuleName.SUPPLY_CURVE, None)
         if supply_curve is not None:
             supply_curve = QaQcModule(
-                'supply-curve', supply_curve, self.dirout)
+                ModuleName.SUPPLY_CURVE, supply_curve, self.dirout)
 
         return supply_curve
 

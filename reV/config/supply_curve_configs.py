@@ -292,7 +292,7 @@ class SupplyCurveConfig(AnalysisConfig):
 
         if sc_points == 'PIPELINE':
             sc_points = Pipeline.parse_previous(
-                self.dirout, 'supply-curve', target='fpath')[0]
+                self.dirout, ModuleName.SUPPLY_CURVE, target='fpath')[0]
 
             logger.info('Supply curve using the following '
                         'pipeline input for sc_points: {}'.format(sc_points))

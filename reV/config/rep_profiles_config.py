@@ -81,7 +81,10 @@ class RepProfilesConfig(AnalysisConfig):
         fpath = self['rev_summary']
 
         if fpath == 'PIPELINE':
-            target_modules = ['aggregation', 'supply-curve']
+            target_modules = [
+                ModuleName.SUPPLY_CURVE_AGGREGATION,
+                ModuleName.SUPPLY_CURVE
+            ]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
