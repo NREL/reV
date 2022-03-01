@@ -858,7 +858,7 @@ class BespokeWindPlants(AbstractAggregation):
         logger.debug('Exclusion dict: {}'.format(excl_dict))
         logger.info('Bespoke objective function: {}'
                     .format(objective_function))
-        logger.info('Bespoke cost function: {}'.format(objective_function))
+        logger.info('Bespoke cost function: {}'.format(cost_function))
 
         BespokeSinglePlant.check_dependencies()
 
