@@ -14,6 +14,7 @@ class ModuleName(str, Enum):
     GENERATION = 'generation'
     MULTI_YEAR = 'multi-year'
     NRWAL = 'nrwal'
+    QA_QC = 'qa-qc'
     REP_PROFILES = 'rep-profiles'
 
 

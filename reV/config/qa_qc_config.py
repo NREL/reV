@@ -152,7 +152,8 @@ class QaQcModule:
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self._out_root, 'qa-qc', target='fpath',
+                        self._out_root,
+                        module=ModuleName.QA_QC, target='fpath',
                         target_module=target_module)
                 except KeyError:
                     pass
@@ -223,7 +224,8 @@ class QaQcModule:
         if excl_fpath == 'PIPELINE':
             try:
                 excl_fpath = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='excl_fpath',
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='excl_fpath',
                     target_module='supply-curve-aggregation')[0]
             except KeyError:
                 excl_fpath = None
@@ -246,7 +248,8 @@ class QaQcModule:
         if excl_dict == 'PIPELINE':
             try:
                 excl_dict = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='excl_dict',
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='excl_dict',
                     target_module='supply-curve-aggregation')[0]
             except KeyError:
                 excl_dict = None
@@ -269,7 +272,8 @@ class QaQcModule:
         if area_filter_kernel == 'PIPELINE':
             try:
                 area_filter_kernel = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='area_filter_kernel',
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='area_filter_kernel',
                     target_module='supply-curve-aggregation')[0]
             except KeyError:
                 area_filter_kernel = self._default_area_filter_kernel
@@ -293,7 +297,8 @@ class QaQcModule:
         if min_area == 'PIPELINE':
             try:
                 min_area = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='min_area',
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='min_area',
                     target_module='supply-curve-aggregation')[0]
             except KeyError:
                 min_area = None

@@ -13,6 +13,7 @@ from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger, init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
+from reV.utilities import ModuleName
 
 from reV.config.qa_qc_config import QaQcConfig
 from reV.pipeline.status import Status
@@ -237,7 +238,7 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': h5_file}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -294,7 +295,7 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': sc_table}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -367,7 +368,7 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': excl_fpath}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -402,11 +403,13 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'qa-qc',
-                                            name)
+        status = Status.retrieve_job_status(config.dirout,
+                                            module=ModuleName.QA_QC,
+                                            job_name=name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'qa-qc', name, replace=True,
+                config.dirout, module=ModuleName.QA_QC,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'dirout': config.dirout})
 
@@ -684,8 +687,8 @@ def launch_slurm(config, verbose):
         node_cmd = config.execution_control.sh_script + '\n' + node_cmd
 
     slurm_manager = SLURM()
-    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir, module=ModuleName.QA_QC,
+                                        job_name=config.name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
     msg = 'QA-QC CLI failed to submit jobs!'
@@ -715,7 +718,8 @@ def launch_slurm(config, verbose):
                    .format(config.name, out))
 
         Status.add_job(
-            out_dir, 'qa-qc', config.name, replace=True,
+            out_dir, module=ModuleName.QA_QC,
+            job_name=config.name, replace=True,
             job_attrs={'job_id': out, 'hardware': 'eagle',
                        'dirout': out_dir})
 
