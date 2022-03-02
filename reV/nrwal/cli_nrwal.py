@@ -93,6 +93,7 @@ def from_config(ctx, config_file, verbose):
 
     for i, gen_fpath in enumerate(gen_fpaths):
         job_name = '{}_{}'.format(name, str(i).zfill(2))
+        ctx.obj['NAME'] = job_name
 
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(config.dirout, 'nrwal',
@@ -113,11 +114,10 @@ def from_config(ctx, config_file, verbose):
                            save_raw=config.save_raw,
                            meta_gid_col=config.meta_gid_col,
                            site_meta_cols=config.site_meta_cols,
-                           logdir=config.logdir,
+                           log_dir=config.logdir,
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-            ctx.obj['NAME'] = job_name
             ctx.obj['GEN_FPATH'] = gen_fpath
             ctx.obj['SITE_DATA'] = config.site_data
             ctx.obj['SAM_FILES'] = config.sam_files
