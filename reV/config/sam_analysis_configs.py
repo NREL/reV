@@ -172,7 +172,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
-    NAME = 'gen'
+    NAME = ModuleName.GENERATION
 
     def __init__(self, config):
         """
