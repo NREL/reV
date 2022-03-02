@@ -491,8 +491,8 @@ def get_node_cmd(excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
     if verbose:
         args.append('-v')
 
-    cmd = ('python -m reV.supply_curve.cli_sc_aggregation direct {}'
-           .format(' '.join(args)))
+    cmd = ('python -m reV.supply_curve.cli_sc_aggregation -n {} direct {}'
+           .format(SLURM.s(name), ' '.join(args)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd

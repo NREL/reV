@@ -266,8 +266,8 @@ def get_node_cmd(gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     if verbose:
         args.append('-v')
 
-    cmd = ('python -m reV.rep_profiles.cli_rep_profiles direct {}'
-           .format(' '.join(args)))
+    cmd = ('python -m reV.rep_profiles.cli_rep_profiles -n {} direct {}'
+           .format(SLURM.s(name), ' '.join(args)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
