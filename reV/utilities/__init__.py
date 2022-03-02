@@ -9,6 +9,22 @@ from reV.version import __version__
 
 
 class ModuleName(str, Enum):
+    """A collection of the module names available in reV.
+
+    Each module name should match the name of the click command
+    that will be used to invoke its respective cli. As of 3/1/2022,
+    this means that all commands are lowercase with underscores
+    replaced by dashes.
+
+
+    Reference
+    ---------
+    See this line in the click source code to get the most up-to-date
+    click name conversions:
+        https://tinyurl.com/4rehbsvf
+
+    """
+
     COLLECT = 'collect'
     ECON = 'econ'
     GENERATION = 'generation'
