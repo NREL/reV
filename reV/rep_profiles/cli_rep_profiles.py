@@ -242,7 +242,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         Status.make_job_file(out_dir, ModuleName.REP_PROFILES, name, status)
 
 
-def get_node_cmd(gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
+def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                  err_method, weight, n_profiles, out_dir, log_dir, max_workers,
                  aggregate_profiles, verbose):
     """Get a CLI call command for the rep profiles cli."""
@@ -322,7 +322,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(gen_fpath, rev_summary, reg_cols, cf_dset,
+    cmd = get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset,
                        rep_method, err_method, weight, n_profiles,
                        out_dir, log_dir, max_workers, aggregate_profiles,
                        verbose)

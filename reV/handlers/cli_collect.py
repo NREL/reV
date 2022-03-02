@@ -219,13 +219,15 @@ def collect(ctx, verbose):
     )
 
 
-def get_node_cmd(h5_file, h5_dir, project_points, dsets,
+def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                  file_prefix=None, log_dir='./logs/',
                  purge_chunks=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
     ----------
+    name : str
+        reV collection jobname.
     h5_file : str
         Path to .h5 file into which data will be collected
     h5_dir : str
@@ -321,7 +323,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    cmd = get_node_cmd(h5_file, h5_dir, project_points, dsets,
+    cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, log_dir=log_dir,
                        purge_chunks=purge_chunks, verbose=verbose)
     if sh_script:

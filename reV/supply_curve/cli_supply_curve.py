@@ -272,7 +272,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
         Status.make_job_file(out_dir, ModuleName.SUPPLY_CURVE, name, status)
 
 
-def get_node_cmd(sc_points, trans_table, fixed_charge_rate, sc_features,
+def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                  transmission_costs, avail_cap_frac, sort_on, wind_dirs,
                  n_dirs, downwind, offshore_compete, max_workers, out_dir,
                  log_dir, simple, line_limited, verbose):
@@ -366,7 +366,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(sc_points, trans_table, fixed_charge_rate,
+    cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
                        sc_features, transmission_costs, avail_cap_frac,
                        sort_on, wind_dirs, n_dirs, downwind,
                        offshore_compete, max_workers, out_dir, log_dir,

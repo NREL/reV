@@ -252,11 +252,13 @@ def multi_year_groups(ctx, group_params, verbose):
                          status)
 
 
-def get_slurm_cmd(my_file, group_params, verbose=False):
+def get_slurm_cmd(name, my_file, group_params, verbose=False):
     """Make a reV multi-year collection local CLI call string.
 
     Parameters
     ----------
+    name : str
+        reV collection jobname.
     my_file : str
         Path to .h5 file to use for multi-year collection.
     group_params : list
@@ -355,7 +357,7 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
                     ' name "{}", collecting into "{}".'
                     .format(name, my_file))
         # create and submit the SLURM job
-        cmd = get_slurm_cmd(my_file, group_params, verbose=verbose)
+        cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
         if sh_script:
             cmd = sh_script + '\n' + cmd
         out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,

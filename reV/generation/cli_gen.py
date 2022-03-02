@@ -540,7 +540,7 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     return node_name, fout_node
 
 
-def get_node_cmd(tech, sam_files, res_file, out_fpath,
+def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  points=slice(0, 100), points_range=None,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
@@ -550,6 +550,8 @@ def get_node_cmd(tech, sam_files, res_file, out_fpath,
 
     Parameters
     ----------
+    name : str
+        Name of the job to be submitted.
     tech : str
         Name of the reV technology to be analyzed.
         (e.g. pv, csp, landbasedwind, offshorewind).
@@ -708,7 +710,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                                                   hpc='slurm')
 
         node_fpath = os.path.join(dirout, fout_node)
-        cmd = get_node_cmd(tech, sam_files, res_file, node_fpath,
+        cmd = get_node_cmd(node_name, tech, sam_files, res_file, node_fpath,
                            points=points,
                            points_range=split.split_range,
                            sites_per_worker=sites_per_worker,
