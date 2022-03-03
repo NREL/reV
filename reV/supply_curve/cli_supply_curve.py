@@ -25,13 +25,15 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Supply Curve job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, verbose):
+def main(ctx, name, verbose):
     """reV Supply Curve Command Line Interface"""
     ctx.ensure_object(dict)
-    ctx.obj['NAME'] = os.path.basename(os.getcwd())
+    ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
 

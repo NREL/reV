@@ -25,13 +25,15 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Multi-Year job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, verbose):
+def main(ctx, name, verbose):
     """reV Multi-Year Command Line Interface"""
     ctx.ensure_object(dict)
-    ctx.obj['NAME'] = os.path.basename(os.getcwd())
+    ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -257,8 +259,6 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
     Parameters
     ----------
-    name : str
-        reV collection jobname.
     my_file : str
         Path to .h5 file to use for multi-year collection.
     group_params : list
