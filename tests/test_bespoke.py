@@ -49,7 +49,6 @@ SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 
 def test_turbine_placement(gid=33):
     """Test turbine placement with zero available area. """
-    np.random.seed(0)
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
     cost_function = """200 * system_capacity * np.exp(-system_capacity /
         1E5 * 0.1 + (1 - 0.1))"""
@@ -74,12 +73,31 @@ def test_turbine_placement(gid=33):
         place_optimizer = bsp.plant_optimizer
         place_optimizer.place_turbines()
 
-        assert place_optimizer.nturbs == 95
-        assert place_optimizer.capacity == 142500.0
-        assert place_optimizer.area == 13421700.0
-        assert place_optimizer.capacity_density == 10.617134938197099
-        assert place_optimizer.objective == 0.15975631472465107
-        assert place_optimizer.annual_cost == 60788710.38507378
+        assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
+        assert place_optimizer.capacity == place_optimizer.nturbs *\
+            place_optimizer.turbine_capacity
+        assert place_optimizer.area == place_optimizer.full_polygons.area
+        assert place_optimizer.capacity_density == place_optimizer.capacity\
+            / place_optimizer.area * 1E3
+
+        place_optimizer.wind_plant["wind_farm_xCoordinates"] = \
+            place_optimizer.turbine_x
+        place_optimizer.wind_plant["wind_farm_yCoordinates"] = \
+            place_optimizer.turbine_y
+        place_optimizer.wind_plant["system_capacity"] =\
+            place_optimizer.capacity
+        place_optimizer.wind_plant.assign_inputs()
+        place_optimizer.wind_plant.execute()
+
+        assert place_optimizer.aep == \
+            place_optimizer.wind_plant.annual_energy()
+
+        system_capacity = place_optimizer.capacity
+        aep = place_optimizer.aep
+        cost = eval(cost_function, globals(), locals())
+        assert place_optimizer.objective ==\
+            eval(objective_function, globals(), locals())
+        assert place_optimizer.annual_cost == cost
 
 
 def test_zero_area(gid=33):
@@ -121,10 +139,9 @@ def test_zero_area(gid=33):
 
 def test_packing_algorithm(gid=33):
     """Test turbine placement with zero available area. """
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = """200 * system_capacity * np.exp(-system_capacity /
-        1E5 * 0.1 + (1 - 0.1))"""
-    objective_function = "cost / aep"
+    output_request = ()
+    cost_function = """"""
+    objective_function = ""
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
