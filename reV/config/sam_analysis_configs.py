@@ -151,8 +151,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             pp = ProjectPoints(self.project_points, self['sam_files'],
                                tech=self.technology)
 
-            if (self.execution_control.option == 'peregrine'
-                    or self.execution_control.option == 'eagle'):
+            if self.execution_control.option in ('peregrine', 'eagle'):
                 # sites per split on peregrine or eagle is the number of sites
                 # in project points / number of nodes. This is for the initial
                 # division of the project sites between HPC nodes (jobs)
