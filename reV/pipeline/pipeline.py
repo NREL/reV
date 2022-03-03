@@ -344,8 +344,8 @@ class Pipeline:
             Python reV CLI call string.
         """
         if command not in ModuleName.all_names():
-            raise KeyError('Could not recognize command "{}". '
-                           'Available commands are: {}'
+            raise KeyError("Could not recognize command {!r}. "
+                           "Available commands are: {!r}"
                            .format(command, ModuleName.all_names())) from None
         cmd = cls.CMD_BASE.format(fp_config=f_config, command=command)
         if verbose:
