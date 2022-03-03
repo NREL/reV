@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class QaQcConfig(AnalysisConfig):
     """QA/QC config."""
 
-    NAME = 'QA-QC'
+    NAME = ModuleName.QA_QC
     REQUIREMENTS = ('modules',)
 
     def __init__(self, config):

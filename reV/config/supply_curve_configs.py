@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SupplyCurveAggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
-    NAME = 'agg'
+    NAME = ModuleName.SUPPLY_CURVE_AGGREGATION
     REQUIREMENTS = ('excl_fpath', 'gen_fpath', 'tm_dset')
 
     def __init__(self, config):
@@ -255,7 +255,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
 
-    NAME = 'sc'
+    NAME = ModuleName.SUPPLY_CURVE
     REQUIREMENTS = ('sc_points', 'trans_table', 'fixed_charge_rate')
 
     def __init__(self, config):
