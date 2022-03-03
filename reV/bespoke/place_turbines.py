@@ -207,7 +207,10 @@ class PlaceTurbines():
         self.nturbs = np.sum(optimized_design_variables)
         self.capacity = self.turbine_capacity * self.nturbs
         self.area = self.full_polygons.area
-        self.capacity_density = self.capacity / self.area * 1E3
+        if self.area != 0.0:
+            self.capacity_density = self.capacity / self.area * 1E3
+        else:
+            self.capacity_density = 0.0
 
         self.wind_plant["wind_farm_xCoordinates"] = \
             self.x_locations[optimized_design_variables]
@@ -219,6 +222,7 @@ class PlaceTurbines():
         self.aep = self.wind_plant.annual_energy()
 
         system_capacity = self.capacity
+        aep = self.aep
         self.objective = ga.optimized_function_value
         self.annual_cost = eval(self.cost_function, globals(), locals())
 

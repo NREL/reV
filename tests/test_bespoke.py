@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import tempfile
+from tkinter import Place
 import numpy as np
 import pandas as pd
 import pytest
@@ -44,6 +45,117 @@ SAM_SYS_INPUTS['wind_farm_losses_percent'] = 0
 del SAM_SYS_INPUTS['wind_resource_filename']
 TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
+
+
+def test_turbine_placement(gid=33):
+    """Test turbine placement with zero available area. """
+    np.random.seed(0)
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cost_function,
+                                 ga_time=5,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        place_optimizer = bsp.plant_optimizer
+        place_optimizer.place_turbines()
+
+        assert place_optimizer.nturbs == 95
+        assert place_optimizer.capacity == 142500.0
+        assert place_optimizer.area == 13421700.0
+        assert place_optimizer.capacity_density == 10.617134938197099
+        assert place_optimizer.objective == 0.15975631472465107
+        assert place_optimizer.annual_cost == 60788710.38507378
+
+
+def test_zero_area(gid=33):
+    """Test turbine placement with zero available area. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cost_function,
+                                 ga_time=5,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        optimizer = bsp.plant_optimizer
+        optimizer.include_mask = np.zeros_like(optimizer.include_mask)
+        optimizer.place_turbines()
+
+        assert len(optimizer.turbine_x) == 0
+        assert len(optimizer.turbine_y) == 0
+        assert optimizer.nturbs == 0
+        assert optimizer.capacity == 0
+        assert optimizer.area == 0
+        assert optimizer.capacity_density == 0
+        assert optimizer.objective == 0
+        assert optimizer.annual_cost == 0
+
+
+def test_packing_algorithm(gid=33):
+    """Test turbine placement with zero available area. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cost_function,
+                                 ga_time=5,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        optimizer = bsp.plant_optimizer
+        optimizer.define_exclusions()
+        optimizer.initialize_packing()
+
+        test_x = optimizer.x_locations
+        test_y = optimizer.y_locations
+
+        truth_x = np.load(os.path.join(TESTDATADIR,
+                                       'bespoke/packing_data_x.npy'))
+        truth_y = np.load(os.path.join(TESTDATADIR,
+                                       'bespoke/packing_data_y.npy'))
+
+        assert np.allclose(test_x, truth_x)
+        assert np.allclose(test_y, truth_y)
 
 
 def test_bespoke_points():
