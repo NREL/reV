@@ -28,6 +28,7 @@ class ModuleName(str, Enum):
     COLLECT = 'collect'
     ECON = 'econ'
     GENERATION = 'generation'
+    HYBRIDS = 'hybrids'
     MULTI_YEAR = 'multi-year'
     NRWAL = 'nrwal'
     QA_QC = 'qa-qc'

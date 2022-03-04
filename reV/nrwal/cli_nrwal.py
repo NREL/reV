@@ -100,7 +100,7 @@ def from_config(ctx, config_file, verbose):
             if status != 'successful':
                 Status.add_job(
                     config.dirout, module=ModuleName.NRWAL,
-                    job_names=job_name, replace=True,
+                    job_name=job_name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}_nrwal.h5'.format(job_name),
                                'dirout': config.dirout,
