@@ -73,7 +73,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
             target_modules = [
                 ModuleName.MULTI_YEAR,
                 ModuleName.COLLECT,
-                'generation'
+                ModuleName.GENERATION
             ]
             for target_module in target_modules:
                 try:
