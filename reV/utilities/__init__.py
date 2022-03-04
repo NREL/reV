@@ -16,7 +16,6 @@ class ModuleName(str, Enum):
     this means that all commands are lowercase with underscores
     replaced by dashes.
 
-
     Reference
     ---------
     See this line in the click source code to get the most up-to-date
@@ -38,6 +37,13 @@ class ModuleName(str, Enum):
 
     @classmethod
     def all_names(cls):
+        """All module names.
+
+        Returns
+        -------
+        set
+            The set of all module name strings.
+        """
         return {v.value for v in cls.__members__.values()}
 
 
