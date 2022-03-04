@@ -83,7 +83,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = name
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(config.dirout,
-                                                module=ModuleName.Hybrids,
+                                                module=ModuleName.HYBRIDS,
                                                 job_name=name)
 
             if status != 'successful':

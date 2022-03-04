@@ -12,6 +12,7 @@ from click.testing import CliRunner
 from reV.hybrids import Hybridization, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
+from reV.config.hybrids_config import HybridsConfig
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.cli import main
 from reV import Outputs, TESTDATADIR
@@ -603,17 +604,13 @@ def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
             "analysis_years": 2012,
             "solar_fpath": sfp,
             "wind_fpath": wfp,
-            "directories": {
-                "log_directory": td,
-                "output_directory": td
-            },
+            "log_directory": td,
             "execution_control": {
                 "nodes": 1,
                 "option": "local",
                 "sites_per_worker": 10
             },
             "log_level": "INFO",
-            "name": "hybrids-test",
             "allow_solar_only": allow_solar_only,
             "allow_wind_only": allow_wind_only,
             "fillna": fill_vals,
@@ -644,8 +641,9 @@ def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
             ratio=ratio,
             ratio_bounds=ratio_bounds
         ).run_all()
-
-        out_fpath = os.path.join(td, 'hybrids-test.h5')
+        dirname = os.path.basename(td)
+        fn_out = "{}_{}.h5".format(dirname, HybridsConfig.NAME)
+        out_fpath = os.path.join(td, fn_out)
         with Outputs(out_fpath, 'r') as f:
             for dset_name in OUTPUT_PROFILE_NAMES:
                 assert dset_name in f.dsets
@@ -668,17 +666,13 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
         config = {
             "solar_fpath": bad_fpath,
             "wind_fpath": WIND_FPATH,
-            "directories": {
-                "log_directory": td,
-                "output_directory": td
-            },
+            "log_directory": td,
             "execution_control": {
                 "nodes": 1,
                 "option": "local",
                 "sites_per_worker": 10
             },
             "log_level": "INFO",
-            "name": "hybrids-test",
         }
 
         config_path = os.path.join(td, 'config.json')
@@ -695,8 +689,10 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
             LOGGERS.clear()
             raise RuntimeError(msg)
 
+        dirname = os.path.basename(td)
+        fn_out = "{}_{}.h5".format(dirname, HybridsConfig.NAME)
         assert "WARNING" in result.stdout
-        assert 'hybrids-test.h5' not in os.listdir(td)
+        assert fn_out not in os.listdir(td)
 
         LOGGERS.clear()
 
