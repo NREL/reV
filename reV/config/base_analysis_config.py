@@ -54,22 +54,6 @@ class AnalysisConfig(BaseConfig):
             logger.error(e)
             raise ConfigError(e)
 
-    @classmethod
-    def _get_properties(cls):
-        """
-        Get all class properties
-        Used to check against config keys
-
-        Returns
-        -------
-        properties : list
-            List of class properties, each of which should represent a valid
-            config key/entry
-        """
-        props = get_class_properties(cls)
-        props.append('log_directory')
-        return props
-
     @property
     def analysis_years(self):
         """Get the analysis years.
