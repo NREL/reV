@@ -20,18 +20,19 @@ Setting up an AWS Parallel Cluster
 
 #. Optional, set up an `HPC parallel filesystem <https://www.hpcworkshops.com/04-amazon-fsx-for-lustre.html>`_.
 
-    * Seems like EBS is probably fine and FSx is unnecessary for non-IO-intensive reV modules. Generation will source resource data from HSDS and so is probably fine with EBS. SC-aggregation is probably fine with EBS if you set ``pre_extract_inclusions=True``.
+    * Seems like EBS is probably fine and FSx is unnecessary for non-IO-intensive reV modules. Generation will retrieve resource data from HSDS and so is probably fine with EBS. SC-aggregation is probably fine with EBS if you set ``pre_extract_inclusions=True``.
 
 #. `Login to your cluster <https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop/07-logon-pc.html>`_ from your cloud9 IDE: ``pcluster ssh pcluster_name -i ~/.ssh/lab-3-key``
-#. Get `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ and install.
+#. Get `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_, install, and activate your conda environment.
 
     #. ``wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh``
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
+    #. ``source ~/.bashrc``
 
 #. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See instructions below for details.
 #. Install reV
 
-    #. You need to clone the reV repo to get this ``aws_pcluster`` example. reV example files do not ship with the pypi package.
+    #. You need to clone the reV repo to get the ``aws_pcluster`` `example files <https://github.com/NREL/reV/tree/main/examples/aws_pcluster>`_. reV example files do not ship with the pypi package.
     #. You will have to first add the pcluster public ssh key (``cat ~/.ssh/id_rsa.pub``) to your github ssh keys.
     #. Put the reV repo in the ``/shared/`` volume so that the ``aws_pcluster`` project directory is in the large EBS storage volume shared between compute nodes.
     #. ``cd /shared/``
@@ -76,7 +77,7 @@ The current recommended approach for setting up an HSDS service for reV is to st
         hs_api_key = None
         hs_bucket = nrel-pds-hsds
 
-#. Copy the ``start_hsds.sh`` script from this example to your home directory in the pcluster login node.
+#. Copy the ``start_hsds.sh`` script from this example (source file is `here <https://github.com/NREL/reV/blob/main/examples/aws_pcluster/start_hsds.sh>`_) to your home directory in the pcluster login node (e.g. ``cp /shared/reV/examples/aws_pcluster/start_hsds.sh ~/``).
 #. Replace the following environment variables in ``start_hsds.sh`` with your values: ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``BUCKET_NAME`` (note that you should use AWS keys from an IAM user with admin privileges and not your AWS console root user).
 #. Optional, to test your HSDS local server config, do the following:
 

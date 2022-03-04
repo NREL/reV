@@ -12,18 +12,20 @@ Created on Mon Jun 10 13:49:53 2019
 import pandas as pd
 import copy
 import json
+import yaml
 import os
 import shutil
 import itertools
 import logging
 from warnings import warn
+from abc import ABC, abstractmethod
 
 from reV.config.batch import BatchConfig
 from reV.pipeline.cli_pipeline import pipeline_monitor_background
 from reV.pipeline.pipeline import Pipeline
-from reV.utilities.exceptions import PipelineError
+from reV.utilities.exceptions import InputError, PipelineError
 
-from rex.utilities import safe_json_load, parse_year
+from rex.utilities import safe_json_load, safe_yaml_load, parse_year
 from rex.utilities.loggers import init_logger
 
 
@@ -360,13 +362,14 @@ class BatchJob:
         return out
 
     @classmethod
-    def _mod_json(cls, fpath, fpath_out, arg_mods):
+    def _mod_file(cls, file, fpath_out, arg_mods):
         """Import and modify the contents of a json. Dump to new file.
 
         Parameters
         ---------
-        fpath : str
-            File path to json to be imported/modified
+        file : `FileToMod`
+            Instance of a `FileToMod` object representing the
+            input file that will be imported/modified.
         fpath_out : str
             File path to dump new modified json.
         arg_mods : dict
@@ -374,11 +377,9 @@ class BatchJob:
             implement in the json
         """
 
-        data = safe_json_load(fpath)
-        data = cls._mod_dict(data, arg_mods)
-
-        with open(fpath_out, 'w') as f:
-            json.dump(data, f, indent=4, separators=(',', ': '))
+        data = file.load()
+        file.data = cls._mod_dict(data, arg_mods)
+        file.write(fpath_out)
 
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
@@ -440,19 +441,35 @@ class BatchJob:
             Batch job name (for logging purposes)
         arg_comb : dict
             Dictionary representing one set of arg/value combinations to
-            implement in the fn if the fn is a .json file specified as one
-            of the batch permutation files to modify.
+            implement in the fn if the fn is a JSON or YAML file specified
+            as one of the batch permutation files to modify.
         mod_fnames : list
             List of filenames that need to be modified by the batch module.
+
+        Raises
+        ------
+        InputError
+            If fn does not end in ('.json', '.yml', '.yaml'), i.e.
+            unrecognized input mod file format.
         """
 
-        if fn in mod_fnames and fn.endswith('.json'):
-            # modify json and dump to new path
-            logger.debug('Copying and modifying run json file '
+        if fn in mod_fnames:
+            logger.debug('Copying and modifying run file '
                          '"{}" to job: "{}"'.format(fn, job_name))
-            self._mod_json(os.path.join(source_dir, fn),
-                           os.path.join(destination_dir, fn),
-                           arg_comb)
+            fn_in = os.path.join(source_dir, fn)
+            fn_out = os.path.join(destination_dir, fn)
+            if fn.endswith('.json'):
+                in_file = JSONFileToMod(fn_in)
+            elif fn.endswith(('.yml', '.yaml')):
+                in_file = YAMLFileToMod(fn_in)
+            else:
+                msg = ('Unknown file-to-modify type: {!r}. Please ensure '
+                       'the input files to modify are in JSON or YAML format '
+                       '(i.e. end in ".json", ".yml", or ".yaml").')
+                e = msg.format(fn)
+                logger.error(e)
+                raise InputError(e)
+            self._mod_file(in_file, fn_out, arg_comb)
 
         else:
             # straight copy of non-mod and non-json
@@ -600,3 +617,54 @@ class BatchJob:
             if not dry_run:
                 b._run_pipelines(monitor_background=monitor_background,
                                  verbose=verbose)
+
+
+class FileToMod(ABC):
+    """Abstract base class representing a file that is modded by BatchJob. """
+
+    def __init__(self, file_path):
+        """
+        Parameters
+        ----------
+        file_path : str
+            Path to data file.
+        """
+        super().__init__()
+        self.file_path = file_path
+        self.data = None
+
+    @abstractmethod
+    def load(self):
+        """Load the file contents."""
+
+    @abstractmethod
+    def write(self, file_name_out):
+        """Write data out in the correct file format. """
+
+
+class JSONFileToMod(FileToMod):
+    """JSON file that is modded by BatchJob. """
+
+    def load(self):
+        """Load the JSON file contents."""
+        self.data = safe_json_load(self.file_path)
+        return self.data
+
+    def write(self, file_name_out):
+        """Write data out in the correct file format. """
+        with open(file_name_out, 'w') as f:
+            json.dump(self.data, f, indent=4, separators=(',', ': '))
+
+
+class YAMLFileToMod(FileToMod):
+    """YAML file that is modded by BatchJob. """
+
+    def load(self):
+        """Load the YAML file contents."""
+        self.data = safe_yaml_load(self.file_path)
+        return self.data
+
+    def write(self, file_name_out):
+        """Write data out in the correct file format. """
+        with open(file_name_out, 'w') as f:
+            yaml.dump(self.data, f, indent=2, sort_keys=False)

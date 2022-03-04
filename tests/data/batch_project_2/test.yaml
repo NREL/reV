@@ -1,0 +1,11 @@
+# Constants
+input_constant_1:
+  1476.54 * 1000
+input_constant_2:
+  18.02
+another_input_constant:
+  54
+
+# Equations
+some_equation:
+  np.exp(input_constant_1, input_constant_2) + another_input_constant

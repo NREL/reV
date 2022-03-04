@@ -28,6 +28,8 @@ from reV.supply_curve.cli_sc_aggregation import (valid_config_keys
                                                  as sc_agg_keys)
 from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
 from reV.supply_curve.cli_supply_curve import valid_config_keys as sc_keys
+from reV.hybrids.cli_hybrids import from_config as run_hybrids_from_config
+from reV.hybrids.cli_hybrids import valid_config_keys as hybrids_keys
 from reV.qa_qc.cli_qa_qc import from_config as run_qa_qc_from_config
 from reV.qa_qc.cli_qa_qc import valid_config_keys as qa_qc_keys
 from reV import __version__
@@ -295,6 +297,28 @@ def valid_rep_profiles_keys(ctx):
     Valid Representative Profiles config keys
     """
     ctx.invoke(rep_profiles_keys)
+
+
+@main.group(invoke_without_command=True)
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def hybrids(ctx, verbose):
+    """Run reV hybridization using the config file."""
+    if ctx.invoked_subcommand is None:
+        config_file = ctx.obj['CONFIG_FILE']
+        verbose = any([verbose, ctx.obj['VERBOSE']])
+        ctx.invoke(run_hybrids_from_config, config_file=config_file,
+                   verbose=verbose)
+
+
+@hybrids.command()
+@click.pass_context
+def valid_hybrids_keys(ctx):
+    """
+    Valid Hybridization config keys
+    """
+    ctx.invoke(hybrids_keys)
 
 
 @main.group(invoke_without_command=True)

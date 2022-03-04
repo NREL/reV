@@ -42,8 +42,8 @@ class RevNrwalConfig(AnalysisConfig):
         fpaths = self['gen_fpath']
         if fpaths == 'PIPELINE':
             fpaths = Pipeline.parse_previous(
-                self.dirout, module=ModuleName.NRWAL, target='fpath',
-                target_module='generation')
+                self.dirout, module=ModuleName.NRWAL, target='fpath'
+            )
 
         if isinstance(fpaths, str) and '*' in fpaths:
             fpaths = glob(fpaths)

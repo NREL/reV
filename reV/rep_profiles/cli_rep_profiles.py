@@ -95,6 +95,7 @@ def from_config(ctx, config_file, verbose):
 
     for name, gen_fpath, dset in zip(names, fpaths, dsets):
 
+        ctx.obj['NAME'] = name
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(
                 config.dirout, module=ModuleName.REP_PROFILES, job_name=name
@@ -122,7 +123,6 @@ def from_config(ctx, config_file, verbose):
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
-            ctx.obj['NAME'] = name
             ctx.obj['GEN_FPATH'] = gen_fpath
             ctx.obj['REV_SUMMARY'] = config.rev_summary
             ctx.obj['REG_COLS'] = config.reg_cols

@@ -35,6 +35,8 @@ else
         # install docker if not found
         if ! command -v docker &> /dev/null; then
             sudo amazon-linux-extras install -y docker
+            sudo systemctl start docker
+            sudo chmod 666 /var/run/docker.sock
         fi
 
         # install docker-compose if not found

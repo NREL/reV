@@ -1,0 +1,21 @@
+{
+  "pipeline_config": "./config_pipeline.json",
+  "sets": [
+    {
+      "args": {
+        "input_constant_1": [
+          "1476.54 * 1000",
+          "1476.54 * 2000",
+          "1476.54 * 3000"
+        ],
+        "input_constant_2": [
+            18.02
+        ]
+      },
+      "files": [
+        "./test.yamlet"
+      ],
+      "set_tag": "set1"
+    }
+  ]
+}
