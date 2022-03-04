@@ -47,7 +47,7 @@ class RepProfilesConfig(AnalysisConfig):
         if fpath == 'PIPELINE':
             targets = {ModuleName.MULTI_YEAR: 'fpath',
                        ModuleName.COLLECT: 'fpath',
-                       'generation': 'fpath',
+                       ModuleName.GENERATION: 'fpath',
                        ModuleName.SUPPLY_CURVE_AGGREGATION: 'gen_fpath'}
             for target_module, target in targets.items():
                 try:
