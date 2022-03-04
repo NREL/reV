@@ -169,7 +169,7 @@ class AnalysisConfig(BaseConfig):
                 msg = ("Specifying a job name using config key 'name' is "
                        "deprecated. Job names are now inferred from the run "
                        "directory name. To silence this warning, remove "
-                       "the 'name' key from the {!r} config file.'"
+                       "the 'name' key from the following config file: {!r}'"
                        .format(self.__config_fn))
                 logger.warning(msg)
                 warn(reVDeprecationWarning(msg))
