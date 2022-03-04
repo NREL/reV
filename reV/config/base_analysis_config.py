@@ -12,8 +12,6 @@ from reV.utilities.exceptions import (ConfigError, ConfigWarning,
                                       reVDeprecationWarning)
 from reV.utilities import ModuleName
 
-from rex.utilities.utilities import get_class_properties
-
 logger = logging.getLogger(__name__)
 
 
