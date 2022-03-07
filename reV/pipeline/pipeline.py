@@ -26,7 +26,7 @@ class Pipeline:
     """reV pipeline execution framework."""
 
     CMD_BASE = 'python -m reV.cli -c {fp_config} {command}'
-
+    COMMANDS = ModuleName.all_names()
     RETURN_CODES = {0: 'successful',
                     1: 'running',
                     2: 'failed',
@@ -343,10 +343,10 @@ class Pipeline:
         cmd : str
             Python reV CLI call string.
         """
-        if command not in ModuleName.all_names():
+        if command not in cls.COMMANDS:
             raise KeyError("Could not recognize command {!r}. "
                            "Available commands are: {!r}"
-                           .format(command, ModuleName.all_names())) from None
+                           .format(command, cls.COMMANDS)) from None
         cmd = cls.CMD_BASE.format(fp_config=f_config, command=command)
         if verbose:
             cmd += ' -v'
