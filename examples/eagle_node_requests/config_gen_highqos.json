@@ -3,10 +3,7 @@
     2010,
     2011
   ],
-  "directories": {
-    "log_directory": "/scratch/gbuster/rev/test_pipeline",
-    "output_directory": "/scratch/gbuster/rev/test_pipeline"
-  },
+  "log_directory": "/scratch/gbuster/rev/test_pipeline",
   "execution_control": {
     "allocation": "rev",
     "feature": "--qos=high",
@@ -15,7 +12,6 @@
     "walltime": 10.0
   },
   "log_level": "INFO",
-  "name": "gen",
   "output_request": [
     "cf_mean",
     "cf_profile"

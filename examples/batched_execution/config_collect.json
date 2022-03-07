@@ -1,9 +1,6 @@
 {
-  "directories": {
-    "collect_directory": "PIPELINE",
-    "log_directory": "./",
-    "output_directory": "./"
-  },
+  "collect_directory": "PIPELINE",
+  "log_directory": "./",
   "dsets": [
     "cf_mean"
   ],

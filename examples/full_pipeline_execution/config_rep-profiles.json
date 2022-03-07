@@ -5,10 +5,7 @@
     2013
   ],
   "cf_dset": "cf_profile-{}",
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./"
-  },
+  "log_directory": "./logs/",
   "err_method": "rmse",
   "execution_control": {
     "allocation": "rev",
