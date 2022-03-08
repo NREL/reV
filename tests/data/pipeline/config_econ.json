@@ -4,10 +4,7 @@
     2013
   ],
   "cf_file": "PIPELINE",
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./outputs/"
-  },
+  "log_directory": "./logs/",
   "execution_control": {
     "nodes": 1,
     "option": "local",

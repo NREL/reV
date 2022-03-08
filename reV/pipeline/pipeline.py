@@ -12,6 +12,7 @@ from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.pipeline import PipelineConfig
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ExecutionError
+from reV.utilities import ModuleName
 
 from rex.utilities.execution import SubprocessManager
 from rex.utilities.hpc import SLURM
@@ -25,19 +26,7 @@ class Pipeline:
     """reV pipeline execution framework."""
 
     CMD_BASE = 'python -m reV.cli -c {fp_config} {command}'
-
-    COMMANDS = ('generation',
-                'econ',
-                'nrwal',
-                'collect',
-                'multi-year',
-                'supply-curve-aggregation',
-                'supply-curve',
-                'rep-profiles',
-                'qa-qc',
-                'hybrids',
-                )
-
+    COMMANDS = ModuleName.all_names()
     RETURN_CODES = {0: 'successful',
                     1: 'running',
                     2: 'failed',
@@ -355,9 +344,9 @@ class Pipeline:
             Python reV CLI call string.
         """
         if command not in cls.COMMANDS:
-            raise KeyError('Could not recongize command "{}". '
-                           'Available commands are: {}'
-                           .format(command, cls.COMMANDS))
+            raise KeyError("Could not recognize command {!r}. "
+                           "Available commands are: {!r}"
+                           .format(command, cls.COMMANDS)) from None
         cmd = cls.CMD_BASE.format(fp_config=f_config, command=command)
         if verbose:
             cmd += ' -v'

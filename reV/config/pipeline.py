@@ -60,12 +60,16 @@ class PipelineConfig(AnalysisConfig):
                 if 'name' in config:
                     names.append(config.name)
 
+        # The following two exceptions are just extra protection -
+        # the user can no longer change "dirout" or "name" as of 2/23/2022.
+        # All dirouts should now automatically be set to "./" and job names
+        # should be inferrred from the directory name
         if len(set(dirouts)) != 1:
             raise ConfigError('Pipeline steps must have a common output '
                               'directory but received {} different '
                               'directories.'.format(len(set(dirouts))))
         else:
-            self._dirout = dirouts[0]
+            self.dirout = dirouts[0]
 
         if len(set(names)) != len(names):
             raise ConfigError('Pipeline steps must have a unique job names '
@@ -131,24 +135,7 @@ class PipelineConfig(AnalysisConfig):
         _status_file : str
             reV status file path.
         """
-        if self._dirout is None:
+        if self.dirout is None:
             raise ConfigError('Pipeline has not yet been initialized.')
 
-        return os.path.join(self._dirout, '{}_status.json'.format(self.name))
-
-    @property
-    def name(self):
-        """Get the pipeline name.
-
-        Returns
-        -------
-        _name : str
-            reV pipeline name.
-        """
-        if self._name is None:
-            self._name = os.path.basename(os.path.normpath(self.dirout))
-            if 'name' in self:
-                if self['name']:
-                    self._name = self['name']
-
-        return self._name
+        return os.path.join(self.dirout, '{}_status.json'.format(self.name))

@@ -13,6 +13,7 @@ from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger, init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
+from reV.utilities import ModuleName
 
 from reV.config.qa_qc_config import QaQcConfig
 from reV.pipeline.status import Status
@@ -26,9 +27,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-QA_QC', type=STR,
-              show_default=True,
-              help='reV QA/QC name, by default "reV-QA/QC".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV QA/QC job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -240,7 +240,7 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': h5_file}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -297,7 +297,7 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': sc_table}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -370,7 +370,7 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': excl_fpath}
-        Status.make_job_file(out_dir, 'qa-qc', name, status)
+        Status.make_job_file(out_dir, ModuleName.QA_QC, name, status)
 
 
 @main.command()
@@ -382,37 +382,36 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV QA/QC from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = QaQcConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     verbose = config.log_level == logging.DEBUG
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'qa-qc',
-                                            name)
+        status = Status.retrieve_job_status(config.dirout,
+                                            module=ModuleName.QA_QC,
+                                            job_name=name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'qa-qc', name, replace=True,
+                config.dirout, module=ModuleName.QA_QC,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'dirout': config.dirout})
 
@@ -425,7 +424,7 @@ def from_config(ctx, config_file, verbose):
                 fpath = module_config.fpath
                 if module.lower() == 'exclusions':
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.h5', '.log'))
                     afk = module_config.area_filter_kernel
                     ctx.invoke(exclusions,
@@ -444,7 +443,7 @@ def from_config(ctx, config_file, verbose):
 
                 elif fpath.endswith('.h5'):
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.h5', '.log'))
                     max_workers = config.execution_control.max_workers
                     ctx.invoke(reV_h5,
@@ -463,7 +462,7 @@ def from_config(ctx, config_file, verbose):
 
                 elif fpath.endswith('.csv'):
                     log_file = os.path.join(
-                        config.logdir,
+                        config.log_directory,
                         os.path.basename(fpath).replace('.csv', '.log'))
                     ctx.invoke(supply_curve,
                                sc_table=fpath,
@@ -686,18 +685,19 @@ def launch_slurm(config, verbose):
     """
 
     out_dir = config.dirout
-    log_file = os.path.join(config.logdir, config.name + '.log')
-    stdout_path = os.path.join(config.logdir, 'stdout/')
+    log_file = os.path.join(config.log_directory, config.name + '.log')
+    stdout_path = os.path.join(config.log_directory, 'stdout/')
     node_cmd = get_multiple_cmds(config, out_dir, log_file, verbose)
 
     if config.execution_control.sh_script:
-        node_cmd = config.execution_control.sh_script + '\n' + cmd
+        node_cmd = config.execution_control.sh_script + '\n' + node_cmd
 
     slurm_manager = SLURM()
-    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir, module=ModuleName.QA_QC,
+                                        job_name=config.name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'QA-QC CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -722,10 +722,12 @@ def launch_slurm(config, verbose):
             msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
                    .format(config.name, out))
-            Status.add_job(
-                out_dir, 'qa-qc', config.name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, module=ModuleName.QA_QC,
+            job_name=config.name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

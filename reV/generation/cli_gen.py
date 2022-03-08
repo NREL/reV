@@ -18,6 +18,7 @@ from reV.generation.generation import Gen
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
@@ -30,9 +31,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-gen', type=STR,
-              show_default=True,
-              help='reV generation job name, by default "reV-gen".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Economics job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -60,16 +60,13 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # Instantiate the config object
     config = GenConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
@@ -80,14 +77,14 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV Generation from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
@@ -102,7 +99,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['TECH'] = config.technology
     ctx.obj['POINTS'] = config.project_points
     ctx.obj['SAM_FILES'] = config.sam_files
-    ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['LOGDIR'] = config.log_directory
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['GID_MAP'] = config.gid_map
     ctx.obj['SITE_DATA'] = config.site_data
@@ -159,11 +156,13 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
         ctx.obj['NAME'] = name_year
-        status = Status.retrieve_job_status(config.dirout, 'generation',
-                                            name_year)
+        status = Status.retrieve_job_status(
+            config.dirout, module=ModuleName.GENERATION, job_name=name_year
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'generation', name_year, replace=True,
+                config.dirout, module=ModuleName.GENERATION,
+                job_name=name_year, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': fout,
                            'dirout': config.dirout})
@@ -184,7 +183,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    feature=config.execution_control.feature,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   stdout_path=os.path.join(config.log_directory, 'stdout'),
                    sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 
@@ -452,7 +451,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     # add job to reV status file.
     status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
               'runtime': runtime, 'finput': res_file}
-    Status.make_job_file(dirout, 'generation', name, status)
+    Status.make_job_file(dirout, ModuleName.GENERATION, name, status)
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -730,10 +729,13 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
         if sh_script:
             cmd = sh_script + '\n' + cmd
 
-        status = Status.retrieve_job_status(dirout, 'generation', node_name,
+        status = Status.retrieve_job_status(dirout,
+                                            module=ModuleName.GENERATION,
+                                            job_name=node_name,
                                             hardware='eagle',
                                             subprocess_manager=slurm_manager)
 
+        msg = 'Generation CLI failed to submit jobs!'
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
@@ -758,11 +760,13 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
             if out:
                 msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}).'
                        .format(node_name, out))
-                # add job to reV status file.
-                Status.add_job(
-                    dirout, 'generation', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
-                               'fout': fout_node, 'dirout': dirout})
+
+            # add job to reV status file.
+            Status.add_job(
+                dirout, module=ModuleName.GENERATION,
+                job_name=node_name, replace=True,
+                job_attrs={'job_id': out, 'hardware': 'eagle',
+                           'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)
         logger.info(msg)

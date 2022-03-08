@@ -24,6 +24,7 @@ from reV.cli import main
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
+from reV.config.sam_analysis_configs import EconConfig
 
 RTOL = 0.01
 ATOL = 0.001
@@ -199,17 +200,13 @@ def test_econ_from_config(runner):
         config = {
             "analysis_years": 2012,
             "cf_file": cf_file,
-            "directories": {
-                "log_directory": td,
-                "output_directory": td
-            },
+            "log_directory": td,
             "execution_control": {
                 "nodes": 1,
                 "option": "local",
                 "sites_per_worker": 10
             },
             "log_level": "INFO",
-            "name": "econ-test",
             "output_request": [
                 "lcoe_fcr"
             ],
@@ -229,7 +226,9 @@ def test_econ_from_config(runner):
                    .format(traceback.print_exception(*result.exc_info)))
             raise RuntimeError(msg)
 
-        out_fpath = os.path.join(td, 'econ-test_2012.h5')
+        dirname = os.path.basename(td)
+        fn_out = "{}_{}_2012.h5".format(dirname, EconConfig.NAME)
+        out_fpath = os.path.join(td, fn_out)
         with Outputs(out_fpath, 'r') as f:
             lcoe = f['lcoe_fcr']
 

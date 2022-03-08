@@ -10,10 +10,7 @@
       "method": "mean"
     }
   },
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./"
-  },
+  "log_directory": "./logs/",
   "excl_dict": {
     "smod": {
       "inclusion_weights": {

@@ -1,9 +1,6 @@
 {
-  "directories": {
-    "collect_directory": "PIPELINE",
-    "log_directory": "./",
-    "output_directory": "./"
-  },
+  "collect_directory": "PIPELINE",
+  "log_directory": "./",
   "dsets": [
     "ppa_price",
     "lcoe_nom",

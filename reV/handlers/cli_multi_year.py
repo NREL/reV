@@ -12,6 +12,7 @@ import time
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
 from reV.pipeline.status import Status
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
@@ -24,9 +25,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV_multi-year', type=str,
-              show_default=True,
-              help='Multi-year job name. Default is "reV_multi-year".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Multi-Year job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -54,15 +54,12 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = MultiYearConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
@@ -73,23 +70,26 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV multi-year from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
 
     ctx.obj['MY_FILE'] = config.my_file
     if config.execution_control.option == 'local':
 
         ctx.obj['NAME'] = name
-        status = Status.retrieve_job_status(config.dirout, 'multi-year', name)
+        status = Status.retrieve_job_status(
+            config.dirout, module=ModuleName.MULTI_YEAR, job_name=name
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'multi-year', name, replace=True,
+                config.dirout, module=ModuleName.MULTI_YEAR,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['MY_FILE'],
                            'dirout': config.dirout})
@@ -105,7 +105,7 @@ def from_config(ctx, config_file, verbose):
                    memory=config.execution_control.memory,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   stdout_path=os.path.join(config.log_directory, 'stdout'),
                    group_params=json.dumps(config.group_params),
                    sh_script=config.execution_control.sh_script,
                    verbose=verbose)
@@ -187,7 +187,7 @@ def multi_year(ctx, source_files, group, dsets, pass_through_dsets, verbose):
               'job_status': 'successful',
               'runtime': runtime,
               'finput': source_files}
-    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+    Status.make_job_file(os.path.dirname(my_file), ModuleName.MULTI_YEAR, name,
                          status)
 
 
@@ -250,7 +250,7 @@ def multi_year_groups(ctx, group_params, verbose):
               'fout': os.path.basename(my_file),
               'job_status': 'successful',
               'runtime': runtime}
-    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+    Status.make_job_file(os.path.dirname(my_file), ModuleName.MULTI_YEAR, name,
                          status)
 
 
@@ -259,8 +259,6 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
     Parameters
     ----------
-    name : str
-        reV collection jobname.
     my_file : str
         Path to .h5 file to use for multi-year collection.
     group_params : list
@@ -341,10 +339,12 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
-                                        name, hardware='eagle',
+    status = Status.retrieve_job_status(os.path.dirname(my_file),
+                                        module=ModuleName.MULTI_YEAR,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Multi-year CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -367,12 +367,14 @@ def multi_year_slurm(ctx, group_params, alloc, walltime, feature, memory,
         if out:
             msg = ('Kicked off reV multi-year collection job "{}" '
                    '(SLURM jobid #{}).'.format(name, out))
-            # add job to reV status file.
-            Status.add_job(
-                os.path.dirname(my_file), 'multi-year', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': os.path.basename(my_file),
-                           'dirout': os.path.dirname(my_file)})
+
+        # add job to reV status file.
+        Status.add_job(
+            os.path.dirname(my_file), module=ModuleName.MULTI_YEAR,
+            job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': os.path.basename(my_file),
+                       'dirout': os.path.dirname(my_file)})
 
     click.echo(msg)
     logger.info(msg)

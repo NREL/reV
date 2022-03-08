@@ -21,6 +21,7 @@ from reV.config.nrwal_config import RevNrwalConfig
 from reV.pipeline.status import Status
 from reV.nrwal.nrwal import RevNrwal
 from reV.utilities.cli_dtypes import SAMFILES
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, INT, STRLIST
@@ -33,8 +34,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-off', type=STR,
-              help='Job name. Default is "reV-off".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV NRWAL job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -64,26 +65,23 @@ def from_config(ctx, config_file, verbose):
     """Run reV-NRWAL analysis from a config file."""
     # Instantiate the config object
     config = RevNrwalConfig(config_file)
-    name = ctx.obj['NAME']
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV-NRWAL analysis from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -96,11 +94,13 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = job_name
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'nrwal',
-                                                job_name)
+            status = Status.retrieve_job_status(config.dirout,
+                                                module=ModuleName.NRWAL,
+                                                job_name=job_name)
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'nrwal', job_name, replace=True,
+                    config.dirout, module=ModuleName.NRWAL,
+                    job_name=job_name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}_nrwal.h5'.format(job_name),
                                'dirout': config.dirout,
@@ -114,7 +114,7 @@ def from_config(ctx, config_file, verbose):
                            save_raw=config.save_raw,
                            meta_gid_col=config.meta_gid_col,
                            site_meta_cols=config.site_meta_cols,
-                           log_dir=config.logdir,
+                           log_dir=config.log_directory,
                            verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
@@ -127,7 +127,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['META_GID_COL'] = config.meta_gid_col
             ctx.obj['SITE_META_COLS'] = config.site_meta_cols
             ctx.obj['OUT_DIR'] = config.dirout
-            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['LOG_DIR'] = config.log_directory
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(slurm,
@@ -227,7 +227,7 @@ def direct(ctx, gen_fpath, site_data, sam_files, nrwal_configs,
                   'fout': os.path.basename(gen_fpath),
                   'job_status': 'successful',
                   'runtime': runtime, 'finput': gen_fpath}
-        Status.make_job_file(os.path.dirname(gen_fpath), 'nrwal',
+        Status.make_job_file(os.path.dirname(gen_fpath), ModuleName.NRWAL,
                              name, status)
 
 
@@ -308,10 +308,11 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'nrwal', name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir, module=ModuleName.NRWAL,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'NRWAL CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -334,10 +335,11 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
         if out:
             msg = ('Kicked off reV-NRWAL job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'nrwal', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, module=ModuleName.NRWAL, job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

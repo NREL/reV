@@ -1,8 +1,5 @@
 {
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./"
-  },
+  "log_directory": "./logs/",
   "execution_control": {
     "allocation": "rev",
     "feature": "--qos=high",

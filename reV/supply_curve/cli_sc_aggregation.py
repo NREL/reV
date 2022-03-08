@@ -15,6 +15,7 @@ from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.multi_file_resource import MultiFileResource
@@ -29,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-agg', type=STR,
-              show_default=True,
-              help='Job name. Default is "reV-agg".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True,
+              help='reV Supply Curve Aggregation job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -59,39 +60,39 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV SC aggregation from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = SupplyCurveAggregationConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve aggregation from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout,
-                                            'supply-curve-aggregation',
-                                            name)
+        status = Status.retrieve_job_status(
+            config.dirout,
+            module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+            job_name=name
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'supply-curve-aggregation', name, replace=True,
+                config.dirout, module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
@@ -120,7 +121,7 @@ def from_config(ctx, config_file, verbose):
                 out_dir=config.dirout,
                 max_workers=config.execution_control.max_workers,
                 sites_per_worker=config.execution_control.sites_per_worker,
-                log_dir=config.logdir,
+                log_dir=config.log_directory,
                 recalc_lcoe=config.recalc_lcoe,
                 pre_extract_inclusions=config.pre_extract_inclusions,
                 verbose=verbose)
@@ -151,7 +152,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['SITES_PER_WORKER'] = spw
-        ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['LOG_DIR'] = config.log_directory
         ctx.obj['RECALC_LCOE'] = config.recalc_lcoe
         ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
         ctx.obj['VERBOSE'] = verbose
@@ -447,7 +448,8 @@ def direct(ctx, excl_fpath, gen_fpath, tm_dset, econ_fpath, res_fpath,
                   'area_filter_kernel': area_filter_kernel,
                   'min_area': min_area}
 
-        Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
+        Status.make_job_file(out_dir, ModuleName.SUPPLY_CURVE_AGGREGATION,
+                             name, status)
 
 
 def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
@@ -579,10 +581,12 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
-                                        name, hardware='eagle',
-                                        subprocess_manager=slurm_manager)
+    status = Status.retrieve_job_status(
+        out_dir, module=ModuleName.SUPPLY_CURVE_AGGREGATION, job_name=name,
+        hardware='eagle', subprocess_manager=slurm_manager
+    )
 
+    msg = 'SC Aggregation CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -601,10 +605,12 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
             msg = ('Kicked off reV SC aggregation job "{}" '
                    '(SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'supply-curve-aggregation', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, module=ModuleName.SUPPLY_CURVE_AGGREGATION,
+            job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

@@ -17,6 +17,7 @@ from reV.econ.econ import Econ
 from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
@@ -29,9 +30,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-econ', type=STR,
-              show_default=True,
-              help='reV Economics job name, by default "reV-econ".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Economics job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -59,16 +59,13 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV econ from a config file."""
-    name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # Instantiate the config object
     config = EconConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
@@ -79,14 +76,14 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
     cf_files = config.parse_cf_files()
     # Initial log statements
     logger.info('Running reV Econ from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
@@ -102,7 +99,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SAM_FILES'] = config.parse_sam_config()
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
-    ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['LOGDIR'] = config.log_directory
     ctx.obj['APPEND'] = config.append
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
@@ -161,12 +158,15 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
-        name_year = name_year.replace('gen', 'econ')
+        name_year = name_year.replace('gen', ModuleName.ECON)
         ctx.obj['NAME'] = name_year
-        status = Status.retrieve_job_status(config.dirout, 'econ', name_year)
+        status = Status.retrieve_job_status(
+            config.dirout, module=ModuleName.ECON, job_name=name_year
+        )
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'econ', name_year, replace=True,
+                config.dirout, module=ModuleName.ECON,
+                job_name=name_year, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': fout,
                            'dirout': config.dirout})
@@ -186,7 +186,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
                    feature=config.execution_control.feature,
                    module=config.execution_control.module,
                    conda_env=config.execution_control.conda_env,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   stdout_path=os.path.join(config.log_directory, 'stdout'),
                    sh_script=config.execution_control.sh_script,
                    verbose=verbose)
 
@@ -246,7 +246,7 @@ def direct(ctx, sam_files, cf_file, year, points, site_data,
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['APPEND'] = append
-    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.obj['VERBOSE'] = any([verbose, ctx.obj['VERBOSE']])
 
 
 @direct.command()
@@ -329,7 +329,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     # add job to reV status file.
     status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
               'runtime': runtime, 'finput': cf_file}
-    Status.make_job_file(dirout, 'econ', name, status)
+    Status.make_job_file(dirout, ModuleName.ECON, name, status)
 
 
 def get_node_pc(points, sam_files, nodes):
@@ -521,7 +521,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
-        node_name = node_name.replace('gen', 'econ')
+        node_name = node_name.replace('gen', ModuleName.ECON)
         node_fpath = os.path.join(dirout, fout_node)
         points_range = split.split_range if split is not None else None
         cmd = get_node_cmd(node_name, sam_files, cf_file, node_fpath,
@@ -535,10 +535,13 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
         if sh_script:
             cmd = sh_script + '\n' + cmd
 
-        status = Status.retrieve_job_status(dirout, 'econ', node_name,
+        status = Status.retrieve_job_status(dirout,
+                                            module=ModuleName.ECON,
+                                            job_name=node_name,
                                             hardware='eagle',
                                             subprocess_manager=slurm_manager)
 
+        msg = 'Econ CLI failed to submit jobs!'
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
@@ -563,11 +566,13 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, module, conda_env,
             if out:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}).'
                        .format(node_name, out))
-                # add job to reV status file.
-                Status.add_job(
-                    dirout, 'econ', node_name, replace=True,
-                    job_attrs={'job_id': out, 'hardware': 'eagle',
-                               'fout': fout_node, 'dirout': dirout})
+
+            # add job to reV status file.
+            Status.add_job(
+                dirout, module=ModuleName.ECON,
+                job_name=node_name, replace=True,
+                job_attrs={'job_id': out, 'hardware': 'eagle',
+                           'fout': fout_node, 'dirout': dirout})
 
         click.echo(msg)
         logger.info(msg)

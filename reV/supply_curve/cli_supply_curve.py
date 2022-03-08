@@ -12,6 +12,7 @@ import time
 from reV.config.supply_curve_configs import SupplyCurveConfig
 from reV.pipeline.status import Status
 from reV.supply_curve.supply_curve import SupplyCurve
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -24,9 +25,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-sc', type=STR,
-              show_default=True,
-              help='Job name. Default is "reV-sc".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Supply Curve job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -54,38 +54,37 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV supply curve compute from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = SupplyCurveConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'supply-curve',
-                                            name)
+        status = Status.retrieve_job_status(config.dirout,
+                                            module=ModuleName.SUPPLY_CURVE,
+                                            job_name=name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'supply-curve', name, replace=True,
+                config.dirout, module=ModuleName.SUPPLY_CURVE,
+                job_name=name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
@@ -102,7 +101,7 @@ def from_config(ctx, config_file, verbose):
                        downwind=config.downwind,
                        max_workers=config.execution_control.max_workers,
                        out_dir=config.dirout,
-                       log_dir=config.logdir,
+                       log_dir=config.log_directory,
                        simple=config.simple,
                        line_limited=config.line_limited,
                        verbose=verbose)
@@ -123,7 +122,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['OFFSHORE_COMPETE'] = config.offshore_compete
         ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
         ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['LOG_DIR'] = config.log_directory
         ctx.obj['SIMPLE'] = config.simple
         ctx.obj['LINE_LIMITED'] = config.line_limited
         ctx.obj['VERBOSE'] = verbose
@@ -272,7 +271,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': finput}
-        Status.make_job_file(out_dir, 'supply-curve', name, status)
+        Status.make_job_file(out_dir, ModuleName.SUPPLY_CURVE, name, status)
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
@@ -383,10 +382,12 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'supply-curve', name,
-                                        hardware='eagle',
+    status = Status.retrieve_job_status(out_dir,
+                                        module=ModuleName.SUPPLY_CURVE,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Supply Curve CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -405,10 +406,12 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         if out:
             msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'supply-curve', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, module=ModuleName.SUPPLY_CURVE,
+            job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

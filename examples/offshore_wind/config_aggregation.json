@@ -1,9 +1,6 @@
 {
   "cf_dset": "cf_mean-means",
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./"
-  },
+  "log_directory": "./logs/",
   "excl_dict": null,
   "excl_fpath": "/projects/rev/data/exclusions/CONUS_Exclusions.h5",
   "execution_control": {

@@ -1,8 +1,5 @@
 {
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./outputs/"
-  },
+  "log_directory": "./logs/",
   "execution_control": {
     "option": "local"
   },
@@ -11,17 +8,17 @@
       "dsets": [
         "lcoe_fcr"
       ],
-      "source_dir": "./outputs/",
+      "source_dir": "./",
       "source_files": null,
-      "source_prefix": "outputs_econ"
+      "source_prefix": "pipeline_econ"
     },
     "generation": {
       "dsets": [
         "cf_mean"
       ],
-      "source_dir": "./outputs/",
+      "source_dir": "./",
       "source_files": null,
-      "source_prefix": "outputs_gen"
+      "source_prefix": "pipeline_gen"
     }
   },
   "log_level": "INFO"

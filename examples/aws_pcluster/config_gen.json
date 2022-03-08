@@ -3,10 +3,7 @@
     2007,
     2008
   ],
-  "directories": {
-    "log_directory": "./logs/",
-    "output_directory": "./"
-  },
+  "log_directory": "./logs/",
   "execution_control": {
     "nodes": 16,
     "option": "slurm",

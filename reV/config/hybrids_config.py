@@ -8,6 +8,7 @@ import os
 import glob
 import logging
 
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class HybridsConfig(AnalysisConfig):
     """Hybrids config."""
 
-    NAME = 'hybrids'
+    NAME = ModuleName.HYBRIDS
     REQUIREMENTS = ('solar_fpath', 'wind_fpath')
 
     def __init__(self, config):

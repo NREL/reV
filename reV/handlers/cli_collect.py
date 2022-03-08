@@ -12,6 +12,7 @@ import time
 from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.pipeline.status import Status
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT
@@ -24,9 +25,8 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV_collect', type=str,
-              show_default=True,
-              help='Collection job name. Default is "reV_collect".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True, help='reV Collect job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -54,15 +54,12 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = CollectionConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
@@ -73,23 +70,24 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV collection from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
-    logger.info('Target collection directory: "{}"'.format(config.coldir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
+    logger.info('Target collection directory: "{}"'
+                .format(config.collect_directory))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['H5_DIR'] = config.coldir
-    ctx.obj['LOG_DIR'] = config.logdir
+    ctx.obj['H5_DIR'] = config.collect_directory
+    ctx.obj['LOG_DIR'] = config.log_directory
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['PURGE_CHUNKS'] = config.purge_chunks
@@ -101,11 +99,15 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FILE_PREFIX'] = file_prefix
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'collect',
-                                                ctx.obj['NAME'])
+            status = Status.retrieve_job_status(
+                config.dirout,
+                module=ModuleName.COLLECT,
+                job_name=ctx.obj['NAME']
+            )
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'collect', ctx.obj['NAME'], replace=True,
+                    config.dirout, module=ModuleName.COLLECT,
+                    job_name=ctx.obj['NAME'], replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': file_prefix + '.h5',
                                'dirout': config.dirout})
@@ -119,7 +121,8 @@ def from_config(ctx, config_file, verbose):
                        feature=config.execution_control.feature,
                        conda_env=config.execution_control.conda_env,
                        module=config.execution_control.module,
-                       stdout_path=os.path.join(config.logdir, 'stdout'),
+                       stdout_path=os.path.join(config.log_directory,
+                                                'stdout'),
                        sh_script=config.execution_control.sh_script,
                        verbose=verbose)
 
@@ -213,7 +216,9 @@ def collect(ctx, verbose):
               'fout': os.path.basename(h5_file), 'job_status': 'successful',
               'runtime': runtime,
               'finput': os.path.join(h5_dir, '{}*.h5'.format(file_prefix))}
-    Status.make_job_file(os.path.dirname(h5_file), 'collect', name, status)
+    Status.make_job_file(
+        os.path.dirname(h5_file), ModuleName.COLLECT, name, status
+    )
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
@@ -326,10 +331,12 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     if sh_script:
         cmd = sh_script + '\n' + cmd
 
-    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name, hardware='eagle',
+    status = Status.retrieve_job_status(os.path.dirname(h5_file),
+                                        module=ModuleName.COLLECT,
+                                        job_name=name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Collect CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -353,12 +360,14 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         if out:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
                    .format(name, out))
-            # add job to reV status file.
-            Status.add_job(
-                os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': os.path.basename(h5_file),
-                           'dirout': os.path.dirname(h5_file)})
+
+        # add job to reV status file.
+        Status.add_job(
+            os.path.dirname(h5_file), module=ModuleName.COLLECT,
+            job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': os.path.basename(h5_file),
+                       'dirout': os.path.dirname(h5_file)})
 
     click.echo(msg)
     logger.info(msg)

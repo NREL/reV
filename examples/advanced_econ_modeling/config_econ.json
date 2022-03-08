@@ -1,10 +1,7 @@
 {
   "analysis_years": 2012,
   "cf_file": "placeholder",
-  "directories": {
-    "log_directory": "./",
-    "output_directory": "./"
-  },
+  "log_directory": "./",
   "execution_control": {
     "allocation": "rev",
     "nodes": 20,

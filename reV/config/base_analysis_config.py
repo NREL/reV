@@ -8,9 +8,9 @@ from warnings import warn
 
 from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
-from reV.utilities.exceptions import ConfigError, ConfigWarning
-
-from rex.utilities.utilities import get_class_properties
+from reV.utilities.exceptions import (ConfigError, ConfigWarning,
+                                      reVDeprecationWarning)
+from reV.utilities import ModuleName
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ class AnalysisConfig(BaseConfig):
 
         self._analysis_years = None
         self._ec = None
-        self._dirout = self.config_dir
-        self._logdir = './logs/'
+        self.dirout = self.config_dir
+        self.__config_fn = config
 
         self._preflight()
 
@@ -47,32 +47,10 @@ class AnalysisConfig(BaseConfig):
     def _analysis_config_preflight(self):
         """Check for required config blocks"""
 
-        if 'directories' not in self:
-            w = ('reV config does not have "directories" block, '
-                 'default directories being used.')
-            logger.warning(w)
-            warn(w, ConfigWarning)
-
         if 'execution_control' not in self:
             e = 'reV config must have "execution_control" block!'
             logger.error(e)
             raise ConfigError(e)
-
-    @classmethod
-    def _get_properties(cls):
-        """
-        Get all class properties
-        Used to check against config keys
-
-        Returns
-        -------
-        properties : list
-            List of class properties, each of which should represent a valid
-            config key/entry
-        """
-        props = get_class_properties(cls)
-        props.append('directories')
-        return props
 
     @property
     def analysis_years(self):
@@ -98,34 +76,16 @@ class AnalysisConfig(BaseConfig):
         return self._analysis_years
 
     @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        if 'directories' in self:
-            self._dirout = self['directories'].get('output_directory',
-                                                   self._dirout)
-        return self._dirout
-
-    @property
-    def logdir(self):
+    def log_directory(self):
         """Get the logging directory, look for key "log_directory" in the
-        "directories" config group.
+        config.
 
         Returns
         -------
-        logdir : str
+        log_directory : str
             Target path for reV log files.
         """
-        if 'directories' in self:
-            self._logdir = self['directories'].get('log_directory',
-                                                   self._logdir)
-        return self._logdir
+        return self.get('log_directory', './logs/')
 
     @property
     def execution_control(self):
@@ -179,14 +139,21 @@ class AnalysisConfig(BaseConfig):
             self._name = os.path.basename(os.path.normpath(self.dirout))
 
             # collect name is simple, will be added to what is being collected
-            if self.NAME == 'collect':
+            if self.NAME == ModuleName.COLLECT:
                 self._name = self.NAME
 
             # Analysis job name tag (helps ensure unique job name)
             elif self.NAME is not None:
                 self._name += '_{}'.format(self.NAME)
 
-            # name specified by user config
-            self._name = str(self.get('name', self._name))
+            # Throw warning if user still has 'name' key in config
+            if self.get('name') is not None:
+                msg = ("Specifying a job name using config key 'name' is "
+                       "deprecated. Job names are now inferred from the run "
+                       "directory name. To silence this warning, remove "
+                       "the 'name' key from the following config file: {!r}'"
+                       .format(self.__config_fn))
+                logger.warning(msg)
+                warn(reVDeprecationWarning(msg))
 
         return self._name

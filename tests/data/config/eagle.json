@@ -1,9 +1,6 @@
 {
   "analysis_years": 2012,
-  "directories": {
-    "log_directory": "TESTDATADIR/ri_pv_reV2",
-    "output_directory": "TESTDATADIR/ri_pv_reV2"
-  },
+  "log_directory": "TESTDATADIR/ri_pv_reV2",
   "execution_control": {
     "allocation": "rev",
     "memory": 96,
@@ -14,7 +11,6 @@
     "walltime": 0.5
   },
   "log_level": "DEBUG",
-  "name": "rev",
   "output_request": [
     "cf_mean",
     "cf_profile",

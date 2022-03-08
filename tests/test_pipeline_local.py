@@ -23,14 +23,13 @@ def test_pipeline_local():
         pipeline_dir = os.path.join(TESTDATADIR, 'pipeline/')
         pipeline_dir = shutil.copytree(pipeline_dir,
                                        os.path.join(TEMP_DIR, 'pipeline'))
-        out_dir = os.path.join(pipeline_dir, 'outputs/')
         fpipeline = os.path.join(pipeline_dir, 'config_pipeline.json')
         fbaseline = os.path.join(pipeline_dir,
                                  'baseline_pipeline_multi-year.h5')
 
         Pipeline.run(fpipeline, monitor=True)
 
-        fpath_out = Pipeline.parse_previous(out_dir, 'multi-year',
+        fpath_out = Pipeline.parse_previous(pipeline_dir, 'multi-year',
                                             target_module='multi-year')[0]
 
         dsets = ['generation/cf_mean-means', 'econ/lcoe_fcr-means']

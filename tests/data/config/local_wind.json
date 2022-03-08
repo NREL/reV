@@ -1,9 +1,6 @@
 {
   "analysis_years": 2012,
-  "directories": {
-    "log_directory": "TESTDATADIR/ri_wind_reV2",
-    "output_directory": "TESTDATADIR/ri_wind_reV2"
-  },
+  "log_directory": "TESTDATADIR/ri_wind_reV2",
   "execution_control": {
     "max_workers": 2,
     "nodes": 1,
@@ -11,7 +8,6 @@
     "sites_per_worker": 10
   },
   "log_level": "DEBUG",
-  "name": "rev",
   "output_request": [
     "cf_mean",
     "cf_profile",

@@ -12,6 +12,7 @@ import time
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
 from reV.rep_profiles.rep_profiles import RepProfiles
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.hpc import SLURM
@@ -24,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-rep_profiles', type=STR,
-              show_default=True,
-              help='Job name. Default is "reV-rep_profiles".')
+@click.option('--name', '-n', default=os.path.basename(os.getcwd()),
+              type=STR, show_default=True,
+              help='reV Representative Profiles job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -54,29 +55,26 @@ def valid_config_keys():
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV representative profiles from a config file."""
-    name = ctx.obj['NAME']
 
     # Instantiate the config object
     config = RepProfilesConfig(config_file)
 
-    # take name from config if not default
-    if config.name.lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV', 'rex'],
+    init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
               verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV representative profiles from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
-    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -99,11 +97,13 @@ def from_config(ctx, config_file, verbose):
 
         ctx.obj['NAME'] = name
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'rep-profiles',
-                                                name)
+            status = Status.retrieve_job_status(
+                config.dirout, module=ModuleName.REP_PROFILES, job_name=name
+            )
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'rep-profiles', name, replace=True,
+                    config.dirout, module=ModuleName.REP_PROFILES,
+                    job_name=name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
@@ -116,7 +116,7 @@ def from_config(ctx, config_file, verbose):
                            err_method=config.err_method,
                            weight=config.weight,
                            out_dir=config.dirout,
-                           log_dir=config.logdir,
+                           log_dir=config.log_directory,
                            n_profiles=config.n_profiles,
                            max_workers=config.execution_control.max_workers,
                            aggregate_profiles=config.aggregate_profiles,
@@ -132,7 +132,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['WEIGHT'] = config.weight
             ctx.obj['N_PROFILES'] = config.n_profiles
             ctx.obj['OUT_DIR'] = config.dirout
-            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['LOG_DIR'] = config.log_directory
             ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
             ctx.obj['AGGREGATE_PROFILES'] = config.aggregate_profiles
             ctx.obj['VERBOSE'] = verbose
@@ -242,7 +242,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': [gen_fpath, rev_summary]}
-        Status.make_job_file(out_dir, 'rep-profiles', name, status)
+        Status.make_job_file(out_dir, ModuleName.REP_PROFILES, name, status)
 
 
 def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
@@ -338,10 +338,13 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'rep-profiles', name,
+    status = Status.retrieve_job_status(out_dir,
+                                        module=ModuleName.REP_PROFILES,
+                                        job_name=name,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
 
+    msg = 'Rep profiles CLI failed to submit jobs!'
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -360,10 +363,12 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
             msg = ('Kicked off reV rep profiles job "{}" '
                    '(SLURM jobid #{}).'
                    .format(name, out))
-            Status.add_job(
-                out_dir, 'rep-profiles', name, replace=True,
-                job_attrs={'job_id': out, 'hardware': 'eagle',
-                           'fout': '{}.h5'.format(name), 'dirout': out_dir})
+
+        Status.add_job(
+            out_dir, module=ModuleName.REP_PROFILES,
+            job_name=name, replace=True,
+            job_attrs={'job_id': out, 'hardware': 'eagle',
+                       'fout': '{}.h5'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
     logger.info(msg)

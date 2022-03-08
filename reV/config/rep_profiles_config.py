@@ -8,6 +8,7 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class RepProfilesConfig(AnalysisConfig):
     """Representative Profiles config."""
 
-    NAME = 'rep_profiles'
+    NAME = ModuleName.REP_PROFILES
     REQUIREMENTS = ('gen_fpath', 'rev_summary', 'reg_cols')
 
     def __init__(self, config):
@@ -44,24 +45,19 @@ class RepProfilesConfig(AnalysisConfig):
         fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', 'collect', 'generation']
-            for target_module in target_modules:
+            targets = {ModuleName.MULTI_YEAR: 'fpath',
+                       ModuleName.COLLECT: 'fpath',
+                       ModuleName.GENERATION: 'fpath',
+                       ModuleName.SUPPLY_CURVE_AGGREGATION: 'gen_fpath'}
+            for target_module, target in targets.items():
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='fpath',
-                        target_module=target_module)[0]
+                        self.dirout, module=ModuleName.REP_PROFILES,
+                        target=target, target_module=target_module)[0]
                 except KeyError:
                     pass
                 else:
                     break
-
-            if fpath == 'PIPELINE':
-                try:
-                    fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='gen_fpath',
-                        target_module='supply-curve-aggregation')[0]
-                except KeyError:
-                    pass
 
             if fpath == 'PIPELINE':
                 msg = 'Could not parse gen_fpath from previous pipeline jobs.'
@@ -85,12 +81,15 @@ class RepProfilesConfig(AnalysisConfig):
         fpath = self['rev_summary']
 
         if fpath == 'PIPELINE':
-            target_modules = ['aggregation', 'supply-curve']
+            target_modules = [
+                ModuleName.SUPPLY_CURVE_AGGREGATION,
+                ModuleName.SUPPLY_CURVE
+            ]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep-profiles', target='fpath',
-                        target_module=target_module)[0]
+                        self.dirout, module=ModuleName.REP_PROFILES,
+                        target='fpath', target_module=target_module)[0]
                 except KeyError:
                     pass
                 else:

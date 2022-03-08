@@ -12,6 +12,7 @@ import logging
 from reV.utilities.exceptions import ConfigError, PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
+from reV.utilities import ModuleName
 from rex.multi_file_resource import MultiFileResource
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SupplyCurveAggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
-    NAME = 'agg'
+    NAME = ModuleName.SUPPLY_CURVE_AGGREGATION
     REQUIREMENTS = ('excl_fpath', 'gen_fpath', 'tm_dset')
 
     def __init__(self, config):
@@ -69,11 +70,16 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', 'collect', 'generation']
+            target_modules = [
+                ModuleName.MULTI_YEAR,
+                ModuleName.COLLECT,
+                ModuleName.GENERATION
+            ]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'supply-curve-aggregation',
+                        self.dirout,
+                        module=ModuleName.SUPPLY_CURVE_AGGREGATION,
                         target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
@@ -98,11 +104,16 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         fpath = self.get('econ_fpath', None)
 
         if fpath == 'PIPELINE':
-            target_modules = ['multi-year', 'collect', 'econ']
+            target_modules = [
+                ModuleName.MULTI_YEAR,
+                ModuleName.COLLECT,
+                ModuleName.ECON
+            ]
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'supply-curve-aggregation',
+                        self.dirout,
+                        module=ModuleName.SUPPLY_CURVE_AGGREGATION,
                         target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
@@ -244,7 +255,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
 
-    NAME = 'sc'
+    NAME = ModuleName.SUPPLY_CURVE
     REQUIREMENTS = ('sc_points', 'trans_table', 'fixed_charge_rate')
 
     def __init__(self, config):
@@ -281,7 +292,7 @@ class SupplyCurveConfig(AnalysisConfig):
 
         if sc_points == 'PIPELINE':
             sc_points = Pipeline.parse_previous(
-                self.dirout, 'supply-curve', target='fpath')[0]
+                self.dirout, ModuleName.SUPPLY_CURVE, target='fpath')[0]
 
             logger.info('Supply curve using the following '
                         'pipeline input for sc_points: {}'.format(sc_points))

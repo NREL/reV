@@ -5,6 +5,7 @@ reV QA/QC config
 import logging
 from warnings import warn
 
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class QaQcConfig(AnalysisConfig):
     """QA/QC config."""
 
-    NAME = 'QA-QC'
+    NAME = ModuleName.QA_QC
     REQUIREMENTS = ('modules',)
 
     def __init__(self, config):
@@ -49,27 +50,28 @@ class QaQcConfig(AnalysisConfig):
     @property
     def collect(self):
         """Get the collect QA/QC inputs in the config dict."""
-        collect = self.modules.get('collect', None)
+        collect = self.modules.get(ModuleName.COLLECT, None)
         if collect is not None:
-            collect = QaQcModule('collect', collect, self.dirout)
+            collect = QaQcModule(ModuleName.COLLECT, collect, self.dirout)
 
         return collect
 
     @property
     def multi_year(self):
         """Get the multi-year QA/QC inputs in the config dict."""
-        multi_year = self.modules.get('multi-year', None)
+        multi_year = self.modules.get(ModuleName.MULTI_YEAR, None)
         if multi_year is not None:
-            multi_year = QaQcModule('multi-year', multi_year, self.dirout)
+            multi_year = QaQcModule(ModuleName.MULTI_YEAR, multi_year,
+                                    self.dirout)
 
         return multi_year
 
     @property
     def rep_profiles(self):
         """Get the representative profile QA/QC inputs in the config dict."""
-        rep_profiles = self.modules.get('rep-profiles', None)
+        rep_profiles = self.modules.get(ModuleName.REP_PROFILES, None)
         if rep_profiles is not None:
-            rep_profiles = QaQcModule('rep-profiles', rep_profiles,
+            rep_profiles = QaQcModule(ModuleName.REP_PROFILES, rep_profiles,
                                       self.dirout)
 
         return rep_profiles
@@ -77,20 +79,22 @@ class QaQcConfig(AnalysisConfig):
     @property
     def supply_curve_aggregation(self):
         """Get the aggregation QA/QC inputs in the config dict."""
-        aggregation = self.modules.get('supply-curve-aggregation', None)
+        aggregation = self.modules.get(ModuleName.SUPPLY_CURVE_AGGREGATION,
+                                       None)
         if aggregation is not None:
             aggregation = QaQcModule(
-                'aggregation', aggregation, self.dirout)
+                ModuleName.SUPPLY_CURVE_AGGREGATION, aggregation, self.dirout
+            )
 
         return aggregation
 
     @property
     def supply_curve(self):
         """Get the supply curve QA/QC inputs in the config dict."""
-        supply_curve = self.modules.get('supply-curve', None)
+        supply_curve = self.modules.get(ModuleName.SUPPLY_CURVE, None)
         if supply_curve is not None:
             supply_curve = QaQcModule(
-                'supply-curve', supply_curve, self.dirout)
+                ModuleName.SUPPLY_CURVE, supply_curve, self.dirout)
 
         return supply_curve
 
@@ -150,7 +154,8 @@ class QaQcModule:
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self._out_root, 'qa-qc', target='fpath',
+                        self._out_root,
+                        module=ModuleName.QA_QC, target='fpath',
                         target_module=target_module)
                 except KeyError:
                     pass
@@ -221,8 +226,9 @@ class QaQcModule:
         if excl_fpath == 'PIPELINE':
             try:
                 excl_fpath = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='excl_fpath',
-                    target_module='supply-curve-aggregation')[0]
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='excl_fpath',
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 excl_fpath = None
                 msg = ('Could not parse excl_fpath from previous '
@@ -244,8 +250,9 @@ class QaQcModule:
         if excl_dict == 'PIPELINE':
             try:
                 excl_dict = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='excl_dict',
-                    target_module='supply-curve-aggregation')[0]
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='excl_dict',
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 excl_dict = None
                 msg = ('Could not parse excl_dict from previous '
@@ -267,8 +274,9 @@ class QaQcModule:
         if area_filter_kernel == 'PIPELINE':
             try:
                 area_filter_kernel = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='area_filter_kernel',
-                    target_module='supply-curve-aggregation')[0]
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='area_filter_kernel',
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 area_filter_kernel = self._default_area_filter_kernel
                 msg = ('Could not parse area_filter_kernel from previous '
@@ -291,8 +299,9 @@ class QaQcModule:
         if min_area == 'PIPELINE':
             try:
                 min_area = Pipeline.parse_previous(
-                    self._out_root, 'qa-qc', target='min_area',
-                    target_module='supply-curve-aggregation')[0]
+                    self._out_root,
+                    module=ModuleName.QA_QC, target='min_area',
+                    target_module=ModuleName.SUPPLY_CURVE_AGGREGATION)[0]
             except KeyError:
                 min_area = None
                 msg = ('Could not parse min_area from previous '

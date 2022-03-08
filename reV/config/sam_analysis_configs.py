@@ -16,6 +16,7 @@ from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.utilities.exceptions import ConfigError
+from reV.utilities import ModuleName
 from reV.pipeline.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
@@ -150,8 +151,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             pp = ProjectPoints(self.project_points, self['sam_files'],
                                tech=self.technology)
 
-            if (self.execution_control.option == 'peregrine'
-                    or self.execution_control.option == 'eagle'):
+            if self.execution_control.option in ('peregrine', 'eagle'):
                 # sites per split on peregrine or eagle is the number of sites
                 # in project points / number of nodes. This is for the initial
                 # division of the project sites between HPC nodes (jobs)
@@ -171,7 +171,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
-    NAME = 'gen'
+    NAME = ModuleName.GENERATION
 
     def __init__(self, config):
         """
@@ -261,7 +261,7 @@ class GenConfig(SAMAnalysisConfig):
 class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
 
-    NAME = 'econ'
+    NAME = ModuleName.ECON
 
     def __init__(self, config):
         """
@@ -273,6 +273,9 @@ class EconConfig(SAMAnalysisConfig):
         """
         super().__init__(config)
         self._cf_files = None
+        self._super_dirout = self.dirout
+        if self.append:
+            self.dirout = os.path.dirname(self.parse_cf_files()[0])
 
     @property
     def cf_file(self):
@@ -284,22 +287,6 @@ class EconConfig(SAMAnalysisConfig):
         str
         """
         return self['cf_file']
-
-    @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group. Overwritten if append is True.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        self._dirout = super().dirout
-        if self.append:
-            self._dirout = os.path.dirname(self.parse_cf_files()[0])
-
-        return self._dirout
 
     @property
     def append(self):
@@ -330,9 +317,9 @@ class EconConfig(SAMAnalysisConfig):
                 self._cf_files = [fname.format(year) for
                                   year in self.analysis_years]
             elif 'PIPELINE' in fname:
-                self._cf_files = Pipeline.parse_previous(super().dirout,
-                                                         'econ',
-                                                         target='fpath')
+                self._cf_files = Pipeline.parse_previous(
+                    self._super_dirout, module=ModuleName.ECON, target='fpath'
+                )
             else:
                 # only one resource file request, still put in list
                 self._cf_files = [fname]
