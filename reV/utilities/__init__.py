@@ -24,6 +24,7 @@ class ModuleName(str, Enum):
 
     """
 
+    BESPOKE = 'bespoke'
     COLLECT = 'collect'
     ECON = 'econ'
     GENERATION = 'generation'
@@ -44,6 +45,7 @@ class ModuleName(str, Enum):
         set
             The set of all module name strings.
         """
+        # pylint: disable=no-member
         return {v.value for v in cls.__members__.values()}
 
 

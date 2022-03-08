@@ -14,6 +14,7 @@ from reV.bespoke.bespoke import BespokeWindPlants
 from reV.config.bespoke import BespokeConfig
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, SCPOINTS
+from reV.utilities import ModuleName
 from reV import __version__
 
 from rex.utilities.cli_dtypes import (FLOAT, INT, STR, INTLIST, FLOATLIST,
@@ -161,7 +162,8 @@ def from_config(ctx, config_file, points_range, verbose):
             logger.info('Running Bespoke project with {} points '
                         'corresponding to points_range {}.'
                         .format(len(pc.project_points), config.points_range))
-            status = Status.retrieve_job_status(config.out_dir, 'bespoke',
+            status = Status.retrieve_job_status(config.out_dir,
+                                                ModuleName.BESPOKE,
                                                 name)
             if status == 'successful':
                 logger.info('Bespoke job with name "{}" was already '
@@ -170,7 +172,8 @@ def from_config(ctx, config_file, points_range, verbose):
             else:
                 job_attrs = {'hardware': 'local', 'fout': fout,
                              'dirout': config.out_dir}
-                Status.add_job(config.out_dir, 'bespoke', name, replace=True,
+                Status.add_job(config.out_dir, ModuleName.BESPOKE,
+                               name, replace=True,
                                job_attrs=job_attrs)
                 max_workers = config.execution_control.max_workers
                 pre_extract_inclusions = config.pre_extract_inclusions
@@ -416,7 +419,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                   'excl_fpath': excl_fpath, 'tm_dset': tm_dset,
                   'objective_function': objective_function,
                   'cost_function': cost_function, 'excl_dict': excl_dict}
-        Status.make_job_file(out_dir, 'bespoke', name, status)
+        Status.make_job_file(out_dir, ModuleName.BESPOKE, name, status)
 
 
 def get_node_cmd(name, kwargs):
@@ -502,7 +505,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    status = Status.retrieve_job_status(out_dir, 'bespoke',
+    status = Status.retrieve_job_status(out_dir, ModuleName.BESPOKE,
                                         name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
@@ -525,7 +528,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
             msg = ('Kicked off reV Bespoke job "{}" (SLURM jobid #{}).'
                    .format(name, out))
             Status.add_job(
-                out_dir, 'bespoke', name, replace=True,
+                out_dir, ModuleName.BESPOKE, name, replace=True,
                 job_attrs={'job_id': out, 'hardware': 'slurm',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
