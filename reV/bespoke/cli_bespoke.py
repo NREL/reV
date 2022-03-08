@@ -70,20 +70,20 @@ def from_config(ctx, config_file, points_range, verbose):
     name = ctx.obj['NAME'] = config.name
 
     # make output directory if does not exist
-    if not os.path.exists(config.out_dir):
+    if not os.path.exists(config.out):
         os.makedirs(config.out_dir)
 
     # initialize loggers.
     node_tag = re.search('_node[0-9]*', name)
     if node_tag is None:
-        init_mult(name, config.log_dir, modules=[__name__, 'reV', 'rex'],
+        init_mult(name, config.log_directory, modules=[__name__, 'reV', 'rex'],
                   verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV Bespoke job with name "{}" from config file: "{}"'
                 .format(name, config_file))
     logger.info('Target output directory: "{}"'.format(config.out_dir))
-    logger.info('Target logging directory: "{}"'.format(config.log_dir))
+    logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('Source resource file: "{}"'.format(config.res_fpath))
     logger.info('Source exclusion file: "{}"'.format(config.excl_fpath))
     logger.info('Bespoke optimization objective function: "{}"'
@@ -121,7 +121,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['EXCL_AREA'] = config.excl_area
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
 
-    ctx.obj['LOG_DIR'] = config.log_dir
+    ctx.obj['LOG_DIR'] = config.log_directory
     ctx.obj['OUT_DIR'] = config.out_dir
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
@@ -194,13 +194,14 @@ def from_config(ctx, config_file, points_range, verbose):
                            min_area=config.min_area,
                            resolution=config.resolution,
                            excl_area=config.excl_area,
-                           log_dir=config.log_dir,
+                           log_dir=config.log_directory,
                            max_workers=max_workers,
                            pre_extract_inclusions=pre_extract_inclusions,
                            verbose=verbose,
                            )
 
         elif config.execution_control.option in ('eagle', 'slurm'):
+            stdout_path = os.path.join(config.log_directory, 'stdout')
             ctx.invoke(slurm,
                        alloc=config.execution_control.allocation,
                        walltime=config.execution_control.walltime,
@@ -208,7 +209,7 @@ def from_config(ctx, config_file, points_range, verbose):
                        memory=config.execution_control.memory,
                        module=config.execution_control.module,
                        conda_env=config.execution_control.conda_env,
-                       stdout_path=os.path.join(config.log_dir, 'stdout'),
+                       stdout_path=stdout_path,
                        )
 
 
