@@ -28,9 +28,9 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option(version=__version__)
-@click.option('--name', '-n', default='reV-gen', type=STR,
+@click.option('--name', '-n', default='reV-bespoke', type=STR,
               show_default=True,
-              help='reV generation job name, by default "reV-gen".')
+              help='reV bespoke job name, by default "reV-bespoke".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
