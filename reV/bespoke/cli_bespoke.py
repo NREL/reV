@@ -70,7 +70,7 @@ def from_config(ctx, config_file, points_range, verbose):
     name = ctx.obj['NAME'] = config.name
 
     # make output directory if does not exist
-    if not os.path.exists(config.out):
+    if not os.path.exists(config.dirout):
         os.makedirs(config.dirout)
 
     # initialize loggers.
