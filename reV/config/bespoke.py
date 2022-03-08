@@ -11,6 +11,7 @@ import logging
 from reV.config.output_request import SAMOutputRequest
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.utilities.exceptions import ConfigError
+from reV.utilities import ModuleName
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class BespokeConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
 
-    NAME = 'bespoke'
+    NAME = ModuleName.BESPOKE
 
     REQUIREMENTS = ('excl_fpath', 'res_fpath', 'tm_dset', 'objective_function',
                     'cost_function', 'project_points', 'sam_files',
