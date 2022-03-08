@@ -36,9 +36,8 @@ class AnalysisConfig(BaseConfig):
 
         self._analysis_years = None
         self._ec = None
-        self._out_dir = self.config_dir
+        self.dirout = self.config_dir
         self.__config_fn = config
-        self._log_dir = './logs/'
 
         self._preflight()
 
@@ -56,7 +55,6 @@ class AnalysisConfig(BaseConfig):
     @property
     def analysis_years(self):
         """Get the analysis years.
-
         Returns
         -------
         analysis_years : list
@@ -77,59 +75,19 @@ class AnalysisConfig(BaseConfig):
         return self._analysis_years
 
     @property
-    def out_dir(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group.
-
-        Returns
-        -------
-        str
-        """
-        if 'directories' in self:
-            self._out_dir = self['directories'].get('output_directory',
-                                                    self._out_dir)
-        return self._out_dir
-
-    @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group. Legacy alias for out_dir property.
-
-        Returns
-        -------
-        str
-        """
-        return self.out_dir
-
-    @property
-    def log_dir(self):
+    def log_directory(self):
         """Get the logging directory, look for key "log_directory" in the
         config.
-
         Returns
         -------
-        str
+        log_directory : str
+            Target path for reV log files.
         """
-        if 'directories' in self:
-            self._log_dir = self['directories'].get('log_directory',
-                                                    self._log_dir)
-        return self._log_dir
-
-    @property
-    def logdir(self):
-        """Get the logging directory, look for key "log_directory" in the
-        "directories" config group. Legacy alias for log_dir property.
-
-        Returns
-        -------
-        str
-        """
-        return self.log_dir
+        return self.get('log_directory', './logs/')
 
     @property
     def execution_control(self):
         """Get the execution control object.
-
         Returns
         -------
         _ec : BaseExecutionConfig | EagleConfig
@@ -165,7 +123,6 @@ class AnalysisConfig(BaseConfig):
     @property
     def name(self):
         """Get the job name, defaults to the output directory name.
-
         Returns
         -------
         _name : str
