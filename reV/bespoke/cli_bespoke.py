@@ -71,7 +71,7 @@ def from_config(ctx, config_file, points_range, verbose):
 
     # make output directory if does not exist
     if not os.path.exists(config.out):
-        os.makedirs(config.out_dir)
+        os.makedirs(config.dirout)
 
     # initialize loggers.
     node_tag = re.search('_node[0-9]*', name)
@@ -82,7 +82,7 @@ def from_config(ctx, config_file, points_range, verbose):
     # Initial log statements
     logger.info('Running reV Bespoke job with name "{}" from config file: "{}"'
                 .format(name, config_file))
-    logger.info('Target output directory: "{}"'.format(config.out_dir))
+    logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('Source resource file: "{}"'.format(config.res_fpath))
     logger.info('Source exclusion file: "{}"'.format(config.excl_fpath))
@@ -122,7 +122,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
 
     ctx.obj['LOG_DIR'] = config.log_directory
-    ctx.obj['OUT_DIR'] = config.out_dir
+    ctx.obj['OUT_DIR'] = config.dirout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
 
@@ -153,23 +153,23 @@ def from_config(ctx, config_file, points_range, verbose):
 
     else:
         fout = name + '.h5'
-        out_fpath = os.path.join(config.out_dir, fout)
+        out_fpath = os.path.join(config.dirout, fout)
         ctx.obj['OUT_FPATH'] = out_fpath
         if config.execution_control.option == 'local':
             logger.info('Running Bespoke project with {} points '
                         'corresponding to points_range {}.'
                         .format(len(pc.project_points), config.points_range))
-            status = Status.retrieve_job_status(config.out_dir,
+            status = Status.retrieve_job_status(config.dirout,
                                                 ModuleName.BESPOKE,
                                                 name)
             if status == 'successful':
                 logger.info('Bespoke job with name "{}" was already '
                             'successfully run in directory: {}'
-                            .format(name, config.out_dir))
+                            .format(name, config.dirout))
             else:
                 job_attrs = {'hardware': 'local', 'fout': fout,
-                             'dirout': config.out_dir}
-                Status.add_job(config.out_dir, ModuleName.BESPOKE,
+                             'dirout': config.dirout}
+                Status.add_job(config.dirout, ModuleName.BESPOKE,
                                name, replace=True,
                                job_attrs=job_attrs)
                 max_workers = config.execution_control.max_workers
