@@ -56,7 +56,6 @@ def main(ctx, name, verbose):
 @click.pass_context
 def from_config(ctx, config_file, points_range, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['NAME']
 
     config = (config_file if isinstance(config_file, BespokeConfig)
               else BespokeConfig(config_file))
@@ -67,10 +66,8 @@ def from_config(ctx, config_file, points_range, verbose):
     if points_range is not None:
         config['points_range'] = points_range
 
-    # take name from config if not default
-    if str(config.name).lower() != 'rev':
-        name = config.name
-        ctx.obj['NAME'] = name
+    # take name from config
+    name = ctx.obj['NAME'] = config.name
 
     # make output directory if does not exist
     if not os.path.exists(config.out_dir):
