@@ -53,12 +53,13 @@ class PackTurbines():
                     exterior_coords = smallest_area.exterior.coords[:]
                     x, y = get_xy(exterior_coords)
                     metric = self.weight_x * x + y
+                    index = np.argsort(metric)[0]
                     self.turbine_x = np.append(self.turbine_x,
-                                               x[np.argmin(metric)])
+                                               x[index])
                     self.turbine_y = np.append(self.turbine_y,
-                                               y[np.argmin(metric)])
-                    new_turbine = Point(x[np.argmin(metric)],
-                                        y[np.argmin(metric)]
+                                               y[index])
+                    new_turbine = Point(x[index],
+                                        y[index]
                                         ).buffer(self.min_spacing)
                 else:
                     break
