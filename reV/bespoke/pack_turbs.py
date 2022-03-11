@@ -11,7 +11,7 @@ class PackTurbines():
     """Framework to maximize plant capacity in a provided wind plant area.
     """
 
-    def __init__(self, min_spacing, safe_polygons, weight_x=0.0):
+    def __init__(self, min_spacing, safe_polygons, weight_x=0.0013547):
         """
         Parameters
         ----------
