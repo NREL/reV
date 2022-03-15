@@ -83,6 +83,13 @@ class GeneticAlgorithm():
         self.optimized_function_value = 0.0
         self.optimized_design_variables = np.array([])
 
+        self.initialize_design_variables()
+        self.initialize_bits()
+        if self.population_size % 2 == 1:
+            self.population_size += 1
+        self.initialize_population()
+        self.initialize_fitness()
+
     def initialize_design_variables(self):
         """initialize the design variables from the randomly initialized
         population
@@ -177,13 +184,6 @@ class GeneticAlgorithm():
 
     def optimize_ga(self):
         """run the genetic algorithm"""
-
-        self.initialize_design_variables()
-        self.initialize_bits()
-        if self.population_size % 2 == 1:
-            self.population_size += 1
-        self.initialize_population()
-        self.initialize_fitness()
 
         converged = False
         ngens = 1

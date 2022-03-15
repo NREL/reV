@@ -185,15 +185,12 @@ class PlaceTurbines():
         for _ in range(nlocs):
             variable_type = np.append(variable_type, "int")
         ga = GeneticAlgorithm(bits, bounds, variable_type,
-                              self.optimization_objective)
+                              self.optimization_objective,
+                              max_generation=10000, population_size=25,
+                              crossover_rate=0.2, mutation_rate=0.01,
+                              tol=1E-6, convergence_iters=10000,
+                              max_time=self.ga_time)
 
-        ga.max_generation = 10000
-        ga.population_size = 25
-        ga.crossover_rate = 0.2
-        ga.mutation_rate = 0.01
-        ga.tol = 1E-6
-        ga.convergence_iters = 10000
-        ga.max_time = self.ga_time
         ga.optimize_ga()
 
         optimized_design_variables = ga.optimized_design_variables
