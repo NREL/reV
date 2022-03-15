@@ -5,6 +5,9 @@ a simple genetic algorithm
 import numpy as np
 import time
 from math import log
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GeneticAlgorithm():
@@ -89,6 +92,15 @@ class GeneticAlgorithm():
             self.population_size += 1
         self.initialize_population()
         self.initialize_fitness()
+
+        if self.population_size > 5:
+            n = 5
+        else:
+            n = self.population_size
+        logger.debug('The first few parent individuals are:\n{}'
+                     .format(self.parent_population[0:n]))
+        logger.debug('The first few parent fitness values are:\n{}'
+                     .format(self.parent_fitness[0:n]))
 
     def initialize_design_variables(self):
         """initialize the design variables from the randomly initialized
@@ -245,3 +257,12 @@ class GeneticAlgorithm():
         self.chromosome_2_variables(
             self.parent_population[np.argmin(self.parent_fitness)])
         self.optimized_design_variables = self.design_variables
+
+        logger.debug('The GA ran for this many generations:\n{}'
+                     .format(ngens))
+        logger.debug('The GA ran for this many seconds:\n{}'
+                     .format(run_time))
+        logger.debug('The optimized function value was:\n{}'
+                     .format(self.optimized_function_value))
+        logger.debug('The optimal design variables were:\n{}'
+                     .format(self.optimized_design_variables))
