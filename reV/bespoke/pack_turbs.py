@@ -42,27 +42,18 @@ class PackTurbines():
             leftover = MultiPolygon(self.safe_polygons)
             while can_add_more:
                 if leftover.area > 0:
-                    smallest_area = min(
-                        [g for g in leftover.geoms if g.area > 0],
-                        key=lambda g: (
-                            # choose based on smallest area
-                            g.area,
-                            # break remaining ties by southwest coord
-                            min(g.exterior.coords),
-                            # break remaining ties by northwest coord
-                            max(g.exterior.coords)
-                        )
-                    )
-                    x, y = get_xy(smallest_area.exterior.coords)
-                    index = min(
-                        range(len(smallest_area.exterior.coords)),
-                        key=lambda ind: (
-                            # choose index with smallest y value
-                            y[ind],
-                            # break remaining ties with x value if weight set
-                            self.weight_x * x[ind]
-                        )
-                    )
+                    nareas = len(leftover.geoms)
+                    areas = np.zeros(len(leftover.geoms))
+                    for i in range(nareas):
+                        areas[i] = leftover.geoms[i].area
+                    m = min(i for i in areas if i > 0)
+                    ind = np.where(areas == m)[0][0]
+                    # smallest_area = leftover.geoms[np.argmin(areas)]
+                    smallest_area = leftover.geoms[ind]
+                    exterior_coords = smallest_area.exterior.coords[:]
+                    x, y = get_xy(exterior_coords)
+                    metric = self.weight_x * x + y
+                    index = np.argsort(metric)[0]
                     self.turbine_x = np.append(self.turbine_x,
                                                x[index])
                     self.turbine_y = np.append(self.turbine_y,
@@ -72,7 +63,6 @@ class PackTurbines():
                                         ).buffer(self.min_spacing)
                 else:
                     break
-
                 leftover = leftover.difference(new_turbine)
                 if isinstance(leftover, Polygon):
                     leftover = MultiPolygon([leftover])
@@ -82,3 +72,26 @@ class PackTurbines():
         """
         self.turbine_x = np.array([])
         self.turbine_y = np.array([])
+
+
+def smallest_area_with_tiebreakers(g):
+    """_summary_
+
+    This function helps break ties in the area of two different
+    geometries using their exterior coordinate values.
+
+    Parameters
+    ----------
+    g : _type_
+        A geometry object with an `area` and an
+        `exterior.coords` coords attribute.
+
+    Returns
+    -------
+    tuple
+        Tuple with the following elements:
+            - area of the geometry
+            - minimum exterior coordinate (southwest)
+            - maximum exterior coordinate (northeast)
+    """
+    return g.area, min(g.exterior.coords), max(g.exterior.coords)
