@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
+from reV.supply_curve.tech_mapping import TechMapping
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
 from reV.SAM.generation import WindPower
@@ -52,8 +53,8 @@ def test_turbine_placement(gid=33):
         1E5 * 0.1 + (1 - 0.1))"""
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
@@ -109,8 +110,8 @@ def test_zero_area(gid=33):
         1E5 * 0.1 + (1 - 0.1))"""
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
@@ -145,8 +146,8 @@ def test_packing_algorithm(gid=33):
     cost_function = """"""
     objective_function = ""
     with tempfile.TemporaryDirectory() as td:
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
@@ -216,8 +217,8 @@ def test_single(gid=33):
         1E5 * 0.1 + (1 - 0.1))"""
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
@@ -292,8 +293,8 @@ def test_bespoke():
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
