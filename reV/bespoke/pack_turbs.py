@@ -44,11 +44,25 @@ class PackTurbines():
                 if leftover.area > 0:
                     smallest_area = min(
                         [g for g in leftover.geoms if g.area > 0],
-                        key=lambda g: (g.area, min(g.exterior.coords))
+                        key=lambda g: (
+                            # choose based on smallest area
+                            g.area,
+                            # break remaining ties by southwest coord
+                            min(g.exterior.coords),
+                            # break remaining ties by northwest coord
+                            max(g.exterior.coords)
+                        )
                     )
                     x, y = get_xy(smallest_area.exterior.coords)
-                    metric = self.weight_x * x + y
-                    index = np.argsort(metric)[0]
+                    index = min(
+                        range(len(smallest_area.exterior.coords)),
+                        key=lambda ind: (
+                            # choose index with smallest y value
+                            y[ind],
+                            # break remaining ties with x value if weight set
+                            self.weight_x * x[ind]
+                        )
+                    )
                     self.turbine_x = np.append(self.turbine_x,
                                                x[index])
                     self.turbine_y = np.append(self.turbine_y,
