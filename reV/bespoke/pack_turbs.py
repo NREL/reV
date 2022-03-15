@@ -42,16 +42,11 @@ class PackTurbines():
             leftover = MultiPolygon(self.safe_polygons)
             while can_add_more:
                 if leftover.area > 0:
-                    nareas = len(leftover.geoms)
-                    areas = np.zeros(len(leftover.geoms))
-                    for i in range(nareas):
-                        areas[i] = leftover.geoms[i].area
-                    m = min(i for i in areas if i > 0)
-                    ind = np.where(areas == m)[0][0]
-                    # smallest_area = leftover.geoms[np.argmin(areas)]
-                    smallest_area = leftover.geoms[ind]
-                    exterior_coords = smallest_area.exterior.coords[:]
-                    x, y = get_xy(exterior_coords)
+                    smallest_area = min(
+                        [g for g in leftover.geoms if g.area > 0],
+                        key=lambda g: (g.area, min(g.exterior.coords))
+                    )
+                    x, y = get_xy(smallest_area.exterior.coords)
                     metric = self.weight_x * x + y
                     index = np.argsort(metric)[0]
                     self.turbine_x = np.append(self.turbine_x,
