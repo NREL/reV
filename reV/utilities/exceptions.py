@@ -154,6 +154,12 @@ class OffshoreWindInputError(Exception):
     """
 
 
+class WhileLoopPackingError(Exception):
+    """
+    Error for stuck in while loop while packing
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data

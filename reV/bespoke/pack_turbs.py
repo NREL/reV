@@ -5,6 +5,7 @@ turbine packing module.
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon, Point
 from reV.bespoke.plotting_functions import get_xy
+from reV.utilities.exceptions import WhileLoopPackingError
 
 
 class PackTurbines():
@@ -40,7 +41,13 @@ class PackTurbines():
         if self.safe_polygons.area > 0.0:
             can_add_more = True
             leftover = MultiPolygon(self.safe_polygons)
+            iters = 0
             while can_add_more:
+                iters += 1
+                if iters > 10000:
+                    msg = ('Too many points placed in packing algorithm')
+                    raise WhileLoopPackingError(msg)
+
                 if leftover.area > 0:
                     nareas = len(leftover.geoms)
                     areas = np.zeros(len(leftover.geoms))

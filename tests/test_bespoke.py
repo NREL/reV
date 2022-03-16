@@ -163,16 +163,8 @@ def test_packing_algorithm(gid=33):
         optimizer.define_exclusions()
         optimizer.initialize_packing()
 
-        test_x = optimizer.x_locations
-        test_y = optimizer.y_locations
-
-        truth_x = np.load(os.path.join(TESTDATADIR,
-                                       'bespoke/packing_data_x.npy'))
-        truth_y = np.load(os.path.join(TESTDATADIR,
-                                       'bespoke/packing_data_y.npy'))
-
-        assert np.allclose(test_x, truth_x)
-        assert np.allclose(test_y, truth_y)
+        assert len(optimizer.x_locations) < 165
+        assert len(optimizer.x_locations) > 145
 
 
 def test_bespoke_points():

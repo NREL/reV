@@ -9,6 +9,7 @@ import rasterio.features
 
 from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
+from reV.utilities.exceptions import WhileLoopPackingError
 
 
 class PlaceTurbines():
@@ -52,7 +53,7 @@ class PlaceTurbines():
             The time to run the genetic algorithm (in seconds).
         """
 
-        # need to be assigned
+        # inputs
         self.wind_plant = wind_plant
         self.cost_function = cost_function
         self.objective_function = objective_function
@@ -60,6 +61,7 @@ class PlaceTurbines():
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
         self.ga_time = ga_time
+
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
         self.x_locations = np.array([])
@@ -69,17 +71,7 @@ class PlaceTurbines():
                    sam_sys_inputs["wind_turbine_powercurve_powerout"])
         self.full_polygons = None
         self.packing_polygons = None
-
-        # outputs
-        self.turbine_x = np.array([])
-        self.turbine_y = np.array([])
-        self.nturbs = 0
-        self.capacity = 0.0
-        self.area = 0.0
-        self.capacity_density = 0.0
-        self.aep = 0.0
-        self.objective = 0.0
-        self.annual_cost = 0.0
+        self.optimized_design_variables = None
 
         self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
         self._preflight(self.objective_function)
@@ -145,7 +137,12 @@ class PlaceTurbines():
         packing = PackTurbines(self.min_spacing, self.packing_polygons)
         nturbs = 1E6
         mult = 1.0
+        iters = 0
         while nturbs > 300:
+            iters += 1
+            if iters > 10000:
+                msg = ('Too many attempts within initialize packing')
+                raise WhileLoopPackingError(msg)
             packing.clear()
             packing.min_spacing = self.min_spacing * mult
             packing.pack_turbines_poly()
@@ -194,34 +191,8 @@ class PlaceTurbines():
         ga.optimize_ga()
 
         optimized_design_variables = ga.optimized_design_variables
-        optimized_design_variables = \
+        self.optimized_design_variables = \
             [bool(y) for y in optimized_design_variables]
-
-        self.objective = 0.0
-
-        self.turbine_x = self.x_locations[optimized_design_variables]
-        self.turbine_y = self.y_locations[optimized_design_variables]
-        self.nturbs = np.sum(optimized_design_variables)
-        self.capacity = self.turbine_capacity * self.nturbs
-        self.area = self.full_polygons.area
-        if self.area != 0.0:
-            self.capacity_density = self.capacity / self.area * 1E3
-        else:
-            self.capacity_density = 0.0
-
-        self.wind_plant["wind_farm_xCoordinates"] = \
-            self.x_locations[optimized_design_variables]
-        self.wind_plant["wind_farm_yCoordinates"] = \
-            self.y_locations[optimized_design_variables]
-        self.wind_plant["system_capacity"] = self.capacity
-        self.wind_plant.assign_inputs()
-        self.wind_plant.execute()
-        self.aep = self.wind_plant.annual_energy()
-
-        system_capacity = self.capacity
-        aep = self.aep
-        self.objective = ga.optimized_function_value
-        self.annual_cost = eval(self.cost_function, globals(), locals())
 
     def place_turbines(self):
         """run all functions to define bespoke wind plant turbine layouts
@@ -229,3 +200,89 @@ class PlaceTurbines():
         self.define_exclusions()
         self.initialize_packing()
         self.optimize()
+
+    @property
+    def turbine_x(self):
+        """This is the final optimized turbine x locations"""
+        if self.optimized_design_variables is not None:
+            return self.x_locations[self.optimized_design_variables]
+        else:
+            return None
+
+    @property
+    def turbine_y(self):
+        """This is the final optimized turbine y locations"""
+        if self.optimized_design_variables is not None:
+            return self.y_locations[self.optimized_design_variables]
+        else:
+            return None
+
+    @property
+    def nturbs(self):
+        """This is the final optimized number of turbines"""
+        if self.optimized_design_variables is not None:
+            return np.sum(self.optimized_design_variables)
+        else:
+            return None
+
+    @property
+    def capacity(self):
+        """This is the final optimized plant capacity"""
+        if self.optimized_design_variables is not None:
+            return self.turbine_capacity * self.nturbs
+        else:
+            return None
+
+    @property
+    def area(self):
+        """This is the area available for wind turbine placement"""
+        if self.full_polygons is not None:
+            return self.full_polygons.area
+        else:
+            return None
+
+    @property
+    def capacity_density(self):
+        """This is the optimized capacity density of the wind plant
+        defined with the area available after removing the exclusions"""
+        if self.full_polygons is None or self.capacity is None:
+            return None
+        else:
+            if self.area != 0.0:
+                return self.capacity / self.area * 1E3
+            else:
+                return 0.0
+
+    @property
+    def aep(self):
+        """This is the annual energy production of the optimized plant"""
+        if self.optimized_design_variables is not None:
+            self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
+            self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
+            self.wind_plant["system_capacity"] = self.capacity
+            self.wind_plant.assign_inputs()
+            self.wind_plant.execute()
+            return self.wind_plant.annual_energy()
+        else:
+            return None
+
+    @property
+    def annual_cost(self):
+        """This is the annual cost of the optimized plant"""
+        if self.optimized_design_variables is not None:
+            system_capacity = self.capacity
+            aep = self.aep
+            return eval(self.cost_function, globals(), locals())
+        else:
+            return None
+
+    @property
+    def objective(self):
+        """This is the optimized objective function value"""
+        if self.optimized_design_variables is not None:
+            system_capacity = self.capacity
+            aep = self.aep
+            cost = self.annual_cost
+            return eval(self.objective_function, globals(), locals())
+        else:
+            return None
