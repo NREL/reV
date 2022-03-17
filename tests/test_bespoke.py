@@ -6,7 +6,6 @@ import json
 import os
 import shutil
 import tempfile
-from tkinter import Place
 import numpy as np
 import pandas as pd
 import pytest
@@ -15,7 +14,6 @@ from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
 from reV.SAM.generation import WindPower
-from reV.supply_curve.tech_mapping import TechMapping
 
 from rex import Resource
 
@@ -92,9 +90,13 @@ def test_turbine_placement(gid=33):
         assert place_optimizer.aep == \
             place_optimizer.wind_plant.annual_energy()
 
+        # pylint: disable=W0641
         system_capacity = place_optimizer.capacity
+        # pylint: disable=W0641
         aep = place_optimizer.aep
+        # pylint: disable=W0123
         cost = eval(cost_function, globals(), locals())
+        # pylint: disable=W0123
         assert place_optimizer.objective ==\
             eval(objective_function, globals(), locals())
         assert place_optimizer.annual_cost == cost
@@ -169,6 +171,7 @@ def test_packing_algorithm(gid=33):
 
 def test_bespoke_points():
     """Test the bespoke points input options"""
+    # pylint: disable=W0612
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
