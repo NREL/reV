@@ -29,7 +29,7 @@ class DatasetCollector:
     output file.
     """
     def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None,
-                 mem_util_lim=0.7):
+                 mem_util_lim=0.7, pass_through=False):
         """
         Parameters
         ----------
@@ -46,10 +46,15 @@ class DatasetCollector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         self._h5_file = h5_file
         self._source_files = source_files
         self._gids = gids
+        self._pass_through = pass_through
 
         self._file_gid_map = {fp: self.parse_meta(fp)['gid'].values.tolist()
                               for fp in self._source_files}
@@ -326,20 +331,27 @@ class DatasetCollector:
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
         with Outputs(self._h5_file, mode='a') as f_out:
-            for fp in self._source_files:
-                with Outputs(fp, mode='r') as f_source:
-                    x = self._get_source_gid_chunks(f_source)
-                    all_source_gids, source_gid_chunks = x
 
-                    for source_gids in source_gid_chunks:
-                        self._collect_chunk(all_source_gids, source_gids,
-                                            f_out, f_source, fp)
+            if self._pass_through:
+                with Outputs(self._source_files[0], mode='r') as f_source:
+                    data = f_source[self._dset_in]
+                    f_out[self._dset_out] = data
 
-                log_mem(logger, log_level='DEBUG')
+            else:
+                for fp in self._source_files:
+                    with Outputs(fp, mode='r') as f_source:
+                        x = self._get_source_gid_chunks(f_source)
+                        all_source_gids, source_gid_chunks = x
+
+                        for source_gids in source_gid_chunks:
+                            self._collect_chunk(all_source_gids, source_gids,
+                                                f_out, f_source, fp)
+
+                    log_mem(logger, log_level='DEBUG')
 
     @classmethod
     def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None,
-                     mem_util_lim=0.7):
+                     mem_util_lim=0.7, pass_through=False):
         """Collect a single dataset from a list of source files into a final
         output file.
 
@@ -358,9 +370,13 @@ class DatasetCollector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out,
-                 mem_util_lim=mem_util_lim)
+                 mem_util_lim=mem_util_lim, pass_through=pass_through)
         dc._collect()
 
 
@@ -573,21 +589,17 @@ class Collector:
 
     def combine_time_index(self):
         """
-        Extract time_index, None if not present in .h5 files
+        Extract all time_index datasets, None if not present in .h5 files
         """
-        with Outputs(self.h5_files[0], mode='r') as f:
-            if 'time_index' in f.datasets:
-                time_index = f.time_index
-                attrs = f.get_attrs('time_index')
-            else:
+        with Outputs(self.h5_files[0], mode='r') as f_source:
+            with Outputs(self._h5_out, mode='a') as f_out:
+                ti_dsets = [d for d in list(f_source)
+                            if d.startswith('time_index')]
                 time_index = None
-                warn("'time_index' was not processed as it is not "
-                     "present in .h5 files to be combined.",
-                     CollectionWarning)
-
-        if time_index is not None:
-            with Outputs(self._h5_out, mode='a') as f:
-                f._set_time_index('time_index', time_index, attrs=attrs)
+                for name in ti_dsets:
+                    time_index = f_source._get_time_index(name, slice(None))
+                    attrs = f_source.get_attrs(name)
+                    f_out._set_time_index(name, time_index, attrs=attrs)
 
     def _check_meta(self, meta):
         """
@@ -698,7 +710,7 @@ class Collector:
 
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
-                file_prefix=None, mem_util_lim=0.7):
+                file_prefix=None, mem_util_lim=0.7, pass_through=False):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -722,6 +734,10 @@ class Collector:
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
+        pass_through : bool
+            Flag to just pass through dataset from one of the source files,
+            assuming all of the source files have identical copies of this
+            dataset.
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -742,7 +758,8 @@ class Collector:
 
         DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
                                       dset_name, dset_out=dset_out,
-                                      mem_util_lim=mem_util_lim)
+                                      mem_util_lim=mem_util_lim,
+                                      pass_through=pass_through)
 
         logger.debug("\t- Collection of '{}' complete".format(dset_name))
 

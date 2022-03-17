@@ -7,6 +7,8 @@ import logging
 
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
+from reV.bespoke.cli_bespoke import from_config as run_bespoke_from_config
+from reV.bespoke.cli_bespoke import valid_config_keys as bespoke_keys
 from reV.handlers.cli_collect import from_config as run_collect_from_config
 from reV.handlers.cli_collect import valid_config_keys as collect_keys
 from reV.handlers.cli_multi_year import from_config as run_my_from_config
@@ -209,6 +211,28 @@ def valid_batch_keys(ctx):
     Valid Batch config keys
     """
     ctx.invoke(batch_keys)
+
+
+@main.group(invoke_without_command=True)
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def bespoke(ctx, verbose):
+    """Run reV bespoke wind plant optimization using the config file."""
+    if ctx.invoked_subcommand is None:
+        config_file = ctx.obj['CONFIG_FILE']
+        verbose = any([verbose, ctx.obj['VERBOSE']])
+        ctx.invoke(run_bespoke_from_config, config_file=config_file,
+                   verbose=verbose)
+
+
+@bespoke.command()
+@click.pass_context
+def valid_bespoke_keys(ctx):
+    """
+    Valid Bespoke config keys
+    """
+    ctx.invoke(bespoke_keys)
 
 
 @main.group(invoke_without_command=True)

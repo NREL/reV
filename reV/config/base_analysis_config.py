@@ -55,7 +55,6 @@ class AnalysisConfig(BaseConfig):
     @property
     def analysis_years(self):
         """Get the analysis years.
-
         Returns
         -------
         analysis_years : list
@@ -79,7 +78,6 @@ class AnalysisConfig(BaseConfig):
     def log_directory(self):
         """Get the logging directory, look for key "log_directory" in the
         config.
-
         Returns
         -------
         log_directory : str
@@ -90,7 +88,6 @@ class AnalysisConfig(BaseConfig):
     @property
     def execution_control(self):
         """Get the execution control object.
-
         Returns
         -------
         _ec : BaseExecutionConfig | EagleConfig
@@ -126,7 +123,6 @@ class AnalysisConfig(BaseConfig):
     @property
     def name(self):
         """Get the job name, defaults to the output directory name.
-
         Returns
         -------
         _name : str

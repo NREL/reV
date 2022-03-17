@@ -607,7 +607,7 @@ class BaseGen(ABC):
             # get the optimal sites per split based on res file chunk size
             sites_per_worker = cls.get_sites_per_worker(res_file)
 
-        logger.debug('Sites per worker being set to {} for Gen/Econ '
+        logger.debug('Sites per worker being set to {} for '
                      'PointsControl.'.format(sites_per_worker))
 
         if isinstance(points, PointsControl):

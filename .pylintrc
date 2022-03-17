@@ -55,6 +55,7 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=
+        unspecified-encoding,
         consider-using-f-string,
         # Defaults
         print-statement,
@@ -377,7 +378,7 @@ ignore-docstrings=yes
 ignore-imports=yes
 
 # Minimum lines number of a similarity.
-min-similarity-lines=10
+min-similarity-lines=20
 
 
 [SPELLING]

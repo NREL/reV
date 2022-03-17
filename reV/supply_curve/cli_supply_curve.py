@@ -384,7 +384,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
 
     status = Status.retrieve_job_status(out_dir,
                                         module=ModuleName.SUPPLY_CURVE,
-                                        job_name=name, hardware='eagle',
+                                        job_name=name, hardware='slurm',
                                         subprocess_manager=slurm_manager)
 
     msg = 'Supply Curve CLI failed to submit jobs!'
@@ -410,7 +410,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         Status.add_job(
             out_dir, module=ModuleName.SUPPLY_CURVE,
             job_name=name, replace=True,
-            job_attrs={'job_id': out, 'hardware': 'eagle',
+            job_attrs={'job_id': out, 'hardware': 'slurm',
                        'fout': '{}.csv'.format(name), 'dirout': out_dir})
 
     click.echo(msg)
