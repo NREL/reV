@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
+from reV.supply_curve.tech_mapping import TechMapping
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
 from reV.SAM.generation import WindPower
@@ -22,7 +23,7 @@ pytest.importorskip("rasterio")
 
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
-EXCL = os.path.join(TESTDATADIR, 'bespoke/ri_exclusions.h5')
+EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
 AGG_DSET = ('cf_mean', 'cf_profile')
@@ -53,11 +54,14 @@ def test_turbine_placement(gid=33):
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        bsp = BespokeSinglePlant(gid, EXCL, res_fp, TM_DSET,
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
                                  ga_time=5,
@@ -107,11 +111,14 @@ def test_zero_area(gid=33):
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        bsp = BespokeSinglePlant(gid, EXCL, res_fp, TM_DSET,
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
                                  ga_time=5,
@@ -140,11 +147,14 @@ def test_packing_algorithm(gid=33):
     objective_function = ""
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        bsp = BespokeSinglePlant(gid, EXCL, res_fp, TM_DSET,
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
                                  ga_time=5,
@@ -164,10 +174,13 @@ def test_bespoke_points():
     """Test the bespoke points input options"""
     # pylint: disable=W0612
     with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
         points = None
         points_range = None
-        pc = BespokeWindPlants._parse_points(EXCL, RES.format(2012),
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
                                              TM_DSET, 64, points,
                                              points_range, SAM)
         pp = pc.project_points
@@ -178,7 +191,7 @@ def test_bespoke_points():
 
         points = None
         points_range = (0, 10)
-        pc = BespokeWindPlants._parse_points(EXCL, RES.format(2012),
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
                                              TM_DSET, 64, points,
                                              points_range, {'default': SAM})
         pp = pc.project_points
@@ -188,7 +201,7 @@ def test_bespoke_points():
 
         points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
         points_range = None
-        pc = BespokeWindPlants._parse_points(EXCL, RES.format(2012),
+        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
                                              TM_DSET, 64, points,
                                              points_range, {'default': SAM})
         pp = pc.project_points
@@ -205,11 +218,14 @@ def test_single(gid=33):
     objective_function = "cost / aep"
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        bsp = BespokeSinglePlant(gid, EXCL, res_fp, TM_DSET,
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
                                  ga_time=5,
@@ -278,13 +294,16 @@ def test_bespoke():
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
         points = [33, 35]  # both 33 and 35 are included
 #        points = [36, 37]  # 37 is fully excluded
 
-        _ = BespokeWindPlants.run(EXCL, res_fp, TM_DSET,
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
                                   objective_function, cost_function,
                                   points, SAM_CONFIGS,
                                   ga_time=5,
