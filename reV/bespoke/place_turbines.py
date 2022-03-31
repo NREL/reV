@@ -5,7 +5,6 @@ place turbines for bespoke wind plants
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon
 import shapely.affinity
-import rasterio.features
 
 from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
@@ -72,6 +71,7 @@ class PlaceTurbines():
         self.full_polygons = None
         self.packing_polygons = None
         self.optimized_design_variables = None
+        self.safe_polygons = None
 
         self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
         self._preflight(self.objective_function)
@@ -89,26 +89,36 @@ class PlaceTurbines():
         """From the exclusions data, create a shapely MultiPolygon as
         self.safe_polygons that defines where turbines can be placed.
         """
-        shapes = rasterio.features.shapes(np.floor(self.include_mask))
-        polygons = [Polygon(shape[0]["coordinates"][0]) for shape in shapes
-                    if shape[1] == 1]
-        for i, _ in enumerate(polygons):
-            polygons[i] = shapely.affinity.scale(polygons[i],
-                                                 xfact=self.pixel_side_length,
-                                                 yfact=-self.pixel_side_length,
-                                                 origin=(0, 0))
 
-        safe_polygons = MultiPolygon(polygons)
+        nx, ny = np.shape(self.include_mask)
+        self.safe_polygons = MultiPolygon()
+        side_x = np.linspace(0.0, float(nx), nx + 1)
+        side_y = np.linspace(0.0, float(ny), ny + 1)
+        floored = np.floor(self.include_mask)
+        for i in range(nx):
+            for j in range(ny):
+                if floored[j, i] == 1:
+                    added_poly = Polygon(((side_x[i], side_y[j]),
+                                          (side_x[i + 1], side_y[j]),
+                                          (side_x[i + 1], side_y[j + 1]),
+                                          (side_x[i], side_y[j + 1])))
+                    self.safe_polygons = self.safe_polygons.union(added_poly)
 
-        if safe_polygons.area == 0.0:
+        self.safe_polygons = \
+            shapely.affinity.scale(self.safe_polygons,
+                                   xfact=self.pixel_side_length,
+                                   yfact=-self.pixel_side_length,
+                                   origin=(0, 0))
+
+        if self.safe_polygons.area == 0.0:
             self.full_polygons = MultiPolygon([])
             self.packing_polygons = MultiPolygon([])
         else:
-            minx, miny, maxx, maxy = safe_polygons.bounds
-            safe_polygons = shapely.affinity.translate(safe_polygons,
-                                                       xoff=-minx,
-                                                       yoff=-miny)
-            self.full_polygons = safe_polygons.buffer(0)
+            minx, miny, maxx, maxy = self.safe_polygons.bounds
+            self.safe_polygons = shapely.affinity.translate(self.safe_polygons,
+                                                            xoff=-minx,
+                                                            yoff=-miny)
+            self.full_polygons = self.safe_polygons.buffer(0)
 
             # add extra setback to cell boundary
             minx, miny, maxx, maxy = self.full_polygons.bounds

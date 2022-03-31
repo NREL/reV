@@ -19,8 +19,6 @@ from reV.SAM.generation import WindPower
 from rex import Resource
 
 pytest.importorskip("shapely")
-pytest.importorskip("rasterio")
-
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -168,6 +166,8 @@ def test_packing_algorithm(gid=33):
 
         assert len(optimizer.x_locations) < 165
         assert len(optimizer.x_locations) > 145
+        assert np.sum(optimizer.include_mask) ==\
+            optimizer.safe_polygons.area / (optimizer.pixel_side_length**2)
 
 
 def test_bespoke_points():

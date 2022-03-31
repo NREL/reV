@@ -56,7 +56,8 @@ def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
         for interior in geom.interiors:
             interior_coords = interior.coords[:]
             x, y = get_xy(interior_coords)
-            ax.plot(x, y, "--b", linewidth=0.5)
+            ax.fill(x, y, color="white", alpha=1.0)
+            ax.plot(x, y, "--k", linewidth=0.5)
 
     elif geom.type == 'MultiPolygon':
 
@@ -70,7 +71,8 @@ def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
             for interior in part.interiors:
                 interior_coords = interior.coords[:]
                 x, y = get_xy(interior_coords)
-                ax.plot(x, y, "--b", linewidth=0.5)
+                ax.fill(x, y, color="white", alpha=1.0)
+                ax.plot(x, y, "--k", linewidth=0.5)
     return ax
 
 

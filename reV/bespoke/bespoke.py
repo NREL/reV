@@ -42,7 +42,7 @@ class BespokeSinglePlant:
     the local wind resource and exclusions for a single reV supply curve point.
     """
 
-    DEPENDENCIES = ('shapely', 'rasterio')
+    DEPENDENCIES = ('shapely')
     OUT_ATTRS = copy.deepcopy(Gen.OUT_ATTRS)
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
