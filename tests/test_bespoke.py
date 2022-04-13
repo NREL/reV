@@ -19,8 +19,6 @@ from reV.SAM.generation import WindPower
 from rex import Resource
 
 pytest.importorskip("shapely")
-pytest.importorskip("rasterio")
-
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -102,6 +100,8 @@ def test_turbine_placement(gid=33):
             eval(objective_function, globals(), locals())
         assert place_optimizer.annual_cost == cost
 
+        bsp.close()
+
 
 def test_zero_area(gid=33):
     """Test turbine placement with zero available area. """
@@ -139,6 +139,8 @@ def test_zero_area(gid=33):
         assert optimizer.objective == 0
         assert optimizer.annual_cost == 0
 
+        bsp.close()
+
 
 def test_packing_algorithm(gid=33):
     """Test turbine placement with zero available area. """
@@ -168,6 +170,10 @@ def test_packing_algorithm(gid=33):
 
         assert len(optimizer.x_locations) < 165
         assert len(optimizer.x_locations) > 145
+        assert np.sum(optimizer.include_mask) ==\
+            optimizer.safe_polygons.area / (optimizer.pixel_side_length**2)
+
+        bsp.close()
 
 
 def test_bespoke_points():
@@ -282,6 +288,8 @@ def test_single(gid=33):
         diff = cf_ideal - cf_bespoke
         assert all(diff > -0.00001)
         assert diff.mean() > 0.02
+
+        bsp.close()
 
 
 def test_bespoke():

@@ -42,7 +42,7 @@ class BespokeSinglePlant:
     the local wind resource and exclusions for a single reV supply curve point.
     """
 
-    DEPENDENCIES = ('shapely', 'rasterio')
+    DEPENDENCIES = ('shapely',)
     OUT_ATTRS = copy.deepcopy(Gen.OUT_ATTRS)
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
@@ -202,7 +202,7 @@ class BespokeSinglePlant:
         return self
 
     def __exit__(self, type, value, traceback):
-        self.sc_point.close()
+        self.close()
         if type is not None:
             raise
 
@@ -228,6 +228,12 @@ class BespokeSinglePlant:
             if dset in available_dsets:
                 self._out_req.remove(req)
                 self._outputs[req] = self.res_df[dset].mean()
+
+    def close(self):
+        """Close any open file handlers via the sc point attribute. If this
+        class was initialized with close=False, this will not close any
+        handlers."""
+        self.sc_point.close()
 
     def get_weighted_res_ts(self, dset):
         """Special method for calculating the exclusion-weighted mean resource
@@ -1142,6 +1148,7 @@ class BespokeWindPlants(AbstractAggregation):
 
         logger.info('Saved output data to: {}'.format(out_fpath))
 
+    # pylint: disable=arguments-renamed
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset,
                    sam_sys_inputs, objective_function, cost_function,
@@ -1313,6 +1320,7 @@ class BespokeWindPlants(AbstractAggregation):
 
         return out
 
+    # pylint: disable=arguments-renamed
     @classmethod
     def run(cls, excl_fpath, res_fpath, tm_dset,
             objective_function, cost_function,

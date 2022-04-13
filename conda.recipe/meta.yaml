@@ -17,17 +17,21 @@ requirements:
     - setuptools
     - NREL-rex
     - NREL-PySAM
+    - NREL-NRWAL
     - packaging
     - plotting
     - plotly
+    - shapely
   run:
     - python
     - pip
     - NREL-rex
     - NREL-PySAM
+    - NREL-NRWAL
     - packaging
     - plotting
     - plotly
+    - shapely
 
 about:
   home: "https://github.com/NREL/reV"
