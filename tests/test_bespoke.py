@@ -408,3 +408,5 @@ def test_consistent_eval_namespace(gid=33):
 
         assert out["bespoke_aep"] == bsp.plant_optimizer.aep
         assert out["bespoke_objective"] == bsp.plant_optimizer.objective
+
+        bsp.close()
