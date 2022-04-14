@@ -61,7 +61,7 @@ def from_config(ctx, config_file, points_range, verbose):
               else BespokeConfig(config_file))
 
     verbose = config.log_level == logging.DEBUG
-    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.obj['VERBOSE'] = verbose = any([verbose, ctx.obj['VERBOSE']])
 
     if points_range is not None:
         config['points_range'] = points_range
