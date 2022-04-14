@@ -470,6 +470,7 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
+        fname = fname.strip()
         if fname.endswith('.csv'):
             df = pd.read_csv(fname)
         else:
