@@ -380,7 +380,6 @@ def test_collect_bespoke():
                     assert np.allclose(truth, test)
 
 
-
 def test_consistent_eval_namespace(gid=33):
     """Test that all the same variables are available for every eval."""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
