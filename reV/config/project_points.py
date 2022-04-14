@@ -271,7 +271,7 @@ class ProjectPoints:
         site_bool = (self.df['gid'] == site)
         try:
             config_id = self.df.loc[site_bool, 'config'].values[0]
-        except KeyError as ex:
+        except (KeyError, IndexError) as ex:
             msg = ('Site {} not found in this instance of '
                    'ProjectPoints. Available sites include: {}'
                    .format(site, self.sites))
@@ -424,11 +424,7 @@ class ProjectPoints:
             solarwaterheat, troughphysicalheat, lineardirectsteam)
             The string should be lower-cased with spaces and _ removed.
         """
-        tech = self._tech
-        if 'wind' in tech.lower():
-            tech = 'windpower'
-
-        return self._tech
+        return 'windpower' if 'wind' in self._tech.lower() else self._tech
 
     @property
     def h(self):
@@ -475,6 +471,7 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
+        fname = fname.strip()
         if fname.endswith('.csv'):
             df = pd.read_csv(fname)
         else:
