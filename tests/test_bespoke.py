@@ -378,3 +378,34 @@ def test_collect_bespoke():
                     truth = source['cf_profile-2012', :, isource].flatten()
                     test = data[:, iout].flatten()
                     assert np.allclose(truth, test)
+
+
+def test_consistent_eval_namespace(gid=33):
+    """Test that all the same variables are available for every eval."""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    cost_function = "2000"
+    objective_function = (
+        "n_turbines + id(self.wind_plant) + system_capacity + cost + aep"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cost_function,
+                                 ga_time=5,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+        out = bsp.run_plant_optimization()
+
+        assert out["bespoke_aep"] == bsp.plant_optimizer.aep
+        assert out["bespoke_objective"] == bsp.plant_optimizer.objective
+
+        bsp.close()

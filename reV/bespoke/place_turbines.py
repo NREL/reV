@@ -161,6 +161,7 @@ class PlaceTurbines():
         self.x_locations = packing.turbine_x
         self.y_locations = packing.turbine_y
 
+    # pylint: disable=W0641,W0123
     def optimization_objective(self, x):
         """The optimization objective used in the bespoke optimization
         """
@@ -174,11 +175,8 @@ class PlaceTurbines():
 
         self.wind_plant.assign_inputs()
         self.wind_plant.execute()
-        # pylint: disable=W0641
         aep = self.wind_plant.annual_energy()
-        # pylint: disable=W0123,W0641
         cost = eval(self.cost_function, globals(), locals())
-        # pylint: disable=W0123
         objective = eval(self.objective_function, globals(), locals())
 
         return objective
@@ -279,30 +277,27 @@ class PlaceTurbines():
         else:
             return None
 
+    # pylint: disable=W0641,W0123
     @property
     def annual_cost(self):
         """This is the annual cost of the optimized plant"""
         if self.optimized_design_variables is not None:
-            # pylint: disable=W0641
+            n_turbines = self.nturbs
             system_capacity = self.capacity
-            # pylint: disable=W0641
             aep = self.aep
-            # pylint: disable=W0123
             return eval(self.cost_function, globals(), locals())
         else:
             return None
 
+    # pylint: disable=W0641,W0123
     @property
     def objective(self):
         """This is the optimized objective function value"""
         if self.optimized_design_variables is not None:
-            # pylint: disable=W0641
+            n_turbines = self.nturbs
             system_capacity = self.capacity
-            # pylint: disable=W0641
             aep = self.aep
-            # pylint: disable=W0641
             cost = self.annual_cost
-            # pylint: disable=W0123
             return eval(self.objective_function, globals(), locals())
         else:
             return None
