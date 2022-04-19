@@ -4,6 +4,45 @@
 """
 import calendar
 
+import numpy as np
+
+
+# 1900 is just a representative year, since a year input is required
+DAYS_PER_MONTH = [calendar.monthrange(1900, i)[1] for i in range(1, 13)]
+FIRST_DAY_INDEX_OF_MONTH = np.cumsum([0] + DAYS_PER_MONTH[:-1])
+
+
+def hourly_indices_for_months(month_names):
+    """Convert month names into a list of hourly indices.
+
+    Given a list of month names, this function will return a list
+    of indices such that any index value corresponds to some hour within
+    the input months.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of month names for the desired starting indices.
+        The month names must match the formatting in
+        `calendar.month_name` (upper case, no extra whitespace),
+        otherwise their hourly indices will not be included in the
+        output.
+
+    Returns
+    -------
+    list
+        A list of hourly index values such that any index corresponds to
+        some hour within the input months.
+    """
+
+    indices = []
+    for ind in sorted(month_indices(month_names)):
+        start_index = FIRST_DAY_INDEX_OF_MONTH[ind] * 24
+        hours_in_month = DAYS_PER_MONTH[ind] * 24
+        indices += list(range(start_index, start_index + hours_in_month))
+
+    return indices
+
 
 def month_indices(month_names):
     """Convert input month names to an indices (0-11) of the months.

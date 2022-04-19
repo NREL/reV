@@ -12,7 +12,34 @@ import pytest
 
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
-                            filter_unknown_month_names, month_indices)
+                            filter_unknown_month_names, month_indices,
+                            hourly_indices_for_months)
+
+
+def test_hourly_indices_for_months():
+    """Test that the correct indices are returned for the input months. """
+
+    assert not hourly_indices_for_months(['Abc'])
+
+    indices = hourly_indices_for_months(['January', 'Abc'])
+    assert indices[0] == 0
+    assert indices[-1] == len(indices) - 1
+    assert len(indices) == 31 * 24  # 31 days in Jan
+    assert all(i < 31 * 24 for i in indices)
+
+    indices = hourly_indices_for_months(['March', 'January'])
+    assert indices[0] == 0
+    assert len(indices) == (31 + 31) * 24  # 31 days in Jan and Mar
+    assert 744 not in indices
+    assert indices[744] - indices[743] - 1 == 28 * 24  # we skip Feb
+
+    all_months = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November',
+                  'December']
+    indices = hourly_indices_for_months(all_months)
+    assert indices[0] == 0
+    assert indices[-1] == len(indices) - 1
+    assert len(indices) == 8760
 
 
 def test_month_indices():
