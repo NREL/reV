@@ -11,7 +11,21 @@ import os
 import pytest
 
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
-                            month_index, convert_to_full_month_names)
+                            month_index, convert_to_full_month_names,
+                            filter_unknown_month_names)
+
+
+def test_filter_unknown_month_names():
+    """Test that month names are filtered correctly. """
+
+    input_names = ['March', 'April', 'June', 'July', 'Abc', ' unformaTTed']
+    expected_known_names = ['March', 'April', 'June', 'July']
+    expected_unknown_names = ['Abc', ' unformaTTed']
+
+    known_months, unknown_months = filter_unknown_month_names(input_names)
+
+    assert known_months == expected_known_names
+    assert unknown_months == expected_unknown_names
 
 
 def test_convert_to_full_month_names():

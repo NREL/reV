@@ -5,6 +5,34 @@
 import calendar
 
 
+def filter_unknown_month_names(month_names):
+    """Split the input into known and unknown month names.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of strings representing the input month names. Month
+        names must match the formatting in `calendar.month_name`
+        (upper case, no extra whitespace), otherwise they will be placed
+        into `unknown_months` list.
+
+    Returns
+    -------
+    known_months : list
+        List of known month names.
+    unknown_months : list
+        List of unknown month names.
+    """
+    known_months, unknown_months = [], []
+    for name in month_names:
+        if name in calendar.month_name:
+            known_months.append(name)
+        else:
+            unknown_months.append(name)
+
+    return known_months, unknown_months
+
+
 def convert_to_full_month_names(month_names):
     """Format an iterable of month names to match those in `calendar`.
 
