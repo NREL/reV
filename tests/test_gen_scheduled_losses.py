@@ -17,11 +17,13 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
 def test_month_index():
     """Test that the correct month index is returned for input. """
 
-    assert month_index(' aprIl  ') == 3
     assert month_index("June") == 5
-    assert month_index("jul") == 6
+    assert month_index("July") == 6
+    assert month_index("Jun") == -1
+    assert month_index("jul") == -1
     assert month_index('') == -1
     assert month_index('Abcdef') == -1
+    assert month_index(' aprIl  ') == -1
 
 
 def test_full_month_name_from_abbr():

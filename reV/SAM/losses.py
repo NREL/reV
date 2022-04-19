@@ -12,7 +12,8 @@ def month_index(month_name):
     ----------
     month_name : str
         Name of month to corresponding to desired index. This input
-        can also be a 3-letter abbreviation of the month name.
+        must match the formatting in `calendar.month_name` (upper case,
+        no extra whitespace).
 
     Returns
     -------
@@ -24,13 +25,13 @@ def month_index(month_name):
     --------
     >>> month_index("June")
     5
-    >>> month_index("jul")
+    >>> month_index("July")
     6
-    >>> month_index("Abc")
+    >>> month_index("Jun")
+    -1
+    >>> month_index("july")
     -1
     """
-    month_name = format_month_name(month_name)
-    month_name = full_month_name_from_abbr(month_name) or month_name
     for month_ind in range(12):
         if calendar.month_name[month_ind + 1] == month_name:
             return month_ind
