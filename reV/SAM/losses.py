@@ -3,6 +3,8 @@
 
 """
 
+import calendar
+
 
 def format_month_name(month_name):
     """Format a month name to match the names in the `calendar` module.
@@ -23,3 +25,37 @@ def format_month_name(month_name):
         `calendar` module.
     """
     return month_name.strip().title()
+
+
+def full_month_name_from_abbr(month_name):
+    """Convert a month abbreviation to a full month name.
+
+    Parameters
+    ----------
+    month_name : str
+        Abbreviated month name. Must be one of:
+            - "Jan"
+            - "Feb"
+            - "Mar"
+            - "Apr"
+            - "May"
+            - "Jun"
+            - "Jul"
+            - "Aug"
+            - "Sep"
+            - "Oct"
+            - "Nov"
+            - "Dec"
+        If the input does not match one of these, this function returns
+        `None`.
+
+
+    Returns
+    -------
+    str | None
+        Unabbreviated month name, or `None` if input abbreviation is not
+        understood.
+    """
+    for month_index in range(1, 13):
+        if calendar.month_abbr[month_index] == month_name:
+            return calendar.month_name[month_index]

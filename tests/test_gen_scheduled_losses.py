@@ -10,7 +10,16 @@ Created on Mon Apr 18 12:52:16 2021
 import os
 import pytest
 
-from reV.SAM.losses import format_month_name
+from reV.SAM.losses import format_month_name, full_month_name_from_abbr
+
+
+def test_full_month_name_from_abbr():
+    """Test that month names are retrieved from abbreviations. """
+
+    assert full_month_name_from_abbr('Jun') == 'June'
+    assert full_month_name_from_abbr('') is None
+    assert full_month_name_from_abbr('June') is None
+    assert full_month_name_from_abbr('Abcdef') is None
 
 
 def test_format_month_name():
