@@ -5,6 +5,26 @@
 import calendar
 
 
+def month_indices(month_names):
+    """Convert input month names to an indices (0-11) of the months.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of month names for the desired starting indices.
+        The month names must match the formatting in
+        `calendar.month_name` (upper case, no extra whitespace),
+        otherwise their index will not be included in the output.
+
+    Returns
+    -------
+    set
+        A set of month indices for the input month names. Unknown
+        month indices (-1) are removed.
+    """
+    return {month_index(name) for name in month_names} - {-1}
+
+
 def filter_unknown_month_names(month_names):
     """Split the input into known and unknown month names.
 

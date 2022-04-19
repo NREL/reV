@@ -12,7 +12,16 @@ import pytest
 
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
-                            filter_unknown_month_names)
+                            filter_unknown_month_names, month_indices)
+
+
+def test_month_indices():
+    """Test that month indices are generated correctly. """
+
+    assert not month_indices(['Abc'])
+    assert month_indices(['March', 'April', 'June', 'July']) == {2, 3, 5, 6}
+    assert -1 not in month_indices(['March', 'April', 'June', 'July', 'Abc'])
+    assert month_indices(['March', 'April', 'March']) == {2, 3}
 
 
 def test_filter_unknown_month_names():
