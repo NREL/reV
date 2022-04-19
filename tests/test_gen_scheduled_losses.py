@@ -13,7 +13,41 @@ import pytest
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
                             filter_unknown_month_names, month_indices,
-                            hourly_indices_for_months)
+                            hourly_indices_for_months,
+                            convert_user_months_input_to_hourly_indices)
+
+
+def test_convert_user_months_input_to_hourly_indices():
+    """Test that the correct indices are returned for user input months. """
+
+    assert not convert_user_months_input_to_hourly_indices([])
+
+    with pytest.warns(Warning) as record:
+        assert not convert_user_months_input_to_hourly_indices(
+            ['unknown_month']
+        )
+
+    warn_msg = record[0].message.args[0]
+    assert "The following month names were not understood" in warn_msg
+
+    indices = convert_user_months_input_to_hourly_indices(['january', ' abc '])
+    assert indices[0] == 0
+    assert indices[-1] == len(indices) - 1
+    assert len(indices) == 31 * 24  # 31 days in Jan
+    assert all(i < 31 * 24 for i in indices)
+
+    indices = convert_user_months_input_to_hourly_indices(['march', 'Jan'])
+    assert indices[0] == 0
+    assert len(indices) == (31 + 31) * 24  # 31 days in Jan and Mar
+    assert 744 not in indices
+    assert indices[744] - indices[743] - 1 == 28 * 24  # we skip Feb
+
+    all_months = ['Jan', 'March', 'April  ', 'mAy', 'jun', 'July', 'October',
+                  'November', 'September', 'feb', 'December', 'August', 'May']
+    indices = convert_user_months_input_to_hourly_indices(all_months)
+    assert indices[0] == 0
+    assert indices[-1] == len(indices) - 1
+    assert len(indices) == 8760
 
 
 def test_hourly_indices_for_months():

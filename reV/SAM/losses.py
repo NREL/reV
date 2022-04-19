@@ -3,6 +3,8 @@
 
 """
 import calendar
+import logging
+import warnings
 
 import numpy as np
 
@@ -12,84 +14,39 @@ DAYS_PER_MONTH = [calendar.monthrange(1900, i)[1] for i in range(1, 13)]
 FIRST_DAY_INDEX_OF_MONTH = np.cumsum([0] + DAYS_PER_MONTH[:-1])
 
 
-def hourly_indices_for_months(month_names):
-    """Convert month names into a list of hourly indices.
+logger = logging.getLogger(__name__)
 
-    Given a list of month names, this function will return a list
-    of indices such that any index value corresponds to some hour within
-    the input months.
+
+def convert_user_months_input_to_hourly_indices(month_names):
+    """Convert user input month names to hourly indices.
 
     Parameters
     ----------
     month_names : iter
-        An iterable of month names for the desired starting indices.
-        The month names must match the formatting in
-        `calendar.month_name` (upper case, no extra whitespace),
-        otherwise their hourly indices will not be included in the
-        output.
+        An iterable of strings representing the input month names.
+        Month names can be unformatted and contain 3-letter month
+        abbreviations.
 
     Returns
     -------
     list
         A list of hourly index values such that any index corresponds to
-        some hour within the input months.
+        an hour within the input months.
     """
 
-    indices = []
-    for ind in sorted(month_indices(month_names)):
-        start_index = FIRST_DAY_INDEX_OF_MONTH[ind] * 24
-        hours_in_month = DAYS_PER_MONTH[ind] * 24
-        indices += list(range(start_index, start_index + hours_in_month))
+    month_names = convert_to_full_month_names(month_names)
+    known_months, unknown_months = filter_unknown_month_names(month_names)
 
-    return indices
+    if unknown_months:
+        msg = ("The following month names were not understood: {}. Please use "
+               "either the full month name or the standard 3-letter month "
+               "abbreviation. For more info, see the month name documentation "
+               "for the python standard package `calendar`."
+               ).format(unknown_months)
+        logger.warning(msg)
+        warnings.warn(msg)
 
-
-def month_indices(month_names):
-    """Convert input month names to an indices (0-11) of the months.
-
-    Parameters
-    ----------
-    month_names : iter
-        An iterable of month names for the desired starting indices.
-        The month names must match the formatting in
-        `calendar.month_name` (upper case, no extra whitespace),
-        otherwise their index will not be included in the output.
-
-    Returns
-    -------
-    set
-        A set of month indices for the input month names. Unknown
-        month indices (-1) are removed.
-    """
-    return {month_index(name) for name in month_names} - {-1}
-
-
-def filter_unknown_month_names(month_names):
-    """Split the input into known and unknown month names.
-
-    Parameters
-    ----------
-    month_names : iter
-        An iterable of strings representing the input month names. Month
-        names must match the formatting in `calendar.month_name`
-        (upper case, no extra whitespace), otherwise they will be placed
-        into `unknown_months` list.
-
-    Returns
-    -------
-    known_months : list
-        List of known month names.
-    unknown_months : list
-        List of unknown month names.
-    """
-    known_months, unknown_months = [], []
-    for name in month_names:
-        if name in calendar.month_name:
-            known_months.append(name)
-        else:
-            unknown_months.append(name)
-
-    return known_months, unknown_months
+    return hourly_indices_for_months(known_months)
 
 
 def convert_to_full_month_names(month_names):
@@ -127,6 +84,86 @@ def convert_to_full_month_names(month_names):
         month_name = full_month_name_from_abbr(month_name) or month_name
         formatted_names.append(month_name)
     return formatted_names
+
+
+def filter_unknown_month_names(month_names):
+    """Split the input into known and unknown month names.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of strings representing the input month names. Month
+        names must match the formatting in `calendar.month_name`
+        (upper case, no extra whitespace), otherwise they will be placed
+        into `unknown_months` list.
+
+    Returns
+    -------
+    known_months : list
+        List of known month names.
+    unknown_months : list
+        List of unknown month names.
+    """
+    known_months, unknown_months = [], []
+    for name in month_names:
+        if name in calendar.month_name:
+            known_months.append(name)
+        else:
+            unknown_months.append(name)
+
+    return known_months, unknown_months
+
+
+def hourly_indices_for_months(month_names):
+    """Convert month names into a list of hourly indices.
+
+    Given a list of month names, this function will return a list
+    of indices such that any index value corresponds to an hour within
+    the input months.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of month names for the desired starting indices.
+        The month names must match the formatting in
+        `calendar.month_name` (upper case, no extra whitespace),
+        otherwise their hourly indices will not be included in the
+        output.
+
+    Returns
+    -------
+    list
+        A list of hourly index values such that any index corresponds to
+        an hour within the input months.
+    """
+
+    indices = []
+    for ind in sorted(month_indices(month_names)):
+        start_index = FIRST_DAY_INDEX_OF_MONTH[ind] * 24
+        hours_in_month = DAYS_PER_MONTH[ind] * 24
+        indices += list(range(start_index, start_index + hours_in_month))
+
+    return indices
+
+
+def month_indices(month_names):
+    """Convert input month names to an indices (0-11) of the months.
+
+    Parameters
+    ----------
+    month_names : iter
+        An iterable of month names for the desired starting indices.
+        The month names must match the formatting in
+        `calendar.month_name` (upper case, no extra whitespace),
+        otherwise their index will not be included in the output.
+
+    Returns
+    -------
+    set
+        A set of month indices for the input month names. Unknown
+        month indices (-1) are removed.
+    """
+    return {month_index(name) for name in month_names} - {-1}
 
 
 def month_index(month_name):
