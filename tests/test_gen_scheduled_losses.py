@@ -11,7 +11,15 @@ import os
 import pytest
 
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
-                            month_index)
+                            month_index, convert_to_full_month_names)
+
+
+def test_convert_to_full_month_names():
+    """Test that an iterable of names is formatted correctly. """
+
+    input_names = ['March', ' aprIl  ', 'Jun', 'jul', '  abc ']
+    expected_output_names = ['March', 'April', 'June', 'July', 'Abc']
+    assert convert_to_full_month_names(input_names) == expected_output_names
 
 
 def test_month_index():
