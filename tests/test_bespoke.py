@@ -334,7 +334,7 @@ def test_bespoke():
                 assert isinstance(f[dset], np.ndarray)
                 assert len(f[dset].shape) == 1
                 assert len(f[dset]) == len(meta)
-                assert any(f[dset])  # not all zeros
+                assert f[dset].any()  # not all zeros
 
             dsets_2d = ('cf_profile-2012', 'cf_profile-2013')
             for dset in dsets_2d:
@@ -343,7 +343,7 @@ def test_bespoke():
                 assert len(f[dset].shape) == 2
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
-                assert any(f[dset])  # not all zeros
+                assert f[dset].any()  # not all zeros
 
 #        shutil.copy(out_fpath, './data/bespoke/test_bespoke_node00.h5')
 
