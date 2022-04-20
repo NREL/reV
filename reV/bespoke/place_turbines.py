@@ -226,12 +226,23 @@ class PlaceTurbines():
         self.optimized_design_variables = \
             [bool(y) for y in optimized_design_variables]
 
-    def place_turbines(self):
-        """run all functions to define bespoke wind plant turbine layouts
+    def place_turbines(self, **kwargs):
+        """Define bespoke wind plant turbine layouts.
+
+        Run all functions to define bespoke wind plant turbine layouts.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments to pass to GA initialization.
+
+        See Also
+        --------
+        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.
         """
         self.define_exclusions()
         self.initialize_packing()
-        self.optimize()
+        self.optimize(**kwargs)
 
     @property
     def turbine_x(self):

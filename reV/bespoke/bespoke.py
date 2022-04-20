@@ -47,7 +47,7 @@ class BespokeSinglePlant:
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
                  objective_function, cost_function,
-                 min_spacing='5x', ga_time=20,
+                 min_spacing='5x', ga_time=20, ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
@@ -94,6 +94,11 @@ class BespokeSinglePlant:
         ga_time : int
             Cutoff time for single-plant genetic algorithm optimization in
             seconds. Default is 20 seconds.
+        ga_kwargs : dict | None
+            Dictionary of keyword arguments to pass to GA initialization.
+            If `None`, default initialization values are used.
+            See :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` for
+            a description of the allowed keyword arguments.
         output_request : list | tuple
             Outputs requested from the SAM windpower simulation after the
             bespoke plant layout optimization. Can also request resource means
@@ -158,6 +163,7 @@ class BespokeSinglePlant:
         self.cost_function = cost_function
         self.min_spacing = min_spacing
         self.ga_time = ga_time
+        self.ga_kwargs = ga_kwargs or {}
 
         self._sam_sys_inputs = sam_sys_inputs
         self._out_req = list(output_request)
@@ -647,7 +653,7 @@ class BespokeSinglePlant:
 
         logger.debug('Running plant layout optimization for {}'.format(self))
         try:
-            self.plant_optimizer.place_turbines()
+            self.plant_optimizer.place_turbines(**self.ga_kwargs)
         except Exception as e:
             msg = ('{} failed while trying to run the '
                    'turbine placement optimizer'
