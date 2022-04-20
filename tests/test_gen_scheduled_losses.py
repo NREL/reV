@@ -14,7 +14,73 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
                             filter_unknown_month_names, month_indices,
                             hourly_indices_for_months,
-                            convert_user_months_input_to_hourly_indices)
+                            convert_user_months_input_to_hourly_indices,
+                            ScheduledLosses)
+
+
+def test_scheduled_losses_normal_run():
+    """Test hourly outage losses for a reasonable outage info input. """
+
+    outages_info = [
+        {
+            'number_of_outages': 5,
+            'duration': 24,
+            'percentage_of_farm_down': 100,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        },
+        {
+            'number_of_outages': 5,
+            'duration': 10,
+            'percentage_of_farm_down': 60,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        },
+        {
+            'number_of_outages': 5,
+            'duration': 5,
+            'percentage_of_farm_down': 50,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': False
+        },
+        {
+            'number_of_outages': 100,
+            'duration': 1,
+            'percentage_of_farm_down': 10,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': False
+        },
+        {
+            'number_of_outages': 100,
+            'duration': 2,
+            'percentage_of_farm_down': 15,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        }
+    ]
+    out = ScheduledLosses(outages_info).calculate()
+
+    assert len(out) == 8760
+    assert out[:744].any()
+    assert not out[744:].any()
+
+    for outage in outages_info:
+        outage_percentage = outage['percentage_of_farm_down']
+        num_expected_outage_hours = (
+            outage['number_of_outages'] * outage['duration']
+        )
+        if not outage['allow_outage_overlap'] or outage_percentage == 100:
+            num_outage_hours = (out == outage_percentage).sum()
+            assert num_outage_hours == num_expected_outage_hours
+        else:
+            num_outage_hours = (out >= outage_percentage).sum()
+            assert num_outage_hours >= num_expected_outage_hours
+
+    total_expected_outage = sum(
+        o['number_of_outages'] * o['duration'] * o['percentage_of_farm_down']
+        for o in outages_info
+    )
+    assert out.sum() == total_expected_outage
 
 
 def test_convert_user_months_input_to_hourly_indices():

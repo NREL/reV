@@ -5,6 +5,7 @@
 import calendar
 import logging
 import warnings
+from collections import namedtuple
 
 import numpy as np
 
@@ -13,8 +14,69 @@ import numpy as np
 DAYS_PER_MONTH = [calendar.monthrange(1900, i)[1] for i in range(1, 13)]
 FIRST_DAY_INDEX_OF_MONTH = np.cumsum([0] + DAYS_PER_MONTH[:-1])
 
-
 logger = logging.getLogger(__name__)
+
+
+class ScheduledLosses:
+
+    def __init__(self, outages):
+        self.outages = outages
+        self.total_losses = np.zeros(8760)
+        self.can_schedule_more = np.full(8760, True)
+
+    def calculate(self):
+        for outage in self.outages:
+            SingleOutageLosses(outage, self).calculate()
+        return self.total_losses
+
+
+class SingleOutageLosses:
+
+    MAX_ITER = 10_000
+
+    def __init__(self, outage, scheduler):
+        self.outage = outage
+        self.scheduler = scheduler
+        self.outage_losses = self.outage['percentage_of_farm_down']
+        self.can_schedule_more = np.full(8760, False)
+
+    def calculate(self):
+        self.outage['outage_inds'] = []
+        outage_target_number = self.outage['number_of_outages']
+        self.update_when_can_schedule_from_months()
+
+        for iter_ind in range(self.MAX_ITER):
+            self.update_when_can_schedule()
+            outage_slice = self.find_random_outage_slice(iter_ind)
+            if self.can_schedule_more[outage_slice].all():
+                self.schedule_losses(outage_slice)
+            if len(self.outage['outage_inds']) == outage_target_number:
+                break
+
+    def update_when_can_schedule_from_months(self):
+        month_names = self.outage['allowed_months']
+        inds = convert_user_months_input_to_hourly_indices(month_names)
+        self.can_schedule_more[inds] = True
+
+    def update_when_can_schedule(self):
+        self.can_schedule_more &= self.scheduler.can_schedule_more
+        if self.outage['allow_outage_overlap']:
+            self.can_schedule_more &= (
+                self.scheduler.total_losses + self.outage_losses
+            ) <= 100
+        else:
+            self.can_schedule_more &= self.scheduler.total_losses == 0
+
+    def find_random_outage_slice(self, iter_ind):
+        np.random.seed(iter_ind)
+        outage_ind = np.random.choice(np.where(self.can_schedule_more)[0])
+        return slice(outage_ind, outage_ind + self.outage['duration'])
+
+    def schedule_losses(self, outage_slice):
+        self.outage['outage_inds'].append(outage_slice.start)
+        self.scheduler.total_losses[outage_slice] += self.outage_losses
+        if not self.outage['allow_outage_overlap']:
+            self.scheduler.can_schedule_more[outage_slice] = False
 
 
 def convert_user_months_input_to_hourly_indices(month_names):
