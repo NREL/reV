@@ -275,6 +275,9 @@ def valid_config_keys():
 @click.option('--ga_time', '-ga', default=20, type=FLOAT, show_default=True,
               help='Cutoff time for single-plant genetic algorithm '
               'optimization in seconds.')
+@click.option('--ga_kwargs', '-gakw', type=STR, default=None,
+              show_default=True,
+              help='Dictionary of keyword arguments to pass to GA initialization.')
 @click.option('--output_request', '-or', type=STRLIST,
               default=['cf_mean', 'system_capacity'], show_default=True,
               help=('List of requested output variable names from SAM.'))
@@ -331,7 +334,7 @@ def valid_config_keys():
 @click.pass_context
 def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            cost_function, points, sam_files, points_range, min_spacing,
-           ga_time, output_request, ws_bins, wd_bins, excl_dict,
+           ga_time, ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
            area_filter_kernel, min_area, resolution, excl_area,
            log_dir, max_workers, pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
@@ -346,6 +349,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['MIN_SPACING'] = min_spacing
     ctx.obj['GA_TIME'] = ga_time
+    ctx.obj['GA_KWARGS'] = ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['WS_BINS'] = ws_bins
     ctx.obj['WD_BINS'] = wd_bins
@@ -375,6 +379,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
         if isinstance(excl_dict, str):
             excl_dict = dict_str_load(excl_dict)
 
+        if isinstance(ga_kwargs, str):
+            ga_kwargs = dict_str_load(ga_kwargs)
+
         t0 = time.time()
 
         try:
@@ -386,6 +393,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 points_range=points_range,
                 min_spacing=min_spacing,
                 ga_time=ga_time,
+                ga_kwargs=ga_kwargs,
                 output_request=output_request,
                 ws_bins=ws_bins,
                 wd_bins=wd_bins,
