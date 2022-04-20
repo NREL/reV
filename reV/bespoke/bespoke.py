@@ -755,7 +755,7 @@ class BespokeWindPlants(AbstractAggregation):
     def __init__(self, excl_fpath, res_fpath, tm_dset,
                  objective_function, cost_function,
                  points, sam_configs, points_range=None,
-                 min_spacing='5x', ga_time=20,
+                 min_spacing='5x', ga_time=20, ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None,
@@ -818,6 +818,11 @@ class BespokeWindPlants(AbstractAggregation):
         ga_time : int
             Cutoff time for single-plant genetic algorithm optimization in
             seconds. Default is 20 seconds.
+        ga_kwargs : dict | None
+            Dictionary of keyword arguments to pass to GA initialization.
+            If `None`, default initialization values are used.
+            See :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` for
+            a description of the allowed keyword arguments.
         output_request : list | tuple
             Outputs requested from the SAM windpower simulation after the
             bespoke plant layout optimization. Can also request resource means
@@ -890,6 +895,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._cost_fun = cost_function
         self._min_spacing = min_spacing
         self._ga_time = ga_time
+        self._ga_kwargs = ga_kwargs or {}
         self._output_request = output_request
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
@@ -1158,7 +1164,7 @@ class BespokeWindPlants(AbstractAggregation):
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset,
                    sam_sys_inputs, objective_function, cost_function,
-                   min_spacing='5x', ga_time=20,
+                   min_spacing='5x', ga_time=20, ga_kwargs=None,
                    output_request=('system_capacity', 'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
@@ -1217,6 +1223,7 @@ class BespokeWindPlants(AbstractAggregation):
                         cost_function,
                         min_spacing=min_spacing,
                         ga_time=ga_time,
+                        ga_kwargs=ga_kwargs,
                         output_request=output_request,
                         ws_bins=ws_bins,
                         wd_bins=wd_bins,
@@ -1297,6 +1304,7 @@ class BespokeWindPlants(AbstractAggregation):
                     self._cost_fun,
                     self._min_spacing,
                     self._ga_time,
+                    ga_kwargs=self._ga_kwargs,
                     output_request=self._output_request,
                     ws_bins=self._ws_bins,
                     wd_bins=self._wd_bins,
@@ -1331,7 +1339,7 @@ class BespokeWindPlants(AbstractAggregation):
     def run(cls, excl_fpath, res_fpath, tm_dset,
             objective_function, cost_function,
             points, sam_configs, points_range=None,
-            min_spacing='5x', ga_time=20,
+            min_spacing='5x', ga_time=20, ga_kwargs=None,
             output_request=('system_capacity', 'cf_mean'),
             ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None,
@@ -1349,6 +1357,7 @@ class BespokeWindPlants(AbstractAggregation):
                   points_range=points_range,
                   min_spacing=min_spacing,
                   ga_time=ga_time,
+                  ga_kwargs=ga_kwargs,
                   output_request=output_request,
                   ws_bins=ws_bins,
                   wd_bins=wd_bins,
@@ -1372,6 +1381,7 @@ class BespokeWindPlants(AbstractAggregation):
                                     cost_function,
                                     min_spacing=bsp._min_spacing,
                                     ga_time=bsp._ga_time,
+                                    ga_kwargs=bsp._ga_kwargs,
                                     output_request=bsp._output_request,
                                     ws_bins=bsp._ws_bins,
                                     wd_bins=bsp._wd_bins,
