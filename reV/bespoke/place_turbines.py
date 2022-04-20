@@ -16,7 +16,7 @@ class PlaceTurbines():
     exclusions, wind resources, and objective
     """
     def __init__(self, wind_plant, objective_function, cost_function,
-                 include_mask, pixel_side_length, min_spacing, ga_time):
+                 include_mask, pixel_side_length, min_spacing):
         """
         Parameters
         ----------
@@ -48,8 +48,6 @@ class PlaceTurbines():
             exclusions.latitude, exclusions.longitude, and exclusions.mask
         min_spacing : float
             The minimum spacing between turbines (in meters).
-        ga_time : float
-            The time to run the genetic algorithm (in seconds).
         """
 
         # inputs
@@ -59,7 +57,6 @@ class PlaceTurbines():
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
-        self.ga_time = ga_time
 
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
@@ -211,7 +208,7 @@ class PlaceTurbines():
             'mutation_rate': 0.01,
             'tol': 1E-6,
             'convergence_iters': 10000,
-            'max_time': self.ga_time
+            'max_time': 3600
         }
 
         ga_kwargs.update(kwargs)

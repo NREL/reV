@@ -70,7 +70,7 @@ if __name__ == "__main__":
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=20,
+                                 ga_kwargs={'max_time': 20},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )

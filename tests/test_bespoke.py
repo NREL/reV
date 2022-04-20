@@ -62,13 +62,12 @@ def test_turbine_placement(gid=33):
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=5,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
 
         place_optimizer = bsp.plant_optimizer
-        place_optimizer.place_turbines()
+        place_optimizer.place_turbines(max_time=5)
 
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
         assert place_optimizer.capacity == place_optimizer.nturbs *\
@@ -121,14 +120,13 @@ def test_zero_area(gid=33):
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=5,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
 
         optimizer = bsp.plant_optimizer
         optimizer.include_mask = np.zeros_like(optimizer.include_mask)
-        optimizer.place_turbines()
+        optimizer.place_turbines(max_time=5)
 
         assert len(optimizer.turbine_x) == 0
         assert len(optimizer.turbine_y) == 0
@@ -159,7 +157,7 @@ def test_packing_algorithm(gid=33):
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=5,
+                                 ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
@@ -234,7 +232,7 @@ def test_single(gid=33):
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=5,
+                                 ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
@@ -314,7 +312,7 @@ def test_bespoke():
         _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
                                   objective_function, cost_function,
                                   points, SAM_CONFIGS,
-                                  ga_time=5,
+                                  ga_kwargs={'max_time': 5},
                                   excl_dict=EXCL_DICT,
                                   output_request=output_request,
                                   max_workers=2,
@@ -399,7 +397,7 @@ def test_consistent_eval_namespace(gid=33):
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,
-                                 ga_time=5,
+                                 ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
