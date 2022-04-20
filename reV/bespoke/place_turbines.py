@@ -181,9 +181,20 @@ class PlaceTurbines():
 
         return objective
 
-    def optimize(self):
-        """use a genetic algorithm to optimize wind plant layout for the user
-        defined objective function.
+    def optimize(self, **kwargs):
+        """Optimize wind farm layout.
+
+        Use a genetic algorithm to optimize wind plant layout for the
+        user-defined objective function.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments to pass to GA initialization.
+
+        See Also
+        --------
+        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.
         """
         nlocs = len(self.x_locations)
         bits = np.ones(nlocs, dtype=int)
@@ -192,12 +203,22 @@ class PlaceTurbines():
         variable_type = np.array([])
         for _ in range(nlocs):
             variable_type = np.append(variable_type, "int")
+
+        ga_kwargs = {
+            'max_generation': 10000,
+            'population_size': 25,
+            'crossover_rate': 0.2,
+            'mutation_rate': 0.01,
+            'tol': 1E-6,
+            'convergence_iters': 10000,
+            'max_time': self.ga_time
+        }
+
+        ga_kwargs.update(kwargs)
+
         ga = GeneticAlgorithm(bits, bounds, variable_type,
                               self.optimization_objective,
-                              max_generation=10000, population_size=25,
-                              crossover_rate=0.2, mutation_rate=0.01,
-                              tol=1E-6, convergence_iters=10000,
-                              max_time=self.ga_time)
+                              **ga_kwargs)
 
         ga.optimize_ga()
 
