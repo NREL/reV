@@ -1086,29 +1086,33 @@ class BespokeWindPlants(AbstractAggregation):
         """
 
         single_arr = sample[dset]
-        # initialize output data array for all wind plants
-        full_arr = None
-        shape = None
+
         if isinstance(single_arr, Number):
             shape = (len(self.completed_gids),)
-            full_arr = np.zeros(shape, type(single_arr))
+            sample_num = single_arr
         elif isinstance(single_arr, (list, tuple, np.ndarray)):
             shape = (len(single_arr), len(self.completed_gids))
-            full_arr = np.zeros(shape, dtype=type(single_arr[0]))
+            sample_num = single_arr[0]
         else:
             msg = ('Not writing dataset "{}" of type "{}" to disk.'
                    .format(dset, type(single_arr)))
             logger.info(msg)
+            return None
+
+        if isinstance(sample_num, float):
+            dtype = np.float32
+        else:
+            dtype = type(sample_num)
+        full_arr = np.zeros(shape, dtype=dtype)
 
         # collect data from all wind plants
-        if full_arr is not None:
-            logger.info('Collecting dataset "{}" with final shape {}'
-                        .format(dset, shape))
-            for i, gid in enumerate(self.completed_gids):
-                if len(full_arr.shape) == 1:
-                    full_arr[i] = self.outputs[gid][dset]
-                else:
-                    full_arr[:, i] = self.outputs[gid][dset]
+        logger.info('Collecting dataset "{}" with final shape {}'
+                    .format(dset, shape))
+        for i, gid in enumerate(self.completed_gids):
+            if len(full_arr.shape) == 1:
+                full_arr[i] = self.outputs[gid][dset]
+            else:
+                full_arr[:, i] = self.outputs[gid][dset]
 
         return full_arr
 
