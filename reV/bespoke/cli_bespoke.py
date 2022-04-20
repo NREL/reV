@@ -111,6 +111,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['MIN_SPACING'] = config.min_spacing
     ctx.obj['GA_TIME'] = config.ga_time
+    ctx.obj['GA_KWARGS'] = config.ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['WS_BINS'] = config.ws_bins
     ctx.obj['WD_BINS'] = config.wd_bins
@@ -186,6 +187,7 @@ def from_config(ctx, config_file, points_range, verbose):
                            points_range=config.points_range,
                            min_spacing=config.min_spacing,
                            ga_time=config.ga_time,
+                           ga_kwargs=config.ga_kwargs,
                            output_request=config.output_request,
                            ws_bins=config.ws_bins,
                            wd_bins=config.wd_bins,
@@ -444,6 +446,7 @@ def get_node_cmd(name, kwargs):
         '-pr {}'.format(SLURM.s(kwargs['POINTS_RANGE'])),
         '-ms {}'.format(SLURM.s(kwargs['MIN_SPACING'])),
         '-ga {}'.format(SLURM.s(kwargs['GA_TIME'])),
+        '-gakw {}'.format(SLURM.s(kwargs['GA_KWARGS'])),
         '-or {}'.format(SLURM.s(kwargs['OUTPUT_REQUEST'])),
         '-ws {}'.format(SLURM.s(kwargs['WS_BINS'])),
         '-wd {}'.format(SLURM.s(kwargs['WD_BINS'])),

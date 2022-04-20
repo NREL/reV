@@ -132,6 +132,11 @@ class BespokeConfig(AnalysisConfig):
         return float(self.get('ga_time', 20))
 
     @property
+    def ga_kwargs(self):
+        """Get the ga_kwargs dictionary. Default is None (default init)."""
+        return self.get('ga_kwargs', None)
+
+    @property
     def output_request(self):
         """Get the list of requested output variables. default is
         ('system_capacity', 'cf_mean')
