@@ -130,9 +130,11 @@ class GeneticAlgorithm():
 
     def initialize_population(self):
         """randomly initialize the parent and offspring populations"""
-        self.parent_population = \
-            np.random.randint(0, high=2, size=(self.population_size,
-                              self.nbits))
+        all_bits_on = np.ones((1, self.nbits))
+        random_bits_on = np.random.randint(
+            0, high=2, size=(self.population_size - 1, self.nbits)
+        )
+        self.parent_population = np.r_[all_bits_on, random_bits_on]
         self.offspring_population = np.zeros_like(self.parent_population)
 
     def initialize_fitness(self):
