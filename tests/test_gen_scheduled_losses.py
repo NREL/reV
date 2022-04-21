@@ -99,7 +99,7 @@ def test_outage_class_missing_keys():
         bad_input.pop(key)
         with pytest.raises(RevLossesValueError) as excinfo:
             Outage(bad_input)
-        assert 'The following required keys are missing' in str(excinfo.value)
+        assert "The following required keys are missing" in str(excinfo.value)
 
 
 def test_outage_class_allowed_months():
@@ -164,6 +164,34 @@ def test_outage_class_duration():
     with pytest.raises(RevLossesValueError) as excinfo:
         Outage(outage_info)
     assert "Duration must be an integer number of hours" in str(excinfo.value)
+
+    outage_info['duration'] = 5
+    assert Outage(outage_info).duration == 5
+
+
+def test_outage_class_percentage():
+    """Test Outage class behavior for different percentage inputs. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 0,
+        'allowed_months': ['Jan'],
+    }
+
+    err_msg = "Percentage of farm down during outage must be in the range"
+
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert err_msg in str(excinfo.value)
+
+    outage_info['percentage_of_farm_down'] = 100.1
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert err_msg in str(excinfo.value)
+
+    outage_info['percentage_of_farm_down'] = 100.0
+    assert Outage(outage_info).percentage_of_farm_down == 100
 
 
 def test_hourly_indices_for_months():
