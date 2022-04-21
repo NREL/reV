@@ -102,6 +102,26 @@ def test_outage_class_missing_keys():
         assert "The following required keys are missing" in str(excinfo.value)
 
 
+def test_outage_class_count():
+    """Test Outage class behavior for different count inputs. """
+
+    outage_info = {
+        'count': 0,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert "Number of outages must be greater than 0" in str(excinfo.value)
+
+    outage_info['count'] = 5.5
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert "Number of outages must be an integer" in str(excinfo.value)
+
+
 def test_outage_class_allowed_months():
     """Test Outage class behavior for different allowed_month inputs. """
 
