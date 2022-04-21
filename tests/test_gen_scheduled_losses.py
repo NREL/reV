@@ -110,25 +110,19 @@ def test_outage_class_allowed_months():
         'duration': 24,
         'percentage_of_farm_down': 100,
         'allowed_months': [],
-        'allow_outage_overlap': True
     }
+
     with pytest.raises(RevLossesValueError) as excinfo:
         Outage(outage_info)
-
     assert "No known month names were provided!" in str(excinfo.value)
 
     outage_info['allowed_months'] = ['Jan', 'unknown_month']
     with pytest.warns(RevLossesWarning) as record:
         outage = Outage(outage_info)
-
     warn_msg = record[0].message.args[0]
     assert "The following month names were not understood" in warn_msg
     assert outage.allowed_months == ['January']
     assert outage.total_available_hours == 31 * 24  # 31 days in Jan
-
-    outage_info['allowed_months'] = ['Jan', 'unknown_month']
-    with pytest.warns(Warning) as record:
-        outage = Outage(outage_info)
 
     outage_info['allowed_months'] = ['mArcH', 'jan']
     outage = Outage(outage_info)
@@ -143,6 +137,33 @@ def test_outage_class_allowed_months():
     outage = Outage(outage_info)
     assert len(outage.allowed_months) == 12
     assert outage.total_available_hours == 8760
+
+
+def test_outage_class_duration():
+    """Test Outage class behavior for different duration inputs. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 0,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    err_msg = "Duration of outage must be between 1 and the total available"
+
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert err_msg in str(excinfo.value)
+
+    outage_info['duration'] = 745
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert err_msg in str(excinfo.value)
+
+    outage_info['duration'] = 10.5
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
+    assert "Duration must be an integer number of hours" in str(excinfo.value)
 
 
 def test_hourly_indices_for_months():
