@@ -433,7 +433,7 @@ class SingleOutageScheduler:
         else:
             self.can_schedule_more &= self.scheduler.total_losses == 0
 
-    def find_random_outage_slice(self, seed):
+    def find_random_outage_slice(self, seed=None):
         """Find a random slot of time for this type of outage.
 
         This function randomly selects a starting time for this outage
@@ -443,8 +443,9 @@ class SingleOutageScheduler:
 
         Parameters
         ----------
-        seed : int
+        seed : int, optional
             Integer used to see the :func:`np.random.choice` call.
+            If `None`, seed is not used.
 
         Returns
         -------
@@ -452,7 +453,8 @@ class SingleOutageScheduler:
             A slice corresponding to the random slot of time for this
             type of outage.
         """
-        np.random.seed(seed)
+        if seed is not None:
+            np.random.seed(seed)
         outage_ind = np.random.choice(np.where(self.can_schedule_more)[0])
         return slice(outage_ind, outage_ind + self.outage.duration)
 
