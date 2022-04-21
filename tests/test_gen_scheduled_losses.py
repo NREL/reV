@@ -14,8 +14,66 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
                             filter_unknown_month_names, month_indices,
                             hourly_indices_for_months, Outage,
-                            OutageScheduler,
+                            OutageScheduler, SingleOutageScheduler,
                             RevLossesValueError, RevLossesWarning)
+
+
+@pytest.mark.parametrize('allow_outage_overlap', [True, False])
+def test_single_outage_scheduler_normal_run(allow_outage_overlap):
+    """Test that single outage is scheduled correctly. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+        'allow_outage_overlap': allow_outage_overlap
+    }
+
+    outage = Outage(outage_info)
+    scheduler = OutageScheduler([])
+    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    so_scheduler.calculate()
+
+    assert scheduler.total_losses[:744].any()
+    assert not scheduler.total_losses[744:].any()
+
+    outage_percentage = outage.percentage_of_farm_down
+    num_expected_outage_hours = (
+        outage.count * outage.duration
+    )
+
+    if not outage.allow_outage_overlap or outage_percentage == 100:
+        num_outage_hours = (scheduler.total_losses == outage_percentage).sum()
+        assert num_outage_hours == num_expected_outage_hours
+    else:
+        num_outage_hours = (scheduler.total_losses >= outage_percentage).sum()
+        assert num_outage_hours >= num_expected_outage_hours
+
+    total_expected_outage = (
+        outage.count * outage.duration * outage.percentage_of_farm_down
+    )
+
+    assert scheduler.total_losses.sum() == total_expected_outage
+
+
+def test_single_outage_scheduler_update_when_can_schedule_from_months():
+    """Test that single outage is scheduled correctly. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    outage = Outage(outage_info)
+    scheduler = OutageScheduler([])
+    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    so_scheduler.update_when_can_schedule_from_months()
+
+    assert so_scheduler.can_schedule_more[:744].all()
+    assert not so_scheduler.can_schedule_more[744:].any()
 
 
 def test_outage_scheduler_normal_run():
