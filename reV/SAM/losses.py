@@ -132,9 +132,15 @@ class Outage:
 
     def _validate_duration(self):
         """Validate that the duration is between 0 and the max total. """
-        if not 0 <= self.duration <= self.total_available_hours:
+        if not isinstance(self.duration, int):
+            msg = ("Duration must be an integer number of hours, "
+                   "but got {} for {}").format(self.duration, self.name)
+            logger.error(msg)
+            raise RevLossesValueError(msg)
+
+        if not 1 <= self.duration <= self.total_available_hours:
             msg = (
-                "Duration of outage must be between 0 and the total available "
+                "Duration of outage must be between 1 and the total available "
                 "hours based on allowed month input ({} for a total hour "
                 "count of {}), but got {} for {}"
             ).format(self.allowed_months, self.total_available_hours,
