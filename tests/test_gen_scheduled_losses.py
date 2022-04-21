@@ -232,6 +232,24 @@ def test_outage_class_allow_outage_overlap():
     assert not Outage(outage_info).allow_outage_overlap
 
 
+def test_outage_class_name():
+    """Test Outage class behavior for different name inputs."""
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+    expected_name = (
+        "Outage(count=5, duration=24, percentage_of_farm_down=100, "
+        "allowed_months=['January'], allow_outage_overlap=True)"
+    )
+    assert Outage(outage_info).name == expected_name
+    outage_info['name'] = "My Outage"
+    assert Outage(outage_info).name == "My Outage"
+
+
 def test_hourly_indices_for_months():
     """Test that the correct indices are returned for the input months. """
 
