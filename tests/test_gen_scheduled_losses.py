@@ -119,6 +119,7 @@ def test_convert_user_months_input_to_hourly_indices():
 def test_hourly_indices_for_months():
     """Test that the correct indices are returned for the input months. """
 
+    assert not hourly_indices_for_months([])
     assert not hourly_indices_for_months(['Abc'])
 
     indices = hourly_indices_for_months(['January', 'Abc'])
