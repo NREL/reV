@@ -150,10 +150,10 @@ class Outage:
 
     def _validate_percentage(self):
         """Validate that the percentage is between 0 and 100. """
-        if not 0 <= self.percentage_of_farm_down <= 100:
+        if not 0 < self.percentage_of_farm_down <= 100:
             msg = (
-                "Percentage of farm down during outage must be between "
-                "0 and 100, but got {} for {}"
+                "Percentage of farm down during outage must be in the range "
+                "(0 and 100], but got {} for {}"
             ).format(self.percentage_of_farm_down, self.name)
             logger.error(msg)
             raise RevLossesValueError(msg)
