@@ -51,7 +51,8 @@ class Outage:
             dictionary must contain the following keys:
                 - `count`
                     An integer value representing the total number of
-                    times this outage should be scheduled.
+                    times this outage should be scheduled. This number
+                    should be larger than 0.
                 - `duration`
                     An integer value representing the total number of
                     consecutive hours that this outage should take. This
@@ -61,7 +62,7 @@ class Outage:
                     An integer or float value representing the total
                     percentage of the farm that will be take offline for
                     the duration of the outage. This value must be
-                    between 0 and 100.
+                    in the range (0, 100].
                 - `allowed_months`
                     A list of month names corresponding to the allowed
                     months for the scheduled outages. Month names can be
@@ -89,6 +90,7 @@ class Outage:
     def _validate(self):
         """Validate the input specs."""
         self._validate_required_keys_exist()
+        self._validate_count()
         self._validate_and_convert_to_full_name_months()
         self._validate_duration()
         self._validate_percentage()
@@ -101,6 +103,20 @@ class Outage:
                 "The following required keys are missing from the Outage "
                 "specification: {}".format(sorted(missing_keys))
             )
+            logger.error(msg)
+            raise RevLossesValueError(msg)
+
+    def _validate_count(self):
+        """Validate that the total number of outages is an integer. """
+        if not isinstance(self.count, int):
+            msg = "Number of outages must be an integer, but got {} for {}"
+            msg = msg.format(self.count, self.name)
+            logger.error(msg)
+            raise RevLossesValueError(msg)
+
+        if self.count < 1:
+            msg = "Number of outages must be greater than 0, but got {} for {}"
+            msg = msg.format(self.count, self.name)
             logger.error(msg)
             raise RevLossesValueError(msg)
 
@@ -149,11 +165,11 @@ class Outage:
             raise RevLossesValueError(msg)
 
     def _validate_percentage(self):
-        """Validate that the percentage is between 0 and 100. """
+        """Validate that the percentage is in the range (0, 100]. """
         if not 0 < self.percentage_of_farm_down <= 100:
             msg = (
                 "Percentage of farm down during outage must be in the range "
-                "(0 and 100], but got {} for {}"
+                "(0, 100], but got {} for {}"
             ).format(self.percentage_of_farm_down, self.name)
             logger.error(msg)
             raise RevLossesValueError(msg)
