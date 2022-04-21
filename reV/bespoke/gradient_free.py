@@ -52,15 +52,15 @@ class GeneticAlgorithm():
             The maximum time (in seconds) to run the genetic algorithm.
         """
 
-        logger.info('Initializing GeneticAlgorithm...')
-        logger.info('Minimum convergence iterations: {}'
-                    .format(convergence_iters))
-        logger.info('Max iterations (generations): {}'.format(max_generation))
-        logger.info('Population size: {}'.format(population_size))
-        logger.info('Crossover rate: {}'.format(crossover_rate))
-        logger.info('Mutation rate: {}'.format(mutation_rate))
-        logger.info('Convergence tolerance: {}'.format(tol))
-        logger.info('Maximum runtime (in seconds): {}'.format(max_time))
+        logger.debug('Initializing GeneticAlgorithm...')
+        logger.debug('Minimum convergence iterations: {}'
+                     .format(convergence_iters))
+        logger.debug('Max iterations (generations): {}'.format(max_generation))
+        logger.debug('Population size: {}'.format(population_size))
+        logger.debug('Crossover rate: {}'.format(crossover_rate))
+        logger.debug('Mutation rate: {}'.format(mutation_rate))
+        logger.debug('Convergence tolerance: {}'.format(tol))
+        logger.debug('Maximum runtime (in seconds): {}'.format(max_time))
 
         # inputs
         self.bits = bits

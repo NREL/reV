@@ -142,6 +142,7 @@ class BespokeSinglePlant:
         logger.debug('Bespoke objective function: {}'
                      .format(objective_function))
         logger.debug('Bespoke cost function: {}'.format(objective_function))
+        logger.debug('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         if isinstance(min_spacing, str) and min_spacing.endswith('x'):
             rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
@@ -868,6 +869,7 @@ class BespokeWindPlants(AbstractAggregation):
         logger.info('Bespoke objective function: {}'
                     .format(objective_function))
         logger.info('Bespoke cost function: {}'.format(cost_function))
+        logger.info('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         BespokeSinglePlant.check_dependencies()
 
