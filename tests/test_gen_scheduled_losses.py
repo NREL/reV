@@ -13,9 +13,9 @@ import pytest
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
                             filter_unknown_month_names, month_indices,
-                            hourly_indices_for_months,
-                            convert_user_months_input_to_hourly_indices,
-                            ScheduledLosses)
+                            hourly_indices_for_months, Outage,
+                            OutageScheduler,
+                            RevLossesValueError, RevLossesWarning)
 
 
 def test_scheduled_losses_normal_run():
@@ -23,53 +23,54 @@ def test_scheduled_losses_normal_run():
 
     outages_info = [
         {
-            'number_of_outages': 5,
+            'count': 5,
             'duration': 24,
             'percentage_of_farm_down': 100,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
-            'number_of_outages': 5,
+            'count': 5,
             'duration': 10,
             'percentage_of_farm_down': 60,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
-            'number_of_outages': 5,
+            'count': 5,
             'duration': 5,
             'percentage_of_farm_down': 50,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
-            'number_of_outages': 100,
+            'count': 100,
             'duration': 1,
             'percentage_of_farm_down': 10,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
-            'number_of_outages': 100,
+            'count': 100,
             'duration': 2,
             'percentage_of_farm_down': 15,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         }
     ]
-    out = ScheduledLosses(outages_info).calculate()
+    outages = [Outage(spec) for spec in outages_info]
+    out = OutageScheduler(outages).calculate()
 
     assert len(out) == 8760
     assert out[:744].any()
     assert not out[744:].any()
 
-    for outage in outages_info:
-        outage_percentage = outage['percentage_of_farm_down']
+    for outage in outages:
+        outage_percentage = outage.percentage_of_farm_down
         num_expected_outage_hours = (
-            outage['number_of_outages'] * outage['duration']
+            outage.count * outage.duration
         )
-        if not outage['allow_outage_overlap'] or outage_percentage == 100:
+        if not outage.allow_outage_overlap or outage_percentage == 100:
             num_outage_hours = (out == outage_percentage).sum()
             assert num_outage_hours == num_expected_outage_hours
         else:
@@ -77,43 +78,53 @@ def test_scheduled_losses_normal_run():
             assert num_outage_hours >= num_expected_outage_hours
 
     total_expected_outage = sum(
-        o['number_of_outages'] * o['duration'] * o['percentage_of_farm_down']
-        for o in outages_info
+        outage.count * outage.duration * outage.percentage_of_farm_down
+        for outage in outages
     )
     assert out.sum() == total_expected_outage
 
 
-def test_convert_user_months_input_to_hourly_indices():
+def test_outages_class_allowed_months():
     """Test that the correct indices are returned for user input months. """
 
-    assert not convert_user_months_input_to_hourly_indices([])
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': [],
+        'allow_outage_overlap': True
+    }
+    with pytest.raises(RevLossesValueError) as excinfo:
+        Outage(outage_info)
 
-    with pytest.warns(Warning) as record:
-        assert not convert_user_months_input_to_hourly_indices(
-            ['unknown_month']
-        )
+    assert "No known month names were provided!" in str(excinfo.value)
+
+    outage_info['allowed_months'] = ['Jan', 'unknown_month']
+    with pytest.warns(RevLossesWarning) as record:
+        outage = Outage(outage_info)
 
     warn_msg = record[0].message.args[0]
     assert "The following month names were not understood" in warn_msg
+    assert outage.allowed_months == ['January']
+    assert outage.total_available_hours == 31 * 24  # 31 days in Jan
 
-    indices = convert_user_months_input_to_hourly_indices(['january', ' abc '])
-    assert indices[0] == 0
-    assert indices[-1] == len(indices) - 1
-    assert len(indices) == 31 * 24  # 31 days in Jan
-    assert all(i < 31 * 24 for i in indices)
+    outage_info['allowed_months'] = ['Jan', 'unknown_month']
+    with pytest.warns(Warning) as record:
+        outage = Outage(outage_info)
 
-    indices = convert_user_months_input_to_hourly_indices(['march', 'Jan'])
-    assert indices[0] == 0
-    assert len(indices) == (31 + 31) * 24  # 31 days in Jan and Mar
-    assert 744 not in indices
-    assert indices[744] - indices[743] - 1 == 28 * 24  # we skip Feb
+    outage_info['allowed_months'] = ['mArcH', 'jan']
+    outage = Outage(outage_info)
+    assert 'January' in outage.allowed_months
+    assert 'March' in outage.allowed_months
+    assert outage.total_available_hours == (31 + 31) * 24
 
-    all_months = ['Jan', 'March', 'April  ', 'mAy', 'jun', 'July', 'October',
-                  'November', 'September', 'feb', 'December', 'August', 'May']
-    indices = convert_user_months_input_to_hourly_indices(all_months)
-    assert indices[0] == 0
-    assert indices[-1] == len(indices) - 1
-    assert len(indices) == 8760
+    outage_info['allowed_months'] = [
+        'Jan', 'March', 'April  ', 'mAy', 'jun', 'July', 'October',
+        'November', 'September', 'feb', 'December', 'August', 'May'
+    ]
+    outage = Outage(outage_info)
+    assert len(outage.allowed_months) == 12
+    assert outage.total_available_hours == 8760
 
 
 def test_hourly_indices_for_months():
