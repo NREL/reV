@@ -84,8 +84,26 @@ def test_scheduled_losses_normal_run():
     assert out.sum() == total_expected_outage
 
 
-def test_outages_class_allowed_months():
-    """Test that the correct indices are returned for user input months. """
+def test_outage_class_missing_keys():
+    """Test Outage class behavior for inputs with missing keys. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    for key in outage_info:
+        bad_input = outage_info.copy()
+        bad_input.pop(key)
+        with pytest.raises(RevLossesValueError) as excinfo:
+            Outage(bad_input)
+        assert 'The following required keys are missing' in str(excinfo.value)
+
+
+def test_outage_class_allowed_months():
+    """Test Outage class behavior for different allowed_month inputs. """
 
     outage_info = {
         'count': 5,
