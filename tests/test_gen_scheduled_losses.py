@@ -18,7 +18,7 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             RevLossesValueError, RevLossesWarning)
 
 
-def test_scheduled_losses_normal_run():
+def test_outage_scheduler_normal_run():
     """Test hourly outage losses for a reasonable outage info input. """
 
     outages_info = [
