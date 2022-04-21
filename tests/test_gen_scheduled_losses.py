@@ -214,6 +214,24 @@ def test_outage_class_percentage():
     assert Outage(outage_info).percentage_of_farm_down == 100
 
 
+def test_outage_class_allow_outage_overlap():
+    """
+    Test Outage class behavior for different allow_outage_overlap inputs.
+    """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+    assert Outage(outage_info).allow_outage_overlap
+    outage_info['allow_outage_overlap'] = True
+    assert Outage(outage_info).allow_outage_overlap
+    outage_info['allow_outage_overlap'] = False
+    assert not Outage(outage_info).allow_outage_overlap
+
+
 def test_hourly_indices_for_months():
     """Test that the correct indices are returned for the input months. """
 
