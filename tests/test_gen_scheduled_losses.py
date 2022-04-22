@@ -76,6 +76,78 @@ def test_single_outage_scheduler_update_when_can_schedule_from_months():
     assert not so_scheduler.can_schedule_more[744:].any()
 
 
+def test_single_outage_scheduler_update_when_can_schedule():
+    """Test that single outage is scheduled correctly. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    outage = Outage(outage_info)
+    scheduler = OutageScheduler([])
+    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    so_scheduler.update_when_can_schedule_from_months()
+
+    scheduler.can_schedule_more[:10] = False
+    scheduler.total_losses[740:744] = 10
+    so_scheduler.update_when_can_schedule()
+
+    assert so_scheduler.can_schedule_more[10:740].all()
+    assert not so_scheduler.can_schedule_more[0:10].any()
+    assert not so_scheduler.can_schedule_more[740:].any()
+
+
+def test_single_outage_scheduler_find_random_outage_slice():
+    """Test single outage class method. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+    }
+
+    outage = Outage(outage_info)
+    scheduler = OutageScheduler([])
+    so_scheduler = SingleOutageScheduler(outage, scheduler)
+
+    so_scheduler.update_when_can_schedule_from_months()
+    random_slice = so_scheduler.find_random_outage_slice()
+    assert 0 <= random_slice.start < 744
+    assert 0 < random_slice.stop <= 744
+
+    slice_len = random_slice.stop - random_slice.start
+    assert slice_len == so_scheduler.outage.duration
+
+
+@pytest.mark.parametrize('allow_outage_overlap', [True, False])
+def test_single_outage_scheduler_schedule_losses(allow_outage_overlap):
+    """Test single outage class method. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 24,
+        'percentage_of_farm_down': 100,
+        'allowed_months': ['Jan'],
+        'allow_outage_overlap': allow_outage_overlap
+    }
+
+    outage = Outage(outage_info)
+    scheduler = OutageScheduler([])
+    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    so_scheduler.update_when_can_schedule_from_months()
+
+    so_scheduler.schedule_losses(slice(0, 25))
+
+    assert (so_scheduler.scheduler.total_losses[0:25] == 100).all()
+
+    if not outage.allow_outage_overlap:
+        assert not (so_scheduler.scheduler.can_schedule_more[0:25]).any()
+
+
 def test_outage_scheduler_normal_run():
     """Test hourly outage losses for a reasonable outage info input. """
 
