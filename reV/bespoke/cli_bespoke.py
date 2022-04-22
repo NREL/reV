@@ -110,7 +110,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['POINTS_RANGE'] = config.points_range
     ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['MIN_SPACING'] = config.min_spacing
-    ctx.obj['GA_TIME'] = config.ga_time
+    ctx.obj['GA_KWARGS'] = config.ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['WS_BINS'] = config.ws_bins
     ctx.obj['WD_BINS'] = config.wd_bins
@@ -185,7 +185,7 @@ def from_config(ctx, config_file, points_range, verbose):
                            sam_files=config.sam_files,
                            points_range=config.points_range,
                            min_spacing=config.min_spacing,
-                           ga_time=config.ga_time,
+                           ga_kwargs=config.ga_kwargs,
                            output_request=config.output_request,
                            ws_bins=config.ws_bins,
                            wd_bins=config.wd_bins,
@@ -272,9 +272,9 @@ def valid_config_keys():
               help='Minimum spacing between turbines in meters. Can also be '
               'a string like "5x" (default) which is interpreted as 5 times '
               'the turbine rotor diameter.')
-@click.option('--ga_time', '-ga', default=20, type=FLOAT, show_default=True,
-              help='Cutoff time for single-plant genetic algorithm '
-              'optimization in seconds.')
+@click.option('--ga_kwargs', '-gakw', type=STR, default=None,
+              show_default=True,
+              help='Dictionary of keyword arguments to pass to GA initialization.')
 @click.option('--output_request', '-or', type=STRLIST,
               default=['cf_mean', 'system_capacity'], show_default=True,
               help=('List of requested output variable names from SAM.'))
@@ -331,7 +331,7 @@ def valid_config_keys():
 @click.pass_context
 def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            cost_function, points, sam_files, points_range, min_spacing,
-           ga_time, output_request, ws_bins, wd_bins, excl_dict,
+           ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
            area_filter_kernel, min_area, resolution, excl_area,
            log_dir, max_workers, pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
@@ -345,7 +345,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['POINTS_RANGE'] = points_range
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['MIN_SPACING'] = min_spacing
-    ctx.obj['GA_TIME'] = ga_time
+    ctx.obj['GA_KWARGS'] = ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['WS_BINS'] = ws_bins
     ctx.obj['WD_BINS'] = wd_bins
@@ -375,6 +375,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
         if isinstance(excl_dict, str):
             excl_dict = dict_str_load(excl_dict)
 
+        if isinstance(ga_kwargs, str):
+            ga_kwargs = dict_str_load(ga_kwargs)
+
         t0 = time.time()
 
         try:
@@ -385,7 +388,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 points, sam_files,
                 points_range=points_range,
                 min_spacing=min_spacing,
-                ga_time=ga_time,
+                ga_kwargs=ga_kwargs,
                 output_request=output_request,
                 ws_bins=ws_bins,
                 wd_bins=wd_bins,
@@ -435,7 +438,7 @@ def get_node_cmd(name, kwargs):
         '-sf {}'.format(SLURM.s(kwargs['SAM_FILES'])),
         '-pr {}'.format(SLURM.s(kwargs['POINTS_RANGE'])),
         '-ms {}'.format(SLURM.s(kwargs['MIN_SPACING'])),
-        '-ga {}'.format(SLURM.s(kwargs['GA_TIME'])),
+        '-gakw {}'.format(SLURM.s(kwargs['GA_KWARGS'])),
         '-or {}'.format(SLURM.s(kwargs['OUTPUT_REQUEST'])),
         '-ws {}'.format(SLURM.s(kwargs['WS_BINS'])),
         '-wd {}'.format(SLURM.s(kwargs['WD_BINS'])),
