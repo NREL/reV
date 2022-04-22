@@ -18,21 +18,35 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             RevLossesValueError, RevLossesWarning)
 
 
-@pytest.mark.parametrize('allow_outage_overlap', [True, False])
-def test_single_outage_scheduler_normal_run(allow_outage_overlap):
-    """Test that single outage is scheduled correctly. """
-
+@pytest.fixture
+def basic_outage_dict():
+    """Return a basic outage dictionary."""
     outage_info = {
         'count': 5,
         'duration': 24,
         'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-        'allow_outage_overlap': allow_outage_overlap
+        'allowed_months': ['Jan']
     }
+    return outage_info
 
-    outage = Outage(outage_info)
+
+@pytest.fixture
+def so_scheduler(basic_outage_dict):
+    """Return a basic initalized `SingleOutageScheduler` object."""
+    outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
-    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    return SingleOutageScheduler(outage, scheduler)
+
+
+@pytest.mark.parametrize('allow_outage_overlap', [True, False])
+def test_single_outage_scheduler_normal_run(
+    allow_outage_overlap, so_scheduler
+):
+    """Test that single outage is scheduled correctly. """
+
+    so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
+    outage = so_scheduler.outage
+    scheduler = so_scheduler.scheduler
     so_scheduler.calculate()
 
     assert scheduler.total_losses[:744].any()
@@ -57,42 +71,24 @@ def test_single_outage_scheduler_normal_run(allow_outage_overlap):
     assert scheduler.total_losses.sum() == total_expected_outage
 
 
-def test_single_outage_scheduler_update_when_can_schedule_from_months():
+def test_single_outage_scheduler_update_when_can_schedule_from_months(
+    so_scheduler
+):
     """Test that single outage is scheduled correctly. """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-
-    outage = Outage(outage_info)
-    scheduler = OutageScheduler([])
-    so_scheduler = SingleOutageScheduler(outage, scheduler)
     so_scheduler.update_when_can_schedule_from_months()
 
     assert so_scheduler.can_schedule_more[:744].all()
     assert not so_scheduler.can_schedule_more[744:].any()
 
 
-def test_single_outage_scheduler_update_when_can_schedule():
+def test_single_outage_scheduler_update_when_can_schedule(so_scheduler):
     """Test that single outage is scheduled correctly. """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-
-    outage = Outage(outage_info)
-    scheduler = OutageScheduler([])
-    so_scheduler = SingleOutageScheduler(outage, scheduler)
     so_scheduler.update_when_can_schedule_from_months()
 
-    scheduler.can_schedule_more[:10] = False
-    scheduler.total_losses[740:744] = 10
+    so_scheduler.scheduler.can_schedule_more[:10] = False
+    so_scheduler.scheduler.total_losses[740:744] = 10
     so_scheduler.update_when_can_schedule()
 
     assert so_scheduler.can_schedule_more[10:740].all()
@@ -100,19 +96,8 @@ def test_single_outage_scheduler_update_when_can_schedule():
     assert not so_scheduler.can_schedule_more[740:].any()
 
 
-def test_single_outage_scheduler_find_random_outage_slice():
+def test_single_outage_scheduler_find_random_outage_slice(so_scheduler):
     """Test single outage class method. """
-
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-
-    outage = Outage(outage_info)
-    scheduler = OutageScheduler([])
-    so_scheduler = SingleOutageScheduler(outage, scheduler)
 
     so_scheduler.update_when_can_schedule_from_months()
     random_slice = so_scheduler.find_random_outage_slice()
@@ -124,27 +109,19 @@ def test_single_outage_scheduler_find_random_outage_slice():
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
-def test_single_outage_scheduler_schedule_losses(allow_outage_overlap):
+def test_single_outage_scheduler_schedule_losses(
+    allow_outage_overlap, so_scheduler
+):
     """Test single outage class method. """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-        'allow_outage_overlap': allow_outage_overlap
-    }
-
-    outage = Outage(outage_info)
-    scheduler = OutageScheduler([])
-    so_scheduler = SingleOutageScheduler(outage, scheduler)
+    so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
     so_scheduler.update_when_can_schedule_from_months()
 
     so_scheduler.schedule_losses(slice(0, 25))
 
     assert (so_scheduler.scheduler.total_losses[0:25] == 100).all()
 
-    if not outage.allow_outage_overlap:
+    if not so_scheduler.outage.allow_outage_overlap:
         assert not (so_scheduler.scheduler.can_schedule_more[0:25]).any()
 
 
@@ -214,170 +191,127 @@ def test_outage_scheduler_normal_run():
     assert out.sum() == total_expected_outage
 
 
-def test_outage_class_missing_keys():
+def test_outage_class_missing_keys(basic_outage_dict):
     """Test Outage class behavior for inputs with missing keys. """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-
-    for key in outage_info:
-        bad_input = outage_info.copy()
+    for key in basic_outage_dict:
+        bad_input = basic_outage_dict.copy()
         bad_input.pop(key)
         with pytest.raises(RevLossesValueError) as excinfo:
             Outage(bad_input)
         assert "The following required keys are missing" in str(excinfo.value)
 
 
-def test_outage_class_count():
+def test_outage_class_count(basic_outage_dict):
     """Test Outage class behavior for different count inputs. """
 
-    outage_info = {
-        'count': 0,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-
+    basic_outage_dict['count'] = 0
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert "Number of outages must be greater than 0" in str(excinfo.value)
 
-    outage_info['count'] = 5.5
+    basic_outage_dict['count'] = 5.5
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert "Number of outages must be an integer" in str(excinfo.value)
 
 
-def test_outage_class_allowed_months():
+def test_outage_class_allowed_months(basic_outage_dict):
     """Test Outage class behavior for different allowed_month inputs. """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': [],
-    }
-
+    basic_outage_dict['allowed_months'] = []
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert "No known month names were provided!" in str(excinfo.value)
 
-    outage_info['allowed_months'] = ['Jan', 'unknown_month']
+    basic_outage_dict['allowed_months'] = ['Jan', 'unknown_month']
     with pytest.warns(RevLossesWarning) as record:
-        outage = Outage(outage_info)
+        outage = Outage(basic_outage_dict)
     warn_msg = record[0].message.args[0]
     assert "The following month names were not understood" in warn_msg
     assert outage.allowed_months == ['January']
     assert outage.total_available_hours == 31 * 24  # 31 days in Jan
 
-    outage_info['allowed_months'] = ['mArcH', 'jan']
-    outage = Outage(outage_info)
+    basic_outage_dict['allowed_months'] = ['mArcH', 'jan']
+    outage = Outage(basic_outage_dict)
     assert 'January' in outage.allowed_months
     assert 'March' in outage.allowed_months
     assert outage.total_available_hours == (31 + 31) * 24
 
-    outage_info['allowed_months'] = [
+    basic_outage_dict['allowed_months'] = [
         'Jan', 'March', 'April  ', 'mAy', 'jun', 'July', 'October',
         'November', 'September', 'feb', 'December', 'August', 'May'
     ]
-    outage = Outage(outage_info)
+    outage = Outage(basic_outage_dict)
     assert len(outage.allowed_months) == 12
     assert outage.total_available_hours == 8760
 
 
-def test_outage_class_duration():
+def test_outage_class_duration(basic_outage_dict):
     """Test Outage class behavior for different duration inputs. """
-
-    outage_info = {
-        'count': 5,
-        'duration': 0,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
 
     err_msg = "Duration of outage must be between 1 and the total available"
 
+    basic_outage_dict['duration'] = 0
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    outage_info['duration'] = 745
+    basic_outage_dict['duration'] = 745
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    outage_info['duration'] = 10.5
+    basic_outage_dict['duration'] = 10.5
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert "Duration must be an integer number of hours" in str(excinfo.value)
 
-    outage_info['duration'] = 5
-    assert Outage(outage_info).duration == 5
+    basic_outage_dict['duration'] = 5
+    assert Outage(basic_outage_dict).duration == 5
 
 
-def test_outage_class_percentage():
+def test_outage_class_percentage(basic_outage_dict):
     """Test Outage class behavior for different percentage inputs. """
-
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 0,
-        'allowed_months': ['Jan'],
-    }
 
     err_msg = "Percentage of farm down during outage must be in the range"
 
+    basic_outage_dict['percentage_of_farm_down'] = 0
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    outage_info['percentage_of_farm_down'] = 100.1
+    basic_outage_dict['percentage_of_farm_down'] = 100.1
     with pytest.raises(RevLossesValueError) as excinfo:
-        Outage(outage_info)
+        Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    outage_info['percentage_of_farm_down'] = 100.0
-    assert Outage(outage_info).percentage_of_farm_down == 100
+    basic_outage_dict['percentage_of_farm_down'] = 100.0
+    assert Outage(basic_outage_dict).percentage_of_farm_down == 100
 
 
-def test_outage_class_allow_outage_overlap():
+def test_outage_class_allow_outage_overlap(basic_outage_dict):
     """
     Test Outage class behavior for different allow_outage_overlap inputs.
     """
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
-    assert Outage(outage_info).allow_outage_overlap
-    outage_info['allow_outage_overlap'] = True
-    assert Outage(outage_info).allow_outage_overlap
-    outage_info['allow_outage_overlap'] = False
-    assert not Outage(outage_info).allow_outage_overlap
+    assert Outage(basic_outage_dict).allow_outage_overlap
+    basic_outage_dict['allow_outage_overlap'] = True
+    assert Outage(basic_outage_dict).allow_outage_overlap
+    basic_outage_dict['allow_outage_overlap'] = False
+    assert not Outage(basic_outage_dict).allow_outage_overlap
 
 
-def test_outage_class_name():
+def test_outage_class_name(basic_outage_dict):
     """Test Outage class behavior for different name inputs."""
 
-    outage_info = {
-        'count': 5,
-        'duration': 24,
-        'percentage_of_farm_down': 100,
-        'allowed_months': ['Jan'],
-    }
     expected_name = (
         "Outage(count=5, duration=24, percentage_of_farm_down=100, "
         "allowed_months=['January'], allow_outage_overlap=True)"
     )
-    assert Outage(outage_info).name == expected_name
-    outage_info['name'] = "My Outage"
-    assert Outage(outage_info).name == "My Outage"
+    assert Outage(basic_outage_dict).name == expected_name
+    basic_outage_dict['name'] = "My Outage"
+    assert Outage(basic_outage_dict).name == "My Outage"
 
 
 def test_hourly_indices_for_months():
