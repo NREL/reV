@@ -290,8 +290,9 @@ class OutageScheduler:
         """Calculate total losses from stochastically scheduled outages.
 
         This function calls :meth:`SingleOutageScheduler.calculate`
-        on every outage input and returns the aggregate the losses from
-        the result.
+        on every outage input (sorted by largest duration and then
+        largest number of outages) and returns the aggregate the losses
+        from the result.
 
         Returns
         -------
@@ -300,7 +301,10 @@ class OutageScheduler:
             percentage resulting from the stochastically scheduled
             outages.
         """
-        for outage in self.outages:
+        sorted_outages = sorted(
+            self.outages, key=lambda outage: (outage.duration, outage.count)
+        )
+        for outage in sorted_outages[::-1]:
             SingleOutageScheduler(outage, self).calculate()
         return self.total_losses
 
