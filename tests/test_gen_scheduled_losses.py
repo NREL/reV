@@ -18,6 +18,63 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             RevLossesValueError, RevLossesWarning)
 
 
+NOMINAL_OUTAGES = [
+    [
+        {
+            'count': 5,
+            'duration': 24,
+            'percentage_of_farm_down': 100,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        },
+        {
+            'count': 5,
+            'duration': 10,
+            'percentage_of_farm_down': 60,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        },
+        {
+            'count': 5,
+            'duration': 5,
+            'percentage_of_farm_down': 50,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': False
+        },
+        {
+            'count': 100,
+            'duration': 1,
+            'percentage_of_farm_down': 10,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': False
+        },
+        {
+            'count': 100,
+            'duration': 2,
+            'percentage_of_farm_down': 15,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        }
+    ],
+    [
+        {
+            'count': 1,
+            'duration': 744,
+            'percentage_of_farm_down': 60,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        },
+        {
+            'count': 5,
+            'duration': 10,
+            'percentage_of_farm_down': 10,
+            'allowed_months': ['January'],
+            'allow_outage_overlap': True
+        }
+    ]
+]
+
+
 @pytest.fixture
 def basic_outage_dict():
     """Return a basic outage dictionary."""
@@ -125,46 +182,10 @@ def test_single_outage_scheduler_schedule_losses(
         assert not (so_scheduler.scheduler.can_schedule_more[0:25]).any()
 
 
-def test_outage_scheduler_normal_run():
+@pytest.mark.parametrize('outages_info', NOMINAL_OUTAGES)
+def test_outage_scheduler_normal_run(outages_info):
     """Test hourly outage losses for a reasonable outage info input. """
 
-    outages_info = [
-        {
-            'count': 5,
-            'duration': 24,
-            'percentage_of_farm_down': 100,
-            'allowed_months': ['January'],
-            'allow_outage_overlap': True
-        },
-        {
-            'count': 5,
-            'duration': 10,
-            'percentage_of_farm_down': 60,
-            'allowed_months': ['January'],
-            'allow_outage_overlap': True
-        },
-        {
-            'count': 5,
-            'duration': 5,
-            'percentage_of_farm_down': 50,
-            'allowed_months': ['January'],
-            'allow_outage_overlap': False
-        },
-        {
-            'count': 100,
-            'duration': 1,
-            'percentage_of_farm_down': 10,
-            'allowed_months': ['January'],
-            'allow_outage_overlap': False
-        },
-        {
-            'count': 100,
-            'duration': 2,
-            'percentage_of_farm_down': 15,
-            'allowed_months': ['January'],
-            'allow_outage_overlap': True
-        }
-    ]
     outages = [Outage(spec) for spec in outages_info]
     losses = OutageScheduler(outages).calculate()
 
