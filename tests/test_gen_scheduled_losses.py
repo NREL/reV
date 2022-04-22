@@ -166,11 +166,11 @@ def test_outage_scheduler_normal_run():
         }
     ]
     outages = [Outage(spec) for spec in outages_info]
-    out = OutageScheduler(outages).calculate()
+    losses = OutageScheduler(outages).calculate()
 
-    assert len(out) == 8760
-    assert out[:744].any()
-    assert not out[744:].any()
+    assert len(losses) == 8760
+    assert losses[:744].any()
+    assert not losses[744:].any()
 
     for outage in outages:
         outage_percentage = outage.percentage_of_farm_down
@@ -178,17 +178,26 @@ def test_outage_scheduler_normal_run():
             outage.count * outage.duration
         )
         if not outage.allow_outage_overlap or outage_percentage == 100:
-            num_outage_hours = (out == outage_percentage).sum()
+            num_outage_hours = (losses == outage_percentage).sum()
             assert num_outage_hours == num_expected_outage_hours
         else:
-            num_outage_hours = (out >= outage_percentage).sum()
+            num_outage_hours = (losses >= outage_percentage).sum()
             assert num_outage_hours >= num_expected_outage_hours
 
     total_expected_outage = sum(
         outage.count * outage.duration * outage.percentage_of_farm_down
         for outage in outages
     )
-    assert out.sum() == total_expected_outage
+    assert losses.sum() == total_expected_outage
+
+
+def test_outage_scheduler_no_outages():
+    """Test hourly outage losses for no outage input. """
+
+    losses = OutageScheduler([]).calculate()
+
+    assert len(losses) == 8760
+    assert not losses.any()
 
 
 def test_outage_class_missing_keys(basic_outage_dict):
