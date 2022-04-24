@@ -248,6 +248,13 @@ class OutageScheduler:
     outages : :obj:`list` of :obj:`Outages <Outage>`
         The user-provided list of :obj:`Outages <Outage>` containing
         info about all types of outages to be scheduled.
+    seed : :obj:`int`
+        The seed value used to seed the random generator in order
+        to produce random but reproducible losses. This is useful
+        for ensuring that stochastically scheduled losses vary
+        between different sites (i.e. that randomly scheduled
+        outages in two different location do not match perfectly on
+        an hourly basis).
     total_losses : :obj:`np.array`
         An array (of length 8760) containing the per-hour total loss
         percentage resulting from the stochastically scheduled outages.
@@ -273,7 +280,7 @@ class OutageScheduler:
     :class:`Outage` : Specifications for a single outage.
     """
 
-    def __init__(self, outages):
+    def __init__(self, outages, seed=None):
         """
         Parameters
         ----------
@@ -282,8 +289,16 @@ class OutageScheduler:
             contains info about a single type of outage. See the
             documentation of :class:`Outage` for a description of the
             required keys of each outage dictionary.
+        seed : int or `None`
+            An integer value used to seed the random generator in order
+            to produce random but reproducible losses. This is useful
+            for ensuring that stochastically scheduled losses vary
+            between different sites (i.e. that randomly scheduled
+            outages in two different location do not match perfectly on
+            an hourly basis). If `None`, the seed is set to 0.
         """
         self.outages = outages
+        self.seed = seed or 0
         self.total_losses = np.zeros(8760)
         self.can_schedule_more = np.full(8760, True)
 
@@ -389,7 +404,9 @@ class SingleOutageScheduler:
 
         for iter_ind in range(self.outage.count + self.MAX_ITER):
             self.update_when_can_schedule()
-            outage_slice = self.find_random_outage_slice(iter_ind)
+            outage_slice = self.find_random_outage_slice(
+                seed=self.scheduler.seed + iter_ind
+            )
             if self.can_schedule_more[outage_slice].all():
                 self.schedule_losses(outage_slice)
             if len(self._scheduled_outage_inds) == self.outage.count:
