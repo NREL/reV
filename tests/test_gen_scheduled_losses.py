@@ -8,6 +8,7 @@ Created on Mon Apr 18 12:52:16 2021
 """
 
 import os
+import py
 import pytest
 import tempfile
 import json
@@ -105,70 +106,6 @@ def so_scheduler(basic_outage_dict):
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
-
-
-@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-def test_scheduled_losses_mixin_class_outage_info_from_configs(outages):
-    """Test mixin class behavior when retrieving outage info. """
-
-    mixin = ScheduledLossesMixin()
-    mixin.site_sys_inputs = {}
-    mixin.sam_sys_inputs = {
-        'reV-outages': outages
-    }
-    outage_info = mixin.outage_info_from_configs()
-
-    assert outage_info == outages
-    assert 'reV-outages' not in mixin.sam_sys_inputs
-
-    site_outage = [{
-        'count': 123,
-        'duration': 20,
-        'percentage_of_farm_down': 42,
-        'allowed_months': ['February'],
-    }]
-
-    mixin.site_sys_inputs = {'reV-outages': json.dumps(site_outage)}
-    mixin.sam_sys_inputs = {
-        'reV-outages': outages
-    }
-    outage_info = mixin.outage_info_from_configs()
-
-    assert outage_info == site_outage
-    assert 'reV-outages' not in mixin.sam_sys_inputs
-    assert 'reV-outages' not in mixin.site_sys_inputs
-
-
-@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
-    """Test mixin class behavior when adding losses. """
-
-    mixin = ScheduledLossesMixin()
-    mixin.site_sys_inputs = {}
-    mixin.sam_sys_inputs = {
-        'reV-outages': outages
-    }
-    mixin.add_scheduled_losses()
-
-    assert 'reV-outages' not in mixin.sam_sys_inputs
-    assert 'hourly' in mixin.sam_sys_inputs
-
-    site_outage = [{
-        'count': 123,
-        'duration': 20,
-        'percentage_of_farm_down': 42,
-        'allowed_months': ['February'],
-    }]
-
-    mixin.site_sys_inputs = {'reV-outages': json.dumps(site_outage)}
-    mixin.sam_sys_inputs = {
-        'reV-outages': outages
-    }
-    mixin.add_scheduled_losses()
-
-    assert 'reV-outages' not in mixin.sam_sys_inputs
-    assert 'reV-outages' not in mixin.site_sys_inputs
-    assert 'hourly' in mixin.sam_sys_inputs
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
@@ -291,6 +228,70 @@ def test_scheduled_losses_wind(generic_losses, outages):
 
         error_msg = "Scheduled losses do not vary between sites!"
         assert any(inds - common_inds for inds in site_loss_inds), error_msg
+
+
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+def test_scheduled_losses_mixin_class_outage_info_from_configs(outages):
+    """Test mixin class behavior when retrieving outage info. """
+
+    mixin = ScheduledLossesMixin()
+    mixin.site_sys_inputs = {}
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    outage_info = mixin.outage_info_from_configs()
+
+    assert outage_info == outages
+    assert 'reV-outages' not in mixin.sam_sys_inputs
+
+    site_outage = [{
+        'count': 123,
+        'duration': 20,
+        'percentage_of_farm_down': 42,
+        'allowed_months': ['February'],
+    }]
+
+    mixin.site_sys_inputs = {'reV-outages': json.dumps(site_outage)}
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    outage_info = mixin.outage_info_from_configs()
+
+    assert outage_info == site_outage
+    assert 'reV-outages' not in mixin.sam_sys_inputs
+    assert 'reV-outages' not in mixin.site_sys_inputs
+
+
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
+    """Test mixin class behavior when adding losses. """
+
+    mixin = ScheduledLossesMixin()
+    mixin.site_sys_inputs = {}
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    mixin.add_scheduled_losses()
+
+    assert 'reV-outages' not in mixin.sam_sys_inputs
+    assert 'hourly' in mixin.sam_sys_inputs
+
+    site_outage = [{
+        'count': 123,
+        'duration': 20,
+        'percentage_of_farm_down': 42,
+        'allowed_months': ['February'],
+    }]
+
+    mixin.site_sys_inputs = {'reV-outages': json.dumps(site_outage)}
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    mixin.add_scheduled_losses()
+
+    assert 'reV-outages' not in mixin.sam_sys_inputs
+    assert 'reV-outages' not in mixin.site_sys_inputs
+    assert 'hourly' in mixin.sam_sys_inputs
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
@@ -417,6 +418,31 @@ def test_outage_scheduler_no_outages():
 
     assert len(losses) == 8760
     assert not losses.any()
+
+
+def test_outage_scheduler_cannot_schedule_any_more():
+    """Test scheduler when little or no outages are allowed. """
+
+    outage_info = {
+        'count': 5,
+        'duration': 10,
+        'percentage_of_farm_down': 17,
+        'allowed_months': ['January'],
+        'allow_outage_overlap': False
+    }
+    losses = OutageScheduler([Outage(outage_info)])
+    losses.can_schedule_more[:31 * 24] = False
+
+    with pytest.warns(RevLossesWarning) as record:
+        losses.calculate()
+    warn_msg = record[0].message.args[0]
+    assert "Could not schedule any requested outages" in warn_msg
+
+    losses.can_schedule_more[100:130] = True
+    with pytest.warns(RevLossesWarning) as record:
+        losses.calculate()
+    warn_msg = record[0].message.args[0]
+    assert "Could only schedule" in warn_msg
 
 
 def test_outage_class_missing_keys(basic_outage_dict):
