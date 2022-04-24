@@ -501,7 +501,14 @@ class SingleOutageScheduler:
 
 
 class ScheduledLossesMixin:
-    """Mixin class for :class:`reV.SAM.SAM.RevPySam`."""
+    """Mixin class for :class:`reV.SAM.SAM.RevPySam`.
+
+    Warning
+    -------
+    Using this class for anything excpet as a mixin for
+    :class:`reV.SAM.SAM.RevPySam` may result in unexpected results
+    and/or errors.
+    """
 
     def add_scheduled_losses(self):
         """Add stochastically scheduled losses to SAM config file.
@@ -556,12 +563,13 @@ class ScheduledLossesMixin:
         :obj:`list` | :obj:`None`
             List of dictionaries containing outage specifications.
         """
+        general_outage_info = self.sam_sys_inputs.pop('reV-outages', None)
 
         reV_outages = self.site_sys_inputs.pop('reV-outages', None)
         if reV_outages is not None:
             return json.loads(reV_outages)
 
-        return self.sam_sys_inputs.pop('reV-outages', None)
+        return general_outage_info
 
     @property
     def outage_seed(self):
@@ -573,7 +581,7 @@ class ScheduledLossesMixin:
 
         try:
             return hash(tuple(self.meta))
-        except TypeError:
+        except (AttributeError, TypeError):
             pass
 
         return 0
