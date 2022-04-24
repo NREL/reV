@@ -9,7 +9,13 @@ Created on Mon Apr 18 12:52:16 2021
 
 import os
 import pytest
+import tempfile
+import json
 
+import numpy as np
+
+from reV import TESTDATADIR
+from reV.generation.generation import Gen
 from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             month_index, convert_to_full_month_names,
                             filter_unknown_month_names, month_indices,
@@ -18,6 +24,9 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
                             RevLossesValueError, RevLossesWarning)
 
 
+REV2_POINTS = slice(0, 5)
+SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
 NOMINAL_OUTAGES = [
     [
         {
@@ -93,6 +102,76 @@ def so_scheduler(basic_outage_dict):
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
+
+
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+def test_scheduled_losses_wind(generic_losses, outages):
+    """Test varying wind turbine losses"""
+
+    with tempfile.TemporaryDirectory() as td:
+        with open(SAM_FILE, 'r') as fh:
+            sam_config = json.load(fh)
+        del sam_config['wind_farm_losses_percent']
+        sam_config['turb_generic_loss'] = generic_losses
+        sam_config['reV-outages'] = outages
+        sam_fp = os.path.join(td, 'wind_gen_standard_losses_0.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        pc = Gen.get_pc(REV2_POINTS, None, sam_fp, 'windpower',
+                        sites_per_worker=3, res_file=RES_FILE)
+
+        gen = Gen.reV_run('windpower', pc, sam_fp, RES_FILE,
+                          output_request=('cf_mean', 'cf_profile'),
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+    gen_profiles_with_losses = gen.out['cf_profile']
+
+    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
+                    sites_per_worker=3, res_file=RES_FILE)
+    del pc.project_points.sam_inputs[SAM_FILE]['wind_farm_losses_percent']
+    pc.project_points.sam_inputs[SAM_FILE]['turb_generic_loss'] = (
+        generic_losses
+    )
+
+    gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
+                      output_request=('cf_mean', 'cf_profile'),
+                      max_workers=1, sites_per_worker=3, out_fpath=None)
+    gen_profiles = gen.out['cf_profile']
+
+    outages = [Outage(outage) for outage in outages]
+    profiles = zip(gen_profiles.T, gen_profiles_with_losses.T)
+    site_loss_inds = []
+    zero_gen_inds = set()
+    for site_gen, site_gen_losses in profiles:
+        non_zero_gen_mask = site_gen > 0
+        zero_gen_inds |= set(np.where(~non_zero_gen_mask)[0])
+        site_gen = site_gen[non_zero_gen_mask]
+        site_gen_losses = site_gen_losses[non_zero_gen_mask]
+        site_losses = (1 - (site_gen_losses / site_gen)) * 100
+        site_loss_inds += [set(np.where(site_losses)[0])]
+        for outage in outages:
+            outage_percentage = outage.percentage_of_farm_down
+            num_expected_outage_hours = (
+                outage.count * outage.duration
+            )
+            if not outage.allow_outage_overlap or outage_percentage == 100:
+                num_outage_hours = (site_losses == outage_percentage).sum()
+                assert num_outage_hours <= num_expected_outage_hours
+
+        total_expected_outage = sum(
+            outage.count * outage.duration * outage.percentage_of_farm_down
+            for outage in outages
+        )
+        assert site_losses.sum() <= total_expected_outage
+
+    common_inds = set()
+    for inds in site_loss_inds:
+        inds -= zero_gen_inds
+        common_inds |= inds
+
+    # error_msg = "Scheduled losses do not vary between sites!"
+    # assert any(any(inds - common_inds) for inds in site_loss_inds), error_msg
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])

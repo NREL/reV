@@ -12,6 +12,7 @@ import pandas as pd
 from warnings import warn
 import PySAM.GenericSystem as generic
 
+from reV.SAM.losses import ScheduledLossesMixin
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
 
@@ -481,7 +482,7 @@ class Sam:
                 logger.warning(wmsg)
 
 
-class RevPySam(Sam):
+class RevPySam(Sam, ScheduledLossesMixin):
     """Base class for reV-SAM simulations (generation and econ)."""
 
     DIR = os.path.dirname(os.path.realpath(__file__))
@@ -530,6 +531,7 @@ class RevPySam(Sam):
         if self.output_request is None:
             self.output_request = []
 
+        self.add_scheduled_losses()
         self._parse_site_sys_inputs(site_sys_inputs)
 
     @property
