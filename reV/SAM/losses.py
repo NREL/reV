@@ -535,10 +535,12 @@ class ScheduledLossesMixin:
         """
 
         outages = self.outage_info_from_configs()
-        if outages is not None:
-            outages = [Outage(spec) for spec in outages]
-            scheduler = OutageScheduler(outages)
-            self.sam_sys_inputs['hourly'] = scheduler.calculate()
+        if outages is None:
+            return
+
+        outages = [Outage(spec) for spec in outages]
+        scheduler = OutageScheduler(outages, seed=self.outage_seed)
+        self.sam_sys_inputs['hourly'] = scheduler.calculate()
 
     def outage_info_from_configs(self):
         """Extract a list of outage specs from the input SAM configs.
@@ -560,6 +562,21 @@ class ScheduledLossesMixin:
             return json.loads(reV_outages)
 
         return self.sam_sys_inputs.pop('reV-outages', None)
+
+    @property
+    def outage_seed(self):
+        """int: A value to use as the seed for the outage losses. """
+        try:
+            return int(self.meta.name)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+        try:
+            return hash(tuple(self.meta))
+        except TypeError:
+            pass
+
+        return 0
 
 
 def convert_to_full_month_names(month_names):

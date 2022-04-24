@@ -25,6 +25,8 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
 
 
 REV2_POINTS = slice(0, 5)
+RTOL = 0
+ATOL = 0.001
 SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
 NOMINAL_OUTAGES = [
@@ -46,21 +48,21 @@ NOMINAL_OUTAGES = [
         {
             'count': 5,
             'duration': 5,
-            'percentage_of_farm_down': 50,
+            'percentage_of_farm_down': 53,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
             'count': 100,
             'duration': 1,
-            'percentage_of_farm_down': 10,
+            'percentage_of_farm_down': 17,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
             'count': 100,
             'duration': 2,
-            'percentage_of_farm_down': 15,
+            'percentage_of_farm_down': 7,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         }
@@ -69,14 +71,14 @@ NOMINAL_OUTAGES = [
         {
             'count': 1,
             'duration': 744,
-            'percentage_of_farm_down': 60,
+            'percentage_of_farm_down': 10,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
             'count': 5,
             'duration': 10,
-            'percentage_of_farm_down': 10,
+            'percentage_of_farm_down': 17,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         }
@@ -123,9 +125,15 @@ def test_scheduled_losses_wind(generic_losses, outages):
                         sites_per_worker=3, res_file=RES_FILE)
 
         gen = Gen.reV_run('windpower', pc, sam_fp, RES_FILE,
-                          output_request=('cf_mean', 'cf_profile'),
+                          output_request=('gen_profile'),
                           max_workers=1, sites_per_worker=3, out_fpath=None)
-    gen_profiles_with_losses = gen.out['cf_profile']
+    gen_profiles_with_losses = gen.out['gen_profile']
+    # undo UTC array rolling
+    for ind, row in gen.meta.iterrows():
+        time_shift = row['timezone']
+        gen_profiles_with_losses[:, ind] = np.roll(
+            gen_profiles_with_losses[:, ind], time_shift
+        )
 
     pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
@@ -135,43 +143,89 @@ def test_scheduled_losses_wind(generic_losses, outages):
     )
 
     gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
-                      output_request=('cf_mean', 'cf_profile'),
+                      output_request=('gen_profile'),
                       max_workers=1, sites_per_worker=3, out_fpath=None)
-    gen_profiles = gen.out['cf_profile']
+    gen_profiles = gen.out['gen_profile']
+    for ind, row in gen.meta.iterrows():
+        time_shift = row['timezone']
+        gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
+
+    assert (gen_profiles - gen_profiles_with_losses > 0.1).any()
 
     outages = [Outage(outage) for outage in outages]
-    profiles = zip(gen_profiles.T, gen_profiles_with_losses.T)
+    losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
     site_loss_inds = []
-    zero_gen_inds = set()
-    for site_gen, site_gen_losses in profiles:
-        non_zero_gen_mask = site_gen > 0
-        zero_gen_inds |= set(np.where(~non_zero_gen_mask)[0])
-        site_gen = site_gen[non_zero_gen_mask]
-        site_gen_losses = site_gen_losses[non_zero_gen_mask]
-        site_losses = (1 - (site_gen_losses / site_gen)) * 100
-        site_loss_inds += [set(np.where(site_losses)[0])]
+    zero_gen_inds_all_sites = set()
+    for site_losses, site_gen in zip(losses.T, gen_profiles.T):
+        non_zero_gen = site_gen > 0.01
+        zero_gen_inds = set(np.where(~non_zero_gen)[0])
+        zero_gen_inds_all_sites |= zero_gen_inds
+        site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
         for outage in outages:
             outage_percentage = outage.percentage_of_farm_down
-            num_expected_outage_hours = (
-                outage.count * outage.duration
+            outage_allowed_hourly_inds = hourly_indices_for_months(
+                outage.allowed_months
             )
+            zero_gen_in_comparison_count = sum(
+                ind in outage_allowed_hourly_inds for ind in zero_gen_inds
+            )
+            comparison_inds = list(
+                set(outage_allowed_hourly_inds) - zero_gen_inds
+            )
+
+            min_num_expected_outage_hours = (
+                outage.count * outage.duration
+                - zero_gen_in_comparison_count
+            )
+
             if not outage.allow_outage_overlap or outage_percentage == 100:
-                num_outage_hours = (site_losses == outage_percentage).sum()
-                assert num_outage_hours <= num_expected_outage_hours
+                max_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                )
+                outage_hours = np.isclose(
+                    site_losses[comparison_inds], outage_percentage,
+                    atol=ATOL, rtol=RTOL
+                )
+                num_outage_hours = outage_hours.sum()
+            else:
+                max_num_expected_outage_hours = len(comparison_inds)
+                outage_hours = (
+                    site_losses[comparison_inds] >= outage_percentage - ATOL
+                )
+                num_outage_hours = outage_hours.sum()
+
+            num_outage_hours_meet_expectations = (
+                min_num_expected_outage_hours
+                <= num_outage_hours
+                <= max_num_expected_outage_hours
+            )
+            assert num_outage_hours_meet_expectations
 
         total_expected_outage = sum(
             outage.count * outage.duration * outage.percentage_of_farm_down
             for outage in outages
         )
-        assert site_losses.sum() <= total_expected_outage
+        assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
 
-    common_inds = set()
-    for inds in site_loss_inds:
-        inds -= zero_gen_inds
-        common_inds |= inds
+    outages_allow_different_scheduled_losses = []
+    for outage in outages:
+        if not outage.allow_outage_overlap or outage_percentage == 100:
+            outages_allow_different_scheduled_losses.append(
+                outage.total_available_hours <= outage.duration * outage.count
+            )
+        else:
+            outages_allow_different_scheduled_losses.append(
+                outage.total_available_hours <= outage.duration
+            )
 
-    # error_msg = "Scheduled losses do not vary between sites!"
-    # assert any(any(inds - common_inds) for inds in site_loss_inds), error_msg
+    if all(outages_allow_different_scheduled_losses):
+        site_loss_inds = [
+            inds - zero_gen_inds_all_sites for inds in site_loss_inds
+        ]
+        common_inds = set.intersection(*site_loss_inds)
+
+        error_msg = "Scheduled losses do not vary between sites!"
+        assert any(inds - common_inds for inds in site_loss_inds), error_msg
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
