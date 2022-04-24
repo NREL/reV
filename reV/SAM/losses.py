@@ -404,6 +404,8 @@ class SingleOutageScheduler:
 
         for iter_ind in range(self.outage.count + self.MAX_ITER):
             self.update_when_can_schedule()
+            if not self.can_schedule_more.any():
+                break
             outage_slice = self.find_random_outage_slice(
                 seed=self.scheduler.seed + iter_ind
             )
@@ -420,11 +422,12 @@ class SingleOutageScheduler:
                              "outages")
                 msg_start = msg_start.format(len(self._scheduled_outage_inds),
                                              self.outage.count)
-            msg = ("{} after {:,} iterations. You are likely attempting to "
-                   "schedule a lot of long outages or a lot of short outages "
-                   "with a large percentage of the farm at a time. Please "
-                   "adjust the outage specifications and try again")
-            msg.format(msg_start, self.outage.count + self.MAX_ITER)
+            msg = ("{} after a max of {:,} iterations. You are likely "
+                   "attempting to schedule a lot of long outages or a lot "
+                   "of short outages with a large percentage of the farm at "
+                   "a time. Please adjust the outage specifications and try "
+                   "again")
+            msg = msg.format(msg_start, self.outage.count + self.MAX_ITER)
             logger.warning(msg)
             warnings.warn(msg, RevLossesWarning)
 
