@@ -712,7 +712,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
     def gen_profile(self):
         """Get AC inverter power generation profile (local timezone) in kW.
-        This is an alias of the "ac" SAM output variable.
+        This is an alias of the "ac" SAM output variable if PySAM version>=3.
         See self.outputs attribute for collected output data in UTC.
 
         Returns
@@ -721,7 +721,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             1D array of AC inverter power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.ac()
+        return np.array(self['gen'], dtype=np.float32)
 
     def ac(self):
         """Get AC inverter power generation profile (local timezone) in kW.
