@@ -113,12 +113,8 @@ def so_scheduler(basic_outage_dict):
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
-    # The line below will not work because of a bug in PVWatts5+
-    # The bug was fixed in https://github.com/NREL/ssc/pull/672
-    # Once reV is fully integrated with PySam 3+, we can uncomment
-    # The line below to include solar tests
-    #
-    # (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
 def test_scheduled_losses(generic_losses, outages, files):
     """Test full gen run with scheduled losses. """
@@ -126,8 +122,6 @@ def test_scheduled_losses(generic_losses, outages, files):
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
         generic_losses, outages, files
     )
-
-    time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
 
     outages = [Outage(outage) for outage in outages]
     min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
@@ -172,7 +166,7 @@ def test_scheduled_losses(generic_losses, outages, files):
                     site_losses[comparison_inds] >= outage_percentage - ATOL
                 )
 
-            num_outage_hours = observed_outages.sum() / time_steps_in_hour
+            num_outage_hours = observed_outages.sum()
 
             num_outage_hours_meet_expectations = (
                 min_num_expected_outage_hours
@@ -182,10 +176,7 @@ def test_scheduled_losses(generic_losses, outages, files):
             assert num_outage_hours_meet_expectations
 
         total_expected_outage = sum(
-            outage.count
-            * outage.duration
-            * outage.percentage_of_farm_down
-            * time_steps_in_hour
+            outage.count * outage.duration * outage.percentage_of_farm_down
             for outage in outages
         )
         assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
@@ -233,6 +224,9 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
                           output_request=('gen_profile'),
                           max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
+    # subsample to hourly generation
+    time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
+    gen_profiles_with_losses = gen_profiles_with_losses[::time_steps_in_hour]
     # undo UTC array rolling
     for ind, row in gen.meta.iterrows():
         time_shift = row['timezone']
@@ -254,6 +248,8 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
                       output_request=('gen_profile'),
                       max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles = gen.out['gen_profile']
+    time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
+    gen_profiles = gen_profiles[::time_steps_in_hour]
     for ind, row in gen.meta.iterrows():
         time_shift = row['timezone']
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
