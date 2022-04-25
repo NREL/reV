@@ -109,7 +109,6 @@ def so_scheduler(basic_outage_dict):
     return SingleOutageScheduler(outage, scheduler)
 
 
-# pylint: disable=C901
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
 @pytest.mark.parametrize('files', [
@@ -124,50 +123,9 @@ def so_scheduler(basic_outage_dict):
 def test_scheduled_losses(generic_losses, outages, files):
     """Test full gen run with scheduled losses. """
 
-    sam_file, res_file, tech = files
-    with open(sam_file, 'r', encoding='utf-8') as fh:
-        sam_config = json.load(fh)
-
-    with tempfile.TemporaryDirectory() as td:
-        if tech == 'windpower':
-            del sam_config['wind_farm_losses_percent']
-            sam_config['turb_generic_loss'] = generic_losses
-        else:
-            sam_config['losses'] = generic_losses
-
-        sam_config['reV-outages'] = outages
-        sam_fp = os.path.join(td, 'gen.json')
-        with open(sam_fp, 'w+') as fh:
-            fh.write(json.dumps(sam_config))
-
-        gen = Gen.reV_run(tech, REV2_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'),
-                          max_workers=1, sites_per_worker=3, out_fpath=None)
-    gen_profiles_with_losses = gen.out['gen_profile']
-    # undo UTC array rolling
-    for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
-        gen_profiles_with_losses[:, ind] = np.roll(
-            gen_profiles_with_losses[:, ind], time_shift
-        )
-
-    pc = Gen.get_pc(REV2_POINTS, None, sam_file, tech,
-                    sites_per_worker=3, res_file=res_file)
-    if tech == 'windpower':
-        del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
-        pc.project_points.sam_inputs[sam_file]['turb_generic_loss'] = (
-            generic_losses
-        )
-    else:
-        pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
-
-    gen = Gen.reV_run(tech, pc, sam_file, res_file,
-                      output_request=('gen_profile'),
-                      max_workers=1, sites_per_worker=3, out_fpath=None)
-    gen_profiles = gen.out['gen_profile']
-    for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
-        gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
+    gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
+        generic_losses, outages, files
+    )
 
     outages = [Outage(outage) for outage in outages]
     min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
@@ -246,6 +204,56 @@ def test_scheduled_losses(generic_losses, outages, files):
 
         error_msg = "Scheduled losses do not vary between sites!"
         assert any(inds - common_inds for inds in site_loss_inds), error_msg
+
+
+def _run_gen_with_and_without_losses(generic_losses, outages, files):
+    """Run generaion with and without losses for testing. """
+    sam_file, res_file, tech = files
+    with open(sam_file, 'r', encoding='utf-8') as fh:
+        sam_config = json.load(fh)
+
+    with tempfile.TemporaryDirectory() as td:
+        if tech == 'windpower':
+            del sam_config['wind_farm_losses_percent']
+            sam_config['turb_generic_loss'] = generic_losses
+        else:
+            sam_config['losses'] = generic_losses
+
+        sam_config['reV-outages'] = outages
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        gen = Gen.reV_run(tech, REV2_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'),
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+    gen_profiles_with_losses = gen.out['gen_profile']
+    # undo UTC array rolling
+    for ind, row in gen.meta.iterrows():
+        time_shift = row['timezone']
+        gen_profiles_with_losses[:, ind] = np.roll(
+            gen_profiles_with_losses[:, ind], time_shift
+        )
+
+    pc = Gen.get_pc(REV2_POINTS, None, sam_file, tech,
+                    sites_per_worker=3, res_file=res_file)
+    if tech == 'windpower':
+        del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
+        pc.project_points.sam_inputs[sam_file]['turb_generic_loss'] = (
+            generic_losses
+        )
+    else:
+        pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
+
+    gen = Gen.reV_run(tech, pc, sam_file, res_file,
+                      output_request=('gen_profile'),
+                      max_workers=1, sites_per_worker=3, out_fpath=None)
+    gen_profiles = gen.out['gen_profile']
+    for ind, row in gen.meta.iterrows():
+        time_shift = row['timezone']
+        gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
+
+    return gen_profiles, gen_profiles_with_losses
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
