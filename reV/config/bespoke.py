@@ -125,11 +125,9 @@ class BespokeConfig(AnalysisConfig):
         return str(self.get('min_spacing', '5x'))
 
     @property
-    def ga_time(self):
-        """Cutoff time for single-plant genetic algorithm optimization in
-        seconds. Default is 20 seconds.
-        """
-        return float(self.get('ga_time', 20))
+    def ga_kwargs(self):
+        """Get the ga_kwargs dictionary. Default is None (default init)."""
+        return self.get('ga_kwargs', None)
 
     @property
     def output_request(self):

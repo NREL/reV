@@ -47,7 +47,7 @@ class BespokeSinglePlant:
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
                  objective_function, cost_function,
-                 min_spacing='5x', ga_time=20,
+                 min_spacing='5x', ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
@@ -91,9 +91,11 @@ class BespokeSinglePlant:
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
             rotor diameter.
-        ga_time : int
-            Cutoff time for single-plant genetic algorithm optimization in
-            seconds. Default is 20 seconds.
+        ga_kwargs : dict | None
+            Dictionary of keyword arguments to pass to GA initialization.
+            If `None`, default initialization values are used.
+            See :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` for
+            a description of the allowed keyword arguments.
         output_request : list | tuple
             Outputs requested from the SAM windpower simulation after the
             bespoke plant layout optimization. Can also request resource means
@@ -140,6 +142,7 @@ class BespokeSinglePlant:
         logger.debug('Bespoke objective function: {}'
                      .format(objective_function))
         logger.debug('Bespoke cost function: {}'.format(objective_function))
+        logger.debug('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         if isinstance(min_spacing, str) and min_spacing.endswith('x'):
             rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
@@ -157,7 +160,7 @@ class BespokeSinglePlant:
         self.objective_function = objective_function
         self.cost_function = cost_function
         self.min_spacing = min_spacing
-        self.ga_time = ga_time
+        self.ga_kwargs = ga_kwargs or {}
 
         self._sam_sys_inputs = sam_sys_inputs
         self._out_req = list(output_request)
@@ -523,8 +526,7 @@ class BespokeSinglePlant:
                                              self.cost_function,
                                              self.include_mask,
                                              self.pixel_side_length,
-                                             self.min_spacing,
-                                             self.ga_time)
+                                             self.min_spacing)
         return self._plant_optm
 
     @staticmethod
@@ -647,7 +649,7 @@ class BespokeSinglePlant:
 
         logger.debug('Running plant layout optimization for {}'.format(self))
         try:
-            self.plant_optimizer.place_turbines()
+            self.plant_optimizer.place_turbines(**self.ga_kwargs)
         except Exception as e:
             msg = ('{} failed while trying to run the '
                    'turbine placement optimizer'
@@ -749,7 +751,7 @@ class BespokeWindPlants(AbstractAggregation):
     def __init__(self, excl_fpath, res_fpath, tm_dset,
                  objective_function, cost_function,
                  points, sam_configs, points_range=None,
-                 min_spacing='5x', ga_time=20,
+                 min_spacing='5x', ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None,
@@ -809,9 +811,11 @@ class BespokeWindPlants(AbstractAggregation):
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
             rotor diameter.
-        ga_time : int
-            Cutoff time for single-plant genetic algorithm optimization in
-            seconds. Default is 20 seconds.
+        ga_kwargs : dict | None
+            Dictionary of keyword arguments to pass to GA initialization.
+            If `None`, default initialization values are used.
+            See :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` for
+            a description of the allowed keyword arguments.
         output_request : list | tuple
             Outputs requested from the SAM windpower simulation after the
             bespoke plant layout optimization. Can also request resource means
@@ -865,6 +869,7 @@ class BespokeWindPlants(AbstractAggregation):
         logger.info('Bespoke objective function: {}'
                     .format(objective_function))
         logger.info('Bespoke cost function: {}'.format(cost_function))
+        logger.info('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         BespokeSinglePlant.check_dependencies()
 
@@ -883,7 +888,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._obj_fun = objective_function
         self._cost_fun = cost_function
         self._min_spacing = min_spacing
-        self._ga_time = ga_time
+        self._ga_kwargs = ga_kwargs or {}
         self._output_request = output_request
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
@@ -1083,29 +1088,33 @@ class BespokeWindPlants(AbstractAggregation):
         """
 
         single_arr = sample[dset]
-        # initialize output data array for all wind plants
-        full_arr = None
-        shape = None
+
         if isinstance(single_arr, Number):
             shape = (len(self.completed_gids),)
-            full_arr = np.zeros(shape, type(single_arr))
+            sample_num = single_arr
         elif isinstance(single_arr, (list, tuple, np.ndarray)):
             shape = (len(single_arr), len(self.completed_gids))
-            full_arr = np.zeros(shape, dtype=type(single_arr[0]))
+            sample_num = single_arr[0]
         else:
             msg = ('Not writing dataset "{}" of type "{}" to disk.'
                    .format(dset, type(single_arr)))
             logger.info(msg)
+            return None
+
+        if isinstance(sample_num, float):
+            dtype = np.float32
+        else:
+            dtype = type(sample_num)
+        full_arr = np.zeros(shape, dtype=dtype)
 
         # collect data from all wind plants
-        if full_arr is not None:
-            logger.info('Collecting dataset "{}" with final shape {}'
-                        .format(dset, shape))
-            for i, gid in enumerate(self.completed_gids):
-                if len(full_arr.shape) == 1:
-                    full_arr[i] = self.outputs[gid][dset]
-                else:
-                    full_arr[:, i] = self.outputs[gid][dset]
+        logger.info('Collecting dataset "{}" with final shape {}'
+                    .format(dset, shape))
+        for i, gid in enumerate(self.completed_gids):
+            if len(full_arr.shape) == 1:
+                full_arr[i] = self.outputs[gid][dset]
+            else:
+                full_arr[:, i] = self.outputs[gid][dset]
 
         return full_arr
 
@@ -1152,7 +1161,7 @@ class BespokeWindPlants(AbstractAggregation):
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset,
                    sam_sys_inputs, objective_function, cost_function,
-                   min_spacing='5x', ga_time=20,
+                   min_spacing='5x', ga_kwargs=None,
                    output_request=('system_capacity', 'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
@@ -1210,7 +1219,7 @@ class BespokeWindPlants(AbstractAggregation):
                         objective_function,
                         cost_function,
                         min_spacing=min_spacing,
-                        ga_time=ga_time,
+                        ga_kwargs=ga_kwargs,
                         output_request=output_request,
                         ws_bins=ws_bins,
                         wd_bins=wd_bins,
@@ -1290,7 +1299,7 @@ class BespokeWindPlants(AbstractAggregation):
                     self._obj_fun,
                     self._cost_fun,
                     self._min_spacing,
-                    self._ga_time,
+                    ga_kwargs=self._ga_kwargs,
                     output_request=self._output_request,
                     ws_bins=self._ws_bins,
                     wd_bins=self._wd_bins,
@@ -1325,7 +1334,7 @@ class BespokeWindPlants(AbstractAggregation):
     def run(cls, excl_fpath, res_fpath, tm_dset,
             objective_function, cost_function,
             points, sam_configs, points_range=None,
-            min_spacing='5x', ga_time=20,
+            min_spacing='5x', ga_kwargs=None,
             output_request=('system_capacity', 'cf_mean'),
             ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
             excl_dict=None,
@@ -1342,7 +1351,7 @@ class BespokeWindPlants(AbstractAggregation):
                   points, sam_configs,
                   points_range=points_range,
                   min_spacing=min_spacing,
-                  ga_time=ga_time,
+                  ga_kwargs=ga_kwargs,
                   output_request=output_request,
                   ws_bins=ws_bins,
                   wd_bins=wd_bins,
@@ -1365,7 +1374,7 @@ class BespokeWindPlants(AbstractAggregation):
                                     objective_function,
                                     cost_function,
                                     min_spacing=bsp._min_spacing,
-                                    ga_time=bsp._ga_time,
+                                    ga_kwargs=bsp._ga_kwargs,
                                     output_request=bsp._output_request,
                                     ws_bins=bsp._ws_bins,
                                     wd_bins=bsp._wd_bins,

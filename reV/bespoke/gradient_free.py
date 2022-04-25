@@ -49,8 +49,18 @@ class GeneticAlgorithm():
         convergence_iters : int, optional
             The number of generations to determine convergence.
         max_time : float
-            The maximium time (in seconds) to run the genetic algorithm.
+            The maximum time (in seconds) to run the genetic algorithm.
         """
+
+        logger.debug('Initializing GeneticAlgorithm...')
+        logger.debug('Minimum convergence iterations: {}'
+                     .format(convergence_iters))
+        logger.debug('Max iterations (generations): {}'.format(max_generation))
+        logger.debug('Population size: {}'.format(population_size))
+        logger.debug('Crossover rate: {}'.format(crossover_rate))
+        logger.debug('Mutation rate: {}'.format(mutation_rate))
+        logger.debug('Convergence tolerance: {}'.format(tol))
+        logger.debug('Maximum runtime (in seconds): {}'.format(max_time))
 
         # inputs
         self.bits = bits
@@ -130,9 +140,11 @@ class GeneticAlgorithm():
 
     def initialize_population(self):
         """randomly initialize the parent and offspring populations"""
-        self.parent_population = \
-            np.random.randint(0, high=2, size=(self.population_size,
-                              self.nbits))
+        all_bits_on = np.ones((1, self.nbits))
+        random_bits_on = np.random.randint(
+            0, high=2, size=(self.population_size - 1, self.nbits)
+        )
+        self.parent_population = np.r_[all_bits_on, random_bits_on]
         self.offspring_population = np.zeros_like(self.parent_population)
 
     def initialize_fitness(self):

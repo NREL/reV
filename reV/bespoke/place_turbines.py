@@ -16,7 +16,7 @@ class PlaceTurbines():
     exclusions, wind resources, and objective
     """
     def __init__(self, wind_plant, objective_function, cost_function,
-                 include_mask, pixel_side_length, min_spacing, ga_time):
+                 include_mask, pixel_side_length, min_spacing):
         """
         Parameters
         ----------
@@ -48,8 +48,6 @@ class PlaceTurbines():
             exclusions.latitude, exclusions.longitude, and exclusions.mask
         min_spacing : float
             The minimum spacing between turbines (in meters).
-        ga_time : float
-            The time to run the genetic algorithm (in seconds).
         """
 
         # inputs
@@ -59,7 +57,6 @@ class PlaceTurbines():
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
-        self.ga_time = ga_time
 
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
@@ -181,9 +178,20 @@ class PlaceTurbines():
 
         return objective
 
-    def optimize(self):
-        """use a genetic algorithm to optimize wind plant layout for the user
-        defined objective function.
+    def optimize(self, **kwargs):
+        """Optimize wind farm layout.
+
+        Use a genetic algorithm to optimize wind plant layout for the
+        user-defined objective function.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments to pass to GA initialization.
+
+        See Also
+        --------
+        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.
         """
         nlocs = len(self.x_locations)
         bits = np.ones(nlocs, dtype=int)
@@ -192,12 +200,22 @@ class PlaceTurbines():
         variable_type = np.array([])
         for _ in range(nlocs):
             variable_type = np.append(variable_type, "int")
+
+        ga_kwargs = {
+            'max_generation': 10000,
+            'population_size': 25,
+            'crossover_rate': 0.2,
+            'mutation_rate': 0.01,
+            'tol': 1E-6,
+            'convergence_iters': 10000,
+            'max_time': 3600
+        }
+
+        ga_kwargs.update(kwargs)
+
         ga = GeneticAlgorithm(bits, bounds, variable_type,
                               self.optimization_objective,
-                              max_generation=10000, population_size=25,
-                              crossover_rate=0.2, mutation_rate=0.01,
-                              tol=1E-6, convergence_iters=10000,
-                              max_time=self.ga_time)
+                              **ga_kwargs)
 
         ga.optimize_ga()
 
@@ -205,12 +223,23 @@ class PlaceTurbines():
         self.optimized_design_variables = \
             [bool(y) for y in optimized_design_variables]
 
-    def place_turbines(self):
-        """run all functions to define bespoke wind plant turbine layouts
+    def place_turbines(self, **kwargs):
+        """Define bespoke wind plant turbine layouts.
+
+        Run all functions to define bespoke wind plant turbine layouts.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments to pass to GA initialization.
+
+        See Also
+        --------
+        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.
         """
         self.define_exclusions()
         self.initialize_packing()
-        self.optimize()
+        self.optimize(**kwargs)
 
     @property
     def turbine_x(self):
