@@ -3,16 +3,12 @@
 
 """
 import calendar
-import logging
-
 import numpy as np
 
 
 # 1900 is just a representative year, since a year input is required
 DAYS_PER_MONTH = [calendar.monthrange(1900, i)[1] for i in range(1, 13)]
 FIRST_DAY_INDEX_OF_MONTH = np.cumsum([0] + DAYS_PER_MONTH[:-1])
-
-logger = logging.getLogger(__name__)
 
 
 def convert_to_full_month_names(month_names):

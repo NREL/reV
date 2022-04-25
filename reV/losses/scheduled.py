@@ -2,7 +2,6 @@
 """reV scheduled losses module.
 
 """
-import calendar
 import logging
 import warnings
 import json
