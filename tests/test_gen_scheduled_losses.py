@@ -127,6 +127,8 @@ def test_scheduled_losses(generic_losses, outages, files):
         generic_losses, outages, files
     )
 
+    time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
+
     outages = [Outage(outage) for outage in outages]
     min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
     assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
@@ -160,17 +162,17 @@ def test_scheduled_losses(generic_losses, outages, files):
                 max_num_expected_outage_hours = (
                     outage.count * outage.duration
                 )
-                outage_hours = np.isclose(
+                observed_outages = np.isclose(
                     site_losses[comparison_inds], outage_percentage,
                     atol=ATOL, rtol=RTOL
                 )
-                num_outage_hours = outage_hours.sum()
             else:
                 max_num_expected_outage_hours = len(comparison_inds)
-                outage_hours = (
+                observed_outages = (
                     site_losses[comparison_inds] >= outage_percentage - ATOL
                 )
-                num_outage_hours = outage_hours.sum()
+
+            num_outage_hours = observed_outages.sum() / time_steps_in_hour
 
             num_outage_hours_meet_expectations = (
                 min_num_expected_outage_hours
@@ -180,7 +182,10 @@ def test_scheduled_losses(generic_losses, outages, files):
             assert num_outage_hours_meet_expectations
 
         total_expected_outage = sum(
-            outage.count * outage.duration * outage.percentage_of_farm_down
+            outage.count
+            * outage.duration
+            * outage.percentage_of_farm_down
+            * time_steps_in_hour
             for outage in outages
         )
         assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
