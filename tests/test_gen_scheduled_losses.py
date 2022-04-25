@@ -8,7 +8,6 @@ Created on Mon Apr 18 12:52:16 2021
 """
 
 import os
-import py
 import pytest
 import tempfile
 import json
