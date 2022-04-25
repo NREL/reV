@@ -12,7 +12,7 @@ import pandas as pd
 from warnings import warn
 import PySAM.GenericSystem as generic
 
-from reV.SAM.losses import ScheduledLossesMixin
+from reV.losses import ScheduledLossesMixin
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
 

@@ -106,6 +106,10 @@ class SAMInputError(Exception):
     """
 
 
+class reVLossesValueError(ValueError):
+    """Value Error for reV losses module. """
+
+
 class SupplyCurveError(Exception):
     """
     Execution error for SAM simulations
@@ -206,6 +210,10 @@ class PySAMVersionWarning(Warning):
     """
     Version warning for SAM installation
     """
+
+
+class reVLossesWarning(Warning):
+    """Warning for reV losses module. """
 
 
 class ParallelExecutionWarning(Warning):

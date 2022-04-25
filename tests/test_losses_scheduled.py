@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PyTest file for scheduled losses.
+PyTest file for reV scheduled loss.
 
 Created on Mon Apr 18 12:52:16 2021
 
@@ -16,13 +16,10 @@ import numpy as np
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
-from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
-                            month_index, convert_to_full_month_names,
-                            filter_unknown_month_names, month_indices,
-                            hourly_indices_for_months, Outage,
-                            OutageScheduler, SingleOutageScheduler,
-                            ScheduledLossesMixin,
-                            RevLossesValueError, RevLossesWarning)
+from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
+from reV.losses.utils import hourly_indices_for_months
+from reV.losses.scheduled import (Outage, OutageScheduler,
+                                  SingleOutageScheduler, ScheduledLossesMixin)
 
 
 REV2_POINTS = slice(0, 5)
@@ -478,13 +475,13 @@ def test_outage_scheduler_cannot_schedule_any_more():
     losses = OutageScheduler([Outage(outage_info)])
     losses.can_schedule_more[:31 * 24] = False
 
-    with pytest.warns(RevLossesWarning) as record:
+    with pytest.warns(reVLossesWarning) as record:
         losses.calculate()
     warn_msg = record[0].message.args[0]
     assert "Could not schedule any requested outages" in warn_msg
 
     losses.can_schedule_more[100:130] = True
-    with pytest.warns(RevLossesWarning) as record:
+    with pytest.warns(reVLossesWarning) as record:
         losses.calculate()
     warn_msg = record[0].message.args[0]
     assert "Could only schedule" in warn_msg
@@ -496,7 +493,7 @@ def test_outage_class_missing_keys(basic_outage_dict):
     for key in basic_outage_dict:
         bad_input = basic_outage_dict.copy()
         bad_input.pop(key)
-        with pytest.raises(RevLossesValueError) as excinfo:
+        with pytest.raises(reVLossesValueError) as excinfo:
             Outage(bad_input)
         assert "The following required keys are missing" in str(excinfo.value)
 
@@ -505,12 +502,12 @@ def test_outage_class_count(basic_outage_dict):
     """Test Outage class behavior for different count inputs. """
 
     basic_outage_dict['count'] = 0
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert "Number of outages must be greater than 0" in str(excinfo.value)
 
     basic_outage_dict['count'] = 5.5
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert "Number of outages must be an integer" in str(excinfo.value)
 
@@ -519,12 +516,12 @@ def test_outage_class_allowed_months(basic_outage_dict):
     """Test Outage class behavior for different allowed_month inputs. """
 
     basic_outage_dict['allowed_months'] = []
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert "No known month names were provided!" in str(excinfo.value)
 
     basic_outage_dict['allowed_months'] = ['Jan', 'unknown_month']
-    with pytest.warns(RevLossesWarning) as record:
+    with pytest.warns(reVLossesWarning) as record:
         outage = Outage(basic_outage_dict)
     warn_msg = record[0].message.args[0]
     assert "The following month names were not understood" in warn_msg
@@ -552,17 +549,17 @@ def test_outage_class_duration(basic_outage_dict):
     err_msg = "Duration of outage must be between 1 and the total available"
 
     basic_outage_dict['duration'] = 0
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
     basic_outage_dict['duration'] = 745
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
     basic_outage_dict['duration'] = 10.5
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert "Duration must be an integer number of hours" in str(excinfo.value)
 
@@ -576,12 +573,12 @@ def test_outage_class_percentage(basic_outage_dict):
     err_msg = "Percentage of farm down during outage must be in the range"
 
     basic_outage_dict['percentage_of_farm_down'] = 0
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
     basic_outage_dict['percentage_of_farm_down'] = 100.1
-    with pytest.raises(RevLossesValueError) as excinfo:
+    with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
@@ -611,91 +608,6 @@ def test_outage_class_name(basic_outage_dict):
     assert Outage(basic_outage_dict).name == expected_name
     basic_outage_dict['name'] = "My Outage"
     assert Outage(basic_outage_dict).name == "My Outage"
-
-
-def test_hourly_indices_for_months():
-    """Test that the correct indices are returned for the input months. """
-
-    assert not hourly_indices_for_months([])
-    assert not hourly_indices_for_months(['Abc'])
-
-    indices = hourly_indices_for_months(['January', 'Abc'])
-    assert indices[0] == 0
-    assert indices[-1] == len(indices) - 1
-    assert len(indices) == 31 * 24  # 31 days in Jan
-    assert all(i < 31 * 24 for i in indices)
-
-    indices = hourly_indices_for_months(['March', 'January'])
-    assert indices[0] == 0
-    assert len(indices) == (31 + 31) * 24  # 31 days in Jan and Mar
-    assert 744 not in indices
-    assert indices[744] - indices[743] - 1 == 28 * 24  # we skip Feb
-
-    all_months = ['January', 'February', 'March', 'April', 'May', 'June',
-                  'July', 'August', 'September', 'October', 'November',
-                  'December']
-    indices = hourly_indices_for_months(all_months)
-    assert indices[0] == 0
-    assert indices[-1] == len(indices) - 1
-    assert len(indices) == 8760
-
-
-def test_month_indices():
-    """Test that month indices are generated correctly. """
-
-    assert not month_indices(['Abc'])
-    assert month_indices(['March', 'April', 'June', 'July']) == {2, 3, 5, 6}
-    assert -1 not in month_indices(['March', 'April', 'June', 'July', 'Abc'])
-    assert month_indices(['March', 'April', 'March']) == {2, 3}
-
-
-def test_filter_unknown_month_names():
-    """Test that month names are filtered correctly. """
-
-    input_names = ['March', 'April', 'June', 'July', 'Abc', ' unformaTTed']
-    expected_known_names = ['March', 'April', 'June', 'July']
-    expected_unknown_names = ['Abc', ' unformaTTed']
-
-    known_months, unknown_months = filter_unknown_month_names(input_names)
-
-    assert known_months == expected_known_names
-    assert unknown_months == expected_unknown_names
-
-
-def test_convert_to_full_month_names():
-    """Test that an iterable of names is formatted correctly. """
-
-    input_names = ['March', ' aprIl  ', 'Jun', 'jul', '  abc ']
-    expected_output_names = ['March', 'April', 'June', 'July', 'Abc']
-    assert convert_to_full_month_names(input_names) == expected_output_names
-
-
-def test_month_index():
-    """Test that the correct month index is returned for input. """
-
-    assert month_index("June") == 5
-    assert month_index("July") == 6
-    assert month_index("Jun") == -1
-    assert month_index("jul") == -1
-    assert month_index('') == -1
-    assert month_index('Abcdef') == -1
-    assert month_index(' aprIl  ') == -1
-
-
-def test_full_month_name_from_abbr():
-    """Test that month names are retrieved from abbreviations. """
-
-    assert full_month_name_from_abbr('Jun') == 'June'
-    assert full_month_name_from_abbr('') is None
-    assert full_month_name_from_abbr('June') is None
-    assert full_month_name_from_abbr('Abcdef') is None
-
-
-def test_format_month_name():
-    """Test that month names are formatter appropriately. """
-
-    assert format_month_name(' aprIl  ') == 'April'
-    assert format_month_name('Jun') == 'Jun'
 
 
 def execute_pytest(capture='all', flags='-rapP'):
