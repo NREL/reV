@@ -29,8 +29,10 @@ from reV.SAM.losses import (format_month_name, full_month_name_from_abbr,
 REV2_POINTS = slice(0, 5)
 RTOL = 0
 ATOL = 0.001
-SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
-RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
+WIND_SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+WIND_RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
+PV_SAM_FILE = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+PV_RES_FILE = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
 NOMINAL_OUTAGES = [
     [
         {
@@ -110,23 +112,35 @@ def so_scheduler(basic_outage_dict):
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-def test_scheduled_losses_wind(generic_losses, outages):
-    """Test varying wind turbine losses"""
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    # The line below will not work because of a bug in PVWatts5+
+    # The bug was fixed in https://github.com/NREL/ssc/pull/672
+    # Once reV is fully integrated with PySam 3+, we can uncomment
+    # The line below to include solar tests
+    #
+    # (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses(generic_losses, outages, files):
+    """Test full gen run with scheduled losses. """
+
+    sam_file, res_file, tech = files
+    with open(sam_file, 'r', encoding='utf-8') as fh:
+        sam_config = json.load(fh)
 
     with tempfile.TemporaryDirectory() as td:
-        with open(SAM_FILE, 'r') as fh:
-            sam_config = json.load(fh)
-        del sam_config['wind_farm_losses_percent']
-        sam_config['turb_generic_loss'] = generic_losses
+        if tech == 'windpower':
+            del sam_config['wind_farm_losses_percent']
+            sam_config['turb_generic_loss'] = generic_losses
+        else:
+            sam_config['losses'] = generic_losses
+
         sam_config['reV-outages'] = outages
-        sam_fp = os.path.join(td, 'wind_gen_standard_losses_0.json')
+        sam_fp = os.path.join(td, 'gen.json')
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
-        pc = Gen.get_pc(REV2_POINTS, None, sam_fp, 'windpower',
-                        sites_per_worker=3, res_file=RES_FILE)
-
-        gen = Gen.reV_run('windpower', pc, sam_fp, RES_FILE,
+        gen = Gen.reV_run(tech, REV2_POINTS, sam_fp, res_file,
                           output_request=('gen_profile'),
                           max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
@@ -137,14 +151,17 @@ def test_scheduled_losses_wind(generic_losses, outages):
             gen_profiles_with_losses[:, ind], time_shift
         )
 
-    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
-                    sites_per_worker=3, res_file=RES_FILE)
-    del pc.project_points.sam_inputs[SAM_FILE]['wind_farm_losses_percent']
-    pc.project_points.sam_inputs[SAM_FILE]['turb_generic_loss'] = (
-        generic_losses
-    )
+    pc = Gen.get_pc(REV2_POINTS, None, sam_file, tech,
+                    sites_per_worker=3, res_file=res_file)
+    if tech == 'windpower':
+        del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
+        pc.project_points.sam_inputs[sam_file]['turb_generic_loss'] = (
+            generic_losses
+        )
+    else:
+        pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
 
-    gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
+    gen = Gen.reV_run(tech, pc, sam_file, res_file,
                       output_request=('gen_profile'),
                       max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles = gen.out['gen_profile']
@@ -152,14 +169,15 @@ def test_scheduled_losses_wind(generic_losses, outages):
         time_shift = row['timezone']
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
-    assert (gen_profiles - gen_profiles_with_losses > 0.1).any()
-
     outages = [Outage(outage) for outage in outages]
+    min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
+    assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
+
     losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
     site_loss_inds = []
     zero_gen_inds_all_sites = set()
     for site_losses, site_gen in zip(losses.T, gen_profiles.T):
-        non_zero_gen = site_gen > 0.01
+        non_zero_gen = site_gen > 0
         zero_gen_inds = set(np.where(~non_zero_gen)[0])
         zero_gen_inds_all_sites |= zero_gen_inds
         site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
