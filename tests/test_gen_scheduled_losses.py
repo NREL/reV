@@ -109,6 +109,7 @@ def so_scheduler(basic_outage_dict):
     return SingleOutageScheduler(outage, scheduler)
 
 
+# pylint: disable=C901
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
 @pytest.mark.parametrize('files', [
