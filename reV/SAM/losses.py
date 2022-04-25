@@ -568,7 +568,8 @@ class ScheduledLossesMixin:
         """
         general_outage_info = self.sam_sys_inputs.pop('reV-outages', None)
 
-        reV_outages = self.site_sys_inputs.pop('reV-outages', None)
+        site_inputs = self.site_sys_inputs or {}
+        reV_outages = site_inputs.pop('reV-outages', None)
         if reV_outages is not None:
             return json.loads(reV_outages)
 

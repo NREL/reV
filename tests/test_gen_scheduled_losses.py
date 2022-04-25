@@ -262,6 +262,15 @@ def test_scheduled_losses_mixin_class_outage_info_from_configs(outages):
     """Test mixin class behavior when retrieving outage info. """
 
     mixin = ScheduledLossesMixin()
+    mixin.site_sys_inputs = None
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    outage_info = mixin.outage_info_from_configs()
+
+    assert outage_info == outages
+    assert 'reV-outages' not in mixin.sam_sys_inputs
+
     mixin.site_sys_inputs = {}
     mixin.sam_sys_inputs = {
         'reV-outages': outages
@@ -318,6 +327,15 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
     assert 'reV-outages' not in mixin.sam_sys_inputs
     assert 'reV-outages' not in mixin.site_sys_inputs
+    assert 'hourly' in mixin.sam_sys_inputs
+
+    mixin.site_sys_inputs = None
+    mixin.sam_sys_inputs = {
+        'reV-outages': outages
+    }
+    mixin.add_scheduled_losses()
+
+    assert 'reV-outages' not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
 
 
