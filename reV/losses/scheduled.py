@@ -10,7 +10,7 @@ import numpy as np
 
 from reV.losses.utils import (convert_to_full_month_names,
                               filter_unknown_month_names,
-                              hourly_indices_for_months)
+                              hourly_indices_for_months, BaseMixin)
 from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 
 
@@ -495,7 +495,7 @@ class SingleOutageScheduler:
             self.scheduler.can_schedule_more[outage_slice] = False
 
 
-class ScheduledLossesMixin:
+class ScheduledLossesMixin(BaseMixin):
     """Mixin class for :class:`reV.SAM.SAM.RevPySam`.
 
     Warning
@@ -504,6 +504,8 @@ class ScheduledLossesMixin:
     :class:`reV.SAM.SAM.RevPySam` may result in unexpected results
     and/or errors.
     """
+
+    CONFIG_KEY = 'reV-outages'
 
     def add_scheduled_losses(self):
         """Add stochastically scheduled losses to SAM config file.
@@ -536,7 +538,7 @@ class ScheduledLossesMixin:
 
         """
 
-        outages = self.outage_info_from_configs()
+        outages = self.loss_info_from_configs()
         if outages is None:
             return
 
@@ -544,7 +546,7 @@ class ScheduledLossesMixin:
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
         self.sam_sys_inputs['hourly'] = scheduler.calculate()
 
-    def outage_info_from_configs(self):
+    def loss_info_from_configs(self):
         """Extract a list of outage specs from the input SAM configs.
 
         This function attempts to read the ``reV-outages`` info from
@@ -558,14 +560,11 @@ class ScheduledLossesMixin:
         :obj:`list` | :obj:`None`
             List of dictionaries containing outage specifications.
         """
-        general_outage_info = self.sam_sys_inputs.pop('reV-outages', None)
+        outage_info = super().loss_info_from_configs()
+        if isinstance(outage_info, str):
+            outage_info = json.loads(outage_info)
 
-        site_inputs = self.site_sys_inputs or {}
-        reV_outages = site_inputs.pop('reV-outages', None)
-        if reV_outages is not None:
-            return json.loads(reV_outages)
-
-        return general_outage_info
+        return outage_info
 
     @property
     def outage_seed(self):
