@@ -13,8 +13,68 @@ logger = logging.getLogger(__name__)
 
 
 class PowercurveLosses:
+    """A converter between annual losses and powercurve shifts.
+
+    Given a target annual loss value, this class facilitates the
+    calculation of a powercurve shift that attempts to match the target
+    loss as close as possible.
+
+    Attributes
+    ----------
+    wind_speed : :obj:`np.array`
+        An array containing the wind speeds corresponding to the values
+        in the :attr:`powercurve` array.
+    powercurve : :obj:`np.array`
+        An array containing the generated power at the corresponding
+        wind speed in the :attr:`wind_speed` array. These values are
+        set during initialization and are treated as the "original
+        powercurve". This input must have at least one positive value,
+        and if a cutoff speed is detected (see `Warnings` section
+        below), then all values above that wind speed must be set to 0.
+    wind_resource : :obj:`np.array`
+        An array containing the wind speeds (i.e. wind speed
+        distribution) for the site at which the powercurve will be used.
+        This distribution is used to calculate the annual generation
+        of the original powercurve as well as any additional calcaulted
+        powercurves. The generation values are then compared in order to
+        calculate the loss resulting from a shifted powercurve.
+
+    Warnings
+    --------
+    This class will attempt to infer a cutoff speed from the powercurve
+    input. Specifically, it will look for a transition from the highest
+    rated power down to zero in a single ``wind_speed`` step of the
+    powercurve. If such a transition is detected, the wind speed
+    corresponding to the zero value will be set as the cutoff speed, and
+    all calculated powercurves will be clipped at this speed. If your
+    input powercurve contains a cutoff speed, ensure that it adheres to
+    the expected pattern of dropping from max rated power to zero power
+    in a single wind speed step.
+    """
 
     def __init__(self, wind_speed, powercurve, wind_resource):
+        """
+        Parameters
+        ----------
+        wind_speed : iter
+            An iterable containing the wind speeds corresponding to the
+            generated power values in ``powercurve`` input. The input
+            values should all be non-zero, and the units should match
+            the units of the ``wind_resource`` input (typically, m/s).
+        powercurve : iter
+            An iterable containing the generated power at the
+            corresponding wind speed in the ``wind_speed`` input. These
+            values are treated as the "original powercurve".
+        wind_resource : iter
+            An iterable containing the wind speeds measured at the site
+            where this powercurve will be applied to caulcate
+            generation. These values are used to calculate the loss
+            resulting from a shifted powercurve compared to the
+            generation of the original powercurve. The input
+            values should all be non-zero, and the units of
+            should match the units of the  ``wind_speed`` input
+            (typically, m/s).
+        """
         self.wind_speed = np.array(wind_speed)
         self.powercurve = np.array(powercurve)
         self.wind_resource = np.array(wind_resource)
@@ -84,7 +144,7 @@ class PowercurveLosses:
         ----------
         shift : float
             The amount to shift the original powercurve by, in wind
-            speed units (m/s).
+            speed units (typically, m/s).
 
         Returns
         -------
@@ -111,7 +171,7 @@ class PowercurveLosses:
         ----------
         shift : float
             The amount to shift the original powercurve by, in wind
-            speed units (m/s).
+            speed units (typically, m/s).
 
         Returns
         -------
@@ -158,15 +218,16 @@ class PowercurveLosses:
             An array containing a shifted powercurve that most closely
             yields the ``target`` annual generation losses.
 
-        Warning
-        -------
-        This function attempt to find an optimal shift value for the
+        Warnings
+        --------
+        This function attempts to find an optimal shift value for the
         powercurve such that the annual generation losses match the
         ``target`` value, but there is no guarantee that a close match
         can be found, if it even exists. Therefore, it is possible that
         the losses resulting from the shifted powercurve will not match
         the ``target``. This is especially likely if the ``target`` is
-        large or if the powercurve and/or wind resource is abnormal.
+        large or if the input powercurve and/or wind resource is
+        abnormal.
         """
         shift = self._find_shift(target)
         new_curve = self.apply_shift(shift)
@@ -226,25 +287,17 @@ class PowercurveLossesMixin:
     """
 
     POWERCURVE_CONFIG_KEY = 'reV-powercurve_losses'
+    """Specify powercurve loss target in the config file using this key."""
 
     def add_powercurve_losses(self, wind_resource):
         """Adjust powercurve in SAM config file to account for losses.
 
         This function reads the information in the
-        ``reV-powercurve_losses`` key of a) the ``site_sys_inputs`` dict
-        or b) the ``sam_sys_inputs`` dict and computes a new powercurve
-        that accounts for the loss percentage specified from that
-        input. In either case, the powercurve loss information must be
-        specified via the ``reV-powercurve_losses`` key. If
-        ``reV-powercurve_losses`` is found in the ``site_sys_inputs``
-        dictionary, then the loss value specified in the corresponding
-        field will be used to calculate the new powercurve. If
-        ``reV-powercurve_losses`` is **not** found in the
-        ``site_sys_inputs`` dictionary but **is** found in the
-        ``sam_sys_inputs`` dictionary, then the latter will be used to
-        calculate the new powercurve. If no powercurve loss info is
-        specified in either ``site_sys_inputs`` or ``sam_sys_inputs``,
-        the powercurve will not be adjusted.
+        ``reV-powercurve_losses`` key of the ``sam_sys_inputs``
+        dictionary and computes a new powercurve that accounts for the
+        loss percentage specified from that input. If no powercurve loss
+        info is specified in ``sam_sys_inputs``, the powercurve will not
+        be adjusted.
 
         See Also
         --------

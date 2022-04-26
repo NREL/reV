@@ -1122,7 +1122,10 @@ class AbstractSamWind(AbstractSamGeneration, PowercurveLossesMixin, ABC):
 
     def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
                  output_request=None, drop_leap=False):
-        """See docstring for :class:`AbstractSamGeneration`."""
+        """
+        See docstring for :class:`AbstractSamGeneration` for full input
+        parameter descriptions.
+        """
 
         super().__init__(resource=resource, meta=meta,
                          sam_sys_inputs=sam_sys_inputs,
