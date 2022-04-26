@@ -131,7 +131,7 @@ def test_powercurve_losses_witch_scheduled_outages():
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
-def test_scheduled_losses_mixin_class_add_scheduled_losses(config):
+def test_powercurve_losses_mixin_class_add_powercurve_losses(config):
     """Test mixin class behavior when adding losses. """
 
     with open(config, 'r') as fh:
@@ -149,6 +149,26 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(config):
 
     assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert any(og_powercurve != new_powercurve)
+
+
+@pytest.mark.parametrize('config', SAM_FILES)
+def test_scheduled_losses_mixin_class_no_losses_input(config):
+    """Test mixin class behavior when no losses should be added. """
+
+    with open(config, 'r') as fh:
+        sam_config = json.load(fh)
+
+    og_powercurve = np.array(sam_config["wind_turbine_powercurve_powerout"])
+
+    mixin = PowercurveLossesMixin()
+    mixin.sam_sys_inputs = copy.deepcopy(sam_config)
+    mixin.add_powercurve_losses(BASIC_WIND_RES)
+    new_powercurve = np.array(
+        mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
+    )
+
+    assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert (og_powercurve == new_powercurve).all()
 
 
 @pytest.mark.parametrize('bad_wind_speed', ([], [-10, 10]))
