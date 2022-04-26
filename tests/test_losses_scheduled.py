@@ -303,6 +303,17 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
     assert 'hourly' in mixin.sam_sys_inputs
 
 
+def test_scheduled_losses_mixin_class_no_losses_input():
+    """Test mixin class behavior when adding losses. """
+
+    mixin = ScheduledLossesMixin()
+    mixin.sam_sys_inputs = {}
+    mixin.add_scheduled_losses()
+
+    assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert 'hourly' not in mixin.sam_sys_inputs
+
+
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
 def test_single_outage_scheduler_normal_run(
     allow_outage_overlap, so_scheduler
