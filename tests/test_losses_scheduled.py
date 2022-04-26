@@ -22,7 +22,7 @@ from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
 
 
-REV2_POINTS = slice(0, 5)
+REV_POINTS = slice(0, 5)
 RTOL = 0
 ATOL = 0.001
 WIND_SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
@@ -217,7 +217,7 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
-        gen = Gen.reV_run(tech, REV2_POINTS, sam_fp, res_file,
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
                           output_request=('gen_profile'),
                           max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
@@ -231,7 +231,7 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
             gen_profiles_with_losses[:, ind], time_shift
         )
 
-    pc = Gen.get_pc(REV2_POINTS, None, sam_file, tech,
+    pc = Gen.get_pc(REV_POINTS, None, sam_file, tech,
                     sites_per_worker=3, res_file=res_file)
     if tech == 'windpower':
         del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
