@@ -501,7 +501,7 @@ class ScheduledLossesMixin:
     Warning
     -------
     Using this class for anything excpet as a mixin for
-    :class:`reV.SAM.generation.AbstractSamGeneration` may result in
+    :class:`~reV.SAM.generation.AbstractSamGeneration` may result in
     unexpected results and/or errors.
     """
 

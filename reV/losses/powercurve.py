@@ -1,0 +1,264 @@
+# -*- coding: utf-8 -*-
+"""reV powercurve losses module.
+
+"""
+import logging
+
+import numpy as np
+from scipy.optimize import minimize_scalar
+
+from reV.utilities.exceptions import reVLossesValueError
+
+logger = logging.getLogger(__name__)
+
+
+class PowercurveLosses:
+
+    def __init__(self, wind_speed, powercurve, wind_resource):
+        self.wind_speed = np.array(wind_speed)
+        self.powercurve = np.array(powercurve)
+        self.wind_resource = np.array(wind_resource)
+
+        self._power_gen = None
+        self._cutoff_wind_speed = None
+
+        self._validate_arrays_not_empty()
+        self._validate_wind_speed()
+        self._validate_powercurve()
+        self._validate_wind_resource()
+
+    def _validate_arrays_not_empty(self):
+        """Validate that the input data arrays are not empty. """
+        attr_names = ['wind_speed', 'powercurve', 'wind_resource']
+        for name in attr_names:
+            arr = getattr(self, name)
+            if not arr.size:
+                msg = "Invalid {} input: Array is empty! - {}"
+                msg = msg.format(name.replace('_', ' '), arr)
+                logger.error(msg)
+                raise reVLossesValueError(msg)
+
+    def _validate_wind_speed(self):
+        """Validate that the input wind speed is non-negative. """
+        if not (self.wind_speed >= 0).all():
+            msg = "Invalid wind speed input: Contains negative values! - {}"
+            msg = msg.format(self.wind_speed)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_powercurve(self):
+        """Validate the input powercurve. """
+        if not (self.powercurve > 0).any():
+            msg = "Invalid powercurve input: Found no positive values! - {}"
+            msg = msg.format(self.powercurve)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+        if 0 < self.cutoff_wind_speed < np.inf:
+            cutoff_windspeed_ind = np.where(
+                self.wind_speed >= self.cutoff_wind_speed
+            )[0].min()
+            if (self.powercurve[cutoff_windspeed_ind:]).any():
+                msg = ("Invalid powercurve input: Found non-zero values above "
+                       "cutoff! - {}")
+                msg = msg.format(self.powercurve)
+                logger.error(msg)
+                raise reVLossesValueError(msg)
+
+    def _validate_wind_resource(self):
+        """Validate that the input wind resource is non-negative. """
+        if not (self.wind_resource >= 0).all():
+            msg = "Invalid wind resource input: Contains negative values! - {}"
+            msg = msg.format(self.wind_resource)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def apply_shift(self, shift):
+        """Calculate a new powercurve by shifting the original.
+
+        This function shifts the original powercurve horizontally
+        by the given amount and truncates any power above the cutoff
+        speed (if one was detected).
+
+        Parameters
+        ----------
+        shift : float
+            The amount to shift the original powercurve by, in wind
+            speed units (m/s).
+
+        Returns
+        -------
+        :obj:`np.array`
+            An array containing the shifted powercurve.
+        """
+        new_pc = np.interp(
+            self.wind_speed - shift, self.wind_speed, self.powercurve
+        )
+        if self.cutoff_wind_speed:
+            new_pc[self.wind_speed >= self.cutoff_wind_speed] = 0
+        return new_pc
+
+    def annual_losses_with_shifted_powercurve(self, shift):
+        """Calculate the annual losses from a shifted powercurve.
+
+        This function uses the wind resource data that the object was
+        initialized with to calculate the total annual power generation
+        with a shifted powercurve. This generation is compared with the
+        generation of the original (un-shifted) powercurve to compute
+        the total annual losses as a result of the shift.
+
+        Parameters
+        ----------
+        shift : float
+            The amount to shift the original powercurve by, in wind
+            speed units (m/s).
+
+        Returns
+        -------
+        float
+            Total losses (%) as a result of a powercurve shifted by the
+            input ``shift`` amount.
+        """
+        new_curve = self.apply_shift(shift)
+        power_gen_with_losses = np.interp(
+            self.wind_resource, self.wind_speed, new_curve
+        ).sum()
+        return (1 - power_gen_with_losses / self.power_gen_no_losses) * 100
+
+    def _obj(self, shift, target):
+        """Objective function: |output - target|."""
+        losses = self.annual_losses_with_shifted_powercurve(shift)
+        return np.abs(losses - target)
+
+    def _find_shift(self, target):
+        """Run a minimization of the objective function. """
+        return minimize_scalar(
+            self._obj,
+            args=(target),
+            bounds=self.shift_bounds,
+            method='bounded'
+        ).x
+
+    def calculate(self, target):
+        """Shift the powercurve to yield annual losses closest to target.
+
+        This function shifts the input powercurve (the one used to
+        initialize the object) to generate an annual loss percentage
+        closest to the ``target``. The losses are computed w.r.t the
+        generation of the original (un-shifted) powercurve.
+
+        Parameters
+        ----------
+        target : float
+            Target value for annual generation losses (%).
+
+        Returns
+        -------
+        :obj:`np.array`
+            An array containing a shifted powercurve that most closely
+            yields the ``target`` annual generation losses.
+
+        Warning
+        -------
+        This function attempt to find an optimal shift value for the
+        powercurve such that the annual generation losses match the
+        ``target`` value, but there is no guarantee that a close match
+        can be found, if it even exists. Therefore, it is possible that
+        the losses resulting from the shifted powercurve will not match
+        the ``target``. This is especially likely if the ``target`` is
+        large or if the powercurve and/or wind resource is abnormal.
+        """
+        shift = self._find_shift(target)
+        new_curve = self.apply_shift(shift)
+        self._validate_shifted_powercurve(new_curve)
+        return new_curve
+
+    def _validate_shifted_powercurve(self, new_curve):
+        """Ensure new powercurve has some non-zero generation. """
+        mask = [self.wind_speed <= self.cutoff_wind_speed]
+        min_expected_power_gen = self.powercurve[self.powercurve > 0].min()
+        if not (new_curve[mask] > min_expected_power_gen).any():
+            msg = ("Calculated powercurve is invalid. No power generation "
+                   "below the cutoff wind speed ({} m/s) detected. Target "
+                   "loss percentage  may be too large! Please try again with "
+                   "a lower target value.")
+            msg = msg.format(self.cutoff_wind_speed)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    @property
+    def cutoff_wind_speed(self):
+        """float or :obj:`np.inf`: The detected cutoff wind speed."""
+        if self._cutoff_wind_speed is None:
+            ind = np.argmax(self.powercurve[::-1])
+            if ind > 0 and self.powercurve[-ind] <= 0:
+                self._cutoff_wind_speed = self.wind_speed[-ind]
+            else:
+                self._cutoff_wind_speed = np.inf
+        return self._cutoff_wind_speed
+
+    @property
+    def shift_bounds(self):
+        """tuple: Bounds on the powercurve shift for the fitting procedure."""
+        min_ind = np.where(self.powercurve)[0][0]
+        max_ind = np.where(self.powercurve[::-1])[0][0]
+        max_shift = self.wind_speed[-max_ind] - self.wind_speed[min_ind]
+        return (0, max_shift)
+
+    @property
+    def power_gen_no_losses(self):
+        """float: Total power generation from original powercurve."""
+        if self._power_gen is None:
+            self._power_gen = np.interp(
+                self.wind_resource, self.wind_speed, self.powercurve
+            ).sum()
+        return self._power_gen
+
+
+class PowercurveLossesMixin:
+    """Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.
+
+    Warning
+    -------
+    Using this class for anything excpet as a mixin for
+    :class:`~reV.SAM.generation.AbstractSamWind` may result in unexpected
+    results and/or errors.
+    """
+
+    POWERCURVE_CONFIG_KEY = 'reV-powercurve_losses'
+
+    def add_powercurve_losses(self, wind_resource):
+        """Adjust powercurve in SAM config file to account for losses.
+
+        This function reads the information in the
+        ``reV-powercurve_losses`` key of a) the ``site_sys_inputs`` dict
+        or b) the ``sam_sys_inputs`` dict and computes a new powercurve
+        that accounts for the loss percentage specified from that
+        input. In either case, the powercurve loss information must be
+        specified via the ``reV-powercurve_losses`` key. If
+        ``reV-powercurve_losses`` is found in the ``site_sys_inputs``
+        dictionary, then the loss value specified in the corresponding
+        field will be used to calculate the new powercurve. If
+        ``reV-powercurve_losses`` is **not** found in the
+        ``site_sys_inputs`` dictionary but **is** found in the
+        ``sam_sys_inputs`` dictionary, then the latter will be used to
+        calculate the new powercurve. If no powercurve loss info is
+        specified in either ``site_sys_inputs`` or ``sam_sys_inputs``,
+        the powercurve will not be adjusted.
+
+        See Also
+        --------
+        :class:`PowercurveLosses` : Powercurve re-calculation.
+
+        """
+        target_losses = self.sam_sys_inputs.pop(
+            self.POWERCURVE_CONFIG_KEY, None
+        )
+        if target_losses is None:
+            return
+
+        wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
+        powercurve = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
+        pc_losses = PowercurveLosses(wind_speed, powercurve, wind_resource)
+        new_curve = pc_losses.calculate(target_losses)
+        self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve

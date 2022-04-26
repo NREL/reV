@@ -1117,7 +1117,22 @@ class TroughPhysicalHeat(AbstractSamSolarThermal):
         return DefaultTroughPhysicalProcessHeat.default()
 
 
-class WindPower(AbstractSamGeneration):
+class AbstractSamWind(AbstractSamGeneration, PowercurveLossesMixin, ABC):
+    """Base Class for Wind generation from SAM"""
+
+    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
+                 output_request=None, drop_leap=False):
+        """See docstring for :class:`AbstractSamGeneration`."""
+
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
+                         output_request=output_request, drop_leap=drop_leap)
+
+        self.add_powercurve_losses(resource['windspeed'].values)
+
+
+class WindPower(AbstractSamWind):
     """Class for Wind generation from SAM
     """
     MODULE = 'windpower'
@@ -1208,7 +1223,7 @@ class WindPower(AbstractSamGeneration):
         return DefaultWindPower.default()
 
 
-class WindPowerPD(WindPower):
+class WindPowerPD(AbstractSamWind):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
 

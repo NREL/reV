@@ -3,3 +3,4 @@
 reV Losses Module
 """
 from .scheduled import ScheduledLossesMixin
+from .powercurve import PowercurveLossesMixin
