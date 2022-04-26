@@ -233,38 +233,3 @@ def full_month_name_from_abbr(month_name):
     for month_index in range(1, 13):
         if calendar.month_abbr[month_index] == month_name:
             return calendar.month_name[month_index]
-
-
-class BaseMixin:
-    """Base Mixin class for :class:`reV.SAM.SAM.RevPySam`.
-
-    Warning
-    -------
-    Using this class for anything excpet as a mixin for
-    :class:`reV.SAM.SAM.RevPySam` may result in unexpected results
-    and/or errors.
-    """
-
-    CONFIG_KEY = 'losses'
-
-    def loss_info_from_configs(self):
-        """Extract a list of outage specs from the input SAM configs.
-
-        This function attempts to read the :attr:`CONFIG_KEY` info from
-        a) the ``site_sys_inputs`` dict or b) the ``sam_sys_inputs``
-        dict, in that order. If found in either, the value is returned.
-        Otherwise, this function returns :obj:`None`.
-
-        Returns
-        -------
-        :obj:`float` | :obj:`str` | :obj:`list` |  :obj:`dict` | :obj:`None`
-            Value pulled from config for :attr:`CONFIG_KEY`.
-        """
-        loss_info = self.sam_sys_inputs.pop(self.CONFIG_KEY, None)
-
-        site_inputs = self.site_sys_inputs or {}
-        site_loss_info = site_inputs.pop(self.CONFIG_KEY, None)
-        if site_loss_info is not None:
-            return site_loss_info
-
-        return loss_info

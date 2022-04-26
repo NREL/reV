@@ -35,11 +35,12 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
+from reV.losses import ScheduledLossesMixin, PowercurveLossesMixin
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractSamGeneration(RevPySam, ABC):
+class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     """Base class for SAM generation simulations."""
 
     def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
@@ -94,6 +95,8 @@ class AbstractSamGeneration(RevPySam, ABC):
         if resource is not None:
             self.check_resource_data(resource)
             self.set_resource_data(resource, meta)
+
+        self.add_scheduled_losses()
 
     @classmethod
     def _get_res(cls, res_df, output_request):

@@ -10,7 +10,7 @@ import numpy as np
 
 from reV.losses.utils import (convert_to_full_month_names,
                               filter_unknown_month_names,
-                              hourly_indices_for_months, BaseMixin)
+                              hourly_indices_for_months)
 from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 
 
@@ -495,17 +495,17 @@ class SingleOutageScheduler:
             self.scheduler.can_schedule_more[outage_slice] = False
 
 
-class ScheduledLossesMixin(BaseMixin):
-    """Mixin class for :class:`reV.SAM.SAM.RevPySam`.
+class ScheduledLossesMixin:
+    """Mixin class for :class:`reV.SAM.generation.AbstractSamGeneration`.
 
     Warning
     -------
     Using this class for anything excpet as a mixin for
-    :class:`reV.SAM.SAM.RevPySam` may result in unexpected results
-    and/or errors.
+    :class:`reV.SAM.generation.AbstractSamGeneration` may result in
+    unexpected results and/or errors.
     """
 
-    CONFIG_KEY = 'reV-outages'
+    OUTAGE_CONFIG_KEY = 'reV-outages'
 
     def add_scheduled_losses(self):
         """Add stochastically scheduled losses to SAM config file.
@@ -538,33 +538,16 @@ class ScheduledLossesMixin(BaseMixin):
 
         """
 
-        outages = self.loss_info_from_configs()
-        if outages is None:
+        outage_specs = self.sam_sys_inputs.pop(self.OUTAGE_CONFIG_KEY, None)
+        if outage_specs is None:
             return
 
-        outages = [Outage(spec) for spec in outages]
+        if isinstance(outage_specs, str):
+            outage_specs = json.loads(outage_specs)
+
+        outages = [Outage(spec) for spec in outage_specs]
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
         self.sam_sys_inputs['hourly'] = scheduler.calculate()
-
-    def loss_info_from_configs(self):
-        """Extract a list of outage specs from the input SAM configs.
-
-        This function attempts to read the ``reV-outages`` info from
-        a) the ``site_sys_inputs`` dict or b) the ``sam_sys_inputs``
-        dict, in that order. If found in either, the list of
-        dictionaries containing outage specifications is returned.
-        Otherwise, this function returns :obj:`None`.
-
-        Returns
-        -------
-        :obj:`list` | :obj:`None`
-            List of dictionaries containing outage specifications.
-        """
-        outage_info = super().loss_info_from_configs()
-        if isinstance(outage_info, str):
-            outage_info = json.loads(outage_info)
-
-        return outage_info
 
     @property
     def outage_seed(self):

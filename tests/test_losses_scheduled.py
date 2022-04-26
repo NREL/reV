@@ -13,6 +13,7 @@ import tempfile
 import json
 
 import numpy as np
+import pandas as pd
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
@@ -22,7 +23,7 @@ from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
 
 
-REV_POINTS = slice(0, 5)
+REV_POINTS = list(range(5))
 RTOL = 0
 ATOL = 0.001
 WIND_SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
@@ -84,6 +85,12 @@ NOMINAL_OUTAGES = [
         }
     ]
 ]
+SINGLE_SITE_OUTAGE = [{
+    'count': 12,
+    'duration': 20,
+    'percentage_of_farm_down': 42,
+    'allowed_months': ['February'],
+}]
 
 
 @pytest.fixture
@@ -108,17 +115,21 @@ def so_scheduler(basic_outage_dict):
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+@pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
-def test_scheduled_losses(generic_losses, outages, files):
+def test_scheduled_losses(generic_losses, outages, site_outages, files):
     """Test full gen run with scheduled losses. """
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, outages, files
+        generic_losses, outages, site_outages, files
     )
+
+    if site_outages is not None:
+        outages = site_outages
 
     outages = [Outage(outage) for outage in outages]
     min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
@@ -144,12 +155,11 @@ def test_scheduled_losses(generic_losses, outages, files):
                 set(outage_allowed_hourly_inds) - zero_gen_inds
             )
 
-            min_num_expected_outage_hours = (
-                outage.count * outage.duration
-                - zero_gen_in_comparison_count
-            )
-
             if not outage.allow_outage_overlap or outage_percentage == 100:
+                min_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                    - zero_gen_in_comparison_count
+                )
                 max_num_expected_outage_hours = (
                     outage.count * outage.duration
                 )
@@ -158,6 +168,18 @@ def test_scheduled_losses(generic_losses, outages, files):
                     atol=ATOL, rtol=RTOL
                 )
             else:
+                num_outages_possible_per_day = np.floor(
+                    100 / outage.percentage_of_farm_down
+                )
+                min_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                    / num_outages_possible_per_day
+                )
+                min_num_expected_outage_hours = max(
+                    0,
+                    min_num_expected_outage_hours
+                    - zero_gen_in_comparison_count
+                )
                 max_num_expected_outage_hours = len(comparison_inds)
                 observed_outages = (
                     site_losses[comparison_inds] >= outage_percentage - ATOL
@@ -199,7 +221,9 @@ def test_scheduled_losses(generic_losses, outages, files):
         assert any(inds - common_inds for inds in site_loss_inds), error_msg
 
 
-def _run_gen_with_and_without_losses(generic_losses, outages, files):
+def _run_gen_with_and_without_losses(
+    generic_losses, outages, site_outages, files
+):
     """Run generaion with and without losses for testing. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r', encoding='utf-8') as fh:
@@ -212,13 +236,14 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
         else:
             sam_config['losses'] = generic_losses
 
-        sam_config['reV-outages'] = outages
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
+        site_data = _make_site_data_df(site_outages)
         gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'),
+                          output_request=('gen_profile'), site_data=site_data,
                           max_workers=1, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
@@ -254,39 +279,16 @@ def _run_gen_with_and_without_losses(generic_losses, outages, files):
     return gen_profiles, gen_profiles_with_losses
 
 
-@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-def test_scheduled_losses_mixin_class_loss_info_from_configs(outages):
-    """Test mixin class behavior when retrieving outage info. """
-
-    mixin = ScheduledLossesMixin()
-    mixin.site_sys_inputs = None
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
-    outage_info = mixin.loss_info_from_configs()
-
-    assert outage_info == outages
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
-
-    mixin.site_sys_inputs = {}
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
-    outage_info = mixin.loss_info_from_configs()
-
-    assert outage_info == outages
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
-
-    site_outage = [{
-        'count': 123,
-        'duration': 20,
-        'percentage_of_farm_down': 42,
-        'allowed_months': ['February'],
-    }]
-
-    mixin.site_sys_inputs = {mixin.CONFIG_KEY: json.dumps(site_outage)}
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
-    outage_info = mixin.loss_info_from_configs()
-
-    assert outage_info == site_outage
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
-    assert mixin.CONFIG_KEY not in mixin.site_sys_inputs
+def _make_site_data_df(site_data):
+    """Make site data DataFrame for a specific outage input. """
+    if site_data is not None:
+        site_specific_outages = [json.dumps(site_data)] * len(REV_POINTS)
+        site_data_dict = {
+            'gid': REV_POINTS,
+            ScheduledLossesMixin.OUTAGE_CONFIG_KEY: site_specific_outages
+        }
+        site_data = pd.DataFrame(site_data_dict)
+    return site_data
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
@@ -294,33 +296,10 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
     """Test mixin class behavior when adding losses. """
 
     mixin = ScheduledLossesMixin()
-    mixin.site_sys_inputs = {}
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
+    mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
     mixin.add_scheduled_losses()
 
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
-    assert 'hourly' in mixin.sam_sys_inputs
-
-    site_outage = [{
-        'count': 123,
-        'duration': 20,
-        'percentage_of_farm_down': 42,
-        'allowed_months': ['February'],
-    }]
-
-    mixin.site_sys_inputs = {mixin.CONFIG_KEY: json.dumps(site_outage)}
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
-    mixin.add_scheduled_losses()
-
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
-    assert mixin.CONFIG_KEY not in mixin.site_sys_inputs
-    assert 'hourly' in mixin.sam_sys_inputs
-
-    mixin.site_sys_inputs = None
-    mixin.sam_sys_inputs = {mixin.CONFIG_KEY: outages}
-    mixin.add_scheduled_losses()
-
-    assert mixin.CONFIG_KEY not in mixin.sam_sys_inputs
+    assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
 
 
