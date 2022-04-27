@@ -291,6 +291,10 @@ class SupplyCurveConfig(AnalysisConfig):
         """Path to .csv or .json containing supply curve point summary. Can
         also now be a filepath to a bespoke h5 where the "meta" dataset has the
         same format as the sc aggregation output.
+
+        This can be set to "PIPELINE" to automatically parse the sc_points
+        output file from the previous pipeline steps "supply-curve-aggregation"
+        or "bespoke".
         """
 
         sc_points = self['sc_points']

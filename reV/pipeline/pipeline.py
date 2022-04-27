@@ -443,6 +443,7 @@ class Pipeline:
             if 'pipeline_index' in status.data[module]:
                 msg = None
         if msg:
+            logger.error(msg)
             raise KeyError(msg)
 
         i1 = int(status.data[module]['pipeline_index'])
@@ -450,9 +451,11 @@ class Pipeline:
 
         if i0 < 0:
             i0 = 0
-            warn('Module "{0}" is attempting to parse a previous pipeline '
-                 'step, but it appears to be the first step. Attempting to '
-                 'parse data from {0}.'.format(module))
+            msg = ('Module "{0}" is attempting to parse a previous pipeline '
+                   'step, but it appears to be the first step. Attempting to '
+                   'parse data from {0}.'.format(module))
+            logger.warning(msg)
+            warn(msg)
 
         if target_module is None:
             module_status = cls._get_module_status(status, i0)
