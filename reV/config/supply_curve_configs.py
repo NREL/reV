@@ -64,7 +64,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def gen_fpath(self):
-        """Get the generation data filepath"""
+        """Get the generation data filepath
+
+        This can also bet set to "PIPELINE" to retrieve gen_fpath from previous
+        reV pipeline steps (multi-year, collect, or generation)
+        """
 
         fpath = self['gen_fpath']
 
@@ -98,7 +102,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def econ_fpath(self):
         """Get the econ data filepath. This is an optional argument only used
-        if reV gen and econ outputs are being used from different files."""
+        if reV gen and econ outputs are being used from different files.
+
+        This can also bet set to "PIPELINE" to retrieve gen_fpath from previous
+        reV pipeline steps (multi-year, collect, or econ)
+        """
 
         fpath = self.get('econ_fpath', None)
 
