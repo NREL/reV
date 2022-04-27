@@ -88,6 +88,7 @@ class MultiYearGroup:
     """
     Handle group parameters for MultiYearConfig
     """
+
     def __init__(self, name, out_dir, source_files=None,
                  source_dir=None, source_prefix=None,
                  dsets=('cf_mean',), pass_through_dsets=None):
@@ -187,6 +188,7 @@ class MultiYearGroup:
                 e = "source_files must be a list, tuple, or 'PIPELINE'"
                 logger.error(e)
                 raise ConfigError(e)
+
         else:
             if self._source_dir and self._source_prefix:
                 source_files = []
