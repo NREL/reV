@@ -252,6 +252,7 @@ class PowercurveLosses:
         """float or :obj:`np.inf`: The detected cutoff wind speed."""
         if self._cutoff_wind_speed is None:
             ind = np.argmax(self.powercurve[::-1])
+            # pylint: disable=chained-comparison
             if ind > 0 and self.powercurve[-ind] <= 0:
                 self._cutoff_wind_speed = self.wind_speed[-ind]
             else:
