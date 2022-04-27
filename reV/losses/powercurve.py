@@ -37,7 +37,7 @@ class PowercurveLosses:
     distributed primarily across region 2 of the powercurve (the steep,
     almost linear, portion where the generation rapidly increases). This
     means that, unlike with haircut losses, generation is able to reach
-    max rating if the wind resource is good enough in a given region.
+    max rated power (albeit at a greater wind speed).
 
     Attributes
     ----------
@@ -122,7 +122,7 @@ class PowercurveLosses:
         losses = self.annual_losses_with_transformed_powercurve(new_powercurve)
         return np.abs(losses - target)
 
-    def fit(self, target, transformation='horizontal_shift'):
+    def fit(self, target, transformation='horizontal_translation'):
         """Fit a powercurve transformation.
 
         This function fits a transformation to the input powercurve
@@ -351,7 +351,7 @@ class PowercurveLossesMixin:
         # TODO: Add checks for required keys - turn into class like Outages
         target_losses = powercurve_losses_info['target_losses_percent']
         transformation = powercurve_losses_info.get(
-            'transformation', 'horizontal_shift'
+            'transformation', 'horizontal_translation'
         )
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
@@ -366,7 +366,14 @@ class PowercurveLossesMixin:
 
 
 class PowercurveTransformation(ABC):
-    """Base class for powercurve transformations.
+    """Abscrtact base class for powercurve transformations.
+
+    **This class is not meant to be instantiated**.
+
+    This class provides an interface for powercurve transformations,
+    which are meant to more realistically represent certain types of
+    losses when compared to simple haircut losses (i.e. constant loss
+    value applied at all points on the power curve).
 
     Attributes
     ----------
@@ -395,18 +402,33 @@ class PowercurveTransformation(ABC):
         """tuple: Bounds on the transformation_var."""
 
 
-class HorizontalPowercurveTransformation(PowercurveTransformation):
-    """Utility for applying horizontal powercurve shifts.
+class HorizontalPowercurveTranslation(PowercurveTransformation):
+    """Utility for applying horizontal powercurve translations.
+
+    This kind of powercurve transformation is simplistic, and should
+    only be used for a small handful of applicable turbine losses
+    (i.e. blade degradation). See ``Warnings`` for more details.
+
+    The losses in this type of transformation are distributed primarily
+    across region 2 of the power curve (the steep, almost linear,
+    portion where the generation rapidly increases).
 
     Attributes
     ----------
     powercurve : :obj:`Powercurve`
         A :obj:`Powercurve` object representing the "original
         powercurve".
+
+    Warnings
+    --------
+    This kind of powercurve translation is not genrally realistic. Using
+    this transformation as a primary source of losses (i.e. many
+    different kinds of losses bundled together) is extremely likely to
+    yield unrealistic results!
     """
 
     def apply(self, transformation_var):
-        """Apply a horizontal shift to the original powercurve.
+        """Apply a horizontal translation to the original powercurve.
 
         This function shifts the original powercurve horizontally
         by the given amount and truncates any power above the cutoff
@@ -462,7 +484,7 @@ class HorizontalPowercurveTransformation(PowercurveTransformation):
 
 
 TRANSFORMATIONS = {
-    'horizontal_shift': HorizontalPowercurveTransformation
+    'horizontal_translation': HorizontalPowercurveTranslation
 }
 """Implemented powercurve transformations."""
 

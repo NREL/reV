@@ -20,7 +20,7 @@ from reV.generation.generation import Gen
 from reV.utilities.exceptions import reVLossesValueError
 from reV.losses.powercurve import (Powercurve, PowercurveLosses,
                                    PowercurveLossesMixin,
-                                   HorizontalPowercurveTransformation)
+                                   HorizontalPowercurveTranslation)
 from reV.losses.scheduled import ScheduledLossesMixin
 
 
@@ -231,7 +231,7 @@ def test_horizontal_transformation_class_apply(real_powercurve):
     curve_shift = (
         real_powercurve.wind_speed[1] - real_powercurve.wind_speed[0]
     )
-    transformation = HorizontalPowercurveTransformation(real_powercurve)
+    transformation = HorizontalPowercurveTranslation(real_powercurve)
     new_powercurve = transformation.apply(curve_shift)
 
     assert new_powercurve != real_powercurve
@@ -250,7 +250,7 @@ def test_powercurve_losses_class_annual_losses_with_transformed_powercurve():
     windspeed = [0, 10, 20, 30, 40]
     generation = [0, 10, 15, 20, 0]
     powercurve = Powercurve(windspeed, generation)
-    transformation = HorizontalPowercurveTransformation(powercurve)
+    transformation = HorizontalPowercurveTranslation(powercurve)
     pc_losses = PowercurveLosses(powercurve, BASIC_WIND_RES)
 
     new_pc = transformation.apply(10)
@@ -268,7 +268,7 @@ def test_powercurve_losses_class_annual_losses_with_transformed_powercurve():
 def test_horizontal_transformation_class_bounds(real_powercurve):
     """Test that shift_bounds are set correctly. """
 
-    transformation = HorizontalPowercurveTransformation(real_powercurve)
+    transformation = HorizontalPowercurveTranslation(real_powercurve)
     bounds_min, bounds_max = transformation.bounds
     assert bounds_min == 0
     assert bounds_max <= real_powercurve.cutoff_wind_speed
