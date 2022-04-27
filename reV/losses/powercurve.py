@@ -2,6 +2,7 @@
 """reV powercurve losses module.
 
 """
+import json
 import logging
 from abc import ABC, abstractmethod
 
@@ -338,11 +339,20 @@ class PowercurveLossesMixin:
         :class:`PowercurveLosses` : Powercurve re-calculation.
 
         """
-        target_losses = self.sam_sys_inputs.pop(
+        powercurve_losses_info = self.sam_sys_inputs.pop(
             self.POWERCURVE_CONFIG_KEY, None
         )
-        if target_losses is None:
+        if powercurve_losses_info is None:
             return
+
+        if isinstance(powercurve_losses_info, str):
+            powercurve_losses_info = json.loads(powercurve_losses_info)
+
+        # TODO: Add checks for required keys - turn into class like Outages
+        target_losses = powercurve_losses_info['target_losses_percent']
+        transformation = powercurve_losses_info.get(
+            'transformation', 'horizontal_shift'
+        )
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
@@ -351,7 +361,7 @@ class PowercurveLossesMixin:
         wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
         pc_losses = PowercurveLosses(powercurve, wind_resource)
 
-        new_curve = pc_losses.fit(target_losses)
+        new_curve = pc_losses.fit(target_losses, transformation)
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
 

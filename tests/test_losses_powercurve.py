@@ -83,7 +83,9 @@ def _run_gen_with_and_without_losses(
         del sam_config['wind_farm_losses_percent']
         sam_config['turb_generic_loss'] = generic_losses
 
-        sam_config[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = target_losses
+        sam_config[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+            'target_losses_percent': target_losses
+        }
         if include_outages:
             sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = [
                 {
@@ -156,7 +158,9 @@ def test_powercurve_losses_mixin_class_add_powercurve_losses(config):
 
     mixin = PowercurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
-    mixin.sam_sys_inputs[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = 10
+    mixin.sam_sys_inputs[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+        'target_losses_percent': 10
+    }
     mixin.sam_sys_inputs['wind_resource_data'] = {
         'data': [(0, 0, val) for val in BASIC_WIND_RES]
     }
