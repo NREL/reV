@@ -13,11 +13,29 @@ logger = logging.getLogger(__name__)
 
 
 class PowercurveLosses:
-    """A converter between annual losses and powercurve shifts.
+    """A converter between annual losses and powercurve transformation.
 
     Given a target annual loss value, this class facilitates the
-    calculation of a powercurve shift that attempts to match the target
-    loss as close as possible.
+    calculation of a powercurve transformation such that the annual
+    generation losses incurred by using the transformed powercurve when
+    compared to the original (non-transformed) powercurve match the
+    target loss as close as possible.
+
+    The underlying assumption for this approach is that some types of
+    losses can be realized by a transformation of the powercurve (see
+    :meth:`PowercurveLosses.apply_transformation` for details on the
+    current implementation of the powercurve transformation).
+
+    The advantage of this approach is that, unlike haircut losses (where
+    a single loss value is applied across the board to all generation),
+    the losses are distributed non-uniformly across the powercurve. For
+    example, even in the overly simplified case of a horizontal
+    translation of the powercurve (which is only physically realistic
+    for certain types of losses like blade degradation), the losses are
+    distributed primarily across region 2 of the powercurve (the steep,
+    almost linear, portion where the generation rapidly increases). This
+    means that, unlike with haircut losses, generation is able to reach
+    max rating if the wind resource is good enough in a given region.
 
     Attributes
     ----------
