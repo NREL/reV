@@ -410,3 +410,30 @@ def test_consistent_eval_namespace(gid=33):
         assert out["bespoke_objective"] == bsp.plant_optimizer.objective
 
         bsp.close()
+
+
+if __name__ == '__main__':
+    import h5py
+    from reV.handler.outputs import Outputs
+    from reV.supply_curve.supply_curve import SupplyCurve
+
+    bespoke_sample_fout = os.path.join(TESTDATADIR,
+                                       'bespoke/test_bespoke_node00.h5')
+
+    normal_path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+    normal_sc_points = pd.read_csv(normal_path)
+
+    with tempfile.TemporaryDirectory() as td:
+        bespoke_sc_fp = os.path.join(td, 'bespoke_out.h5')
+        shutil.copy(bespoke_sample_fout, bespoke_sc_fp)
+        with h5py.File(bespoke_sc_fp, 'a') as f:
+            del f['meta']
+        with Outputs(bespoke_sc_fp, mode='a') as f:
+            f.meta = normal_sc_points
+
+        # this is basically copied from test_supply_curve_compute.py
+        trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                     f'costs_RI_{cap}MW.csv')
+                        for cap in [100, 200, 400, 1000]]
+        sc_full = SupplyCurve.full(bespoke_sc_fp, trans_tables, fcr=0.1,
+                                   avail_cap_frac=0.1)

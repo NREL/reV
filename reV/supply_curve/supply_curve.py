@@ -18,7 +18,7 @@ from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 from reV.utilities import log_versions
 
-from rex.utilities import parse_table, SpawnProcessPool
+from rex.utilities import Resource, parse_table, SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +65,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame | list
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping, can also be a list of transmission tables
@@ -122,7 +123,14 @@ class SupplyCurve:
             DataFrame of supply curve point summary with additional features
             added if supplied
         """
-        sc_points = parse_table(sc_points)
+        if isinstance(sc_points, str) and sc_points.endswith('.h5'):
+            with Resource(sc_points) as res:
+                sc_points = res.meta
+                print(sc_points)
+                raise
+        else:
+            sc_points = parse_table(sc_points)
+
         logger.debug('Supply curve points table imported with columns: {}'
                      .format(sc_points.columns.values.tolist()))
 
