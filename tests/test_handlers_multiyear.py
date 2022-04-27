@@ -25,6 +25,7 @@ H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
 H5_FILES = [os.path.join(H5_DIR, 'gen_ri_pv_{}_x000.h5'.format(year))
             for year in YEARS]
+H5_PATTERN = os.path.join(H5_DIR, 'gen_ri_pv_201*_x000.h5')
 
 logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
 
@@ -101,17 +102,24 @@ def compare_arrays(my_arr, test_arr, desc):
     assert np.allclose(my_arr, test_arr, atol=1.e-3), msg
 
 
-@pytest.mark.parametrize(('dset', 'group'), [
-    ('cf_profile', None),
-    ('cf_mean', None),
-    ('cf_profile', 'pytest'),
-    ('cf_mean', 'pytest')])
-def test_my_collection(dset, group):
+@pytest.mark.parametrize(('source', 'dset', 'group'), [
+    (H5_FILES, 'cf_profile', None),
+    (H5_FILES, 'cf_mean', None),
+    (H5_FILES, 'cf_profile', 'pytest'),
+    (H5_FILES, 'cf_mean', 'pytest'),
+    (H5_PATTERN, 'cf_profile', None),
+    (H5_PATTERN, 'cf_mean', None),
+    (H5_PATTERN, 'cf_profile', 'pytest'),
+    (H5_PATTERN, 'cf_mean', 'pytest'),
+])
+def test_my_collection(source, dset, group):
     """
     Collect the desired dset
 
     Parameters
     ----------
+    source : list | str
+        h5 source files, either an explicit list or a file*pattern
     dset : str
         dset to collect from H5_Files
     group : str | NoneType
@@ -122,10 +130,10 @@ def test_my_collection(dset, group):
         my_dsets = ['meta', ]
         my_dsets.extend(['{}-{}'.format(dset, year) for year in YEARS])
         if 'profile' in dset:
-            MultiYear.collect_profiles(my_out, H5_FILES, dset, group=group)
+            MultiYear.collect_profiles(my_out, source, dset, group=group)
             my_dsets.extend(["time_index-{}".format(year) for year in YEARS])
         else:
-            MultiYear.collect_means(my_out, H5_FILES, dset, group=group)
+            MultiYear.collect_means(my_out, source, dset, group=group)
             my_dsets.extend(["{}-{}".format(dset, val)
                              for val in ['means', 'stdev']])
 
@@ -194,7 +202,7 @@ def test_cli(runner):
         LOGGERS.clear()
 
 
-@pytest.mark.parametrize(('dset', 'group'), [
+@ pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_means(dset, group):
@@ -224,7 +232,7 @@ def test_my_means(dset, group):
         compare_arrays(my_means, dset_means, "Saved Means")
 
 
-@pytest.mark.parametrize(('dset', 'group'), [
+@ pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_update(dset, group):
@@ -265,7 +273,7 @@ def test_update(dset, group):
         compare_arrays(my_std, dset_std, "Updated STDEV")
 
 
-@pytest.mark.parametrize(('dset', 'group'), [
+@ pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_stdev(dset, group):
