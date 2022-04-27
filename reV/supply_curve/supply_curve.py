@@ -114,7 +114,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         sc_features : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing additional supply
             curve features, e.g. transmission multipliers, regions
@@ -1160,8 +1162,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supplcy curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
@@ -1239,8 +1242,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supplcy curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping

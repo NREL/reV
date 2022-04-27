@@ -139,7 +139,10 @@ def from_config(ctx, config_file, verbose):
 
 @main.group(invoke_without_command=True)
 @click.option('--sc_points', '-sc', type=STR, required=True,
-              help='Supply curve point summary table (.csv or .json).')
+              help='Path to .csv or .json containing supply curve point '
+              'summary. Can also now be a filepath to a bespoke h5 where the '
+              '"meta" dataset has the same format as the sc aggregation '
+              'output.')
 @click.option('--trans_table', '-tt', type=STR_OR_LIST, required=True,
               help=('Supply curve transmission mapping table(s) (.csv or '
                     'list of .csv).'))

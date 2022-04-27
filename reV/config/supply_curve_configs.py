@@ -288,7 +288,10 @@ class SupplyCurveConfig(AnalysisConfig):
 
     @property
     def sc_points(self):
-        """Get the supply curve points summary file path"""
+        """Path to .csv or .json containing supply curve point summary. Can
+        also now be a filepath to a bespoke h5 where the "meta" dataset has the
+        same format as the sc aggregation output.
+        """
 
         sc_points = self['sc_points']
 
