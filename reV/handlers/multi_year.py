@@ -156,7 +156,10 @@ class MultiYear(Outputs):
         elif isinstance(source_files, str):
             source_files = [source_files]
 
-        assert all(fp.endswith('.h5') for fp in source_files)
+        if not all(fp.endswith('.h5') for fp in source_files):
+            msg = ('Non-h5 files cannot be collected: {}'.format(source_files))
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         return source_files
 

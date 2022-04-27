@@ -28,6 +28,7 @@ class DatasetCollector:
     Class to collect single datasets from several source files into a final
     output file.
     """
+
     def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None,
                  mem_util_lim=0.7, pass_through=False):
         """
@@ -384,6 +385,7 @@ class Collector:
     """
     Class to handle the collection and combination of .h5 files
     """
+
     def __init__(self, h5_file, h5_dir, project_points, file_prefix=None,
                  clobber=False):
         """

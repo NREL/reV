@@ -2,6 +2,7 @@
 """
 reV file multi-year config
 """
+import glob
 import logging
 import os
 
@@ -91,6 +92,7 @@ class MultiYearGroup:
 
     def __init__(self, name, out_dir, source_files=None,
                  source_dir=None, source_prefix=None,
+                 source_pattern=None,
                  dsets=('cf_mean',), pass_through_dsets=None):
         """
         Parameters
@@ -111,6 +113,10 @@ class MultiYearGroup:
         source_prefix : str | NoneType
             File prefix to search for in source directory
             (must be paired with source_dir)
+        source_pattern : str | NoneType
+            Optional unix-style /filepath/pattern*.h5 to specify the source
+            files. This takes priority over source_dir and source_prefix but is
+            not used if source_files are specified Explicitly.
         dsets : list | tuple
             List of datasets to collect
         pass_through_dsets : list | tuple | None
@@ -124,6 +130,7 @@ class MultiYearGroup:
         self._source_files = source_files
         self._source_dir = source_dir
         self._source_prefix = source_prefix
+        self._source_pattern = source_pattern
         self._pass_through_dsets = None
         if pass_through_dsets is not None:
             self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
@@ -147,7 +154,7 @@ class MultiYearGroup:
         """
         if isinstance(dsets, str) and dsets == 'PIPELINE':
             files = Pipeline.parse_previous(self._dirout, 'collect',
-                                            target='fout')
+                                            target='fpath')
             with Resource(files[0]) as res:
                 dsets = [d for d in res
                          if not d.startswith('time_index')
@@ -182,26 +189,33 @@ class MultiYearGroup:
                 source_files = self._source_files
             elif self._source_files == "PIPELINE":
                 source_files = Pipeline.parse_previous(
-                    self._dirout, module=ModuleName.MULTI_YEAR, target='fpath'
-                )
+                    self._dirout, module=ModuleName.MULTI_YEAR, target='fpath')
             else:
                 e = "source_files must be a list, tuple, or 'PIPELINE'"
                 logger.error(e)
                 raise ConfigError(e)
 
+        elif self._source_pattern:
+            source_files = glob.glob(self._source_pattern)
+            if not all(fp.endswith('.h5') for fp in source_files):
+                msg = ('Source pattern resulted in non-h5 files that cannot '
+                       'be collected: {}, pattern: {}'
+                       .format(source_files, self._source_pattern))
+                logger.error(msg)
+                raise RuntimeError(msg)
+
+        elif self._source_dir and self._source_prefix:
+            source_files = []
+            for file in os.listdir(self._source_dir):
+                if (file.startswith(self._source_prefix)
+                        and file.endswith('.h5') and '_node' not in file):
+                    source_files.append(os.path.join(self._source_dir,
+                                                     file))
         else:
-            if self._source_dir and self._source_prefix:
-                source_files = []
-                for file in os.listdir(self._source_dir):
-                    if (file.startswith(self._source_prefix)
-                            and file.endswith('.h5') and '_node' not in file):
-                        source_files.append(os.path.join(self._source_dir,
-                                                         file))
-            else:
-                e = ("source_files or both source_dir and "
-                     "source_prefix must be provided")
-                logger.error(e)
-                raise ConfigError(e)
+            e = ("source_files or both source_dir and "
+                 "source_prefix must be provided")
+            logger.error(e)
+            raise ConfigError(e)
 
         if not any(source_files):
             e = ('Could not find any source files for '
