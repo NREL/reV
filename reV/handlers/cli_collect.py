@@ -86,17 +86,18 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['H5_DIR'] = config.collect_directory
     ctx.obj['LOG_DIR'] = config.log_directory
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['PURGE_CHUNKS'] = config.purge_chunks
     ctx.obj['VERBOSE'] = verbose
 
-    for file_prefix in config.file_prefixes:
-        ctx.obj['NAME'] = name + '_{}'.format(file_prefix)
-        ctx.obj['H5_FILE'] = os.path.join(config.dirout, file_prefix + '.h5')
-        ctx.obj['FILE_PREFIX'] = file_prefix
+    zip_iter = zip(config.fn_out_names, config.collect_patterns)
+    for i_fn_out, collect_pattern in zip_iter:
+        fn_out = i_fn_out + '.h5'
+        ctx.obj['NAME'] = name + '_{}'.format(i_fn_out)
+        ctx.obj['H5_FILE'] = os.path.join(config.dirout, fn_out)
+        ctx.obj['collect_pattern'] = collect_pattern
 
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(
@@ -109,7 +110,7 @@ def from_config(ctx, config_file, verbose):
                     config.dirout, module=ModuleName.COLLECT,
                     job_name=ctx.obj['NAME'], replace=True,
                     job_attrs={'hardware': 'local',
-                               'fout': file_prefix + '.h5',
+                               'fout': fn_out,
                                'dirout': config.dirout})
                 ctx.invoke(collect)
 
@@ -130,8 +131,9 @@ def from_config(ctx, config_file, verbose):
 @main.group()
 @click.option('--h5_file', '-f', required=True, type=click.Path(),
               help='H5 file to be collected into.')
-@click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
-              help='Directory containing h5 files to collect.')
+@click.option('--collect_pattern', '-cp', required=True, type=str,
+              help='Unix-style /filepath/pattern*.h5 to get a list of '
+              'files to collect into h5_file')
 @click.option('--project_points', '-pp', type=STR, required=False,
               help='Project points file representing the full '
               'collection scope. This doesnt have to be provided '
@@ -139,9 +141,6 @@ def from_config(ctx, config_file, verbose):
               'in h5_files without checking that all gids are there)')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected.')
-@click.option('--file_prefix', '-fp', type=STR, default=None,
-              show_default=True,
-              help='File prefix found in the h5 file names to be collected.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs',
               show_default=True,
               help='Directory to put log files.')
@@ -150,14 +149,13 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def direct(ctx, h5_file, h5_dir, project_points, dsets, file_prefix,
+def direct(ctx, h5_file, collect_pattern, project_points, dsets,
            log_dir, purge_chunks, verbose):
     """Main entry point for collection with context passing."""
     ctx.obj['H5_FILE'] = h5_file
-    ctx.obj['H5_DIR'] = h5_dir
+    ctx.obj['collect_pattern'] = collect_pattern
     ctx.obj['PROJECT_POINTS'] = project_points
     ctx.obj['DSETS'] = dsets
-    ctx.obj['FILE_PREFIX'] = file_prefix
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['PURGE_CHUNKS'] = purge_chunks
     ctx.obj['VERBOSE'] = verbose
@@ -172,10 +170,9 @@ def collect(ctx, verbose):
 
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
-    h5_dir = ctx.obj['H5_DIR']
+    collect_pattern = ctx.obj['collect_pattern']
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
-    file_prefix = ctx.obj['FILE_PREFIX']
     log_dir = ctx.obj['LOG_DIR']
     purge_chunks = ctx.obj['PURGE_CHUNKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -189,24 +186,20 @@ def collect(ctx, verbose):
                      'with type "{}"'.format(key, val, type(val)))
 
     logger.info('Collection is being run for "{}" with job name "{}" '
-                'and collection dir: {}. Target output path is: {}'
-                .format(dsets, name, h5_dir, h5_file))
+                'and collection pattern: {}. Target output path is: {}'
+                .format(dsets, name, collect_pattern, h5_file))
     t0 = time.time()
 
-    Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                      file_prefix=file_prefix)
+    Collector.collect(h5_file, collect_pattern, project_points, dsets[0])
 
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
-            Collector.add_dataset(h5_file, h5_dir, dset_name,
-                                  file_prefix=file_prefix)
+            Collector.add_dataset(h5_file, collect_pattern, dset_name)
 
     if purge_chunks:
-        Collector.purge_chunks(h5_file, h5_dir, project_points,
-                               file_prefix=file_prefix)
+        Collector.purge_chunks(h5_file, collect_pattern, project_points)
     else:
-        Collector.move_chunks(h5_file, h5_dir, project_points,
-                              file_prefix=file_prefix)
+        Collector.move_chunks(h5_file, collect_pattern, project_points)
 
     runtime = (time.time() - t0) / 60
     logger.info('Collection completed in: {:.2f} min.'.format(runtime))
@@ -215,15 +208,14 @@ def collect(ctx, verbose):
     status = {'dirout': os.path.dirname(h5_file),
               'fout': os.path.basename(h5_file), 'job_status': 'successful',
               'runtime': runtime,
-              'finput': os.path.join(h5_dir, '{}*.h5'.format(file_prefix))}
+              'finput': collect_pattern}
     Status.make_job_file(
         os.path.dirname(h5_file), ModuleName.COLLECT, name, status
     )
 
 
-def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                 file_prefix=None, log_dir='./logs/',
-                 purge_chunks=False, verbose=False):
+def get_node_cmd(name, h5_file, collect_pattern, project_points, dsets,
+                 log_dir='./logs/', purge_chunks=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
@@ -232,15 +224,14 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         reV collection jobname.
     h5_file : str
         Path to .h5 file into which data will be collected
-    h5_dir : str
-        Root directory containing .h5 files to combine
+    collect_pattern : str
+        Unix-style /filepath/pattern*.h5 to get a list of files to
+        collect into h5_file
     project_points : str | slice | list | pandas.DataFrame
         Project points that correspond to the full collection of points
         contained in the .h5 files to be collected
     dsets : list
         List of datasets (strings) to be collected.
-    file_prefix : str
-        .h5 file prefix, if None collect all files on h5_dir
     log_dir : str
         Log directory.
     purge_chunks : bool
@@ -257,10 +248,9 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
     """
     # make a cli arg string for direct() in this module
     args = ['-f {}'.format(SLURM.s(h5_file)),
-            '-d {}'.format(SLURM.s(h5_dir)),
+            '-cd {}'.format(SLURM.s(collect_pattern)),
             '-pp {}'.format(SLURM.s(project_points)),
             '-ds {}'.format(SLURM.s(dsets)),
-            '-fp {}'.format(SLURM.s(file_prefix)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
 
@@ -312,11 +302,10 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
-    h5_dir = ctx.obj['H5_DIR']
+    collect_pattern = ctx.obj['collect_pattern']
     log_dir = ctx.obj['LOG_DIR']
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
-    file_prefix = ctx.obj['FILE_PREFIX']
     purge_chunks = ctx.obj['PURGE_CHUNKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -325,9 +314,9 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         slurm_manager = SLURM()
         ctx.obj['SLURM_MANAGER'] = slurm_manager
 
-    cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                       file_prefix=file_prefix, log_dir=log_dir,
-                       purge_chunks=purge_chunks, verbose=verbose)
+    cmd = get_node_cmd(name, h5_file, collect_pattern, project_points, dsets,
+                       log_dir=log_dir, purge_chunks=purge_chunks,
+                       verbose=verbose)
     if sh_script:
         cmd = sh_script + '\n' + cmd
 
@@ -346,8 +335,8 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                .format(name, status))
     else:
         logger.info('Running reV collection on SLURM with node name "{}", '
-                    'collecting data to "{}" from "{}" with file prefix "{}".'
-                    .format(name, h5_file, h5_dir, file_prefix))
+                    'collecting data to "{}" from pattern "{}".'
+                    .format(name, h5_file, collect_pattern))
         out = slurm_manager.sbatch(cmd,
                                    alloc=alloc,
                                    memory=memory,
