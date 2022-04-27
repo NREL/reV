@@ -139,10 +139,18 @@ def test_powercurve_losses_mixin_class_add_powercurve_losses(config):
 
     og_powercurve = np.array(sam_config["wind_turbine_powercurve_powerout"])
 
+    # patch required for 'wind_resource_data' access below
+    def get_item_patch(self, key):
+        return self.sam_sys_inputs.get(key)
+    PowercurveLossesMixin.__getitem__ = get_item_patch
+
     mixin = PowercurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
     mixin.sam_sys_inputs[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = 10
-    mixin.add_powercurve_losses(BASIC_WIND_RES)
+    mixin.sam_sys_inputs['wind_resource_data'] = {
+        'data': [(0, 0, val) for val in BASIC_WIND_RES]
+    }
+    mixin.add_powercurve_losses()
     new_powercurve = np.array(
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )
@@ -152,7 +160,7 @@ def test_powercurve_losses_mixin_class_add_powercurve_losses(config):
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
-def test_scheduled_losses_mixin_class_no_losses_input(config):
+def test_powercurve_losses_mixin_class_no_losses_input(config):
     """Test mixin class behavior when no losses should be added. """
 
     with open(config, 'r') as fh:
@@ -162,7 +170,7 @@ def test_scheduled_losses_mixin_class_no_losses_input(config):
 
     mixin = PowercurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
-    mixin.add_powercurve_losses(BASIC_WIND_RES)
+    mixin.add_powercurve_losses()
     new_powercurve = np.array(
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )

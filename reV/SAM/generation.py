@@ -1120,19 +1120,13 @@ class TroughPhysicalHeat(AbstractSamSolarThermal):
 class AbstractSamWind(AbstractSamGeneration, PowercurveLossesMixin, ABC):
     """Base Class for Wind generation from SAM"""
 
-    def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, *args, **kwargs):
         """
         See docstring for :class:`AbstractSamGeneration` for full input
         parameter descriptions.
         """
-
-        super().__init__(resource=resource, meta=meta,
-                         sam_sys_inputs=sam_sys_inputs,
-                         site_sys_inputs=site_sys_inputs,
-                         output_request=output_request, drop_leap=drop_leap)
-
-        self.add_powercurve_losses(resource['windspeed'].values)
+        super().__init__(*args, **kwargs)
+        self.add_powercurve_losses()
 
 
 class WindPower(AbstractSamWind):

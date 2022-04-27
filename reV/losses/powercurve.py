@@ -290,7 +290,7 @@ class PowercurveLossesMixin:
     POWERCURVE_CONFIG_KEY = 'reV-powercurve_losses'
     """Specify powercurve loss target in the config file using this key."""
 
-    def add_powercurve_losses(self, wind_resource):
+    def add_powercurve_losses(self):
         """Adjust powercurve in SAM config file to account for losses.
 
         This function reads the information in the
@@ -313,6 +313,8 @@ class PowercurveLossesMixin:
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         powercurve = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
+        wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
+
         pc_losses = PowercurveLosses(wind_speed, powercurve, wind_resource)
         new_curve = pc_losses.calculate(target_losses)
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
