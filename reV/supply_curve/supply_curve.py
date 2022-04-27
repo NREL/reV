@@ -18,7 +18,8 @@ from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 from reV.utilities import log_versions
 
-from rex.utilities import Resource, parse_table, SpawnProcessPool
+from rex import Resource
+from rex.utilities import parse_table, SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ class SupplyCurve:
         Total LCOE of each supply curve point considering the LCOE friction
         scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
     """
+
     def __init__(self, sc_points, trans_table, sc_features=None):
         """
         Parameters
@@ -126,8 +128,7 @@ class SupplyCurve:
         if isinstance(sc_points, str) and sc_points.endswith('.h5'):
             with Resource(sc_points) as res:
                 sc_points = res.meta
-                print(sc_points)
-                raise
+                sc_points.index.name = None
         else:
             sc_points = parse_table(sc_points)
 

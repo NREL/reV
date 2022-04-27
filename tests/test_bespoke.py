@@ -9,11 +9,14 @@ import tempfile
 import numpy as np
 import pandas as pd
 import pytest
+import h5py
 
 from reV import TESTDATADIR
-from reV.supply_curve.tech_mapping import TechMapping
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.tech_mapping import TechMapping
+from reV.supply_curve.supply_curve import SupplyCurve
 from reV.SAM.generation import WindPower
 
 from rex import Resource
@@ -412,10 +415,9 @@ def test_consistent_eval_namespace(gid=33):
         bsp.close()
 
 
-if __name__ == '__main__':
-    import h5py
-    from reV.handler.outputs import Outputs
-    from reV.supply_curve.supply_curve import SupplyCurve
+def test_bespoke_supply_curve():
+    """Test supply curve compute from a bespoke output that acts as the
+    traditional reV-sc-aggregation output table."""
 
     bespoke_sample_fout = os.path.join(TESTDATADIR,
                                        'bespoke/test_bespoke_node00.h5')
@@ -435,5 +437,20 @@ if __name__ == '__main__':
         trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                      f'costs_RI_{cap}MW.csv')
                         for cap in [100, 200, 400, 1000]]
+
         sc_full = SupplyCurve.full(bespoke_sc_fp, trans_tables, fcr=0.1,
                                    avail_cap_frac=0.1)
+
+        assert all(gid in sc_full['sc_gid']
+                   for gid in normal_sc_points['sc_gid'])
+        for _, inp_row in normal_sc_points.iterrows():
+            sc_gid = inp_row['sc_gid']
+            assert sc_gid in sc_full['sc_gid']
+            test_ind = np.where(sc_full['sc_gid'] == sc_gid)[0]
+            assert len(test_ind) == 1
+            test_row = sc_full.iloc[test_ind]
+            assert test_row['total_lcoe'].values[0] > inp_row['mean_lcoe']
+
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
+    sc_baseline = pd.read_csv(fpath_baseline)
+    assert np.allclose(sc_baseline['total_lcoe'], sc_full['total_lcoe'])
