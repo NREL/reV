@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""reV powercurve losses module.
+"""reV power curve losses module.
 
 """
 import json
@@ -14,64 +14,65 @@ from reV.utilities.exceptions import reVLossesValueError
 logger = logging.getLogger(__name__)
 
 
-class PowercurveLosses:
-    """A converter between annual losses and powercurve transformation.
+class PowerCurveLosses:
+    """A converter between annual losses and power curve transformation.
 
     Given a target annual loss value, this class facilitates the
-    calculation of a powercurve transformation such that the annual
-    generation losses incurred by using the transformed powercurve when
-    compared to the original (non-transformed) powercurve match the
+    calculation of a power curve transformation such that the annual
+    generation losses incurred by using the transformed power curve when
+    compared to the original (non-transformed) power curve match the
     target loss as close as possible.
 
     The underlying assumption for this approach is that some types of
-    losses can be realized by a transformation of the powercurve (see
+    losses can be realized by a transformation of the power curve (see
     the values of :obj:`TRANSFORMATIONS` for details on all of the
-    powercurve transformations that have been implemented).
+    power curve transformations that have been implemented).
 
     The advantage of this approach is that, unlike haircut losses (where
     a single loss value is applied across the board to all generation),
-    the losses are distributed non-uniformly across the powercurve. For
+    the losses are distributed non-uniformly across the power curve. For
     example, even in the overly simplified case of a horizontal
-    translation of the powercurve (which is only physically realistic
+    translation of the power curve (which is only physically realistic
     for certain types of losses like blade degradation), the losses are
-    distributed primarily across region 2 of the powercurve (the steep,
+    distributed primarily across region 2 of the power curve (the steep,
     almost linear, portion where the generation rapidly increases). This
     means that, unlike with haircut losses, generation is able to reach
     max rated power (albeit at a greater wind speed).
 
     Attributes
     ----------
-    powercurve : :obj:`Powercurve`
-        A :obj:`Powercurve` object representing the "original
-        powercurve".
+    power_curve : :obj:`PowerCurve`
+        A :obj:`PowerCurve` object representing the "original
+        powerCurve".
     wind_resource : :obj:`np.array`
         An array containing the wind speeds (i.e. wind speed
-        distribution) for the site at which the powercurve will be used.
-        This distribution is used to calculate the annual generation
-        of the original powercurve as well as any additional calcaulted
-        powercurves. The generation values are then compared in order to
-        calculate the loss resulting from a transformed powercurve.
+        distribution) for the site at which the power curve will be
+        used. This distribution is used to calculate the annual
+        generation of the original power curve as well as any additional
+        calcaulted power curves. The generation values are then compared
+        in order to calculate the loss resulting from a transformed
+        power curve.
     """
 
-    def __init__(self, powercurve, wind_resource):
+    def __init__(self, power_curve, wind_resource):
         """
         Parameters
         ----------
-        powercurve : Powercurve
-            A :obj:`Powercurve` object representing the turbine
-            powercurve. This input is treated as the
-            "original powercurve".
+        power_curve : PowerCurve
+            A :obj:`PowerCurve` object representing the turbine
+            power curve. This input is treated as the
+            "original" power curve.
         wind_resource : iter
             An iterable containing the wind speeds measured at the site
-            where this powercurve will be applied to caulcate
+            where this power curve will be applied to caulcate
             generation. These values are used to calculate the loss
-            resulting from a transformed powercurve compared to the
-            generation of the original powercurve. The input
+            resulting from a transformed power curve compared to the
+            generation of the original power curve. The input
             values should all be non-zero, and the units of
-            should match the units of the ``powercurve`` input
+            should match the units of the ``power_curve`` input
             (typically, m/s).
         """
-        self.powercurve = powercurve
+        self.power_curve = power_curve
         self.wind_resource = np.array(wind_resource)
         self._power_gen = None
 
@@ -86,50 +87,52 @@ class PowercurveLosses:
             logger.error(msg)
             raise reVLossesValueError(msg)
 
-    def annual_losses_with_transformed_powercurve(
-        self, transformed_powercurve
+    def annual_losses_with_transformed_power_curve(
+        self, transformed_power_curve
     ):
-        """Calculate the annual losses from a transformed powercurve.
+        """Calculate the annual losses from a transformed power curve.
 
         This function uses the wind resource data that the object was
         initialized with to calculate the total annual power generation
-        with a transformed powercurve. This generation is compared with
-        the generation of the original (non-transformed) powercurve to
+        with a transformed power curve. This generation is compared with
+        the generation of the original (non-transformed) power curve to
         compute the total annual losses as a result of the
         transformation.
 
         Parameters
         ----------
-        transformed_powercurve : Powercurve
-            A :obj:`Powercurve` object representing the transformed
-            powercurve. The power generated with this powercurve will be
-            conpared with the power generated by the "original
-            powercurve" to calculate annual losses.
+        transformed_power_curve : PowerCurve
+            A :obj:`PowerCurve` object representing the transformed
+            power curve. The power generated with this power curve will
+            be compared with the power generated by the "original" power
+            curve to calculate annual losses.
 
         Returns
         -------
         float
-            Total losses (%) as a result of a the powercurve
+            Total losses (%) as a result of a the power curve
             transformation.
         """
-        power_gen_with_losses = transformed_powercurve(self.wind_resource)
+        power_gen_with_losses = transformed_power_curve(self.wind_resource)
         power_gen_with_losses = power_gen_with_losses.sum()
         return (1 - power_gen_with_losses / self.power_gen_no_losses) * 100
 
     def _obj(self, transformation_variable, target, transformation):
         """Objective function: |output - target|."""
-        new_powercurve = transformation.apply(transformation_variable)
-        losses = self.annual_losses_with_transformed_powercurve(new_powercurve)
+        new_power_curve = transformation.apply(transformation_variable)
+        losses = self.annual_losses_with_transformed_power_curve(
+            new_power_curve
+        )
         return np.abs(losses - target)
 
     def fit(self, target, transformation='horizontal_translation'):
-        """Fit a powercurve transformation.
+        """Fit a power curve transformation.
 
-        This function fits a transformation to the input powercurve
+        This function fits a transformation to the input power curve
         (the one used to initialize the object) to generate an annual
         loss percentage closest to the ``target``. The losses are
         computed w.r.t the generation of the original (non-transformed)
-        powercurve.
+        power curve.
 
         Parameters
         ----------
@@ -137,27 +140,27 @@ class PowercurveLosses:
             Target value for annual generation losses (%).
         transformation : str
             A string representing the key in the :obj:`TRANSFORMATIONS`
-            dictionary corresponding to the powercurve transformation to
-            use.
+            dictionary corresponding to the power curve transformation
+            to use.
 
         Returns
         -------
         :obj:`np.array`
-            An array containing a transformed powercurve that most
+            An array containing a transformed power curve that most
             closely yields the ``target`` annual generation losses.
 
         Warnings
         --------
         This function attempts to find an optimal transformation for the
-        powercurve such that the annual generation losses match the
+        power curve such that the annual generation losses match the
         ``target`` value, but there is no guarantee that a close match
         can be found, if it even exists. Therefore, it is possible that
-        the losses resulting from the transformed powercurve will not
+        the losses resulting from the transformed power curve will not
         match the ``target``. This is especially likely if the
-        ``target`` is large or if the input powercurve and/or wind
+        ``target`` is large or if the input power curve and/or wind
         resource is abnormal.
         """
-        transformation = TRANSFORMATIONS[transformation](self.powercurve)
+        transformation = TRANSFORMATIONS[transformation](self.power_curve)
         fit_var = minimize_scalar(
             self._obj,
             args=(target, transformation),
@@ -168,20 +171,20 @@ class PowercurveLosses:
 
     @property
     def power_gen_no_losses(self):
-        """float: Total power generation from original powercurve."""
+        """float: Total power generation from original power curve."""
         if self._power_gen is None:
-            self._power_gen = self.powercurve(self.wind_resource).sum()
+            self._power_gen = self.power_curve(self.wind_resource).sum()
         return self._power_gen
 
 
-class Powercurve:
-    """A turbine powercurve.
+class PowerCurve:
+    """A turbine power curve.
 
     Attributes
     ----------
     wind_speed : :obj:`np.array`
         An array containing the wind speeds corresponding to the values
-        in the :attr:`powercurve` array.
+        in the :attr:`power_curve` array.
     generation : :obj:`np.array`
         An array containing the generated power at the corresponding
         wind speed in the :attr:`wind_speed` array. This input must have
@@ -194,12 +197,12 @@ class Powercurve:
     This class will attempt to infer a cutoff speed from the
     ``generation`` input. Specifically, it will look for a transition
     from the highest rated power down to zero in a single ``wind_speed``
-    step of the powercurve. If such a transition is detected, the wind
+    step of the power curve. If such a transition is detected, the wind
     speed corresponding to the zero value will be set as the cutoff
-    speed, and all calculated powercurves will be clipped at this speed.
-    If your input powercurve contains a cutoff speed, ensure that it
-    adheres to the expected pattern of dropping from max rated power to
-    zero power in a single wind speed step.
+    speed, and all calculated power curves will be clipped at this
+    speed. If your input power curve contains a cutoff speed, ensure
+    that it adheres to the expected pattern of dropping from max rated
+    power to zero power in a single wind speed step.
     """
     def __init__(self, wind_speed, generation):
         """
@@ -290,7 +293,7 @@ class Powercurve:
         return self.generation[key]
 
     def __call__(self, wind_speed):
-        """Calculate the powercurve value for the given ``wind_speed``.
+        """Calculate the power curve value for the given ``wind_speed``.
 
         Parameters
         ----------
@@ -301,7 +304,7 @@ class Powercurve:
         Returns
         -------
         float | :obj:`np.array`
-            The powercurve value(s) for the input wind speed(s).
+            The power curve value(s) for the input wind speed(s).
         """
         if isinstance(wind_speed, (int, float)):
             wind_speed = [wind_speed]
@@ -311,7 +314,7 @@ class Powercurve:
         return new_pc
 
 
-class PowercurveLossesMixin:
+class PowerCurveLossesMixin:
     """Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.
 
     Warning
@@ -321,80 +324,80 @@ class PowercurveLossesMixin:
     results and/or errors.
     """
 
-    POWERCURVE_CONFIG_KEY = 'reV-powercurve_losses'
-    """Specify powercurve loss target in the config file using this key."""
+    POWERCURVE_CONFIG_KEY = 'reV-power_curve_losses'
+    """Specify power curve loss target in the config file using this key."""
 
-    def add_powercurve_losses(self):
-        """Adjust powercurve in SAM config file to account for losses.
+    def add_power_curve_losses(self):
+        """Adjust power curve in SAM config file to account for losses.
 
         This function reads the information in the
-        ``reV-powercurve_losses`` key of the ``sam_sys_inputs``
-        dictionary and computes a new powercurve that accounts for the
-        loss percentage specified from that input. If no powercurve loss
-        info is specified in ``sam_sys_inputs``, the powercurve will not
-        be adjusted.
+        ``reV-power_curve_losses`` key of the ``sam_sys_inputs``
+        dictionary and computes a new power curve that accounts for the
+        loss percentage specified from that input. If no power curve
+        loss info is specified in ``sam_sys_inputs``, the power curve
+        will not be adjusted.
 
         See Also
         --------
-        :class:`PowercurveLosses` : Powercurve re-calculation.
+        :class:`PowerCurveLosses` : Power curve re-calculation.
 
         """
-        powercurve_losses_info = self.sam_sys_inputs.pop(
+        power_curve_losses_info = self.sam_sys_inputs.pop(
             self.POWERCURVE_CONFIG_KEY, None
         )
-        if powercurve_losses_info is None:
+        if power_curve_losses_info is None:
             return
 
-        if isinstance(powercurve_losses_info, str):
-            powercurve_losses_info = json.loads(powercurve_losses_info)
+        if isinstance(power_curve_losses_info, str):
+            power_curve_losses_info = json.loads(power_curve_losses_info)
 
         # TODO: Add checks for required keys - turn into class like Outages
-        target_losses = powercurve_losses_info['target_losses_percent']
-        transformation = powercurve_losses_info.get(
+        target_losses = power_curve_losses_info['target_losses_percent']
+        transformation = power_curve_losses_info.get(
             'transformation', 'horizontal_translation'
         )
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
-        powercurve = Powercurve(wind_speed, generation)
+        power_curve = PowerCurve(wind_speed, generation)
 
         wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
-        pc_losses = PowercurveLosses(powercurve, wind_resource)
+        pc_losses = PowerCurveLosses(power_curve, wind_resource)
 
         new_curve = pc_losses.fit(target_losses, transformation)
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
 
-class PowercurveTransformation(ABC):
-    """Abscrtact base class for powercurve transformations.
+class PowerCurveTransformation(ABC):
+    """Abscrtact base class for power curve transformations.
 
     **This class is not meant to be instantiated**.
 
-    This class provides an interface for powercurve transformations,
+    This class provides an interface for power curve transformations,
     which are meant to more realistically represent certain types of
     losses when compared to simple haircut losses (i.e. constant loss
     value applied at all points on the power curve).
 
     Attributes
     ----------
-    powercurve : :obj:`Powercurve`
-        A :obj:`Powercurve` object representing the "original
-        powercurve".
+    power_curve : :obj:`PowerCurve`
+        A :obj:`PowerCurve` object representing the "original" power
+        curve.
     """
-    def __init__(self, powercurve):
+    def __init__(self, power_curve):
         """
         Parameters
         ----------
-        powercurve : Powercurve
-            A :obj:`Powercurve` object representing the turbine
-            powercurve. This input is treated as the "original
-            powercurve".
+        power_curve : PowerCurve
+            A :obj:`PowerCurve` object representing the turbine
+            power curve. This input is treated as the "original" power
+            curve.
         """
-        self.powercurve = powercurve
+        self.power_curve = power_curve
 
     @abstractmethod
     def apply(self, transformation_var):
-        """Apply a transformation to the original powercurve."""
+        """Apply a transformation to the original power curve."""
 
     @property
     @abstractmethod
@@ -402,10 +405,10 @@ class PowercurveTransformation(ABC):
         """tuple: Bounds on the transformation_var."""
 
 
-class HorizontalPowercurveTranslation(PowercurveTransformation):
-    """Utility for applying horizontal powercurve translations.
+class HorizontalPowerCurveTranslation(PowerCurveTransformation):
+    """Utility for applying horizontal power curve translations.
 
-    This kind of powercurve transformation is simplistic, and should
+    This kind of power curve transformation is simplistic, and should
     only be used for a small handful of applicable turbine losses
     (i.e. blade degradation). See ``Warnings`` for more details.
 
@@ -415,78 +418,80 @@ class HorizontalPowercurveTranslation(PowercurveTransformation):
 
     Attributes
     ----------
-    powercurve : :obj:`Powercurve`
-        A :obj:`Powercurve` object representing the "original
-        powercurve".
+    power_curve : :obj:`PowerCurve`
+        A :obj:`PowerCurve` object representing the "original" power
+        curve.
 
     Warnings
     --------
-    This kind of powercurve translation is not genrally realistic. Using
-    this transformation as a primary source of losses (i.e. many
+    This kind of power curve translation is not genrally realistic.
+    Using this transformation as a primary source of losses (i.e. many
     different kinds of losses bundled together) is extremely likely to
     yield unrealistic results!
     """
 
     def apply(self, transformation_var):
-        """Apply a horizontal translation to the original powercurve.
+        """Apply a horizontal translation to the original power curve.
 
-        This function shifts the original powercurve horizontally
+        This function shifts the original power curve horizontally
         by the given amount and truncates any power above the cutoff
         speed (if one was detected).
 
         Parameters
         ----------
         transformation_var : float
-            The amount to shift the original powercurve by, in wind
+            The amount to shift the original power curve by, in wind
             speed units (typically, m/s).
 
         Returns
         -------
-        :obj:`Powercurve`
-            An new powercurve containing the generation values from the
-            shifted powercurve.
+        :obj:`PowerCurve`
+            An new power curve containing the generation values from the
+            shifted power curve.
         """
-        new_gen = self.powercurve(
-            self.powercurve.wind_speed - transformation_var
+        new_gen = self.power_curve(
+            self.power_curve.wind_speed - transformation_var
         )
-        mask = self.powercurve.wind_speed >= self.powercurve.cutoff_wind_speed
+        mask = (
+            self.power_curve.wind_speed >= self.power_curve.cutoff_wind_speed
+        )
         new_gen[mask] = 0
 
-        new_curve = Powercurve(self.powercurve.wind_speed, new_gen)
-        self._validate_shifted_powercurve(new_curve)
+        new_curve = PowerCurve(self.power_curve.wind_speed, new_gen)
+        self._validate_shifted_power_curve(new_curve)
         return new_curve
 
-    def _validate_shifted_powercurve(self, new_curve):
-        """Ensure new powercurve has some non-zero generation. """
+    def _validate_shifted_power_curve(self, new_curve):
+        """Ensure new power curve has some non-zero generation. """
         mask = [
-            self.powercurve.wind_speed <= self.powercurve.cutoff_wind_speed
+            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
         ]
-        min_expected_power_gen = self.powercurve[self.powercurve > 0].min()
+        min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
         if not (new_curve[mask] > min_expected_power_gen).any():
-            msg = ("Calculated powercurve is invalid. No power generation "
+            msg = ("Calculated power curve is invalid. No power generation "
                    "below the cutoff wind speed ({} m/s) detected. Target "
                    "loss percentage  may be too large! Please try again with "
                    "a lower target value.")
-            msg = msg.format(self.powercurve.cutoff_wind_speed)
+            msg = msg.format(self.power_curve.cutoff_wind_speed)
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     @property
     def bounds(self):
-        """tuple: Bounds on the powercurve shift for the fitting procedure."""
-        min_ind = np.where(self.powercurve)[0][0]
-        max_ind = np.where(self.powercurve[::-1])[0][0]
+        """tuple: Bounds on the power curve shift for the fitting procedure."""
+        min_ind = np.where(self.power_curve)[0][0]
+        max_ind = np.where(self.power_curve[::-1])[0][0]
         max_shift = (
-            self.powercurve.wind_speed[-max_ind]
-            - self.powercurve.wind_speed[min_ind]
+            self.power_curve.wind_speed[-max_ind]
+            - self.power_curve.wind_speed[min_ind]
         )
         return (0, max_shift)
 
 
 TRANSFORMATIONS = {
-    'horizontal_translation': HorizontalPowercurveTranslation
+    'horizontal_translation': HorizontalPowerCurveTranslation
 }
-"""Implemented powercurve transformations."""
+"""Implemented power curve transformations."""
 
 
 def _validate_arrays_not_empty(obj, array_names=None):

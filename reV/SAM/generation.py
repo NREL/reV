@@ -35,7 +35,7 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
-from reV.losses import ScheduledLossesMixin, PowercurveLossesMixin
+from reV.losses import ScheduledLossesMixin, PowerCurveLossesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -1117,7 +1117,7 @@ class TroughPhysicalHeat(AbstractSamSolarThermal):
         return DefaultTroughPhysicalProcessHeat.default()
 
 
-class AbstractSamWind(AbstractSamGeneration, PowercurveLossesMixin, ABC):
+class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
     """Base Class for Wind generation from SAM"""
 
     def __init__(self, *args, **kwargs):
@@ -1126,7 +1126,7 @@ class AbstractSamWind(AbstractSamGeneration, PowercurveLossesMixin, ABC):
         parameter descriptions.
         """
         super().__init__(*args, **kwargs)
-        self.add_powercurve_losses()
+        self.add_power_curve_losses()
 
 
 class WindPower(AbstractSamWind):

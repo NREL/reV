@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PyTest file for reV powercurve losses.
+PyTest file for reV power curve losses.
 
 Created on Mon Apr 18 12:52:16 2021
 
@@ -18,9 +18,9 @@ import numpy as np
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
 from reV.utilities.exceptions import reVLossesValueError
-from reV.losses.powercurve import (Powercurve, PowercurveLosses,
-                                   PowercurveLossesMixin,
-                                   HorizontalPowercurveTranslation)
+from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
+                                    PowerCurveLossesMixin,
+                                    HorizontalPowerCurveTranslation)
 from reV.losses.scheduled import ScheduledLossesMixin
 
 
@@ -35,27 +35,27 @@ BASIC_WIND_RES = [10, 20, 20]
 
 
 @pytest.fixture
-def simple_powercurve():
-    """Return a simple synthetic powercurve."""
+def simple_power_curve():
+    """Return a simple synthetic power curve."""
     wind_speed = [0, 10, 20, 30]
     generation = [0, 20, 15, 10]
-    return Powercurve(wind_speed, generation)
+    return PowerCurve(wind_speed, generation)
 
 
 @pytest.fixture
-def real_powercurve():
-    """Return a basic powercurve."""
+def real_power_curve():
+    """Return a basic power curve."""
     with open(SAM_FILES[0], 'r') as fh:
         sam_config = json.load(fh)
 
     wind_speed = sam_config['wind_turbine_powercurve_windspeeds']
-    powercurve = sam_config['wind_turbine_powercurve_powerout']
-    return Powercurve(wind_speed, powercurve)
+    generation = sam_config['wind_turbine_powercurve_powerout']
+    return PowerCurve(wind_speed, generation)
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('target_losses', [0, 10, 50])
-def test_powercurve_losses(generic_losses, target_losses):
+def test_power_curve_losses(generic_losses, target_losses):
     """Test full gen run with scheduled losses. """
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
         generic_losses, target_losses=target_losses
@@ -83,7 +83,7 @@ def _run_gen_with_and_without_losses(
         del sam_config['wind_farm_losses_percent']
         sam_config['turb_generic_loss'] = generic_losses
 
-        sam_config[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+        sam_config[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
             'target_losses_percent': target_losses
         }
         if include_outages:
@@ -132,7 +132,7 @@ def _run_gen_with_and_without_losses(
     return gen_profiles, gen_profiles_with_losses
 
 
-def test_powercurve_losses_witch_scheduled_outages():
+def test_power_curve_losses_witch_scheduled_outages():
     """Test full gen run with scheduled losses. """
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
         generic_losses=0.2, target_losses=20, include_outages=True
@@ -143,121 +143,121 @@ def test_powercurve_losses_witch_scheduled_outages():
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
-def test_powercurve_losses_mixin_class_add_powercurve_losses(config):
+def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
     """Test mixin class behavior when adding losses. """
 
     with open(config, 'r') as fh:
         sam_config = json.load(fh)
 
-    og_powercurve = np.array(sam_config["wind_turbine_powercurve_powerout"])
+    og_power_curve = np.array(sam_config["wind_turbine_powercurve_powerout"])
 
     # patch required for 'wind_resource_data' access below
     def get_item_patch(self, key):
         return self.sam_sys_inputs.get(key)
-    PowercurveLossesMixin.__getitem__ = get_item_patch
+    PowerCurveLossesMixin.__getitem__ = get_item_patch
 
-    mixin = PowercurveLossesMixin()
+    mixin = PowerCurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
-    mixin.sam_sys_inputs[PowercurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+    mixin.sam_sys_inputs[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
         'target_losses_percent': 10
     }
     mixin.sam_sys_inputs['wind_resource_data'] = {
         'data': [(0, 0, val) for val in BASIC_WIND_RES]
     }
-    mixin.add_powercurve_losses()
-    new_powercurve = np.array(
+    mixin.add_power_curve_losses()
+    new_power_curve = np.array(
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )
 
     assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert any(og_powercurve != new_powercurve)
+    assert any(og_power_curve != new_power_curve)
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
-def test_powercurve_losses_mixin_class_no_losses_input(config):
+def test_power_curve_losses_mixin_class_no_losses_input(config):
     """Test mixin class behavior when no losses should be added. """
 
     with open(config, 'r') as fh:
         sam_config = json.load(fh)
 
-    og_powercurve = np.array(sam_config["wind_turbine_powercurve_powerout"])
+    og_power_curve = np.array(sam_config["wind_turbine_powercurve_powerout"])
 
-    mixin = PowercurveLossesMixin()
+    mixin = PowerCurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
-    mixin.add_powercurve_losses()
-    new_powercurve = np.array(
+    mixin.add_power_curve_losses()
+    new_power_curve = np.array(
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )
 
     assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert (og_powercurve == new_powercurve).all()
+    assert (og_power_curve == new_power_curve).all()
 
 
 @pytest.mark.parametrize('bad_wind_speed', ([], [-10, 10]))
-def test_powercurve_class_bad_wind_speed_input(bad_wind_speed):
+def test_power_curve_class_bad_wind_speed_input(bad_wind_speed):
     """Test that error is raised for bad wind speed inputs. """
-    powercurve = [10, 100]
+    power_curve = [10, 100]
 
     with pytest.raises(reVLossesValueError) as excinfo:
-        Powercurve(bad_wind_speed, powercurve)
+        PowerCurve(bad_wind_speed, power_curve)
     assert "Invalid wind speed input" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('bad_generation', ([], [0, 0, 0, 0], [0, 20, 0, 10]))
-def test_powercurve_class_bad_generation_input(bad_generation):
+def test_power_curve_class_bad_generation_input(bad_generation):
     """Test that error is raised for bad generation inputs. """
     wind_speed = [0, 10, 20, 30]
 
     with pytest.raises(reVLossesValueError) as excinfo:
-        Powercurve(wind_speed, bad_generation)
+        PowerCurve(wind_speed, bad_generation)
     assert "Invalid generation input" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('bad_wind_res', ([], [-10, 10]))
-def test_powercurve_losses_class_bad_wind_res_input(bad_wind_res):
+def test_power_curve_losses_class_bad_wind_res_input(bad_wind_res):
     """Test that error is raised for bad wind resource inputs. """
     wind_speed = [0, 10]
     generation = [10, 100]
-    powercurve = Powercurve(wind_speed, generation)
+    power_curve = PowerCurve(wind_speed, generation)
     with pytest.raises(reVLossesValueError) as excinfo:
-        PowercurveLosses(powercurve, bad_wind_res)
+        PowerCurveLosses(power_curve, bad_wind_res)
     assert "Invalid wind resource input" in str(excinfo.value)
 
 
-def test_horizontal_transformation_class_apply(real_powercurve):
-    """Test that the powercurve shift is applied correctly. """
+def test_horizontal_transformation_class_apply(real_power_curve):
+    """Test that the power curve shift is applied correctly. """
 
-    real_powercurve.generation[-1] = real_powercurve.generation[-2]
+    real_power_curve.generation[-1] = real_power_curve.generation[-2]
     curve_shift = (
-        real_powercurve.wind_speed[1] - real_powercurve.wind_speed[0]
+        real_power_curve.wind_speed[1] - real_power_curve.wind_speed[0]
     )
-    transformation = HorizontalPowercurveTranslation(real_powercurve)
-    new_powercurve = transformation.apply(curve_shift)
+    transformation = HorizontalPowerCurveTranslation(real_power_curve)
+    new_power_curve = transformation.apply(curve_shift)
 
-    assert new_powercurve != real_powercurve
-    assert np.isclose(real_powercurve[:-2], new_powercurve[1:-1]).all()
+    assert new_power_curve != real_power_curve
+    assert np.isclose(real_power_curve[:-2], new_power_curve[1:-1]).all()
 
-    new_co_ws = real_powercurve.wind_speed[15]
-    transformation.powercurve._cutoff_wind_speed = new_co_ws
-    new_powercurve = transformation.apply(curve_shift)
-    mask = new_powercurve.wind_speed >= real_powercurve.wind_speed[15]
-    assert (new_powercurve[mask] == 0).all()
+    new_co_ws = real_power_curve.wind_speed[15]
+    transformation.power_curve._cutoff_wind_speed = new_co_ws
+    new_power_curve = transformation.apply(curve_shift)
+    mask = new_power_curve.wind_speed >= real_power_curve.wind_speed[15]
+    assert (new_power_curve[mask] == 0).all()
 
 
-def test_powercurve_losses_class_annual_losses_with_transformed_powercurve():
+def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
     """Test that the average difference is calculated correctly. """
 
     windspeed = [0, 10, 20, 30, 40]
     generation = [0, 10, 15, 20, 0]
-    powercurve = Powercurve(windspeed, generation)
-    transformation = HorizontalPowercurveTranslation(powercurve)
-    pc_losses = PowercurveLosses(powercurve, BASIC_WIND_RES)
+    power_curve = PowerCurve(windspeed, generation)
+    transformation = HorizontalPowerCurveTranslation(power_curve)
+    pc_losses = PowerCurveLosses(power_curve, BASIC_WIND_RES)
 
     new_pc = transformation.apply(10)
-    avg_diff = pc_losses.annual_losses_with_transformed_powercurve(new_pc)
+    avg_diff = pc_losses.annual_losses_with_transformed_power_curve(new_pc)
 
-    # original powercurve: [0, 10, 15, 20, 0]
-    # expected powercurve: [0,  0, 10, 15, 0]
+    # original power curve: [0, 10, 15, 20, 0]
+    # expected power curve: [0,  0, 10, 15, 0]
     # powers from wind resource with original curve: 10 + 15 + 15 = 40
     # powers from wind resource with expected curve: 0 + 10 + 10 = 20
     # expected % difference: (40 - 20) / 40 = 50%
@@ -265,37 +265,39 @@ def test_powercurve_losses_class_annual_losses_with_transformed_powercurve():
     assert abs(avg_diff - 50) < 1
 
 
-def test_horizontal_transformation_class_bounds(real_powercurve):
+def test_horizontal_transformation_class_bounds(real_power_curve):
     """Test that shift_bounds are set correctly. """
 
-    transformation = HorizontalPowercurveTranslation(real_powercurve)
+    transformation = HorizontalPowerCurveTranslation(real_power_curve)
     bounds_min, bounds_max = transformation.bounds
     assert bounds_min == 0
-    assert bounds_max <= real_powercurve.cutoff_wind_speed
-    assert bounds_max <= max(real_powercurve.wind_speed)
+    assert bounds_max <= real_power_curve.cutoff_wind_speed
+    assert bounds_max <= max(real_power_curve.wind_speed)
 
 
-def test_powercurve_losses_class_power_gen_no_losses(simple_powercurve):
+def test_power_curve_losses_class_power_gen_no_losses(simple_power_curve):
     """Test that power_gen_no_losses is calculated correctly. """
 
-    pc_losses = PowercurveLosses(simple_powercurve, BASIC_WIND_RES)
+    pc_losses = PowerCurveLosses(simple_power_curve, BASIC_WIND_RES)
 
     # powers from wind resource: 20 + 15 + 15 = 50
     assert abs(pc_losses.power_gen_no_losses - 50) < 1E-6
 
 
-def test_powercurve_class_cutoff_wind_speed(
-    simple_powercurve, real_powercurve
+def test_power_curve_class_cutoff_wind_speed(
+    simple_power_curve, real_power_curve
 ):
     """Test that cutoff_wind_speed is calculated correctly. """
 
-    assert simple_powercurve.cutoff_wind_speed == np.inf
-    assert real_powercurve.cutoff_wind_speed == real_powercurve.wind_speed[-1]
-
-    powercurve = Powercurve(
-        real_powercurve.wind_speed[:-1], real_powercurve.generation[:-1],
+    assert simple_power_curve.cutoff_wind_speed == np.inf
+    assert (
+        real_power_curve.cutoff_wind_speed == real_power_curve.wind_speed[-1]
     )
-    assert powercurve.cutoff_wind_speed == np.inf
+
+    power_curve = PowerCurve(
+        real_power_curve.wind_speed[:-1], real_power_curve.generation[:-1],
+    )
+    assert power_curve.cutoff_wind_speed == np.inf
 
 
 def execute_pytest(capture='all', flags='-rapP'):
