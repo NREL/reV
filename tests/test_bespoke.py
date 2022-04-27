@@ -352,13 +352,14 @@ def test_collect_bespoke():
     """Test the collection of multiple chunked bespoke files. """
     with tempfile.TemporaryDirectory() as td:
         source_dir = os.path.join(TESTDATADIR, 'bespoke/')
-        source_fps = sorted(glob(source_dir + '/test_bespoke*.h5'))
+        source_pattern = source_dir + '/test_bespoke*.h5'
+        source_fps = sorted(glob(source_pattern))
         assert len(source_fps) > 1
 
         h5_file = os.path.join(td, 'collection.h5')
 
-        Collector.collect(h5_file, source_dir, None, 'cf_profile-2012',
-                          dset_out=None, file_prefix='test_bespoke')
+        Collector.collect(h5_file, source_pattern, None, 'cf_profile-2012',
+                          dset_out=None)
 
         with Resource(h5_file) as fout:
             meta = fout.meta

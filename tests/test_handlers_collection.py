@@ -22,19 +22,19 @@ from rex.utilities.loggers import init_logger, LOGGERS
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
+H5_PATTERN_1 = os.path.join(H5_DIR, 'peregrine_2012*.h5')
+H5_PATTERN_2 = os.path.join(H5_DIR, 'pv_gen_2018*.h5')
 POINTS_PATH = os.path.join(TESTDATADIR, 'config', 'project_points_100.csv')
 
 
-def manual_collect(h5_dir, file_prefix, dset):
+def manual_collect(collect_pattern, dset):
     """
-    Manually collect dset from .h5 files w/ file_prefix in h5_dir
+    Manually collect dset from .h5 files in h5_dir
 
     Parameters
     ----------
-    h5_dir : str
-        Directory containing .h5 files to collect from
-    file_prefix : str
-        File prefix on .h5 file to collect from
+    collect_pattern : str
+        /Filepath/pattern*.h5 to collect
     dset : str
         Dataset to collect
 
@@ -43,7 +43,7 @@ def manual_collect(h5_dir, file_prefix, dset):
     arr : ndarray
         Collected dataset array
     """
-    h5_files = Collector.find_h5_files(h5_dir, file_prefix)
+    h5_files = Collector.find_h5_files(collect_pattern)
     arr = []
     for file in h5_files:
         with h5py.File(file, 'r') as f:
@@ -58,10 +58,10 @@ def test_collection():
     """
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         init_logger('reV.handlers.collection')
-        profiles = manual_collect(H5_DIR, 'peregrine_2012', 'cf_profile')
+        profiles = manual_collect(H5_PATTERN_1, 'cf_profile')
         h5_file = os.path.join(TEMP_DIR, 'collection.h5')
-        Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                          dset_out=None, file_prefix='peregrine_2012')
+        Collector.collect(h5_file, H5_PATTERN_1, POINTS_PATH, 'cf_profile',
+                          dset_out=None)
         with h5py.File(h5_file, 'r') as f:
             cf_profiles = f['cf_profile'][...]
 
@@ -88,9 +88,8 @@ def test_collect_means():
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         init_logger('reV.handlers.collection')
         h5_file = os.path.join(TEMP_DIR, 'cf_means.h5')
-        Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
-                          dset_out=None,
-                          file_prefix='peregrine_2012')
+        Collector.collect(h5_file, H5_PATTERN_1, POINTS_PATH, 'cf_mean',
+                          dset_out=None)
 
 
 def test_profiles_means():
@@ -100,12 +99,9 @@ def test_profiles_means():
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         init_logger('reV.handlers.collection')
         h5_file = os.path.join(TEMP_DIR, 'cf.h5')
-        Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                          dset_out=None,
-                          file_prefix='peregrine_2012')
-        Collector.add_dataset(h5_file, H5_DIR, 'cf_mean',
-                              dset_out=None,
-                              file_prefix='peregrine_2012')
+        Collector.collect(h5_file, H5_PATTERN_1, POINTS_PATH, 'cf_profile',
+                          dset_out=None)
+        Collector.add_dataset(h5_file, H5_PATTERN_1, 'cf_mean', dset_out=None)
 
         with h5py.File(h5_file, 'r') as f:
             assert 'cf_profile' in f
@@ -124,9 +120,8 @@ def test_low_mem_collect():
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         init_logger('reV.handlers.collection', log_level='DEBUG')
         h5_file = os.path.join(TEMP_DIR, 'cf.h5')
-        Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+        Collector.collect(h5_file, H5_PATTERN_1, POINTS_PATH, 'cf_profile',
                           dset_out=None,
-                          file_prefix='peregrine_2012',
                           mem_util_lim=0.00002)
 
         with h5py.File(h5_file, 'r') as f:
@@ -147,12 +142,9 @@ def test_means_lcoe():
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         init_logger('reV.handlers.collection')
         h5_file = os.path.join(TEMP_DIR, 'cf_lcoe.h5')
-        Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
-                          dset_out=None,
-                          file_prefix='peregrine_2012')
-        Collector.add_dataset(h5_file, H5_DIR, 'lcoe_fcr',
-                              dset_out=None,
-                              file_prefix='peregrine_2012')
+        Collector.collect(h5_file, H5_PATTERN_1, POINTS_PATH, 'cf_mean',
+                          dset_out=None)
+        Collector.add_dataset(h5_file, H5_PATTERN_1, 'lcoe_fcr', dset_out=None)
 
         with h5py.File(h5_file, 'r') as f:
             assert 'cf_mean' in f
@@ -165,7 +157,6 @@ def test_cli():
 
     with tempfile.TemporaryDirectory() as td:
         config = {
-            "collect_directory": H5_DIR,
             "log_directory": td,
             "execution_control": {
                 "option": "local"
@@ -175,7 +166,7 @@ def test_cli():
                 "cf_profile"
             ],
             "project_points": None,
-            "file_prefixes": ['peregrine_2012']
+            "collect_patterns": H5_PATTERN_1,
         }
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:
@@ -212,8 +203,8 @@ def test_collect_duplicates():
         assert len(source_fps) > 1
 
         h5_file = os.path.join(td, 'collection.h5')
-        Collector.collect(h5_file, H5_DIR, None, 'cf_profile',
-                          dset_out=None, file_prefix='pv_gen_2018')
+        Collector.collect(h5_file, H5_PATTERN_2, None, 'cf_profile',
+                          dset_out=None)
 
         with Resource(h5_file) as res:
             test_cf = res['cf_profile']

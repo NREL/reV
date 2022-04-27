@@ -78,8 +78,8 @@ def from_config(ctx, config_file, verbose):
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.log_directory))
-    logger.info('Target collection directory: "{}"'
-                .format(config.collect_directory))
+    logger.info('Target collection patterns: "{}"'
+                .format(config.collect_patterns))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.debug('The full configuration input is as follows:\n{}'
@@ -93,9 +93,8 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['VERBOSE'] = verbose
 
     zip_iter = zip(config.fn_out_names, config.collect_patterns)
-    for i_fn_out, collect_pattern in zip_iter:
-        fn_out = i_fn_out + '.h5'
-        ctx.obj['NAME'] = name + '_{}'.format(i_fn_out)
+    for fn_out, collect_pattern in zip_iter:
+        ctx.obj['NAME'] = name + '_{}'.format(fn_out.replace('.h5', ''))
         ctx.obj['H5_FILE'] = os.path.join(config.dirout, fn_out)
         ctx.obj['collect_pattern'] = collect_pattern
 

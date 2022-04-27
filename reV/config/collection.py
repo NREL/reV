@@ -109,9 +109,15 @@ class CollectionConfig(AnalysisConfig):
         """
 
         fn_out_names = self.get('fn_out_names', None)
+        collect_patterns = self['collect_patterns']
 
-        if 'PIPELINE' in str(fn_out_names).upper() or fn_out_names is None:
+        if (str(fn_out_names) == 'PIPELINE'
+                and str(collect_patterns) == 'PIPELINE'):
             fn_out_names = self._parse_pipeline_prefixes()
+
+        elif fn_out_names is None and str(collect_patterns) != 'PIPELINE':
+            fn_out_names = [os.path.basename(fp).replace('*', '')
+                            for fp in self.collect_patterns]
 
         if isinstance(fn_out_names, str):
             fn_out_names = [fn_out_names]
@@ -129,8 +135,7 @@ class CollectionConfig(AnalysisConfig):
 
         collect_patterns = self['collect_patterns']
 
-        if (isinstance(collect_patterns, str)
-                and collect_patterns.upper() == 'PIPELINE'):
+        if str(collect_patterns) == 'PIPELINE':
             coldir = Pipeline.parse_previous(self.dirout,
                                              module=ModuleName.COLLECT,
                                              target='dirout')[0]
