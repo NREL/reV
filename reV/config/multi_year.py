@@ -47,7 +47,10 @@ class MultiYearConfig(AnalysisConfig):
 
     @property
     def groups(self):
-        """Get the multi year collection groups
+        """Get the multi year collection groups. This should be a dictionary
+        mapping group names (keys) to a set of key word arguments to initialize
+        MultiYearGroup (e.g. dsets, source_pattern). You can have only one
+        group with name "none" for no group collection.
 
         Returns
         -------
@@ -98,7 +101,7 @@ class MultiYearGroup:
         Parameters
         ----------
         name : str
-            Group name
+            Group name, can be "none" for no collection groups.
         out_dir : str
             Output directory, used for Pipeline handling
         source_files : str | list | NoneType
