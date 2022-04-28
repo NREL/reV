@@ -465,6 +465,8 @@ class PowerCurveLossesMixin:
 
         loss_input = PowerCurveLossesInput(power_curve_losses_info)
         if loss_input.target <= 0:
+            logger.debug("Power curve target loss is 0. Skipping powercurve "
+                         "transformation.")
             return
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
@@ -474,7 +476,12 @@ class PowerCurveLossesMixin:
         wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
         pc_losses = PowerCurveLosses(power_curve, wind_resource)
 
+        logger.debug("Transforming power curve using the {} transformation to "
+                     "meet {}% loss target..."
+                     .format(loss_input.target, loss_input.transformation))
+
         new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
+        logger.debug("Transformed powercurve: {}".format(new_curve))
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
 

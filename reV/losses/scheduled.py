@@ -541,8 +541,14 @@ class ScheduledLossesMixin:
             outage_specs = json.loads(outage_specs)
 
         outages = [Outage(spec) for spec in outage_specs]
+        logger.debug("Adding the following stochastically scheduled outages: "
+                     "{}".format(outages))
+        logger.debug("Scheduled outages seed: {}".format(self.outage_seed))
+
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
         self.sam_sys_inputs['hourly'] = scheduler.calculate()
+        logger.debug("Hourly adjustment factors as a result of scheduled "
+                     "outages: {}".fromat(scheduler.total_losses.tolist()))
 
     @property
     def outage_seed(self):
