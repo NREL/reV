@@ -580,9 +580,9 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
 
     def _validate_shifted_power_curve(self, new_curve):
         """Ensure new power curve has some non-zero generation. """
-        mask = [
+        mask = (
             self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
-        ]
+        )
         min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
         if not (new_curve[mask] > min_expected_power_gen).any():
             msg = ("Calculated power curve is invalid. No power generation "
