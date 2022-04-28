@@ -548,7 +548,7 @@ class ScheduledLossesMixin:
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
         self.sam_sys_inputs['hourly'] = scheduler.calculate()
         logger.debug("Hourly adjustment factors as a result of scheduled "
-                     "outages: {}".fromat(scheduler.total_losses.tolist()))
+                     "outages: {}".format(scheduler.total_losses.tolist()))
 
     @property
     def outage_seed(self):
