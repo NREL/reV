@@ -391,7 +391,7 @@ class SingleOutageScheduler:
 
         Warns
         -----
-        RevLossesWarning
+        reVLossesWarning
             If the number of requested outages could not be scheduled.
         """
         self.update_when_can_schedule_from_months()
