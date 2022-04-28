@@ -420,6 +420,26 @@ class SupplyCurveExtent:
 
         return slices
 
+    def get_sc_row_col_ind(self, gid):
+        """Get the supply curve grid row and column index values corresponding
+        to a supply curve gid.
+
+        Parameters
+        ----------
+        gid : int
+            Supply curve point gid.
+
+        Returns
+        -------
+        row_ind : int
+            Row index that the gid is located at in the sc grid.
+        col_ind : int
+            Column index that the gid is located at in the sc grid.
+        """
+        row_ind = self.points.loc[gid, 'row_ind']
+        col_ind = self.points.loc[gid, 'col_ind']
+        return row_ind, col_ind
+
     def get_excl_slices(self, gid):
         """Get the row and column slices of the exclusions grid corresponding
         to the supply curve point gid.

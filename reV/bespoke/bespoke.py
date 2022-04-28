@@ -352,8 +352,14 @@ class BespokeSinglePlant:
             gid_counts = json.dumps([float(np.round(n, 1))
                                      for n in self.sc_point.gid_counts])
 
+            with SupplyCurveExtent(self.sc_point._excl_fpath,
+                                   resolution=self.sc_point.resolution) as sc:
+                row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
+
             self._meta = pd.DataFrame(
                 {'sc_point_gid': self.sc_point.gid,
+                 'sc_row_ind': row_ind,
+                 'sc_col_ind': col_ind,
                  'gid': self.sc_point.gid,
                  'latitude': self.sc_point.latitude,
                  'longitude': self.sc_point.longitude,
@@ -368,6 +374,7 @@ class BespokeSinglePlant:
                  'n_gids': self.sc_point.n_gids,
                  'area_sq_km': self.sc_point.area,
                  }, index=[self.sc_point.gid])
+
         return self._meta
 
     @property
