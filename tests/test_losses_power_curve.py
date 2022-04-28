@@ -20,6 +20,7 @@ from reV.generation.generation import Gen
 from reV.utilities.exceptions import reVLossesValueError
 from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesMixin,
+                                    PowerCurveLossesInput,
                                     HorizontalPowerCurveTranslation)
 from reV.losses.scheduled import ScheduledLossesMixin
 
@@ -61,9 +62,13 @@ def test_power_curve_losses(generic_losses, target_losses):
         generic_losses, target_losses=target_losses
     )
 
-    assert (gen_profiles - gen_profiles_with_losses > 0).any()
     assert np.isclose(gen_profiles, gen_profiles_with_losses).any()
     assert gen_profiles.max() == gen_profiles_with_losses.max()
+
+    if target_losses > 0:
+        assert (gen_profiles - gen_profiles_with_losses > 0).any()
+    else:
+        assert np.isclose(gen_profiles, gen_profiles_with_losses).all()
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
     assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
@@ -273,6 +278,47 @@ def test_horizontal_transformation_class_bounds(real_power_curve):
     assert bounds_min == 0
     assert bounds_max <= real_power_curve.cutoff_wind_speed
     assert bounds_max <= max(real_power_curve.wind_speed)
+
+
+def test_power_curve_loss_input_class_valid_inputs():
+    """Test PowerCurveLossesInput class with valid input. """
+
+    specs = {'target_losses_percent': 50}
+    pc_input = PowerCurveLossesInput(specs)
+
+    assert abs(pc_input.target - 50) < 1E-6
+    assert pc_input.transformation == HorizontalPowerCurveTranslation
+
+
+@pytest.mark.parametrize('bad_percent', [-10, 105])
+def test_power_curve_loss_input_class_bad_percent_input(bad_percent):
+    """Test PowerCurveLossesInput class with bad percent input. """
+
+    bad_specs = {'target_losses_percent': bad_percent}
+
+    with pytest.raises(reVLossesValueError) as excinfo:
+        PowerCurveLossesInput(bad_specs)
+    assert "Percentage" in str(excinfo.value)
+    assert "must be in the range [0, 100]" in str(excinfo.value)
+
+
+def test_power_curve_loss_input_class_bad_transformation_input():
+    """Test PowerCurveLossesInput class with bad transformation input. """
+
+    bad_specs = {'target_losses_percent': 50, 'transformation': 'DNE'}
+
+    with pytest.raises(reVLossesValueError) as excinfo:
+        PowerCurveLossesInput(bad_specs)
+    assert "Transformation" in str(excinfo.value)
+    assert "not understood!" in str(excinfo.value)
+
+
+def test_power_curve_loss_input_class_missing_required_keys():
+    """Test PowerCurveLossesInput class withmissing keys input. """
+
+    with pytest.raises(reVLossesValueError) as excinfo:
+        PowerCurveLossesInput({})
+    assert "The following required keys are missing" in str(excinfo.value)
 
 
 def test_power_curve_losses_class_power_gen_no_losses(simple_power_curve):

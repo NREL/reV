@@ -125,7 +125,7 @@ class PowerCurveLosses:
         )
         return np.abs(losses - target)
 
-    def fit(self, target, transformation='horizontal_translation'):
+    def fit(self, target, transformation):
         """Fit a power curve transformation.
 
         This function fits a transformation to the input power curve
@@ -138,10 +138,9 @@ class PowerCurveLosses:
         ----------
         target : float
             Target value for annual generation losses (%).
-        transformation : str
-            A string representing the key in the :obj:`TRANSFORMATIONS`
-            dictionary corresponding to the power curve transformation
-            to use.
+        transformation : PowerCurveTransformation
+            A :class:`PowerCurveTransformation` class representing the
+            power curve transformation to use.
 
         Returns
         -------
@@ -160,7 +159,7 @@ class PowerCurveLosses:
         ``target`` is large or if the input power curve and/or wind
         resource is abnormal.
         """
-        transformation = TRANSFORMATIONS[transformation](self.power_curve)
+        transformation = transformation(self.power_curve)
         fit_var = minimize_scalar(
             self._obj,
             args=(target, transformation),
@@ -314,6 +313,102 @@ class PowerCurve:
         return new_pc
 
 
+class PowerCurveLossesInput:
+    """Power curve losses specification.
+
+    This class stores and validates information about the desired losses
+    from a given type of power curve transfromation. In particular, the
+    target loss percentage must be provided. This input is then
+    validated to be used powercurve transformation fitting.
+
+    """
+
+    REQUIRED_KEYS = {'target_losses_percent'}
+    """Required keys in the input specification dictionary."""
+
+    def __init__(self, specs):
+        """
+
+        Parameters
+        ----------
+        specs : dict
+            A dictionary containing specifications for the power curve
+            losses. This dictionary must contain the following keys:
+                - `target_losses_percent`
+                    An integer or float value representing the
+                    total percentage of annual energy production that
+                    should be lost due to the powercurve transformation.
+                    This value must be in the range [0, 100].
+            The input dictionary can also provide the following optional
+            keys:
+                - `transformation` - by default, ``horizontal_translation``
+                    A string representing the type of transformation to
+                    apply to the power curve. This sting must be one of
+                    the keys of :obj:`TRANSFORMATIONS`.
+
+        """
+        self._specs = specs
+        self._transformation_name = self._specs.get(
+            'transformation', 'horizontal_translation'
+        )
+        self._validate()
+
+    def _validate(self):
+        """Validate the input specs."""
+        self._validate_required_keys_exist()
+        self._validate_transformation()
+        self._validate_percentage()
+
+    def _validate_required_keys_exist(self):
+        """Raise an error if any required keys are missing."""
+        missing_keys = [n not in self._specs for n in self.REQUIRED_KEYS]
+        if any(missing_keys):
+            msg = (
+                "The following required keys are missing from the power curve "
+                "losses specification: {}".format(sorted(missing_keys))
+            )
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_transformation(self):
+        """Validate that the transformation exists in TRANSFORMATIONS. """
+        if self._transformation_name not in TRANSFORMATIONS:
+            msg = (
+                "Transformation {!r} not understood! Input must be one of: {} "
+            ).format(self._transformation_name, list(TRANSFORMATIONS.keys()))
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_percentage(self):
+        """Validate that the percentage is in the range [0, 100]. """
+        if not 0 <= self.target <= 100:
+            msg = (
+                "Percentage of annual energy production loss to be attributed "
+                "to the powercurve transformation must be in the range "
+                "[0, 100], but got {} for transformation {!r}"
+            ).format(self.target, self._transformation_name)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def __repr__(self):
+        specs = self._specs.copy()
+        specs.update({'transformation': self._transformation_name})
+        specs_as_str = ", ".join(
+            ["{}={!r}".format(k, v) for k, v in specs.items()]
+        )
+        return "PowerCurveLossesInput({})".format(specs_as_str)
+
+    @property
+    def target(self):
+        """int or float: Target loss percentage due to transformation."""
+        return self._specs['target_losses_percent']
+
+    @property
+    def transformation(self):
+        """PowerCurveTransformation: Requested power curve transformation."""
+        return TRANSFORMATIONS[self._transformation_name]
+
+
 class PowerCurveLossesMixin:
     """Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.
 
@@ -351,11 +446,9 @@ class PowerCurveLossesMixin:
         if isinstance(power_curve_losses_info, str):
             power_curve_losses_info = json.loads(power_curve_losses_info)
 
-        # TODO: Add checks for required keys - turn into class like Outages
-        target_losses = power_curve_losses_info['target_losses_percent']
-        transformation = power_curve_losses_info.get(
-            'transformation', 'horizontal_translation'
-        )
+        loss_input = PowerCurveLossesInput(power_curve_losses_info)
+        if loss_input.target <= 0:
+            return
 
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
@@ -364,7 +457,7 @@ class PowerCurveLossesMixin:
         wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
         pc_losses = PowerCurveLosses(power_curve, wind_resource)
 
-        new_curve = pc_losses.fit(target_losses, transformation)
+        new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
 
