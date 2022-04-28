@@ -11,6 +11,7 @@ import os
 import pytest
 import tempfile
 import json
+import random
 
 import numpy as np
 import pandas as pd
@@ -226,7 +227,7 @@ def _run_gen_with_and_without_losses(
 ):
     """Run generaion with and without losses for testing. """
     sam_file, res_file, tech = files
-    with open(sam_file, 'r', encoding='utf-8') as fh:
+    with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
 
     with tempfile.TemporaryDirectory() as td:
@@ -289,6 +290,53 @@ def _make_site_data_df(site_data):
         }
         site_data = pd.DataFrame(site_data_dict)
     return site_data
+
+
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+@pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses_repeatability(
+    generic_losses, outages, site_outages, files
+):
+    sam_file, res_file, tech = files
+    with open(sam_file, 'r') as fh:
+        sam_config = json.load(fh)
+
+    with tempfile.TemporaryDirectory() as td:
+        if tech == 'windpower':
+            del sam_config['wind_farm_losses_percent']
+            sam_config['turb_generic_loss'] = generic_losses
+        else:
+            sam_config['losses'] = generic_losses
+
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(site_outages)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+        gen_profiles_first_run = gen.out['gen_profile']
+
+        random.shuffle(outages)
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(site_outages)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+        gen_profiles_second_run = gen.out['gen_profile']
+
+    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
