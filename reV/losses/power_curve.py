@@ -2,9 +2,9 @@
 """reV power curve losses module.
 
 """
-from distutils.log import warn
 import json
 import logging
+import warnings
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -319,7 +319,7 @@ class PowerCurveLosses:
                    "transformation or reducing the target losses!"
                    .format(loss_percentage, target))
             logger.warning(msg)
-            warn(msg, reVLossesWarning)
+            warnings.warn(msg, reVLossesWarning)
         return transformation.apply(fit_var)
 
     @property
