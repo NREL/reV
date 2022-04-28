@@ -24,7 +24,7 @@ from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
 
 
-REV_POINTS = list(range(5))
+REV_POINTS = list(range(3))
 RTOL = 0
 ATOL = 0.001
 WIND_SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
