@@ -1220,7 +1220,7 @@ class WindPower(AbstractSamWind):
         return DefaultWindPower.default()
 
 
-class WindPowerPD(AbstractSamWind):
+class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
 
