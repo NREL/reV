@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-"""reV-losses module.
+"""reV-losses utilities.
 
 """
 import calendar
+import logging
+
 import numpy as np
 
+from reV.utilities.exceptions import reVLossesValueError
+
+logger = logging.getLogger(__name__)
 
 # 1900 is just a representative year, since a year input is required
 DAYS_PER_MONTH = [calendar.monthrange(1900, i)[1] for i in range(1, 13)]
@@ -233,3 +238,18 @@ def full_month_name_from_abbr(month_name):
     for month_index in range(1, 13):
         if calendar.month_abbr[month_index] == month_name:
             return calendar.month_name[month_index]
+
+
+def _validate_arrays_not_empty(obj, array_names=None):
+    """Validate that the input data arrays are not empty. """
+    array_names = array_names or []
+    for name in array_names:
+        try:
+            arr = getattr(obj, name)
+        except AttributeError:
+            continue
+        if not arr.size:
+            msg = "Invalid {} input: Array is empty! - {}"
+            msg = msg.format(name.replace('_', ' '), arr)
+            logger.error(msg)
+            raise reVLossesValueError(msg)

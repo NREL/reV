@@ -10,8 +10,146 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 
 from reV.utilities.exceptions import reVLossesValueError
+from reV.losses.utils import _validate_arrays_not_empty
 
 logger = logging.getLogger(__name__)
+
+
+class PowerCurve:
+    """A turbine power curve.
+
+    Attributes
+    ----------
+    wind_speed : :obj:`np.array`
+        An array containing the wind speeds corresponding to the values
+        in the :attr:`power_curve` array.
+    generation : :obj:`np.array`
+        An array containing the generated power at the corresponding
+        wind speed in the :attr:`wind_speed` array. This input must have
+        at least one positive value, and if a cutoff speed is detected
+        (see `Warnings` section below), then all values above that wind
+        speed must be set to 0.
+
+    Warnings
+    --------
+    This class will attempt to infer a cutoff speed from the
+    ``generation`` input. Specifically, it will look for a transition
+    from the highest rated power down to zero in a single ``wind_speed``
+    step of the power curve. If such a transition is detected, the wind
+    speed corresponding to the zero value will be set as the cutoff
+    speed, and all calculated power curves will be clipped at this
+    speed. If your input power curve contains a cutoff speed, ensure
+    that it adheres to the expected pattern of dropping from max rated
+    power to zero power in a single wind speed step.
+    """
+    def __init__(self, wind_speed, generation):
+        """
+        Parameters
+        ----------
+        wind_speed : iter
+            An iterable containing the wind speeds corresponding to the
+            generated power values in ``generation`` input. The input
+            values should all be non-zero.
+        generation : iter
+            An iterable containing the generated power at the
+            corresponding wind speed in the ``wind_speed`` input. This
+            input must have at least one positive value, and if a cutoff
+            speed is detected (see `Warnings` section below), then all
+            values above that wind speed must be set to 0.
+        """
+        self.wind_speed = np.array(wind_speed)
+        self.generation = np.array(generation)
+        self._cutoff_wind_speed = None
+
+        _validate_arrays_not_empty(
+            self, array_names=['wind_speed', 'generation']
+        )
+        self._validate_wind_speed()
+        self._validate_generation()
+
+    def _validate_wind_speed(self):
+        """Validate that the input wind speed is non-negative. """
+        if not (self.wind_speed >= 0).all():
+            msg = "Invalid wind speed input: Contains negative values! - {}"
+            msg = msg.format(self.wind_speed)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_generation(self):
+        """Validate the input generation. """
+        if not (self.generation > 0).any():
+            msg = "Invalid generation input: Found no positive values! - {}"
+            msg = msg.format(self.generation)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+        if 0 < self.cutoff_wind_speed < np.inf:
+            cutoff_windspeed_ind = np.where(
+                self.wind_speed >= self.cutoff_wind_speed
+            )[0].min()
+            if (self.generation[cutoff_windspeed_ind:]).any():
+                msg = ("Invalid generation input: Found non-zero values above "
+                       "cutoff! - {}")
+                msg = msg.format(self.generation)
+                logger.error(msg)
+                raise reVLossesValueError(msg)
+
+    @property
+    def cutoff_wind_speed(self):
+        """float or :obj:`np.inf`: The detected cutoff wind speed."""
+        if self._cutoff_wind_speed is None:
+            ind = np.argmax(self.generation[::-1])
+            # pylint: disable=chained-comparison
+            if ind > 0 and self.generation[-ind] <= 0:
+                self._cutoff_wind_speed = self.wind_speed[-ind]
+            else:
+                self._cutoff_wind_speed = np.inf
+        return self._cutoff_wind_speed
+
+    def __eq__(self, other):
+        return np.isclose(self.generation, other).all()
+
+    def __ne__(self, other):
+        return not np.isclose(self.generation, other).all()
+
+    def __lt__(self, other):
+        return self.generation < other
+
+    def __le__(self, other):
+        return self.generation <= other
+
+    def __gt__(self, other):
+        return self.generation > other
+
+    def __ge__(self, other):
+        return self.generation >= other
+
+    def __len__(self):
+        return len(self.generation)
+
+    def __getitem__(self, key):
+        return self.generation[key]
+
+    def __call__(self, wind_speed):
+        """Calculate the power curve value for the given ``wind_speed``.
+
+        Parameters
+        ----------
+        wind_speed : :obj:`int` | :obj:`float` | :obj:`list` | :obj:`np.array`
+            Wind speed value corresponding to the desired powerrcurve
+            value.
+
+        Returns
+        -------
+        float | :obj:`np.array`
+            The power curve value(s) for the input wind speed(s).
+        """
+        if isinstance(wind_speed, (int, float)):
+            wind_speed = [wind_speed]
+        new_pc = np.interp(wind_speed, self.wind_speed, self.generation)
+        if self.cutoff_wind_speed:
+            new_pc[wind_speed >= self.cutoff_wind_speed] = 0
+        return new_pc
 
 
 class PowerCurveLosses:
@@ -174,143 +312,6 @@ class PowerCurveLosses:
         if self._power_gen is None:
             self._power_gen = self.power_curve(self.wind_resource).sum()
         return self._power_gen
-
-
-class PowerCurve:
-    """A turbine power curve.
-
-    Attributes
-    ----------
-    wind_speed : :obj:`np.array`
-        An array containing the wind speeds corresponding to the values
-        in the :attr:`power_curve` array.
-    generation : :obj:`np.array`
-        An array containing the generated power at the corresponding
-        wind speed in the :attr:`wind_speed` array. This input must have
-        at least one positive value, and if a cutoff speed is detected
-        (see `Warnings` section below), then all values above that wind
-        speed must be set to 0.
-
-    Warnings
-    --------
-    This class will attempt to infer a cutoff speed from the
-    ``generation`` input. Specifically, it will look for a transition
-    from the highest rated power down to zero in a single ``wind_speed``
-    step of the power curve. If such a transition is detected, the wind
-    speed corresponding to the zero value will be set as the cutoff
-    speed, and all calculated power curves will be clipped at this
-    speed. If your input power curve contains a cutoff speed, ensure
-    that it adheres to the expected pattern of dropping from max rated
-    power to zero power in a single wind speed step.
-    """
-    def __init__(self, wind_speed, generation):
-        """
-        Parameters
-        ----------
-        wind_speed : iter
-            An iterable containing the wind speeds corresponding to the
-            generated power values in ``generation`` input. The input
-            values should all be non-zero.
-        generation : iter
-            An iterable containing the generated power at the
-            corresponding wind speed in the ``wind_speed`` input. This
-            input must have at least one positive value, and if a cutoff
-            speed is detected (see `Warnings` section below), then all
-            values above that wind speed must be set to 0.
-        """
-        self.wind_speed = np.array(wind_speed)
-        self.generation = np.array(generation)
-        self._cutoff_wind_speed = None
-
-        _validate_arrays_not_empty(
-            self, array_names=['wind_speed', 'generation']
-        )
-        self._validate_wind_speed()
-        self._validate_generation()
-
-    def _validate_wind_speed(self):
-        """Validate that the input wind speed is non-negative. """
-        if not (self.wind_speed >= 0).all():
-            msg = "Invalid wind speed input: Contains negative values! - {}"
-            msg = msg.format(self.wind_speed)
-            logger.error(msg)
-            raise reVLossesValueError(msg)
-
-    def _validate_generation(self):
-        """Validate the input generation. """
-        if not (self.generation > 0).any():
-            msg = "Invalid generation input: Found no positive values! - {}"
-            msg = msg.format(self.generation)
-            logger.error(msg)
-            raise reVLossesValueError(msg)
-
-        if 0 < self.cutoff_wind_speed < np.inf:
-            cutoff_windspeed_ind = np.where(
-                self.wind_speed >= self.cutoff_wind_speed
-            )[0].min()
-            if (self.generation[cutoff_windspeed_ind:]).any():
-                msg = ("Invalid generation input: Found non-zero values above "
-                       "cutoff! - {}")
-                msg = msg.format(self.generation)
-                logger.error(msg)
-                raise reVLossesValueError(msg)
-
-    @property
-    def cutoff_wind_speed(self):
-        """float or :obj:`np.inf`: The detected cutoff wind speed."""
-        if self._cutoff_wind_speed is None:
-            ind = np.argmax(self.generation[::-1])
-            # pylint: disable=chained-comparison
-            if ind > 0 and self.generation[-ind] <= 0:
-                self._cutoff_wind_speed = self.wind_speed[-ind]
-            else:
-                self._cutoff_wind_speed = np.inf
-        return self._cutoff_wind_speed
-
-    def __eq__(self, other):
-        return np.isclose(self.generation, other).all()
-
-    def __ne__(self, other):
-        return not np.isclose(self.generation, other).all()
-
-    def __lt__(self, other):
-        return self.generation < other
-
-    def __le__(self, other):
-        return self.generation <= other
-
-    def __gt__(self, other):
-        return self.generation > other
-
-    def __ge__(self, other):
-        return self.generation >= other
-
-    def __len__(self):
-        return len(self.generation)
-
-    def __getitem__(self, key):
-        return self.generation[key]
-
-    def __call__(self, wind_speed):
-        """Calculate the power curve value for the given ``wind_speed``.
-
-        Parameters
-        ----------
-        wind_speed : :obj:`int` | :obj:`float` | :obj:`list` | :obj:`np.array`
-            Wind speed value corresponding to the desired powerrcurve
-            value.
-
-        Returns
-        -------
-        float | :obj:`np.array`
-            The power curve value(s) for the input wind speed(s).
-        """
-        if isinstance(wind_speed, (int, float)):
-            wind_speed = [wind_speed]
-        new_pc = np.interp(wind_speed, self.wind_speed, self.generation)
-        if self.cutoff_wind_speed:
-            new_pc[wind_speed >= self.cutoff_wind_speed] = 0
-        return new_pc
 
 
 class PowerCurveLossesInput:
@@ -585,18 +586,3 @@ TRANSFORMATIONS = {
     'horizontal_translation': HorizontalPowerCurveTranslation
 }
 """Implemented power curve transformations."""
-
-
-def _validate_arrays_not_empty(obj, array_names=None):
-    """Validate that the input data arrays are not empty. """
-    array_names = array_names or []
-    for name in array_names:
-        try:
-            arr = getattr(obj, name)
-        except AttributeError:
-            continue
-        if not arr.size:
-            msg = "Invalid {} input: Array is empty! - {}"
-            msg = msg.format(name.replace('_', ' '), arr)
-            logger.error(msg)
-            raise reVLossesValueError(msg)
