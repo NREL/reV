@@ -2,6 +2,7 @@
 """reV power curve losses module.
 
 """
+from distutils.log import warn
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -9,7 +10,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import minimize_scalar
 
-from reV.utilities.exceptions import reVLossesValueError
+from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import _validate_arrays_not_empty
 
 logger = logging.getLogger(__name__)
@@ -286,6 +287,12 @@ class PowerCurveLosses:
             An array containing a transformed power curve that most
             closely yields the ``target`` annual generation losses.
 
+        Warns
+        -----
+        reVLossesWarning
+            If the fit did not meet the target annual losses to within
+            1%.
+
         Warnings
         --------
         This function attempts to find an optimal transformation for the
@@ -304,6 +311,15 @@ class PowerCurveLosses:
             bounds=transformation.bounds,
             method='bounded'
         ).x
+        loss_percentage = self._obj(fit_var, target, transformation)
+        if loss_percentage > 1:
+            msg = ("Unable to find a transformation such that the losses meet "
+                   "the target within 1%! Obtained fit with loss percentage "
+                   "{}% when target was {}%. Consider using a different "
+                   "transformation or reducing the target losses!"
+                   .format(loss_percentage, target))
+            logger.warning(msg)
+            warn(msg, reVLossesWarning)
         return transformation.apply(fit_var)
 
     @property
