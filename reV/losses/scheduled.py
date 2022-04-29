@@ -90,7 +90,7 @@ class Outage:
 
     def _validate_required_keys_exist(self):
         """Raise an error if any required keys are missing."""
-        missing_keys = [n not in self._specs for n in self.REQUIRED_KEYS]
+        missing_keys = [n for n in self.REQUIRED_KEYS if n not in self._specs]
         if any(missing_keys):
             msg = (
                 "The following required keys are missing from the Outage "
