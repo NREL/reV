@@ -495,6 +495,11 @@ class PowerCurveTransformation(ABC):
     losses when compared to simple haircut losses (i.e. constant loss
     value applied at all points on the power curve).
 
+    If you would like to implement your own power curve transfromation,
+    you should subclass this class and implement the :meth:`apply`
+    method and the :attr:`bounds` property. See the documentation for
+    each of these below for more details.
+
     Attributes
     ----------
     power_curve : :obj:`PowerCurve`
@@ -514,7 +519,24 @@ class PowerCurveTransformation(ABC):
 
     @abstractmethod
     def apply(self, transformation_var):
-        """Apply a transformation to the original power curve."""
+        """Apply a transformation to the original power curve.
+
+        Parameters
+        ----------
+        transformation_var : : float
+            A single variable controlling the "strength" of the
+            transformation. The :class:`PowerCurveLosses` object will
+            run an optimization using this variable to fit the target
+            annual losses incurred with the transformed power curve
+            compared to the original power curve using the given wind
+            resource distribution.
+
+        Returns
+        -------
+        :obj:`PowerCurve`
+            An new power curve containing the generation values from the
+            transformed power curve.
+        """
 
     @property
     @abstractmethod
