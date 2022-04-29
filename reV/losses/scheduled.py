@@ -64,7 +64,7 @@ class Outage:
             The input dictionary can also provide the following optional
             keys:
                 - `allow_outage_overlap` - by default, ``True``
-                    A bool flag indicating wether or not this outage is
+                    A bool flag indicating whether or not this outage is
                     allowed to overlap with other outages, including
                     itself. It is recommended to set this value to
                     ``True`` whenever possible, as it allows for more
