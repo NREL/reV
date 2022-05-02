@@ -18,6 +18,7 @@ from concurrent.futures import as_completed
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
+from reV.econ.utilities import lcoe_fcr
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
@@ -232,6 +233,21 @@ class BespokeSinglePlant:
                 self._out_req.remove(req)
                 self._outputs[req] = self.res_df[dset].mean()
 
+        if 'lcoe_fcr' in self._out_req:
+            missing = []
+            required = ('fixed_charge_rate', 'fixed_operating_cost',
+                        'variable_operating_cost', 'system_capacity',
+                        'capital_cost')
+            for arg_name in required:
+                if arg_name not in self.original_sam_sys_inputs:
+                    missing.append(arg_name)
+            if any(missing):
+                msg = ('User requested "lcoe_fcr" but did not input the '
+                       'following required inputs in the SAM system config: {}'
+                       .format(missing))
+                logger.error(msg)
+                raise KeyError(msg)
+
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
         class was initialized with close=False, this will not close any
@@ -312,6 +328,16 @@ class BespokeSinglePlant:
         float
         """
         return np.sqrt(self.sc_point.pixel_area) * 1000.0
+
+    @property
+    def original_sam_sys_inputs(self):
+        """Get the original (pre-optimized) SAM windpower system inputs.
+
+        Returns
+        -------
+        dict
+        """
+        return self._sam_sys_inputs
 
     @property
     def sam_sys_inputs(self):
@@ -483,10 +509,16 @@ class BespokeSinglePlant:
         wind_plant_ts = {}
         for year in self.years:
             res_df = self.res_df[(self.res_df.index.year == year)]
-            i_wp = WindPower(res_df, self.meta,
-                             copy.deepcopy(self.sam_sys_inputs),
+            sam_inputs = copy.deepcopy(self.sam_sys_inputs)
+
+            if 'lcoe_fcr' in self._out_req:
+                lcoe_kwargs = self.get_lcoe_kwargs()
+                sam_inputs.update(lcoe_kwargs)
+
+            i_wp = WindPower(res_df, self.meta, sam_inputs,
                              output_request=self._out_req)
             wind_plant_ts[year] = i_wp
+
         return wind_plant_ts
 
     @property
@@ -536,6 +568,71 @@ class BespokeSinglePlant:
                                              self.min_spacing)
         return self._plant_optm
 
+    def recalc_lcoe(self):
+        """Recalculate the multi-year mean LCOE based on the multi-year mean
+        annual energy production (AEP)"""
+
+        if 'lcoe_fcr-means' in self.outputs:
+            lcoe_kwargs = self.get_lcoe_kwargs()
+
+            logger.debug('Recalulating multi-year mean LCOE using '
+                         'multi-year mean AEP.')
+
+            fcr = lcoe_kwargs['fixed_charge_rate']
+            cap_cost = lcoe_kwargs['capital_cost']
+            foc = lcoe_kwargs['fixed_operating_cost']
+            voc = lcoe_kwargs['variable_operating_cost']
+            aep = self.outputs['annual_energy-means']
+
+            my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+
+            self._outputs['lcoe_fcr-means'] = my_mean_lcoe
+            self._meta['mean_lcoe'] = my_mean_lcoe
+
+    def get_lcoe_kwargs(self):
+        """Get a namespace of arguments for calculating LCOE based on the
+        bespoke optimized wind plant capacity
+
+        Returns
+        -------
+        lcoe_kwargs : dict
+            kwargs for the SAM lcoe model. These are based on the original
+            sam_sys_inputs, normalized to the original system_capacity, and
+            updated based on the bespoke optimized system_capacity, includes
+            fixed_charge_rate, system_capacity (kW), capital_cost ($),
+            fixed_operating_cos ($), variable_operating_cost ($/kWh)
+        """
+
+        if 'system_capacity' not in self.outputs:
+            msg = ('Could not find system_capacity in the outputs, need to '
+                   'run_plant_optimization() to get the optimized '
+                   'system_capacity before calculating LCOE!')
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        new_sys_cap = self.outputs['system_capacity']
+        og_sys_cap = self.original_sam_sys_inputs['system_capacity']
+        og_cap_cost = self.original_sam_sys_inputs['capital_cost']
+        og_foc = self.original_sam_sys_inputs['fixed_operating_cost']
+        og_voc = self.original_sam_sys_inputs['variable_operating_cost']
+        og_fcr = self.original_sam_sys_inputs['fixed_charge_rate']
+
+        new_foc = og_foc * new_sys_cap / og_sys_cap
+        new_voc = og_voc * new_sys_cap / og_sys_cap
+        new_cap_cost = og_cap_cost * new_sys_cap / og_sys_cap
+
+        lcoe_kwargs = {}
+        lcoe_kwargs['fixed_charge_rate'] = og_fcr
+        lcoe_kwargs['system_capacity'] = new_sys_cap
+        lcoe_kwargs['capital_cost'] = new_cap_cost
+        lcoe_kwargs['fixed_operating_cost'] = new_foc
+        lcoe_kwargs['variable_operating_cost'] = new_voc
+
+        for k, v in lcoe_kwargs.items():
+            self._meta[k] = v
+
+        return lcoe_kwargs
+
     @staticmethod
     def get_wind_handler(res):
         """Get a wind resource handler for a resource filepath.
@@ -580,7 +677,10 @@ class BespokeSinglePlant:
     @staticmethod
     def _check_sys_inputs(plant1, plant2,
                           ignore=('wind_resource_model_choice',
-                                  'wind_resource_data')):
+                                  'wind_resource_data',
+                                  'capital_cost',
+                                  'fixed_operating_cost',
+                                  'variable_operating_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
@@ -641,9 +741,10 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if 'cf_mean-means' in self.outputs:
-            self.meta['mean_cf'] = self.outputs['cf_mean-means']
+            self._meta['mean_cf'] = self.outputs['cf_mean-means']
         if 'lcoe_fcr-means' in self.outputs:
-            self.meta['mean_lcoe'] = self.outputs['lcoe_fcr-means']
+            self._meta['mean_lcoe'] = self.outputs['lcoe_fcr-means']
+            self.recalc_lcoe()
 
         logger.debug('Timeseries analysis complete!')
 
@@ -706,7 +807,8 @@ class BespokeSinglePlant:
         logger.debug('Plant layout optimization complete!')
 
         # copy dataset outputs to meta data for supply curve table summary
-        self.meta['capacity'] = self.outputs['system_capacity']
+        # convert SAM system capacity in kW to reV supply curve cap in MW
+        self._meta['capacity'] = self.outputs['system_capacity'] / 1e3
 
         return self.outputs
 

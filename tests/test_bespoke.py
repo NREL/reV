@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV bespoke wind plant optimization tests
 """
+import copy
 from glob import glob
 import json
 import os
@@ -289,6 +290,59 @@ def test_single(gid=33):
         diff = cf_ideal - cf_bespoke
         assert all(diff > -0.00001)
         assert diff.mean() > 0.02
+
+        bsp.close()
+
+
+def test_single_lcoe(gid=33):
+    """Test running bespoke single farm optimization with lcoe requests"""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile', 'lcoe_fcr')
+    cost_function = """200 * system_capacity * np.exp(-system_capacity /
+        1E5 * 0.1 + (1 - 0.1))"""
+    objective_function = "cost / aep"
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        with pytest.raises(KeyError):
+            bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                     SAM_SYS_INPUTS,
+                                     objective_function, cost_function,
+                                     ga_kwargs={'max_time': 5},
+                                     excl_dict=EXCL_DICT,
+                                     output_request=output_request,
+                                     )
+
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['capital_cost'] = 81360000
+        sam_sys_inputs['fixed_charge_rate'] = 0.097
+        sam_sys_inputs['fixed_operating_cost'] = 2448000
+        sam_sys_inputs['variable_operating_cost'] = 0
+
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, cost_function,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+
+        assert 'lcoe_fcr-2012' in out
+        assert 'lcoe_fcr-2013' in out
+        assert 'lcoe_fcr-means' in out
+
+        assert 'capacity' in bsp.meta
+        assert 'mean_cf' in bsp.meta
+        assert 'mean_lcoe' in bsp.meta
 
         bsp.close()
 

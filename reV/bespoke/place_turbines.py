@@ -15,6 +15,7 @@ class PlaceTurbines():
     """Framework for optimizing turbine locations for site specific
     exclusions, wind resources, and objective
     """
+
     def __init__(self, wind_plant, objective_function, cost_function,
                  include_mask, pixel_side_length, min_spacing):
         """
@@ -243,7 +244,7 @@ class PlaceTurbines():
 
     @property
     def turbine_x(self):
-        """This is the final optimized turbine x locations"""
+        """This is the final optimized turbine x locations (m)"""
         if self.optimized_design_variables is not None:
             return self.x_locations[self.optimized_design_variables]
         else:
@@ -251,7 +252,7 @@ class PlaceTurbines():
 
     @property
     def turbine_y(self):
-        """This is the final optimized turbine y locations"""
+        """This is the final optimized turbine y locations (m)"""
         if self.optimized_design_variables is not None:
             return self.y_locations[self.optimized_design_variables]
         else:
@@ -267,7 +268,7 @@ class PlaceTurbines():
 
     @property
     def capacity(self):
-        """This is the final optimized plant capacity"""
+        """This is the final optimized plant nameplate capacity (kW)"""
         if self.optimized_design_variables is not None:
             return self.turbine_capacity * self.nturbs
         else:
@@ -275,7 +276,7 @@ class PlaceTurbines():
 
     @property
     def area(self):
-        """This is the area available for wind turbine placement"""
+        """This is the area available for wind turbine placement (km2)"""
         if self.full_polygons is not None:
             return self.full_polygons.area
         else:
@@ -284,7 +285,8 @@ class PlaceTurbines():
     @property
     def capacity_density(self):
         """This is the optimized capacity density of the wind plant
-        defined with the area available after removing the exclusions"""
+        defined with the area available after removing the exclusions
+        (MW/km2)"""
         if self.full_polygons is None or self.capacity is None:
             return None
         else:
@@ -295,7 +297,7 @@ class PlaceTurbines():
 
     @property
     def aep(self):
-        """This is the annual energy production of the optimized plant"""
+        """This is the annual energy production of the optimized plant (kWh)"""
         if self.optimized_design_variables is not None:
             self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
             self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
@@ -309,7 +311,7 @@ class PlaceTurbines():
     # pylint: disable=W0641,W0123
     @property
     def annual_cost(self):
-        """This is the annual cost of the optimized plant"""
+        """This is the annual cost of the optimized plant ($)"""
         if self.optimized_design_variables is not None:
             n_turbines = self.nturbs
             system_capacity = self.capacity
