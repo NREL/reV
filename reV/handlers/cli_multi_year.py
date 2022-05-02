@@ -125,11 +125,17 @@ def direct(ctx, my_file, verbose):
 
 @direct.command()
 @click.option('--source_files', '-sf', required=True, type=PATHLIST,
-              help='List of files to collect from.')
+              help='List of files to collect from. Either this or '
+              'source_pattern must be specified.')
+@click.option('--source_pattern', '-sp', required=False,
+              type=str, default=None,
+              help='Optional argument to specify a unix-style '
+              '/filepath/pattern*.h5 to get source files. Either this or '
+              'source_files must be specified.')
 @click.option('--group', '-g', type=STR, default=None,
               show_default=True,
               help='Group to collect into. Useful for collecting multiple '
-              'scenarios into a single file.')
+              'scenarios into a single file. Optional.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected. If means, multi-year '
               'means will be computed.')
@@ -143,7 +149,8 @@ def direct(ctx, my_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def multi_year(ctx, source_files, group, dsets, pass_through_dsets, verbose):
+def multi_year(ctx, source_files, source_pattern, group, dsets,
+               pass_through_dsets, verbose):
     """Run multi year collection and means on local worker."""
 
     name = ctx.obj['NAME']
@@ -158,6 +165,9 @@ def multi_year(ctx, source_files, group, dsets, pass_through_dsets, verbose):
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to collection method: "{}" : "{}" '
                      'with type "{}"'.format(key, val, type(val)))
+
+    if source_pattern is not None:
+        source_files = source_pattern
 
     logger.info('Multi-year collection is being run for "{}" '
                 'with job name "{}" on {}. Target output path is: {}'

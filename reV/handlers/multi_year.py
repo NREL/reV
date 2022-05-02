@@ -2,6 +2,7 @@
 """
 Classes to collect reV outputs from multiple annual files.
 """
+import glob
 import logging
 import numpy as np
 import os
@@ -25,6 +26,7 @@ class MultiYear(Outputs):
     - compute multi-year coefficient of variations
 
     """
+
     def __init__(self, h5_file, group=None, unscale=True, mode='r',
                  str_decode=True):
         """
@@ -126,15 +128,56 @@ class MultiYear(Outputs):
             self._create_dset(dset_out, ds_data.shape, ds_dtype,
                               chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
 
+    @staticmethod
+    def parse_source_files_pattern(source_files):
+        """Parse a source_files pattern that can be either an explicit list of
+        source files or a unix-style /filepath/pattern*.h5 and either way
+        return a list of explicit filepaths.
+
+        Parameters
+        ----------
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
+
+        Returns
+        -------
+        source_files : list
+            List of .h5 filepaths.
+        """
+
+        if isinstance(source_files, str) and '*' in source_files:
+            source_files = glob.glob(source_files)
+        elif isinstance(source_files, str):
+            source_files = [source_files]
+        elif not isinstance(source_files, (list, tuple)):
+            msg = ('Cannot recognize source_files type: {} {}'
+                   .format(source_files, type(source_files)))
+            logger.error(msg)
+            raise TypeError(msg)
+
+        if not all(fp.endswith('.h5') for fp in source_files):
+            msg = ('Non-h5 files cannot be collected: {}'.format(source_files))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        return source_files
+
     def collect(self, source_files, dset, profiles=False, pass_through=False):
         """
         Collect dataset dset from given list of h5 files
 
         Parameters
         ----------
-        source_files : list
-            List of .h5 files to collect datasets from
-            NOTE: .h5 file names much indicate the year the data pertains to
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
         dset : str
             Dataset to collect
         profiles : bool
@@ -144,6 +187,7 @@ class MultiYear(Outputs):
             Flag to just pass through dataset without name modifications
             (no differences between years, no means or stdevs)
         """
+        source_files = self.parse_source_files_pattern(source_files)
         with Outputs(source_files[0], mode='r') as f_in:
             meta = f_in.h5['meta'][...]
 
@@ -335,15 +379,19 @@ class MultiYear(Outputs):
         my_cv = self.stdev(dset) / self.means(dset)
         return my_cv
 
-    @staticmethod
-    def is_profile(source_files, dset):
+    @classmethod
+    def is_profile(cls, source_files, dset):
         """
         Check dataset in source files to see if it is a profile.
 
         Parameters
         ----------
-        source_files : list
-            List of .h5 files to collect datasets from
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
         dset : str
             Dataset to collect
 
@@ -352,6 +400,7 @@ class MultiYear(Outputs):
         is_profile : bool
             True if profile, False if not.
         """
+        source_files = cls.parse_source_files_pattern(source_files)
         with Outputs(source_files[0]) as f:
             if dset not in f.datasets:
                 raise KeyError('Dataset "{}" not found in source file: "{}"'
@@ -371,14 +420,19 @@ class MultiYear(Outputs):
         ----------
         my_file : str
             Path to multi-year .h5 file
-        source_files : list
-            List of .h5 files to collect datasets from
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
         dset : str
             Dataset to pass through (will also be the name of the output
             dataset in my_file)
         group : str
             Group to collect datasets into
         """
+        source_files = cls.parse_source_files_pattern(source_files)
         logger.info('Passing through {} into {}.'
                     .format(dset, my_file))
         with cls(my_file, mode='a', group=group) as my:
@@ -393,8 +447,12 @@ class MultiYear(Outputs):
         ----------
         my_file : str
             Path to multi-year .h5 file
-        source_files : list
-            List of .h5 files to collect datasets from
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
         dset : str
             Dataset to collect
         group : str
@@ -403,6 +461,7 @@ class MultiYear(Outputs):
         logger.info('Collecting {} into {} '
                     'and computing multi-year means and standard deviations.'
                     .format(dset, my_file))
+        source_files = cls.parse_source_files_pattern(source_files)
         with cls(my_file, mode='a', group=group) as my:
             my.collect(source_files, dset)
             means = my._compute_means("{}-means".format(dset))
@@ -417,13 +476,18 @@ class MultiYear(Outputs):
         ----------
         my_file : str
             Path to multi-year .h5 file
-        source_files : list
-            List of .h5 files to collect datasets from
+        source_files : list | str
+            List of .h5 files to collect datasets from. This can also be a
+            unix-style /filepath/pattern*.h5 to find .h5 files to collect,
+            however all resulting files must be .h5 otherwise an exception will
+            be raised. NOTE: .h5 file names must indicate the year the data
+            pertains to
         dset : str
             Profiles dataset to collect
         group : str
             Group to collect datasets into
         """
         logger.info('Collecting {} into {}'.format(dset, my_file))
+        source_files = cls.parse_source_files_pattern(source_files)
         with cls(my_file, mode='a', group=group) as my:
             my.collect(source_files, dset, profiles=True)
