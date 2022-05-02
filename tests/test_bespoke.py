@@ -485,7 +485,9 @@ def test_bespoke_supply_curve():
         with h5py.File(bespoke_sc_fp, 'a') as f:
             del f['meta']
         with Outputs(bespoke_sc_fp, mode='a') as f:
-            f.meta = normal_sc_points
+            bespoke_meta = normal_sc_points.copy()
+            bespoke_meta = bespoke_meta.drop('sc_gid', axis=1)
+            f.meta = bespoke_meta
 
         # this is basically copied from test_supply_curve_compute.py
         trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
