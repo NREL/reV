@@ -202,7 +202,7 @@ def test_cli(runner):
         LOGGERS.clear()
 
 
-@ pytest.mark.parametrize(('dset', 'group'), [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_means(dset, group):
@@ -232,7 +232,7 @@ def test_my_means(dset, group):
         compare_arrays(my_means, dset_means, "Saved Means")
 
 
-@ pytest.mark.parametrize(('dset', 'group'), [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_update(dset, group):
@@ -273,7 +273,7 @@ def test_update(dset, group):
         compare_arrays(my_std, dset_std, "Updated STDEV")
 
 
-@ pytest.mark.parametrize(('dset', 'group'), [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_stdev(dset, group):

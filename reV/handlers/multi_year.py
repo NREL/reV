@@ -140,7 +140,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
 
         Returns
@@ -149,12 +149,15 @@ class MultiYear(Outputs):
             List of .h5 filepaths.
         """
 
-        if isinstance(source_files, (list, tuple)):
-            pass
-        elif isinstance(source_files, str) and '*' in source_files:
+        if isinstance(source_files, str) and '*' in source_files:
             source_files = glob.glob(source_files)
         elif isinstance(source_files, str):
             source_files = [source_files]
+        elif not isinstance(source_files, (list, tuple)):
+            msg = ('Cannot recognize source_files type: {} {}'
+                   .format(source_files, type(source_files)))
+            logger.error(msg)
+            raise TypeError(msg)
 
         if not all(fp.endswith('.h5') for fp in source_files):
             msg = ('Non-h5 files cannot be collected: {}'.format(source_files))
@@ -173,7 +176,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
         dset : str
             Dataset to collect
@@ -387,7 +390,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
         dset : str
             Dataset to collect
@@ -421,7 +424,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
         dset : str
             Dataset to pass through (will also be the name of the output
@@ -448,7 +451,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
         dset : str
             Dataset to collect
@@ -477,7 +480,7 @@ class MultiYear(Outputs):
             List of .h5 files to collect datasets from. This can also be a
             unix-style /filepath/pattern*.h5 to find .h5 files to collect,
             however all resulting files must be .h5 otherwise an exception will
-            be raised. NOTE: .h5 file names much indicate the year the data
+            be raised. NOTE: .h5 file names must indicate the year the data
             pertains to
         dset : str
             Profiles dataset to collect
