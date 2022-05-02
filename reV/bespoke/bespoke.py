@@ -638,6 +638,13 @@ class BespokeSinglePlant:
                 means[base_str + 'means'] = np.mean(all_values)
 
         self._outputs.update(means)
+
+        # copy dataset outputs to meta data for supply curve table summary
+        if 'cf_mean-means' in self.outputs:
+            self.meta['mean_cf'] = self.outputs['cf_mean-means']
+        if 'lcoe_fcr-means' in self.outputs:
+            self.meta['mean_lcoe'] = self.outputs['lcoe_fcr-means']
+
         logger.debug('Timeseries analysis complete!')
 
         return self.outputs
@@ -697,6 +704,9 @@ class BespokeSinglePlant:
             self.plant_optimizer.capacity_density
 
         logger.debug('Plant layout optimization complete!')
+
+        # copy dataset outputs to meta data for supply curve table summary
+        self.meta['capacity'] = self.outputs['system_capacity']
 
         return self.outputs
 

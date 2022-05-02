@@ -130,7 +130,8 @@ class SupplyCurve:
         if isinstance(sc_points, str) and sc_points.endswith('.h5'):
             with Resource(sc_points) as res:
                 sc_points = res.meta
-                sc_points.index.name = None
+                sc_points.index.name = 'sc_gid'
+                sc_points = sc_points.reset_index()
         else:
             sc_points = parse_table(sc_points)
 
