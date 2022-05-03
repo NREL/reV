@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import HandlerRuntimeError
@@ -118,8 +119,19 @@ class MultiYear(Outputs):
                 if meta is not None:
                     cols = get_lat_lon_cols(meta)
                     source_meta = f_in.meta
-                    if not meta[cols].equals(source_meta[cols]):
-                        raise HandlerRuntimeError('Coordinates do not match')
+
+                    if len(meta) != len(source_meta):
+                        msg = ('Meta data has different lengths between '
+                               'collection files! Found {} and {}'
+                               .format(len(meta), len(source_meta)))
+                        logger.error(msg)
+                        raise HandlerRuntimeError(msg)
+
+                    if not np.allclose(meta[cols], source_meta[cols]):
+                        msg = ('Coordinates do not match between '
+                               'collection files!')
+                        logger.warning(msg)
+                        warn(msg)
 
                 _, ds_dtype, ds_chunks = f_in.get_dset_properties(dset)
                 ds_attrs = f_in.get_attrs(dset=dset)
