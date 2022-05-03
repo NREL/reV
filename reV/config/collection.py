@@ -112,8 +112,10 @@ class CollectionConfig(AnalysisConfig):
         collect_patterns = self['collect_patterns']
 
         if (str(fn_out_names) == 'PIPELINE'
-                and str(collect_patterns) == 'PIPELINE'):
+                or str(collect_patterns) == 'PIPELINE'):
             fn_out_names = self._parse_pipeline_prefixes()
+            fn_out_names = [fn if fn.endswith('.h5') else fn + '.h5'
+                            for fn in fn_out_names]
 
         elif fn_out_names is None and str(collect_patterns) != 'PIPELINE':
             fn_out_names = [os.path.basename(fp).replace('*', '')
@@ -121,6 +123,10 @@ class CollectionConfig(AnalysisConfig):
 
         if isinstance(fn_out_names, str):
             fn_out_names = [fn_out_names]
+        elif fn_out_names is None:
+            msg = ('Failed to parse "fn_out_names" from collect config!')
+            logger.error(msg)
+            raise RuntimeError(msg)
         else:
             fn_out_names = list(fn_out_names)
 
@@ -140,11 +146,16 @@ class CollectionConfig(AnalysisConfig):
                                              module=ModuleName.COLLECT,
                                              target='dirout')[0]
             prefixes = self._parse_pipeline_prefixes()
-            collect_patterns = [os.path.join(coldir, pfx + '*.h5')
-                                for pfx in prefixes]
+            fn_patterns = [fn if fn.endswith('.h5') else fn + '*.h5'
+                           for fn in prefixes]
+            collect_patterns = [os.path.join(coldir, fn) for fn in fn_patterns]
 
         if isinstance(collect_patterns, str):
             collect_patterns = [collect_patterns]
+        elif collect_patterns is None:
+            msg = ('Failed to parse "collect_patterns" from collect config!')
+            logger.error(msg)
+            raise RuntimeError(msg)
         else:
             collect_patterns = list(collect_patterns)
 

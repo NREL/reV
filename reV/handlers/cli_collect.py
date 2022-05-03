@@ -247,7 +247,7 @@ def get_node_cmd(name, h5_file, collect_pattern, project_points, dsets,
     """
     # make a cli arg string for direct() in this module
     args = ['-f {}'.format(SLURM.s(h5_file)),
-            '-cd {}'.format(SLURM.s(collect_pattern)),
+            '-cp {}'.format(SLURM.s(collect_pattern)),
             '-pp {}'.format(SLURM.s(project_points)),
             '-ds {}'.format(SLURM.s(dsets)),
             '-ld {}'.format(SLURM.s(log_dir)),
