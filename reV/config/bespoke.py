@@ -225,6 +225,14 @@ class BespokeConfig(AnalysisConfig):
         return self.get('excl_area', None)
 
     @property
+    def data_layers(self):
+        """Aggregation data layers. Must be a dictionary keyed by data label
+        name. Each value must be another dictionary with "dset", "method",
+        and "fpath".
+        """
+        return self.get('data_layers', None)
+
+    @property
     def pre_extract_inclusions(self):
         """Optional flag to pre-extract/compute the inclusion mask from the
         provided excl_dict, by default False. Typically faster to compute

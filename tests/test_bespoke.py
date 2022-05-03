@@ -30,6 +30,16 @@ RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
 AGG_DSET = ('cf_mean', 'cf_profile')
 
+DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
+                             'method': 'mean',
+                             'fpath': EXCL},
+               'reeds_region': {'dset': 'ri_reeds_regions',
+                                'method': 'mode',
+                                'fpath': EXCL},
+               'padus': {'dset': 'ri_padus',
+                         'method': 'mode',
+                         'fpath': EXCL}}
+
 # note that this differs from the
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
                                'exclude_nodata': False},
@@ -155,6 +165,7 @@ def test_zero_area(gid=33):
         optimizer.include_mask = np.zeros_like(optimizer.include_mask)
         optimizer.place_turbines(max_time=5)
 
+        # pylint: disable=W0123
         assert len(optimizer.turbine_x) == 0
         assert len(optimizer.turbine_y) == 0
         assert optimizer.nturbs == 0
@@ -329,7 +340,7 @@ def test_single(gid=33):
         bsp.close()
 
 
-def test_single_lcoe(gid=33):
+def test_extra_outputs(gid=33):
     """Test running bespoke single farm optimization with lcoe requests"""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile', 'lcoe_fcr')
 
@@ -372,10 +383,12 @@ def test_single_lcoe(gid=33):
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
+                                 data_layers=DATA_LAYERS,
                                  )
 
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
+        bsp.agg_data_layers()
 
         assert 'lcoe_fcr-2012' in out
         assert 'lcoe_fcr-2013' in out
@@ -384,6 +397,10 @@ def test_single_lcoe(gid=33):
         assert 'capacity' in bsp.meta
         assert 'mean_cf' in bsp.meta
         assert 'mean_lcoe' in bsp.meta
+
+        assert 'pct_slope' in bsp.meta
+        assert 'reeds_region' in bsp.meta
+        assert 'padus' in bsp.meta
 
         bsp.close()
 

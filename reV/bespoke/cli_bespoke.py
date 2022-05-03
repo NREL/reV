@@ -127,6 +127,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['MIN_AREA'] = config.min_area
     ctx.obj['RESOLUTION'] = config.resolution
     ctx.obj['EXCL_AREA'] = config.excl_area
+    ctx.obj['DATA_LAYERS'] = config.data_layers
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
 
     ctx.obj['LOG_DIR'] = config.log_directory
@@ -180,8 +181,6 @@ def from_config(ctx, config_file, points_range, verbose):
                 Status.add_job(config.dirout, ModuleName.BESPOKE,
                                name, replace=True,
                                job_attrs=job_attrs)
-                max_workers = config.execution_control.max_workers
-                pre_extract_inclusions = config.pre_extract_inclusions
                 kws = {'excl_fpath': config.excl_fpath,
                        'res_fpath': config.res_fpath,
                        'out_fpath': out_fpath,
@@ -208,8 +207,9 @@ def from_config(ctx, config_file, points_range, verbose):
                        'resolution': config.resolution,
                        'excl_area': config.excl_area,
                        'log_dir': config.log_directory,
-                       'max_workers': max_workers,
-                       'pre_extract_inclusions': pre_extract_inclusions,
+                       'max_workers': config.execution_control.max_workers,
+                       'data_layers': config.data_layers,
+                       'pre_extract_inclusions': config.pre_extract_inclusions,
                        'verbose': verbose}
                 ctx.invoke(direct, **kws)
 
@@ -347,6 +347,12 @@ def valid_config_keys():
 @click.option('--max_workers', '-mw', type=INT, default=None,
               show_default=True,
               help='Number of workers. Use 1 for serial, None for all cores.')
+@click.option('--data_layers', '-d', type=STR, default=None,
+              show_default=True,
+              help='String representation of a dictionary of additional data '
+              'layers to include in the aggregation e.g. '
+              '{"slope": {"dset": "srtm_slope", "method": "mean", '
+              '"fpath": "./excl.h5"}}')
 @click.option('-pre', '--pre_extract_inclusions', is_flag=True,
               help='Optional flag to pre-extract/compute the inclusion mask '
               'from the provided excl_dict, by default False. Typically '
@@ -360,7 +366,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            variable_operating_cost_function, points, sam_files, points_range,
            min_spacing, ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
            area_filter_kernel, min_area, resolution, excl_area,
-           log_dir, max_workers, pre_extract_inclusions, verbose):
+           log_dir, max_workers, data_layers, pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['RES_FPATH'] = res_fpath
@@ -384,6 +390,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['MIN_AREA'] = min_area
     ctx.obj['RESOLUTION'] = resolution
     ctx.obj['EXCL_AREA'] = excl_area
+    ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = pre_extract_inclusions
     ctx.obj['LOG_DIR'] = log_dir
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -401,6 +408,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
         logger.info('Bespoke local is being run with with job name "{}" and '
                     'resource file: {}. Target output path is: {}'
                     .format(name, res_fpath, out_fpath))
+
+        if isinstance(data_layers, str):
+            data_layers = dict_str_load(data_layers)
 
         if isinstance(excl_dict, str):
             excl_dict = dict_str_load(excl_dict)
@@ -430,6 +440,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 min_area=min_area,
                 resolution=resolution,
                 excl_area=excl_area,
+                data_layers=data_layers,
                 pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
                 out_fpath=out_fpath)
@@ -487,6 +498,7 @@ def get_node_cmd(name, kwargs):
         '-ma {}'.format(SLURM.s(kwargs['MIN_AREA'])),
         '-r {}'.format(SLURM.s(kwargs['RESOLUTION'])),
         '-ea {}'.format(SLURM.s(kwargs['EXCL_AREA'])),
+        '-d {}'.format(SLURM.s(kwargs['DATA_LAYERS'])),
         '-lo {}'.format(SLURM.s(kwargs['LOG_DIR'])),
         '-mw {}'.format(SLURM.s(kwargs['MAX_WORKERS']))]
 
