@@ -22,7 +22,9 @@ class BespokeConfig(AnalysisConfig):
     NAME = ModuleName.BESPOKE
 
     REQUIREMENTS = ('excl_fpath', 'res_fpath', 'tm_dset', 'objective_function',
-                    'cost_function', 'project_points', 'sam_files',
+                    'capital_cost_function', 'fixed_operating_cost_function',
+                    'variable_operating_cost_function',
+                    'project_points', 'sam_files',
                     )
 
     def __init__(self, config):
@@ -76,9 +78,25 @@ class BespokeConfig(AnalysisConfig):
         return self['objective_function']
 
     @property
-    def cost_function(self):
-        """Get the bespoke optimization cost function"""
-        return self['cost_function']
+    def capital_cost_function(self):
+        """The plant capital cost function as a string, must return the total
+        capital cost in $. Has access to the same variables as the
+        objective_function."""
+        return self['capital_cost_function']
+
+    @property
+    def fixed_operating_cost_function(self):
+        """The plant annual fixed operating cost function as a string, must
+        return the fixed operating cost in $/year. Has access to the same
+        variables as the objective_function."""
+        return self['fixed_operating_cost_function']
+
+    @property
+    def variable_operating_cost_function(self):
+        """The plant annual variable operating cost function as a string, must
+        return the variable operating cost in $/kWh. Has access to the same
+        variables as the objective_function."""
+        return self['variable_operating_cost_function']
 
     @property
     def project_points(self):

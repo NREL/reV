@@ -16,7 +16,10 @@ class PlaceTurbines():
     exclusions, wind resources, and objective
     """
 
-    def __init__(self, wind_plant, objective_function, cost_function,
+    def __init__(self, wind_plant, objective_function,
+                 capital_cost_function,
+                 fixed_operating_cost_function,
+                 variable_operating_cost_function,
                  include_mask, pixel_side_length, min_spacing):
         """
         Parameters
@@ -33,17 +36,27 @@ class PlaceTurbines():
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - capital_cost: plant capital cost as evaluated
+                  by `capital_cost_function`
+                - fixed_operating_cost: plant fixed annual operating cost as
+                  evaluated by `fixed_operating_cost_function`
+                - variable_operating_cost: plant variable annual operating cost
+                  as evaluated by `variable_operating_cost_function`
                 - self.wind_plant: the SAM wind plant object, through which
-                all SAM variables can be accessed
+                  all SAM variables can be accessed
                 - cost: the annual cost of the wind plant (from cost_function)
-        cost_function : str
-            The cost function as a string, should return the annual cost
-            of the wind farm. Variables available are:
-                - n_turbines: the number of turbines
-                - system_capacity: wind plant capacity
-                - aep: annual energy production
-                - self.wind_plant: the SAM wind plant object, through which
-                all SAM variables can be accessed
+        capital_cost_function : str
+            The plant capital cost function as a string, must return the total
+            capital cost in $. Has access to the same variables as the
+            objective_function.
+        fixed_operating_cost_function : str
+            The plant annual fixed operating cost function as a string, must
+            return the fixed operating cost in $/year. Has access to the same
+            variables as the objective_function.
+        variable_operating_cost_function : str
+            The plant annual variable operating cost function as a string, must
+            return the variable operating cost in $/kWh. Has access to the same
+            variables as the objective_function.
         exclusions : ExclusionMaskFromDict
             The exclusions that define where turbines can be placed. Contains
             exclusions.latitude, exclusions.longitude, and exclusions.mask
@@ -53,7 +66,12 @@ class PlaceTurbines():
 
         # inputs
         self.wind_plant = wind_plant
-        self.cost_function = cost_function
+
+        self.capital_cost_function = capital_cost_function
+        self.fixed_operating_cost_function = fixed_operating_cost_function
+        self.variable_operating_cost_function = \
+            variable_operating_cost_function
+
         self.objective_function = objective_function
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
@@ -73,7 +91,9 @@ class PlaceTurbines():
 
         self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
         self._preflight(self.objective_function)
-        self._preflight(self.cost_function)
+        self._preflight(self.capital_cost_function)
+        self._preflight(self.fixed_operating_cost_function)
+        self._preflight(self.variable_operating_cost_function)
 
     def _preflight(self, eqn):
         """Run preflight checks on the equation string."""
@@ -174,7 +194,14 @@ class PlaceTurbines():
         self.wind_plant.assign_inputs()
         self.wind_plant.execute()
         aep = self.wind_plant.annual_energy()
-        cost = eval(self.cost_function, globals(), locals())
+
+        capital_cost = eval(self.capital_cost_function,
+                            globals(), locals())
+        fixed_operating_cost = eval(self.fixed_operating_cost_function,
+                                    globals(), locals())
+        variable_operating_cost = eval(self.variable_operating_cost_function,
+                                       globals(), locals())
+
         objective = eval(self.objective_function, globals(), locals())
 
         return objective
@@ -310,13 +337,41 @@ class PlaceTurbines():
 
     # pylint: disable=W0641,W0123
     @property
-    def annual_cost(self):
-        """This is the annual cost of the optimized plant ($)"""
+    def capital_cost(self):
+        """This is the capital cost of the optimized plant ($)"""
         if self.optimized_design_variables is not None:
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
-            return eval(self.cost_function, globals(), locals())
+            return eval(self.capital_cost_function, globals(), locals())
+        else:
+            return None
+
+    # pylint: disable=W0641,W0123
+    @property
+    def fixed_operating_cost(self):
+        """This is the annual fixed operating cost of the
+        optimized plant ($/year)"""
+        if self.optimized_design_variables is not None:
+            n_turbines = self.nturbs
+            system_capacity = self.capacity
+            aep = self.aep
+            return eval(self.fixed_operating_cost_function,
+                        globals(), locals())
+        else:
+            return None
+
+    # pylint: disable=W0641,W0123
+    @property
+    def variable_operating_cost(self):
+        """This is the annual variable operating cost of the
+        optimized plant ($/kWh)"""
+        if self.optimized_design_variables is not None:
+            n_turbines = self.nturbs
+            system_capacity = self.capacity
+            aep = self.aep
+            return eval(self.variable_operating_cost_function,
+                        globals(), locals())
         else:
             return None
 
@@ -328,7 +383,9 @@ class PlaceTurbines():
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
-            cost = self.annual_cost
+            capital_cost = self.capital_cost
+            fixed_operating_cost = self.fixed_operating_cost
+            variable_operating_cost = self.variable_operating_cost
             return eval(self.objective_function, globals(), locals())
         else:
             return None
