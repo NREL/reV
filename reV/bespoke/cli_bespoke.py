@@ -254,6 +254,7 @@ def valid_config_keys():
               '- n_turbines: the number of turbines'
               '- system_capacity: wind plant capacity'
               '- aep: annual energy production'
+              '- fixed_charge_rate: user input if included in sam sys config'
               '- capital_cost: the cap cost output by the cap cost function'
               '- fixed_operating_cost: the foc output by the foc function'
               '- variable_operating_cost: the voc output by the voc function'

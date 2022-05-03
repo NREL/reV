@@ -74,7 +74,24 @@ class BespokeConfig(AnalysisConfig):
 
     @property
     def objective_function(self):
-        """Get the bespoke optimization objective function"""
+        """The objective function of the optimization as a string
+
+        Should return the objective to be minimized during layout optimization.
+        Variables available are:
+            - n_turbines: the number of turbines
+            - system_capacity: wind plant capacity
+            - aep: annual energy production
+            - fixed_charge_rate: user input fixed_charge_rate if included
+              as part of the sam system config.
+            - self.wind_plant: the SAM wind plant object, through which
+            all SAM variables can be accessed
+            - capital_cost: plant capital cost as evaluated
+              by `capital_cost_function`
+            - fixed_operating_cost: plant fixed annual operating cost as
+              evaluated by `fixed_operating_cost_function`
+            - variable_operating_cost: plant variable annual operating cost
+              as evaluated by `variable_operating_cost_function`
+        """
         return self['objective_function']
 
     @property

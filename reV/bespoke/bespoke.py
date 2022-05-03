@@ -79,6 +79,8 @@ class BespokeSinglePlant:
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - fixed_charge_rate: user input fixed_charge_rate if included
+                  as part of the sam system config.
                 - self.wind_plant: the SAM wind plant object, through which
                 all SAM variables can be accessed
                 - capital_cost: plant capital cost as evaluated
@@ -247,20 +249,12 @@ class BespokeSinglePlant:
                 self._out_req.remove(req)
                 self._outputs[req] = self.res_df[dset].mean()
 
-        if 'lcoe_fcr' in self._out_req:
-            missing = []
-            required = ('fixed_charge_rate', 'fixed_operating_cost',
-                        'variable_operating_cost', 'system_capacity',
-                        'capital_cost')
-            for arg_name in required:
-                if arg_name not in self.original_sam_sys_inputs:
-                    missing.append(arg_name)
-            if any(missing):
-                msg = ('User requested "lcoe_fcr" but did not input the '
-                       'following required inputs in the SAM system config: {}'
-                       .format(missing))
-                logger.error(msg)
-                raise KeyError(msg)
+        if ('lcoe_fcr' in self._out_req
+                and 'fixed_charge_rate' not in self.original_sam_sys_inputs):
+            msg = ('User requested "lcoe_fcr" but did not input '
+                   '"fixed_charge_rate" in the SAM system config.')
+            logger.error(msg)
+            raise KeyError(msg)
 
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
@@ -577,7 +571,7 @@ class BespokeSinglePlant:
             self._plant_optm = PlaceTurbines(
                 self.wind_plant_pd,
                 self.objective_function,
-                self.captial_cost_function,
+                self.capital_cost_function,
                 self.fixed_operating_cost_function,
                 self.variable_operating_cost_function,
                 self.include_mask,
@@ -628,23 +622,18 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise RuntimeError(msg)
 
-        new_sys_cap = self.outputs['system_capacity']
-        og_sys_cap = self.original_sam_sys_inputs['system_capacity']
-        og_cap_cost = self.original_sam_sys_inputs['capital_cost']
-        og_foc = self.original_sam_sys_inputs['fixed_operating_cost']
-        og_voc = self.original_sam_sys_inputs['variable_operating_cost']
-        og_fcr = self.original_sam_sys_inputs['fixed_charge_rate']
-
-        new_foc = og_foc * new_sys_cap / og_sys_cap
-        new_voc = og_voc * new_sys_cap / og_sys_cap
-        new_cap_cost = og_cap_cost * new_sys_cap / og_sys_cap
+        fcr = self.original_sam_sys_inputs['fixed_charge_rate']
+        sys_cap = self.plant_optimizer.capacity
+        cap_cost = self.plant_optimizer.capital_cost
+        foc = self.plant_optimizer.fixed_operating_cost
+        voc = self.plant_optimizer.variable_operating_cost
 
         lcoe_kwargs = {}
-        lcoe_kwargs['fixed_charge_rate'] = og_fcr
-        lcoe_kwargs['system_capacity'] = new_sys_cap
-        lcoe_kwargs['capital_cost'] = new_cap_cost
-        lcoe_kwargs['fixed_operating_cost'] = new_foc
-        lcoe_kwargs['variable_operating_cost'] = new_voc
+        lcoe_kwargs['fixed_charge_rate'] = fcr
+        lcoe_kwargs['system_capacity'] = sys_cap
+        lcoe_kwargs['capital_cost'] = cap_cost
+        lcoe_kwargs['fixed_operating_cost'] = foc
+        lcoe_kwargs['variable_operating_cost'] = voc
 
         for k, v in lcoe_kwargs.items():
             self._meta[k] = v
@@ -817,8 +806,12 @@ class BespokeSinglePlant:
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
         self._outputs["bespoke_aep"] = self.plant_optimizer.aep
         self._outputs["bespoke_objective"] = self.plant_optimizer.objective
-        self._outputs["bespoke_annual_cost"] = \
-            self.plant_optimizer.annual_cost
+        self._outputs["bespoke_capital_cost"] = \
+            self.plant_optimizer.capital_cost
+        self._outputs["bespoke_fixed_operating_cost"] = \
+            self.plant_optimizer.fixed_operating_cost
+        self._outputs["bespoke_variable_operating_cost"] = \
+            self.plant_optimizer.variable_operating_cost
         self._outputs["included_area_capacity_density"] = \
             self.plant_optimizer.capacity_density
 
@@ -935,6 +928,8 @@ class BespokeWindPlants(AbstractAggregation):
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - fixed_charge_rate: user input fixed_charge_rate if included
+                  as part of the sam system config.
                 - self.wind_plant: the SAM wind plant object, through which
                 all SAM variables can be accessed
                 - capital_cost: plant capital cost as evaluated

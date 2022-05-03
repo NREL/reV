@@ -36,6 +36,8 @@ class PlaceTurbines():
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - fixed_charge_rate: user input fixed_charge_rate if included
+                  as part of the sam system config.
                 - capital_cost: plant capital cost as evaluated
                   by `capital_cost_function`
                 - fixed_operating_cost: plant fixed annual operating cost as
@@ -195,6 +197,7 @@ class PlaceTurbines():
         self.wind_plant.execute()
         aep = self.wind_plant.annual_energy()
 
+        fixed_charge_rate = self.fixed_charge_rate
         capital_cost = eval(self.capital_cost_function,
                             globals(), locals())
         fixed_operating_cost = eval(self.fixed_operating_cost_function,
@@ -310,6 +313,12 @@ class PlaceTurbines():
             return None
 
     @property
+    def fixed_charge_rate(self):
+        """Fixed charge rate if input to the SAM WindPowerPD object, None if
+        not found in inputs."""
+        return self.wind_plant.sam_sys_inputs.get('fixed_charge_rate', None)
+
+    @property
     def capacity_density(self):
         """This is the optimized capacity density of the wind plant
         defined with the area available after removing the exclusions
@@ -340,6 +349,7 @@ class PlaceTurbines():
     def capital_cost(self):
         """This is the capital cost of the optimized plant ($)"""
         if self.optimized_design_variables is not None:
+            fixed_charge_rate = self.fixed_charge_rate
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
@@ -353,6 +363,7 @@ class PlaceTurbines():
         """This is the annual fixed operating cost of the
         optimized plant ($/year)"""
         if self.optimized_design_variables is not None:
+            fixed_charge_rate = self.fixed_charge_rate
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
@@ -367,6 +378,7 @@ class PlaceTurbines():
         """This is the annual variable operating cost of the
         optimized plant ($/kWh)"""
         if self.optimized_design_variables is not None:
+            fixed_charge_rate = self.fixed_charge_rate
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
@@ -380,6 +392,7 @@ class PlaceTurbines():
     def objective(self):
         """This is the optimized objective function value"""
         if self.optimized_design_variables is not None:
+            fixed_charge_rate = self.fixed_charge_rate
             n_turbines = self.nturbs
             system_capacity = self.capacity
             aep = self.aep
