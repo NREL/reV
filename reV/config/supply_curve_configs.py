@@ -64,7 +64,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     @property
     def gen_fpath(self):
-        """Get the generation data filepath"""
+        """Get the generation data filepath
+
+        This can also bet set to "PIPELINE" to retrieve gen_fpath from previous
+        reV pipeline steps (multi-year, collect, or generation)
+        """
 
         fpath = self['gen_fpath']
 
@@ -98,7 +102,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
     @property
     def econ_fpath(self):
         """Get the econ data filepath. This is an optional argument only used
-        if reV gen and econ outputs are being used from different files."""
+        if reV gen and econ outputs are being used from different files.
+
+        This can also bet set to "PIPELINE" to retrieve gen_fpath from previous
+        reV pipeline steps (multi-year, collect, or econ)
+        """
 
         fpath = self.get('econ_fpath', None)
 
@@ -288,7 +296,14 @@ class SupplyCurveConfig(AnalysisConfig):
 
     @property
     def sc_points(self):
-        """Get the supply curve points summary file path"""
+        """Path to .csv or .json containing supply curve point summary. Can
+        also now be a filepath to a bespoke h5 where the "meta" dataset has the
+        same format as the sc aggregation output.
+
+        This can be set to "PIPELINE" to automatically parse the sc_points
+        output file from the previous pipeline steps "supply-curve-aggregation"
+        or "bespoke".
+        """
 
         sc_points = self['sc_points']
 

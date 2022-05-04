@@ -88,8 +88,12 @@ def from_config(ctx, config_file, points_range, verbose):
     logger.info('Source exclusion file: "{}"'.format(config.excl_fpath))
     logger.info('Bespoke optimization objective function: "{}"'
                 .format(config.objective_function))
-    logger.info('Bespoke optimization cost function: "{}"'
-                .format(config.cost_function))
+    logger.info('Bespoke capital cost function: "{}"'
+                .format(config.capital_cost_function))
+    logger.info('Bespoke fixed operating cost function: "{}"'
+                .format(config.fixed_operating_cost_function))
+    logger.info('Bespoke variable operating cost function: "{}"'
+                .format(config.variable_operating_cost_function))
     logger.info('The following project points were specified with '
                 'points_range "{}": "{}"'
                 .format(config.points_range, config.project_points))
@@ -105,7 +109,11 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['RES_FPATH'] = config.res_fpath
     ctx.obj['TM_DSET'] = config.tm_dset
     ctx.obj['OBJECTIVE_FUNCTION'] = config.objective_function
-    ctx.obj['COST_FUNCTION'] = config.cost_function
+    ctx.obj['CAPITAL_COST_FUNCTION'] = config.capital_cost_function
+    ctx.obj['FIXED_OPERATING_COST_FUNCTION'] = \
+        config.fixed_operating_cost_function
+    ctx.obj['VARIABLE_OPERATING_COST_FUNCTION'] = \
+        config.variable_operating_cost_function
     ctx.obj['POINTS'] = config.project_points
     ctx.obj['POINTS_RANGE'] = config.points_range
     ctx.obj['SAM_FILES'] = config.sam_files
@@ -119,6 +127,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['MIN_AREA'] = config.min_area
     ctx.obj['RESOLUTION'] = config.resolution
     ctx.obj['EXCL_AREA'] = config.excl_area
+    ctx.obj['DATA_LAYERS'] = config.data_layers
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
 
     ctx.obj['LOG_DIR'] = config.log_directory
@@ -172,33 +181,37 @@ def from_config(ctx, config_file, points_range, verbose):
                 Status.add_job(config.dirout, ModuleName.BESPOKE,
                                name, replace=True,
                                job_attrs=job_attrs)
-                max_workers = config.execution_control.max_workers
-                pre_extract_inclusions = config.pre_extract_inclusions
-                ctx.invoke(direct,
-                           excl_fpath=config.excl_fpath,
-                           res_fpath=config.res_fpath,
-                           out_fpath=out_fpath,
-                           tm_dset=config.tm_dset,
-                           objective_function=config.objective_function,
-                           cost_function=config.cost_function,
-                           points=config.project_points,
-                           sam_files=config.sam_files,
-                           points_range=config.points_range,
-                           min_spacing=config.min_spacing,
-                           ga_kwargs=config.ga_kwargs,
-                           output_request=config.output_request,
-                           ws_bins=config.ws_bins,
-                           wd_bins=config.wd_bins,
-                           excl_dict=config.excl_dict,
-                           area_filter_kernel=config.area_filter_kernel,
-                           min_area=config.min_area,
-                           resolution=config.resolution,
-                           excl_area=config.excl_area,
-                           log_dir=config.log_directory,
-                           max_workers=max_workers,
-                           pre_extract_inclusions=pre_extract_inclusions,
-                           verbose=verbose,
-                           )
+                kws = {'excl_fpath': config.excl_fpath,
+                       'res_fpath': config.res_fpath,
+                       'out_fpath': out_fpath,
+                       'tm_dset': config.tm_dset,
+                       'objective_function':
+                           config.objective_function,
+                       'capital_cost_function':
+                           config.capital_cost_function,
+                       'fixed_operating_cost_function':
+                           config.fixed_operating_cost_function,
+                       'variable_operating_cost_function':
+                           config.variable_operating_cost_function,
+                       'points': config.project_points,
+                       'sam_files': config.sam_files,
+                       'points_range': config.points_range,
+                       'min_spacing': config.min_spacing,
+                       'ga_kwargs': config.ga_kwargs,
+                       'output_request': config.output_request,
+                       'ws_bins': config.ws_bins,
+                       'wd_bins': config.wd_bins,
+                       'excl_dict': config.excl_dict,
+                       'area_filter_kernel': config.area_filter_kernel,
+                       'min_area': config.min_area,
+                       'resolution': config.resolution,
+                       'excl_area': config.excl_area,
+                       'log_dir': config.log_directory,
+                       'max_workers': config.execution_control.max_workers,
+                       'data_layers': config.data_layers,
+                       'pre_extract_inclusions': config.pre_extract_inclusions,
+                       'verbose': verbose}
+                ctx.invoke(direct, **kws)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
             stdout_path = os.path.join(config.log_directory, 'stdout')
@@ -241,17 +254,27 @@ def valid_config_keys():
               '- n_turbines: the number of turbines'
               '- system_capacity: wind plant capacity'
               '- aep: annual energy production'
-              '- self.wind_plant: the SAM wind plant object, through which'
-              'all SAM variables can be accessed'
-              '- cost: the annual cost of the wind plant')
-@click.option('--cost_function', '-cos', required=True, type=STR,
-              help='The cost function as a string, returns the annual cost'
-              'of the wind farm. Variables available are:'
-              '- n_turbines: the number of turbines'
-              '- system_capacity: wind plant capacity'
-              '- aep: annual energy production'
+              '- fixed_charge_rate: user input if included in sam sys config'
+              '- capital_cost: the cap cost output by the cap cost function'
+              '- fixed_operating_cost: the foc output by the foc function'
+              '- variable_operating_cost: the voc output by the voc function'
               '- self.wind_plant: the SAM wind plant object, through which'
               'all SAM variables can be accessed')
+@click.option('--capital_cost_function', '-cc',
+              required=True, type=STR,
+              help='The plant capital cost function as a string, must return '
+              'the total capital cost in $. Has access to the same variables '
+              'as the objective_function.')
+@click.option('--fixed_operating_cost_function', '-foc',
+              required=True, type=STR,
+              help='The plant annual fixed operating cost function as a '
+              'string, must return the fixed operating cost in $/year. Has '
+              'access to the same variables as the objective_function.')
+@click.option('--variable_operating_cost_function', '-voc',
+              required=True, type=STR,
+              help='The plant annual variable operating cost function as a '
+              'string, must return the variable operating cost in $/kWh. Has '
+              'access to the same variables as the objective_function.')
 @click.option('--points', '-p',
               default=None, type=SCPOINTS, show_default=True,
               help='Project points to analyze. This can either be a string '
@@ -274,7 +297,10 @@ def valid_config_keys():
               'the turbine rotor diameter.')
 @click.option('--ga_kwargs', '-gakw', type=STR, default=None,
               show_default=True,
-              help='Dictionary of keyword arguments to pass to GA initialization.')
+              help='Dictionary of keyword arguments to pass to GA '
+              'initialization.If `None`, default initialization values are '
+              'used. See the reV.bespoke.gradient_free.GeneticAlgorithm class '
+              'for a description of the allowed keyword arguments.')
 @click.option('--output_request', '-or', type=STRLIST,
               default=['cf_mean', 'system_capacity'], show_default=True,
               help=('List of requested output variable names from SAM.'))
@@ -321,6 +347,12 @@ def valid_config_keys():
 @click.option('--max_workers', '-mw', type=INT, default=None,
               show_default=True,
               help='Number of workers. Use 1 for serial, None for all cores.')
+@click.option('--data_layers', '-d', type=STR, default=None,
+              show_default=True,
+              help='String representation of a dictionary of additional data '
+              'layers to include in the aggregation e.g. '
+              '{"slope": {"dset": "srtm_slope", "method": "mean", '
+              '"fpath": "./excl.h5"}}')
 @click.option('-pre', '--pre_extract_inclusions', is_flag=True,
               help='Optional flag to pre-extract/compute the inclusion mask '
               'from the provided excl_dict, by default False. Typically '
@@ -330,17 +362,21 @@ def valid_config_keys():
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
-           cost_function, points, sam_files, points_range, min_spacing,
-           ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
+           capital_cost_function, fixed_operating_cost_function,
+           variable_operating_cost_function, points, sam_files, points_range,
+           min_spacing, ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
            area_filter_kernel, min_area, resolution, excl_area,
-           log_dir, max_workers, pre_extract_inclusions, verbose):
+           log_dir, max_workers, data_layers, pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['RES_FPATH'] = res_fpath
     ctx.obj['OUT_FPATH'] = out_fpath
     ctx.obj['TM_DSET'] = tm_dset
     ctx.obj['OBJECTIVE_FUNCTION'] = objective_function
-    ctx.obj['COST_FUNCTION'] = cost_function
+    ctx.obj['CAPITAL_COST_FUNCTION'] = capital_cost_function
+    ctx.obj['FIXED_OPERATING_COST_FUNCTION'] = fixed_operating_cost_function
+    ctx.obj['VARIABLE_OPERATING_COST_FUNCTION'] = \
+        variable_operating_cost_function
     ctx.obj['POINTS'] = points
     ctx.obj['POINTS_RANGE'] = points_range
     ctx.obj['SAM_FILES'] = sam_files
@@ -354,6 +390,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['MIN_AREA'] = min_area
     ctx.obj['RESOLUTION'] = resolution
     ctx.obj['EXCL_AREA'] = excl_area
+    ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = pre_extract_inclusions
     ctx.obj['LOG_DIR'] = log_dir
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -372,6 +409,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                     'resource file: {}. Target output path is: {}'
                     .format(name, res_fpath, out_fpath))
 
+        if isinstance(data_layers, str):
+            data_layers = dict_str_load(data_layers)
+
         if isinstance(excl_dict, str):
             excl_dict = dict_str_load(excl_dict)
 
@@ -384,7 +424,10 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
             # Execute the Bespoke module with smart data flushing.
             BespokeWindPlants.run(
                 excl_fpath, res_fpath, tm_dset,
-                objective_function, cost_function,
+                objective_function,
+                capital_cost_function,
+                fixed_operating_cost_function,
+                variable_operating_cost_function,
                 points, sam_files,
                 points_range=points_range,
                 min_spacing=min_spacing,
@@ -397,6 +440,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 min_area=min_area,
                 resolution=resolution,
                 excl_area=excl_area,
+                data_layers=data_layers,
                 pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
                 out_fpath=out_fpath)
@@ -419,7 +463,12 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                   'runtime': runtime, 'res_fpath': res_fpath,
                   'excl_fpath': excl_fpath, 'tm_dset': tm_dset,
                   'objective_function': objective_function,
-                  'cost_function': cost_function, 'excl_dict': excl_dict}
+                  'capital_cost_function': capital_cost_function,
+                  'fixed_operating_cost_function':
+                      fixed_operating_cost_function,
+                  'variable_operating_cost_function':
+                      variable_operating_cost_function,
+                  'excl_dict': excl_dict}
         Status.make_job_file(out_dir, ModuleName.BESPOKE, name, status)
 
 
@@ -433,7 +482,9 @@ def get_node_cmd(name, kwargs):
         '-of {}'.format(SLURM.s(kwargs['OUT_FPATH'])),
         '-tm {}'.format(SLURM.s(kwargs['TM_DSET'])),
         '-obj {}'.format(SLURM.s(kwargs['OBJECTIVE_FUNCTION'])),
-        '-cos {}'.format(SLURM.s(kwargs['COST_FUNCTION'])),
+        '-cc {}'.format(SLURM.s(kwargs['CAPITAL_COST_FUNCTION'])),
+        '-foc {}'.format(SLURM.s(kwargs['FIXED_OPERATING_COST_FUNCTION'])),
+        '-voc {}'.format(SLURM.s(kwargs['VARIABLE_OPERATING_COST_FUNCTION'])),
         '-p {}'.format(SLURM.s(kwargs['POINTS'])),
         '-sf {}'.format(SLURM.s(kwargs['SAM_FILES'])),
         '-pr {}'.format(SLURM.s(kwargs['POINTS_RANGE'])),
@@ -447,6 +498,7 @@ def get_node_cmd(name, kwargs):
         '-ma {}'.format(SLURM.s(kwargs['MIN_AREA'])),
         '-r {}'.format(SLURM.s(kwargs['RESOLUTION'])),
         '-ea {}'.format(SLURM.s(kwargs['EXCL_AREA'])),
+        '-d {}'.format(SLURM.s(kwargs['DATA_LAYERS'])),
         '-lo {}'.format(SLURM.s(kwargs['LOG_DIR'])),
         '-mw {}'.format(SLURM.s(kwargs['MAX_WORKERS']))]
 

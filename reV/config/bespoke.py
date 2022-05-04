@@ -22,7 +22,9 @@ class BespokeConfig(AnalysisConfig):
     NAME = ModuleName.BESPOKE
 
     REQUIREMENTS = ('excl_fpath', 'res_fpath', 'tm_dset', 'objective_function',
-                    'cost_function', 'project_points', 'sam_files',
+                    'capital_cost_function', 'fixed_operating_cost_function',
+                    'variable_operating_cost_function',
+                    'project_points', 'sam_files',
                     )
 
     def __init__(self, config):
@@ -72,13 +74,46 @@ class BespokeConfig(AnalysisConfig):
 
     @property
     def objective_function(self):
-        """Get the bespoke optimization objective function"""
+        """The objective function of the optimization as a string
+
+        Should return the objective to be minimized during layout optimization.
+        Variables available are:
+            - n_turbines: the number of turbines
+            - system_capacity: wind plant capacity
+            - aep: annual energy production
+            - fixed_charge_rate: user input fixed_charge_rate if included
+              as part of the sam system config.
+            - self.wind_plant: the SAM wind plant object, through which
+            all SAM variables can be accessed
+            - capital_cost: plant capital cost as evaluated
+              by `capital_cost_function`
+            - fixed_operating_cost: plant fixed annual operating cost as
+              evaluated by `fixed_operating_cost_function`
+            - variable_operating_cost: plant variable annual operating cost
+              as evaluated by `variable_operating_cost_function`
+        """
         return self['objective_function']
 
     @property
-    def cost_function(self):
-        """Get the bespoke optimization cost function"""
-        return self['cost_function']
+    def capital_cost_function(self):
+        """The plant capital cost function as a string, must return the total
+        capital cost in $. Has access to the same variables as the
+        objective_function."""
+        return self['capital_cost_function']
+
+    @property
+    def fixed_operating_cost_function(self):
+        """The plant annual fixed operating cost function as a string, must
+        return the fixed operating cost in $/year. Has access to the same
+        variables as the objective_function."""
+        return self['fixed_operating_cost_function']
+
+    @property
+    def variable_operating_cost_function(self):
+        """The plant annual variable operating cost function as a string, must
+        return the variable operating cost in $/kWh. Has access to the same
+        variables as the objective_function."""
+        return self['variable_operating_cost_function']
 
     @property
     def project_points(self):
@@ -188,6 +223,14 @@ class BespokeConfig(AnalysisConfig):
         """Get the exclusion pixel area in km2. Default is None which will
         determine the area from the exclusion file projection profile."""
         return self.get('excl_area', None)
+
+    @property
+    def data_layers(self):
+        """Aggregation data layers. Must be a dictionary keyed by data label
+        name. Each value must be another dictionary with "dset", "method",
+        and "fpath".
+        """
+        return self.get('data_layers', None)
 
     @property
     def pre_extract_inclusions(self):

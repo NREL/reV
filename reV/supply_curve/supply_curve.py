@@ -18,6 +18,7 @@ from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 from reV.utilities import log_versions
 
+from rex import Resource
 from rex.utilities import parse_table, SpawnProcessPool
 
 logger = logging.getLogger(__name__)
@@ -60,13 +61,15 @@ class SupplyCurve:
         Total LCOE of each supply curve point considering the LCOE friction
         scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
     """
+
     def __init__(self, sc_points, trans_table, sc_features=None):
         """
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame | list
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping, can also be a list of transmission tables
@@ -111,7 +114,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         sc_features : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing additional supply
             curve features, e.g. transmission multipliers, regions
@@ -122,7 +127,14 @@ class SupplyCurve:
             DataFrame of supply curve point summary with additional features
             added if supplied
         """
-        sc_points = parse_table(sc_points)
+        if isinstance(sc_points, str) and sc_points.endswith('.h5'):
+            with Resource(sc_points) as res:
+                sc_points = res.meta
+                sc_points.index.name = 'sc_gid'
+                sc_points = sc_points.reset_index()
+        else:
+            sc_points = parse_table(sc_points)
+
         logger.debug('Supply curve points table imported with columns: {}'
                      .format(sc_points.columns.values.tolist()))
 
@@ -1151,8 +1163,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supplcy curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
@@ -1230,8 +1243,9 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supplcy curve
-            point summary
+            Path to .csv or .json or DataFrame containing supply curve point
+            summary. Can also now be a filepath to a bespoke h5 where the
+            "meta" dataset has the same format as the sc aggregation output.
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping

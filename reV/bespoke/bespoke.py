@@ -18,6 +18,7 @@ from concurrent.futures import as_completed
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
+from reV.econ.utilities import lcoe_fcr
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
@@ -46,7 +47,9 @@ class BespokeSinglePlant:
     OUT_ATTRS = copy.deepcopy(Gen.OUT_ATTRS)
 
     def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
-                 objective_function, cost_function,
+                 objective_function, capital_cost_function,
+                 fixed_operating_cost_function,
+                 variable_operating_cost_function,
                  min_spacing='5x', ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
@@ -76,17 +79,28 @@ class BespokeSinglePlant:
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - fixed_charge_rate: user input fixed_charge_rate if included
+                  as part of the sam system config.
                 - self.wind_plant: the SAM wind plant object, through which
                 all SAM variables can be accessed
-                - cost: the annual cost of the wind plant (from cost_function)
-        cost_function : str
-            The cost function as a string, should return the annual cost
-            of the wind farm. Variables available are:
-                - n_turbines: the number of turbines
-                - system_capacity: wind plant capacity
-                - aep: annual energy production
-                - self.wind_plant: the SAM wind plant object, through which
-                all SAM variables can be accessed
+                - capital_cost: plant capital cost as evaluated
+                  by `capital_cost_function`
+                - fixed_operating_cost: plant fixed annual operating cost as
+                  evaluated by `fixed_operating_cost_function`
+                - variable_operating_cost: plant variable annual operating cost
+                  as evaluated by `variable_operating_cost_function`
+        capital_cost_function : str
+            The plant capital cost function as a string, must return the total
+            capital cost in $. Has access to the same variables as the
+            objective_function.
+        fixed_operating_cost_function : str
+            The plant annual fixed operating cost function as a string, must
+            return the fixed operating cost in $/year. Has access to the same
+            variables as the objective_function.
+        variable_operating_cost_function : str
+            The plant annual variable operating cost function as a string, must
+            return the variable operating cost in $/kWh. Has access to the same
+            variables as the objective_function.
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -158,7 +172,10 @@ class BespokeSinglePlant:
                 raise TypeError(msg) from e
 
         self.objective_function = objective_function
-        self.cost_function = cost_function
+        self.capital_cost_function = capital_cost_function
+        self.fixed_operating_cost_function = fixed_operating_cost_function
+        self.variable_operating_cost_function = \
+            variable_operating_cost_function
         self.min_spacing = min_spacing
         self.ga_kwargs = ga_kwargs or {}
 
@@ -231,6 +248,13 @@ class BespokeSinglePlant:
             if dset in available_dsets:
                 self._out_req.remove(req)
                 self._outputs[req] = self.res_df[dset].mean()
+
+        if ('lcoe_fcr' in self._out_req
+                and 'fixed_charge_rate' not in self.original_sam_sys_inputs):
+            msg = ('User requested "lcoe_fcr" but did not input '
+                   '"fixed_charge_rate" in the SAM system config.')
+            logger.error(msg)
+            raise KeyError(msg)
 
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
@@ -314,6 +338,16 @@ class BespokeSinglePlant:
         return np.sqrt(self.sc_point.pixel_area) * 1000.0
 
     @property
+    def original_sam_sys_inputs(self):
+        """Get the original (pre-optimized) SAM windpower system inputs.
+
+        Returns
+        -------
+        dict
+        """
+        return self._sam_sys_inputs
+
+    @property
     def sam_sys_inputs(self):
         """Get the SAM windpower system inputs. If the wind plant has not yet
         been optimized, this returns the initial SAM config. If the wind plant
@@ -352,8 +386,14 @@ class BespokeSinglePlant:
             gid_counts = json.dumps([float(np.round(n, 1))
                                      for n in self.sc_point.gid_counts])
 
+            with SupplyCurveExtent(self.sc_point._excl_fpath,
+                                   resolution=self.sc_point.resolution) as sc:
+                row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
+
             self._meta = pd.DataFrame(
                 {'sc_point_gid': self.sc_point.gid,
+                 'sc_row_ind': row_ind,
+                 'sc_col_ind': col_ind,
                  'gid': self.sc_point.gid,
                  'latitude': self.sc_point.latitude,
                  'longitude': self.sc_point.longitude,
@@ -368,6 +408,7 @@ class BespokeSinglePlant:
                  'n_gids': self.sc_point.n_gids,
                  'area_sq_km': self.sc_point.area,
                  }, index=[self.sc_point.gid])
+
         return self._meta
 
     @property
@@ -476,10 +517,16 @@ class BespokeSinglePlant:
         wind_plant_ts = {}
         for year in self.years:
             res_df = self.res_df[(self.res_df.index.year == year)]
-            i_wp = WindPower(res_df, self.meta,
-                             copy.deepcopy(self.sam_sys_inputs),
+            sam_inputs = copy.deepcopy(self.sam_sys_inputs)
+
+            if 'lcoe_fcr' in self._out_req:
+                lcoe_kwargs = self.get_lcoe_kwargs()
+                sam_inputs.update(lcoe_kwargs)
+
+            i_wp = WindPower(res_df, self.meta, sam_inputs,
                              output_request=self._out_req)
             wind_plant_ts[year] = i_wp
+
         return wind_plant_ts
 
     @property
@@ -521,13 +568,73 @@ class BespokeSinglePlant:
         if self._plant_optm is None:
             # put import here to delay breaking due to special dependencies
             from reV.bespoke.place_turbines import PlaceTurbines
-            self._plant_optm = PlaceTurbines(self.wind_plant_pd,
-                                             self.objective_function,
-                                             self.cost_function,
-                                             self.include_mask,
-                                             self.pixel_side_length,
-                                             self.min_spacing)
+            self._plant_optm = PlaceTurbines(
+                self.wind_plant_pd,
+                self.objective_function,
+                self.capital_cost_function,
+                self.fixed_operating_cost_function,
+                self.variable_operating_cost_function,
+                self.include_mask,
+                self.pixel_side_length,
+                self.min_spacing)
+
         return self._plant_optm
+
+    def recalc_lcoe(self):
+        """Recalculate the multi-year mean LCOE based on the multi-year mean
+        annual energy production (AEP)"""
+
+        if 'lcoe_fcr-means' in self.outputs:
+            lcoe_kwargs = self.get_lcoe_kwargs()
+
+            logger.debug('Recalulating multi-year mean LCOE using '
+                         'multi-year mean AEP.')
+
+            fcr = lcoe_kwargs['fixed_charge_rate']
+            cap_cost = lcoe_kwargs['capital_cost']
+            foc = lcoe_kwargs['fixed_operating_cost']
+            voc = lcoe_kwargs['variable_operating_cost']
+            aep = self.outputs['annual_energy-means']
+
+            my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+
+            self._outputs['lcoe_fcr-means'] = my_mean_lcoe
+            self._meta['mean_lcoe'] = my_mean_lcoe
+
+    def get_lcoe_kwargs(self):
+        """Get a namespace of arguments for calculating LCOE based on the
+        bespoke optimized wind plant capacity
+
+        Returns
+        -------
+        lcoe_kwargs : dict
+            kwargs for the SAM lcoe model. These are based on the original
+            sam_sys_inputs, normalized to the original system_capacity, and
+            updated based on the bespoke optimized system_capacity, includes
+            fixed_charge_rate, system_capacity (kW), capital_cost ($),
+            fixed_operating_cos ($), variable_operating_cost ($/kWh)
+        """
+
+        if 'system_capacity' not in self.outputs:
+            msg = ('Could not find system_capacity in the outputs, need to '
+                   'run_plant_optimization() to get the optimized '
+                   'system_capacity before calculating LCOE!')
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        lcoe_kwargs = {
+            'fixed_charge_rate':
+                self.original_sam_sys_inputs['fixed_charge_rate'],
+            'system_capacity': self.plant_optimizer.capacity,
+            'capital_cost': self.plant_optimizer.capital_cost,
+            'fixed_operating_cost': self.plant_optimizer.fixed_operating_cost,
+            'variable_operating_cost':
+                self.plant_optimizer.variable_operating_cost}
+
+        for k, v in lcoe_kwargs.items():
+            self._meta[k] = v
+
+        return lcoe_kwargs
 
     @staticmethod
     def get_wind_handler(res):
@@ -573,7 +680,10 @@ class BespokeSinglePlant:
     @staticmethod
     def _check_sys_inputs(plant1, plant2,
                           ignore=('wind_resource_model_choice',
-                                  'wind_resource_data')):
+                                  'wind_resource_data',
+                                  'capital_cost',
+                                  'fixed_operating_cost',
+                                  'variable_operating_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
@@ -631,6 +741,14 @@ class BespokeSinglePlant:
                 means[base_str + 'means'] = np.mean(all_values)
 
         self._outputs.update(means)
+
+        # copy dataset outputs to meta data for supply curve table summary
+        if 'cf_mean-means' in self.outputs:
+            self._meta['mean_cf'] = self.outputs['cf_mean-means']
+        if 'lcoe_fcr-means' in self.outputs:
+            self._meta['mean_lcoe'] = self.outputs['lcoe_fcr-means']
+            self.recalc_lcoe()
+
         logger.debug('Timeseries analysis complete!')
 
         return self.outputs
@@ -684,12 +802,20 @@ class BespokeSinglePlant:
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
         self._outputs["bespoke_aep"] = self.plant_optimizer.aep
         self._outputs["bespoke_objective"] = self.plant_optimizer.objective
-        self._outputs["bespoke_annual_cost"] = \
-            self.plant_optimizer.annual_cost
+        self._outputs["bespoke_capital_cost"] = \
+            self.plant_optimizer.capital_cost
+        self._outputs["bespoke_fixed_operating_cost"] = \
+            self.plant_optimizer.fixed_operating_cost
+        self._outputs["bespoke_variable_operating_cost"] = \
+            self.plant_optimizer.variable_operating_cost
         self._outputs["included_area_capacity_density"] = \
             self.plant_optimizer.capacity_density
 
         logger.debug('Plant layout optimization complete!')
+
+        # copy dataset outputs to meta data for supply curve table summary
+        # convert SAM system capacity in kW to reV supply curve cap in MW
+        self._meta['capacity'] = self.outputs['system_capacity'] / 1e3
 
         return self.outputs
 
@@ -749,7 +875,9 @@ class BespokeWindPlants(AbstractAggregation):
     """
 
     def __init__(self, excl_fpath, res_fpath, tm_dset,
-                 objective_function, cost_function,
+                 objective_function, capital_cost_function,
+                 fixed_operating_cost_function,
+                 variable_operating_cost_function,
                  points, sam_configs, points_range=None,
                  min_spacing='5x', ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
@@ -796,17 +924,28 @@ class BespokeWindPlants(AbstractAggregation):
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
+                - fixed_charge_rate: user input fixed_charge_rate if included
+                  as part of the sam system config.
                 - self.wind_plant: the SAM wind plant object, through which
                 all SAM variables can be accessed
-                - cost: the annual cost of the wind plant (from cost_function)
-        cost_function : str
-            The cost function as a string, should return the annual cost
-            of the wind farm. Variables available are:
-                - n_turbines: the number of turbines
-                - system_capacity: wind plant capacity
-                - aep: annual energy production
-                - self.wind_plant: the SAM wind plant object, through which
-                all SAM variables can be accessed
+                - capital_cost: plant capital cost as evaluated
+                  by `capital_cost_function`
+                - fixed_operating_cost: plant fixed annual operating cost as
+                  evaluated by `fixed_operating_cost_function`
+                - variable_operating_cost: plant variable annual operating cost
+                  as evaluated by `variable_operating_cost_function`
+        capital_cost_function : str
+            The plant capital cost function as a string, must return the total
+            capital cost in $. Has access to the same variables as the
+            objective_function.
+        fixed_operating_cost_function : str
+            The plant annual fixed operating cost function as a string, must
+            return the fixed operating cost in $/year. Has access to the same
+            variables as the objective_function.
+        variable_operating_cost_function : str
+            The plant annual variable operating cost function as a string, must
+            return the variable operating cost in $/kWh. Has access to the same
+            variables as the objective_function.
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -868,7 +1007,12 @@ class BespokeWindPlants(AbstractAggregation):
         logger.debug('Exclusion dict: {}'.format(excl_dict))
         logger.info('Bespoke objective function: {}'
                     .format(objective_function))
-        logger.info('Bespoke cost function: {}'.format(cost_function))
+        logger.info('Bespoke capital cost function: {}'
+                    .format(capital_cost_function))
+        logger.info('Bespoke fixed operating cost function: {}'
+                    .format(fixed_operating_cost_function))
+        logger.info('Bespoke variable operating cost function: {}'
+                    .format(variable_operating_cost_function))
         logger.info('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         BespokeSinglePlant.check_dependencies()
@@ -886,7 +1030,9 @@ class BespokeWindPlants(AbstractAggregation):
 
         self._res_fpath = res_fpath
         self._obj_fun = objective_function
-        self._cost_fun = cost_function
+        self._cap_cost_fun = capital_cost_function
+        self._foc_fun = fixed_operating_cost_function
+        self._voc_fun = variable_operating_cost_function
         self._min_spacing = min_spacing
         self._ga_kwargs = ga_kwargs or {}
         self._output_request = output_request
@@ -1160,7 +1306,10 @@ class BespokeWindPlants(AbstractAggregation):
     # pylint: disable=arguments-renamed
     @classmethod
     def run_serial(cls, excl_fpath, res_fpath, tm_dset,
-                   sam_sys_inputs, objective_function, cost_function,
+                   sam_sys_inputs, objective_function,
+                   capital_cost_function,
+                   fixed_operating_cost_function,
+                   variable_operating_cost_function,
                    min_spacing='5x', ga_kwargs=None,
                    output_request=('system_capacity', 'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
@@ -1217,7 +1366,9 @@ class BespokeWindPlants(AbstractAggregation):
                         tm_dset,
                         sam_sys_inputs,
                         objective_function,
-                        cost_function,
+                        capital_cost_function,
+                        fixed_operating_cost_function,
+                        variable_operating_cost_function,
                         min_spacing=min_spacing,
                         ga_kwargs=ga_kwargs,
                         output_request=output_request,
@@ -1297,7 +1448,9 @@ class BespokeWindPlants(AbstractAggregation):
                     self._tm_dset,
                     self._project_points[gid][1],
                     self._obj_fun,
-                    self._cost_fun,
+                    self._cap_cost_fun,
+                    self._foc_fun,
+                    self._voc_fun,
                     self._min_spacing,
                     ga_kwargs=self._ga_kwargs,
                     output_request=self._output_request,
@@ -1332,7 +1485,9 @@ class BespokeWindPlants(AbstractAggregation):
     # pylint: disable=arguments-renamed
     @classmethod
     def run(cls, excl_fpath, res_fpath, tm_dset,
-            objective_function, cost_function,
+            objective_function, capital_cost_function,
+            fixed_operating_cost_function,
+            variable_operating_cost_function,
             points, sam_configs, points_range=None,
             min_spacing='5x', ga_kwargs=None,
             output_request=('system_capacity', 'cf_mean'),
@@ -1347,7 +1502,10 @@ class BespokeWindPlants(AbstractAggregation):
         """
 
         bsp = cls(excl_fpath, res_fpath, tm_dset,
-                  objective_function, cost_function,
+                  objective_function,
+                  capital_cost_function,
+                  fixed_operating_cost_function,
+                  variable_operating_cost_function,
                   points, sam_configs,
                   points_range=points_range,
                   min_spacing=min_spacing,
@@ -1372,7 +1530,9 @@ class BespokeWindPlants(AbstractAggregation):
                 si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
                                     bsp._project_points[gid][1],
                                     objective_function,
-                                    cost_function,
+                                    capital_cost_function,
+                                    fixed_operating_cost_function,
+                                    variable_operating_cost_function,
                                     min_spacing=bsp._min_spacing,
                                     ga_kwargs=bsp._ga_kwargs,
                                     output_request=bsp._output_request,

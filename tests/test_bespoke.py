@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV bespoke wind plant optimization tests
 """
+import copy
 from glob import glob
 import json
 import os
@@ -9,11 +10,14 @@ import tempfile
 import numpy as np
 import pandas as pd
 import pytest
+import h5py
 
 from reV import TESTDATADIR
-from reV.supply_curve.tech_mapping import TechMapping
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.tech_mapping import TechMapping
+from reV.supply_curve.supply_curve import SupplyCurve
 from reV.SAM.generation import WindPower
 
 from rex import Resource
@@ -25,6 +29,16 @@ EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
 AGG_DSET = ('cf_mean', 'cf_profile')
+
+DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
+                             'method': 'mean',
+                             'fpath': EXCL},
+               'reeds_region': {'dset': 'ri_reeds_regions',
+                                'method': 'mode',
+                                'fpath': EXCL},
+               'padus': {'dset': 'ri_padus',
+                         'method': 'mode',
+                         'fpath': EXCL}}
 
 # note that this differs from the
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
@@ -47,9 +61,16 @@ SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
 def test_turbine_placement(gid=33):
     """Test turbine placement with zero available area. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = """200 * system_capacity * np.exp(-system_capacity /
-        1E5 * 0.1 + (1 - 0.1))"""
-    objective_function = "cost / aep"
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -61,7 +82,10 @@ def test_turbine_placement(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
-                                 objective_function, cost_function,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
@@ -93,11 +117,16 @@ def test_turbine_placement(gid=33):
         # pylint: disable=W0641
         aep = place_optimizer.aep
         # pylint: disable=W0123
-        cost = eval(cost_function, globals(), locals())
+        capital_cost = eval(cap_cost_fun, globals(), locals())
+        fixed_operating_cost = eval(foc_fun, globals(), locals())
+        variable_operating_cost = eval(voc_fun, globals(), locals())
         # pylint: disable=W0123
         assert place_optimizer.objective ==\
             eval(objective_function, globals(), locals())
-        assert place_optimizer.annual_cost == cost
+        assert place_optimizer.capital_cost == capital_cost
+        assert place_optimizer.fixed_operating_cost == fixed_operating_cost
+        assert (place_optimizer.variable_operating_cost
+                == variable_operating_cost)
 
         bsp.close()
 
@@ -105,9 +134,16 @@ def test_turbine_placement(gid=33):
 def test_zero_area(gid=33):
     """Test turbine placement with zero available area. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = """200 * system_capacity * np.exp(-system_capacity /
-        1E5 * 0.1 + (1 - 0.1))"""
-    objective_function = "cost / aep"
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -119,7 +155,8 @@ def test_zero_area(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
-                                 objective_function, cost_function,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
@@ -128,14 +165,16 @@ def test_zero_area(gid=33):
         optimizer.include_mask = np.zeros_like(optimizer.include_mask)
         optimizer.place_turbines(max_time=5)
 
+        # pylint: disable=W0123
         assert len(optimizer.turbine_x) == 0
         assert len(optimizer.turbine_y) == 0
         assert optimizer.nturbs == 0
         assert optimizer.capacity == 0
         assert optimizer.area == 0
         assert optimizer.capacity_density == 0
-        assert optimizer.objective == 0
-        assert optimizer.annual_cost == 0
+        assert optimizer.objective == eval(voc_fun)
+        assert optimizer.capital_cost == 0
+        assert optimizer.fixed_operating_cost == 0
 
         bsp.close()
 
@@ -143,7 +182,9 @@ def test_zero_area(gid=33):
 def test_packing_algorithm(gid=33):
     """Test turbine placement with zero available area. """
     output_request = ()
-    cost_function = """"""
+    cap_cost_fun = ""
+    foc_fun = ""
+    voc_fun = ""
     objective_function = ""
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -156,7 +197,8 @@ def test_packing_algorithm(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
-                                 objective_function, cost_function,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
@@ -217,9 +259,16 @@ def test_bespoke_points():
 def test_single(gid=33):
     """Test a single wind plant bespoke optimization run"""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = """200 * system_capacity * np.exp(-system_capacity /
-        1E5 * 0.1 + (1 - 0.1))"""
-    objective_function = "cost / aep"
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -231,7 +280,8 @@ def test_single(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
-                                 objective_function, cost_function,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
@@ -290,13 +340,85 @@ def test_single(gid=33):
         bsp.close()
 
 
+def test_extra_outputs(gid=33):
+    """Test running bespoke single farm optimization with lcoe requests"""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile', 'lcoe_fcr')
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(fixed_charge_rate * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        with pytest.raises(KeyError):
+            bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                     SAM_SYS_INPUTS,
+                                     objective_function, cap_cost_fun,
+                                     foc_fun, voc_fun,
+                                     ga_kwargs={'max_time': 5},
+                                     excl_dict=EXCL_DICT,
+                                     output_request=output_request,
+                                     )
+
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['fixed_charge_rate'] = 0.0975
+
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 data_layers=DATA_LAYERS,
+                                 )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+        bsp.agg_data_layers()
+
+        assert 'lcoe_fcr-2012' in out
+        assert 'lcoe_fcr-2013' in out
+        assert 'lcoe_fcr-means' in out
+
+        assert 'capacity' in bsp.meta
+        assert 'mean_cf' in bsp.meta
+        assert 'mean_lcoe' in bsp.meta
+
+        assert 'pct_slope' in bsp.meta
+        assert 'reeds_region' in bsp.meta
+        assert 'padus' in bsp.meta
+
+        bsp.close()
+
+
 def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = """200 * system_capacity * np.exp(-system_capacity /
-        1E5 * 0.1 + (1 - 0.1))"""
-    objective_function = "cost / aep"
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -305,12 +427,13 @@ def test_bespoke():
         shutil.copy(RES.format(2012), res_fp.format(2012))
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
-        points = [33, 35]  # both 33 and 35 are included
-#        points = [36, 37]  # 37 is fully excluded
+        # both 33 and 35 are included, 37 is fully excluded
+        points = [33, 35]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
-                                  objective_function, cost_function,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
                                   points, SAM_CONFIGS,
                                   ga_kwargs={'max_time': 5},
                                   excl_dict=EXCL_DICT,
@@ -344,8 +467,6 @@ def test_bespoke():
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
-
-#        shutil.copy(out_fpath, './data/bespoke/test_bespoke_node00.h5')
 
 
 def test_collect_bespoke():
@@ -384,10 +505,11 @@ def test_collect_bespoke():
 def test_consistent_eval_namespace(gid=33):
     """Test that all the same variables are available for every eval."""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    cost_function = "2000"
-    objective_function = (
-        "n_turbines + id(self.wind_plant) + system_capacity + cost + aep"
-    )
+    cap_cost_fun = "2000"
+    foc_fun = "0"
+    voc_fun = "0"
+    objective_function = ("n_turbines + id(self.wind_plant) "
+                          "+ system_capacity + capital_cost + aep")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
@@ -399,7 +521,8 @@ def test_consistent_eval_namespace(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
-                                 objective_function, cost_function,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
@@ -410,3 +533,46 @@ def test_consistent_eval_namespace(gid=33):
         assert out["bespoke_objective"] == bsp.plant_optimizer.objective
 
         bsp.close()
+
+
+def test_bespoke_supply_curve():
+    """Test supply curve compute from a bespoke output that acts as the
+    traditional reV-sc-aggregation output table."""
+
+    bespoke_sample_fout = os.path.join(TESTDATADIR,
+                                       'bespoke/test_bespoke_node00.h5')
+
+    normal_path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+    normal_sc_points = pd.read_csv(normal_path)
+
+    with tempfile.TemporaryDirectory() as td:
+        bespoke_sc_fp = os.path.join(td, 'bespoke_out.h5')
+        shutil.copy(bespoke_sample_fout, bespoke_sc_fp)
+        with h5py.File(bespoke_sc_fp, 'a') as f:
+            del f['meta']
+        with Outputs(bespoke_sc_fp, mode='a') as f:
+            bespoke_meta = normal_sc_points.copy()
+            bespoke_meta = bespoke_meta.drop('sc_gid', axis=1)
+            f.meta = bespoke_meta
+
+        # this is basically copied from test_supply_curve_compute.py
+        trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                     f'costs_RI_{cap}MW.csv')
+                        for cap in [100, 200, 400, 1000]]
+
+        sc_full = SupplyCurve.full(bespoke_sc_fp, trans_tables, fcr=0.1,
+                                   avail_cap_frac=0.1)
+
+        assert all(gid in sc_full['sc_gid']
+                   for gid in normal_sc_points['sc_gid'])
+        for _, inp_row in normal_sc_points.iterrows():
+            sc_gid = inp_row['sc_gid']
+            assert sc_gid in sc_full['sc_gid']
+            test_ind = np.where(sc_full['sc_gid'] == sc_gid)[0]
+            assert len(test_ind) == 1
+            test_row = sc_full.iloc[test_ind]
+            assert test_row['total_lcoe'].values[0] > inp_row['mean_lcoe']
+
+    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
+    sc_baseline = pd.read_csv(fpath_baseline)
+    assert np.allclose(sc_baseline['total_lcoe'], sc_full['total_lcoe'])
