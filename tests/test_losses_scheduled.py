@@ -8,6 +8,7 @@ Created on Mon Apr 18 12:52:16 2021
 """
 
 import os
+import sys
 import pytest
 import tempfile
 import json
@@ -23,6 +24,10 @@ from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import hourly_indices_for_months
 from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
+
+
+if not sys.platform.startswith("win"):
+    pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
 REV_POINTS = list(range(3))

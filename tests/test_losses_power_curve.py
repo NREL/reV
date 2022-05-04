@@ -8,6 +8,7 @@ Created on Mon Apr 18 12:52:16 2021
 """
 
 import os
+import sys
 import pytest
 import tempfile
 import json
@@ -24,6 +25,10 @@ from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesInput,
                                     HorizontalPowerCurveTranslation)
 from reV.losses.scheduled import ScheduledLossesMixin
+
+
+if sys.platform.startswith("win"):
+    pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
 REV_POINTS = slice(0, 5)
