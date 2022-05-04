@@ -12,6 +12,7 @@ import pytest
 import tempfile
 import json
 import copy
+import gc
 
 import numpy as np
 
@@ -33,6 +34,13 @@ SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_non_standard_1.json'
 ]
 BASIC_WIND_RES = [10, 20, 20]
+
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    """Attempt to force garbage collector run. """
+    yield
+    gc.collect()
 
 
 @pytest.fixture

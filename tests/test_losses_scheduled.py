@@ -12,6 +12,7 @@ import pytest
 import tempfile
 import json
 import random
+import gc
 
 import numpy as np
 import pandas as pd
@@ -92,6 +93,13 @@ SINGLE_SITE_OUTAGE = [{
     'percentage_of_farm_down': 42,
     'allowed_months': ['February'],
 }]
+
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    """Attempt to force garbage collector run. """
+    yield
+    gc.collect()
 
 
 @pytest.fixture
