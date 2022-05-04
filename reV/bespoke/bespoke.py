@@ -622,18 +622,14 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise RuntimeError(msg)
 
-        fcr = self.original_sam_sys_inputs['fixed_charge_rate']
-        sys_cap = self.plant_optimizer.capacity
-        cap_cost = self.plant_optimizer.capital_cost
-        foc = self.plant_optimizer.fixed_operating_cost
-        voc = self.plant_optimizer.variable_operating_cost
-
-        lcoe_kwargs = {}
-        lcoe_kwargs['fixed_charge_rate'] = fcr
-        lcoe_kwargs['system_capacity'] = sys_cap
-        lcoe_kwargs['capital_cost'] = cap_cost
-        lcoe_kwargs['fixed_operating_cost'] = foc
-        lcoe_kwargs['variable_operating_cost'] = voc
+        lcoe_kwargs = {
+            'fixed_charge_rate':
+                self.original_sam_sys_inputs['fixed_charge_rate'],
+            'system_capacity': self.plant_optimizer.capacity,
+            'capital_cost': self.plant_optimizer.capital_cost,
+            'fixed_operating_cost': self.plant_optimizer.fixed_operating_cost,
+            'variable_operating_cost':
+                self.plant_optimizer.variable_operating_cost}
 
         for k, v in lcoe_kwargs.items():
             self._meta[k] = v

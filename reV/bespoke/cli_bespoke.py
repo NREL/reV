@@ -299,7 +299,7 @@ def valid_config_keys():
               show_default=True,
               help='Dictionary of keyword arguments to pass to GA '
               'initialization.If `None`, default initialization values are '
-              'used. See :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` '
+              'used. See the reV.bespoke.gradient_free.GeneticAlgorithm class '
               'for a description of the allowed keyword arguments.')
 @click.option('--output_request', '-or', type=STRLIST,
               default=['cf_mean', 'system_capacity'], show_default=True,
