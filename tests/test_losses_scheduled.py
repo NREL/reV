@@ -310,8 +310,21 @@ def _make_site_data_df(site_data):
     return site_data
 
 
-def test_scheduled_losses_repeatability():
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+@pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses_repeatability(
+    generic_losses, outages, site_outages, files
+):
     """Test that losses are reproducible between runs. """
+    sam_file, res_file, tech = files
+    with open(sam_file, 'r') as fh:
+        sam_config = json.load(fh)
 
     test_generic_losses = [0, 0.2]
     test_outages = NOMINAL_OUTAGES
