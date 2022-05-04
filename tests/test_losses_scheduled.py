@@ -12,7 +12,7 @@ import pytest
 import tempfile
 import json
 import random
-from itertools import product
+import gc
 
 import numpy as np
 import pandas as pd
@@ -95,6 +95,13 @@ SINGLE_SITE_OUTAGE = [{
 }]
 
 
+@pytest.fixture(autouse=True)
+def cleanup():
+    """Attempt to force garbage collector run. """
+    yield
+    gc.collect()
+
+
 @pytest.fixture
 def basic_outage_dict():
     """Return a basic outage dictionary."""
@@ -115,129 +122,112 @@ def so_scheduler(basic_outage_dict):
     return SingleOutageScheduler(outage, scheduler)
 
 
-def test_scheduled_losses():
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+@pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses(generic_losses, outages, site_outages, files):
     """Test full gen run with scheduled losses. """
 
-    test_generic_losses = [0, 0.2]
-    test_outages = NOMINAL_OUTAGES
-    test_site_outages = [None, SINGLE_SITE_OUTAGE]
-    test_files = [
-        (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
-        (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
-        (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
-    ]
-
-    test_parametrization = product(
-        test_generic_losses, test_outages, test_site_outages, test_files
+    gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
+        generic_losses, outages, site_outages, files
     )
 
-    for generic_losses, outages, site_outages, files in test_parametrization:
-        gen_profiles, gen_profiles_with_losses = (
-            _run_gen_with_and_without_losses(
-                generic_losses, outages, site_outages, files
-            )
-        )
+    if site_outages is not None:
+        outages = site_outages
 
-        if site_outages is not None:
-            outages = site_outages
+    outages = [Outage(outage) for outage in outages]
+    min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
+    assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
 
-        outages = [Outage(outage) for outage in outages]
-        min_loss = min(
-            outage.percentage_of_farm_down / 100 for outage in outages
-        )
-
-        assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
-
-        losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
-        site_loss_inds = []
-        zero_gen_inds_all_sites = set()
-        for site_losses, site_gen in zip(losses.T, gen_profiles.T):
-            non_zero_gen = site_gen > 0
-            zero_gen_inds = set(np.where(~non_zero_gen)[0])
-            zero_gen_inds_all_sites |= zero_gen_inds
-            site_loss_inds += [
-                set(np.where(site_losses > 0 & non_zero_gen)[0])
-            ]
-            for outage in outages:
-                outage_percentage = outage.percentage_of_farm_down
-                outage_allowed_hourly_inds = hourly_indices_for_months(
-                    outage.allowed_months
-                )
-                zero_gen_in_comparison_count = sum(
-                    ind in outage_allowed_hourly_inds for ind in zero_gen_inds
-                )
-                comparison_inds = list(
-                    set(outage_allowed_hourly_inds) - zero_gen_inds
-                )
-
-                if not outage.allow_outage_overlap or outage_percentage == 100:
-                    min_num_expected_outage_hours = (
-                        outage.count * outage.duration
-                        - zero_gen_in_comparison_count
-                    )
-                    max_num_expected_outage_hours = (
-                        outage.count * outage.duration
-                    )
-                    observed_outages = np.isclose(
-                        site_losses[comparison_inds], outage_percentage,
-                        atol=ATOL, rtol=RTOL
-                    )
-                else:
-                    num_outages_possible_per_day = np.floor(
-                        100 / outage.percentage_of_farm_down
-                    )
-                    min_num_expected_outage_hours = (
-                        outage.count * outage.duration
-                        / num_outages_possible_per_day
-                    )
-                    min_num_expected_outage_hours = max(
-                        0,
-                        min_num_expected_outage_hours
-                        - zero_gen_in_comparison_count
-                    )
-                    max_num_expected_outage_hours = len(comparison_inds)
-                    observed_outages = (
-                        site_losses[comparison_inds]
-                        >= outage_percentage - ATOL
-                    )
-
-                num_outage_hours = observed_outages.sum()
-
-                num_outage_hours_meet_expectations = (
-                    min_num_expected_outage_hours
-                    <= num_outage_hours
-                    <= max_num_expected_outage_hours
-                )
-                assert num_outage_hours_meet_expectations
-
-            total_expected_outage = sum(
-                outage.count * outage.duration * outage.percentage_of_farm_down
-                for outage in outages
-            )
-            assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
-
-        outages_allow_different_scheduled_losses = []
+    losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
+    site_loss_inds = []
+    zero_gen_inds_all_sites = set()
+    for site_losses, site_gen in zip(losses.T, gen_profiles.T):
+        non_zero_gen = site_gen > 0
+        zero_gen_inds = set(np.where(~non_zero_gen)[0])
+        zero_gen_inds_all_sites |= zero_gen_inds
+        site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
         for outage in outages:
+            outage_percentage = outage.percentage_of_farm_down
+            outage_allowed_hourly_inds = hourly_indices_for_months(
+                outage.allowed_months
+            )
+            zero_gen_in_comparison_count = sum(
+                ind in outage_allowed_hourly_inds for ind in zero_gen_inds
+            )
+            comparison_inds = list(
+                set(outage_allowed_hourly_inds) - zero_gen_inds
+            )
+
             if not outage.allow_outage_overlap or outage_percentage == 100:
-                outages_allow_different_scheduled_losses.append(
-                    outage.total_available_hours
-                    <= outage.duration * outage.count
+                min_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                    - zero_gen_in_comparison_count
+                )
+                max_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                )
+                observed_outages = np.isclose(
+                    site_losses[comparison_inds], outage_percentage,
+                    atol=ATOL, rtol=RTOL
                 )
             else:
-                outages_allow_different_scheduled_losses.append(
-                    outage.total_available_hours <= outage.duration
+                num_outages_possible_per_day = np.floor(
+                    100 / outage.percentage_of_farm_down
+                )
+                min_num_expected_outage_hours = (
+                    outage.count * outage.duration
+                    / num_outages_possible_per_day
+                )
+                min_num_expected_outage_hours = max(
+                    0,
+                    min_num_expected_outage_hours
+                    - zero_gen_in_comparison_count
+                )
+                max_num_expected_outage_hours = len(comparison_inds)
+                observed_outages = (
+                    site_losses[comparison_inds] >= outage_percentage - ATOL
                 )
 
-        if all(outages_allow_different_scheduled_losses):
-            site_loss_inds = [
-                inds - zero_gen_inds_all_sites for inds in site_loss_inds
-            ]
-            common_inds = set.intersection(*site_loss_inds)
+            num_outage_hours = observed_outages.sum()
 
-            error_msg = "Scheduled losses do not vary between sites!"
-            assert any(
-                inds - common_inds for inds in site_loss_inds
-            ), error_msg
+            num_outage_hours_meet_expectations = (
+                min_num_expected_outage_hours
+                <= num_outage_hours
+                <= max_num_expected_outage_hours
+            )
+            assert num_outage_hours_meet_expectations
+
+        total_expected_outage = sum(
+            outage.count * outage.duration * outage.percentage_of_farm_down
+            for outage in outages
+        )
+        assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
+
+    outages_allow_different_scheduled_losses = []
+    for outage in outages:
+        if not outage.allow_outage_overlap or outage_percentage == 100:
+            outages_allow_different_scheduled_losses.append(
+                outage.total_available_hours <= outage.duration * outage.count
+            )
+        else:
+            outages_allow_different_scheduled_losses.append(
+                outage.total_available_hours <= outage.duration
+            )
+
+    if all(outages_allow_different_scheduled_losses):
+        site_loss_inds = [
+            inds - zero_gen_inds_all_sites for inds in site_loss_inds
+        ]
+        common_inds = set.intersection(*site_loss_inds)
+
+        error_msg = "Scheduled losses do not vary between sites!"
+        assert any(inds - common_inds for inds in site_loss_inds), error_msg
 
 
 def _run_gen_with_and_without_losses(
@@ -326,71 +316,48 @@ def test_scheduled_losses_repeatability(
     with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
 
-    test_generic_losses = [0, 0.2]
-    test_outages = NOMINAL_OUTAGES
-    test_site_outages = [None, SINGLE_SITE_OUTAGE]
-    test_files = [
-        (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
-        (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
-        (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
-    ]
+    with tempfile.TemporaryDirectory() as td:
+        if tech == 'windpower':
+            del sam_config['wind_farm_losses_percent']
+            sam_config['turb_generic_loss'] = generic_losses
+        else:
+            sam_config['losses'] = generic_losses
 
-    test_parametrization = product(
-        test_generic_losses, test_outages, test_site_outages, test_files
-    )
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
 
-    for generic_losses, outages, site_outages, files in test_parametrization:
-        sam_file, res_file, tech = files
-        with open(sam_file, 'r') as fh:
-            sam_config = json.load(fh)
+        site_data = _make_site_data_df(site_outages)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+        gen_profiles_first_run = gen.out['gen_profile']
 
-        with tempfile.TemporaryDirectory() as td:
-            if tech == 'windpower':
-                del sam_config['wind_farm_losses_percent']
-                sam_config['turb_generic_loss'] = generic_losses
-            else:
-                sam_config['losses'] = generic_losses
+        random.shuffle(outages)
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
 
-            sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
-            sam_fp = os.path.join(td, 'gen.json')
-            with open(sam_fp, 'w+') as fh:
-                fh.write(json.dumps(sam_config))
+        site_data = _make_site_data_df(site_outages)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=1, sites_per_worker=3, out_fpath=None)
+        gen_profiles_second_run = gen.out['gen_profile']
 
-            site_data = _make_site_data_df(site_outages)
-            gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                              output_request=('gen_profile'),
-                              site_data=site_data,
-                              max_workers=1, sites_per_worker=3,
-                              out_fpath=None)
-            gen_profiles_first_run = gen.out['gen_profile']
-
-            random.shuffle(outages)
-            sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
-            with open(sam_fp, 'w+') as fh:
-                fh.write(json.dumps(sam_config))
-
-            site_data = _make_site_data_df(site_outages)
-            gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                              output_request=('gen_profile'),
-                              site_data=site_data,
-                              max_workers=1, sites_per_worker=3,
-                              out_fpath=None)
-            gen_profiles_second_run = gen.out['gen_profile']
-
-        assert np.isclose(
-            gen_profiles_first_run, gen_profiles_second_run
-        ).all()
+    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
 
 
-def test_scheduled_losses_mixin_class_add_scheduled_losses():
+@pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
+def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
     """Test mixin class behavior when adding losses. """
-    for outages in NOMINAL_OUTAGES:
-        mixin = ScheduledLossesMixin()
-        mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
-        mixin.add_scheduled_losses()
 
-        assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
-        assert 'hourly' in mixin.sam_sys_inputs
+    mixin = ScheduledLossesMixin()
+    mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
+    mixin.add_scheduled_losses()
+
+    assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert 'hourly' in mixin.sam_sys_inputs
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():
@@ -404,41 +371,37 @@ def test_scheduled_losses_mixin_class_no_losses_input():
     assert 'hourly' not in mixin.sam_sys_inputs
 
 
-def test_single_outage_scheduler_normal_run(so_scheduler):
+@pytest.mark.parametrize('allow_outage_overlap', [True, False])
+def test_single_outage_scheduler_normal_run(
+    allow_outage_overlap, so_scheduler
+):
     """Test that single outage is scheduled correctly. """
 
-    for allow_outage_overlap in [True, False]:
-        so_scheduler.outage._specs['allow_outage_overlap'] = (
-            allow_outage_overlap
-        )
-        outage = so_scheduler.outage
-        scheduler = so_scheduler.scheduler
-        so_scheduler.calculate()
+    so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
+    outage = so_scheduler.outage
+    scheduler = so_scheduler.scheduler
+    so_scheduler.calculate()
 
-        assert scheduler.total_losses[:744].any()
-        assert not scheduler.total_losses[744:].any()
+    assert scheduler.total_losses[:744].any()
+    assert not scheduler.total_losses[744:].any()
 
-        outage_percentage = outage.percentage_of_farm_down
-        num_expected_outage_hours = (
-            outage.count * outage.duration
-        )
+    outage_percentage = outage.percentage_of_farm_down
+    num_expected_outage_hours = (
+        outage.count * outage.duration
+    )
 
-        if not outage.allow_outage_overlap or outage_percentage == 100:
-            num_outage_hours = (
-                scheduler.total_losses == outage_percentage
-            ).sum()
-            assert num_outage_hours == num_expected_outage_hours
-        else:
-            num_outage_hours = (
-                scheduler.total_losses >= outage_percentage
-            ).sum()
-            assert num_outage_hours >= num_expected_outage_hours
+    if not outage.allow_outage_overlap or outage_percentage == 100:
+        num_outage_hours = (scheduler.total_losses == outage_percentage).sum()
+        assert num_outage_hours == num_expected_outage_hours
+    else:
+        num_outage_hours = (scheduler.total_losses >= outage_percentage).sum()
+        assert num_outage_hours >= num_expected_outage_hours
 
-        total_expected_outage = (
-            outage.count * outage.duration * outage.percentage_of_farm_down
-        )
+    total_expected_outage = (
+        outage.count * outage.duration * outage.percentage_of_farm_down
+    )
 
-        assert scheduler.total_losses.sum() == total_expected_outage
+    assert scheduler.total_losses.sum() == total_expected_outage
 
 
 def test_single_outage_scheduler_update_when_can_schedule_from_months(
@@ -478,50 +441,51 @@ def test_single_outage_scheduler_find_random_outage_slice(so_scheduler):
     assert slice_len == so_scheduler.outage.duration
 
 
-def test_single_outage_scheduler_schedule_losses(so_scheduler):
+@pytest.mark.parametrize('allow_outage_overlap', [True, False])
+def test_single_outage_scheduler_schedule_losses(
+    allow_outage_overlap, so_scheduler
+):
     """Test single outage class method. """
 
-    for allow_outage_overlap in [True, False]:
-        so_scheduler.outage._specs['allow_outage_overlap'] = (
-            allow_outage_overlap
-        )
-        so_scheduler.update_when_can_schedule_from_months()
+    so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
+    so_scheduler.update_when_can_schedule_from_months()
 
-        so_scheduler.schedule_losses(slice(0, 25))
+    so_scheduler.schedule_losses(slice(0, 25))
 
-        assert (so_scheduler.scheduler.total_losses[0:25] == 100).all()
+    assert (so_scheduler.scheduler.total_losses[0:25] == 100).all()
 
-        if not so_scheduler.outage.allow_outage_overlap:
-            assert not (so_scheduler.scheduler.can_schedule_more[0:25]).any()
+    if not so_scheduler.outage.allow_outage_overlap:
+        assert not (so_scheduler.scheduler.can_schedule_more[0:25]).any()
 
 
-def test_outage_scheduler_normal_run():
+@pytest.mark.parametrize('outages_info', NOMINAL_OUTAGES)
+def test_outage_scheduler_normal_run(outages_info):
     """Test hourly outage losses for a reasonable outage info input. """
-    for outages_info in NOMINAL_OUTAGES:
-        outages = [Outage(spec) for spec in outages_info]
-        losses = OutageScheduler(outages).calculate()
 
-        assert len(losses) == 8760
-        assert losses[:744].any()
-        assert not losses[744:].any()
+    outages = [Outage(spec) for spec in outages_info]
+    losses = OutageScheduler(outages).calculate()
 
-        for outage in outages:
-            outage_percentage = outage.percentage_of_farm_down
-            num_expected_outage_hours = (
-                outage.count * outage.duration
-            )
-            if not outage.allow_outage_overlap or outage_percentage == 100:
-                num_outage_hours = (losses == outage_percentage).sum()
-                assert num_outage_hours == num_expected_outage_hours
-            else:
-                num_outage_hours = (losses >= outage_percentage).sum()
-                assert num_outage_hours >= num_expected_outage_hours
+    assert len(losses) == 8760
+    assert losses[:744].any()
+    assert not losses[744:].any()
 
-        total_expected_outage = sum(
-            outage.count * outage.duration * outage.percentage_of_farm_down
-            for outage in outages
+    for outage in outages:
+        outage_percentage = outage.percentage_of_farm_down
+        num_expected_outage_hours = (
+            outage.count * outage.duration
         )
-        assert losses.sum() == total_expected_outage
+        if not outage.allow_outage_overlap or outage_percentage == 100:
+            num_outage_hours = (losses == outage_percentage).sum()
+            assert num_outage_hours == num_expected_outage_hours
+        else:
+            num_outage_hours = (losses >= outage_percentage).sum()
+            assert num_outage_hours >= num_expected_outage_hours
+
+    total_expected_outage = sum(
+        outage.count * outage.duration * outage.percentage_of_farm_down
+        for outage in outages
+    )
+    assert losses.sum() == total_expected_outage
 
 
 def test_outage_scheduler_no_outages():
