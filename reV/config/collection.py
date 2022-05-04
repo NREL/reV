@@ -6,6 +6,7 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
+import os
 import logging
 
 from rex import Resource
@@ -22,7 +23,7 @@ class CollectionConfig(AnalysisConfig):
     """File collection config."""
 
     NAME = ModuleName.COLLECT
-    REQUIREMENTS = ('dsets', 'file_prefixes')
+    REQUIREMENTS = ('dsets', 'collect_patterns')
 
     def __init__(self, config):
         """
@@ -36,26 +37,6 @@ class CollectionConfig(AnalysisConfig):
 
         self._purge = False
         self._dsets = None
-        self._file_prefixes = None
-        self._ec = None
-        self._coldir = self.dirout
-
-    @property
-    def collect_directory(self):
-        """Get the directory to collect files from.
-
-        Returns
-        -------
-        collect_directory : str
-            Target path to collect h5 files from.
-        """
-        self._coldir = self.get('collect_directory', self._coldir)
-
-        if self._coldir == 'PIPELINE':
-            self._coldir = Pipeline.parse_previous(self.dirout,
-                                                   module=ModuleName.COLLECT,
-                                                   target='dirout')[0]
-        return self._coldir
 
     @property
     def project_points(self):
@@ -119,24 +100,63 @@ class CollectionConfig(AnalysisConfig):
         return file_prefixes
 
     @property
-    def file_prefixes(self):
-        """Get the file prefixes to collect.
+    def fn_out_names(self):
+        """Get a list of output filenames ordered to correspond to the list of
+        collection patterns.
 
-        Returns
-        -------
-        file_prefixes : list
-            list of file prefixes to collect.
+        This can also be set to PIPELINE or just not set at all if this is a
+        pipeline job and collect_patterns="PIPELINE"
         """
 
-        if self._file_prefixes is None:
-            self._file_prefixes = self['file_prefixes']
+        fn_out_names = self.get('fn_out_names', None)
+        collect_patterns = self['collect_patterns']
 
-            if 'PIPELINE' in self._file_prefixes:
-                self._file_prefixes = self._parse_pipeline_prefixes()
+        if (str(fn_out_names) == 'PIPELINE'
+                or str(collect_patterns) == 'PIPELINE'):
+            fn_out_names = self._parse_pipeline_prefixes()
+            fn_out_names = [fn if fn.endswith('.h5') else fn + '.h5'
+                            for fn in fn_out_names]
 
-            if isinstance(self._file_prefixes, str):
-                self._file_prefixes = [self._file_prefixes]
-            else:
-                self._file_prefixes = list(self._file_prefixes)
+        elif fn_out_names is None and str(collect_patterns) != 'PIPELINE':
+            fn_out_names = [os.path.basename(fp).replace('*', '')
+                            for fp in self.collect_patterns]
 
-        return self._file_prefixes
+        if isinstance(fn_out_names, str):
+            fn_out_names = [fn_out_names]
+        elif fn_out_names is None:
+            msg = ('Failed to parse "fn_out_names" from collect config!')
+            logger.error(msg)
+            raise RuntimeError(msg)
+        else:
+            fn_out_names = list(fn_out_names)
+
+        return fn_out_names
+
+    @property
+    def collect_patterns(self):
+        """Get a list of unix-style /filepath/patterns*.h5, each of which is
+        a separate collection job. This should correspond to the fn_out_names,
+        unless both are set to PIPELINE.
+        """
+
+        collect_patterns = self['collect_patterns']
+
+        if str(collect_patterns) == 'PIPELINE':
+            coldir = Pipeline.parse_previous(self.dirout,
+                                             module=ModuleName.COLLECT,
+                                             target='dirout')[0]
+            prefixes = self._parse_pipeline_prefixes()
+            fn_patterns = [fn if fn.endswith('.h5') else fn + '*.h5'
+                           for fn in prefixes]
+            collect_patterns = [os.path.join(coldir, fn) for fn in fn_patterns]
+
+        if isinstance(collect_patterns, str):
+            collect_patterns = [collect_patterns]
+        elif collect_patterns is None:
+            msg = ('Failed to parse "collect_patterns" from collect config!')
+            logger.error(msg)
+            raise RuntimeError(msg)
+        else:
+            collect_patterns = list(collect_patterns)
+
+        return collect_patterns

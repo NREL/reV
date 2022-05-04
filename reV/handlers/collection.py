@@ -2,6 +2,7 @@
 """
 Base class to handle collection of profiles and means across multiple .h5 files
 """
+import glob
 import logging
 import numpy as np
 import os
@@ -386,22 +387,21 @@ class Collector:
     Class to handle the collection and combination of .h5 files
     """
 
-    def __init__(self, h5_file, h5_dir, project_points, file_prefix=None,
+    def __init__(self, h5_file, collect_pattern, project_points,
                  clobber=False):
         """
         Parameters
         ----------
         h5_file : str
             Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected. None if points list is
             to be ignored (collect all data in h5_files without checking that
             all gids are there)
-        file_prefix : str
-            .h5 file prefix, if None collect all files in h5_dir
         clobber : bool
             Flag to purge .h5 file if it already exists
         """
@@ -414,8 +414,7 @@ class Collector:
 
         self._h5_out = h5_file
         ignore = os.path.basename(self._h5_out)
-        self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix,
-                                            ignore=ignore)
+        self._h5_files = self.find_h5_files(collect_pattern, ignore=ignore)
         if project_points is not None:
             self._gids = self.parse_project_points(project_points)
         else:
@@ -424,36 +423,34 @@ class Collector:
         self.combine_meta()
 
     @staticmethod
-    def find_h5_files(h5_dir, file_prefix=None, ignore=None):
-        """
-        Search h5_dir for .h5 file, return sorted
-        If file_prefix is not None, only return .h5 files with given prefix
+    def find_h5_files(collect_pattern, ignore=None):
+        """Search pattern for h5 files, return sorted
 
         Parameters
         ----------
-        h5_dir : str
-            Root directory to search
-        file_prefix : str
-            Prefix for .h5 file in h5_dir, if None return all .h5 files
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         ignore : str | list | NoneType
             File name(s) to ignore.
         """
         if not isinstance(ignore, list):
             ignore = [ignore]
         h5_files = []
-        logger.debug('Looking for source files in {}'.format(h5_dir))
-        for file in os.listdir(h5_dir):
-            if file.endswith('.h5'):
-                if file_prefix is not None:
-                    if file.startswith(file_prefix) and file not in ignore:
-                        logger.debug('\t- Found source file to collect: {}'
-                                     .format(file))
-                        h5_files.append(os.path.join(h5_dir, file))
-                elif file not in ignore:
-                    logger.debug('\t- Found source file to collect: {}'
-                                 .format(file))
-                    h5_files.append(os.path.join(h5_dir, file))
+        logger.debug('Looking for source files based on {}'
+                     .format(collect_pattern))
+
+        h5_files = [fp for fp in glob.glob(collect_pattern)
+                    if not os.path.basename(fp) in ignore]
         h5_files = sorted(h5_files)
+
+        if not all(fp.endswith('.h5') for fp in h5_files):
+            msg = ('Source pattern resulted in non-h5 files that cannot '
+                   'be collected: {}, pattern: {}'
+                   .format(h5_files, collect_pattern))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
         logger.info('Collecting list of {} source files: {}'
                     .format(len(h5_files), h5_files))
         return h5_files
@@ -711,8 +708,8 @@ class Collector:
                 f._set_meta('meta', meta, attrs=meta_attrs)
 
     @classmethod
-    def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
-                file_prefix=None, mem_util_lim=0.7, pass_through=False):
+    def collect(cls, h5_file, collect_pattern, project_points, dset_name,
+                dset_out=None, mem_util_lim=0.7, pass_through=False):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -720,8 +717,9 @@ class Collector:
         ----------
         h5_file : str
             Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected. None if points list is
@@ -731,8 +729,6 @@ class Collector:
             collected.
         dset_out : str
             Dataset to collect means into
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
@@ -741,16 +737,12 @@ class Collector:
             assuming all of the source files have identical copies of this
             dataset.
         """
-        if file_prefix is None:
-            h5_files = "*.h5"
-        else:
-            h5_files = "{}*.h5".format(file_prefix)
 
-        logger.info('Collecting dataset "{}" from {} files in {} to {}'
-                    .format(dset_name, h5_files, h5_dir, h5_file))
+        logger.info('Collecting dataset "{}" from files based on '
+                    'pattern {} to output: {}'
+                    .format(dset_name, collect_pattern, h5_file))
         ts = time.time()
-        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix,
-                  clobber=True)
+        clt = cls(h5_file, collect_pattern, project_points, clobber=True)
         logger.debug("\t- 'meta' collected")
 
         dset_shape = clt.get_dset_shape(dset_name)
@@ -771,8 +763,8 @@ class Collector:
                      .format(tt))
 
     @classmethod
-    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
-                    file_prefix=None, mem_util_lim=0.7):
+    def add_dataset(cls, h5_file, collect_pattern, dset_name, dset_out=None,
+                    mem_util_lim=0.7):
         """
         Collect and add dataset to h5_file from h5_dir
 
@@ -780,31 +772,27 @@ class Collector:
         ----------
         h5_file : str
             Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         dset_name : str
             Dataset to be collected. If source shape is 2D, time index will be
             collected.
         dset_out : str
             Dataset to collect means into
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many sites
             will be collected at a time.
         """
-        if file_prefix is None:
-            h5_files = "*.h5"
-        else:
-            h5_files = "{}*.h5".format(file_prefix)
 
-        logger.info('Collecting "{}" from {} files in {} and adding to {}'
-                    .format(dset_name, h5_files, h5_dir, h5_file))
+        logger.info('Collecting "{}" from files based on '
+                    'pattern {} and adding to: "{}"'
+                    .format(dset_name, collect_pattern, h5_file))
         ts = time.time()
         with Outputs(h5_file, mode='r') as f:
             points = f.meta
 
-        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix)
+        clt = cls(h5_file, collect_pattern, points)
 
         dset_shape = clt.get_dset_shape(dset_name)
         if len(dset_shape) > 1:
@@ -823,7 +811,7 @@ class Collector:
                      .format(tt))
 
     @classmethod
-    def purge_chunks(cls, h5_file, h5_dir, project_points, file_prefix=None):
+    def purge_chunks(cls, h5_file, collect_pattern, project_points):
         """
         Purge (remove) chunked files from h5_dir (after collection).
 
@@ -831,21 +819,20 @@ class Collector:
         ----------
         h5_file : str
             Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         project_points : str | slice | list | pandas.DataFrame
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
         """
 
-        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
+        clt = cls(h5_file, collect_pattern, project_points)
         clt._purge_chunks()
-        logger.info('Purged chunk files from {}'.format(h5_dir))
+        logger.info('Purged chunk files from {}'.format(collect_pattern))
 
     @classmethod
-    def move_chunks(cls, h5_file, h5_dir, project_points, file_prefix=None,
+    def move_chunks(cls, h5_file, collect_pattern, project_points,
                     sub_dir='chunk_files'):
         """
         Move chunked files from h5_dir (after collection) to subdir.
@@ -854,18 +841,17 @@ class Collector:
         ----------
         h5_file : str
             Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
+        collect_pattern : str
+            Unix-style /filepath/pattern*.h5 to get a list of files to
+            collect into h5_file
         project_points : str | slice | list | pandas.DataFrame
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
         sub_dir : str | None
             Sub directory name to move chunks to. None to not move files.
         """
 
-        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
+        clt = cls(h5_file, collect_pattern, project_points)
         clt._move_chunks(sub_dir)
         logger.info('Moved chunk files from {} to sub_dir: {}'
-                    .format(h5_dir, sub_dir))
+                    .format(collect_pattern, sub_dir))

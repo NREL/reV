@@ -1,6 +1,5 @@
 {
-  "collect_directory": "PIPELINE",
-  "log_directory": "./logs/",
+  "collect_patterns": "PIPELINE",
   "dsets": [
     "cf_mean",
     "cf_profile",
@@ -27,7 +26,7 @@
     "option": "eagle",
     "walltime": 1
   },
-  "file_prefixes": "PIPELINE",
+  "log_directory": "./logs/",
   "log_level": "INFO",
   "project_points": "./project_points_offshore_test.csv",
   "purge_chunks": false

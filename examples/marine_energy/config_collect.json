@@ -1,6 +1,5 @@
 {
-  "collect_directory": "PIPELINE",
-  "log_directory": "./logs/",
+  "collect_patterns": "PIPELINE",
   "dsets": [
     "cf_mean",
     "significant_wave_height_mean",
@@ -34,7 +33,7 @@
     "option": "eagle",
     "walltime": 1
   },
-  "file_prefixes": "PIPELINE",
+  "log_directory": "./logs/",
   "log_level": "INFO",
   "project_points": "PLACEHOLDER",
   "purge_chunks": false

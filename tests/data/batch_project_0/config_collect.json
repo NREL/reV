@@ -1,9 +1,5 @@
 {
-  "directories": {
-    "collect_directory": "PIPELINE",
-    "log_directory": "./",
-    "output_directory": "./"
-  },
+  "collect_patterns": "PIPELINE",
   "dsets": [
     "cf_mean"
   ],
@@ -14,7 +10,7 @@
     "option": "eagle",
     "walltime": 0.5
   },
-  "file_prefixes": "PIPELINE",
+  "log_directory": "./",
   "log_level": "INFO",
   "parallel": false,
   "project_points": "placeholder"
