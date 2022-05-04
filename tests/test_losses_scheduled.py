@@ -311,6 +311,7 @@ def _make_site_data_df(site_data):
 def test_scheduled_losses_repeatability(
     generic_losses, outages, site_outages, files
 ):
+    """Test that losses are reproducible between runs. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
