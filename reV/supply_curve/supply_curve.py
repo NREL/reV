@@ -1004,6 +1004,7 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on full supply curve connections
         """
+        logger.info('Starting full competitive supply curve sort.')
         self._check_substation_conns(self._trans_table)
         self.compute_total_lcoe(fcr, transmission_costs=transmission_costs,
                                 avail_cap_frac=avail_cap_frac,
@@ -1113,6 +1114,7 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on simple supply curve connections
         """
+        logger.info('Starting simple supply curve sort (no capacity limits).')
         self.compute_total_lcoe(fcr, transmission_costs=transmission_costs,
                                 avail_cap_frac=avail_cap_frac,
                                 connectable=False,
