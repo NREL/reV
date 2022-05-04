@@ -9,19 +9,11 @@ Created on Mon Apr 18 12:52:16 2021
 
 import os
 import pytest
-import gc
 
 from reV.losses.utils import (format_month_name, full_month_name_from_abbr,
                               month_index, convert_to_full_month_names,
                               filter_unknown_month_names, month_indices,
                               hourly_indices_for_months)
-
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    """Attempt to force garbage collector run. """
-    yield
-    gc.collect()
 
 
 def test_hourly_indices_for_months():
