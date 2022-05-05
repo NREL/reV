@@ -59,7 +59,7 @@ def test_wind_generic_losses(loss):
     pc.project_points.sam_inputs[SAM_FILE]['turb_generic_loss'] = loss
 
     gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
-                      max_workers=1, sites_per_worker=3, out_fpath=None)
+                      max_workers=2, sites_per_worker=3, out_fpath=None)
     gen_outs = list(gen.out['cf_mean'])
 
     if loss in LOSS_BASELINE:

@@ -79,7 +79,7 @@ def to_list(gen_out):
     ('f_rev1_out', 'rev2_points', 'year', 'max_workers'),
     [('project_outputs.h5', slice(0, 10), '2012', 1),
      ('project_outputs.h5', slice(0, 100, 10), '2013', 2)]
-    + [('project_outputs.h5', slice(0, i), '2012', 1) for i in range(1, 101)]
+    + [('project_outputs.h5', slice(0, i), '2012', 2) for i in range(1, 101)]
 )
 def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
