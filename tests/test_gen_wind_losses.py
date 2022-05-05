@@ -47,11 +47,11 @@ LOW_TEMP_BASELINE = {0: {'temp': -5.0,
                      }
 
 
-@pytest.mark.parametrize('loss', [0.0, 16.7, 30.0])
-@pytest.mark.parametrize('n_runs', list(range(20)))
-def test_wind_generic_losses(loss, n_runs):
+@pytest.mark.parametrize(
+    'loss', [0.0, 16.7, 30.0] + list(np.linspace(0, 30, 100))
+)
+def test_wind_generic_losses(loss):
     """Test varying wind turbine losses"""
-    __ = n_runs
     pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
