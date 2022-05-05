@@ -30,7 +30,8 @@ RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
 SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json',
     TESTDATADIR + '/SAM/wind_gen_non_standard_0.json',
-    TESTDATADIR + '/SAM/wind_gen_non_standard_1.json'
+    TESTDATADIR + '/SAM/wind_gen_non_standard_1.json',
+    TESTDATADIR + '/SAM/wind_gen_non_standard_2.json'
 ]
 BASIC_WIND_RES = [10, 20, 20]
 
@@ -270,14 +271,23 @@ def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
     assert abs(avg_diff - 50) < 1
 
 
-def test_horizontal_transformation_class_bounds(real_power_curve):
+@pytest.mark.parametrize('sam_file', SAM_FILES)
+def test_horizontal_transformation_class_bounds(sam_file):
     """Test that shift_bounds are set correctly. """
 
-    transformation = HorizontalPowerCurveTranslation(real_power_curve)
+    with open(sam_file, 'r') as fh:
+        sam_config = json.load(fh)
+
+    wind_speed = sam_config['wind_turbine_powercurve_windspeeds']
+    generation = sam_config['wind_turbine_powercurve_powerout']
+    power_curve = PowerCurve(wind_speed, generation)
+
+    transformation = HorizontalPowerCurveTranslation(power_curve)
     bounds_min, bounds_max = transformation.bounds
     assert bounds_min == 0
-    assert bounds_max <= real_power_curve.cutoff_wind_speed
-    assert bounds_max <= max(real_power_curve.wind_speed)
+    assert bounds_max > bounds_min
+    assert bounds_max <= power_curve.cutoff_wind_speed
+    assert bounds_max <= max(power_curve.wind_speed)
 
 
 def test_power_curve_loss_input_class_valid_inputs():

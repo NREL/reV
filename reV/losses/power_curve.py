@@ -621,7 +621,7 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
         min_ind = np.where(self.power_curve)[0][0]
         max_ind = np.where(self.power_curve[::-1])[0][0]
         max_shift = (
-            self.power_curve.wind_speed[-max_ind]
+            self.power_curve.wind_speed[-max_ind - 1]
             - self.power_curve.wind_speed[min_ind]
         )
         return (0, max_shift)
