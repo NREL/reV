@@ -12,7 +12,6 @@ import pytest
 import tempfile
 import json
 import copy
-import gc
 
 import numpy as np
 
@@ -34,13 +33,6 @@ SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_non_standard_1.json'
 ]
 BASIC_WIND_RES = [10, 20, 20]
-
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    """Attempt to force garbage collector run. """
-    yield
-    gc.collect()
 
 
 @pytest.fixture
@@ -115,7 +107,7 @@ def _run_gen_with_and_without_losses(
 
         gen = Gen.reV_run('windpower', REV_POINTS, sam_fp, RES_FILE,
                           output_request=('gen_profile'),
-                          max_workers=1, sites_per_worker=3, out_fpath=None)
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
 
     # undo UTC array rolling
@@ -135,7 +127,7 @@ def _run_gen_with_and_without_losses(
 
     gen = Gen.reV_run('windpower', pc, sam_file, RES_FILE,
                       output_request=('gen_profile'),
-                      max_workers=1, sites_per_worker=3, out_fpath=None)
+                      max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles = gen.out['gen_profile']
 
     for ind, row in gen.meta.iterrows():

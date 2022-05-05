@@ -12,7 +12,6 @@ import pytest
 import tempfile
 import json
 import random
-import gc
 
 import numpy as np
 import pandas as pd
@@ -93,13 +92,6 @@ SINGLE_SITE_OUTAGE = [{
     'percentage_of_farm_down': 42,
     'allowed_months': ['February'],
 }]
-
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    """Attempt to force garbage collector run. """
-    yield
-    gc.collect()
 
 
 @pytest.fixture
@@ -253,7 +245,7 @@ def _run_gen_with_and_without_losses(
         site_data = _make_site_data_df(site_outages)
         gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
                           output_request=('gen_profile'), site_data=site_data,
-                          max_workers=1, sites_per_worker=3, out_fpath=None)
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -277,7 +269,7 @@ def _run_gen_with_and_without_losses(
 
     gen = Gen.reV_run(tech, pc, sam_file, res_file,
                       output_request=('gen_profile'),
-                      max_workers=1, sites_per_worker=3, out_fpath=None)
+                      max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles = gen.out['gen_profile']
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
@@ -331,7 +323,7 @@ def test_scheduled_losses_repeatability(
         site_data = _make_site_data_df(site_outages)
         gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
                           output_request=('gen_profile'), site_data=site_data,
-                          max_workers=1, sites_per_worker=3, out_fpath=None)
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_first_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -342,7 +334,7 @@ def test_scheduled_losses_repeatability(
         site_data = _make_site_data_df(site_outages)
         gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
                           output_request=('gen_profile'), site_data=site_data,
-                          max_workers=1, sites_per_worker=3, out_fpath=None)
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
