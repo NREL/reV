@@ -26,7 +26,7 @@ from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
 
 
-if not sys.platform.startswith("win"):
+if sys.platform.startswith("win"):
     pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
