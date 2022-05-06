@@ -55,6 +55,7 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=
+        arguments-renamed,
         unspecified-encoding,
         consider-using-f-string,
         # Defaults
