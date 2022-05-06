@@ -224,7 +224,7 @@ class PlaceTurbines():
         agep = self.wind_plant['annual_gross_energy']
 
         energy_lost_due_to_wake = wake_loss_pct / 100 * agep
-        aep_after_wake_losses = agep - aep_after_wake_losses
+        aep_after_wake_losses = agep - energy_lost_due_to_wake
         other_losses_multiplier = 1 - aep / aep_after_wake_losses
 
         scaled_wake_losses = (
