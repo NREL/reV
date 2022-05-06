@@ -188,7 +188,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -592,7 +595,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         data : ndarray | ResourceDataset
             Array of data or open dataset handler to apply exclusions too
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         resolution : int
             Number of exclusion points per SC point along an axis.
@@ -634,7 +640,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         data : ndarray | ResourceDataset
             Array of data or open dataset handler to apply exclusions too
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         resolution : int
             Number of exclusion points per SC point along an axis.
@@ -835,7 +844,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -1154,7 +1166,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         agg_method : str
             Aggregation method, either mean or sum/aggregate
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -1247,7 +1262,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Array value is -1 if the resource index was not used in the
             generation run.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -1884,7 +1902,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Array value is -1 if the resource index was not used in the
             generation run.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is

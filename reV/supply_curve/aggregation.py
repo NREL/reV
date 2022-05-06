@@ -37,8 +37,11 @@ class AbstractAggFileHandler(ABC):
         excl_fpath : str | list | tuple
             Filepath to exclusions h5 with techmap dataset
             (can be one or more filepaths).
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
@@ -103,8 +106,11 @@ class AggFileHandler(AbstractAggFileHandler):
             (can be one or more filepaths).
         h5_fpath : str
             Filepath to .h5 file to be aggregated
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
@@ -159,8 +165,11 @@ class AbstractAggregation(ABC):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
@@ -426,8 +435,11 @@ class AbstractAggregation(ABC):
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         inclusion_mask : np.ndarray, optional
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -661,8 +673,11 @@ class AbstractAggregation(ABC):
             exclusions-to-resource mapping data.
         sc_point_method : method
             Supply Curve Point Method to operate on a single SC point.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
@@ -737,8 +752,11 @@ class Aggregation(AbstractAggregation):
             Dataset to aggreate, can supply multiple datasets. The datasets
             should be scalar values for each site. This method cannot aggregate
             timeseries data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
@@ -833,8 +851,11 @@ class Aggregation(AbstractAggregation):
             timeseries data.
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         inclusion_mask : np.ndarray, optional
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -1145,8 +1166,11 @@ class Aggregation(AbstractAggregation):
             Dataset to aggreate, can supply multiple datasets. The datasets
             should be scalar values for each site. This method cannot aggregate
             timeseries data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,

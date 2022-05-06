@@ -70,7 +70,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
             columns where gid is the resource gid (typically wtk or nsrdb gid)
             and the power_density column is in MW/km2.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
             Must be paired with friction_dset. The friction data must be the
@@ -406,7 +409,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             Filepath to .h5 reV econ output results. This is optional and only
             used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None
@@ -751,7 +757,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             Filepath to .h5 reV econ output results. This is optional and only
             used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
         inclusion_mask : np.ndarray | dict | optional
             2D array pre-extracted inclusion mask where 1 is included and 0 is
             excluded. This must be either match the full exclusion shape or
@@ -1146,7 +1155,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             Filepath to .h5 reV econ output results. This is optional and only
             used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | None

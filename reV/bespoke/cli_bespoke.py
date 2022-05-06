@@ -324,8 +324,9 @@ def valid_config_keys():
               'LayerMask arguments {layer: {kwarg: value}} where layer '
               'is a dataset in excl_fpath and kwarg can be '
               '"inclusion_range", "exclude_values", "include_values", '
-              '"inclusion_weights", "force_inclusion_values", '
-              '"use_as_weights", "exclude_nodata", and/or "weight".')
+              '"inclusion_weights", "force_include_values", '
+              '"force_include_range", "use_as_weights", '
+              '"exclude_nodata", and/or "weight".')
 @click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
               show_default=True,
               help='Contiguous area filter kernel name ("queen", "rook").')

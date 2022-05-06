@@ -125,7 +125,10 @@ class BespokeSinglePlant:
             is inclusive, so ws_bins=(0, 360, 90) would result in four bins
             with bin edges (0, 90, 180, 270, 360).
         excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             None if excl input is pre-initialized.
         inclusion_mask : np.ndarray
             2D array pre-extracted inclusion mask where 1 is included and 0 is
@@ -969,8 +972,11 @@ class BespokeWindPlants(AbstractAggregation):
             binning of the wind joint probability distribution. The stop value
             is inclusive, so ws_bins=(0, 360, 90) would result in four bins
             with bin edges (0, 90, 180, 270, 360).
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
             by default None
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,

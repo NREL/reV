@@ -20,8 +20,11 @@ class LayerMask:
     Class to convert exclusion layer to inclusion layer mask
     """
     def __init__(self, layer, inclusion_range=(None, None),
-                 exclude_values=None, include_values=None,
-                 inclusion_weights=None, force_include_values=None,
+                 exclude_values=None,
+                 include_values=None,
+                 inclusion_weights=None,
+                 force_include_values=None,
+                 force_include_range=None,
                  use_as_weights=False, weight=1.0,
                  exclude_nodata=False, nodata_value=None):
         """
@@ -41,6 +44,8 @@ class LayerMask:
             Include given values with given weights
         force_include_values : list
             Force the inclusion of the given values
+        force_include_range : list
+            Force the inclusion of the range of given values
         use_as_weights : bool
             Use layer as final inclusion weights
         weight : float
@@ -55,13 +60,16 @@ class LayerMask:
         self._name = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
+        self._include_values = include_values
         self._inclusion_weights = inclusion_weights
+        self._force_include = False
+
         if force_include_values is not None:
             self._include_values = force_include_values
             self._force_include = True
-        else:
-            self._include_values = include_values
-            self._force_include = False
+        if force_include_range is not None:
+            self._inclusion_range = force_include_range
+            self._force_include = True
 
         self._as_weights = use_as_weights
         self._exclude_nodata = exclude_nodata
@@ -77,7 +85,7 @@ class LayerMask:
         self._mask_type = self._check_mask_type()
 
     def __repr__(self):
-        msg = ("{} for {} exclusion, of type {}"
+        msg = ('{} for "{}" exclusion, of type "{}"'
                .format(self.__class__.__name__, self.name, self.mask_type))
 
         return msg
@@ -113,7 +121,7 @@ class LayerMask:
         -------
         float
         """
-        return self._inclusion_range[0]
+        return min(self._inclusion_range)
 
     @property
     def max_value(self):
@@ -124,7 +132,7 @@ class LayerMask:
         -------
         float
         """
-        return self._inclusion_range[1]
+        return max(self._inclusion_range)
 
     @property
     def exclude_values(self):
@@ -771,6 +779,10 @@ class ExclusionMask:
         for layer in layers:
             layer_slice = (layer.name, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
+            logger.debug('Computing forced inclusions for {}. Layer has '
+                         'average value of {:.2f}'
+                         .format(layer, layer_mask.mean()))
+            log_mem(logger, log_level='DEBUG')
             if mask is None:
                 mask = layer_mask
             else:
@@ -811,11 +823,13 @@ class ExclusionMask:
                 if layer.force_include:
                     force_include.append(layer)
                 else:
-                    logger.debug('Computing exclusions {} for {}'
-                                 .format(layer, ds_slice))
-                    log_mem(logger, log_level='DEBUG')
                     layer_slice = (layer.name, ) + ds_slice
                     layer_mask = layer[self.excl_h5[layer_slice]]
+
+                    logger.debug('Computed exclusions {} for {}. '
+                                 'Layer has average value of {:.2f}.'
+                                 .format(layer, ds_slice, layer_mask.mean()))
+                    log_mem(logger, log_level='DEBUG')
 
                     if check_layers and not layer_mask.any():
                         msg = ("Layer {} is fully excluded!"
@@ -829,8 +843,6 @@ class ExclusionMask:
                         mask = np.minimum(mask, layer_mask, dtype='float32')
 
             if force_include:
-                logger.debug('Computing forced inclusions')
-                log_mem(logger, log_level='DEBUG')
                 mask = self._force_include(mask, force_include, ds_slice)
 
             if self._min_area is not None:
@@ -956,9 +968,11 @@ class ExclusionMaskFromDict(ExclusionMask):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict, optional
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-            by default None
+        excl_dict : dict | None
+            Dictionary of exclusion keyword arugments of the format
+            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
+            dataset in the exclusion h5 file and kwarg is a keyword argument to
+            the reV.supply_curve.exclusions.LayerMask class.
         area_filter_kernel : str, optional
             Contiguous area filter method to use on final exclusions mask,
             by default "queen"
