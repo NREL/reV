@@ -309,7 +309,7 @@ def test_inclusion_weights():
     assert np.all(test > 0)
 
 
-def test_force_inclusion():
+def test_force_include_values():
     """
     Test force inclusion
     """
@@ -333,6 +333,27 @@ def test_force_inclusion():
         test = f.mask
 
     assert np.allclose(test, truth)
+
+
+def test_force_include_range():
+    """
+    Test force inclusion of a whole range of float values
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+
+    excl_dict = {'ri_padus': {'exclude_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        assert not (f.mask).all()
+        assert (f.mask == 0).any()
+
+    excl_dict = {'ri_padus': {'exclude_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': True},
+                 'ri_srtm_slope': {'force_include_range': [-1e6, 1e6],
+                                   'weight': 0.5,
+                                   'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        assert (f.mask == 0.5).all()
 
 
 def execute_pytest(capture='all', flags='-rapP'):
