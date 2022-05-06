@@ -469,20 +469,61 @@ class PowerCurveLossesMixin:
                          "transformation.")
             return
 
-        wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
-        generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
-        power_curve = PowerCurve(wind_speed, generation)
-
-        wind_resource = [d[-2] for d in self['wind_resource_data']['data']]
-        pc_losses = PowerCurveLosses(power_curve, wind_resource)
+        wind_resource = self.wind_resource_for_site()
+        pc_losses = PowerCurveLosses(self.input_power_curve, wind_resource)
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
                      .format(loss_input.target, loss_input.transformation))
 
         new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
-        logger.debug("Transformed powercurve: {}".format(new_curve))
+        logger.debug("Transformed powercurve: {}".format(list(new_curve)))
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
+
+    @property
+    def input_power_curve(self):
+        """PowerCurve: Original power curve for site. """
+        wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
+        generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
+        return PowerCurve(wind_speed, generation)
+
+    def wind_resource_for_site(self):
+        """Extract scaled wind speeds at the site.
+
+        Get the wind resource (wind speeds) for this site, accounting
+        for the scaling done in SAM based on air pressure. These wind
+        speeds can then be used to sample the power curve and obtain
+        generation values.
+
+        Returns
+        -------
+        array-like
+            Array of scaled wind speeds.
+
+        References
+        ----------
+        Scaling done in SAM:
+            https://tinyurl.com/2uzjawpe
+        SAM Wind Power Reference Manual for explanations on generation
+        and air density calculations (pp. 18):
+            https://tinyurl.com/2p8fjba6
+
+        """
+
+        temperatures, pressures, wind_speeds, __, = map(
+            np.array, zip(*self['wind_resource_data']['data'])
+        )
+
+        pressures_pascal = pressures * 101325.0273830  # originally in atm
+        temperatures_K = temperatures + 273.15  # originally in celsius
+        specific_gas_constant_dry_air = 287.058  # units: J / kg / K
+        sea_level_air_density = 1.225  # units: kg/m**3 at 15 degrees celsius
+
+        site_air_densities = pressures_pascal / (
+            specific_gas_constant_dry_air * temperatures_K
+        )
+        weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
+        return wind_speeds / weights
 
 
 class PowerCurveTransformation(ABC):
