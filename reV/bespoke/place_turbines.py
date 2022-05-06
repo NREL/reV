@@ -230,7 +230,7 @@ class PlaceTurbines():
         scaled_wake_losses = (
             self.wake_loss_multiplier * energy_lost_due_to_wake
         )
-        aep_after_scaled_wake_losses = agep - scaled_wake_losses
+        aep_after_scaled_wake_losses = max(0, agep - scaled_wake_losses)
         return aep_after_scaled_wake_losses * (1 - other_losses_multiplier)
 
     def optimize(self, **kwargs):
