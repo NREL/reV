@@ -557,8 +557,8 @@ class PowerCurveTransformation(ABC):
             curve.
         """
         self.power_curve = power_curve
+        self._transformed_generation = None
 
-    @abstractmethod
     def apply(self, transformation_var):
         """Apply a transformation to the original power curve.
 
@@ -577,12 +577,56 @@ class PowerCurveTransformation(ABC):
         :obj:`PowerCurve`
             An new power curve containing the generation values from the
             transformed power curve.
+
+        Notes
+        -----
+        When implementing a new transformation, override this method and
+        set the ``_transformed_generation`` protected attribute to be
+        the generation corresponding to the transformed power curve.
+        Then, call ``super().apply(transformation_var)`` in order to
+        apply cutout speed curtailment and validation for the
+        transformed power curve. For example, here is the implementation
+        for a transformation that shifts the power curve horizontally::
+
+            self._transformed_generation = self.power_curve(
+                self.power_curve.wind_speed - transformation_var
+            )
+            return super().apply(transformation_var)
+
         """
+        if self._transformed_generation is None:
+            return self.power_curve
+
+        mask = (
+            self.power_curve.wind_speed >= self.power_curve.cutoff_wind_speed
+        )
+        self._transformed_generation[mask] = 0
+
+        new_curve = PowerCurve(
+            self.power_curve.wind_speed, self._transformed_generation
+        )
+        self._validate_shifted_power_curve(new_curve)
+        return new_curve
+
+    def _validate_shifted_power_curve(self, new_curve):
+        """Ensure new power curve has some non-zero generation. """
+        mask = (
+            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
+        )
+        min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
+        if not (new_curve[mask] > min_expected_power_gen).any():
+            msg = ("Calculated power curve is invalid. No power generation "
+                   "below the cutoff wind speed ({} m/s) detected. Target "
+                   "loss percentage  may be too large! Please try again with "
+                   "a lower target value.")
+            msg = msg.format(self.power_curve.cutoff_wind_speed)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
 
     @property
     @abstractmethod
     def bounds(self):
-        """tuple: Bounds on the transformation_var."""
+        """tuple: Bounds on the ``transformation_var``."""
 
 
 class HorizontalPowerCurveTranslation(PowerCurveTransformation):
@@ -632,32 +676,10 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
             An new power curve containing the generation values from the
             shifted power curve.
         """
-        new_gen = self.power_curve(
+        self._transformed_generation = self.power_curve(
             self.power_curve.wind_speed - transformation_var
         )
-        mask = (
-            self.power_curve.wind_speed >= self.power_curve.cutoff_wind_speed
-        )
-        new_gen[mask] = 0
-
-        new_curve = PowerCurve(self.power_curve.wind_speed, new_gen)
-        self._validate_shifted_power_curve(new_curve)
-        return new_curve
-
-    def _validate_shifted_power_curve(self, new_curve):
-        """Ensure new power curve has some non-zero generation. """
-        mask = (
-            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
-        )
-        min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
-        if not (new_curve[mask] > min_expected_power_gen).any():
-            msg = ("Calculated power curve is invalid. No power generation "
-                   "below the cutoff wind speed ({} m/s) detected. Target "
-                   "loss percentage  may be too large! Please try again with "
-                   "a lower target value.")
-            msg = msg.format(self.power_curve.cutoff_wind_speed)
-            logger.error(msg)
-            raise reVLossesValueError(msg)
+        return super().apply(transformation_var)
 
     @property
     def bounds(self):
