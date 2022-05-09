@@ -454,19 +454,8 @@ class PowerCurveLossesMixin:
         :class:`PowerCurveLosses` : Power curve re-calculation.
 
         """
-        power_curve_losses_info = self.sam_sys_inputs.pop(
-            self.POWERCURVE_CONFIG_KEY, None
-        )
-        if power_curve_losses_info is None:
-            return
-
-        if isinstance(power_curve_losses_info, str):
-            power_curve_losses_info = json.loads(power_curve_losses_info)
-
-        loss_input = PowerCurveLossesInput(power_curve_losses_info)
-        if loss_input.target <= 0:
-            logger.debug("Power curve target loss is 0. Skipping powercurve "
-                         "transformation.")
+        loss_input = self._user_power_curve_input()
+        if not loss_input:
             return
 
         wind_resource = self.wind_resource_for_site()
@@ -479,6 +468,26 @@ class PowerCurveLossesMixin:
         new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
         logger.debug("Transformed powercurve: {}".format(list(new_curve)))
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
+
+    def _user_power_curve_input(self):
+        """Get power curve loss info from config. """
+        power_curve_losses_info = self.sam_sys_inputs.pop(
+            self.POWERCURVE_CONFIG_KEY, None
+        )
+        if power_curve_losses_info is None:
+            return
+
+        # site-specific info is input as str
+        if isinstance(power_curve_losses_info, str):
+            power_curve_losses_info = json.loads(power_curve_losses_info)
+
+        loss_input = PowerCurveLossesInput(power_curve_losses_info)
+        if loss_input.target <= 0:
+            logger.debug("Power curve target loss is 0. Skipping powercurve "
+                         "transformation.")
+            return
+
+        return loss_input
 
     @property
     def input_power_curve(self):
