@@ -12,6 +12,7 @@ import pytest
 import tempfile
 import json
 import random
+import copy
 
 import numpy as np
 import pandas as pd
@@ -326,6 +327,7 @@ def test_scheduled_losses_repeatability(
                           max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_first_run = gen.out['gen_profile']
 
+        outages = copy.deepcopy(outages)
         random.shuffle(outages)
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         with open(sam_fp, 'w+') as fh:
@@ -338,6 +340,66 @@ def test_scheduled_losses_repeatability(
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
+
+
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses_repeatability_with_seed(files):
+    """Test that losses are reproducible between runs. """
+    sam_file, res_file, tech = files
+    outages = copy.deepcopy(NOMINAL_OUTAGES[0])
+    with open(sam_file, 'r') as fh:
+        sam_config = json.load(fh)
+
+    with tempfile.TemporaryDirectory() as td:
+        if tech == 'windpower':
+            del sam_config['wind_farm_losses_percent']
+            sam_config['turb_generic_loss'] = 0.2
+        else:
+            sam_config['losses'] = 0.2
+
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        sam_config[ScheduledLossesMixin.OUTAGE_SEED_CONFIG_KEY] = 42
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen_profiles_first_run = gen.out['gen_profile']
+
+        random.shuffle(outages)
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        sam_config[ScheduledLossesMixin.OUTAGE_SEED_CONFIG_KEY] = 42
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen_profiles_second_run = gen.out['gen_profile']
+
+        random.shuffle(outages)
+        sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+        sam_config[ScheduledLossesMixin.OUTAGE_SEED_CONFIG_KEY] = 1234
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
+        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
+                          output_request=('gen_profile'), site_data=site_data,
+                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen_profiles_third_run = gen.out['gen_profile']
+
+    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
+    assert (~np.isclose(gen_profiles_first_run, gen_profiles_third_run)).any()
+    assert (~np.isclose(gen_profiles_second_run, gen_profiles_third_run)).any()
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)

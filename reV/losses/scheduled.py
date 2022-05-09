@@ -509,6 +509,8 @@ class ScheduledLossesMixin:
 
     OUTAGE_CONFIG_KEY = 'reV-outages'
     """Specify outage information in the config file using this key."""
+    OUTAGE_SEED_CONFIG_KEY = 'reV-outages-seed'
+    """Specify a randomizer seed in the config file using this key."""
 
     def add_scheduled_losses(self):
         """Add stochastically scheduled losses to SAM config file.
@@ -532,35 +534,47 @@ class ScheduledLossesMixin:
         :class:`Outage` : Single outage specification.
 
         """
-
-        outage_specs = self.sam_sys_inputs.pop(self.OUTAGE_CONFIG_KEY, None)
-        if outage_specs is None:
+        outages = self._user_outage_input()
+        if not outages:
             return
 
-        if isinstance(outage_specs, str):
-            outage_specs = json.loads(outage_specs)
-
-        outages = [Outage(spec) for spec in outage_specs]
         logger.debug("Adding the following stochastically scheduled outages: "
                      "{}".format(outages))
         logger.debug("Scheduled outages seed: {}".format(self.outage_seed))
 
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
         self.sam_sys_inputs['hourly'] = scheduler.calculate()
+
         logger.debug("Hourly adjustment factors as a result of scheduled "
                      "outages: {}".format(scheduler.total_losses.tolist()))
+
+    def _user_outage_input(self):
+        """Get outage and seed info from config. """
+        outage_specs = self.sam_sys_inputs.pop(self.OUTAGE_CONFIG_KEY, None)
+        if outage_specs is None:
+            return
+
+        # site-specific info is input as str
+        if isinstance(outage_specs, str):
+            outage_specs = json.loads(outage_specs)
+
+        outages = [Outage(spec) for spec in outage_specs]
+        self.__user_input_seed = self.sam_sys_inputs.pop(
+            self.OUTAGE_SEED_CONFIG_KEY, 0
+        )
+        return outages
 
     @property
     def outage_seed(self):
         """int: A value to use as the seed for the outage losses. """
         try:
-            return int(self.meta.name)
+            return int(self.meta.name) + self.__user_input_seed
         except (AttributeError, TypeError, ValueError):
             pass
 
         try:
-            return hash(tuple(self.meta))
+            return hash(tuple(self.meta)) + self.__user_input_seed
         except (AttributeError, TypeError):
             pass
 
-        return 0
+        return 0 + self.__user_input_seed
