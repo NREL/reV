@@ -559,7 +559,22 @@ class PowerCurveTransformation(ABC):
         self.power_curve = power_curve
         self._transformed_generation = None
 
-    # pylint: disable=W0613
+    def _validate_shifted_power_curve(self, new_curve):
+        """Ensure new power curve has some non-zero generation. """
+        mask = (
+            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
+        )
+        min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
+        if not (new_curve[mask] > min_expected_power_gen).any():
+            msg = ("Calculated power curve is invalid. No power generation "
+                   "below the cutoff wind speed ({} m/s) detected. Target "
+                   "loss percentage  may be too large! Please try again with "
+                   "a lower target value.")
+            msg = msg.format(self.power_curve.cutoff_wind_speed)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    @abstractmethod
     def apply(self, transformation_var):
         """Apply a transformation to the original power curve.
 
@@ -596,7 +611,11 @@ class PowerCurveTransformation(ABC):
 
         """
         if self._transformed_generation is None:
-            return self.power_curve
+            msg = ("Transformation implementation for {}.apply did not set "
+                   "the `_transformed_generation` attribute."
+                   .format(type(self).__name__))
+            logger.error(msg)
+            raise NotImplementedError(msg)
 
         mask = (
             self.power_curve.wind_speed >= self.power_curve.cutoff_wind_speed
@@ -608,21 +627,6 @@ class PowerCurveTransformation(ABC):
         )
         self._validate_shifted_power_curve(new_curve)
         return new_curve
-
-    def _validate_shifted_power_curve(self, new_curve):
-        """Ensure new power curve has some non-zero generation. """
-        mask = (
-            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
-        )
-        min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
-        if not (new_curve[mask] > min_expected_power_gen).any():
-            msg = ("Calculated power curve is invalid. No power generation "
-                   "below the cutoff wind speed ({} m/s) detected. Target "
-                   "loss percentage  may be too large! Please try again with "
-                   "a lower target value.")
-            msg = msg.format(self.power_curve.cutoff_wind_speed)
-            logger.error(msg)
-            raise reVLossesValueError(msg)
 
     @property
     @abstractmethod
