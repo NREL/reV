@@ -594,7 +594,10 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
 
     The losses in this type of transformation are distributed primarily
     across region 2 of the power curve (the steep, almost linear,
-    portion where the generation rapidly increases).
+    portion where the generation rapidly increases):
+
+    .. image:: ../../../examples/rev_losses/horizontal_translation.png
+       :align: center
 
     Attributes
     ----------
