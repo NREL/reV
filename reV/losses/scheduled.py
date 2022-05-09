@@ -272,7 +272,7 @@ class OutageScheduler:
     :class:`Outage` : Specifications for a single outage.
     """
 
-    def __init__(self, outages, seed=None):
+    def __init__(self, outages, seed=0):
         """
         Parameters
         ----------
@@ -281,16 +281,16 @@ class OutageScheduler:
             contains info about a single type of outage. See the
             documentation of :class:`Outage` for a description of the
             required keys of each outage dictionary.
-        seed : int or `None`
+        seed : int, optional
             An integer value used to seed the random generator in order
             to produce random but reproducible losses. This is useful
             for ensuring that stochastically scheduled losses vary
             between different sites (i.e. that randomly scheduled
             outages in two different location do not match perfectly on
-            an hourly basis). If `None`, the seed is set to 0.
+            an hourly basis). By default, the seed is set to 0.
         """
         self.outages = outages
-        self.seed = seed or 0
+        self.seed = seed
         self.total_losses = np.zeros(8760)
         self.can_schedule_more = np.full(8760, True)
 
