@@ -559,6 +559,7 @@ class PowerCurveTransformation(ABC):
         self.power_curve = power_curve
         self._transformed_generation = None
 
+    # pylint: disable=W0613
     def apply(self, transformation_var):
         """Apply a transformation to the original power curve.
 
