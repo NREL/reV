@@ -533,6 +533,20 @@ class ScheduledLossesMixin:
         --------
         :class:`Outage` : Single outage specification.
 
+        Notes
+        -----
+        The scheduled losses are passed to SAM via the ``hourly`` key to
+        signify which hourly capacity factors should be adjusted with
+        outage losses. If the user specifies other hourly adjustment
+        factors via the ``hourly`` key, the effect is combined. For
+        example, if the user inputs a 33% hourly adjustment factor and
+        reV schedules an outage for 70% of the farm down for the same
+        hour, then the resulting adjustment factor is::
+            1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
+        This means the generation will be reduced by ~80%, because the
+        user requested 33% losses for the 30% the farm that remained
+        operational during the scheduled outage (i.e. 20% remaining of
+        the original generation).
         """
         outages = self._user_outage_input()
         if not outages:
@@ -543,10 +557,11 @@ class ScheduledLossesMixin:
         logger.debug("Scheduled outages seed: {}".format(self.outage_seed))
 
         scheduler = OutageScheduler(outages, seed=self.outage_seed)
-        self.sam_sys_inputs['hourly'] = scheduler.calculate()
+        hourly_outages = scheduler.calculate()
+        self._add_outages_to_sam_inputs(hourly_outages)
 
-        logger.debug("Hourly adjustment factors as a result of scheduled "
-                     "outages: {}".format(scheduler.total_losses.tolist()))
+        logger.debug("Hourly adjustment factors after scheduled outages: {}"
+                     .format(list(self.sam_sys_inputs['hourly'])))
 
     def _user_outage_input(self):
         """Get outage and seed info from config. """
@@ -563,6 +578,17 @@ class ScheduledLossesMixin:
             self.OUTAGE_SEED_CONFIG_KEY, 0
         )
         return outages
+
+    def _add_outages_to_sam_inputs(self, outages):
+        """Add the hourly adjustment factors to config, checking user input."""
+
+        hourly_mult = 1 - outages / 100
+
+        user_hourly_input = self.sam_sys_inputs.pop('hourly', [0] * 8760)
+        user_hourly_mult = 1 - np.array(user_hourly_input) / 100
+
+        final_hourly_mult = hourly_mult * user_hourly_mult
+        self.sam_sys_inputs['hourly'] = (1 - final_hourly_mult) * 100
 
     @property
     def outage_seed(self):

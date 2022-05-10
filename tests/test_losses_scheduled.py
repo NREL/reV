@@ -118,16 +118,17 @@ def so_scheduler(basic_outage_dict):
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
 @pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
+@pytest.mark.parametrize('haf', [None, np.random.randint(0, 100, 8760)])
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
-def test_scheduled_losses(generic_losses, outages, site_outages, files):
+def test_scheduled_losses(generic_losses, outages, site_outages, haf, files):
     """Test full gen run with scheduled losses. """
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, outages, site_outages, files
+        generic_losses, outages, site_outages, haf, files
     )
 
     if site_outages is not None:
@@ -224,7 +225,7 @@ def test_scheduled_losses(generic_losses, outages, site_outages, files):
 
 
 def _run_gen_with_and_without_losses(
-    generic_losses, outages, site_outages, files
+    generic_losses, outages, site_outages, haf, files
 ):
     """Run generaion with and without losses for testing. """
     sam_file, res_file, tech = files
@@ -237,6 +238,9 @@ def _run_gen_with_and_without_losses(
             sam_config['turb_generic_loss'] = generic_losses
         else:
             sam_config['losses'] = generic_losses
+
+        if haf is not None:
+            sam_config['hourly'] = haf.tolist()
 
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
@@ -267,6 +271,9 @@ def _run_gen_with_and_without_losses(
         )
     else:
         pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
+
+    if haf is not None:
+        pc.project_points.sam_inputs[sam_file]['hourly'] = haf.tolist()
 
     gen = Gen.reV_run(tech, pc, sam_file, res_file,
                       output_request=('gen_profile'),
