@@ -404,6 +404,29 @@ def test_power_curve_class_comparisons(simple_power_curve):
     assert simple_power_curve(5) == 10
 
 
+def test_bad_transformation_implementation(real_power_curve):
+    """Test an invalid transformation implementation. """
+
+    class NewTransformation(PowerCurveTransformation):
+        """Test class"""
+        def apply(self, *args, **kwargs):
+            """Test apply method."""
+            return super().apply(*args, **kwargs)
+
+        @property
+        def bounds(self):
+            """Test bounds."""
+            return (0, 1)
+
+    transformation = NewTransformation(real_power_curve)
+    with pytest.raises(NotImplementedError) as excinfo:
+        transformation.apply(0.5)
+
+    err_msg = str(excinfo.value)
+    assert "Transformation implementation" in err_msg
+    assert "did not set the `_transformed_generation` attribute" in err_msg
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
