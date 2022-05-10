@@ -310,6 +310,18 @@ def test_transformation_classes_bounds(sam_file, pc_transformation):
     assert bounds_max <= max(power_curve.wind_speed)
 
 
+def test_transformation_invalid_result(real_power_curve):
+    """Test a transformation with invalid result. """
+
+    transformation = HorizontalTranslation(real_power_curve)
+    with pytest.raises(reVLossesValueError) as excinfo:
+        transformation.apply(transformation.bounds[-1] + 0.2)
+
+    err_msg = str(excinfo.value)
+    assert "Calculated power curve is invalid" in err_msg
+    assert "No power generation below the cutoff wind speed" in err_msg
+
+
 def test_power_curve_loss_input_class_valid_inputs():
     """Test PowerCurveLossesInput class with valid input. """
 
