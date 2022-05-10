@@ -366,7 +366,7 @@ class PowerCurveLossesInput:
         """
         self._specs = specs
         self._transformation_name = self._specs.get(
-            'transformation', 'horizontal_translation'
+            'transformation', 'exponential_stretching'
         )
         self._validate()
 
@@ -643,8 +643,17 @@ class PowerCurveTransformation(ABC):
         """tuple: Bounds on the ``transformation_var``."""
 
 
-class HorizontalPowerCurveTranslation(PowerCurveTransformation):
+class HorizontalTranslation(PowerCurveTransformation):
     """Utility for applying horizontal power curve translations.
+
+    The mathematical representation of this transformation is:
+
+    .. math:: P_{transformed}(u) = P_{original}(u - t),
+
+    where :math:`P_{transformed}` is the transformed power curve,
+    :math:`P_{original}` is the original power curve, :math:`u` is
+    the wind speed, and :math:`t` is the transformation variable
+    (horizontal translation amount).
 
     This kind of power curve transformation is simplistic, and should
     only be used for a small handful of applicable turbine losses
@@ -674,9 +683,10 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
     def apply(self, transformation_var):
         """Apply a horizontal translation to the original power curve.
 
-        This function shifts the original power curve horizontally
-        by the given amount and truncates any power above the cutoff
-        speed (if one was detected).
+        This function shifts the original power curve horizontally,
+        along the "wind speed" (x) axis, by the given amount. Any power
+        above the cutoff speed (if one was detected) is truncated after
+        the transforamtion.
 
         Parameters
         ----------
@@ -707,7 +717,137 @@ class HorizontalPowerCurveTranslation(PowerCurveTransformation):
         return (0, max_shift)
 
 
+class LinearStretching(PowerCurveTransformation):
+    """Utility for applying a linear stretch to the power curve.
+
+    The mathematical representation of this transformation is:
+
+    .. math:: P_{transformed}(u) = P_{original}(u/t),
+
+    where :math:`P_{transformed}` is the transformed power curve,
+    :math:`P_{original}` is the original power curve, :math:`u` is
+    the wind speed, and :math:`t` is the transformation variable
+    (horizontal translation amount).
+
+    The losses in this type of transformation are distributed primarily
+    across regions 2 and 3 of the power curve. In particular, losses are
+    smaller for wind speeds closer to the cut-in speed, and larger for
+    speeds close to rated power:
+
+    .. image:: ../../../examples/rev_losses/linear_stretching.png
+       :align: center
+
+    Attributes
+    ----------
+    power_curve : :obj:`PowerCurve`
+        A :obj:`PowerCurve` object representing the "original" power
+        curve.
+    """
+
+    def apply(self, transformation_var):
+        """Apply a linear stretch to the original power curve.
+
+        This function stretches the original power curve along the
+        "wind speed" (x) axis. Any power above the cutoff speed (if one
+        was detected) is truncated after the transforamtion.
+
+        Parameters
+        ----------
+        transformation_var : float
+            The exponent of the wind speed scaling.
+
+        Returns
+        -------
+        :obj:`PowerCurve`
+            An new power curve containing the generation values from the
+            shifted power curve.
+        """
+        self._transformed_generation = self.power_curve(
+            self.power_curve.wind_speed / transformation_var
+        )
+        return super().apply(transformation_var)
+
+    @property
+    def bounds(self):
+        """tuple: Bounds on the wind speed multiplier."""
+        min_ind_pc = np.where(self.power_curve)[0][0]
+        min_ind_ws = np.where(self.power_curve.wind_speed > 1)[0][0]
+        min_ws = self.power_curve.wind_speed[max(min_ind_pc, min_ind_ws)]
+        max_ws = min(
+            self.power_curve.wind_speed.max(),
+            self.power_curve.cutoff_wind_speed
+        )
+        max_multiplier = np.ceil(max_ws / min_ws)
+        return (1, max_multiplier)
+
+
+class ExponentialStretching(PowerCurveTransformation):
+    """Utility for applying an exponential stretch to the power curve.
+
+    The mathematical representation of this transformation is:
+
+    .. math:: P_{transformed}(u) = P_{original}(u^{1/t}),
+
+    where :math:`P_{transformed}` is the transformed power curve,
+    :math:`P_{original}` is the original power curve, :math:`u` is
+    the wind speed, and :math:`t` is the transformation variable
+    (horizontal translation amount).
+
+    The losses in this type of transformation are distributed primarily
+    across regions 2 and 3 of the power curve. In particular, losses are
+    smaller for wind speeds closer to the cut-in speed, and larger for
+    speeds close to rated power:
+
+    .. image:: ../../../examples/rev_losses/exponential_stretching.png
+       :align: center
+
+    Attributes
+    ----------
+    power_curve : :obj:`PowerCurve`
+        A :obj:`PowerCurve` object representing the "original" power
+        curve.
+    """
+
+    def apply(self, transformation_var):
+        """Apply an exponential stretch to the original power curve.
+
+        This function stretches the original power curve along the
+        "wind speed" (x) axis. Any power above the cutoff speed (if one
+        was detected) is truncated after the transforamtion.
+
+        Parameters
+        ----------
+        transformation_var : float
+            The exponent of the wind speed scaling.
+
+        Returns
+        -------
+        :obj:`PowerCurve`
+            An new power curve containing the generation values from the
+            shifted power curve.
+        """
+        self._transformed_generation = self.power_curve(
+            self.power_curve.wind_speed ** (1 / transformation_var)
+        )
+        return super().apply(transformation_var)
+
+    @property
+    def bounds(self):
+        """tuple: Bounds on the wind speed exponent."""
+        min_ind_pc = np.where(self.power_curve)[0][0]
+        min_ind_ws = np.where(self.power_curve.wind_speed > 1)[0][0]
+        min_ws = self.power_curve.wind_speed[max(min_ind_pc, min_ind_ws)]
+        max_ws = min(
+            self.power_curve.wind_speed.max(),
+            self.power_curve.cutoff_wind_speed
+        )
+        max_exponent = np.ceil(np.log(max_ws) / np.log(min_ws))
+        return (1, max_exponent)
+
+
 TRANSFORMATIONS = {
-    'horizontal_translation': HorizontalPowerCurveTranslation
+    'horizontal_translation': HorizontalTranslation,
+    'linear_stretching': LinearStretching,
+    'exponential_stretching': ExponentialStretching
 }
 """Implemented power curve transformations."""

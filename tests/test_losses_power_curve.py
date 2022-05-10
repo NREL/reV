@@ -21,7 +21,8 @@ from reV.utilities.exceptions import reVLossesValueError
 from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesMixin,
                                     PowerCurveLossesInput,
-                                    HorizontalPowerCurveTranslation)
+                                    TRANSFORMATIONS,
+                                    HorizontalTranslation)
 from reV.losses.scheduled import ScheduledLossesMixin
 
 
@@ -57,10 +58,13 @@ def real_power_curve():
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('target_losses', [0, 10, 50])
-def test_power_curve_losses(generic_losses, target_losses):
+@pytest.mark.parametrize('transformation', TRANSFORMATIONS)
+def test_power_curve_losses(generic_losses, target_losses, transformation):
     """Test full gen run with scheduled losses. """
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, target_losses=target_losses
+        generic_losses,
+        target_losses=target_losses,
+        transformation=transformation
     )
 
     assert np.isclose(gen_profiles, gen_profiles_with_losses).any()
@@ -76,7 +80,7 @@ def test_power_curve_losses(generic_losses, target_losses):
 
 
 def _run_gen_with_and_without_losses(
-    generic_losses, target_losses, include_outages=False
+    generic_losses, target_losses, transformation, include_outages=False
 ):
     """Run generaion with and without losses for testing. """
 
@@ -90,7 +94,8 @@ def _run_gen_with_and_without_losses(
         sam_config['turb_generic_loss'] = generic_losses
 
         sam_config[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
-            'target_losses_percent': target_losses
+            'target_losses_percent': target_losses,
+            'transformation': transformation
         }
         if include_outages:
             sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = [
@@ -230,24 +235,35 @@ def test_power_curve_losses_class_bad_wind_res_input(bad_wind_res):
     assert "Invalid wind resource input" in str(excinfo.value)
 
 
-def test_horizontal_transformation_class_apply(real_power_curve):
-    """Test that the power curve shift is applied correctly. """
+@pytest.mark.parametrize('pc_transformation', TRANSFORMATIONS.values())
+def test_transformation_classes_apply(pc_transformation, real_power_curve):
+    """Test that the power curve transformations are applied correctly. """
 
+    real_power_curve.generation[-1] = real_power_curve.generation[-2]
+    transformation = pc_transformation(real_power_curve)
+    min_b, max_b = transformation.bounds
+    strength = min_b + (max_b - min_b) / 4
+    new_power_curve = transformation.apply(strength)
+
+    assert new_power_curve != real_power_curve
+
+    new_co_ws = real_power_curve.wind_speed[-10]
+    transformation.power_curve._cutoff_wind_speed = new_co_ws
+    new_power_curve = transformation.apply(strength)
+    mask = new_power_curve.wind_speed >= real_power_curve.wind_speed[-10]
+    assert (new_power_curve[mask] == 0).all()
+
+
+def test_horizontal_transformation_class_apply(real_power_curve):
+    """Test apply method for power curve shift in particular."""
     real_power_curve.generation[-1] = real_power_curve.generation[-2]
     curve_shift = (
         real_power_curve.wind_speed[1] - real_power_curve.wind_speed[0]
     )
-    transformation = HorizontalPowerCurveTranslation(real_power_curve)
+    transformation = HorizontalTranslation(real_power_curve)
     new_power_curve = transformation.apply(curve_shift)
 
-    assert new_power_curve != real_power_curve
     assert np.isclose(real_power_curve[:-2], new_power_curve[1:-1]).all()
-
-    new_co_ws = real_power_curve.wind_speed[15]
-    transformation.power_curve._cutoff_wind_speed = new_co_ws
-    new_power_curve = transformation.apply(curve_shift)
-    mask = new_power_curve.wind_speed >= real_power_curve.wind_speed[15]
-    assert (new_power_curve[mask] == 0).all()
 
 
 def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
@@ -256,7 +272,7 @@ def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
     windspeed = [0, 10, 20, 30, 40]
     generation = [0, 10, 15, 20, 0]
     power_curve = PowerCurve(windspeed, generation)
-    transformation = HorizontalPowerCurveTranslation(power_curve)
+    transformation = HorizontalTranslation(power_curve)
     pc_losses = PowerCurveLosses(power_curve, BASIC_WIND_RES)
 
     new_pc = transformation.apply(10)
@@ -272,7 +288,8 @@ def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
 
 
 @pytest.mark.parametrize('sam_file', SAM_FILES)
-def test_horizontal_transformation_class_bounds(sam_file):
+@pytest.mark.parametrize('pc_transformation', TRANSFORMATIONS.values())
+def test_transformation_classes_bounds(sam_file, pc_transformation):
     """Test that shift_bounds are set correctly. """
 
     with open(sam_file, 'r') as fh:
@@ -282,9 +299,9 @@ def test_horizontal_transformation_class_bounds(sam_file):
     generation = sam_config['wind_turbine_powercurve_powerout']
     power_curve = PowerCurve(wind_speed, generation)
 
-    transformation = HorizontalPowerCurveTranslation(power_curve)
+    transformation = pc_transformation(power_curve)
     bounds_min, bounds_max = transformation.bounds
-    assert bounds_min == 0
+
     assert bounds_max > bounds_min
     assert bounds_max <= power_curve.cutoff_wind_speed
     assert bounds_max <= max(power_curve.wind_speed)
@@ -297,7 +314,7 @@ def test_power_curve_loss_input_class_valid_inputs():
     pc_input = PowerCurveLossesInput(specs)
 
     assert abs(pc_input.target - 50) < 1E-6
-    assert pc_input.transformation == HorizontalPowerCurveTranslation
+    assert pc_input.transformation in TRANSFORMATIONS.values()
 
 
 @pytest.mark.parametrize('bad_percent', [-10, 105])
