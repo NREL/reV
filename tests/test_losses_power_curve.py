@@ -14,6 +14,7 @@ import json
 import copy
 
 import numpy as np
+import pandas as pd
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
@@ -22,11 +23,13 @@ from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesMixin,
                                     PowerCurveLossesInput,
                                     TRANSFORMATIONS,
-                                    HorizontalTranslation)
+                                    HorizontalTranslation,
+                                    PowerCurveTransformation
+                                    )
 from reV.losses.scheduled import ScheduledLossesMixin
 
 
-REV_POINTS = slice(0, 5)
+REV_POINTS = list(range(3))
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
 SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json',
@@ -35,6 +38,10 @@ SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_non_standard_2.json'
 ]
 BASIC_WIND_RES = [10, 20, 20]
+SINGLE_SITE_PC_LOSSES = {
+    'target_losses_percent': 16,
+    'transformation': 'horizontal_translation'
+}
 
 
 @pytest.fixture
@@ -79,8 +86,29 @@ def test_power_curve_losses(generic_losses, target_losses, transformation):
     assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
 
 
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+def test_power_curve_losses_site_specific(generic_losses):
+    """Test full gen run with scheduled losses. """
+    gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
+        generic_losses,
+        target_losses=10,
+        site_losses=SINGLE_SITE_PC_LOSSES,
+        transformation='exponential_stretching'
+    )
+
+    target_losses = SINGLE_SITE_PC_LOSSES['target_losses_percent']
+
+    assert np.isclose(gen_profiles, gen_profiles_with_losses).any()
+    assert gen_profiles.max() == gen_profiles_with_losses.max()
+    assert (gen_profiles - gen_profiles_with_losses > 0).any()
+
+    annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
+    assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
+
+
 def _run_gen_with_and_without_losses(
-    generic_losses, target_losses, transformation, include_outages=False
+    generic_losses, target_losses, transformation, include_outages=False,
+    site_losses=None
 ):
     """Run generaion with and without losses for testing. """
 
@@ -111,8 +139,9 @@ def _run_gen_with_and_without_losses(
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
+        site_data = _make_site_data_df(site_losses)
         gen = Gen.reV_run('windpower', REV_POINTS, sam_fp, RES_FILE,
-                          output_request=('gen_profile'),
+                          output_request=('gen_profile'), site_data=site_data,
                           max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
 
@@ -141,6 +170,18 @@ def _run_gen_with_and_without_losses(
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
     return gen_profiles, gen_profiles_with_losses
+
+
+def _make_site_data_df(site_data):
+    """Make site data DataFrame for a specific power curve loss input. """
+    if site_data is not None:
+        site_specific_losses = [json.dumps(site_data)] * len(REV_POINTS)
+        site_data_dict = {
+            'gid': REV_POINTS,
+            PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY: site_specific_losses
+        }
+        site_data = pd.DataFrame(site_data_dict)
+    return site_data
 
 
 def test_power_curve_losses_witch_scheduled_outages():
