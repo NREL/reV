@@ -319,6 +319,9 @@ def test_power_curve_loss_input_class_valid_inputs():
     assert abs(pc_input.target - 50) < 1E-6
     assert pc_input.transformation in TRANSFORMATIONS.values()
 
+    assert '50' in str(pc_input)
+    assert any(t in str(pc_input) for t in TRANSFORMATIONS)
+
 
 @pytest.mark.parametrize('bad_percent', [-10, 105])
 def test_power_curve_loss_input_class_bad_percent_input(bad_percent):
