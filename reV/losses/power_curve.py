@@ -463,10 +463,10 @@ class PowerCurveLossesMixin:
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
-                     .format(loss_input.target, loss_input.transformation))
+                     .format(loss_input.transformation, loss_input.target))
 
         new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
-        logger.debug("Transformed powercurve: {}".format(list(new_curve)))
+        logger.debug("Transformed power curve: {}".format(list(new_curve)))
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
     def _user_power_curve_input(self):
@@ -727,7 +727,7 @@ class LinearStretching(PowerCurveTransformation):
     where :math:`P_{transformed}` is the transformed power curve,
     :math:`P_{original}` is the original power curve, :math:`u` is
     the wind speed, and :math:`t` is the transformation variable
-    (horizontal translation amount).
+    (wind speed multiplier).
 
     The losses in this type of transformation are distributed primarily
     across regions 2 and 3 of the power curve. In particular, losses are
@@ -754,7 +754,7 @@ class LinearStretching(PowerCurveTransformation):
         Parameters
         ----------
         transformation_var : float
-            The exponent of the wind speed scaling.
+            The linear multiplier of the wind speed scaling.
 
         Returns
         -------
@@ -791,7 +791,7 @@ class ExponentialStretching(PowerCurveTransformation):
     where :math:`P_{transformed}` is the transformed power curve,
     :math:`P_{original}` is the original power curve, :math:`u` is
     the wind speed, and :math:`t` is the transformation variable
-    (horizontal translation amount).
+    (wind speed exponent).
 
     The losses in this type of transformation are distributed primarily
     across regions 2 and 3 of the power curve. In particular, losses are

@@ -146,7 +146,9 @@ def _run_gen_with_and_without_losses(
 def test_power_curve_losses_witch_scheduled_outages():
     """Test full gen run with scheduled losses. """
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses=0.2, target_losses=20, include_outages=True
+        generic_losses=0.2,
+        target_losses=20, transformation='exponential_stretching',
+        include_outages=True
     )
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
@@ -170,7 +172,8 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
     mixin = PowerCurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
     mixin.sam_sys_inputs[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
-        'target_losses_percent': 10
+        'target_losses_percent': 10,
+        'transformation': 'horizontal_translation'
     }
     mixin.sam_sys_inputs['wind_resource_data'] = {
         'data': [(1, 10, val, 0) for val in BASIC_WIND_RES]
