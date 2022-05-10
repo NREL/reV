@@ -117,22 +117,18 @@ def so_scheduler(basic_outage_dict):
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-@pytest.mark.parametrize('site_outages', [None, SINGLE_SITE_OUTAGE])
 @pytest.mark.parametrize('haf', [None, np.random.randint(0, 100, 8760)])
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
-def test_scheduled_losses(generic_losses, outages, site_outages, haf, files):
+def test_scheduled_losses(generic_losses, outages, haf, files):
     """Test full gen run with scheduled losses. """
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, outages, site_outages, haf, files
+        generic_losses, outages, None, haf, files
     )
-
-    if site_outages is not None:
-        outages = site_outages
 
     outages = [Outage(outage) for outage in outages]
     min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
@@ -213,6 +209,91 @@ def test_scheduled_losses(generic_losses, outages, site_outages, haf, files):
             outages_allow_different_scheduled_losses.append(
                 outage.total_available_hours <= outage.duration
             )
+
+    if all(outages_allow_different_scheduled_losses):
+        site_loss_inds = [
+            inds - zero_gen_inds_all_sites for inds in site_loss_inds
+        ]
+        common_inds = set.intersection(*site_loss_inds)
+
+        error_msg = "Scheduled losses do not vary between sites!"
+        assert any(inds - common_inds for inds in site_loss_inds), error_msg
+
+
+@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('haf', [None, np.random.randint(0, 100, 8760)])
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
+    (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
+])
+def test_scheduled_losses_site_specific(generic_losses, haf, files):
+    """Test full gen run with scheduled losses. """
+
+    gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
+        generic_losses, NOMINAL_OUTAGES[0], SINGLE_SITE_OUTAGE, haf, files
+    )
+
+    outages = [Outage(outage) for outage in SINGLE_SITE_OUTAGE]
+    min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
+    assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
+
+    losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
+    site_loss_inds = []
+    zero_gen_inds_all_sites = set()
+    for site_losses, site_gen in zip(losses.T, gen_profiles.T):
+        non_zero_gen = site_gen > 0
+        zero_gen_inds = set(np.where(~non_zero_gen)[0])
+        zero_gen_inds_all_sites |= zero_gen_inds
+        site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
+        for outage in outages:
+            outage_percentage = outage.percentage_of_farm_down
+            outage_allowed_hourly_inds = hourly_indices_for_months(
+                outage.allowed_months
+            )
+            zero_gen_in_comparison_count = sum(
+                ind in outage_allowed_hourly_inds for ind in zero_gen_inds
+            )
+            comparison_inds = list(
+                set(outage_allowed_hourly_inds) - zero_gen_inds
+            )
+            num_outages_possible_per_day = np.floor(
+                100 / outage.percentage_of_farm_down
+            )
+            min_num_expected_outage_hours = (
+                outage.count * outage.duration
+                / num_outages_possible_per_day
+            )
+            min_num_expected_outage_hours = max(
+                0,
+                min_num_expected_outage_hours
+                - zero_gen_in_comparison_count
+            )
+            max_num_expected_outage_hours = len(comparison_inds)
+            observed_outages = (
+                site_losses[comparison_inds] >= outage_percentage - ATOL
+            )
+
+            num_outage_hours = observed_outages.sum()
+
+            num_outage_hours_meet_expectations = (
+                min_num_expected_outage_hours
+                <= num_outage_hours
+                <= max_num_expected_outage_hours
+            )
+            assert num_outage_hours_meet_expectations
+
+        total_expected_outage = sum(
+            outage.count * outage.duration * outage.percentage_of_farm_down
+            for outage in outages
+        )
+        assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
+
+    outages_allow_different_scheduled_losses = []
+    for outage in outages:
+        outages_allow_different_scheduled_losses.append(
+            outage.total_available_hours <= outage.duration
+        )
 
     if all(outages_allow_different_scheduled_losses):
         site_loss_inds = [
