@@ -146,7 +146,7 @@ class PowerCurve:
             The power curve value(s) for the input wind speed(s).
         """
         if isinstance(wind_speed, (int, float)):
-            wind_speed = [wind_speed]
+            wind_speed = np.array([wind_speed])
         new_pc = np.interp(wind_speed, self.wind_speed, self.generation)
         if self.cutoff_wind_speed:
             new_pc[wind_speed >= self.cutoff_wind_speed] = 0

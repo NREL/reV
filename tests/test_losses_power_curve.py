@@ -376,6 +376,19 @@ def test_power_curve_class_cutoff_wind_speed(
     assert power_curve.cutoff_wind_speed == np.inf
 
 
+def test_power_curve_class_comparisons(simple_power_curve):
+    """Test power curve class comparison and call operators. """
+
+    assert simple_power_curve == [0, 20, 15, 10]
+    assert simple_power_curve != [0, 20, 15, 0]
+    assert sum(simple_power_curve < 15) == 2
+    assert sum(simple_power_curve <= 15) == 3
+    assert sum(simple_power_curve > 15) == 1
+    assert sum(simple_power_curve >= 15) == 2
+
+    assert simple_power_curve(5) == 10
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
