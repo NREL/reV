@@ -450,6 +450,7 @@ def test_bad_transformation_implementation(real_power_curve):
 
     class NewTransformation(AbstractPowerCurveTransformation):
         """Test class"""
+        # pylint: disable=useless-super-delegation
         def apply(self, *args, **kwargs):
             """Test apply method."""
             return super().apply(*args, **kwargs)
