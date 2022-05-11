@@ -97,7 +97,12 @@ class PowerCurve:
 
     @property
     def cutoff_wind_speed(self):
-        """float or :obj:`np.inf`: The detected cutoff wind speed."""
+        """The detected cutoff wind speed at which the power generation is zero
+
+        Returns
+        --------
+        float | np.inf
+        """
         if self._cutoff_wind_speed is None:
             ind = np.argmax(self.generation[::-1])
             # pylint: disable=chained-comparison
@@ -128,15 +133,15 @@ class PowerCurve:
     def __len__(self):
         return len(self.generation)
 
-    def __getitem__(self, key):
-        return self.generation[key]
+    def __getitem__(self, index):
+        return self.generation[index]
 
     def __call__(self, wind_speed):
         """Calculate the power curve value for the given ``wind_speed``.
 
         Parameters
         ----------
-        wind_speed : :obj:`int` | :obj:`float` | :obj:`list` | :obj:`np.array`
+        wind_speed : int | float | list | np.array
             Wind speed value corresponding to the desired powerrcurve
             value.
 
@@ -147,10 +152,11 @@ class PowerCurve:
         """
         if isinstance(wind_speed, (int, float)):
             wind_speed = np.array([wind_speed])
-        new_pc = np.interp(wind_speed, self.wind_speed, self.generation)
+        power_generated = np.interp(wind_speed, self.wind_speed,
+                                    self.generation)
         if self.cutoff_wind_speed:
-            new_pc[wind_speed >= self.cutoff_wind_speed] = 0
-        return new_pc
+            power_generated[wind_speed >= self.cutoff_wind_speed] = 0
+        return power_generated
 
 
 class PowerCurveLosses:
@@ -221,7 +227,8 @@ class PowerCurveLosses:
     def _validate_wind_resource(self):
         """Validate that the input wind resource is non-negative. """
         if not (self.wind_resource >= 0).all():
-            msg = "Invalid wind resource input: Contains negative values! - {}"
+            msg = ("Invalid wind resource input: Contains negative values!"
+                   " - {}".format(self.wind_resource))
             msg = msg.format(self.wind_resource)
             logger.error(msg)
             raise reVLossesValueError(msg)
@@ -305,12 +312,10 @@ class PowerCurveLosses:
         resource is abnormal.
         """
         transformation = transformation(self.power_curve)
-        fit_var = minimize_scalar(
-            self._obj,
-            args=(target, transformation),
-            bounds=transformation.bounds,
-            method='bounded'
-        ).x
+        fit_var = minimize_scalar(self._obj,
+                                  args=(target, transformation),
+                                  bounds=transformation.bounds,
+                                  method='bounded').x
         loss_percentage = self._obj(fit_var, target, transformation)
         if loss_percentage > 1:
             msg = ("Unable to find a transformation such that the losses meet "
@@ -436,14 +441,14 @@ class PowerCurveLossesMixin:
     results and/or errors.
     """
 
-    POWERCURVE_CONFIG_KEY = 'reV-power_curve_losses'
+    POWERCURVE_CONFIG_KEY = 'reV_power_curve_losses'
     """Specify power curve loss target in the config file using this key."""
 
     def add_power_curve_losses(self):
         """Adjust power curve in SAM config file to account for losses.
 
         This function reads the information in the
-        ``reV-power_curve_losses`` key of the ``sam_sys_inputs``
+        ``reV_power_curve_losses`` key of the ``sam_sys_inputs``
         dictionary and computes a new power curve that accounts for the
         loss percentage specified from that input. If no power curve
         loss info is specified in ``sam_sys_inputs``, the power curve
@@ -535,7 +540,7 @@ class PowerCurveLossesMixin:
         return wind_speeds / weights
 
 
-class PowerCurveTransformation(ABC):
+class AbstractPowerCurveTransformation(ABC):
     """Abscrtact base class for power curve transformations.
 
     **This class is not meant to be instantiated**.
@@ -626,14 +631,12 @@ class PowerCurveTransformation(ABC):
             logger.error(msg)
             raise NotImplementedError(msg)
 
-        mask = (
-            self.power_curve.wind_speed >= self.power_curve.cutoff_wind_speed
-        )
+        mask = (self.power_curve.wind_speed
+                >= self.power_curve.cutoff_wind_speed)
         self._transformed_generation[mask] = 0
 
-        new_curve = PowerCurve(
-            self.power_curve.wind_speed, self._transformed_generation
-        )
+        new_curve = PowerCurve(self.power_curve.wind_speed,
+                               self._transformed_generation)
         self._validate_shifted_power_curve(new_curve)
         return new_curve
 
@@ -643,7 +646,7 @@ class PowerCurveTransformation(ABC):
         """tuple: Bounds on the ``transformation_var``."""
 
 
-class HorizontalTranslation(PowerCurveTransformation):
+class HorizontalTranslation(AbstractPowerCurveTransformation):
     """Utility for applying horizontal power curve translations.
 
     The mathematical representation of this transformation is:
@@ -717,7 +720,7 @@ class HorizontalTranslation(PowerCurveTransformation):
         return (0, max_shift)
 
 
-class LinearStretching(PowerCurveTransformation):
+class LinearStretching(AbstractPowerCurveTransformation):
     """Utility for applying a linear stretch to the power curve.
 
     The mathematical representation of this transformation is:
@@ -781,7 +784,7 @@ class LinearStretching(PowerCurveTransformation):
         return (1, max_multiplier)
 
 
-class ExponentialStretching(PowerCurveTransformation):
+class ExponentialStretching(AbstractPowerCurveTransformation):
     """Utility for applying an exponential stretch to the power curve.
 
     The mathematical representation of this transformation is:

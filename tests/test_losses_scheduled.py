@@ -88,8 +88,8 @@ NOMINAL_OUTAGES = [
     ]
 ]
 SINGLE_SITE_OUTAGE = [{
-    'count': 12,
-    'duration': 20,
+    'count': 100,
+    'duration': 2,
     'percentage_of_farm_down': 42,
     'allowed_months': ['February'],
 }]
@@ -334,14 +334,14 @@ def _run_gen_with_and_without_losses(
                           max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
-    time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
-    gen_profiles_with_losses = gen_profiles_with_losses[::time_steps_in_hour]
-    # undo UTC array rolling
-    for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
-        gen_profiles_with_losses[:, ind] = np.roll(
-            gen_profiles_with_losses[:, ind], time_shift
-        )
+    # time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
+    # gen_profiles_with_losses = gen_profiles_with_losses[::time_steps_in_hour]
+    # # undo UTC array rolling
+    # for ind, row in gen.meta.iterrows():
+    #     time_shift = row['timezone']
+    #     gen_profiles_with_losses[:, ind] = np.roll(
+    #         gen_profiles_with_losses[:, ind], time_shift
+    #     )
 
     pc = Gen.get_pc(REV_POINTS, None, sam_file, tech,
                     sites_per_worker=3, res_file=res_file)
@@ -360,11 +360,11 @@ def _run_gen_with_and_without_losses(
                       output_request=('gen_profile'),
                       max_workers=None, sites_per_worker=3, out_fpath=None)
     gen_profiles = gen.out['gen_profile']
-    time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
-    gen_profiles = gen_profiles[::time_steps_in_hour]
-    for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
-        gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
+    # time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
+    # gen_profiles = gen_profiles[::time_steps_in_hour]
+    # for ind, row in gen.meta.iterrows():
+    #     time_shift = row['timezone']
+    #     gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
     return gen_profiles, gen_profiles_with_losses
 

@@ -11,7 +11,7 @@ Instead of simple haircut losses, we can add power curve losses.
 The example transformation we will use is a horizontal power curve translation.
 To do so, we must specify the ``target_losses_percent`` as well as the name
 of the ``transformation``. We specify both of these options with the
-``'reV-power_curve_losses'`` key in the SAM config.
+``'reV_power_curve_losses'`` key in the SAM config.
 
 .. code-block:: python
 
@@ -46,7 +46,7 @@ of the ``transformation``. We specify both of these options with the
     with tempfile.TemporaryDirectory() as td:
         sam_fp = os.path.join(td, 'gen.json')
         sam_config.pop('turb_generic_loss', None)
-        sam_config['reV-power_curve_losses'] = power_curve_loss_info
+        sam_config['reV_power_curve_losses'] = power_curve_loss_info
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
@@ -112,7 +112,7 @@ as well as the ``percentage_of_farm_down`` for each outage.
     ]
     with tempfile.TemporaryDirectory() as td:
         sam_fp = os.path.join(td, 'gen.json')
-        sam_config['reV-outages'] = outage_info
+        sam_config['reV_outages'] = outage_info
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 

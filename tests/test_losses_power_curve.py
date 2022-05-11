@@ -24,7 +24,7 @@ from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesInput,
                                     TRANSFORMATIONS,
                                     HorizontalTranslation,
-                                    PowerCurveTransformation
+                                    AbstractPowerCurveTransformation
                                     )
 from reV.losses.scheduled import ScheduledLossesMixin
 
@@ -448,7 +448,7 @@ def test_power_curve_class_comparisons(simple_power_curve):
 def test_bad_transformation_implementation(real_power_curve):
     """Test an invalid transformation implementation. """
 
-    class NewTransformation(PowerCurveTransformation):
+    class NewTransformation(AbstractPowerCurveTransformation):
         """Test class"""
         def apply(self, *args, **kwargs):
             """Test apply method."""
