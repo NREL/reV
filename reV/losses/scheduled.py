@@ -92,24 +92,22 @@ class Outage:
         """Raise an error if any required keys are missing."""
         missing_keys = [n for n in self.REQUIRED_KEYS if n not in self._specs]
         if any(missing_keys):
-            msg = (
-                "The following required keys are missing from the Outage "
-                "specification: {}".format(sorted(missing_keys))
-            )
+            msg = ("The following required keys are missing from the Outage "
+                   "specification: {}".format(sorted(missing_keys)))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_count(self):
         """Validate that the total number of outages is an integer. """
         if not isinstance(self.count, int):
-            msg = "Number of outages must be an integer, but got {} for {}"
-            msg = msg.format(self.count, self.name)
+            msg = ("Number of outages must be an integer, but got {} for {}"
+                   .format(self.count, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
         if self.count < 1:
-            msg = "Number of outages must be greater than 0, but got {} for {}"
-            msg = msg.format(self.count, self.name)
+            msg = ("Number of outages must be greater than 0, but got "
+                   "{} for {}".format(self.count, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -123,17 +121,17 @@ class Outage:
                    "use either the full month name or the standard 3-letter "
                    "month abbreviation. For more info, see the month name "
                    "documentation for the python standard package `calendar`."
-                   ).format(unknown_months)
+                   .format(unknown_months))
             logger.warning(msg)
             warnings.warn(msg, reVLossesWarning)
 
         if not known_months:
-            msg = ("No known month names were provided! Please "
-                   "use either the full month name or the standard 3-letter "
-                   "month abbreviation. For more info, see the month name "
+            msg = ("No known month names were provided! Please use either the "
+                   "full month name or the standard 3-letter month "
+                   "abbreviation. For more info, see the month name "
                    "documentation for the python standard package `calendar`. "
                    "Received input: {!r}"
-                   ).format(self._specs['allowed_months'])
+                   .format(self._specs['allowed_months']))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -143,27 +141,25 @@ class Outage:
         """Validate that the duration is between 0 and the max total. """
         if not isinstance(self.duration, int):
             msg = ("Duration must be an integer number of hours, "
-                   "but got {} for {}").format(self.duration, self.name)
+                   "but got {} for {}".format(self.duration, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
         if not 1 <= self.duration <= self.total_available_hours:
-            msg = (
-                "Duration of outage must be between 1 and the total available "
-                "hours based on allowed month input ({} for a total hour "
-                "count of {}), but got {} for {}"
-            ).format(self.allowed_months, self.total_available_hours,
-                     self.percentage_of_farm_down, self.name)
+            msg = ("Duration of outage must be between 1 and the total "
+                   "available hours based on allowed month input ({} for "
+                   "a total hour count of {}), but got {} for {}"
+                   .format(self.allowed_months, self.total_available_hours,
+                           self.percentage_of_farm_down, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_percentage(self):
         """Validate that the percentage is in the range (0, 100]. """
         if not 0 < self.percentage_of_farm_down <= 100:
-            msg = (
-                "Percentage of farm down during outage must be in the range "
-                "(0, 100], but got {} for {}"
-            ).format(self.percentage_of_farm_down, self.name)
+            msg = ("Percentage of farm down during outage must be in the "
+                   "range (0, 100], but got {} for {}"
+                   .format(self.percentage_of_farm_down, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -178,13 +174,10 @@ class Outage:
     def _default_name(self):
         """Generate a default name for the outage."""
         specs = self._specs.copy()
-        specs.update(
-            {'allowed_months': self.allowed_months,
-             'allow_outage_overlap': self.allow_outage_overlap}
-        )
-        specs_as_str = ", ".join(
-            ["{}={}".format(k, v) for k, v in specs.items()]
-        )
+        specs.update({'allowed_months': self.allowed_months,
+                      'allow_outage_overlap': self.allow_outage_overlap})
+        specs_as_str = ", ".join(["{}={}".format(k, v)
+                                  for k, v in specs.items()])
         return "Outage({})".format(specs_as_str)
 
     @property
@@ -222,8 +215,7 @@ class Outage:
         """int: Total number of hours avialbale based on allowed months."""
         if self._total_available_hours is None:
             self._total_available_hours = len(
-                hourly_indices_for_months(self.allowed_months)
-            )
+                hourly_indices_for_months(self.allowed_months))
         return self._total_available_hours
 
 
@@ -309,9 +301,9 @@ class OutageScheduler:
             percentage resulting from the stochastically scheduled
             outages.
         """
-        sorted_outages = sorted(
-            self.outages, key=lambda outage: (outage.duration, outage.count)
-        )
+        sorted_outages = sorted(self.outages,
+                                key=lambda outage: (outage.duration,
+                                                    outage.count))
         for outage in sorted_outages[::-1]:
             self.seed += 1
             SingleOutageScheduler(outage, self).calculate()
@@ -401,9 +393,8 @@ class SingleOutageScheduler:
             self.update_when_can_schedule()
             if not self.can_schedule_more.any():
                 break
-            outage_slice = self.find_random_outage_slice(
-                seed=self.scheduler.seed + iter_ind
-            )
+            seed = self.scheduler.seed + iter_ind
+            outage_slice = self.find_random_outage_slice(seed=seed)
             if self.can_schedule_more[outage_slice].all():
                 self.schedule_losses(outage_slice)
             if len(self._scheduled_outage_inds) == self.outage.count:
@@ -414,15 +405,15 @@ class SingleOutageScheduler:
                 msg_start = "Could not schedule any requested outages"
             else:
                 msg_start = ("Could only schedule {} out of {} requested "
-                             "outages")
-                msg_start = msg_start.format(len(self._scheduled_outage_inds),
-                                             self.outage.count)
+                             "outages"
+                             .format(len(self._scheduled_outage_inds),
+                                     self.outage.count))
             msg = ("{} after a max of {:,} iterations. You are likely "
                    "attempting to schedule a lot of long outages or a lot "
                    "of short outages with a large percentage of the farm at "
                    "a time. Please adjust the outage specifications and try "
-                   "again")
-            msg = msg.format(msg_start, self.outage.count + self.MAX_ITER)
+                   "again"
+                   .format(msg_start, self.outage.count + self.MAX_ITER))
             logger.warning(msg)
             warnings.warn(msg, reVLossesWarning)
 
@@ -446,10 +437,9 @@ class SingleOutageScheduler:
         """
         self.can_schedule_more &= self.scheduler.can_schedule_more
         if self.outage.allow_outage_overlap:
-            self.can_schedule_more &= (
-                self.scheduler.total_losses
-                + self.outage.percentage_of_farm_down
-            ) <= 100
+            self.can_schedule_more &= (self.scheduler.total_losses
+                                       + self.outage.percentage_of_farm_down
+                                       ) <= 100
         else:
             self.can_schedule_more &= self.scheduler.total_losses == 0
 
@@ -492,8 +482,7 @@ class SingleOutageScheduler:
         """
         self._scheduled_outage_inds.append(outage_slice.start)
         self.scheduler.total_losses[outage_slice] += (
-            self.outage.percentage_of_farm_down
-        )
+            self.outage.percentage_of_farm_down)
         if not self.outage.allow_outage_overlap:
             self.scheduler.can_schedule_more[outage_slice] = False
 
@@ -576,8 +565,7 @@ class ScheduledLossesMixin:
 
         outages = [Outage(spec) for spec in outage_specs]
         self.__user_input_seed = self.sam_sys_inputs.pop(
-            self.OUTAGE_SEED_CONFIG_KEY, 0
-        )
+            self.OUTAGE_SEED_CONFIG_KEY, 0)
         return outages
 
     def _add_outages_to_sam_inputs(self, outages):

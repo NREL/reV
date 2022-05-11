@@ -62,36 +62,33 @@ class PowerCurve:
         self.generation = np.array(generation)
         self._cutoff_wind_speed = None
 
-        _validate_arrays_not_empty(
-            self, array_names=['wind_speed', 'generation']
-        )
+        _validate_arrays_not_empty(self,
+                                   array_names=['wind_speed', 'generation'])
         self._validate_wind_speed()
         self._validate_generation()
 
     def _validate_wind_speed(self):
         """Validate that the input wind speed is non-negative. """
         if not (self.wind_speed >= 0).all():
-            msg = "Invalid wind speed input: Contains negative values! - {}"
-            msg = msg.format(self.wind_speed)
+            msg = ("Invalid wind speed input: Contains negative values! - {}"
+                   .format(self.wind_speed))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_generation(self):
         """Validate the input generation. """
         if not (self.generation > 0).any():
-            msg = "Invalid generation input: Found no positive values! - {}"
-            msg = msg.format(self.generation)
+            msg = ("Invalid generation input: Found no positive values! - {}"
+                   .format(self.generation))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
         if 0 < self.cutoff_wind_speed < np.inf:
-            cutoff_windspeed_ind = np.where(
-                self.wind_speed >= self.cutoff_wind_speed
-            )[0].min()
+            cutoff_windspeed_ind = np.where(self.wind_speed
+                                            >= self.cutoff_wind_speed)[0].min()
             if (self.generation[cutoff_windspeed_ind:]).any():
                 msg = ("Invalid generation input: Found non-zero values above "
-                       "cutoff! - {}")
-                msg = msg.format(self.generation)
+                       "cutoff! - {}".format(self.generation))
                 logger.error(msg)
                 raise reVLossesValueError(msg)
 
@@ -370,9 +367,8 @@ class PowerCurveLossesInput:
 
         """
         self._specs = specs
-        self._transformation_name = self._specs.get(
-            'transformation', 'exponential_stretching'
-        )
+        self._transformation_name = self._specs.get('transformation',
+                                                    'exponential_stretching')
         self._validate()
 
     def _validate(self):
@@ -385,39 +381,37 @@ class PowerCurveLossesInput:
         """Raise an error if any required keys are missing."""
         missing_keys = [n not in self._specs for n in self.REQUIRED_KEYS]
         if any(missing_keys):
-            msg = (
-                "The following required keys are missing from the power curve "
-                "losses specification: {}".format(sorted(missing_keys))
-            )
+            msg = ("The following required keys are missing from the power "
+                   "curve losses specification: {}"
+                   .format(sorted(missing_keys)))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_transformation(self):
         """Validate that the transformation exists in TRANSFORMATIONS. """
         if self._transformation_name not in TRANSFORMATIONS:
-            msg = (
-                "Transformation {!r} not understood! Input must be one of: {} "
-            ).format(self._transformation_name, list(TRANSFORMATIONS.keys()))
+            msg = ("Transformation {!r} not understood! "
+                   "Input must be one of: {} "
+                   .format(self._transformation_name,
+                           list(TRANSFORMATIONS.keys())))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_percentage(self):
         """Validate that the percentage is in the range [0, 100]. """
         if not 0 <= self.target <= 100:
-            msg = (
-                "Percentage of annual energy production loss to be attributed "
-                "to the powercurve transformation must be in the range "
-                "[0, 100], but got {} for transformation {!r}"
-            ).format(self.target, self._transformation_name)
+            msg = ("Percentage of annual energy production loss to be "
+                   "attributed to the powercurve transformation must be in "
+                   "the range [0, 100], but got {} for transformation {!r}"
+                   .format(self.target, self._transformation_name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def __repr__(self):
         specs = self._specs.copy()
         specs.update({'transformation': self._transformation_name})
-        specs_as_str = ", ".join(
-            ["{}={!r}".format(k, v) for k, v in specs.items()]
-        )
+        specs_as_str = ", ".join(["{}={!r}".format(k, v)
+                                  for k, v in specs.items()])
         return "PowerCurveLossesInput({})".format(specs_as_str)
 
     @property
@@ -533,9 +527,8 @@ class PowerCurveLossesMixin:
         specific_gas_constant_dry_air = 287.058  # units: J / kg / K
         sea_level_air_density = 1.225  # units: kg/m**3 at 15 degrees celsius
 
-        site_air_densities = pressures_pascal / (
-            specific_gas_constant_dry_air * temperatures_K
-        )
+        site_air_densities = pressures_pascal / (specific_gas_constant_dry_air
+                                                 * temperatures_K)
         weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
         return wind_speeds / weights
 
@@ -575,16 +568,15 @@ class AbstractPowerCurveTransformation(ABC):
 
     def _validate_shifted_power_curve(self, new_curve):
         """Ensure new power curve has some non-zero generation. """
-        mask = (
-            self.power_curve.wind_speed <= self.power_curve.cutoff_wind_speed
-        )
+        mask = (self.power_curve.wind_speed
+                <= self.power_curve.cutoff_wind_speed)
         min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
         if not (new_curve[mask] > min_expected_power_gen).any():
             msg = ("Calculated power curve is invalid. No power generation "
                    "below the cutoff wind speed ({} m/s) detected. Target "
                    "loss percentage  may be too large! Please try again with "
-                   "a lower target value.")
-            msg = msg.format(self.power_curve.cutoff_wind_speed)
+                   "a lower target value."
+                   .format(self.power_curve.cutoff_wind_speed))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -713,10 +705,8 @@ class HorizontalTranslation(AbstractPowerCurveTransformation):
         """tuple: Bounds on the power curve shift for the fitting procedure."""
         min_ind = np.where(self.power_curve)[0][0]
         max_ind = np.where(self.power_curve[::-1])[0][0]
-        max_shift = (
-            self.power_curve.wind_speed[-max_ind - 1]
-            - self.power_curve.wind_speed[min_ind]
-        )
+        max_shift = (self.power_curve.wind_speed[-max_ind - 1]
+                     - self.power_curve.wind_speed[min_ind])
         return (0, max_shift)
 
 
@@ -776,10 +766,8 @@ class LinearStretching(AbstractPowerCurveTransformation):
         min_ind_pc = np.where(self.power_curve)[0][0]
         min_ind_ws = np.where(self.power_curve.wind_speed > 1)[0][0]
         min_ws = self.power_curve.wind_speed[max(min_ind_pc, min_ind_ws)]
-        max_ws = min(
-            self.power_curve.wind_speed.max(),
-            self.power_curve.cutoff_wind_speed
-        )
+        max_ws = min(self.power_curve.wind_speed.max(),
+                     self.power_curve.cutoff_wind_speed)
         max_multiplier = np.ceil(max_ws / min_ws)
         return (1, max_multiplier)
 
@@ -840,10 +828,8 @@ class ExponentialStretching(AbstractPowerCurveTransformation):
         min_ind_pc = np.where(self.power_curve)[0][0]
         min_ind_ws = np.where(self.power_curve.wind_speed > 1)[0][0]
         min_ws = self.power_curve.wind_speed[max(min_ind_pc, min_ind_ws)]
-        max_ws = min(
-            self.power_curve.wind_speed.max(),
-            self.power_curve.cutoff_wind_speed
-        )
+        max_ws = min(self.power_curve.wind_speed.max(),
+                     self.power_curve.cutoff_wind_speed)
         max_exponent = np.ceil(np.log(max_ws) / np.log(min_ws))
         return (1, max_exponent)
 
