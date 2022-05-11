@@ -534,7 +534,7 @@ class PowerCurveLossesMixin:
 
 
 class AbstractPowerCurveTransformation(ABC):
-    """Abscrtact base class for power curve transformations.
+    """Abstract base class for power curve transformations.
 
     **This class is not meant to be instantiated**.
 
