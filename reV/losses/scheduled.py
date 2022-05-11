@@ -499,7 +499,7 @@ class ScheduledLossesMixin:
 
     OUTAGE_CONFIG_KEY = 'reV_outages'
     """Specify outage information in the config file using this key."""
-    OUTAGE_SEED_CONFIG_KEY = 'reV_outages-seed'
+    OUTAGE_SEED_CONFIG_KEY = 'reV_outages_seed'
     """Specify a randomizer seed in the config file using this key."""
 
     def add_scheduled_losses(self):
