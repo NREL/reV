@@ -313,6 +313,7 @@ class OutageScheduler:
             self.outages, key=lambda outage: (outage.duration, outage.count)
         )
         for outage in sorted_outages[::-1]:
+            self.seed += 1
             SingleOutageScheduler(outage, self).calculate()
         return self.total_losses
 
