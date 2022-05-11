@@ -37,35 +37,35 @@ NOMINAL_OUTAGES = [
         {
             'count': 5,
             'duration': 24,
-            'percentage_of_farm_down': 100,
+            'percentage_of_capacity_lost': 100,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
             'count': 5,
             'duration': 10,
-            'percentage_of_farm_down': 60,
+            'percentage_of_capacity_lost': 60,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
             'count': 5,
             'duration': 5,
-            'percentage_of_farm_down': 53,
+            'percentage_of_capacity_lost': 53,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
             'count': 100,
             'duration': 1,
-            'percentage_of_farm_down': 17,
+            'percentage_of_capacity_lost': 17,
             'allowed_months': ['January'],
             'allow_outage_overlap': False
         },
         {
             'count': 100,
             'duration': 2,
-            'percentage_of_farm_down': 7,
+            'percentage_of_capacity_lost': 7,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         }
@@ -74,14 +74,14 @@ NOMINAL_OUTAGES = [
         {
             'count': 1,
             'duration': 744,
-            'percentage_of_farm_down': 10,
+            'percentage_of_capacity_lost': 10,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         },
         {
             'count': 5,
             'duration': 10,
-            'percentage_of_farm_down': 17,
+            'percentage_of_capacity_lost': 17,
             'allowed_months': ['January'],
             'allow_outage_overlap': True
         }
@@ -90,7 +90,7 @@ NOMINAL_OUTAGES = [
 SINGLE_SITE_OUTAGE = [{
     'count': 100,
     'duration': 2,
-    'percentage_of_farm_down': 42,
+    'percentage_of_capacity_lost': 42,
     'allowed_months': ['February'],
 }]
 
@@ -101,7 +101,7 @@ def basic_outage_dict():
     outage_info = {
         'count': 5,
         'duration': 24,
-        'percentage_of_farm_down': 100,
+        'percentage_of_capacity_lost': 100,
         'allowed_months': ['Jan']
     }
     return outage_info
@@ -131,7 +131,8 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
     )
 
     outages = [Outage(outage) for outage in outages]
-    min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
+    min_loss = min(outage.percentage_of_capacity_lost / 100
+                   for outage in outages)
     assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
 
     losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
@@ -143,7 +144,7 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
         zero_gen_inds_all_sites |= zero_gen_inds
         site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
         for outage in outages:
-            outage_percentage = outage.percentage_of_farm_down
+            outage_percentage = outage.percentage_of_capacity_lost
             outage_allowed_hourly_inds = hourly_indices_for_months(
                 outage.allowed_months
             )
@@ -168,7 +169,7 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
                 )
             else:
                 num_outages_possible_per_day = np.floor(
-                    100 / outage.percentage_of_farm_down
+                    100 / outage.percentage_of_capacity_lost
                 )
                 min_num_expected_outage_hours = (
                     outage.count * outage.duration
@@ -194,7 +195,7 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
             assert num_outage_hours_meet_expectations
 
         total_expected_outage = sum(
-            outage.count * outage.duration * outage.percentage_of_farm_down
+            outage.count * outage.duration * outage.percentage_of_capacity_lost
             for outage in outages
         )
         assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
@@ -235,7 +236,8 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
     )
 
     outages = [Outage(outage) for outage in SINGLE_SITE_OUTAGE]
-    min_loss = min(outage.percentage_of_farm_down / 100 for outage in outages)
+    min_loss = min(outage.percentage_of_capacity_lost / 100
+                   for outage in outages)
     assert (gen_profiles - gen_profiles_with_losses >= min_loss).any()
 
     losses = (1 - (gen_profiles_with_losses / gen_profiles)) * 100
@@ -247,7 +249,7 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
         zero_gen_inds_all_sites |= zero_gen_inds
         site_loss_inds += [set(np.where(site_losses > 0 & non_zero_gen)[0])]
         for outage in outages:
-            outage_percentage = outage.percentage_of_farm_down
+            outage_percentage = outage.percentage_of_capacity_lost
             outage_allowed_hourly_inds = hourly_indices_for_months(
                 outage.allowed_months
             )
@@ -258,7 +260,7 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
                 set(outage_allowed_hourly_inds) - zero_gen_inds
             )
             num_outages_possible_per_day = np.floor(
-                100 / outage.percentage_of_farm_down
+                100 / outage.percentage_of_capacity_lost
             )
             min_num_expected_outage_hours = (
                 outage.count * outage.duration
@@ -284,7 +286,7 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
             assert num_outage_hours_meet_expectations
 
         total_expected_outage = sum(
-            outage.count * outage.duration * outage.percentage_of_farm_down
+            outage.count * outage.duration * outage.percentage_of_capacity_lost
             for outage in outages
         )
         assert 0 < site_losses[non_zero_gen].sum() <= total_expected_outage
@@ -527,10 +529,8 @@ def test_single_outage_scheduler_normal_run(
     assert scheduler.total_losses[:744].any()
     assert not scheduler.total_losses[744:].any()
 
-    outage_percentage = outage.percentage_of_farm_down
-    num_expected_outage_hours = (
-        outage.count * outage.duration
-    )
+    outage_percentage = outage.percentage_of_capacity_lost
+    num_expected_outage_hours = outage.count * outage.duration
 
     if not outage.allow_outage_overlap or outage_percentage == 100:
         num_outage_hours = (scheduler.total_losses == outage_percentage).sum()
@@ -539,9 +539,8 @@ def test_single_outage_scheduler_normal_run(
         num_outage_hours = (scheduler.total_losses >= outage_percentage).sum()
         assert num_outage_hours >= num_expected_outage_hours
 
-    total_expected_outage = (
-        outage.count * outage.duration * outage.percentage_of_farm_down
-    )
+    total_expected_outage = (outage.count * outage.duration
+                             * outage.percentage_of_capacity_lost)
 
     assert scheduler.total_losses.sum() == total_expected_outage
 
@@ -612,10 +611,8 @@ def test_outage_scheduler_normal_run(outages_info):
     assert not losses[744:].any()
 
     for outage in outages:
-        outage_percentage = outage.percentage_of_farm_down
-        num_expected_outage_hours = (
-            outage.count * outage.duration
-        )
+        outage_percentage = outage.percentage_of_capacity_lost
+        num_expected_outage_hours = outage.count * outage.duration
         if not outage.allow_outage_overlap or outage_percentage == 100:
             num_outage_hours = (losses == outage_percentage).sum()
             assert num_outage_hours == num_expected_outage_hours
@@ -623,10 +620,9 @@ def test_outage_scheduler_normal_run(outages_info):
             num_outage_hours = (losses >= outage_percentage).sum()
             assert num_outage_hours >= num_expected_outage_hours
 
-    total_expected_outage = sum(
-        outage.count * outage.duration * outage.percentage_of_farm_down
-        for outage in outages
-    )
+    total_expected_outage = sum(outage.count * outage.duration
+                                * outage.percentage_of_capacity_lost
+                                for outage in outages)
     assert losses.sum() == total_expected_outage
 
 
@@ -645,7 +641,7 @@ def test_outage_scheduler_cannot_schedule_any_more():
     outage_info = {
         'count': 5,
         'duration': 10,
-        'percentage_of_farm_down': 17,
+        'percentage_of_capacity_lost': 17,
         'allowed_months': ['January'],
         'allow_outage_overlap': False
     }
@@ -749,18 +745,18 @@ def test_outage_class_percentage(basic_outage_dict):
 
     err_msg = "Percentage of farm down during outage must be in the range"
 
-    basic_outage_dict['percentage_of_farm_down'] = 0
+    basic_outage_dict['percentage_of_capacity_lost'] = 0
     with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    basic_outage_dict['percentage_of_farm_down'] = 100.1
+    basic_outage_dict['percentage_of_capacity_lost'] = 100.1
     with pytest.raises(reVLossesValueError) as excinfo:
         Outage(basic_outage_dict)
     assert err_msg in str(excinfo.value)
 
-    basic_outage_dict['percentage_of_farm_down'] = 100.0
-    assert Outage(basic_outage_dict).percentage_of_farm_down == 100
+    basic_outage_dict['percentage_of_capacity_lost'] = 100.0
+    assert Outage(basic_outage_dict).percentage_of_capacity_lost == 100
 
 
 def test_outage_class_allow_outage_overlap(basic_outage_dict):
@@ -779,7 +775,7 @@ def test_outage_class_name(basic_outage_dict):
     """Test Outage class behavior for different name inputs."""
 
     expected_name = (
-        "Outage(count=5, duration=24, percentage_of_farm_down=100, "
+        "Outage(count=5, duration=24, percentage_of_capacity_lost=100, "
         "allowed_months=['January'], allow_outage_overlap=True)"
     )
     assert Outage(basic_outage_dict).name == expected_name

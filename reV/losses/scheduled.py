@@ -30,7 +30,7 @@ class Outage:
 
     REQUIRED_KEYS = {'count',
                      'duration',
-                     'percentage_of_farm_down',
+                     'percentage_of_capacity_lost',
                      'allowed_months'}
     """Required keys in the input specification dictionary."""
 
@@ -51,10 +51,10 @@ class Outage:
                     consecutive hours that this outage should take. This
                     value must be larger than 0 and less than the number
                     of hours in the allowed months.
-                - `percentage_of_farm_down`
+                - `percentage_of_capacity_lost`
                     An integer or float value representing the total
-                    percentage of the farm that will be take offline for
-                    the duration of the outage. This value must be
+                    percentage of the total capacity that will be lost
+                    for the duration of the outage. This value must be
                     in the range (0, 100].
                 - `allowed_months`
                     A list of month names corresponding to the allowed
@@ -150,16 +150,16 @@ class Outage:
                    "available hours based on allowed month input ({} for "
                    "a total hour count of {}), but got {} for {}"
                    .format(self.allowed_months, self.total_available_hours,
-                           self.percentage_of_farm_down, self.name))
+                           self.percentage_of_capacity_lost, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
     def _validate_percentage(self):
         """Validate that the percentage is in the range (0, 100]. """
-        if not 0 < self.percentage_of_farm_down <= 100:
+        if not 0 < self.percentage_of_capacity_lost <= 100:
             msg = ("Percentage of farm down during outage must be in the "
                    "range (0, 100], but got {} for {}"
-                   .format(self.percentage_of_farm_down, self.name))
+                   .format(self.percentage_of_capacity_lost, self.name))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -191,9 +191,9 @@ class Outage:
         return self._specs['duration']
 
     @property
-    def percentage_of_farm_down(self):
-        """int or float: Percent of farm taken down per outage."""
-        return self._specs['percentage_of_farm_down']
+    def percentage_of_capacity_lost(self):
+        """int | float: Percent of capacity taken down per outage."""
+        return self._specs['percentage_of_capacity_lost']
 
     @property
     def allowed_months(self):
@@ -437,9 +437,10 @@ class SingleOutageScheduler:
         """
         self.can_schedule_more &= self.scheduler.can_schedule_more
         if self.outage.allow_outage_overlap:
-            self.can_schedule_more &= (self.scheduler.total_losses
-                                       + self.outage.percentage_of_farm_down
-                                       ) <= 100
+            total_new_losses = (self.scheduler.total_losses
+                                + self.outage.percentage_of_capacity_lost)
+            losses_will_not_exceed_100 = total_new_losses <= 100
+            self.can_schedule_more &= losses_will_not_exceed_100
         else:
             self.can_schedule_more &= self.scheduler.total_losses == 0
 
@@ -482,7 +483,7 @@ class SingleOutageScheduler:
         """
         self._scheduled_outage_inds.append(outage_slice.start)
         self.scheduler.total_losses[outage_slice] += (
-            self.outage.percentage_of_farm_down)
+            self.outage.percentage_of_capacity_lost)
         if not self.outage.allow_outage_overlap:
             self.scheduler.can_schedule_more[outage_slice] = False
 

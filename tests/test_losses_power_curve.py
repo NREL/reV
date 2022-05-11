@@ -130,7 +130,7 @@ def _run_gen_with_and_without_losses(
                 {
                     'count': 5,
                     'duration': 24,
-                    'percentage_of_farm_down': 100,
+                    'percentage_of_capacity_lost': 100,
                     'allowed_months': ['January'],
                     'allow_outage_overlap': True
                 }

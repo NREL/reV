@@ -75,7 +75,7 @@ Outage Losses (Wind and Solar)
 We can also tell ``reV`` to stochastically schedule outages based on some
 outage information that we pass in. Specifically, we need to provide the
 outage ``duration``, the number of outages (``count``), the ``allowed_months``,
-as well as the ``percentage_of_farm_down`` for each outage.
+as well as the ``percentage_of_capacity_lost`` for each outage.
 
 .. code-block:: python
 
@@ -106,7 +106,7 @@ as well as the ``percentage_of_farm_down`` for each outage.
         {
             'count': 5,
             'duration': 24,
-            'percentage_of_farm_down': 100,
+            'percentage_of_capacity_lost': 100,
             'allowed_months': ['January'],
         }
     ]
