@@ -35,11 +35,12 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
+from reV.losses import ScheduledLossesMixin, PowerCurveLossesMixin
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractSamGeneration(RevPySam, ABC):
+class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     """Base class for SAM generation simulations."""
 
     def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
@@ -94,6 +95,8 @@ class AbstractSamGeneration(RevPySam, ABC):
         if resource is not None:
             self.check_resource_data(resource)
             self.set_resource_data(resource, meta)
+
+        self.add_scheduled_losses()
 
     @classmethod
     def _get_res(cls, res_df, output_request):
@@ -712,7 +715,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
     def gen_profile(self):
         """Get AC inverter power generation profile (local timezone) in kW.
-        This is an alias of the "ac" SAM output variable.
+        This is an alias of the "ac" SAM output variable if PySAM version>=3.
         See self.outputs attribute for collected output data in UTC.
 
         Returns
@@ -721,7 +724,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             1D array of AC inverter power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.ac()
+        return np.array(self['gen'], dtype=np.float32)
 
     def ac(self):
         """Get AC inverter power generation profile (local timezone) in kW.
@@ -1114,7 +1117,19 @@ class TroughPhysicalHeat(AbstractSamSolarThermal):
         return DefaultTroughPhysicalProcessHeat.default()
 
 
-class WindPower(AbstractSamGeneration):
+class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
+    """Base Class for Wind generation from SAM"""
+
+    def __init__(self, *args, **kwargs):
+        """
+        See docstring for :class:`AbstractSamGeneration` for full input
+        parameter descriptions.
+        """
+        super().__init__(*args, **kwargs)
+        self.add_power_curve_losses()
+
+
+class WindPower(AbstractSamWind):
     """Class for Wind generation from SAM
     """
     MODULE = 'windpower'
