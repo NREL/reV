@@ -45,7 +45,8 @@ class LayerMask:
         force_include_values : list
             Force the inclusion of the given values
         force_include_range : list
-            Force the inclusion of the range of given values
+            Force the inclusion of given values in the range
+            (min threshold, max threshold)
         use_as_weights : bool
             Use layer as final inclusion weights
         weight : float
@@ -121,7 +122,10 @@ class LayerMask:
         -------
         float
         """
-        return min(self._inclusion_range)
+        if all(isinstance(x, (int, float)) for x in self._inclusion_range):
+            return min(self._inclusion_range)
+        else:
+            return self._inclusion_range[0]
 
     @property
     def max_value(self):
@@ -132,7 +136,10 @@ class LayerMask:
         -------
         float
         """
-        return max(self._inclusion_range)
+        if all(isinstance(x, (int, float)) for x in self._inclusion_range):
+            return max(self._inclusion_range)
+        else:
+            return self._inclusion_range[1]
 
     @property
     def exclude_values(self):
