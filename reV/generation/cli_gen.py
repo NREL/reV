@@ -16,6 +16,7 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.pipeline.status import Status
+from reV.losses.scheduled import ScheduledLossesMixin
 from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from reV.utilities import ModuleName
@@ -139,6 +140,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
     res_files = config.parse_res_files()
     # set the year-specific variables
     ctx.obj['RES_FILE'] = res_files[i]
+    ctx.obj['OUTAGE_SEED'] = year
 
     # check to make sure that the year matches the resource file
     if str(year) not in res_files[i]:
@@ -288,13 +290,16 @@ def make_fout(name, year):
               'generation gids to non-unique gids in the resource file. '
               'Should be a filepath to a csv with columns gid and gid_map. '
               'Can be the same csv as project_points input.')
+@click.option('--outage_seed', '-os', default=None, type=INT,
+              show_default=True,
+              help=('Integer used to seed randomizer for outage losses.'))
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
            logdir, output_request, site_data, mem_util_lim,
-           curtailment, gid_map, verbose):
+           curtailment, gid_map, outage_seed, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -308,6 +313,7 @@ def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
     ctx.obj['GID_MAP'] = gid_map
+    ctx.obj['OUTAGE_SEED'] = outage_seed
 
     ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
     ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
@@ -411,6 +417,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     curtailment = ctx.obj['CURTAILMENT']
     gid_map = ctx.obj['GID_MAP']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+    outage_seed = ctx.obj.get('OUTAGE_SEED', None)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV', 'rex'],
@@ -426,6 +433,15 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     t0 = time.time()
 
     points = _parse_points(ctx)
+    if outage_seed is not None:
+        outage_seed = int(outage_seed)
+        points = Gen.get_pc(points, points_range, sam_files, tech,
+                            sites_per_worker=sites_per_worker,
+                            res_file=res_file,
+                            curtailment=curtailment)
+        seed_key = ScheduledLossesMixin.OUTAGE_SEED_CONFIG_KEY
+        for sam_config in points.project_points.sam_inputs.values():
+            sam_config[seed_key] = sam_config.get(seed_key, 0) + outage_seed
 
     # Execute the Generation module with smart data flushing.
     Gen.reV_run(tech,
@@ -550,7 +566,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
-                 curtailment=None, gid_map=None, verbose=False):
+                 curtailment=None, gid_map=None, outage_seed=None,
+                 verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -597,6 +614,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
     gid_map : NoneType | str
         Pointer to a gid_map csv file (can be the same as project_points) with
         gid and gid_map columns or None.
+    outage_seed : NoneType | int
+        Integer value to use as a seed for the randomizer when scheduling
+        outages, or None if no seed.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -630,6 +650,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 
     if gid_map:
         arg_direct.append('-gm {}'.format(SLURM.s(gid_map)))
+
+    if outage_seed:
+        arg_direct.append('-os {}'.format(SLURM.s(outage_seed)))
 
     # make a cli arg string for local() in this module
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
@@ -701,6 +724,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
     gid_map = ctx.obj['GID_MAP']
+    outage_seed = ctx.obj['OUTAGE_SEED']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
@@ -727,6 +751,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                            timeout=timeout,
                            curtailment=curtailment,
                            gid_map=gid_map,
+                           outage_seed=outage_seed,
                            verbose=verbose)
 
         if sh_script:
