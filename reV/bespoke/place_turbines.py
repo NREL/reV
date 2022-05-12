@@ -227,9 +227,8 @@ class PlaceTurbines():
         aep_after_wake_losses = agep - energy_lost_due_to_wake
         other_losses_multiplier = 1 - aep / aep_after_wake_losses
 
-        scaled_wake_losses = (
-            self.wake_loss_multiplier * energy_lost_due_to_wake
-        )
+        scaled_wake_losses = (self.wake_loss_multiplier
+                              * energy_lost_due_to_wake)
         aep_after_scaled_wake_losses = max(0, agep - scaled_wake_losses)
         return aep_after_scaled_wake_losses * (1 - other_losses_multiplier)
 
