@@ -302,8 +302,13 @@ class OutageScheduler:
             outages.
         """
         sorted_outages = sorted(self.outages,
-                                key=lambda outage: (outage.duration,
-                                                    outage.count))
+                                key=lambda o: (o.duration,
+                                               o.count,
+                                               o.percentage_of_capacity_lost,
+                                               sum(sum(map(ord, name))
+                                                   for name
+                                                   in o.allowed_months),
+                                               o.allow_outage_overlap))
         for outage in sorted_outages[::-1]:
             self.seed += 1
             SingleOutageScheduler(outage, self).calculate()
