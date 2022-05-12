@@ -576,3 +576,79 @@ def test_bespoke_supply_curve():
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
     sc_baseline = pd.read_csv(fpath_baseline)
     assert np.allclose(sc_baseline['total_lcoe'], sc_full['total_lcoe'])
+
+
+@pytest.mark.parametrize('wlm', [2, 100])
+def test_wake_loss_multiplier(wlm):
+    """Test wake loss multiplier. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        optimizer = bsp.plant_optimizer
+        optimizer.define_exclusions()
+        optimizer.initialize_packing()
+
+        optimizer.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
+        optimizer.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
+
+        system_capacity = (len(optimizer.x_locations)
+                           * optimizer.turbine_capacity)
+        optimizer.wind_plant["system_capacity"] = system_capacity
+
+        optimizer.wind_plant.assign_inputs()
+        optimizer.wind_plant.execute()
+        aep = optimizer._aep_after_scaled_wake_losses()
+        bsp.close()
+
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 wake_loss_multiplier=wlm)
+
+        optimizer2 = bsp.plant_optimizer
+        optimizer2.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
+        optimizer2.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
+
+        system_capacity = (len(optimizer.x_locations)
+                           * optimizer.turbine_capacity)
+        optimizer2.wind_plant["system_capacity"] = system_capacity
+
+        optimizer2.wind_plant.assign_inputs()
+        optimizer2.wind_plant.execute()
+        aep_wlm = optimizer2._aep_after_scaled_wake_losses()
+        bsp.close()
+
+    assert aep > aep_wlm
+    assert aep_wlm >= 0
