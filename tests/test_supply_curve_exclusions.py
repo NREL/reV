@@ -5,6 +5,7 @@ Exclusions unit test module
 import numpy as np
 import os
 import pytest
+import warnings
 
 from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
@@ -309,6 +310,27 @@ def test_inclusion_weights():
     assert np.all(test > 0)
 
 
+def test_exclusion_range():
+    """
+    Test a range-based exclusion value
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+
+    excl_dict = {'ri_padus': {'include_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': False}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        assert (f.mask).any()
+        assert not (f.mask).all()
+        assert (f.mask == 0.25).any()
+
+    excl_dict = {'ri_padus': {'include_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': False},
+                 'ri_srtm_slope': {'exclude_range': [-1e6, 1e6],
+                                   'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        assert not (f.mask).any()
+
+
 def test_force_include_values():
     """
     Test force inclusion
@@ -354,6 +376,37 @@ def test_force_include_range():
                                    'exclude_nodata': True}}
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
         assert (f.mask == 0.5).all()
+
+
+def test_legacy_kwargs():
+    """We changed all inclusion_* kwargs to include_* kwargs with warning,
+    test that the legacy kwargs still work but throw a warning
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+
+    excl_dict = {'ri_padus': {'inclusion_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': False}}
+    with pytest.warns() as record:
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+            assert (f.mask).any()
+        assert len(record) == 1
+        assert 'use "include_values"' in record[0].message.args[0]
+
+    excl_dict = {'ri_padus': {'inclusion_range': (1, None), 'weight': 0.25,
+                              'exclude_nodata': False}}
+    with pytest.warns() as record:
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+            assert (f.mask).any()
+        assert len(record) == 1
+        assert 'use "include_range"' in record[0].message.args[0]
+
+    # no warnings with current "include_range" kwarg
+    excl_dict = {'ri_padus': {'include_range': (1, None), 'weight': 0.25,
+                              'exclude_nodata': False}}
+    with warnings.catch_warnings():
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+            assert (f.mask).any()
+        warnings.simplefilter("error")
 
 
 def execute_pytest(capture='all', flags='-rapP'):

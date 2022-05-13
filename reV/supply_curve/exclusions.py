@@ -19,28 +19,35 @@ class LayerMask:
     """
     Class to convert exclusion layer to inclusion layer mask
     """
-    def __init__(self, layer, inclusion_range=(None, None),
+
+    def __init__(self, layer,
                  exclude_values=None,
+                 exclude_range=(None, None),
                  include_values=None,
-                 inclusion_weights=None,
+                 include_range=(None, None),
+                 include_weights=None,
                  force_include_values=None,
                  force_include_range=None,
-                 use_as_weights=False, weight=1.0,
-                 exclude_nodata=False, nodata_value=None):
+                 use_as_weights=False,
+                 weight=1.0,
+                 exclude_nodata=False,
+                 nodata_value=None,
+                 **kwargs):
         """
         Parameters
         ----------
         layer : str
             Layer name
-        inclusion_range : tuple
-            (min threshold, max threshold) for values to include
         exclude_values : list
             list of values to exclude
-            Note: Only supply exclusions OR inclusions
+            Note: User should only input exclusions OR inclusions
+        exclude_range : tuple
+            (min threshold, max threshold) for values to exclude
         include_values : list
             List of values to include
-            Note: Only supply inclusions OR exclusions
-        inclusions_weights : dict
+        include_range : tuple
+            (min threshold, max threshold) for values to include
+        include_weights : dict
             Include given values with given weights
         force_include_values : list
             Force the inclusion of the given values
@@ -57,19 +64,26 @@ class LayerMask:
         nodata_value : int | float | None
             Nodata value for the layer. If None, it will be infered when
             LayerMask is added to ExclusionMask
+        kwargs : dict
+            Optional inputs to maintain legacy kwargs of inclusion_* instead of
+            include_*
         """
+
         self._name = layer
-        self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
+        self._exclude_range = exclude_range
         self._include_values = include_values
-        self._inclusion_weights = inclusion_weights
+        self._include_range = include_range
+        self._include_weights = include_weights
         self._force_include = False
+
+        self._parse_legacy_kwargs(kwargs)
 
         if force_include_values is not None:
             self._include_values = force_include_values
             self._force_include = True
         if force_include_range is not None:
-            self._inclusion_range = force_include_range
+            self._include_range = force_include_range
             self._force_include = True
 
         self._as_weights = use_as_weights
@@ -102,6 +116,36 @@ class LayerMask:
         """
         return self._apply_mask(data)
 
+    def _parse_legacy_kwargs(self, kwargs):
+        """Parse legacy kwargs that start with inclusion_* instead of include_*
+
+        Parameters
+        ----------
+        kwargs : dict
+            Optional inputs to maintain legacy kwargs of inclusion_* instead of
+            include_*
+        """
+
+        for k, v in kwargs.items():
+            msg = None
+            if k == 'inclusion_range':
+                self._include_range = v
+                msg = 'Please use "include_range" instead of "inclusion_range"'
+
+            elif k == 'inclusion_weights':
+                self._include_weights = v
+                msg = ('Please use "include_weights" instead of '
+                       '"inclusion_weights"')
+
+            elif k == 'inclusion_values':
+                self._include_values = v
+                msg = ('Please use "include_values" instead of '
+                       '"inclusion_values"')
+
+            if msg is not None:
+                warn(msg)
+                logger.warning(msg)
+
     @property
     def name(self):
         """
@@ -115,31 +159,41 @@ class LayerMask:
 
     @property
     def min_value(self):
-        """
-        Minimum value to include
+        """Minimum value to include/exclude if include_range or exclude_range
+        was input.
 
         Returns
         -------
         float
         """
-        if all(isinstance(x, (int, float)) for x in self._inclusion_range):
-            return min(self._inclusion_range)
+        if 'excl' in self.mask_type:
+            range_var = self._exclude_range
         else:
-            return self._inclusion_range[0]
+            range_var = self._include_range
+
+        if all(isinstance(x, (int, float)) for x in range_var):
+            return min(range_var)
+        else:
+            return range_var[0]
 
     @property
     def max_value(self):
-        """
-        Maximum value to include
+        """Maximum value to include/exclude if include_range or exclude_range
+        was input.
 
         Returns
         -------
         float
         """
-        if all(isinstance(x, (int, float)) for x in self._inclusion_range):
-            return max(self._inclusion_range)
+        if 'excl' in self.mask_type:
+            range_var = self._exclude_range
         else:
-            return self._inclusion_range[1]
+            range_var = self._include_range
+
+        if all(isinstance(x, (int, float)) for x in range_var):
+            return max(range_var)
+        else:
+            return range_var[1]
 
     @property
     def exclude_values(self):
@@ -164,15 +218,15 @@ class LayerMask:
         return self._include_values
 
     @property
-    def inclusion_weights(self):
+    def include_weights(self):
         """
         Mapping of values to include and at what weights
 
         Returns
         -------
-        _inclusion_weights : dict
+        dict
         """
-        return self._inclusion_weights
+        return self._include_weights
 
     @property
     def force_include(self):
@@ -213,17 +267,20 @@ class LayerMask:
         """
 
         if not self._as_weights:
-            if self.mask_type == 'range':
-                func = self._range_mask
+            if self.mask_type == 'include_range':
+                func = self._include_range_mask
+            elif self.mask_type == 'exclude_range':
+                func = self._exclude_range_mask
             elif self.mask_type == 'exclude':
                 func = self._exclusion_mask
             elif self.mask_type == 'include':
                 func = self._inclusion_mask
-            elif self.mask_type == 'inclusion_weights':
+            elif self.mask_type == 'include_weights':
                 func = self._weights_mask
             else:
                 msg = ('{} is an invalid mask type: expecting '
-                       '"range", "exclude", "include", or "inclusion_weights"'
+                       '"include_range", "exclude_range", "exclude", '
+                       '"include", or "include_weights"'
                        .format(self.mask_type))
                 logger.error(msg)
                 raise KeyError(msg)
@@ -246,11 +303,13 @@ class LayerMask:
         """
         mask = None
         if not self._as_weights:
-            masks = {'range': any(i is not None
-                                  for i in self._inclusion_range),
+            masks = {'include_range': any(i is not None
+                                          for i in self._include_range),
+                     'exclude_range': any(i is not None
+                                          for i in self._exclude_range),
                      'exclude': self._exclude_values is not None,
                      'include': self._include_values is not None,
-                     'inclusion_weights': self._inclusion_weights is not None}
+                     'include_weights': self._include_weights is not None}
             for k, v in masks.items():
                 if v:
                     if mask is None:
@@ -262,9 +321,9 @@ class LayerMask:
                         logger.error(msg)
                         raise ExclusionLayerError(msg)
 
-        if mask == 'inclusion_weights' and self._weight < 1:
+        if mask == 'include_weights' and self._weight < 1:
             msg = ("Values are individually weighted when using "
-                   "'inclusion_weights', the supplied weight of {} will be "
+                   "'include_weights', the supplied weight of {} will be "
                    "ignored!".format(self._weight))
             self._weight = 1
             logger.warning(msg)
@@ -272,9 +331,35 @@ class LayerMask:
 
         return mask
 
-    def _range_mask(self, data):
+    def _exclude_range_mask(self, data):
         """
-        Mask exclusion layer based on value range
+        Mask exclusion layer based on exclude value range
+
+        Parameters
+        ----------
+        data : ndarray
+            Exclusions data to create mask from
+
+        Returns
+        -------
+        mask : ndarray
+            Boolean mask of which values to include (True is include).
+        """
+        mask = True
+        if self.min_value is not None:
+            mask = data <= self.min_value
+
+        if self.max_value is not None:
+            mask *= data >= self.max_value
+
+        if self._exclude_nodata and self.nodata_value is not None:
+            mask = mask & (data != self.nodata_value)
+
+        return mask
+
+    def _include_range_mask(self, data):
+        """
+        Mask exclusion layer based on include value range
 
         Parameters
         ----------
@@ -380,7 +465,7 @@ class LayerMask:
             Percentage of value to include
         """
         mask = None
-        for value, weight in self.inclusion_weights.items():
+        for value, weight in self.include_weights.items():
             if isinstance(value, str):
                 value = float(value)
 
@@ -930,6 +1015,7 @@ class ExclusionMaskFromDict(ExclusionMask):
     """
     Class to initialize ExclusionMask from a dictionary defining layers
     """
+
     def __init__(self, excl_h5, layers_dict=None, min_area=None,
                  kernel='queen', hsds=False, check_layers=False):
         """
@@ -1013,7 +1099,6 @@ class ExclusionMaskFromDict(ExclusionMask):
 
         return inclusion_mask
 
-    # pylint: disable=W0237
     @classmethod
     def run(cls, excl_h5, layers_dict=None, min_area=None,
             kernel='queen', hsds=False):

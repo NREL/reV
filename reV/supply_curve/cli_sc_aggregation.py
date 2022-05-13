@@ -192,10 +192,10 @@ def from_config(ctx, config_file, verbose):
               help='String representation of a dictionary of exclusion '
               'LayerMask arguments {layer: {kwarg: value}} where layer '
               'is a dataset in excl_fpath and kwarg can be '
-              '"inclusion_range", "exclude_values", "include_values", '
-              '"inclusion_weights", "force_include_values", '
-              '"force_include_range", "use_as_weights", '
-              '"exclude_nodata", and/or "weight".')
+              '"exclude_values", "exclude_range", "include_values", '
+              '"include_range", "include_weights", "force_include_values", '
+              '"force_include_range", "use_as_weights", "weight", '
+              '"exclude_nodata", and/or "nodata_value".')
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
               show_default=True,
               help='Dataset to determine the resource class '
