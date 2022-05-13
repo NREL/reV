@@ -120,6 +120,7 @@ def from_config(ctx, config_file, verbose):
 
 def submit_from_config(ctx, name, year, config, i, verbose=False):
     """Function to submit one year from a config file.
+
     Parameters
     ----------
     ctx : cli.ctx
@@ -192,12 +193,14 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 
 def make_fout(name, year):
     """Make an appropriate file output from name and year.
+
     Parameters
     ----------
     name : str
         Job name.
     year : int | str
         Analysis year.
+
     Returns
     -------
     fout : str
@@ -318,10 +321,12 @@ def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
 def _parse_points(ctx):
     """
     Parse project points from CLI inputs
+
     Parameters
     ----------
     ctx : dict
         CLI context object
+
     Returns
     -------
     points : slice | list | string | ProjectPoints
@@ -454,6 +459,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
     """Get a PointsControl object to be send to HPC nodes.
+
     Parameters
     ----------
     points : slice | str | list | tuple
@@ -471,6 +477,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
         points slice stop is None.
     nodes : int
         Number of nodes that the PointsControl object is being split to.
+
     Returns
     -------
     pc : reV.config.project_points.PointsControl
@@ -490,6 +497,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
 
 def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     """Make a node name and fout unique to the run name, year, and node number.
+
     Parameters
     ----------
     name : str
@@ -503,6 +511,7 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
         A PointsControl instance that i is enumerated from.
     hpc : str
         HPC job submission tool name (e.g. slurm or pbs). Affects job name.
+
     Returns
     -------
     node_name : str
@@ -543,6 +552,7 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  site_data=None, mem_util_lim=0.4, timeout=1800,
                  curtailment=None, gid_map=None, verbose=False):
     """Make a reV geneneration direct-local CLI call string.
+
     Parameters
     ----------
     name : str
@@ -589,6 +599,7 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
         gid and gid_map columns or None.
     verbose : bool
         Flag to turn on debug logging. Default is False.
+
     Returns
     -------
     cmd : str
