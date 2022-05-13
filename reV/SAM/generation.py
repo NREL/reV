@@ -1220,6 +1220,7 @@ class WindPower(AbstractSamWind):
         return DefaultWindPower.default()
 
 
+# pylint: disable=too-many-ancestors
 class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
