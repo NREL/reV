@@ -345,7 +345,7 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include (True is include).
         """
-        mask = True
+        mask = np.full(data.shape, True)
         if self.min_value is not None:
             mask = data <= self.min_value
 
@@ -371,7 +371,7 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include (True is include).
         """
-        mask = True
+        mask = np.full(data.shape, True)
         if self.min_value is not None:
             mask = data >= self.min_value
 
