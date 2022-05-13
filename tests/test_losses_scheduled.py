@@ -512,7 +512,8 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
-    mixin.add_scheduled_losses()
+    sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
+    mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
@@ -523,7 +524,8 @@ def test_scheduled_losses_mixin_class_no_losses_input():
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {}
-    mixin.add_scheduled_losses()
+    sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
+    mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' not in mixin.sam_sys_inputs
