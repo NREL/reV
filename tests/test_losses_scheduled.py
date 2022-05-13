@@ -8,7 +8,6 @@ Created on Mon Apr 18 12:52:16 2021
 """
 
 import os
-from re import L
 import pytest
 import tempfile
 import json
@@ -23,7 +22,6 @@ from click.testing import CliRunner
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
-from reV.config.sam_analysis_configs import GenConfig
 from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import hourly_indices_for_months
 from reV.losses.scheduled import (Outage, OutageScheduler,
@@ -850,6 +848,7 @@ def test_gen_from_config(runner, files):
             with Outputs(file, 'r') as out:
                 scheduled_outages.append(out['hourly'])
 
+        # pylint: disable=unbalanced-tuple-unpacking
         outages_2012, outages_2013 = scheduled_outages
         for o1, o2 in zip(outages_2012.T, outages_2013.T):
             assert len(o1) == 8760
