@@ -508,7 +508,7 @@ class ScheduledLossesMixin:
     OUTAGE_SEED_CONFIG_KEY = 'reV_outages_seed'
     """Specify a randomizer seed in the config file using this key."""
 
-    def add_scheduled_losses(self):
+    def add_scheduled_losses(self, resource):
         """Add stochastically scheduled losses to SAM config file.
 
         This function reads the information in the ``reV_outages`` key
@@ -524,6 +524,13 @@ class ScheduledLossesMixin:
         capacity factors should be adjusted with outage losses. If no
         outage info is specified in ``sam_sys_inputs``, no scheduled
         losses are added.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries resource data for a single location with a pandas
+            DatetimeIndex. The ``year`` value of the index will be used
+            to seed the stochastically scheduled losses.
 
         See Also
         --------
@@ -544,7 +551,7 @@ class ScheduledLossesMixin:
         operational during the scheduled outage (i.e. 20% remaining of
         the original generation).
         """
-        outages = self._user_outage_input()
+        outages = self._user_outage_input(resource)
         if not outages:
             return
 
@@ -559,7 +566,7 @@ class ScheduledLossesMixin:
         logger.debug("Hourly adjustment factors after scheduled outages: {}"
                      .format(list(self.sam_sys_inputs['hourly'])))
 
-    def _user_outage_input(self):
+    def _user_outage_input(self, resource):
         """Get outage and seed info from config. """
         outage_specs = self.sam_sys_inputs.pop(self.OUTAGE_CONFIG_KEY, None)
         if outage_specs is None:
@@ -570,6 +577,7 @@ class ScheduledLossesMixin:
             outage_specs = json.loads(outage_specs)
 
         outages = [Outage(spec) for spec in outage_specs]
+        self.__year_seed = resource.index.year
         self.__user_input_seed = self.sam_sys_inputs.pop(
             self.OUTAGE_SEED_CONFIG_KEY, 0)
         return outages
@@ -588,14 +596,15 @@ class ScheduledLossesMixin:
     @property
     def outage_seed(self):
         """int: A value to use as the seed for the outage losses. """
+        base_seed = self.__year_seed + self.__user_input_seed
         try:
-            return int(self.meta.name) + self.__user_input_seed
+            return int(self.meta.name) + base_seed
         except (AttributeError, TypeError, ValueError):
             pass
 
         try:
-            return hash(tuple(self.meta)) + self.__user_input_seed
+            return hash(tuple(self.meta)) + base_seed
         except (AttributeError, TypeError):
             pass
 
-        return 0 + self.__user_input_seed
+        return 0 + base_seed
