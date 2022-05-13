@@ -790,8 +790,8 @@ def test_outage_class_allow_outage_overlap(basic_outage_dict):
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv5'),
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv7')
 ])
-def test_gen_from_config(runner, files):
-    """Gen PV CF profiles with write to disk and compare against rev1."""
+def test_scheduled_outages_multi_year(runner, files):
+    """Test that scheduled outages are different year to year. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
