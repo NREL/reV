@@ -13,9 +13,12 @@ import tempfile
 import json
 import random
 import copy
+import glob
+import traceback
 
 import numpy as np
 import pandas as pd
+from click.testing import CliRunner
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
@@ -23,6 +26,11 @@ from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import hourly_indices_for_months
 from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
+from reV.cli import main
+from reV.handlers.outputs import Outputs
+
+from rex.utilities.utilities import safe_json_load
+from rex.utilities.loggers import LOGGERS
 
 
 REV_POINTS = list(range(3))
@@ -113,6 +121,12 @@ def so_scheduler(basic_outage_dict):
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
+
+
+@pytest.fixture(scope="module")
+def runner():
+    """Cli runner."""
+    return CliRunner()
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
@@ -498,7 +512,8 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
-    mixin.add_scheduled_losses()
+    sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
+    mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
@@ -509,7 +524,8 @@ def test_scheduled_losses_mixin_class_no_losses_input():
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {}
-    mixin.add_scheduled_losses()
+    sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
+    mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' not in mixin.sam_sys_inputs
@@ -769,6 +785,77 @@ def test_outage_class_allow_outage_overlap(basic_outage_dict):
     assert Outage(basic_outage_dict).allow_outage_overlap
     basic_outage_dict['allow_outage_overlap'] = False
     assert not Outage(basic_outage_dict).allow_outage_overlap
+
+
+@pytest.mark.parametrize('files', [
+    (WIND_SAM_FILE, TESTDATADIR + '/wtk/ri_100_wtk_{}.h5', 'windpower'),
+    (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv5'),
+    (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv7')
+])
+def test_scheduled_outages_multi_year(runner, files):
+    """Test that scheduled outages are different year to year. """
+    sam_file, res_file, tech = files
+    with open(sam_file, 'r') as fh:
+        sam_config = json.load(fh)
+
+    outages = NOMINAL_OUTAGES[0]
+    sam_config['hourly'] = [0] * 8760
+    sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
+    sam_config.pop('wind_farm_losses_percent', None)
+
+    with tempfile.TemporaryDirectory() as td:
+        sam_fp = os.path.join(td, 'gen.json')
+        if 'pv' in tech:
+            config_file_path = 'local_pv.json'
+            project_points = os.path.join(TESTDATADIR, 'config',
+                                          "project_points_10.csv")
+
+            sam_config['losses'] = 0
+            with open(sam_fp, 'w+') as fh:
+                fh.write(json.dumps(sam_config))
+            sam_files = {"sam_gen_pv_1": sam_fp}
+        else:
+            config_file_path = 'local_wind.json'
+            project_points = os.path.join(TESTDATADIR, 'config',
+                                          "wtk_pp_2012_10.csv")
+            sam_config['turb_generic_loss'] = 0
+
+            with open(sam_fp, 'w+') as fh:
+                fh.write(json.dumps(sam_config))
+            sam_files = {"wind0": sam_fp}
+
+        config_file_path = 'config/{}'.format(config_file_path)
+        config = os.path.join(TESTDATADIR, config_file_path).replace('\\', '/')
+        config = safe_json_load(config)
+        config['project_points'] = project_points
+        config['resource_file'] = res_file
+        config['sam_files'] = sam_files
+        config['log_directory'] = td
+        config['output_request'] = config['output_request'] + ['hourly']
+        config['analysis_years'] = ['2012', '2013']
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['-c', config_path, 'generation'])
+        LOGGERS.clear()
+
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        scheduled_outages = []
+        for file in glob.glob(os.path.join(td, '*.h5')):
+            with Outputs(file, 'r') as out:
+                scheduled_outages.append(out['hourly'])
+
+        # pylint: disable=unbalanced-tuple-unpacking
+        outages_2012, outages_2013 = scheduled_outages
+        for o1, o2 in zip(outages_2012.T, outages_2013.T):
+            assert len(o1) == 8760
+            assert len(o2) == 8760
+            assert not np.allclose(o1, o2)
 
 
 def test_outage_class_name(basic_outage_dict):

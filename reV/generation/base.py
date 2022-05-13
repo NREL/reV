@@ -832,13 +832,16 @@ class BaseGen(ABC):
                 data_shape = (n_sites, )
 
         elif dset in self.project_points.all_sam_input_keys:
-            data_shape = (n_sites, )
             data = list(self.project_points.sam_inputs.values())[0][dset]
-            if isinstance(data, (list, tuple, np.ndarray, str)):
+            if isinstance(data, (list, tuple, np.ndarray)):
+                data_shape = (*np.array(data).shape, n_sites)
+            elif isinstance(data, str):
                 msg = ('Cannot pass through non-scalar SAM input key "{}" '
                        'as an output_request!'.format(dset))
                 logger.error(msg)
                 raise ExecutionError(msg)
+            else:
+                data_shape = (n_sites, )
 
         else:
             if self._sam_obj_default is None:

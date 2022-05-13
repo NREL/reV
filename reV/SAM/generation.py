@@ -96,7 +96,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             self.check_resource_data(resource)
             self.set_resource_data(resource, meta)
 
-        self.add_scheduled_losses()
+        self.add_scheduled_losses(resource)
 
     @classmethod
     def _get_res(cls, res_df, output_request):
@@ -1220,6 +1220,7 @@ class WindPower(AbstractSamWind):
         return DefaultWindPower.default()
 
 
+# pylint: disable=too-many-ancestors
 class WindPowerPD(WindPower):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
