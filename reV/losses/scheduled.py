@@ -577,7 +577,7 @@ class ScheduledLossesMixin:
             outage_specs = json.loads(outage_specs)
 
         outages = [Outage(spec) for spec in outage_specs]
-        self.__year_seed = resource.index.year
+        self.__year_seed = int(resource.index.year.values[0])
         self.__user_input_seed = self.sam_sys_inputs.pop(
             self.OUTAGE_SEED_CONFIG_KEY, 0)
         return outages
