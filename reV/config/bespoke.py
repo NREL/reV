@@ -160,6 +160,12 @@ class BespokeConfig(AnalysisConfig):
         return str(self.get('min_spacing', '5x'))
 
     @property
+    def wake_loss_multiplier(self):
+        """Wake loss multiplier. Default is 1. Only applied during
+        optimization."""
+        return self.get('wake_loss_multiplier', 1)
+
+    @property
     def ga_kwargs(self):
         """Get the ga_kwargs dictionary. Default is None (default init)."""
         return self.get('ga_kwargs', None)

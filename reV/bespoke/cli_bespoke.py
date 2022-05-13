@@ -94,6 +94,8 @@ def from_config(ctx, config_file, points_range, verbose):
                 .format(config.fixed_operating_cost_function))
     logger.info('Bespoke variable operating cost function: "{}"'
                 .format(config.variable_operating_cost_function))
+    logger.info('Bespoke wake loss multiplier: "{}"'
+                .format(config.wake_loss_multiplier))
     logger.info('The following project points were specified with '
                 'points_range "{}": "{}"'
                 .format(config.points_range, config.project_points))
@@ -118,6 +120,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['POINTS_RANGE'] = config.points_range
     ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['MIN_SPACING'] = config.min_spacing
+    ctx.obj['WAKE_LOSS_MULTIPLIER'] = config.wake_loss_multiplier
     ctx.obj['GA_KWARGS'] = config.ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['WS_BINS'] = config.ws_bins
@@ -197,6 +200,7 @@ def from_config(ctx, config_file, points_range, verbose):
                        'sam_files': config.sam_files,
                        'points_range': config.points_range,
                        'min_spacing': config.min_spacing,
+                       'wake_loss_multiplier': config.wake_loss_multiplier,
                        'ga_kwargs': config.ga_kwargs,
                        'output_request': config.output_request,
                        'ws_bins': config.ws_bins,
@@ -295,6 +299,14 @@ def valid_config_keys():
               help='Minimum spacing between turbines in meters. Can also be '
               'a string like "5x" (default) which is interpreted as 5 times '
               'the turbine rotor diameter.')
+@click.option('--wake_loss_multiplier', '-wlm', type=FLOAT, default=1,
+              show_default=True,
+              help='A multiplier used to scale the annual energy lost due to '
+              'wake losses. **IMPORTANT**: This multiplier will ONLY be '
+              'applied during the optimization process and will NOT be '
+              'come through in output values such as hourly generation '
+              'profiles, aep, any of the cost functions, or even the output '
+              'objective.')
 @click.option('--ga_kwargs', '-gakw', type=STR, default=None,
               show_default=True,
               help='Dictionary of keyword arguments to pass to GA '
@@ -364,9 +376,10 @@ def valid_config_keys():
 def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            capital_cost_function, fixed_operating_cost_function,
            variable_operating_cost_function, points, sam_files, points_range,
-           min_spacing, ga_kwargs, output_request, ws_bins, wd_bins, excl_dict,
-           area_filter_kernel, min_area, resolution, excl_area,
-           log_dir, max_workers, data_layers, pre_extract_inclusions, verbose):
+           min_spacing, wake_loss_multiplier, ga_kwargs, output_request,
+           ws_bins, wd_bins, excl_dict, area_filter_kernel, min_area,
+           resolution, excl_area, log_dir, max_workers, data_layers,
+           pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['RES_FPATH'] = res_fpath
@@ -381,6 +394,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['POINTS_RANGE'] = points_range
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['MIN_SPACING'] = min_spacing
+    ctx.obj['WAKE_LOSS_MULTIPLIER'] = wake_loss_multiplier
     ctx.obj['GA_KWARGS'] = ga_kwargs
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['WS_BINS'] = ws_bins
@@ -431,6 +445,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 points, sam_files,
                 points_range=points_range,
                 min_spacing=min_spacing,
+                wake_loss_multiplier=wake_loss_multiplier,
                 ga_kwargs=ga_kwargs,
                 output_request=output_request,
                 ws_bins=ws_bins,
@@ -489,6 +504,7 @@ def get_node_cmd(name, kwargs):
         '-sf {}'.format(SLURM.s(kwargs['SAM_FILES'])),
         '-pr {}'.format(SLURM.s(kwargs['POINTS_RANGE'])),
         '-ms {}'.format(SLURM.s(kwargs['MIN_SPACING'])),
+        '-wlm {}'.format(SLURM.s(kwargs['WAKE_LOSS_MULTIPLIER'])),
         '-gakw {}'.format(SLURM.s(kwargs['GA_KWARGS'])),
         '-or {}'.format(SLURM.s(kwargs['OUTPUT_REQUEST'])),
         '-ws {}'.format(SLURM.s(kwargs['WS_BINS'])),
