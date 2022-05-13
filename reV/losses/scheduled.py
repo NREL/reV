@@ -607,4 +607,4 @@ class ScheduledLossesMixin:
         except (AttributeError, TypeError):
             pass
 
-        return 0 + base_seed
+        return base_seed
