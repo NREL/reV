@@ -363,7 +363,9 @@ class Outputs(BaseResource):
                 logger.error(msg)
                 raise HandlerRuntimeError(msg)
 
-            if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            data_type_differs = not np.issubdtype(data.dtype, np.dtype(dtype))
+            is_integer = np.issubdtype(dtype, np.integer)
+            if data_type_differs and is_integer:
                 # apply scale factor and dtype
                 data = np.round(data * scale_factor).astype(dtype)
 
