@@ -1,9 +1,9 @@
 reV Project Points
 ==================
 
-`reV Gen <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
-and `reV Econ <https://nrel.github.io/reV/reV/reV.econ.econ.html#reV.econ.econ.Econ>`_
-use `Project Points <https://nrel.github.io/reV/reV/reV.config.project_points.html#reV.config.project_points.ProjectPoints>`_ to define which resource sites (`gids`) to run through
+`reV Gen <https://nrel.github.io/reV/_autosummary/reV.generation.generation.Gen.html#reV.generation.generation.Gen>`_
+and `reV Econ <https://nrel.github.io/reV/_autosummary/reV.econ.econ.Econ.html#reV.econ.econ.Econ>`_
+use `Project Points <https://nrel.github.io/reV/_autosummary/reV.config.project_points.ProjectPoints.html#reV.config.project_points.ProjectPoints>`_ to define which resource sites (`gids`) to run through
 `PySAM <https://pysam.readthedocs.io/en/latest/>`_ and how.
 
 At its most basic Project Points consists of the resource ``gid``s and the
@@ -157,7 +157,7 @@ Command Line Interface (CLI)
 ----------------------------
 
 Options 3 and 4 above can be run from the Command Line using the
-`reV-project-points <https://nrel.github.io/reV/reV/reV.config.cli_project_points.html#rev-project-points>`_
+`reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#rev-project-points>`_
 CLI
 
 .. code-block:: bash

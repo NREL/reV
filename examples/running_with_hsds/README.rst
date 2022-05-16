@@ -57,7 +57,7 @@ To access the resource data used by reV (NSRDB or WTK) you have to turn on the
 reV Gen
 -------
 
-reV generation (`reV.Gen <https://nrel.github.io/reV/reV/reV.generation.html>`_)
+reV generation (`reV.Gen <https://nrel.github.io/reV/_autosummary/reV.generation.html>`_)
 will automatically infer if a file path is locally on disk or from HSDS.
 
 Note that for all of these examples, the ``sam_file`` input points to files in
@@ -145,7 +145,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 Command Line Interface (CLI)
 ----------------------------
 
-`reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
+`reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
@@ -187,7 +187,7 @@ Setting up an HSDS Local Server on AWS EC2
 
 You can stand up a local HSDS server on an EC2 instance to improve the HSDS throughput versus the NREL developer API. Generally you should follow `these instructions <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ from the HSDS documentation. Here are a few additional tips and tricks to get everything connected to the NREL bucket:
 
-If you need to install docker and docker-compose on your EC2 instance (if not already installed). You can run ``docker run hello-world`` to test your docker install. 
+If you need to install docker and docker-compose on your EC2 instance (if not already installed). You can run ``docker run hello-world`` to test your docker install.
 
 .. code-block:: bash
 
@@ -229,7 +229,7 @@ A few miscellaneous tips:
 #. You can delete the docker HSDS image with ``docker rmi $IMAGE_ID`` (useful to reset the docker image)
 #. If you have AWS permissions issues try using a non-root IAM user with the corresponding AWS credentials as environment variables
 #. You can stand up parallel docker HSDS servers on your EC2 instance by running ``sh runall.sh -8``
-#. You can also set ``hs_endpoint = local`` in your ``~/.hscfg`` file to have h5pyd automatically spin up a local HSDS server as it opens a file handler. You still need to set all of the other environment variables for this to work. 
+#. You can also set ``hs_endpoint = local`` in your ``~/.hscfg`` file to have h5pyd automatically spin up a local HSDS server as it opens a file handler. You still need to set all of the other environment variables for this to work.
 
 Other Resources
 ---------------

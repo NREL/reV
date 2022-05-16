@@ -1,8 +1,8 @@
 Run reV locally
 ===============
 
-`reV Gen <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
-and `reV Econ <https://nrel.github.io/reV/reV/reV.econ.econ.html#reV.econ.econ.Econ>`_
+`reV Gen <https://nrel.github.io/reV/_autosummary/reV.generation.generation.Gen.html#reV.generation.generation.Gen>`_
+and `reV Econ <https://nrel.github.io/reV/_autosummary/reV.econ.econ.Econ.html#reV.econ.econ.Econ>`_
 can be run locally using resource .h5 files stored locally.
 
 reV Gen
@@ -80,7 +80,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 Command Line Interface (CLI)
 ----------------------------
 
-`reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
+`reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
