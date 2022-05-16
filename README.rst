@@ -57,18 +57,20 @@ reV command line tools
 ======================
 
 - `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
-- `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
-- `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
-- `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
-- `reV-offshore <https://nrel.github.io/reV/_cli/reV-offshore.html#rev-offshore>`_
+- `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
+- `reV-bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
 - `reV-collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
+- `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
+- `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
+- `reV-hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
 - `reV-multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
+- `reV-nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
+- `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
+- `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
+- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
+- `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
 - `reV-supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
 - `reV-supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
-- `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
-- `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
-- `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
-- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
 
 Using Eagle Env
 ===============

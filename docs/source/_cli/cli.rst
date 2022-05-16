@@ -3,10 +3,13 @@ Command Line Interfaces (CLIs)
 
 .. toctree::
 
+   reV
    reV-batch
+   reV-bespoke
    reV-collect
    reV-econ
    reV-gen
+   reV-hybrids
    reV-multiyear
    reV-nrwal
    reV-pipeline
@@ -15,4 +18,3 @@ Command Line Interfaces (CLIs)
    reV-rep-profiles
    reV-supply-curve-aggregation
    reV-supply-curve
-   reV
