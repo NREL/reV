@@ -111,7 +111,17 @@ class ExclusionLayers:
                             logger.error(msg)
                             raise MultiFileExclusionError(msg)
 
-                        if base_profile[attr] != f.profile[attr]:
+                        base_attr = base_profile[attr]
+                        file_attr = f.profile[attr]
+                        attrs_are_str = (isinstance(base_attr, str)
+                                         and isinstance(file_attr, str))
+                        if attr == 'crs' and attrs_are_str:
+                            attrs_match = (set(base_attr.split(' '))
+                                           == set(file_attr.split(' ')))
+                        else:
+                            attrs_match = base_profile[attr] == f.profile[attr]
+
+                        if not attrs_match:
                             msg = ('Multi-file exclusion inputs from {} '
                                    'dont have matching "{}": {} and {}'
                                    .format(self.h5_file, attr,
