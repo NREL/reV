@@ -247,20 +247,34 @@ class SupplyCurve:
             Updated table mapping supply curve points to transmission features
             based on maximum capacity
         """
-        mask = trans_sc_table['capacity'] <= trans_sc_table['max_cap']
-        over_max = trans_sc_table.loc[~mask].copy()
-        trans_sc_table = trans_sc_table.loc[mask]
-        if over_max.size:
+
+        nx = trans_sc_table['capacity'] / trans_sc_table['max_cap']
+        nx = np.ceil(nx).astype(int)
+        trans_sc_table['n_parallel_trans'] = nx
+        mask = nx > 1
+
+        tie_line_cost = trans_sc_table.loc[mask, 'tie_line_cost'] * nx[mask]
+
+        xformer_cost = (trans_sc_table.loc[mask, 'xformer_cost_per_mw']
+                        * trans_sc_table.loc[mask, 'max_cap'] * nx[mask])
+
+        conn_cost = (xformer_cost
+                     + trans_sc_table.loc[mask, 'sub_upgrade_cost']
+                     + trans_sc_table.loc[mask, 'new_sub_cost'])
+
+        trans_cap_cost = tie_line_cost + conn_cost
+
+        trans_sc_table.loc[mask, 'tie_line_cost'] = tie_line_cost
+        trans_sc_table.loc[mask, 'xformer_cost'] = xformer_cost
+        trans_sc_table.loc[mask, 'connection_cost'] = conn_cost
+        trans_sc_table.loc[mask, 'trans_cap_cost'] = trans_cap_cost
+
+        if (nx > 1).any():
             msg = ("{} SC points have a capacity that exceeds the maximum "
-                   "transmission feature capacity and will be mapped to "
-                   "features with the max capacity"
-                   .format(len(over_max['sc_gid'].unique())))
-            logger.warning(msg)
-            warn(msg)
-            over_max = over_max.sort_values('max_cap')
-            over_max = over_max.drop_duplicates(subset=['sc_gid', 'trans_gid'],
-                                                keep='last')
-            trans_sc_table = trans_sc_table.append(over_max)
+                   "transmission feature capacity and will be connected with "
+                   "multiple parallel transmission features."
+                   .format((nx > 1).sum()))
+            logger.info(msg)
 
         return trans_sc_table
 
@@ -1056,8 +1070,8 @@ class SupplyCurve:
     def simple_sort(self, fcr, transmission_costs=None,
                     avail_cap_frac=1, max_workers=None,
                     consider_friction=True, sort_on='total_lcoe',
-                    columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                             'trans_cap_cost_per_mw'),
+                    columns=('trans_gid', 'trans_type', 'n_parallel_trans',
+                             'lcot', 'total_lcoe', 'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
                     offshore_compete=False):
         """
@@ -1234,8 +1248,8 @@ class SupplyCurve:
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, consider_friction=True,
                sort_on='total_lcoe',
-               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                        'dist_km', 'trans_cap_cost_per_mw'),
+               columns=('trans_gid', 'trans_type', 'n_parallel_trans',
+                        'lcot', 'total_lcoe', 'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """

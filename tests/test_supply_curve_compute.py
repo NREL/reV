@@ -283,6 +283,59 @@ def test_substation_conns(sc_points, trans_table, multipliers):
                          max_workers=4)
 
 
+def test_multi_parallel_trans(sc_points):
+    """When SC points exceed maximum available transmission capacity, they
+    should connect to the max capacity trans feature with multiple parallel
+    lines.
+
+    This function tests this feature. Previously (before 20220517), the
+    SC point would just connect to the biggest line possible, but the cost per
+    capacity would become small due to the large capacity and the fixed cost
+    per line (least cost path lines were specified at cost per km at a given
+    discrete capacity rating). This is documented in
+    https://github.com/NREL/reV/issues/336
+    """
+
+    path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+    sc_points = pd.read_csv(path)
+
+    columns = ('trans_gid', 'trans_type', 'n_parallel_trans',
+               'lcot', 'total_lcoe', 'trans_cap_cost_per_mw',
+               'max_cap')
+
+    trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                 f'costs_RI_{cap}MW.csv')
+                    for cap in [100, 200, 400, 1000]]
+    sc_1 = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1,
+                              columns=columns)
+
+    trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
+                                 f'costs_RI_{cap}MW.csv')
+                    for cap in [100]]
+    sc_2 = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1,
+                              columns=columns)
+
+    assert not set(sc_points['sc_gid']) - set(sc_1['sc_gid'])
+    assert not set(sc_points['sc_gid']) - set(sc_2['sc_gid'])
+    assert not set(sc_points['sc_point_gid']) - set(sc_1['sc_point_gid'])
+    assert not set(sc_points['sc_point_gid']) - set(sc_2['sc_point_gid'])
+    assert not set(sc_1['sc_point_gid']) - set(sc_points['sc_point_gid'])
+    assert not set(sc_2['sc_point_gid']) - set(sc_points['sc_point_gid'])
+
+    assert (sc_2.n_parallel_trans > 1).any()
+
+    mask_2 = sc_2['n_parallel_trans'] > 1
+
+    for gid in sc_2.loc[mask_2, 'sc_gid']:
+        nx_1 = sc_1.loc[(sc_1['sc_gid'] == gid), 'n_parallel_trans'].values[0]
+        nx_2 = sc_2.loc[(sc_2['sc_gid'] == gid), 'n_parallel_trans'].values[0]
+        assert nx_2 >= nx_1
+        if nx_1 != nx_2:
+            lcot_1 = sc_1.loc[(sc_1['sc_gid'] == gid), 'lcot'].values[0]
+            lcot_2 = sc_2.loc[(sc_2['sc_gid'] == gid), 'lcot'].values[0]
+            assert lcot_2 > lcot_1
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
