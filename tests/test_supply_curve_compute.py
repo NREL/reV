@@ -22,39 +22,17 @@ TRANS_COSTS_2 = {'line_tie_in_cost': 3000, 'line_cost': 2000,
                  'station_tie_in_cost': 500, 'center_tie_in_cost': 100,
                  'sink_tie_in_cost': 1e6, 'available_capacity': 0.9}
 
+path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+SC_POINTS = pd.read_csv(path)
 
-@pytest.fixture
-def sc_points():
-    """Get the supply curve aggregation summary table"""
-    path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
-    sc_points = pd.read_csv(path)
-    return sc_points
+path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary_friction.csv')
+SC_POINTS_FRICTION = pd.read_csv(path)
 
+path = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
+TRANS_TABLE = pd.read_csv(path)
 
-@pytest.fixture
-def sc_points_friction():
-    """Get the supply curve aggregation summary table with friction surface"""
-    path = os.path.join(TESTDATADIR,
-                        'sc_out/baseline_agg_summary_friction.csv')
-    sc_points = pd.read_csv(path)
-    return sc_points
-
-
-@pytest.fixture
-def trans_table():
-    """Get the transmission mapping table"""
-    path = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
-    trans_table = pd.read_csv(path)
-    return trans_table
-
-
-@pytest.fixture
-def multipliers():
-    """Get table of transmission multipliers"""
-    path = os.path.join(TESTDATADIR,
-                        'trans_tables/transmission_multipliers.csv')
-    multipliers = pd.read_csv(path)
-    return multipliers
+path = os.path.join(TESTDATADIR, 'trans_tables/transmission_multipliers.csv')
+MULTIPLIERS = pd.read_csv(path)
 
 
 def baseline_verify(sc_full, fpath_baseline):
@@ -62,6 +40,8 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
+        baseline.to_csv('./baseline.csv')
+        sc_full.to_csv('./sc_full.csv')
         # double check useful for when tables are changing
         # but lcoe should be the same
         assert np.allclose(baseline['total_lcoe'], sc_full['total_lcoe'])
@@ -72,13 +52,12 @@ def baseline_verify(sc_full, fpath_baseline):
 
 @pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
                                                 (2, TRANS_COSTS_2)))
-def test_integrated_sc_full(i, trans_costs, sc_points, trans_table,
-                            multipliers):
+def test_integrated_sc_full(i, trans_costs):
     """Run the full SC test and verify results against baseline file."""
     tcosts = trans_costs.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                               sc_features=multipliers,
+    sc_full = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
+                               sc_features=MULTIPLIERS,
                                transmission_costs=tcosts,
                                avail_cap_frac=avail_cap_frac)
     fpath_baseline = os.path.join(TESTDATADIR,
@@ -88,13 +67,12 @@ def test_integrated_sc_full(i, trans_costs, sc_points, trans_table,
 
 @pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
                                                 (2, TRANS_COSTS_2)))
-def test_integrated_sc_simple(i, trans_costs, sc_points, trans_table,
-                              multipliers):
+def test_integrated_sc_simple(i, trans_costs):
     """Run the simple SC test and verify results against baseline file."""
     tcosts = trans_costs.copy()
     tcosts.pop('available_capacity', 1)
-    sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1,
-                                   sc_features=multipliers,
+    sc_simple = SupplyCurve.simple(SC_POINTS, TRANS_TABLE, fcr=0.1,
+                                   sc_features=MULTIPLIERS,
                                    transmission_costs=tcosts)
 
     fpath_baseline = os.path.join(TESTDATADIR,
@@ -102,13 +80,12 @@ def test_integrated_sc_simple(i, trans_costs, sc_points, trans_table,
     baseline_verify(sc_simple, fpath_baseline)
 
 
-def test_integrated_sc_full_friction(sc_points_friction, trans_table,
-                                     multipliers):
+def test_integrated_sc_full_friction():
     """Run the full SC algorithm with friction"""
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full = SupplyCurve.full(sc_points_friction, trans_table, fcr=0.1,
-                               sc_features=multipliers,
+    sc_full = SupplyCurve.full(SC_POINTS_FRICTION, TRANS_TABLE, fcr=0.1,
+                               sc_features=MULTIPLIERS,
                                transmission_costs=tcosts,
                                avail_cap_frac=avail_cap_frac,
                                sort_on='total_lcoe_friction')
@@ -123,13 +100,12 @@ def test_integrated_sc_full_friction(sc_points_friction, trans_table,
     baseline_verify(sc_full, fpath_baseline)
 
 
-def test_integrated_sc_simple_friction(sc_points_friction, trans_table,
-                                       multipliers):
+def test_integrated_sc_simple_friction():
     """Run the simple SC algorithm with friction"""
     tcosts = TRANS_COSTS_1.copy()
     tcosts.pop('available_capacity', 1)
-    sc_simple = SupplyCurve.simple(sc_points_friction, trans_table, fcr=0.1,
-                                   sc_features=multipliers,
+    sc_simple = SupplyCurve.simple(SC_POINTS_FRICTION, TRANS_TABLE, fcr=0.1,
+                                   sc_features=MULTIPLIERS,
                                    transmission_costs=tcosts,
                                    sort_on='total_lcoe_friction')
 
@@ -143,16 +119,16 @@ def test_integrated_sc_simple_friction(sc_points_friction, trans_table,
     baseline_verify(sc_simple, fpath_baseline)
 
 
-def test_sc_warning1(sc_points, trans_table, multipliers):
+def test_sc_warning1():
     """Run the full SC test with missing connections and verify warning."""
-    mask = trans_table['sc_point_gid'].isin(list(range(10)))
-    trans_table = trans_table[~mask]
+    mask = TRANS_TABLE['sc_point_gid'].isin(list(range(10)))
+    trans_table = TRANS_TABLE[~mask]
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                         sc_features=multipliers,
+        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
+                         sc_features=MULTIPLIERS,
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac)
 
@@ -163,16 +139,16 @@ def test_sc_warning1(sc_points, trans_table, multipliers):
         assert s1 in s2, msg
 
 
-def test_sc_warning2(sc_points, trans_table, multipliers):
+def test_sc_warning2():
     """Run the full SC test without PCA load centers and verify warning."""
-    mask = trans_table['category'] == 'PCALoadCen'
-    trans_table = trans_table[~mask]
+    mask = TRANS_TABLE['category'] == 'PCALoadCen'
+    trans_table = TRANS_TABLE[~mask]
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                         sc_features=multipliers,
+        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
+                         sc_features=MULTIPLIERS,
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac)
 
@@ -183,19 +159,19 @@ def test_sc_warning2(sc_points, trans_table, multipliers):
         assert s1 in s2, msg
 
 
-def test_parallel(sc_points, trans_table, multipliers):
+def test_parallel():
     """Test a parallel compute against a serial compute"""
 
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full_parallel = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                                        sc_features=multipliers,
+    sc_full_parallel = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
+                                        sc_features=MULTIPLIERS,
                                         transmission_costs=tcosts,
                                         avail_cap_frac=avail_cap_frac,
                                         max_workers=4)
 
-    sc_full_serial = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                                      sc_features=multipliers,
+    sc_full_serial = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
+                                      sc_features=MULTIPLIERS,
                                       transmission_costs=tcosts,
                                       avail_cap_frac=avail_cap_frac,
                                       max_workers=1)
@@ -224,34 +200,39 @@ def verify_trans_cap(sc_table, trans_tables):
     assert any(mask), msg
 
 
-def test_least_cost_full(sc_points):
+def test_least_cost_full():
     """
     Test full supply curve sorting with least-cost path transmission tables
     """
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_full = SupplyCurve.full(sc_points, trans_tables, fcr=0.1,
-                               avail_cap_frac=0.1)
+    sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
+                               avail_cap_frac=0.1,
+                               columns=('trans_gid', 'trans_capacity',
+                                        'trans_type', 'trans_cap_cost_per_mw',
+                                        'dist_km', 'lcot', 'total_lcoe',
+                                        'max_cap', 'n_parallel_trans'))
+
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
     baseline_verify(sc_full, fpath_baseline)
     verify_trans_cap(sc_full, trans_tables)
 
 
-def test_least_cost_simple(sc_points):
+def test_least_cost_simple():
     """
     Test simple supply curve sorting with least-cost path transmission tables
     """
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_simple = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1)
+    sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
     baseline_verify(sc_simple, fpath_baseline)
     verify_trans_cap(sc_simple, trans_tables)
 
 
-def test_simple_trans_table(sc_points):
+def test_simple_trans_table():
     """
     Run the simple SC test using a simple transmission table
     and verify results against baseline file.
@@ -259,31 +240,31 @@ def test_simple_trans_table(sc_points):
     trans_table = os.path.join(TESTDATADIR,
                                'trans_tables',
                                'ri_simple_transmission_table.csv')
-    sc_simple = SupplyCurve.simple(sc_points, trans_table, fcr=0.1)
+    sc_simple = SupplyCurve.simple(SC_POINTS, trans_table, fcr=0.1)
 
     fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/ri_sc_simple_lc.csv')
     baseline_verify(sc_simple, fpath_baseline)
 
 
-def test_substation_conns(sc_points, trans_table, multipliers):
+def test_substation_conns():
     """
     Ensure missing trans lines are caught by SupplyCurveInputError
     """
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    drop_lines = np.where(trans_table['category'] == 'TransLine')[0]
+    drop_lines = np.where(TRANS_TABLE['category'] == 'TransLine')[0]
     drop_lines = np.random.choice(drop_lines, 10, replace=False)
-    trans_table = trans_table.drop(labels=drop_lines)
+    trans_table = TRANS_TABLE.drop(labels=drop_lines)
 
     with pytest.raises(SupplyCurveInputError):
-        SupplyCurve.full(sc_points, trans_table, fcr=0.1,
-                         sc_features=multipliers,
+        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
+                         sc_features=MULTIPLIERS,
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac,
                          max_workers=4)
 
 
-def test_multi_parallel_trans(sc_points):
+def test_multi_parallel_trans():
     """When SC points exceed maximum available transmission capacity, they
     should connect to the max capacity trans feature with multiple parallel
     lines.
@@ -296,9 +277,6 @@ def test_multi_parallel_trans(sc_points):
     https://github.com/NREL/reV/issues/336
     """
 
-    path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
-    sc_points = pd.read_csv(path)
-
     columns = ('trans_gid', 'trans_type', 'n_parallel_trans',
                'lcot', 'total_lcoe', 'trans_cap_cost_per_mw',
                'max_cap')
@@ -306,21 +284,21 @@ def test_multi_parallel_trans(sc_points):
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_1 = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1,
+    sc_1 = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1,
                               columns=columns)
 
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100]]
-    sc_2 = SupplyCurve.simple(sc_points, trans_tables, fcr=0.1,
+    sc_2 = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1,
                               columns=columns)
 
-    assert not set(sc_points['sc_gid']) - set(sc_1['sc_gid'])
-    assert not set(sc_points['sc_gid']) - set(sc_2['sc_gid'])
-    assert not set(sc_points['sc_point_gid']) - set(sc_1['sc_point_gid'])
-    assert not set(sc_points['sc_point_gid']) - set(sc_2['sc_point_gid'])
-    assert not set(sc_1['sc_point_gid']) - set(sc_points['sc_point_gid'])
-    assert not set(sc_2['sc_point_gid']) - set(sc_points['sc_point_gid'])
+    assert not set(SC_POINTS['sc_gid']) - set(sc_1['sc_gid'])
+    assert not set(SC_POINTS['sc_gid']) - set(sc_2['sc_gid'])
+    assert not set(SC_POINTS['sc_point_gid']) - set(sc_1['sc_point_gid'])
+    assert not set(SC_POINTS['sc_point_gid']) - set(sc_2['sc_point_gid'])
+    assert not set(sc_1['sc_point_gid']) - set(SC_POINTS['sc_point_gid'])
+    assert not set(sc_2['sc_point_gid']) - set(SC_POINTS['sc_point_gid'])
 
     assert (sc_2.n_parallel_trans > 1).any()
 
@@ -353,4 +331,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 
 if __name__ == '__main__':
-    execute_pytest()
+    test_least_cost_full()

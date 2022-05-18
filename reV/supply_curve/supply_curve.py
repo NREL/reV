@@ -214,9 +214,12 @@ class SupplyCurve:
         # trans_line_gids -> gids of transmission lines connected to the given
         # transmission feature (only used for Substations),
         # legacy name: trans_gids
-        trans_table = \
-            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
-                                        'trans_gids': 'trans_line_gids'})
+        # also xformer_cost_p_mw -> xformer_cost_per_mw (not sure why there
+        # would be a *_p_mw but here we are...)
+        rename_map = {'trans_line_gid': 'trans_gid',
+                      'trans_gids': 'trans_line_gids',
+                      'xformer_cost_p_mw': 'xformer_cost_per_mw'}
+        trans_table = trans_table.rename(columns=rename_map)
 
         if 'dist_mi' in trans_table and 'dist_km' not in trans_table:
             trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
@@ -251,25 +254,26 @@ class SupplyCurve:
         nx = trans_sc_table['capacity'] / trans_sc_table['max_cap']
         nx = np.ceil(nx).astype(int)
         trans_sc_table['n_parallel_trans'] = nx
-        mask = nx > 1
-
-        tie_line_cost = trans_sc_table.loc[mask, 'tie_line_cost'] * nx[mask]
-
-        xformer_cost = (trans_sc_table.loc[mask, 'xformer_cost_per_mw']
-                        * trans_sc_table.loc[mask, 'max_cap'] * nx[mask])
-
-        conn_cost = (xformer_cost
-                     + trans_sc_table.loc[mask, 'sub_upgrade_cost']
-                     + trans_sc_table.loc[mask, 'new_sub_cost'])
-
-        trans_cap_cost = tie_line_cost + conn_cost
-
-        trans_sc_table.loc[mask, 'tie_line_cost'] = tie_line_cost
-        trans_sc_table.loc[mask, 'xformer_cost'] = xformer_cost
-        trans_sc_table.loc[mask, 'connection_cost'] = conn_cost
-        trans_sc_table.loc[mask, 'trans_cap_cost'] = trans_cap_cost
 
         if (nx > 1).any():
+            mask = nx > 1
+            tie_line_cost = (trans_sc_table.loc[mask, 'tie_line_cost']
+                             * nx[mask])
+
+            xformer_cost = (trans_sc_table.loc[mask, 'xformer_cost_per_mw']
+                            * trans_sc_table.loc[mask, 'max_cap'] * nx[mask])
+
+            conn_cost = (xformer_cost
+                         + trans_sc_table.loc[mask, 'sub_upgrade_cost']
+                         + trans_sc_table.loc[mask, 'new_sub_cost'])
+
+            trans_cap_cost = tie_line_cost + conn_cost
+
+            trans_sc_table.loc[mask, 'tie_line_cost'] = tie_line_cost
+            trans_sc_table.loc[mask, 'xformer_cost'] = xformer_cost
+            trans_sc_table.loc[mask, 'connection_cost'] = conn_cost
+            trans_sc_table.loc[mask, 'trans_cap_cost'] = trans_cap_cost
+
             msg = ("{} SC points have a capacity that exceeds the maximum "
                    "transmission feature capacity and will be connected with "
                    "multiple parallel transmission features."
@@ -875,35 +879,38 @@ class SupplyCurve:
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
         trans_sc_gids = trans_table['sc_gid'].values.astype(int)
-        trans_gids = trans_table['trans_gid'].values
-        trans_cap = trans_table['avail_cap'].values
-        capacities = trans_table['capacity'].values
-        categories = trans_table['category'].values
-        dists = trans_table['dist_km'].values
-        trans_cap_costs = trans_table['trans_cap_cost_per_mw'].values
-        lcots = trans_table['lcot'].values
-        total_lcoes = trans_table['total_lcoe'].values
+
+        # syntax is final_key: source_key (source from trans_table)
+        all_cols = {k: k for k in columns}
+        essentials = {'trans_gid': 'trans_gid',
+                      'trans_capacity': 'avail_cap',
+                      'trans_type': 'category',
+                      'dist_km': 'dist_km',
+                      'trans_cap_cost_per_mw': 'trans_cap_cost_per_mw',
+                      'lcot': 'lcot',
+                      'total_lcoe': 'total_lcoe',
+                      }
+        all_cols.update(essentials)
+
+        arrays = {final_key: trans_table[source_key].values
+                  for final_key, source_key in all_cols.items()}
+
+        sc_capacities = trans_table['capacity'].values
 
         connected = 0
         progress = 0
         for i in range(len(trans_table)):
             sc_gid = trans_sc_gids[i]
             if self._mask[sc_gid]:
-                trans_gid = trans_gids[i]
-                connect = trans_features.connect(trans_gid, capacities[i])
+                connect = trans_features.connect(arrays['trans_gid'][i],
+                                                 sc_capacities[i])
                 if connect:
                     connected += 1
                     logger.debug('Connecting sc gid {}'.format(sc_gid))
                     self._mask[sc_gid] = False
 
-                    conn_lists['trans_gid'][sc_gid] = trans_gid
-                    conn_lists['trans_capacity'][sc_gid] = trans_cap[i]
-                    conn_lists['trans_type'][sc_gid] = categories[i]
-                    conn_lists['trans_cap_cost_per_mw'][sc_gid] = \
-                        trans_cap_costs[i]
-                    conn_lists['dist_km'][sc_gid] = dists[i]
-                    conn_lists['lcot'][sc_gid] = lcots[i]
-                    conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
+                    for col_name, data_arr in arrays.items():
+                        conn_lists[col_name][sc_gid] = data_arr[i]
 
                     if total_lcoe_fric is not None:
                         conn_lists['total_lcoe_friction'][sc_gid] = \
@@ -1070,8 +1077,8 @@ class SupplyCurve:
     def simple_sort(self, fcr, transmission_costs=None,
                     avail_cap_frac=1, max_workers=None,
                     consider_friction=True, sort_on='total_lcoe',
-                    columns=('trans_gid', 'trans_type', 'n_parallel_trans',
-                             'lcot', 'total_lcoe', 'trans_cap_cost_per_mw'),
+                    columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                             'dist_km', 'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
                     offshore_compete=False):
         """
@@ -1248,8 +1255,8 @@ class SupplyCurve:
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, consider_friction=True,
                sort_on='total_lcoe',
-               columns=('trans_gid', 'trans_type', 'n_parallel_trans',
-                        'lcot', 'total_lcoe', 'trans_cap_cost_per_mw'),
+               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                        'dist_km', 'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """
