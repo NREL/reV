@@ -212,7 +212,7 @@ class Outage:
 
     @property
     def total_available_hours(self):
-        """int: Total number of hours avialbale based on allowed months."""
+        """int: Total number of hours available based on allowed months."""
         if self._total_available_hours is None:
             self._total_available_hours = len(
                 hourly_indices_for_months(self.allowed_months))
@@ -361,7 +361,7 @@ class SingleOutageScheduler:
         Parameters
         ----------
         outage : Outage
-            An outage object contianing info about the outage to be
+            An outage object containing info about the outage to be
             scheduled.
         scheduler : OutageScheduler
             A scheduler object that keeps track of the total hourly
@@ -498,7 +498,7 @@ class ScheduledLossesMixin:
 
     Warning
     -------
-    Using this class for anything excpet as a mixin for
+    Using this class for anything except as a mixin for
     :class:`~reV.SAM.generation.AbstractSamGeneration` may result in
     unexpected results and/or errors.
     """
@@ -528,9 +528,9 @@ class ScheduledLossesMixin:
         Parameters
         ----------
         resource : pd.DataFrame
-            Timeseries resource data for a single location with a pandas
-            DatetimeIndex. The ``year`` value of the index will be used
-            to seed the stochastically scheduled losses.
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. The ``year`` value of the index will
+            be used to seed the stochastically scheduled losses.
 
         See Also
         --------

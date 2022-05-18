@@ -117,7 +117,7 @@ def basic_outage_dict():
 
 @pytest.fixture
 def so_scheduler(basic_outage_dict):
-    """Return a basic initalized `SingleOutageScheduler` object."""
+    """Return a basic initialized `SingleOutageScheduler` object."""
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
@@ -324,7 +324,7 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
 def _run_gen_with_and_without_losses(
     generic_losses, outages, site_outages, haf, files
 ):
-    """Run generaion with and without losses for testing. """
+    """Run generation with and without losses for testing. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
