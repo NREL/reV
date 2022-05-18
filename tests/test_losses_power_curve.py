@@ -279,6 +279,18 @@ def test_power_curve_losses_class_bad_wind_res_input(bad_wind_res):
     assert "Invalid wind resource input" in str(excinfo.value)
 
 
+@pytest.mark.parametrize('bad_weights', ([], [1]))
+def test_power_curve_losses_class_bad_weights_input(bad_weights):
+    """Test that error is raised for bad weights input. """
+    wind_speed = [0, 10]
+    generation = [10, 100]
+    wind_res = [0, 0, 5]
+    power_curve = PowerCurve(wind_speed, generation)
+    with pytest.raises(reVLossesValueError) as excinfo:
+        PowerCurveLosses(power_curve, wind_res, weights=bad_weights)
+    assert "Invalid weights input" in str(excinfo.value)
+
+
 @pytest.mark.parametrize('pc_transformation', TRANSFORMATIONS.values())
 def test_transformation_classes_apply(pc_transformation, real_power_curve):
     """Test that the power curve transformations are applied correctly. """

@@ -195,9 +195,13 @@ class PowerCurveLosses:
         calculated power curves. The generation values are then compared
         in order to calculate the loss resulting from a transformed
         power curve.
+    weights :obj:`np.array`
+        An array of the same length as ``wind_resource`` containing
+        weights to apply to each generation value calculated for the
+        corresponding wind speed.
     """
 
-    def __init__(self, power_curve, wind_resource):
+    def __init__(self, power_curve, wind_resource, weights=None):
         """
         Parameters
         ----------
@@ -214,19 +218,39 @@ class PowerCurveLosses:
             values should all be non-zero, and the units of
             should match the units of the ``power_curve`` input
             (typically, m/s).
+        weights : iter, optional
+            An iterable of the same length as ``wind_resource``
+            containing weights to apply to each generation value
+            calculated for the corresponding wind speed.
         """
         self.power_curve = power_curve
         self.wind_resource = np.array(wind_resource)
+        if weights is None:
+            self.weights = np.ones_like(self.wind_resource)
+        else:
+            self.weights = np.array(weights)
         self._power_gen = None
 
-        _validate_arrays_not_empty(self, array_names=['wind_resource'])
+        _validate_arrays_not_empty(self,
+                                   array_names=['wind_resource', 'weights'])
         self._validate_wind_resource()
+        self._validate_weights()
 
     def _validate_wind_resource(self):
         """Validate that the input wind resource is non-negative. """
         if not (self.wind_resource >= 0).all():
             msg = ("Invalid wind resource input: Contains negative values!"
                    " - {}".format(self.wind_resource))
+            msg = msg.format(self.wind_resource)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_weights(self):
+        """Validate that the input weights size matches the wind resource. """
+        if self.wind_resource.size != self.weights.size:
+            msg = ("Invalid weights input: Does not match size of wind "
+                   "resource! - {} vs {}"
+                   .format(self.weights.size, self.wind_resource.size))
             msg = msg.format(self.wind_resource)
             logger.error(msg)
             raise reVLossesValueError(msg)
@@ -258,6 +282,7 @@ class PowerCurveLosses:
             transformation.
         """
         power_gen_with_losses = transformed_power_curve(self.wind_resource)
+        power_gen_with_losses *= self.weights
         power_gen_with_losses = power_gen_with_losses.sum()
         return (1 - power_gen_with_losses / self.power_gen_no_losses) * 100
 
@@ -329,7 +354,9 @@ class PowerCurveLosses:
     def power_gen_no_losses(self):
         """float: Total power generation from original power curve."""
         if self._power_gen is None:
-            self._power_gen = self.power_curve(self.wind_resource).sum()
+            self._power_gen = self.power_curve(self.wind_resource)
+            self._power_gen *= self.weights
+            self._power_gen = self._power_gen.sum()
         return self._power_gen
 
 
