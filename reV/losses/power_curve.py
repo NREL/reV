@@ -486,8 +486,9 @@ class PowerCurveLossesMixin:
         if not loss_input:
             return
 
-        wind_resource = self.wind_resource_for_site()
-        pc_losses = PowerCurveLosses(self.input_power_curve, wind_resource)
+        wind_resource, weights = self.wind_resource_from_input()
+        pc_losses = PowerCurveLosses(self.input_power_curve,
+                                     wind_resource, weights)
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
@@ -523,6 +524,33 @@ class PowerCurveLossesMixin:
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
         return PowerCurve(wind_speed, generation)
+
+    def wind_resource_from_input(self):
+        """Collect wind resource and weights from inputs.
+
+        Returns
+        -------
+        wind_speeds : array-like
+            Array of wind speeds.
+        weights : array-like | ``None``
+            Array of weights for corresponding wind speeds, or ``None``.
+
+        Raises
+        ------
+        reVLossesValueError
+            If power curve losses are not compatible with the
+            'wind_resource_model_choice'.
+        """
+        if self['wind_resource_model_choice'] == 0:
+            return self.wind_resource_for_site(), None
+        elif self['wind_resource_model_choice'] == 2:
+            return self.wind_resource_from_distribution()
+        else:
+            msg = ("reV power curve losses cannot be used with "
+                   "'wind_resource_model_choice' = {}"
+                   .format(self['wind_resource_model_choice']))
+            logger.error(msg)
+            raise reVLossesValueError(msg)
 
     def wind_resource_for_site(self):
         """Extract scaled wind speeds at the site.
@@ -560,6 +588,22 @@ class PowerCurveLossesMixin:
                                                  * temperatures_K)
         weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
         return wind_speeds / weights
+
+    def wind_resource_from_distribution(self):
+        """Extract wind speeds and weights from resource distribution.
+
+        Returns
+        -------
+        wind_speeds : array-like
+            Array of wind speeds.
+        weights : array-like
+            Array of weights for corresponding wind speeds.
+        """
+
+        wrd = np.array(self['wind_resource_distribution'])
+        wind_speeds = wrd[:, 0]
+        weights = wrd[:, -1]
+        return wind_speeds, weights
 
 
 class AbstractPowerCurveTransformation(ABC):
@@ -628,6 +672,12 @@ class AbstractPowerCurveTransformation(ABC):
         :obj:`PowerCurve`
             An new power curve containing the generation values from the
             transformed power curve.
+
+        Raises
+        ------
+        NotImplementedError
+            If the transformation implementation did not set the
+            ``_transformed_generation`` attribute.
 
         Notes
         -----

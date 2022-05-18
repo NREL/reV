@@ -19,6 +19,7 @@ from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.supply_curve import SupplyCurve
 from reV.SAM.generation import WindPower
+from reV.losses.power_curve import PowerCurveLossesMixin
 
 from rex import Resource
 
@@ -286,6 +287,7 @@ def test_single(gid=33):
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
+
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
 
@@ -652,3 +654,77 @@ def test_wake_loss_multiplier(wlm):
 
     assert aep > aep_wlm
     assert aep_wlm >= 0
+
+
+def test_bespoke_with_power_curve_losses():
+    """Test bespoke with power curve losses. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        optimizer = bsp.plant_optimizer
+        optimizer.wind_plant["wind_farm_xCoordinates"] = [1000, -1000]
+        optimizer.wind_plant["wind_farm_yCoordinates"] = [1000, -1000]
+        cap = 2 * optimizer.turbine_capacity
+        optimizer.wind_plant["system_capacity"] = cap
+
+        optimizer.wind_plant.assign_inputs()
+        optimizer.wind_plant.execute()
+        aep = optimizer._aep_after_scaled_wake_losses()
+        bsp.close()
+
+        sam_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_inputs[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
+            'target_losses_percent': 10,
+            'transformation': 'exponential_stretching'
+        }
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 sam_inputs,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request)
+
+        optimizer2 = bsp.plant_optimizer
+        optimizer2.wind_plant["wind_farm_xCoordinates"] = [1000, -1000]
+        optimizer2.wind_plant["wind_farm_yCoordinates"] = [1000, -1000]
+        cap = 2 * optimizer2.turbine_capacity
+        optimizer2.wind_plant["system_capacity"] = cap
+
+        optimizer2.wind_plant.assign_inputs()
+        optimizer2.wind_plant.execute()
+        aep_losses = optimizer2._aep_after_scaled_wake_losses()
+        bsp.close()
+
+    assert aep > aep_losses, f"{aep}, {aep_losses}"
+
+    err_msg = "{:0.3f} != 0.9".format(aep_losses / aep)
+    assert np.isclose(aep_losses / aep, 0.9), err_msg

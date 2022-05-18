@@ -1221,9 +1221,12 @@ class WindPower(AbstractSamWind):
 
 
 # pylint: disable=too-many-ancestors
-class WindPowerPD(WindPower):
+class WindPowerPD(AbstractSamGeneration, PowerCurveLossesMixin):
     """WindPower analysis with wind speed/direction joint probabilty
     distrubtion input"""
+
+    MODULE = 'windpower'
+    PYSAM = PySamWindPower
 
     def __init__(self, ws_edges, wd_edges, wind_dist,
                  meta, sam_sys_inputs,
@@ -1273,6 +1276,7 @@ class WindPowerPD(WindPower):
             self._site = None
 
         self.set_resource_data(ws_edges, wd_edges, wind_dist)
+        self.add_power_curve_losses()
 
     def set_resource_data(self, ws_edges, wd_edges, wind_dist):
         """Send wind PD to pysam
