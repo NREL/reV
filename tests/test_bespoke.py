@@ -656,8 +656,8 @@ def test_wake_loss_multiplier(wlm):
     assert aep_wlm >= 0
 
 
-def test_bespoke_with_power_curve_losses():
-    """Test bespoke with power curve losses. """
+def test_bespoke_wind_plant_with_power_curve_losses():
+    """Test bespoke ``wind_plant`` with power curve losses. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     cap_cost_fun = ('140 * system_capacity '
@@ -728,3 +728,63 @@ def test_bespoke_with_power_curve_losses():
 
     err_msg = "{:0.3f} != 0.9".format(aep_losses / aep)
     assert np.isclose(aep_losses / aep, 0.9), err_msg
+
+
+def test_bespoke_run_with_power_curve_losses():
+    """Test bespoke run with power curve losses. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+        bsp.close()
+
+        sam_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_inputs[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
+            'target_losses_percent': 10,
+            'transformation': 'exponential_stretching'
+        }
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 sam_inputs,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request)
+
+        out_losses = bsp.run_plant_optimization()
+        out_losses = bsp.run_wind_plant_ts()
+        bsp.close()
+
+    ae_dsets = ['annual_energy-2012',
+                'annual_energy-2013',
+                'annual_energy-means']
+    for dset in ae_dsets:
+        assert out[dset] > out_losses[dset]
