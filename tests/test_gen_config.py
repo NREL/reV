@@ -60,17 +60,17 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         if tech == 'pv':
             fconfig = 'local_pv.json'
-            project_points = os.path.join(TESTDATADIR, 'config',
-                                          "project_points_10.csv")
+            project_points = os.path.join(TESTDATADIR, 'config', '..',
+                                          'config', "project_points_10.csv")
             resource_file = os.path.join(TESTDATADIR,
                                          'nsrdb/ri_100_nsrdb_{}.h5')
             sam_files = {"sam_gen_pv_1":
                          os.path.join(TESTDATADIR,
-                                      "SAM/naris_pv_1axis_inv13.json")}
+                                      "SAM/../SAM/naris_pv_1axis_inv13.json")}
         elif tech == 'wind':
             fconfig = 'local_wind.json'
-            project_points = os.path.join(TESTDATADIR, 'config',
-                                          "wtk_pp_2012_10.csv")
+            project_points = os.path.join(TESTDATADIR, 'config', '..',
+                                          'config', "wtk_pp_2012_10.csv")
             resource_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
             sam_files = {"wind0":
                          os.path.join(TESTDATADIR,

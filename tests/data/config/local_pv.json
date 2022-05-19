@@ -1,6 +1,6 @@
 {
   "analysis_years": 2012,
-  "log_directory": "TESTDATADIR/ri_pv_reV2",
+  "log_directory": "TESTDATADIR/../TESTDATADIR/ri_pv_reV2",
   "execution_control": {
     "max_workers": 2,
     "nodes": 1,
@@ -16,9 +16,9 @@
     "lcoe"
   ],
   "project_points": "./project_points_10.csv",
-  "resource_file": "TESTDATADIR/nsrdb/ri_100_nsrdb_{}.h5",
+  "resource_file": "TESTDATADIR/nsrdb/../nsrdb/ri_100_nsrdb_{}.h5",
   "sam_files": {
-    "sam_gen_pv_1": "TESTDATADIR/SAM/naris_pv_1axis_inv13.json"
+    "sam_gen_pv_1": "TESTDATADIR/SAM/../SAM/naris_pv_1axis_inv13.json"
   },
   "technology": "pvwattsv5"
 }

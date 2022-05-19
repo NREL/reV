@@ -12,7 +12,7 @@
     },
     {
       "band": 1,
-      "fpath": "TESTDATADIR/ri_exclusions/ri_srtm_slope.tif",
+      "fpath": "TESTDATADIR/ri_exclusions/../ri_exclusions/ri_srtm_slope.tif",
       "layer_name": "SRTM Slope",
       "layer_type": "Slope",
       "max_thresh": 5
