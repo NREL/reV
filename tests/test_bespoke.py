@@ -144,7 +144,7 @@ def test_zero_area(gid=33):
     voc_fun = '3'
     objective_function = (
         '(0.0975 * capital_cost + fixed_operating_cost) '
-        '/ aep + variable_operating_cost')
+        '/ (aep + 1E-6) + variable_operating_cost')
 
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
@@ -860,3 +860,46 @@ def test_bespoke_run_with_scheduled_losses():
 
     assert not np.allclose(out_losses['hourly-2012'],
                            out_losses['hourly-2013'])
+
+
+def test_bespoke_wind_plant_with_power_curve_losses():
+    """Test bespoke ``wind_plant`` with power curve losses. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = 'aep'
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function,
+                                 cap_cost_fun,
+                                 foc_fun,
+                                 voc_fun,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        optimizer = bsp.plant_optimizer
+        optimizer.define_exclusions()
+        optimizer.initialize_packing()
+        optimizer.wind_plant["wind_farm_xCoordinates"] = []
+        optimizer.wind_plant["wind_farm_yCoordinates"] = []
+        optimizer.wind_plant["system_capacity"] = 0
+
+        aep = optimizer.optimization_objective(x=[])
+        bsp.close()
+
+    assert aep == 0
