@@ -40,12 +40,24 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
-        baseline.to_csv('./baseline.csv')
-        sc_full.to_csv('./sc_full.csv')
         # double check useful for when tables are changing
         # but lcoe should be the same
-        assert np.allclose(baseline['total_lcoe'], sc_full['total_lcoe'])
+        check = np.allclose(baseline['total_lcoe'], sc_full['total_lcoe'])
+        if not check:
+            diff = np.abs(baseline['total_lcoe'].values
+                          - sc_full['total_lcoe'])
+            rel_diff = 100 * diff / baseline['total_lcoe'].values
+            msg = ('Total LCOE values differed from baseline. '
+                   'Maximum difference is {:.1f} ({:.1f}%), '
+                   'mean difference is {:.1f} ({:.1f}%). '
+                   'In total, {:.1f}% of all SC point connections changed'
+                   .format(diff.max(), rel_diff.max(),
+                           diff.mean(), rel_diff.mean(),
+                           100 * (diff > 0).sum() / len(diff)))
+            raise RuntimeError(msg)
+
         assert_frame_equal(baseline, sc_full, check_dtype=False)
+
     else:
         sc_full.to_csv(fpath_baseline, index=False)
 
@@ -184,12 +196,16 @@ def verify_trans_cap(sc_table, trans_tables):
     Verify that sc_points are connected to features in the correct capacity
     bins
     """
+
     trans_features = []
     for path in trans_tables:
         df = pd.read_csv(path)
         trans_features.append(df[['trans_gid', 'max_cap']])
 
     trans_features = pd.concat(trans_features)
+
+    if 'max_cap' in sc_table and 'max_cap' in trans_features:
+        sc_table = sc_table.drop('max_cap', axis=1)
 
     test = sc_table.merge(trans_features, on='trans_gid', how='left')
     mask = test['capacity'] > test['max_cap']
@@ -312,23 +328,3 @@ def test_multi_parallel_trans():
             lcot_1 = sc_1.loc[(sc_1['sc_gid'] == gid), 'lcot'].values[0]
             lcot_2 = sc_2.loc[(sc_2['sc_gid'] == gid), 'lcot'].values[0]
             assert lcot_2 > lcot_1
-
-
-def execute_pytest(capture='all', flags='-rapP'):
-    """Execute module as pytest with detailed summary report.
-
-    Parameters
-    ----------
-    capture : str
-        Log or stdout/stderr capture option. ex: log (only logger),
-        all (includes stdout/stderr)
-    flags : str
-        Which tests to show logs and results for.
-    """
-
-    fname = os.path.basename(__file__)
-    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
-
-
-if __name__ == '__main__':
-    test_least_cost_full()
