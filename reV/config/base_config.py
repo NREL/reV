@@ -297,7 +297,14 @@ class BaseConfig(dict):
         return config
 
     def resolve_path(self, path):
-        """Resolve a file path.
+        """Resolve a file path represented by the input string.
+
+        This function resolves the input string if it resembles a path.
+        Specifically, the string will be resolved if it starts  with
+        "``./``" or "``..``", or it if it contains either "``./``" or
+        "``..``" somewhere in the string body. Otherwise, the string
+        is returned unchanged, so this function *is* safe to call on any
+        string, even ones that do not resemble a path.
 
         This method delegates the "resolving" logic to
         :meth:`pathlib.Path.resolve`. This means the path is made
@@ -315,23 +322,18 @@ class BaseConfig(dict):
         -------
         str
             The resolved path.
-
-        Notes
-        -----
-        This function *is* safe to call on any string, even if it is not
-        a path.
         """
 
         if path.startswith('./'):
-            path = self.config_dir / Path(path[2:])
+            path = (self.config_dir / Path(path[2:]))
         elif path.startswith('..'):
-            path = self.config_dir / Path(path)
-        else:
+            path = (self.config_dir / Path(path))
+        elif './' in path:  # this covers both './' and '../'
             path = Path(path)
 
         try:
-            path = path.resolve()
-        except OSError:
+            path = path.resolve().as_posix()
+        except AttributeError:  # `path` is still a `str`
             pass
 
-        return path.as_posix()
+        return path
