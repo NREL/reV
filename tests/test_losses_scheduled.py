@@ -443,7 +443,7 @@ def test_scheduled_losses_repeatability(
                           max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_second_run = gen.out['gen_profile']
 
-    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
+    assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
 
 
 @pytest.mark.parametrize('files', [
@@ -501,9 +501,9 @@ def test_scheduled_losses_repeatability_with_seed(files):
                           max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_third_run = gen.out['gen_profile']
 
-    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
-    assert (~np.isclose(gen_profiles_first_run, gen_profiles_third_run)).any()
-    assert (~np.isclose(gen_profiles_second_run, gen_profiles_third_run)).any()
+    assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
+    assert not np.allclose(gen_profiles_first_run, gen_profiles_third_run)
+    assert not np.allclose(gen_profiles_second_run, gen_profiles_third_run)
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)

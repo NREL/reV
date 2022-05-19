@@ -80,7 +80,7 @@ def test_power_curve_losses(generic_losses, target_losses, transformation):
     if target_losses > 0:
         assert (gen_profiles - gen_profiles_with_losses > 0).any()
     else:
-        assert np.isclose(gen_profiles, gen_profiles_with_losses).all()
+        assert np.allclose(gen_profiles, gen_profiles_with_losses)
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
     assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
@@ -319,7 +319,7 @@ def test_horizontal_transformation_class_apply(real_power_curve):
     transformation = HorizontalTranslation(real_power_curve)
     new_power_curve = transformation.apply(curve_shift)
 
-    assert np.isclose(real_power_curve[:-2], new_power_curve[1:-1]).all()
+    assert np.allclose(real_power_curve[:-2], new_power_curve[1:-1])
 
 
 def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
