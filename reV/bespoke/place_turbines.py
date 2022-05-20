@@ -280,6 +280,10 @@ class PlaceTurbines():
         self.optimized_design_variables = \
             [bool(y) for y in optimized_design_variables]
 
+        self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
+        self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
+        self.wind_plant["system_capacity"] = self.capacity
+
     def place_turbines(self, **kwargs):
         """Define bespoke wind plant turbine layouts.
 
