@@ -1,7 +1,7 @@
 {
   "collect_patterns": [
     "TESTDATADIR/ri_pv_reV2/gen_1*",
-    "TESTDATADIR/../TESTDATADIR/ri_pv_reV2/gen_2*"
+    "TESTDATADIR/ri_pv_reV2/gen_2*"
   ],
   "dsets": [
     "cf_mean",
@@ -13,7 +13,7 @@
     "option": "eagle",
     "walltime": 0.5
   },
-  "log_directory": "TESTDATADIR/../TESTDATADIR/ri_pv_reV2",
+  "log_directory": "TESTDATADIR/ri_pv_reV2",
   "log_level": "DEBUG",
   "parallel": false,
   "project_points": "./project_points_100.csv"

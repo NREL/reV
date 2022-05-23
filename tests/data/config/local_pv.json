@@ -1,6 +1,6 @@
 {
   "analysis_years": 2012,
-  "log_directory": "TESTDATADIR/../TESTDATADIR/ri_pv_reV2",
+  "log_directory": "TESTDATADIR/ri_pv_reV2",
   "execution_control": {
     "max_workers": 2,
     "nodes": 1,
