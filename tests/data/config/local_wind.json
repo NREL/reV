@@ -14,9 +14,9 @@
     "monthly_energy"
   ],
   "project_points": "./wtk_pp_2012_10.csv",
-  "resource_file": "TESTDATADIR/wtk/ri_100_wtk_{}.h5",
+  "resource_file": "TESTDATADIR/wtk/../wtk/ri_100_wtk_{}.h5",
   "sam_files": {
-    "wind0": "TESTDATADIR/SAM/wind_gen_standard_losses_0.json"
+    "wind0": "TESTDATADIR/SAM/../SAM/wind_gen_standard_losses_0.json"
   },
   "technology": "windpower"
 }

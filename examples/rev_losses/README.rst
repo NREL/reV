@@ -1,7 +1,7 @@
 Run reV with Losses
 ===================
 
-`reV Generation <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
+`reV Generation <https://nrel.github.io/reV/_autosummary/reV.generation.generation.Gen.html#reV.generation.generation.Gen>`_
 can include power curve losses and stochastically scheduled outages.
 
 Power Curve Losses (Wind only)

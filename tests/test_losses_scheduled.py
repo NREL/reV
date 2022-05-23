@@ -117,7 +117,7 @@ def basic_outage_dict():
 
 @pytest.fixture
 def so_scheduler(basic_outage_dict):
-    """Return a basic initalized `SingleOutageScheduler` object."""
+    """Return a basic initialized `SingleOutageScheduler` object."""
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
@@ -324,7 +324,7 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
 def _run_gen_with_and_without_losses(
     generic_losses, outages, site_outages, haf, files
 ):
-    """Run generaion with and without losses for testing. """
+    """Run generation with and without losses for testing. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
         sam_config = json.load(fh)
@@ -443,7 +443,7 @@ def test_scheduled_losses_repeatability(
                           max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_second_run = gen.out['gen_profile']
 
-    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
+    assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
 
 
 @pytest.mark.parametrize('files', [
@@ -501,9 +501,9 @@ def test_scheduled_losses_repeatability_with_seed(files):
                           max_workers=None, sites_per_worker=3, out_fpath=None)
         gen_profiles_third_run = gen.out['gen_profile']
 
-    assert np.isclose(gen_profiles_first_run, gen_profiles_second_run).all()
-    assert (~np.isclose(gen_profiles_first_run, gen_profiles_third_run)).any()
-    assert (~np.isclose(gen_profiles_second_run, gen_profiles_third_run)).any()
+    assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
+    assert not np.allclose(gen_profiles_first_run, gen_profiles_third_run)
+    assert not np.allclose(gen_profiles_second_run, gen_profiles_third_run)
 
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)

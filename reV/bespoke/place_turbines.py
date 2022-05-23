@@ -194,16 +194,19 @@ class PlaceTurbines():
         """The optimization objective used in the bespoke optimization
         """
         x = [bool(y) for y in x]
-        n_turbines = np.sum(x)
-        self.wind_plant["wind_farm_xCoordinates"] = self.x_locations[x]
-        self.wind_plant["wind_farm_yCoordinates"] = self.y_locations[x]
+        if len(x) > 0:
+            n_turbines = np.sum(x)
+            self.wind_plant["wind_farm_xCoordinates"] = self.x_locations[x]
+            self.wind_plant["wind_farm_yCoordinates"] = self.y_locations[x]
 
-        system_capacity = n_turbines * self.turbine_capacity
-        self.wind_plant["system_capacity"] = system_capacity
+            system_capacity = n_turbines * self.turbine_capacity
+            self.wind_plant["system_capacity"] = system_capacity
 
-        self.wind_plant.assign_inputs()
-        self.wind_plant.execute()
-        aep = self._aep_after_scaled_wake_losses()
+            self.wind_plant.assign_inputs()
+            self.wind_plant.execute()
+            aep = self._aep_after_scaled_wake_losses()
+        else:
+            n_turbines = system_capacity = aep = 0
 
         fixed_charge_rate = self.fixed_charge_rate
         capital_cost = eval(self.capital_cost_function,
@@ -276,6 +279,10 @@ class PlaceTurbines():
         optimized_design_variables = ga.optimized_design_variables
         self.optimized_design_variables = \
             [bool(y) for y in optimized_design_variables]
+
+        self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
+        self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
+        self.wind_plant["system_capacity"] = self.capacity
 
     def place_turbines(self, **kwargs):
         """Define bespoke wind plant turbine layouts.
@@ -358,12 +365,15 @@ class PlaceTurbines():
     def aep(self):
         """This is the annual energy production of the optimized plant (kWh)"""
         if self.optimized_design_variables is not None:
-            self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
-            self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
-            self.wind_plant["system_capacity"] = self.capacity
-            self.wind_plant.assign_inputs()
-            self.wind_plant.execute()
-            return self.wind_plant.annual_energy()
+            if self.nturbs > 0:
+                self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
+                self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
+                self.wind_plant["system_capacity"] = self.capacity
+                self.wind_plant.assign_inputs()
+                self.wind_plant.execute()
+                return self.wind_plant.annual_energy()
+            else:
+                return 0
         else:
             return None
 

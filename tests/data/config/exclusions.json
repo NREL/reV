@@ -23,7 +23,7 @@
     },
     {
       "band": 1,
-      "fpath": "/projects/rev/data/ri/ri_srtm_slope.tif",
+      "fpath": "/projects/rev/data/ri/../ri/ri_srtm_slope.tif",
       "max_thresh": 5,
       "name": "SRTM Slope",
       "type": "Slope"

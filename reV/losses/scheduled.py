@@ -212,7 +212,7 @@ class Outage:
 
     @property
     def total_available_hours(self):
-        """int: Total number of hours avialbale based on allowed months."""
+        """int: Total number of hours available based on allowed months."""
         if self._total_available_hours is None:
             self._total_available_hours = len(
                 hourly_indices_for_months(self.allowed_months))
@@ -361,7 +361,7 @@ class SingleOutageScheduler:
         Parameters
         ----------
         outage : Outage
-            An outage object contianing info about the outage to be
+            An outage object containing info about the outage to be
             scheduled.
         scheduler : OutageScheduler
             A scheduler object that keeps track of the total hourly
@@ -498,7 +498,7 @@ class ScheduledLossesMixin:
 
     Warning
     -------
-    Using this class for anything excpet as a mixin for
+    Using this class for anything except as a mixin for
     :class:`~reV.SAM.generation.AbstractSamGeneration` may result in
     unexpected results and/or errors.
     """
@@ -508,7 +508,7 @@ class ScheduledLossesMixin:
     OUTAGE_SEED_CONFIG_KEY = 'reV_outages_seed'
     """Specify a randomizer seed in the config file using this key."""
 
-    def add_scheduled_losses(self, resource):
+    def add_scheduled_losses(self, resource=None):
         """Add stochastically scheduled losses to SAM config file.
 
         This function reads the information in the ``reV_outages`` key
@@ -527,10 +527,11 @@ class ScheduledLossesMixin:
 
         Parameters
         ----------
-        resource : pd.DataFrame
-            Timeseries resource data for a single location with a pandas
-            DatetimeIndex. The ``year`` value of the index will be used
-            to seed the stochastically scheduled losses.
+        resource : pd.DataFrame, optional
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. The ``year`` value of the index will
+            be used to seed the stochastically scheduled losses. If
+            `None`, no yearly seed will be used.
 
         See Also
         --------
@@ -551,9 +552,12 @@ class ScheduledLossesMixin:
         operational during the scheduled outage (i.e. 20% remaining of
         the original generation).
         """
-        outages = self._user_outage_input(resource)
+
+        outages = self._user_outage_input()
         if not outages:
             return
+
+        self._set_base_seed(resource)
 
         logger.debug("Adding the following stochastically scheduled outages: "
                      "{}".format(outages))
@@ -566,7 +570,7 @@ class ScheduledLossesMixin:
         logger.debug("Hourly adjustment factors after scheduled outages: {}"
                      .format(list(self.sam_sys_inputs['hourly'])))
 
-    def _user_outage_input(self, resource):
+    def _user_outage_input(self):
         """Get outage and seed info from config. """
         outage_specs = self.sam_sys_inputs.pop(self.OUTAGE_CONFIG_KEY, None)
         if outage_specs is None:
@@ -577,10 +581,15 @@ class ScheduledLossesMixin:
             outage_specs = json.loads(outage_specs)
 
         outages = [Outage(spec) for spec in outage_specs]
-        self.__year_seed = int(resource.index.year.values[0])
-        self.__user_input_seed = self.sam_sys_inputs.pop(
-            self.OUTAGE_SEED_CONFIG_KEY, 0)
         return outages
+
+    def _set_base_seed(self, resource):
+        """Set the base seed base don user input. """
+        self.__base_seed = 0
+        if resource is not None:
+            self.__base_seed += int(resource.index.year.values[0])
+        self.__base_seed += self.sam_sys_inputs.pop(
+            self.OUTAGE_SEED_CONFIG_KEY, 0)
 
     def _add_outages_to_sam_inputs(self, outages):
         """Add the hourly adjustment factors to config, checking user input."""
@@ -596,15 +605,19 @@ class ScheduledLossesMixin:
     @property
     def outage_seed(self):
         """int: A value to use as the seed for the outage losses. """
-        base_seed = self.__year_seed + self.__user_input_seed
+        # numpy seeds must be between 0 and 2**32 - 1
+        return self._seed_from_inputs() % 2**32
+
+    def _seed_from_inputs(self):
+        """Get seed value from inputs. """
         try:
-            return int(self.meta.name) + base_seed
+            return int(self.meta.name) + self.__base_seed
         except (AttributeError, TypeError, ValueError):
             pass
 
         try:
-            return hash(tuple(self.meta)) + base_seed
+            return hash(tuple(self.meta)) + self.__base_seed
         except (AttributeError, TypeError):
             pass
 
-        return base_seed
+        return self.__base_seed

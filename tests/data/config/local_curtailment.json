@@ -15,7 +15,7 @@
     "lcoe"
   ],
   "project_points": "./project_points_wind_50.csv",
-  "resource_file": "TESTDATADIR/wtk/ri_100_wtk_{}.h5",
+  "resource_file": "TESTDATADIR/wtk/../wtk/ri_100_wtk_{}.h5",
   "sam_files": {
     "sam_gen_wind_1": "TESTDATADIR/SAM/i_windpower.json"
   },

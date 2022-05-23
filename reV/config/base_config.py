@@ -5,6 +5,7 @@ reV Base Configuration Framework
 import json
 import logging
 import os
+from pathlib import Path
 
 from rex.utilities import safe_json_load
 from rex.utilities.utilities import get_class_properties, unstupify_path
@@ -191,7 +192,6 @@ class BaseConfig(dict):
                 self._config_dir = os.path.dirname(unstupify_path(config))
                 self._config_dir += '/'
                 self._config_dir = self._config_dir.replace('\\', '/')
-                self.str_rep['./'] = self.config_dir
                 config = self.get_file(config)
             else:
                 # attempt to deserialize non-json string
@@ -199,7 +199,7 @@ class BaseConfig(dict):
 
         # Perform string replacement, save config to self instance
         if self._perform_str_rep:
-            config = self.str_replace(config, self.str_rep)
+            config = self.str_replace_and_resolve(config, self.str_rep)
 
         self.set_self_dict(config)
 
@@ -218,39 +218,43 @@ class BaseConfig(dict):
                 if os.path.exists(f) is False:
                     raise IOError('File does not exist: {}'.format(f))
 
-    @classmethod
-    def str_replace(cls, d, strrep):
-        """Perform a deep string replacement in d.
+    def str_replace_and_resolve(self, d, str_rep):
+        """Perform a deep string replacement and path resolve in d.
 
         Parameters
         ----------
         d : dict
-            Config dictionary potentially containing strings to replace.
-        strrep : dict
-            Replacement mapping where keys are strings to search for and values
-            are the new values.
+            Config dictionary potentially containing strings to replace
+            and/or paths to resolve.
+        str_rep : dict
+            Replacement mapping where keys are strings to search for and
+            values are the new values.
 
         Returns
         -------
         d : dict
-            Config dictionary with replaced strings.
+            Config dictionary with updated strings.
         """
 
         if isinstance(d, dict):
             # go through dict keys and values
             for key, val in d.items():
-                d[key] = cls.str_replace(val, strrep)
+                d[key] = self.str_replace_and_resolve(val, str_rep)
 
         elif isinstance(d, list):
             # if the value is also a list, iterate through
             for i, entry in enumerate(d):
-                d[i] = cls.str_replace(entry, strrep)
+                d[i] = self.str_replace_and_resolve(entry, str_rep)
 
         elif isinstance(d, str):
             # if val is a str, check to see if str replacements apply
-            for old_str, new in strrep.items():
+            for old_str, new in str_rep.items():
                 # old_str is in the value, replace with new value
                 d = d.replace(old_str, new)
+
+            # `resolve_path` is safe to call on any string,
+            # even if it is not a path
+            d = self.resolve_path(d)
 
         # return updated
         return d
@@ -291,3 +295,45 @@ class BaseConfig(dict):
             raise ConfigError('Unknown error getting configuration file: "{}"'
                               .format(fname))
         return config
+
+    def resolve_path(self, path):
+        """Resolve a file path represented by the input string.
+
+        This function resolves the input string if it resembles a path.
+        Specifically, the string will be resolved if it starts  with
+        "``./``" or "``..``", or it if it contains either "``./``" or
+        "``..``" somewhere in the string body. Otherwise, the string
+        is returned unchanged, so this function *is* safe to call on any
+        string, even ones that do not resemble a path.
+
+        This method delegates the "resolving" logic to
+        :meth:`pathlib.Path.resolve`. This means the path is made
+        absolute, symlinks are resolved, and "``..``" components are
+        eliminated. If the ``path`` input starts with "``./``" or
+        "``..``", it is assumed to be w.r.t the config directory, *not*
+        the run directory.
+
+        Parameters
+        ----------
+        path : str
+            Input file path.
+
+        Returns
+        -------
+        str
+            The resolved path.
+        """
+
+        if path.startswith('./'):
+            path = (self.config_dir / Path(path[2:]))
+        elif path.startswith('..'):
+            path = (self.config_dir / Path(path))
+        elif './' in path:  # this covers both './' and '../'
+            path = Path(path)
+
+        try:
+            path = path.resolve().as_posix()
+        except AttributeError:  # `path` is still a `str`
+            pass
+
+        return path

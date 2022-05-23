@@ -24,6 +24,7 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
+from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
@@ -371,9 +372,20 @@ class BespokeSinglePlant:
         dict
         """
         if self._wind_plant_pd is None:
-            return self._sam_sys_inputs
+            return copy.deepcopy(self._sam_sys_inputs)
         else:
-            return self._wind_plant_pd.sam_sys_inputs
+            config = copy.deepcopy(self._wind_plant_pd.sam_sys_inputs)
+            config['wind_turbine_powercurve_powerout'] = \
+                self._sam_sys_inputs['wind_turbine_powercurve_powerout']
+
+            keys_to_copy = [PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY,
+                            ScheduledLossesMixin.OUTAGE_CONFIG_KEY,
+                            'hourly']
+            for key in keys_to_copy:
+                if key in self._sam_sys_inputs:
+                    config[key] = self._sam_sys_inputs[key]
+
+            return config
 
     @property
     def sc_point(self):
@@ -694,6 +706,8 @@ class BespokeSinglePlant:
     def _check_sys_inputs(plant1, plant2,
                           ignore=('wind_resource_model_choice',
                                   'wind_resource_data',
+                                  'wind_turbine_powercurve_powerout',
+                                  'hourly',
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost')):

@@ -84,9 +84,10 @@ class PowerCurve:
             raise reVLossesValueError(msg)
 
         if 0 < self.cutoff_wind_speed < np.inf:
-            cutoff_windspeed_ind = np.where(self.wind_speed
-                                            >= self.cutoff_wind_speed)[0].min()
-            if (self.generation[cutoff_windspeed_ind:]).any():
+            wind_speeds_above_cutoff = np.where(self.wind_speed
+                                                >= self.cutoff_wind_speed)
+            cutoff_wind_speed_ind = wind_speeds_above_cutoff[0].min()
+            if (self.generation[cutoff_wind_speed_ind:]).any():
                 msg = ("Invalid generation input: Found non-zero values above "
                        "cutoff! - {}".format(self.generation))
                 logger.error(msg)
@@ -139,7 +140,7 @@ class PowerCurve:
         Parameters
         ----------
         wind_speed : int | float | list | np.array
-            Wind speed value corresponding to the desired powerrcurve
+            Wind speed value corresponding to the desired power curve
             value.
 
         Returns
@@ -191,12 +192,16 @@ class PowerCurveLosses:
         distribution) for the site at which the power curve will be
         used. This distribution is used to calculate the annual
         generation of the original power curve as well as any additional
-        calcaulted power curves. The generation values are then compared
+        calculated power curves. The generation values are then compared
         in order to calculate the loss resulting from a transformed
         power curve.
+    weights :obj:`np.array`
+        An array of the same length as ``wind_resource`` containing
+        weights to apply to each generation value calculated for the
+        corresponding wind speed.
     """
 
-    def __init__(self, power_curve, wind_resource):
+    def __init__(self, power_curve, wind_resource, weights=None):
         """
         Parameters
         ----------
@@ -206,26 +211,46 @@ class PowerCurveLosses:
             "original" power curve.
         wind_resource : iter
             An iterable containing the wind speeds measured at the site
-            where this power curve will be applied to caulcate
+            where this power curve will be applied to calculate
             generation. These values are used to calculate the loss
             resulting from a transformed power curve compared to the
             generation of the original power curve. The input
             values should all be non-zero, and the units of
             should match the units of the ``power_curve`` input
             (typically, m/s).
+        weights : iter, optional
+            An iterable of the same length as ``wind_resource``
+            containing weights to apply to each generation value
+            calculated for the corresponding wind speed.
         """
         self.power_curve = power_curve
         self.wind_resource = np.array(wind_resource)
+        if weights is None:
+            self.weights = np.ones_like(self.wind_resource)
+        else:
+            self.weights = np.array(weights)
         self._power_gen = None
 
-        _validate_arrays_not_empty(self, array_names=['wind_resource'])
+        _validate_arrays_not_empty(self,
+                                   array_names=['wind_resource', 'weights'])
         self._validate_wind_resource()
+        self._validate_weights()
 
     def _validate_wind_resource(self):
         """Validate that the input wind resource is non-negative. """
         if not (self.wind_resource >= 0).all():
             msg = ("Invalid wind resource input: Contains negative values!"
                    " - {}".format(self.wind_resource))
+            msg = msg.format(self.wind_resource)
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_weights(self):
+        """Validate that the input weights size matches the wind resource. """
+        if self.wind_resource.size != self.weights.size:
+            msg = ("Invalid weights input: Does not match size of wind "
+                   "resource! - {} vs {}"
+                   .format(self.weights.size, self.wind_resource.size))
             msg = msg.format(self.wind_resource)
             logger.error(msg)
             raise reVLossesValueError(msg)
@@ -257,6 +282,7 @@ class PowerCurveLosses:
             transformation.
         """
         power_gen_with_losses = transformed_power_curve(self.wind_resource)
+        power_gen_with_losses *= self.weights
         power_gen_with_losses = power_gen_with_losses.sum()
         return (1 - power_gen_with_losses / self.power_gen_no_losses) * 100
 
@@ -328,7 +354,9 @@ class PowerCurveLosses:
     def power_gen_no_losses(self):
         """float: Total power generation from original power curve."""
         if self._power_gen is None:
-            self._power_gen = self.power_curve(self.wind_resource).sum()
+            self._power_gen = self.power_curve(self.wind_resource)
+            self._power_gen *= self.weights
+            self._power_gen = self._power_gen.sum()
         return self._power_gen
 
 
@@ -336,9 +364,9 @@ class PowerCurveLossesInput:
     """Power curve losses specification.
 
     This class stores and validates information about the desired losses
-    from a given type of power curve transfromation. In particular, the
+    from a given type of power curve transformation. In particular, the
     target loss percentage must be provided. This input is then
-    validated to be used powercurve transformation fitting.
+    validated to be used power curve transformation fitting.
 
     """
 
@@ -356,8 +384,9 @@ class PowerCurveLossesInput:
                 - `target_losses_percent`
                     An integer or float value representing the
                     total percentage of annual energy production that
-                    should be lost due to the powercurve transformation.
-                    This value must be in the range [0, 100].
+                    should be lost due to the power curve
+                    transformation. This value must be in the range
+                    [0, 100].
             The input dictionary can also provide the following optional
             keys:
                 - `transformation` - by default, ``horizontal_translation``
@@ -401,7 +430,7 @@ class PowerCurveLossesInput:
         """Validate that the percentage is in the range [0, 100]. """
         if not 0 <= self.target <= 100:
             msg = ("Percentage of annual energy production loss to be "
-                   "attributed to the powercurve transformation must be in "
+                   "attributed to the power curve transformation must be in "
                    "the range [0, 100], but got {} for transformation {!r}"
                    .format(self.target, self._transformation_name))
             logger.error(msg)
@@ -430,12 +459,12 @@ class PowerCurveLossesMixin:
 
     Warning
     -------
-    Using this class for anything excpet as a mixin for
+    Using this class for anything except as a mixin for
     :class:`~reV.SAM.generation.AbstractSamWind` may result in unexpected
     results and/or errors.
     """
 
-    POWERCURVE_CONFIG_KEY = 'reV_power_curve_losses'
+    POWER_CURVE_CONFIG_KEY = 'reV_power_curve_losses'
     """Specify power curve loss target in the config file using this key."""
 
     def add_power_curve_losses(self):
@@ -457,8 +486,9 @@ class PowerCurveLossesMixin:
         if not loss_input:
             return
 
-        wind_resource = self.wind_resource_for_site()
-        pc_losses = PowerCurveLosses(self.input_power_curve, wind_resource)
+        wind_resource, weights = self.wind_resource_from_input()
+        pc_losses = PowerCurveLosses(self.input_power_curve,
+                                     wind_resource, weights)
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
@@ -471,7 +501,7 @@ class PowerCurveLossesMixin:
     def _user_power_curve_input(self):
         """Get power curve loss info from config. """
         power_curve_losses_info = self.sam_sys_inputs.pop(
-            self.POWERCURVE_CONFIG_KEY, None
+            self.POWER_CURVE_CONFIG_KEY, None
         )
         if power_curve_losses_info is None:
             return
@@ -482,7 +512,7 @@ class PowerCurveLossesMixin:
 
         loss_input = PowerCurveLossesInput(power_curve_losses_info)
         if loss_input.target <= 0:
-            logger.debug("Power curve target loss is 0. Skipping powercurve "
+            logger.debug("Power curve target loss is 0. Skipping power curve "
                          "transformation.")
             return
 
@@ -494,6 +524,33 @@ class PowerCurveLossesMixin:
         wind_speed = self.sam_sys_inputs['wind_turbine_powercurve_windspeeds']
         generation = self.sam_sys_inputs['wind_turbine_powercurve_powerout']
         return PowerCurve(wind_speed, generation)
+
+    def wind_resource_from_input(self):
+        """Collect wind resource and weights from inputs.
+
+        Returns
+        -------
+        wind_speeds : array-like
+            Array of wind speeds.
+        weights : array-like | ``None``
+            Array of weights for corresponding wind speeds, or ``None``.
+
+        Raises
+        ------
+        reVLossesValueError
+            If power curve losses are not compatible with the
+            'wind_resource_model_choice'.
+        """
+        if self['wind_resource_model_choice'] == 0:
+            return self.wind_resource_for_site(), None
+        elif self['wind_resource_model_choice'] == 2:
+            return self.wind_resource_from_distribution()
+        else:
+            msg = ("reV power curve losses cannot be used with "
+                   "'wind_resource_model_choice' = {}"
+                   .format(self['wind_resource_model_choice']))
+            logger.error(msg)
+            raise reVLossesValueError(msg)
 
     def wind_resource_for_site(self):
         """Extract scaled wind speeds at the site.
@@ -532,6 +589,22 @@ class PowerCurveLossesMixin:
         weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
         return wind_speeds / weights
 
+    def wind_resource_from_distribution(self):
+        """Extract wind speeds and weights from resource distribution.
+
+        Returns
+        -------
+        wind_speeds : array-like
+            Array of wind speeds.
+        weights : array-like
+            Array of weights for corresponding wind speeds.
+        """
+
+        wrd = np.array(self['wind_resource_distribution'])
+        wind_speeds = wrd[:, 0]
+        weights = wrd[:, -1]
+        return wind_speeds, weights
+
 
 class AbstractPowerCurveTransformation(ABC):
     """Abstract base class for power curve transformations.
@@ -543,7 +616,7 @@ class AbstractPowerCurveTransformation(ABC):
     losses when compared to simple haircut losses (i.e. constant loss
     value applied at all points on the power curve).
 
-    If you would like to implement your own power curve transfromation,
+    If you would like to implement your own power curve transformation,
     you should subclass this class and implement the :meth:`apply`
     method and the :attr:`bounds` property. See the documentation for
     each of these below for more details.
@@ -599,6 +672,12 @@ class AbstractPowerCurveTransformation(ABC):
         :obj:`PowerCurve`
             An new power curve containing the generation values from the
             transformed power curve.
+
+        Raises
+        ------
+        NotImplementedError
+            If the transformation implementation did not set the
+            ``_transformed_generation`` attribute.
 
         Notes
         -----
@@ -669,7 +748,7 @@ class HorizontalTranslation(AbstractPowerCurveTransformation):
 
     Warnings
     --------
-    This kind of power curve translation is not genrally realistic.
+    This kind of power curve translation is not generally realistic.
     Using this transformation as a primary source of losses (i.e. many
     different kinds of losses bundled together) is extremely likely to
     yield unrealistic results!
@@ -681,7 +760,7 @@ class HorizontalTranslation(AbstractPowerCurveTransformation):
         This function shifts the original power curve horizontally,
         along the "wind speed" (x) axis, by the given amount. Any power
         above the cutoff speed (if one was detected) is truncated after
-        the transforamtion.
+        the transformation.
 
         Parameters
         ----------
@@ -742,7 +821,7 @@ class LinearStretching(AbstractPowerCurveTransformation):
 
         This function stretches the original power curve along the
         "wind speed" (x) axis. Any power above the cutoff speed (if one
-        was detected) is truncated after the transforamtion.
+        was detected) is truncated after the transformation.
 
         Parameters
         ----------
@@ -804,7 +883,7 @@ class ExponentialStretching(AbstractPowerCurveTransformation):
 
         This function stretches the original power curve along the
         "wind speed" (x) axis. Any power above the cutoff speed (if one
-        was detected) is truncated after the transforamtion.
+        was detected) is truncated after the transformation.
 
         Parameters
         ----------

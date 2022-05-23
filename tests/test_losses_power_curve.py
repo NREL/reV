@@ -80,7 +80,7 @@ def test_power_curve_losses(generic_losses, target_losses, transformation):
     if target_losses > 0:
         assert (gen_profiles - gen_profiles_with_losses > 0).any()
     else:
-        assert np.isclose(gen_profiles, gen_profiles_with_losses).all()
+        assert np.allclose(gen_profiles, gen_profiles_with_losses)
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
     assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
@@ -110,7 +110,7 @@ def _run_gen_with_and_without_losses(
     generic_losses, target_losses, transformation, include_outages=False,
     site_losses=None
 ):
-    """Run generaion with and without losses for testing. """
+    """Run generation with and without losses for testing. """
 
     sam_file = SAM_FILES[0]
 
@@ -121,7 +121,7 @@ def _run_gen_with_and_without_losses(
         del sam_config['wind_farm_losses_percent']
         sam_config['turb_generic_loss'] = generic_losses
 
-        sam_config[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+        sam_config[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
             'target_losses_percent': target_losses,
             'transformation': transformation
         }
@@ -178,7 +178,7 @@ def _make_site_data_df(site_data):
         site_specific_losses = [json.dumps(site_data)] * len(REV_POINTS)
         site_data_dict = {
             'gid': REV_POINTS,
-            PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY: site_specific_losses
+            PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY: site_specific_losses
         }
         site_data = pd.DataFrame(site_data_dict)
     return site_data
@@ -212,7 +212,7 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
 
     mixin = PowerCurveLossesMixin()
     mixin.sam_sys_inputs = copy.deepcopy(sam_config)
-    mixin.sam_sys_inputs[PowerCurveLossesMixin.POWERCURVE_CONFIG_KEY] = {
+    mixin.sam_sys_inputs[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
         'target_losses_percent': 10,
         'transformation': 'horizontal_translation'
     }
@@ -224,7 +224,7 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )
 
-    assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert mixin.POWER_CURVE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert any(og_power_curve != new_power_curve)
 
 
@@ -244,7 +244,7 @@ def test_power_curve_losses_mixin_class_no_losses_input(config):
         mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
     )
 
-    assert mixin.POWERCURVE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert mixin.POWER_CURVE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert (og_power_curve == new_power_curve).all()
 
 
@@ -279,6 +279,18 @@ def test_power_curve_losses_class_bad_wind_res_input(bad_wind_res):
     assert "Invalid wind resource input" in str(excinfo.value)
 
 
+@pytest.mark.parametrize('bad_weights', ([], [1]))
+def test_power_curve_losses_class_bad_weights_input(bad_weights):
+    """Test that error is raised for bad weights input. """
+    wind_speed = [0, 10]
+    generation = [10, 100]
+    wind_res = [0, 0, 5]
+    power_curve = PowerCurve(wind_speed, generation)
+    with pytest.raises(reVLossesValueError) as excinfo:
+        PowerCurveLosses(power_curve, wind_res, weights=bad_weights)
+    assert "Invalid weights input" in str(excinfo.value)
+
+
 @pytest.mark.parametrize('pc_transformation', TRANSFORMATIONS.values())
 def test_transformation_classes_apply(pc_transformation, real_power_curve):
     """Test that the power curve transformations are applied correctly. """
@@ -307,15 +319,15 @@ def test_horizontal_transformation_class_apply(real_power_curve):
     transformation = HorizontalTranslation(real_power_curve)
     new_power_curve = transformation.apply(curve_shift)
 
-    assert np.isclose(real_power_curve[:-2], new_power_curve[1:-1]).all()
+    assert np.allclose(real_power_curve[:-2], new_power_curve[1:-1])
 
 
 def test_power_curve_losses_class_annual_losses_with_transformed_power_curve():
     """Test that the average difference is calculated correctly. """
 
-    windspeed = [0, 10, 20, 30, 40]
+    wind_speed = [0, 10, 20, 30, 40]
     generation = [0, 10, 15, 20, 0]
-    power_curve = PowerCurve(windspeed, generation)
+    power_curve = PowerCurve(wind_speed, generation)
     transformation = HorizontalTranslation(power_curve)
     pc_losses = PowerCurveLosses(power_curve, BASIC_WIND_RES)
 
@@ -400,7 +412,7 @@ def test_power_curve_loss_input_class_bad_transformation_input():
 
 
 def test_power_curve_loss_input_class_missing_required_keys():
-    """Test PowerCurveLossesInput class withmissing keys input. """
+    """Test PowerCurveLossesInput class with missing keys input. """
 
     with pytest.raises(reVLossesValueError) as excinfo:
         PowerCurveLossesInput({})

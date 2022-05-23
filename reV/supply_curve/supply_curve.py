@@ -323,6 +323,10 @@ class SupplyCurve:
         features = features.rename(columns={'trans_line_gid': 'trans_gid',
                                             'trans_gids': 'trans_line_gids'})
         mask = features['category'].str.lower() == 'substation'
+
+        if not any(mask):
+            return []
+
         line_gids = \
             features.loc[mask,
                          'trans_line_gids'].apply(cls._parse_trans_line_gids)
