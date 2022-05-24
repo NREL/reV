@@ -3,7 +3,6 @@
 place turbines for bespoke wind plants
 """
 import numpy as np
-import shapely.affinity
 
 from shapely.geometry import Polygon, MultiPolygon
 
