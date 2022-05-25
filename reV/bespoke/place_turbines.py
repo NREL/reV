@@ -3,8 +3,8 @@
 place turbines for bespoke wind plants
 """
 import numpy as np
+
 from shapely.geometry import Polygon, MultiPolygon
-import shapely.affinity
 
 from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
@@ -117,11 +117,10 @@ class PlaceTurbines():
         """From the exclusions data, create a shapely MultiPolygon as
         self.safe_polygons that defines where turbines can be placed.
         """
-
         nx, ny = np.shape(self.include_mask)
         self.safe_polygons = MultiPolygon()
-        side_x = np.linspace(0.0, float(nx), nx + 1)
-        side_y = np.linspace(0.0, float(ny), ny + 1)
+        side_x = np.arange(nx + 1) * self.pixel_side_length
+        side_y = np.arange(ny + 1, -1, -1) * self.pixel_side_length
         floored = np.floor(self.include_mask)
         for i in range(nx):
             for j in range(ny):
@@ -132,24 +131,17 @@ class PlaceTurbines():
                                           (side_x[i], side_y[j + 1])))
                     self.safe_polygons = self.safe_polygons.union(added_poly)
 
-        self.safe_polygons = \
-            shapely.affinity.scale(self.safe_polygons,
-                                   xfact=self.pixel_side_length,
-                                   yfact=-self.pixel_side_length,
-                                   origin=(0, 0))
-
         if self.safe_polygons.area == 0.0:
             self.full_polygons = MultiPolygon([])
             self.packing_polygons = MultiPolygon([])
         else:
-            minx, miny, maxx, maxy = self.safe_polygons.bounds
-            self.safe_polygons = shapely.affinity.translate(self.safe_polygons,
-                                                            xoff=-minx,
-                                                            yoff=-miny)
             self.full_polygons = self.safe_polygons.buffer(0)
 
             # add extra setback to cell boundary
-            minx, miny, maxx, maxy = self.full_polygons.bounds
+            minx = 0.0
+            miny = 0.0
+            maxx = nx * self.pixel_side_length
+            maxy = ny * self.pixel_side_length
             minx += self.min_spacing / 2.0
             miny += self.min_spacing / 2.0
             maxx -= self.min_spacing / 2.0
@@ -171,7 +163,6 @@ class PlaceTurbines():
         define potential turbine locations that will be used as design
         variables in the gentic algorithm.
         """
-
         packing = PackTurbines(self.min_spacing, self.packing_polygons)
         nturbs = 1E6
         mult = 1.0
