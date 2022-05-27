@@ -1,5 +1,5 @@
 {
-  "collect_patterns": "PIPELINE",
+  "collect_pattern": "PIPELINE",
   "dsets": [
     "cf_mean"
   ],

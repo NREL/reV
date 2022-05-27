@@ -1,6 +1,6 @@
 {
   "aggregate_profiles": true,
-  "collect_patterns": "TESTDATADIR/ri_pv_reV2/*",
+  "collect_pattern": "TESTDATADIR/ri_pv_reV2/*",
   "execution_control": {
     "allocation": "rev",
     "memory": 90,
