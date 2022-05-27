@@ -1,5 +1,5 @@
 {
-  "collect_patterns": [
+  "collect_pattern": [
     "TESTDATADIR/ri_pv_reV2/gen_1*",
     "TESTDATADIR/ri_pv_reV2/gen_2*"
   ],

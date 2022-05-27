@@ -1,5 +1,5 @@
 {
-  "collect_patterns": "PIPELINE",
+  "collect_pattern": "PIPELINE",
   "dsets": [
     "ppa_price",
     "lcoe_nom",

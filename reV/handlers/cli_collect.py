@@ -79,7 +79,7 @@ def from_config(ctx, config_file, verbose):
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.log_directory))
     logger.info('Target collection patterns: "{}"'
-                .format(config.collect_patterns))
+                .format(config.collect_pattern))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.debug('The full configuration input is as follows:\n{}'
@@ -92,11 +92,11 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['PURGE_CHUNKS'] = config.purge_chunks
     ctx.obj['VERBOSE'] = verbose
 
-    zip_iter = zip(config.fn_out_names, config.collect_patterns)
+    zip_iter = zip(config.fn_out_names, config.collect_pattern)
     for fn_out, collect_pattern in zip_iter:
         ctx.obj['NAME'] = name + '_{}'.format(fn_out.replace('.h5', ''))
         ctx.obj['H5_FILE'] = os.path.join(config.dirout, fn_out)
-        ctx.obj['collect_pattern'] = collect_pattern
+        ctx.obj['COLLECT_PATTERN'] = collect_pattern
 
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(
@@ -152,7 +152,7 @@ def direct(ctx, h5_file, collect_pattern, project_points, dsets,
            log_dir, purge_chunks, verbose):
     """Main entry point for collection with context passing."""
     ctx.obj['H5_FILE'] = h5_file
-    ctx.obj['collect_pattern'] = collect_pattern
+    ctx.obj['COLLECT_PATTERN'] = collect_pattern
     ctx.obj['PROJECT_POINTS'] = project_points
     ctx.obj['DSETS'] = dsets
     ctx.obj['LOG_DIR'] = log_dir
@@ -169,7 +169,7 @@ def collect(ctx, verbose):
 
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
-    collect_pattern = ctx.obj['collect_pattern']
+    collect_pattern = ctx.obj['COLLECT_PATTERN']
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
     log_dir = ctx.obj['LOG_DIR']
@@ -301,7 +301,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
-    collect_pattern = ctx.obj['collect_pattern']
+    collect_pattern = ctx.obj['COLLECT_PATTERN']
     log_dir = ctx.obj['LOG_DIR']
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']

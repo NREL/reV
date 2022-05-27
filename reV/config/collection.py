@@ -23,7 +23,7 @@ class CollectionConfig(AnalysisConfig):
     """File collection config."""
 
     NAME = ModuleName.COLLECT
-    REQUIREMENTS = ('dsets', 'collect_patterns')
+    REQUIREMENTS = ('dsets', 'collect_pattern')
 
     def __init__(self, config):
         """
@@ -105,21 +105,21 @@ class CollectionConfig(AnalysisConfig):
         collection patterns.
 
         This can also be set to PIPELINE or just not set at all if this is a
-        pipeline job and collect_patterns="PIPELINE"
+        pipeline job and collect_pattern="PIPELINE"
         """
 
         fn_out_names = self.get('fn_out_names', None)
-        collect_patterns = self['collect_patterns']
+        collect_pattern = self['collect_pattern']
 
         if (str(fn_out_names) == 'PIPELINE'
-                or str(collect_patterns) == 'PIPELINE'):
+                or str(collect_pattern) == 'PIPELINE'):
             fn_out_names = self._parse_pipeline_prefixes()
             fn_out_names = [fn if fn.endswith('.h5') else fn + '.h5'
                             for fn in fn_out_names]
 
-        elif fn_out_names is None and str(collect_patterns) != 'PIPELINE':
+        elif fn_out_names is None and str(collect_pattern) != 'PIPELINE':
             fn_out_names = [os.path.basename(fp).replace('*', '')
-                            for fp in self.collect_patterns]
+                            for fp in self.collect_pattern]
 
         if isinstance(fn_out_names, str):
             fn_out_names = [fn_out_names]
@@ -133,30 +133,30 @@ class CollectionConfig(AnalysisConfig):
         return fn_out_names
 
     @property
-    def collect_patterns(self):
-        """Get a list of unix-style /filepath/patterns*.h5, each of which is
-        a separate collection job. This should correspond to the fn_out_names,
-        unless both are set to PIPELINE.
+    def collect_pattern(self):
+        """Get a list of one or more unix-style /filepath/patterns*.h5, each of
+        which is a separate collection job. This should correspond to the
+        fn_out_names, unless both are set to PIPELINE.
         """
 
-        collect_patterns = self['collect_patterns']
+        collect_pattern = self['collect_pattern']
 
-        if str(collect_patterns) == 'PIPELINE':
+        if str(collect_pattern) == 'PIPELINE':
             coldir = Pipeline.parse_previous(self.dirout,
                                              module=ModuleName.COLLECT,
                                              target='dirout')[0]
             prefixes = self._parse_pipeline_prefixes()
             fn_patterns = [fn if fn.endswith('.h5') else fn + '*.h5'
                            for fn in prefixes]
-            collect_patterns = [os.path.join(coldir, fn) for fn in fn_patterns]
+            collect_pattern = [os.path.join(coldir, fn) for fn in fn_patterns]
 
-        if isinstance(collect_patterns, str):
-            collect_patterns = [collect_patterns]
-        elif collect_patterns is None:
-            msg = ('Failed to parse "collect_patterns" from collect config!')
+        if isinstance(collect_pattern, str):
+            collect_pattern = [collect_pattern]
+        elif collect_pattern is None:
+            msg = ('Failed to parse "collect_pattern" from collect config!')
             logger.error(msg)
             raise RuntimeError(msg)
         else:
-            collect_patterns = list(collect_patterns)
+            collect_pattern = list(collect_pattern)
 
-        return collect_patterns
+        return collect_pattern

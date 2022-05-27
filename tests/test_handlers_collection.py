@@ -166,7 +166,7 @@ def test_cli():
                 "cf_profile"
             ],
             "project_points": None,
-            "collect_patterns": H5_PATTERN_1,
+            "collect_pattern": H5_PATTERN_1,
         }
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:
