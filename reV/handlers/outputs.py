@@ -3,7 +3,13 @@
 Classes to handle reV h5 output files.
 """
 import logging
+import nrwal
+import PySAM
+import rex
+import sys
+import json
 
+from reV import __version__
 from rex.outputs import Outputs as rexOutputs
 
 logger = logging.getLogger(__name__)
@@ -133,3 +139,27 @@ class Outputs(rexOutputs):
         str
         """
         return self.h5.attrs['package']
+
+    @property
+    def full_version_record(self):
+        """Get record of versions for dependencies
+
+        Returns
+        -------
+        dict
+            Dictionary of package versions for dependencies
+        """
+        versions = {'reV': __version__,
+                    'rex': rex.__version__,
+                    'pysam': PySAM.__version__,
+                    'python': sys.version,
+                    'nrwal': nrwal.__version__,
+                    }
+        return versions
+
+    def set_version_attr(self):
+        """Set the version attribute to the h5 file."""
+        self.h5.attrs['version'] = __version__
+        self.h5.attrs['full_version_record'] = json.dumps(
+            self.full_version_record)
+        self.h5.attrs['package'] = 'reV'
