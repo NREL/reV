@@ -3,7 +3,7 @@
 Classes to handle reV h5 output files.
 """
 import logging
-import nrwal
+import NRWAL
 import PySAM
 import rex
 import sys
@@ -153,7 +153,7 @@ class Outputs(rexOutputs):
                     'rex': rex.__version__,
                     'pysam': PySAM.__version__,
                     'python': sys.version,
-                    'nrwal': nrwal.__version__,
+                    'nrwal': NRWAL.__version__,
                     }
         return versions
 
