@@ -9,7 +9,7 @@ import rex
 import sys
 import json
 
-from reV import __version__
+from reV.version import __version__
 from rex.outputs import Outputs as rexOutputs
 
 logger = logging.getLogger(__name__)
