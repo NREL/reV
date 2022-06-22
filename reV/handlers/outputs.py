@@ -130,17 +130,6 @@ class Outputs(rexOutputs):
     """
 
     @property
-    def package(self):
-        """
-        Package used to create file
-
-        Returns
-        -------
-        str
-        """
-        return self.h5.attrs['package']
-
-    @property
     def full_version_record(self):
         """Get record of versions for dependencies
 
@@ -149,12 +138,14 @@ class Outputs(rexOutputs):
         dict
             Dictionary of package versions for dependencies
         """
-        versions = {'reV': __version__,
-                    'rex': rex.__version__,
-                    'pysam': PySAM.__version__,
-                    'python': sys.version,
-                    'nrwal': NRWAL.__version__,
-                    }
+        rev_versions = {'reV': __version__,
+                        'rex': rex.__version__,
+                        'pysam': PySAM.__version__,
+                        'python': sys.version,
+                        'nrwal': NRWAL.__version__,
+                        }
+        versions = super().full_version_record
+        versions.update(rev_versions)
         return versions
 
     def set_version_attr(self):
