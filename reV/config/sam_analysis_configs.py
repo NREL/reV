@@ -239,21 +239,29 @@ class GenConfig(SAMAnalysisConfig):
         """
         if self._res_files is None:
             # get base filename, may have {} for year format
-            fname = self.resource_file
-            if '{}' in fname:
+            self._res_files = self.resource_file
+            if isinstance(self._res_files, str) and '{}' in self._res_files:
                 # need to make list of res files for each year
-                self._res_files = [fname.format(year)
+                self._res_files = [self._res_files.format(year)
                                    for year in self.analysis_years]
-            else:
+            elif isinstance(self._res_files, str):
                 # only one resource file request, still put in list
-                self._res_files = [fname]
+                self._res_files = [self._res_files]
+            elif not isinstance(self._res_files, (list, tuple)):
+                msg = ('Bad "resource_file" type, needed str, list, or tuple '
+                       'but received: {}, {}'
+                       .format(self._res_files, type(self._res_files)))
+                logger.error(msg)
+                raise ConfigError(msg)
 
         if len(self._res_files) != len(self.analysis_years):
-            raise ConfigError('The number of resource files does not match '
-                              'the number of analysis years!'
-                              '\n\tResource files: \n\t\t{}'
-                              '\n\tYears: \n\t\t{}'
-                              .format(self._res_files, self.analysis_years))
+            msg = ('The number of resource files does not match '
+                   'the number of analysis years!'
+                   '\n\tResource files: \n\t\t{}'
+                   '\n\tYears: \n\t\t{}'
+                   .format(self._res_files, self.analysis_years))
+            logger.error(msg)
+            raise ConfigError(msg)
 
         return self._res_files
 
