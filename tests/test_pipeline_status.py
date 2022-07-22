@@ -41,7 +41,7 @@ def test_file_collection():
         Status.make_job_file(STATUS_DIR, 'generation', 'test2', TEST_2_ATTRS_1)
 
         Status.update(STATUS_DIR)
-        with open(os.path.join(STATUS_DIR, 'rev_status.json'), 'r') as f:
+        with open(os.path.join(STATUS_DIR, 'pipeline_status.json'), 'r') as f:
             data = json.load(f)
         assert str(TEST_1_ATTRS_1) in str(data)
         assert str(TEST_2_ATTRS_1) in str(data)

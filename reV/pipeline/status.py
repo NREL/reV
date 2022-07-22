@@ -71,7 +71,7 @@ class Status(dict):
                             'not a status json: {}'.format(status_dir))
 
         if name is None:
-            fpath = os.path.join(status_dir, 'rev_status.json')
+            fpath = os.path.join(status_dir, 'pipeline_status.json')
             for fn in os.listdir(status_dir):
                 if fn.endswith('_status.json'):
                     fpath = os.path.join(status_dir, fn)
