@@ -454,7 +454,14 @@ class Sam:
             key = key.replace('adjust:', '')
 
         if isinstance(value, str) and '[' in value and ']' in value:
-            value = json.loads(value)
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                msg = ('Found a weird SAM config input for "{}" that looks '
+                       'like a stringified-list but could not run through '
+                       'json.loads() so skipping: {}'.format(key, value))
+                logger.warning(msg)
+                warn(msg)
 
         return key, value
 
