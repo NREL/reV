@@ -36,7 +36,6 @@ from reV.qa_qc.cli_qa_qc import from_config as run_qa_qc_from_config
 from reV.qa_qc.cli_qa_qc import valid_config_keys as qa_qc_keys
 from reV import __version__
 
-from rex.utilities.cli_dtypes import STR
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +193,8 @@ def valid_pipeline_keys(ctx):
               help='Flag to turn on debug logging.')
 @click.pass_context
 def batch(ctx, dry_run, cancel, delete, monitor_background, verbose):
-    """Execute multiple steps in a reV analysis pipeline."""
+    """Create and run multiple reV project directories based on batch
+    permutation logic."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])

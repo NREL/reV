@@ -5,7 +5,6 @@ Batch Job CLI entry points.
 """
 import click
 
-from rex.utilities.cli_dtypes import STR
 from rex.utilities.utilities import get_class_properties
 
 from reV.batch.batch import BatchJob
