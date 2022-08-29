@@ -272,7 +272,7 @@ class BaseConfig(dict):
             Python namespace object to set to this dictionary-emulating class.
         """
         for key, val in dictlike.items():
-            self.__setitem__(key, val)
+            self[key] = val
 
     @staticmethod
     def get_file(fname):
