@@ -6,7 +6,6 @@ from abc import ABC
 import logging
 import numpy as np
 import pandas as pd
-from scipy import stats
 from warnings import warn
 
 from reV.econ.economies_of_scale import EconomiesOfScale
@@ -685,7 +684,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         if not data.size:
             return None
         else:
-            return stats.mode(data).mode[0]
+            # pd series is more flexible with non-numeric than stats mode
+            return pd.Series(data).mode().values[0]
 
     @staticmethod
     def _categorize(data, incl_mult):
@@ -1025,9 +1025,16 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def country(self):
         """Get the SC point country based on the resource meta data."""
         country = None
-        if 'country' in self.h5.meta:
+        if 'country' in self.h5.meta and self.county is not None:
+            # make sure country and county are coincident
+            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            iloc = np.where(counties == self.county)[0][0]
             country = self.h5.meta.loc[self.h5_gid_set, 'country'].values
-            country = stats.mode(country).mode[0]
+            country = country[iloc]
+
+        elif 'country' in self.h5.meta:
+            country = self.h5.meta.loc[self.h5_gid_set, 'country'].mode()
+            country = country.values[0]
 
         return country
 
@@ -1035,9 +1042,16 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def state(self):
         """Get the SC point state based on the resource meta data."""
         state = None
-        if 'state' in self.h5.meta:
+        if 'state' in self.h5.meta and self.county is not None:
+            # make sure state and county are coincident
+            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            iloc = np.where(counties == self.county)[0][0]
             state = self.h5.meta.loc[self.h5_gid_set, 'state'].values
-            state = stats.mode(state).mode[0]
+            state = state[iloc]
+
+        elif 'state' in self.h5.meta:
+            state = self.h5.meta.loc[self.h5_gid_set, 'state'].mode()
+            state = state.values[0]
 
         return state
 
@@ -1046,8 +1060,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point county based on the resource meta data."""
         county = None
         if 'county' in self.h5.meta:
-            county = self.h5.meta.loc[self.h5_gid_set, 'county'].values
-            county = stats.mode(county).mode[0]
+            county = self.h5.meta.loc[self.h5_gid_set, 'county'].mode()
+            county = county.values[0]
 
         return county
 
@@ -1064,9 +1078,16 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def timezone(self):
         """Get the SC point timezone based on the resource meta data."""
         timezone = None
-        if 'timezone' in self.h5.meta:
+        if 'timezone' in self.h5.meta and self.county is not None:
+            # make sure timezone flag and county are coincident
+            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            iloc = np.where(counties == self.county)[0][0]
             timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].values
-            timezone = stats.mode(timezone).mode[0]
+            timezone = timezone[iloc]
+
+        elif 'timezone' in self.h5.meta:
+            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].mode()
+            timezone = timezone.values[0]
 
         return timezone
 
@@ -1075,9 +1096,16 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point offshore flag based on the resource meta data
         (if offshore column is present)."""
         offshore = None
-        if 'offshore' in self.h5.meta:
+        if 'offshore' in self.h5.meta and self.county is not None:
+            # make sure offshore flag and county are coincident
+            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            iloc = np.where(counties == self.county)[0][0]
             offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].values
-            offshore = stats.mode(offshore).mode[0]
+            offshore = offshore[iloc]
+
+        elif 'offshore' in self.h5.meta:
+            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].mode()
+            offshore = offshore.values[0]
 
         return offshore
 
