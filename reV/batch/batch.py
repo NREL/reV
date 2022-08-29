@@ -35,6 +35,13 @@ logger = logging.getLogger(__name__)
 class BatchJob:
     """Framework for building a batched job suite."""
 
+    # Class attributes to set the software's pipeline class and run+monitor in
+    # background method. These can be updated in dependent software packages
+    # for other workflows that want to utilize reV's pipeline and batch
+    # features.
+    PIPELINE_CLASS = Pipeline
+    PIPELINE_BACKGROUND_METHOD = pipeline_monitor_background
+
     def __init__(self, config, verbose=False):
         """
         Parameters
@@ -513,9 +520,11 @@ class BatchJob:
                 raise PipelineError('Could not find pipeline config to run: '
                                     '"{}"'.format(pipeline_config))
             elif monitor_background:
-                pipeline_monitor_background(pipeline_config, verbose=verbose)
+                self.PIPELINE_BACKGROUND_METHOD(pipeline_config,
+                                                verbose=verbose)
             else:
-                Pipeline.run(pipeline_config, monitor=False, verbose=verbose)
+                self.PIPELINE_CLASS.run(pipeline_config, monitor=False,
+                                        verbose=verbose)
 
     def _cancel_all(self):
         """Cancel all reV pipeline modules for all batch jobs."""
@@ -523,7 +532,7 @@ class BatchJob:
             pipeline_config = os.path.join(
                 d, os.path.basename(self._config.pipeline_config))
             if os.path.isfile(pipeline_config):
-                Pipeline.cancel_all(pipeline_config)
+                self.PIPELINE_CLASS.cancel_all(pipeline_config)
 
     def _delete_all(self):
         """Clear all of the batch sub job folders based on the job summary

@@ -19,7 +19,14 @@ TESTDATADIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 
 class BaseConfig(dict):
     """Base class for configuration frameworks."""
+
     REQUIREMENTS = ()
+    """Required keys for config"""
+
+    STR_REP = {'REVDIR': REVDIR,
+               'TESTDATADIR': TESTDATADIR}
+    """Mapping of config inputs (keys) to desired replacements (values) in
+    addition to relative file paths as demarcated by ./ and ../"""
 
     def __init__(self, config, check_keys=True, perform_str_rep=True):
         """
@@ -36,9 +43,6 @@ class BaseConfig(dict):
 
         # str_rep is a mapping of config strings to replace with real values
         self._perform_str_rep = perform_str_rep
-        self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
-                        }
         self._name = None
         self._config_dir = None
         self._log_level = None
@@ -199,7 +203,7 @@ class BaseConfig(dict):
 
         # Perform string replacement, save config to self instance
         if self._perform_str_rep:
-            config = self.str_replace_and_resolve(config, self.str_rep)
+            config = self.str_replace_and_resolve(config, self.STR_REP)
 
         self.set_self_dict(config)
 
@@ -268,7 +272,7 @@ class BaseConfig(dict):
             Python namespace object to set to this dictionary-emulating class.
         """
         for key, val in dictlike.items():
-            self.__setitem__(key, val)
+            self[key] = val
 
     @staticmethod
     def get_file(fname):

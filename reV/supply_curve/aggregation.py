@@ -1063,6 +1063,7 @@ class Aggregation(AbstractAggregation):
                                   *self._agg_dsets,
                                   agg_method=agg_method,
                                   excl_dict=self._excl_dict,
+                                  gids=self.gids,
                                   inclusion_mask=self._inclusion_mask,
                                   area_filter_kernel=self._area_filter_kernel,
                                   min_area=self._min_area,
