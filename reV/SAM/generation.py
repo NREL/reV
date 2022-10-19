@@ -158,7 +158,9 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         out_req_nomeans = copy.deepcopy(output_request)
         res_mean = None
         idx = resource.sites.index(res_gid)
-        irrad_means = ('dni_mean', 'dhi_mean', 'ghi_mean')
+        irrad_means = ('dni_mean', 'dhi_mean', 'ghi_mean',
+                       'clearsky_dni_mean', 'clearsky_dhi_mean',
+                       'clearsky_ghi_mean')
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
