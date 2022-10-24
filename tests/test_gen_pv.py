@@ -14,7 +14,9 @@ import pytest
 import pandas as pd
 import numpy as np
 import tempfile
+import shutil
 
+from rex.utilities.exceptions import ResourceRuntimeError
 from reV.utilities.exceptions import ExecutionError
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
@@ -247,8 +249,6 @@ def test_pv_name_error():
 
     # run reV 2.0 generation
     with pytest.raises(KeyError) as record:
-        pp = ProjectPoints(rev2_points, sam_files, 'pv',
-                           res_file=res_file)
         Gen.reV_run('pv', rev2_points, sam_files, res_file, max_workers=1,
                     sites_per_worker=1, out_fpath=None)
         assert 'Did not recognize' in record[0].message
@@ -289,7 +289,6 @@ def test_pvwattsv7_baseline():
                       'ghi_mean', 'ac', 'dc')
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None,
@@ -314,11 +313,9 @@ def test_pvwatts_v5_v7():
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen7 = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                        max_workers=1, sites_per_worker=1, out_fpath=None)
 
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
     gen5 = Gen.reV_run('pvwattsv5', rev2_points, sam_files, res_file,
                        max_workers=1, sites_per_worker=1, out_fpath=None)
 
@@ -333,14 +330,12 @@ def test_bifacial():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None)
 
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     output_request = ('cf_mean', 'cf_profile', 'surface_albedo')
     gen_bi = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                          max_workers=1,
@@ -362,7 +357,6 @@ def test_gen_input_mods():
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None)
@@ -380,7 +374,6 @@ def test_gen_input_pass_through():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None,
@@ -404,7 +397,6 @@ def test_gen_pv_site_data():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     baseline = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                            max_workers=1, sites_per_worker=1, out_fpath=None,
                            output_request=output_request)
@@ -431,7 +423,6 @@ def test_clipping():
     output_request = ('ac', 'dc', 'clipped_power')
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None,
@@ -461,7 +452,6 @@ def test_detailed_pv_baseline():
                       'ghi_mean', 'ac', 'dc')
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvsamv1', res_file=res_file)
     gen = Gen.reV_run('pvsamv1', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None,
@@ -490,7 +480,6 @@ def test_detailed_pv_bifacial():
                       'ghi_mean', 'ac', 'dc', 'surface_albedo')
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pvsamv1', res_file=res_file)
     gen = Gen.reV_run('pvsamv1', rev2_points, sam_files, res_file,
                       max_workers=1,
                       sites_per_worker=1, out_fpath=None,
@@ -504,6 +493,48 @@ def test_detailed_pv_bifacial():
     for req in output_request:
         assert req in gen.out
         assert (gen.out[req] != 0).sum() > 0
+
+
+def test_pv_clearsky():
+    """test basic clearsky functionality"""
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    sam_files_cs = TESTDATADIR + '/SAM/naris_pv_1axis_inv13_cs.json'
+
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc')
+    output_request_cs = ('cf_mean', 'cf_profile', 'clearsky_dni_mean',
+                         'clearsky_dhi_mean', 'clearsky_ghi_mean', 'ac', 'dc')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_cs = os.path.join(td, 'res_cs_{}.h5'.format(year))
+        shutil.copy(res_file, res_cs)
+        with Outputs(res_cs, mode='a') as f:
+            f.write_dataset('clearsky_ghi', f['ghi'], np.float32)
+            f.write_dataset('clearsky_dni', f['dni'], np.float32)
+            f.write_dataset('clearsky_dhi', f['dhi'], np.float32)
+
+        with pytest.raises(ResourceRuntimeError):
+            _ = Gen.reV_run('pvwattsv7', rev2_points, sam_files_cs, res_file,
+                            max_workers=1,
+                            sites_per_worker=1, out_fpath=None,
+                            output_request=output_request_cs)
+
+        gen_cs = Gen.reV_run('pvwattsv7', rev2_points, sam_files_cs, res_cs,
+                             max_workers=1,
+                             sites_per_worker=1, out_fpath=None,
+                             output_request=output_request_cs)
+        gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
+                          max_workers=1,
+                          sites_per_worker=1, out_fpath=None,
+                          output_request=output_request)
+
+        for k, v in gen.out.items():
+            if k in ('ghi_mean', 'dni_mean', 'dhi_mean'):
+                k = 'clearsky_' + k
+            assert np.allclose(v, gen_cs.out[k])
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -729,7 +729,7 @@ class ExclusionMask:
         return nodata
 
     @classmethod
-    def _area_filter(cls, mask, min_area=1, kernel='queen', excl_area=0.0081):
+    def _area_filter(cls, mask, min_area, excl_area, kernel='queen'):
         """
         Ensure the contiguous area of included pixels is greater than
         prescribed minimum in sq-km
@@ -938,7 +938,8 @@ class ExclusionMask:
                 mask = self._force_include(mask, force_include, ds_slice)
 
             if self._min_area is not None:
-                mask = self._area_filter(mask, min_area=self._min_area,
+                mask = self._area_filter(mask, self._min_area,
+                                         self._excl_h5.pixel_area,
                                          kernel=self._kernel)
                 mask = mask[sub_slice]
         else:

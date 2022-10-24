@@ -43,6 +43,27 @@
     "type": "array",
     "units": "unitless"
   },
+  "clearsky_dhi_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
+  "clearsky_dni_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
+  "clearsky_ghi_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
   "clipped_power": {
     "chunks": [
       null,
@@ -96,6 +117,13 @@
     "scale_factor": 1000,
     "type": "scalar",
     "units": "kWh/m2/day"
+  },
+  "energy_period_mean": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "s"
   },
   "energy_yield": {
     "chunks": null,
@@ -151,6 +179,13 @@
     "type": "array",
     "units": "atm"
   },
+  "significant_wave_height_mean": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "m"
+  },
   "surface_albedo": {
     "chunks": [
       null,
@@ -197,19 +232,5 @@
     "scale_factor": 100,
     "type": "scalar",
     "units": "m/s"
-  },
-  "significant_wave_height_mean": {
-    "chunks": null,
-    "dtype": "float32",
-    "scale_factor": 1,
-    "type": "scalar",
-    "units": "m"
-  },
-  "energy_period_mean": {
-    "chunks": null,
-    "dtype": "float32",
-    "scale_factor": 1,
-    "type": "scalar",
-    "units": "s"
   }
 }

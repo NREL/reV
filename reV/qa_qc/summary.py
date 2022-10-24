@@ -106,7 +106,7 @@ class SummarizeH5:
 
         ds_summary = pd.DataFrame(ds_data, columns=[ds_name])
         ds_summary = ds_summary.describe().drop(['count'])
-        ds_summary.at['sum'] = ds_data.sum()
+        ds_summary.at['sum', ds_name] = ds_data.sum()
 
         return ds_summary
 
