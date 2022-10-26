@@ -303,11 +303,6 @@ class DatasetCollector:
             source_slice = slice(source_i0, source_i1 + 1)
             source_indexer = np.isin(source_gids, self._gids)
 
-        logger.debug('\t- Running low mem collection of "{}" for '
-                     'output site {} from source site {} and file : {}'
-                     .format(self._dset_in, out_slice, source_slice,
-                             os.path.basename(fp_source)))
-
         try:
             if self._axis == 1:
                 data = f_source[self._dset_in, source_slice]
