@@ -19,8 +19,6 @@ from reV.utilities.exceptions import (CollectionRuntimeError,
                                       CollectionWarning)
 from reV.utilities import log_versions
 
-from rex.utilities.loggers import log_mem
-
 logger = logging.getLogger(__name__)
 
 
@@ -332,6 +330,7 @@ class DatasetCollector:
 
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
+        logger.info('Collecting {}...'.format(self._dset_in))
         with Outputs(self._h5_file, mode='a') as f_out:
 
             if self._pass_through:
@@ -340,7 +339,7 @@ class DatasetCollector:
                     f_out[self._dset_out] = data
 
             else:
-                for fp in self._source_files:
+                for i, fp in enumerate(self._source_files):
                     with Outputs(fp, mode='r') as f_source:
                         x = self._get_source_gid_chunks(f_source)
                         all_source_gids, source_gid_chunks = x
@@ -349,7 +348,15 @@ class DatasetCollector:
                             self._collect_chunk(all_source_gids, source_gids,
                                                 f_out, f_source, fp)
 
-                    log_mem(logger, log_level='DEBUG')
+                    mem = psutil.virtual_memory()
+                    logger.debug('Finished collecting "{}" from {} out of {} '
+                                 'files. Memory utilization is {:.3f} GB out '
+                                 'of {:.3f} GB total ({:.1f}% used)'
+                                 .format(self._dset_in, i + 1,
+                                         len(self._source_files),
+                                         mem.used / (1024.0 ** 3),
+                                         mem.total / (1024.0 ** 3),
+                                         100 * mem.used / mem.total))
 
     @classmethod
     def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None,
@@ -471,6 +478,7 @@ class Collector:
         gids : list
             List of resource gids that are to be collected
         """
+        logger.debug('Parsing project points...')
         if isinstance(project_points, str):
             gids = pd.read_csv(project_points)['gid'].values
         elif isinstance(project_points, pd.DataFrame):
@@ -516,6 +524,7 @@ class Collector:
             List of sorted resource gids to be collected.
         """
 
+        logger.debug('Parsing gid list from files...')
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
         meta = pd.concat(meta, axis=0)
         gids = list(meta['gid'].values.astype(int).tolist())
@@ -686,6 +695,7 @@ class Collector:
         """
         Load and combine meta data from .h5
         """
+        logger.debug('Combining meta data...')
         with Outputs(self._h5_out, mode='a') as f:
             if 'meta' in f.datasets:
                 self._check_meta(f.meta)
