@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=all
 """
 PyTest file for linear Fresnel
-This is intended to be run with PySAM 1.2.1
 
 Created on 2/6/2020
 @author: Mike Bannister
@@ -10,7 +8,6 @@ Created on 2/6/2020
 import os
 import pytest
 import numpy as np
-import json
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
@@ -18,7 +15,7 @@ from rex import Resource
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_linear_2012.h5')
 RTOL = 0.01
-ATOL = 0
+ATOL = 0.05  # Increased from 0 -> 0.05 when upgrading to PySAM 3+
 
 
 def test_gen_linear():
