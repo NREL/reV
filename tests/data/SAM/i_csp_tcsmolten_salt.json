@@ -44982,7 +44982,7 @@
   "pc_config": 0,
   "piping_length_const": 0,
   "piping_length_mult": 2.5999999046325684,
-  "piping_loss": 10200,
+  "piping_loss_coefficient": 35,
   "plant_spec_cost": 1100,
   "ppa_escalation": 1,
   "ppa_multiplier_model": 0,
