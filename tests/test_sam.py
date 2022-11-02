@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv7,
+from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv8,
                               DefaultWindPower)
-from reV.SAM.generation import PvWattsv5, PvWattsv7
+from reV.SAM.generation import PvWattsv5, PvWattsv7, PvWattsv8
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.SAM.version_checker import PySamVersionChecker
@@ -164,6 +164,8 @@ def test_nan_resource():
         _, inputs = pp[site]
         with pytest.raises(InputError):
             PvWattsv7(resource=res_df, meta=meta, sam_sys_inputs=inputs)
+        with pytest.raises(InputError):
+            PvWattsv8(resource=res_df, meta=meta, sam_sys_inputs=inputs)
 
 
 def test_default_pvwattsv5():
@@ -172,10 +174,10 @@ def test_default_pvwattsv5():
     assert round(default.Outputs.annual_energy, -1) == 6830
 
 
-def test_default_pvwattsv7():
-    """Test default pvwattsv7 execution and compare baseline annual energy"""
-    default = DefaultPvWattsv7.default()
-    assert round(default.Outputs.annual_energy, -1) == 6940
+def test_default_pvwattsv8():
+    """Test default pvwattsv8 execution and compare baseline annual energy"""
+    default = DefaultPvWattsv8.default()
+    assert round(default.Outputs.annual_energy, -1) == 11160
 
 
 def test_default_windpower():
