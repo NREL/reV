@@ -570,7 +570,11 @@ class SupplyCurveAggregation(AbstractAggregation):
                                      .format(v['method'], methods))
                 if 'fpath' in v:
                     with ExclusionLayers(v['fpath']) as f:
-                        if any(f.shape != shape_base):
+                        try:
+                            mismatched_shapes = any(f.shape != shape_base)
+                        except TypeError:
+                            mismatched_shapes = f.shape != shape_base
+                        if mismatched_shapes:
                             msg = ('Data shape of data layer "{}" is {}, '
                                    'which does not match the baseline '
                                    'exclusions shape {}.'
