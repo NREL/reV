@@ -278,7 +278,7 @@ def test_southern_hemisphere():
 def test_pvwattsv7_baseline():
     """Test reV pvwattsv7 generation against baseline data"""
 
-    baseline_cf_mean = np.array([151, 151, 157]) / 1000
+    baseline_cf_mean = np.array([0.1516, 0.1517, 0.1573])
 
     year = 2012
     rev2_points = slice(0, 3)
@@ -290,8 +290,7 @@ def test_pvwattsv7_baseline():
 
     # run reV 2.0 generation
     gen = Gen.reV_run('pvwattsv7', rev2_points, sam_files, res_file,
-                      max_workers=1,
-                      sites_per_worker=1, out_fpath=None,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
                       output_request=output_request)
 
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
@@ -441,7 +440,7 @@ def test_clipping():
 def test_detailed_pv_baseline():
     """Test the detailed pv module against baseline values that are similar to
     the pvwattsv7 cf mean values"""
-    baseline_cf_mean = np.array([0.1594, 0.1595, 0.1650])
+    baseline_cf_mean = np.array([0.1623, 0.1624, 0.1680])
 
     year = 2012
     rev2_points = slice(0, 3)
@@ -469,7 +468,7 @@ def test_detailed_pv_baseline():
 
 def test_detailed_pv_bifacial():
     """Test the detailed pv module with bifacial configs"""
-    baseline_cf_mean = np.array([0.17193589, 0.17201012, 0.17734073])
+    baseline_cf_mean = np.array([0.1745, 0.17455, 0.1799])
 
     year = 2012
     rev2_points = slice(0, 3)
