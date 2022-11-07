@@ -13,6 +13,7 @@ import pandas as pd
 from warnings import warn
 import PySAM.Pvwattsv5 as PySamPv5
 import PySAM.Pvwattsv7 as PySamPv7
+import PySAM.Pvwattsv8 as PySamPv8
 import PySAM.Pvsamv1 as PySamDetailedPv
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
@@ -22,7 +23,7 @@ import PySAM.LinearFresnelDsgIph as PySamLds
 import PySAM.MhkWave as PySamMhkWave
 
 from reV.SAM.defaults import (DefaultPvWattsv5,
-                              DefaultPvWattsv7,
+                              DefaultPvWattsv8,
                               DefaultPvSamv1,
                               DefaultWindPower,
                               DefaultTcsMoltenSalt,
@@ -831,7 +832,24 @@ class PvWattsv7(AbstractSamPv):
         -------
         PySAM.Pvwattsv7
         """
-        return DefaultPvWattsv7.default()
+        raise NotImplementedError("Pvwattsv7 default file no longer exists!")
+
+
+class PvWattsv8(AbstractSamPv):
+    """Photovoltaic (PV) generation with pvwattsv8.
+    """
+    MODULE = 'pvwattsv8'
+    PYSAM = PySamPv8
+
+    @staticmethod
+    def default():
+        """Get the executed default pysam PVWATTSV8 object.
+
+        Returns
+        -------
+        PySAM.Pvwattsv8
+        """
+        return DefaultPvWattsv8.default()
 
 
 class PvSamv1(AbstractSamPv):

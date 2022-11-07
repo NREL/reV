@@ -55,8 +55,6 @@ def test_single_owner():
         result = np.allclose(v, OUT_BASELINE[k], rtol=RTOL, atol=ATOL)
         assert result, msg
 
-    return obj.out
-
 
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
