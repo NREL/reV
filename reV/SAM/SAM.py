@@ -18,7 +18,7 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
 from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
                                      MultiFileWTK)
 from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
-                                    WaveResource)
+                                    WaveResource, GeothermalResource)
 from rex.utilities.utilities import check_res_file
 
 
