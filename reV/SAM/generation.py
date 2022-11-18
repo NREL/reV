@@ -11,6 +11,7 @@ import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
+import PySAM.Geothermal as PySamGeothermal
 import PySAM.Pvwattsv5 as PySamPv5
 import PySAM.Pvwattsv7 as PySamPv7
 import PySAM.Pvwattsv8 as PySamPv8
@@ -22,7 +23,8 @@ import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.LinearFresnelDsgIph as PySamLds
 import PySAM.MhkWave as PySamMhkWave
 
-from reV.SAM.defaults import (DefaultPvWattsv5,
+from reV.SAM.defaults import (DefaultGeothermal,
+                              DefaultPvWattsv5,
                               DefaultPvWattsv8,
                               DefaultPvSamv1,
                               DefaultWindPower,
@@ -472,6 +474,143 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
                 out[gen_gid].update(res_mean)
 
         return out
+
+
+class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
+    """Base class for running sam generation with a weather file on disk. """
+
+    @property
+    @abstractmethod
+    def PYSAM_WEATHER_TAG():
+        """Name of the weather file input used by SAM generation module."""
+        raise NotImplementedError
+
+    def set_resource_data(self, resource, meta):
+        """Generate the weather file and set the path as an input.
+
+        Some PySAM models require a data file, not raw data. This method
+        generates the weather data, writes it to a file on disk, and
+        then sets the file as an input to the generation module. The
+        function
+        :meth:`~AbstractSamGenerationFromWeatherFile.run_gen_and_econ`
+        deletes the file on disk after a run is complete.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. There must be columns for all the
+            required variables to run the respective SAM simulation.
+            Remapping will be done to convert typical NSRDB/WTK names
+            into SAM names (e.g. DNI -> dn and wind_speed -> windspeed).
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude,
+            elevation, and timezone.
+        """
+        self.time_interval = self.get_time_interval(resource.index.values)
+        pysam_w_fname = self._create_pysam_wfile(resource, meta)
+        self[self.PYSAM_WEATHER_TAG] = pysam_w_fname
+
+    def _create_pysam_wfile(self, resource, meta):
+        """Create PySAM weather input file.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. There must be columns for all the
+            required variables to run the respective SAM simulation.
+            Remapping will be done to convert typical NSRDB/WTK names
+            into SAM names (e.g. DNI -> dn and wind_speed -> windspeed).
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude,
+            elevation, and timezone.
+
+        Returns
+        -------
+        fname : str
+            Name of weather csv file.
+
+        Notes
+        -----
+        PySAM will not accept data on Feb 29th. For leap years,
+        December 31st is dropped and time steps are shifted to relabel
+        Feb 29th as March 1st, March 1st as March 2nd, etc.
+        """
+        fname = '{}_weather.csv'.format(self._site)
+        logger.debug('Creating PySAM weather data file: {}'.format(fname))
+
+        # ------- Process metadata
+        m = pd.DataFrame(meta).T
+        timezone = m['timezone']
+        m['Source'] = 'NSRDB'
+        m['Location ID'] = meta.name
+        m['City'] = '-'
+        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
+        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m['latitude']
+        m['Longitude'] = m['longitude']
+        m['Time Zone'] = timezone
+        m['Elevation'] = m['elevation']
+        m['Local Time Zone'] = timezone
+        m['Dew Point Units'] = 'c'
+        m['DHI Units'] = 'w/m2'
+        m['DNI Units'] = 'w/m2'
+        m['Temperature Units'] = 'c'
+        m['Pressure Units'] = 'mbar'
+        m['Wind Speed'] = 'm/s'
+        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
+                    'urban', 'population', 'landcover', 'latitude',
+                    'longitude'], axis=1)
+        m.to_csv(fname, index=False, mode='w')
+
+        # --------- Process data
+        var_map = {'dni': 'DNI',
+                   'dhi': 'DHI',
+                   'wind_speed': 'Wind Speed',
+                   'air_temperature': 'Temperature',
+                   'dew_point': 'Dew Point',
+                   'surface_pressure': 'Pressure',
+                   }
+        resource = resource.rename(mapper=var_map, axis='columns')
+
+        time_index = resource.index
+        # Adjust from UTC to local time
+        local = np.roll(resource.values, int(timezone * self.time_interval),
+                        axis=0)
+        resource = pd.DataFrame(local, columns=resource.columns,
+                                index=time_index)
+        mask = (time_index.month == 2) & (time_index.day == 29)
+        time_index = time_index[~mask]
+
+        df = pd.DataFrame(index=time_index)
+        df['Year'] = time_index.year
+        df['Month'] = time_index.month
+        df['Day'] = time_index.day
+        df['Hour'] = time_index.hour
+        df['Minute'] = time_index.minute
+        df = df.join(resource.loc[~mask])
+
+        df.to_csv(fname, index=False, mode='a')
+
+        return fname
+
+    def run_gen_and_econ(self, delete_wfile=True):
+        """Run SAM generation and possibility follow-on econ analysis.
+
+        Parameters
+        ----------
+        delete_wfile : bool, optional
+            Delete PySAM weather file after processing is complete.
+            By default, `True`.
+        """
+        super().run_gen_and_econ()
+
+        pysam_w_fname = self[self.PYSAM_WEATHER_TAG]
+        if delete_wfile and os.path.exists(pysam_w_fname):
+            os.remove(pysam_w_fname)
 
 
 class AbstractSamSolar(AbstractSamGeneration, ABC):
@@ -925,132 +1064,7 @@ class TcsMoltenSalt(AbstractSamSolar):
         return DefaultTcsMoltenSalt.default()
 
 
-class AbstractSamSolarThermal(AbstractSamSolar, ABC):
-    """Base class for solar thermal """
-    PYSAM_WEATHER_TAG = None
-
-    def set_resource_data(self, resource, meta):
-        """
-        Set NSRDB resource file. Overloads Solar.set_resource_data(). Solar
-        thermal PySAM models require a data file, not raw data.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-        """
-        self.time_interval = self.get_time_interval(resource.index.values)
-        pysam_w_fname = self._create_pysam_wfile(resource, meta)
-        # pylint: disable=E1101
-        self[self.PYSAM_WEATHER_TAG] = pysam_w_fname
-
-    def _create_pysam_wfile(self, resource, meta):
-        """
-        Create PySAM weather input file. PySAM will not accept data on Feb
-        29th. For leap years, December 31st is dropped and time steps are
-        shifted to relabel Feb 29th as March 1st, March 1st as March 2nd, etc.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            Timeseries solar or wind resource data for a single location with a
-            pandas DatetimeIndex.  There must be columns for all the required
-            variables to run the respective SAM simulation. Remapping will be
-            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
-            dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
-            Meta data corresponding to the resource input for the single
-            location. Should include values for latitude, longitude, elevation,
-            and timezone.
-
-        Returns
-        -------
-        fname : string
-            Name of weather csv file
-        """
-        fname = '{}_weather.csv'.format(self._site)
-        logger.debug('Creating PySAM weather data file: {}'.format(fname))
-
-        # ------- Process metadata
-        m = pd.DataFrame(meta).T
-        timezone = m['timezone']
-        m['Source'] = 'NSRDB'
-        m['Location ID'] = meta.name
-        m['City'] = '-'
-        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
-        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m['latitude']
-        m['Longitude'] = m['longitude']
-        m['Time Zone'] = timezone
-        m['Elevation'] = m['elevation']
-        m['Local Time Zone'] = timezone
-        m['Dew Point Units'] = 'c'
-        m['DHI Units'] = 'w/m2'
-        m['DNI Units'] = 'w/m2'
-        m['Temperature Units'] = 'c'
-        m['Pressure Units'] = 'mbar'
-        m['Wind Speed'] = 'm/s'
-        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
-                    'urban', 'population', 'landcover', 'latitude',
-                    'longitude'], axis=1)
-        m.to_csv(fname, index=False, mode='w')
-
-        # --------- Process data
-        var_map = {'dni': 'DNI',
-                   'dhi': 'DHI',
-                   'wind_speed': 'Wind Speed',
-                   'air_temperature': 'Temperature',
-                   'dew_point': 'Dew Point',
-                   'surface_pressure': 'Pressure',
-                   }
-        resource = resource.rename(mapper=var_map, axis='columns')
-
-        time_index = resource.index
-        # Adjust from UTC to local time
-        local = np.roll(resource.values, int(timezone * self.time_interval),
-                        axis=0)
-        resource = pd.DataFrame(local, columns=resource.columns,
-                                index=time_index)
-        mask = (time_index.month == 2) & (time_index.day == 29)
-        time_index = time_index[~mask]
-
-        df = pd.DataFrame(index=time_index)
-        df['Year'] = time_index.year
-        df['Month'] = time_index.month
-        df['Day'] = time_index.day
-        df['Hour'] = time_index.hour
-        df['Minute'] = time_index.minute
-        df = df.join(resource.loc[~mask])
-
-        df.to_csv(fname, index=False, mode='a')
-
-        return fname
-
-    def run_gen_and_econ(self, delete_wfile=True):
-        """
-        Run SAM generation with possibility for follow on econ analysis.
-
-        Parameters
-        ----------
-        delete_wfile : bool
-            Delete PySAM weather file after processing is complete
-        """
-        super().run_gen_and_econ()
-
-        pysam_w_fname = self[self.PYSAM_WEATHER_TAG]
-        if delete_wfile and os.path.exists(pysam_w_fname):
-            os.remove(pysam_w_fname)
-
-
-class SolarWaterHeat(AbstractSamSolarThermal):
+class SolarWaterHeat(AbstractSamGenerationFromWeatherFile):
     """
     Solar Water Heater generation
     """
@@ -1069,7 +1083,7 @@ class SolarWaterHeat(AbstractSamSolarThermal):
         return DefaultSwh.default()
 
 
-class LinearDirectSteam(AbstractSamSolarThermal):
+class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
     """
     Process heat linear Fresnel direct steam generation
     """
@@ -1103,7 +1117,7 @@ class LinearDirectSteam(AbstractSamSolarThermal):
         return DefaultLinearFresnelDsgIph.default()
 
 
-class TroughPhysicalHeat(AbstractSamSolarThermal):
+class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
     """
     Trough Physical Process Heat generation
     """
@@ -1135,6 +1149,152 @@ class TroughPhysicalHeat(AbstractSamSolarThermal):
         PySAM.TroughPhysicalProcessHeat
         """
         return DefaultTroughPhysicalProcessHeat.default()
+
+
+class Geothermal(AbstractSamGenerationFromWeatherFile):
+    MODULE = 'geothermal'
+    PYSAM = PySamGeothermal
+    PYSAM_WEATHER_TAG = "file_name"
+
+    @staticmethod
+    def default():
+        """Get the executed default PySAM Geothermal object.
+
+        Returns
+        -------
+        PySAM.Geothermal
+        """
+        return DefaultGeothermal.default()
+
+    def cf_profile(self):
+        """Get hourly capacity factor (frac) profile in local timezone.
+        See self.outputs attribute for collected output data in UTC.
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return self.gen_profile() / self.sam_sys_inputs['nameplate']
+
+    def assign_inputs(self):
+        """Assign the self.sam_sys_inputs attribute to the PySAM object."""
+        if self.sam_sys_inputs.get("ui_calculations_only"):
+            msg = ('reV requires model run - cannot set '
+                   '"ui_calculations_only" to `True` (1). Automatically '
+                   'setting to `False` (0)!')
+            logger.warn(msg)
+            warn(msg)
+            self.sam_sys_inputs["ui_calculations_only"] = 0
+        super().assign_inputs()
+
+    def set_resource_data(self, resource, meta):
+        """Generate the weather file and set the path as an input.
+
+        The Geothermal PySAM model requires a data file, not raw data.
+        This method generates the weather data, writes it to a file on
+        disk, and then sets the file as an input to the Geothermal
+        generation module. The function
+        :meth:`~AbstractSamGenerationFromWeatherFile.run_gen_and_econ`
+        deletes the file on disk after a run is complete.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. There must be columns for all the
+            required variables to run the respective SAM simulation.
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude,
+            elevation, and timezone.
+        """
+        super().set_resource_data(resource, meta)
+
+        check_vals = {"resource_temp": "temperature",
+                      "resource_potential": "potential_MW"}
+        for sam_key, resource_col in check_vals.items():
+            if sam_key in self.sam_sys_inputs:
+                continue
+
+            val = set(resource[resource_col].unique())
+            if len(val) > 1:
+                msg = ('Found multiple values for {!r} for site {}: {}'
+                       .format(resource_col, self.site, val))
+                logger.error(msg)
+                raise InputError(msg)
+            val = val.pop()
+            logger.debug("Input {!r} not found in config - setting "
+                         "to {:.2f} C based on input resource data."
+                         .format(sam_key, val))
+            self.sam_sys_inputs[sam_key] = val
+
+    def _create_pysam_wfile(self, resource, meta):
+        """Create PySAM weather input file.
+
+        Geothermal module requires a weather file, but does not actually
+        require any weather data to run. Therefore, an empty file is
+        generated and passed through.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Time series resource data for a single location with a
+            pandas DatetimeIndex. There must be columns for all the
+            required variables to run the respective SAM simulation.
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude,
+            elevation, and timezone.
+
+        Returns
+        -------
+        fname : str
+            Name of weather csv file.
+
+        Notes
+        -----
+        PySAM will not accept data on Feb 29th. For leap years,
+        December 31st is dropped and time steps are shifted to relabel
+        Feb 29th as March 1st, March 1st as March 2nd, etc.
+        """
+        fname = 'blank_weather.csv'
+        logger.debug('Creating PySAM weather data file: {}'.format(fname))
+
+        # ------- Process metadata
+        m = pd.DataFrame(meta).T
+        timezone = m['timezone']
+        m['Source'] = 'NSRDB'
+        m['Location ID'] = meta.name
+        m['City'] = '-'
+        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
+        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m['latitude']
+        m['Longitude'] = m['longitude']
+        m['Time Zone'] = timezone
+        m['Elevation'] = m['elevation']
+        m['Local Time Zone'] = timezone
+        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
+                    'urban', 'population', 'landcover', 'latitude',
+                    'longitude'], axis=1)
+        m.to_csv(fname, index=False, mode='w')
+
+        # --------- Process data, blank for geothermal
+        time_index = resource.index
+        mask = (time_index.month == 2) & (time_index.day == 29)
+        time_index = time_index[~mask]
+
+        df = pd.DataFrame(index=time_index)
+        df['Year'] = time_index.year
+        df['Month'] = time_index.month
+        df['Day'] = time_index.day
+        df['Hour'] = time_index.hour
+        df['Minute'] = time_index.minute
+
+        df.to_csv(fname, index=False, mode='a')
+
+        return fname
 
 
 class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
