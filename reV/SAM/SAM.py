@@ -28,6 +28,21 @@ logger = logging.getLogger(__name__)
 class SamResourceRetriever:
     """Factory utility to get the SAM resource handler."""
 
+    # Mapping for reV technology and SAM module to h5 resource handler type
+    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
+    RESOURCE_TYPES = {'geothermal': GeothermalResource,
+                      'pvwattsv5': SolarResource,
+                      'pvwattsv7': SolarResource,
+                      'pvwattsv8': SolarResource,
+                      'pvsamv1': SolarResource,
+                      'tcsmoltensalt': SolarResource,
+                      'solarwaterheat': SolarResource,
+                      'troughphysicalheat': SolarResource,
+                      'lineardirectsteam': SolarResource,
+                      'windpower': WindResource,
+                      'mhkwave': WaveResource
+                      }
+
     @staticmethod
     def _get_base_handler(res_file, module):
         """Get the base SAM resource handler, raise error if module not found.
@@ -50,13 +65,14 @@ class SamResourceRetriever:
         """
 
         try:
-            res_handler = RevPySam.RESOURCE_TYPES[module.lower()]
+            res_handler = SamResourceRetriever.RESOURCE_TYPES[module.lower()]
 
         except KeyError as e:
             msg = ('Cannot interpret what kind of resource handler the SAM '
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
-                   .format(module, list(RevPySam.RESOURCE_TYPES.keys())))
+                   .format(module,
+                           list(SamResourceRetriever.RESOURCE_TYPES.keys())))
             logger.exception(msg)
             raise SAMExecutionError(msg) from e
 
@@ -493,19 +509,6 @@ class RevPySam(Sam):
 
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
-
-    # Mapping for reV technology and SAM module to h5 resource handler type
-    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
-    RESOURCE_TYPES = {'pvwattsv5': SolarResource,
-                      'pvwattsv7': SolarResource,
-                      'pvsamv1': SolarResource,
-                      'tcsmoltensalt': SolarResource,
-                      'solarwaterheat': SolarResource,
-                      'troughphysicalheat': SolarResource,
-                      'lineardirectsteam': SolarResource,
-                      'windpower': WindResource,
-                      'mhkwave': WaveResource
-                      }
 
     def __init__(self, meta, sam_sys_inputs, output_request,
                  site_sys_inputs=None):
