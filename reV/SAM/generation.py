@@ -478,6 +478,9 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
 class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
     """Base class for running sam generation with a weather file on disk. """
+    WF_META_DROP_COLS = {'elevation', 'timezone', 'country', 'state', 'county',
+                         'urban', 'population', 'landcover', 'latitude',
+                         'longitude'}
 
     @property
     @abstractmethod
@@ -561,10 +564,8 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         m['Temperature Units'] = 'c'
         m['Pressure Units'] = 'mbar'
         m['Wind Speed'] = 'm/s'
-        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
-                    'urban', 'population', 'landcover', 'latitude',
-                    'longitude'], axis=1)
-        m.to_csv(fname, index=False, mode='w')
+        keep_cols = [c for c in m.col if c not in self.WF_META_DROP_COLS]
+        m[keep_cols].to_csv(fname, index=False, mode='w')
 
         # --------- Process data
         var_map = {'dni': 'DNI',
@@ -1246,7 +1247,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         meta : pd.DataFrame | pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude,
-            elevation, and timezone.
+            and timezone.
 
         Returns
         -------
@@ -1259,13 +1260,13 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         December 31st is dropped and time steps are shifted to relabel
         Feb 29th as March 1st, March 1st as March 2nd, etc.
         """
-        fname = 'blank_weather.csv'
+        fname = '{}_weather.csv'.format(self._site)
         logger.debug('Creating PySAM weather data file: {}'.format(fname))
 
         # ------- Process metadata
         m = pd.DataFrame(meta).T
         timezone = m['timezone']
-        m['Source'] = 'NSRDB'
+        m['Source'] = 'None'
         m['Location ID'] = meta.name
         m['City'] = '-'
         m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
@@ -1273,12 +1274,9 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         m['Latitude'] = m['latitude']
         m['Longitude'] = m['longitude']
         m['Time Zone'] = timezone
-        m['Elevation'] = m['elevation']
         m['Local Time Zone'] = timezone
-        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
-                    'urban', 'population', 'landcover', 'latitude',
-                    'longitude'], axis=1)
-        m.to_csv(fname, index=False, mode='w')
+        keep_cols = [c for c in m.col if c not in self.WF_META_DROP_COLS]
+        m[keep_cols].to_csv(fname, index=False, mode='w')
 
         # --------- Process data, blank for geothermal
         time_index = resource.index
