@@ -12,7 +12,8 @@ import json
 
 from reV.generation.base import BaseGen
 from reV.utilities.exceptions import ProjectPointsValueError, InputError
-from reV.SAM.generation import (PvWattsv5,
+from reV.SAM.generation import (Geothermal,
+                                PvWattsv5,
                                 PvWattsv7,
                                 PvWattsv8,
                                 PvSamv1,
@@ -90,7 +91,8 @@ class Gen(BaseGen):
     """
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {'pvwattsv5': PvWattsv5,
+    OPTIONS = {'geothermal': Geothermal,
+               'pvwattsv5': PvWattsv5,
                'pvwattsv7': PvWattsv7,
                'pvwattsv8': PvWattsv8,
                'pvsamv1': PvSamv1,
