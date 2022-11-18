@@ -27,13 +27,13 @@ class AbstractDefaultFromConfigFile:
 
     @property
     @abstractmethod
-    def CONFIG_FILE_NAME():
+    def CONFIG_FILE_NAME(self):
         """Name of JSON config file containing default PySAM inputs."""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def PYSAM_MODULE():
+    def PYSAM_MODULE(self):
         """PySAM module to initialize (e.g. Pvwattsv5, Geothermal, etc.). """
         raise NotImplementedError
 

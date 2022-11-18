@@ -484,7 +484,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
 
     @property
     @abstractmethod
-    def PYSAM_WEATHER_TAG():
+    def PYSAM_WEATHER_TAG(self):
         """Name of the weather file input used by SAM generation module."""
         raise NotImplementedError
 
