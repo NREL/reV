@@ -1231,6 +1231,50 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                          .format(sam_key, val))
             self.sam_sys_inputs[sam_key] = val
 
+        self._limit_nameplate_capacity_to_resource_potential()
+
+    def _limit_nameplate_capacity_to_resource_potential(self):
+        """Limit the nameplate capacity if necessary.
+
+        The nameplate capacity may need to be reduced such that the
+        gross plant output does not exceed the resource potential at a
+        given site. To figure out the reduction, we use SAM's
+        `ui_calculations_only` capability, and linearly interpolate
+        the nameplate capacity such that the new gross plant output
+        does not exceed resource potential.
+        """
+        super().assign_inputs()
+        self["ui_calculations_only"] = 1
+        self.execute()
+        gross_gen = getattr(self.pysam.Outputs, "gross_output")
+        resource_potential_MW = self.sam_sys_inputs["resource_potential"]
+        if gross_gen > resource_potential_MW:
+            # linearly interpolate down to allowed nameplate cap
+            input_nameplate = self.sam_sys_inputs["nameplate"]
+            self.sam_sys_inputs["nameplate"] = input_nameplate / 2
+            super().assign_inputs()
+            self.execute()
+            gross_gen_halved_nameplate = getattr(self.pysam.Outputs,
+                                                 "gross_output")
+            scale_factor = ((resource_potential_MW - gross_gen)
+                            / (gross_gen - gross_gen_halved_nameplate))
+            scale_factor = 1 + 0.5 * scale_factor
+            new_nameplate = scale_factor * input_nameplate
+            msg = ("The requested nameplate capacity ({:.2f} kW) resulted in "
+                   "gross plant output ({:.2f} MW) that exceeds the resource "
+                   "potential ({:.2f} MW)) at site gid={}. The nameplate "
+                   "capacity is reduced to {:.2f} kW before running "
+                   "generation. Remember to add 'nameplate' to your output "
+                   "requests in order to save this updated value to the "
+                   "output file!"
+                   .format(input_nameplate, gross_gen, resource_potential_MW,
+                           self._site, new_nameplate))
+            logger.warning(msg)
+            warn(msg)
+            self.sam_sys_inputs["nameplate"] = new_nameplate
+
+        self["ui_calculations_only"] = 0
+
     def _create_pysam_wfile(self, resource, meta):
         """Create PySAM weather input file.
 
