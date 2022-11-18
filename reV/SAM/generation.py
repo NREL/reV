@@ -1184,7 +1184,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             msg = ('reV requires model run - cannot set '
                    '"ui_calculations_only" to `True` (1). Automatically '
                    'setting to `False` (0)!')
-            logger.warn(msg)
+            logger.warning(msg)
             warn(msg)
             self.sam_sys_inputs["ui_calculations_only"] = 0
         super().assign_inputs()
@@ -1226,7 +1226,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                 raise InputError(msg)
             val = val.pop()
             logger.debug("Input {!r} not found in config - setting "
-                         "to {:.2f} C based on input resource data."
+                         "to {:.2f} based on input resource data."
                          .format(sam_key, val))
             self.sam_sys_inputs[sam_key] = val
 
