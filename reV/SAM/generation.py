@@ -564,7 +564,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         m['Temperature Units'] = 'c'
         m['Pressure Units'] = 'mbar'
         m['Wind Speed'] = 'm/s'
-        keep_cols = [c for c in m.col if c not in self.WF_META_DROP_COLS]
+        keep_cols = [c for c in m.columns if c not in self.WF_META_DROP_COLS]
         m[keep_cols].to_csv(fname, index=False, mode='w')
 
         # --------- Process data
@@ -1275,7 +1275,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         m['Longitude'] = m['longitude']
         m['Time Zone'] = timezone
         m['Local Time Zone'] = timezone
-        keep_cols = [c for c in m.col if c not in self.WF_META_DROP_COLS]
+        keep_cols = [c for c in m.columns if c not in self.WF_META_DROP_COLS]
         m[keep_cols].to_csv(fname, index=False, mode='w')
 
         # --------- Process data, blank for geothermal
