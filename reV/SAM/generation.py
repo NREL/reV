@@ -1153,6 +1153,8 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
 
 
 class Geothermal(AbstractSamGenerationFromWeatherFile):
+    """Class for geothermal generation from SAM"""
+
     MODULE = 'geothermal'
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
