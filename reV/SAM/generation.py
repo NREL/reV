@@ -1309,18 +1309,11 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
         # ------- Process metadata
         m = pd.DataFrame(meta).T
-        timezone = m['timezone']
-        m['Source'] = 'None'
-        m['Location ID'] = meta.name
-        m['City'] = '-'
-        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
-        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m['latitude']
-        m['Longitude'] = m['longitude']
-        m['Time Zone'] = timezone
-        m['Local Time Zone'] = timezone
-        keep_cols = [c for c in m.columns if c not in self.WF_META_DROP_COLS]
-        m[keep_cols].to_csv(fname, index=False, mode='w')
+        m = m.rename({"latitude": "Latitude", "longitude": "Longitude",
+                      "timezone": "Time Zone"}, axis=1)
+
+        m[["Latitude", "Longitude", "Time Zone"]].to_csv(fname, index=False,
+                                                         mode='w')
 
         # --------- Process data, blank for geothermal
         time_index = resource.index
