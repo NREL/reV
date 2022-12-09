@@ -214,7 +214,8 @@ class DatasetCollector:
             raise CollectionRuntimeError(e)
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
-        if not len(locs) == len(sequential_locs):
+        check = (not len(locs) == len(sequential_locs))
+        if check:
             w = ('GID indices for source file "{}" are not '
                  'sequential in destination file!'.format(fn_source))
             logger.warning(w)
@@ -283,7 +284,6 @@ class DatasetCollector:
 
         out_slice, source_slice, source_indexer = self._collect_chunk_indices(
             all_source_gids, source_gids, fp_source)
-
         try:
             if self._axis == 1:
                 data = f_source[self._dset_in, source_slice]
@@ -350,17 +350,16 @@ class DatasetCollector:
         elif all(sorted(source_gids) == source_gids):
             out_slice = self._get_gid_slice(self._gids, source_gids,
                                             os.path.basename(fp_source))
-
             source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
             source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
             source_slice = slice(source_i0, source_i1 + 1)
             source_indexer = np.isin(source_gids, self._gids)
 
         elif all(source_gids == all_source_gids):
-            out_slice = self._get_gid_slice(self._gids, source_gids,
-                                            os.path.basename(fp_source))
+            out_slice = np.isin(self._gids, source_gids)
             source_slice = slice(None)
             source_indexer = np.isin(source_gids, self._gids)
+
         else:
             msg = ('source_gids is neither in ascending order or equal to '
                    'all_source_gids. Aborting.')
