@@ -281,27 +281,8 @@ class DatasetCollector:
             Source filepath
         """
 
-        if self.duplicate_gids:
-            msg = 'Cannot collect duplicate gids in multiple chunks'
-            assert len(all_source_gids) == len(source_gids), msg
-            out_i0 = 0
-            for fp in self._source_files:
-                if fp == fp_source:
-                    break
-                else:
-                    out_i0 += len(self._file_gid_map[fp])
-            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
-            out_slice = slice(out_i0, out_i1)
-            source_slice = slice(None)
-            source_indexer = np.isin(source_gids, self._gids)
-
-        else:
-            out_slice = self._get_gid_slice(self._gids, source_gids,
-                                            os.path.basename(fp_source))
-            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
-            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
-            source_slice = slice(source_i0, source_i1 + 1)
-            source_indexer = np.isin(source_gids, self._gids)
+        out_slice, source_slice, source_indexer = self._collect_chunk_indices(
+            all_source_gids, source_gids, fp_source)
 
         try:
             if self._axis == 1:
@@ -322,6 +303,68 @@ class DatasetCollector:
                    .format(self._dset_in, os.path.basename(fp_source), e))
             logger.exception(msg)
             raise CollectionRuntimeError(msg) from e
+
+    def _collect_chunk_indices(self, all_source_gids, source_gids, fp_source):
+        """Get slices and indices used for selecting source gids and writing
+        the corresponding data to output.
+
+        Parameters
+        ----------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gids : np.ndarray | list
+            Source gids to be collected
+        f_out : reV.handlers.outputs.Output
+            Output file handler
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+        fp_source : str
+            Source filepath
+
+        Returns
+        -------
+        out_slice : slice
+            Slice specifying index range of source data in output file
+        source_slice : slice
+            Slice specifying index range of source data in input file. If
+            collection is not being done in chunks this is just slice(None).
+        source_indexer : ndarray
+            Array with indices specifying exact gids (not just a range) of
+            source data in input file
+        """
+        if self.duplicate_gids:
+            msg = 'Cannot collect duplicate gids in multiple chunks'
+            assert len(all_source_gids) == len(source_gids), msg
+            out_i0 = 0
+            for fp in self._source_files:
+                if fp == fp_source:
+                    break
+                else:
+                    out_i0 += len(self._file_gid_map[fp])
+            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
+            out_slice = slice(out_i0, out_i1)
+            source_slice = slice(None)
+            source_indexer = np.isin(source_gids, self._gids)
+
+        elif all(sorted(source_gids) == source_gids):
+            out_slice = self._get_gid_slice(self._gids, source_gids,
+                                            os.path.basename(fp_source))
+
+            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+            source_slice = slice(source_i0, source_i1 + 1)
+            source_indexer = np.isin(source_gids, self._gids)
+
+        elif all(source_gids == all_source_gids):
+            out_slice = self._get_gid_slice(self._gids, source_gids,
+                                            os.path.basename(fp_source))
+            source_slice = slice(None)
+            source_indexer = np.isin(source_gids, self._gids)
+        else:
+            msg = ('source_gids is neither in ascending order or equal to '
+                   'all_source_gids. Aborting.')
+            raise CollectionRuntimeError(msg)
+        return out_slice, source_slice, source_indexer
 
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
