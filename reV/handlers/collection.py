@@ -313,7 +313,8 @@ class DatasetCollector:
         all_source_gids : list
             List of all source gids to be collected
         source_gids : np.ndarray | list
-            Source gids to be collected
+            Source gids to be collected. This is the same as all_source_gids if
+            collection is not being done in chunks.
         f_out : reV.handlers.outputs.Output
             Output file handler
         f_source : reV.handlers.outputs.Output
