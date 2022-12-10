@@ -282,7 +282,7 @@ class DatasetCollector:
             Source filepath
         """
 
-        out_slice, source_slice, source_indexer = self._collect_chunk_indices(
+        out_slice, source_slice, source_indexer = self._get_chunk_indices(
             all_source_gids, source_gids, fp_source)
         try:
             if self._axis == 1:
@@ -304,7 +304,7 @@ class DatasetCollector:
             logger.exception(msg)
             raise CollectionRuntimeError(msg) from e
 
-    def _collect_chunk_indices(self, all_source_gids, source_gids, fp_source):
+    def _get_chunk_indices(self, all_source_gids, source_gids, fp_source):
         """Get slices and indices used for selecting source gids and writing
         the corresponding data to output.
 
@@ -324,14 +324,16 @@ class DatasetCollector:
 
         Returns
         -------
-        out_slice : slice
-            Slice specifying index range of source data in output file
+        out_slice : slice | ndarray
+            Slice specifying location of source data in output file. This can
+            also be a boolean array if source gids are not sequential in the
+            output file
         source_slice : slice
             Slice specifying index range of source data in input file. If
             collection is not being done in chunks this is just slice(None).
         source_indexer : ndarray
-            Array with indices specifying exact gids (not just a range) of
-            source data in input file
+            boolean array specifying which source gids (not just a range) of
+            should be stored in output.
         """
         source_indexer = np.isin(source_gids, self._gids)
         out_slice = self._get_gid_slice(self._gids, source_gids,
