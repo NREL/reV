@@ -333,6 +333,9 @@ class DatasetCollector:
             Array with indices specifying exact gids (not just a range) of
             source data in input file
         """
+        source_indexer = np.isin(source_gids, self._gids)
+        out_slice = self._get_gid_slice(self._gids, source_gids,
+                                        os.path.basename(fp_source))
         if self.duplicate_gids:
             msg = 'Cannot collect duplicate gids in multiple chunks'
             assert len(all_source_gids) == len(source_gids), msg
@@ -345,25 +348,23 @@ class DatasetCollector:
             out_i1 = out_i0 + len(self._file_gid_map[fp_source])
             out_slice = slice(out_i0, out_i1)
             source_slice = slice(None)
-            source_indexer = np.isin(source_gids, self._gids)
 
         elif all(sorted(source_gids) == source_gids):
-            out_slice = self._get_gid_slice(self._gids, source_gids,
-                                            os.path.basename(fp_source))
             source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
             source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
             source_slice = slice(source_i0, source_i1 + 1)
-            source_indexer = np.isin(source_gids, self._gids)
 
         elif all(source_gids == all_source_gids):
-            out_slice = np.isin(self._gids, source_gids)
             source_slice = slice(None)
-            source_indexer = np.isin(source_gids, self._gids)
 
         else:
-            msg = ('source_gids is neither in ascending order or equal to '
-                   'all_source_gids. Aborting.')
-            raise CollectionRuntimeError(msg)
+            source_slice = np.isin(all_source_gids, source_gids)
+            msg = ('source_gids is not in ascending order or equal to '
+                   'all_source_gids. This can cause issues with the '
+                   'collection ordering. Please check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         return out_slice, source_slice, source_indexer
 
     def _collect(self):
@@ -543,7 +544,15 @@ class Collector:
             m = 'Cannot parse project_points'
             logger.error(m)
             raise CollectionValueError(m)
-        gids = sorted([int(g) for g in gids])
+
+        gids = gids.astype(int).tolist()
+        if not sorted(gids) == gids:
+            msg = ('Project points contain non-ordered meta data GIDs! This '
+                   'can cause issues with the collection ordering. Please '
+                   'check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         return gids
 
     @staticmethod
@@ -811,8 +820,8 @@ class Collector:
                      .format(tt))
 
     @classmethod
-    def add_dataset(cls, h5_file, collect_pattern, dset_name, dset_out=None,
-                    mem_util_lim=0.7):
+    def add_dataset(cls, h5_file, collect_pattern,
+                    dset_name, dset_out=None, mem_util_lim=0.7):
         """
         Collect and add dataset to h5_file from h5_dir
 
@@ -838,9 +847,9 @@ class Collector:
                     .format(dset_name, collect_pattern, h5_file))
         ts = time.time()
         with Outputs(h5_file, mode='r') as f:
-            points = f.meta
+            project_points = f.meta
 
-        clt = cls(h5_file, collect_pattern, points)
+        clt = cls(h5_file, collect_pattern, project_points)
 
         dset_shape = clt.get_dset_shape(dset_name)
         if len(dset_shape) > 1:
