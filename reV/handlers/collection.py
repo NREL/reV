@@ -332,7 +332,7 @@ class DatasetCollector:
             Slice specifying index range of source data in input file. If
             collection is not being done in chunks this is just slice(None).
         source_indexer : ndarray
-            boolean array specifying which source gids (not just a range) of
+            boolean array specifying which source gids (not just a range)
             should be stored in output.
         """
         source_indexer = np.isin(source_gids, self._gids)
