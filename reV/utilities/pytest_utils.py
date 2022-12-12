@@ -38,7 +38,6 @@ def write_chunk(meta, times, data, features, out_file):
     out_file : str
         Name of output file
     """
-
     with RexOutputs(out_file, 'w') as fh:
         fh.meta = meta
         fh.time_index = times
@@ -82,26 +81,19 @@ def make_fake_h5_chunks(td, features, shuffle=False):
     if shuffle:
         np.random.shuffle(gids)
     gids = gids.reshape(shape[:-1])
-
     times = pd_date_range('20220101', '20220103', freq='3600s',
                           inclusive='left')
     s_slices = [slice(0, 25), slice(25, 50)]
     out_pattern = os.path.join(td, 'chunks_{i}_{j}.h5')
-    out_files = []
+
     for i, s1 in enumerate(s_slices):
         for j, s2 in enumerate(s_slices):
             out_file = out_pattern.format(i=i, j=j)
-            out_files.append(out_file)
-            chunk_lat = lat[s1, s2].flatten()
-            chunk_lon = lon[s1, s2].flatten()
-            chunk_gids = gids[s1, s2].flatten()
-
-            meta = pd.DataFrame({'latitude': chunk_lat,
-                                 'longitude': chunk_lon,
-                                 'gid': chunk_gids})
+            meta = pd.DataFrame({'latitude': lat[s1, s2].flatten(),
+                                 'longitude': lon[s1, s2].flatten(),
+                                 'gid': gids[s1, s2].flatten()})
             write_chunk(meta=meta, times=times, data=data[s1, s2],
                         features=features, out_file=out_file)
 
     out = (out_pattern.format(i='*', j='*'), data, features, s_slices, times)
-
     return out
