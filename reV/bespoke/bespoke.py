@@ -1312,7 +1312,10 @@ class BespokeWindPlants(AbstractAggregation):
             Full filepath to an output .h5 file to save Bespoke data to. The
             parent directories will be created if they do not already exist.
         """
-
+        if not self.completed_gids:
+            logger.info('No output data found! It is likely that all '
+                        'requested points are excluded.')
+            return
         sample = self.outputs[self.completed_gids[0]]
         out_fpath = self._init_fout(out_fpath, sample)
 

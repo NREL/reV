@@ -432,8 +432,21 @@ def test_bespoke():
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
         points = [33, 35]
+        fully_excluded_points = [37]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        assert not os.path.exists(out_fpath)
+        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  fully_excluded_points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 5},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=2,
+                                  out_fpath=out_fpath)
+        assert not os.path.exists(out_fpath)
         _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
                                   objective_function, cap_cost_fun,
                                   foc_fun, voc_fun,
@@ -443,7 +456,7 @@ def test_bespoke():
                                   output_request=output_request,
                                   max_workers=2,
                                   out_fpath=out_fpath)
-
+        assert os.path.exists(out_fpath)
         with Resource(out_fpath) as f:
             meta = f.meta
             assert len(meta) <= len(points)
