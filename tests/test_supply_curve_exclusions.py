@@ -187,6 +187,36 @@ def test_inclusion_mask(scenario):
     assert np.allclose(truth, dict_test)
 
 
+def test_exclude_range():
+    """
+    Test creation of inclusion mask with "exclude_range" key
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with ExclusionLayers(excl_h5) as excl:
+        # unique vals are 1, 2, and 255, where 255 == nodata value
+        padus_data = excl.get_layer_values("ri_padus")
+
+    excl_dict = {'ri_padus': {'exclude_range': (None, 1),
+                              'exclude_nodata': False}}
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=excl_dict)
+    assert dict_test.sum() == (padus_data > 1).sum()
+
+    excl_dict = {'ri_padus': {'exclude_range': (5, None),
+                              'exclude_nodata': False}}
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=excl_dict)
+    assert dict_test.sum() == dict_test.size
+
+    excl_dict = {'ri_padus': {'exclude_range': (1, 2),
+                              'exclude_nodata': False}}
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=excl_dict)
+    assert dict_test.sum() == (padus_data > 2).sum()
+
+    excl_dict = {'ri_padus': {'exclude_range': (1, 2),
+                              'exclude_nodata': True}}
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=excl_dict)
+    assert dict_test.sum() == 0
+
+
 def test_bad_layer():
     """
     Test creation of inclusion mask

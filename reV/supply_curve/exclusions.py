@@ -345,14 +345,15 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include (True is include).
         """
-        mask = np.full(data.shape, True)
+        mask = np.full(data.shape, False)
         if self.min_value is not None:
-            mask = data <= self.min_value
+            mask = data < self.min_value
 
         if self.max_value is not None:
-            mask *= data >= self.max_value
+            mask |= data > self.max_value
 
-        if self._exclude_nodata and self.nodata_value is not None:
+        mask[data == self.nodata_value] = True
+        if self._exclude_nodata:
             mask = mask & (data != self.nodata_value)
 
         return mask
