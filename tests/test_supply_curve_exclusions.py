@@ -416,7 +416,7 @@ def test_legacy_kwargs():
 
     excl_dict = {'ri_padus': {'inclusion_values': [1, ], 'weight': 0.25,
                               'exclude_nodata': False}}
-    with pytest.warns() as record:
+    with pytest.warns(UserWarning) as record:
         with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
             assert (f.mask).any()
         assert len(record) == 1
@@ -424,7 +424,7 @@ def test_legacy_kwargs():
 
     excl_dict = {'ri_padus': {'inclusion_range': (1, None), 'weight': 0.25,
                               'exclude_nodata': False}}
-    with pytest.warns() as record:
+    with pytest.warns(UserWarning) as record:
         with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
             assert (f.mask).any()
         assert len(record) == 1

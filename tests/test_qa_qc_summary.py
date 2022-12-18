@@ -37,7 +37,7 @@ def test_summarize(dataset):
         test = summary.summarize_dset(
             dataset, process_size=None, max_workers=1)
 
-    assert_frame_equal(test, baseline, check_dtype=False)
+    assert_frame_equal(test, baseline, check_dtype=False, atol=1e-5)
 
 
 def test_sc_summarize():
