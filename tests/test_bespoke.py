@@ -386,7 +386,41 @@ def test_extra_outputs(gid=33):
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
-                                 data_layers=DATA_LAYERS,
+                                 data_layers=copy.deepcopy(DATA_LAYERS),
+                                 )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+        bsp.agg_data_layers()
+
+        assert 'lcoe_fcr-2012' in out
+        assert 'lcoe_fcr-2013' in out
+        assert 'lcoe_fcr-means' in out
+
+        assert 'capacity' in bsp.meta
+        assert 'mean_cf' in bsp.meta
+        assert 'mean_lcoe' in bsp.meta
+
+        assert 'pct_slope' in bsp.meta
+        assert 'reeds_region' in bsp.meta
+        assert 'padus' in bsp.meta
+
+        out = None
+        data_layers = copy.deepcopy(DATA_LAYERS)
+        for layer in data_layers:
+            data_layers[layer].pop('fpath', None)
+
+        for layer in data_layers:
+            assert 'fpath' not in data_layers[layer]
+
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 data_layers=data_layers,
                                  )
 
         out = bsp.run_plant_optimization()
