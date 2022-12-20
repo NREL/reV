@@ -247,7 +247,7 @@ class ProjectPoints:
         self._sam_config_obj = self._parse_sam_config(sam_configs)
         self._check_points_config_mapping()
         self._tech = str(tech)
-        self._h = None
+        self._h  = self._d = None
         self._curtailment = self._parse_curtailment(curtailment)
 
     def __getitem__(self, site):
@@ -443,6 +443,27 @@ class ProjectPoints:
                 self._h = [self[site][1][h_var] for site in self.sites]
 
         return self._h
+
+    @property
+    def d(self):
+        """Get the depths (m) corresponding to the site list.
+
+        Returns
+        -------
+        _d : list | NoneType
+            Resource depths (m) corresponding to each site, taken from
+            the sam config for each site. This is None if the technology
+            is not geothermal.
+        """
+        d_var = 'resource_depth'
+        if self._d is None:
+            if 'geothermal' in self.tech:
+                if d_var in self.df:
+                    self._d = list(self.df[d_var])
+                else:
+                    self._d = [self[site][1][d_var] for site in self.sites]
+
+        return self._d
 
     @property
     def curtailment(self):

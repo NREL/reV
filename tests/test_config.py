@@ -314,6 +314,38 @@ def test_nested_sites():
         ProjectPoints(points, sam_file, 'windpower', res_file)
 
 
+def test_project_points_h():
+    """
+    Test hub heights in project points
+    """
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    points = [1, 2, 3, 5]
+    sam_file = os.path.join(TESTDATADIR,
+                            'SAM/wind_gen_standard_losses_0.json')
+    assert ProjectPoints(points, sam_file, 'pvwattsv8', res_file).h is None
+
+    pp = ProjectPoints(points, sam_file, 'windpower', res_file)
+    assert pp.h == [80] * 4
+
+
+def test_project_points_d():
+    """
+    Test depth in project points
+    """
+    points = [1, 2, 3, 5]
+    sam_file = os.path.join(TESTDATADIR, 'SAM/geothermal_default.json')
+    assert  ProjectPoints(points, sam_file, 'windpower').d is None
+
+    pp = ProjectPoints(points, sam_file, 'geothermal')
+    assert pp.d == [4500] * 4
+
+    depths_in_data = list(range(len(pp.df)))
+    pp = ProjectPoints(points, sam_file, 'geothermal')
+    pp.df['resource_depth'] = depths_in_data
+
+    assert pp.d == depths_in_data
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
