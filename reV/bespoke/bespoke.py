@@ -1316,7 +1316,7 @@ class BespokeWindPlants(AbstractAggregation):
         if not self.completed_gids:
             msg = ("No output data found! It is likely that all requested "
                    "points are excluded.")
-            logger.warn(msg)
+            logger.warning(msg)
             warn(msg)
             return
 
