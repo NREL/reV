@@ -97,7 +97,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         # pre-initialize the resource meta data
         _ = self._gen.meta
 
-        self._data_layers = self._open_data_layers(data_layers)
+        self._data_layers = data_layers
         self._power_density = power_density
         self._parse_power_density()
 
@@ -143,48 +143,6 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
         return handler
 
-    def _open_data_layers(self, data_layers):
-        """Open data layer Exclusion h5 handlers.
-
-        Parameters
-        ----------
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-
-        Returns
-        -------
-        data_layers : None | dict
-            Aggregation data layers. fobj is added to the dictionary of each
-            layer.
-        """
-
-        if data_layers is not None:
-            for name, attrs in data_layers.items():
-                data_layers[name]['fobj'] = self._excl.excl_h5
-                if 'fpath' in attrs:
-                    if attrs['fpath'] != self._excl_fpath:
-                        data_layers[name]['fobj'] = ExclusionLayers(
-                            attrs['fpath'])
-
-        return data_layers
-
-    @staticmethod
-    def _close_data_layers(data_layers):
-        """Close all data layers with exclusion h5 handlers.
-
-        Parameters
-        ----------
-        data_layers : None | dict
-            Aggregation data layers. Must have fobj exclusion handlers to close
-        """
-
-        if data_layers is not None:
-            for layer in data_layers.values():
-                if 'fobj' in layer:
-                    layer['fobj'].close()
-
     def _parse_power_density(self):
         """Parse the power density input. If file, open file handler."""
 
@@ -212,7 +170,6 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         """Close all file handlers."""
         self._excl.close()
         self._gen.close()
-        self._close_data_layers(self._data_layers)
         if self._friction_layer is not None:
             self._friction_layer.close()
 

@@ -14,6 +14,7 @@ import psutil
 from importlib import import_module
 from numbers import Number
 from concurrent.futures import as_completed
+from warnings import warn
 
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
@@ -1312,6 +1313,12 @@ class BespokeWindPlants(AbstractAggregation):
             Full filepath to an output .h5 file to save Bespoke data to. The
             parent directories will be created if they do not already exist.
         """
+        if not self.completed_gids:
+            msg = ("No output data found! It is likely that all requested "
+                   "points are excluded.")
+            logger.warning(msg)
+            warn(msg)
+            return
 
         sample = self.outputs[self.completed_gids[0]]
         out_fpath = self._init_fout(out_fpath, sample)
