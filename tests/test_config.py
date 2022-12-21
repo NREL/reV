@@ -334,7 +334,7 @@ def test_project_points_d():
     """
     points = [1, 2, 3, 5]
     sam_file = os.path.join(TESTDATADIR, 'SAM/geothermal_default.json')
-    assert  ProjectPoints(points, sam_file, 'windpower').d is None
+    assert ProjectPoints(points, sam_file, 'windpower').d is None
 
     pp = ProjectPoints(points, sam_file, 'geothermal')
     assert pp.d == [4500] * 4

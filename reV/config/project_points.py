@@ -247,7 +247,7 @@ class ProjectPoints:
         self._sam_config_obj = self._parse_sam_config(sam_configs)
         self._check_points_config_mapping()
         self._tech = str(tech)
-        self._h  = self._d = None
+        self._h = self._d = None
         self._curtailment = self._parse_curtailment(curtailment)
 
     def __getitem__(self, site):
