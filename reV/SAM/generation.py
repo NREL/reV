@@ -10,6 +10,7 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+from tempfile import TemporaryDirectory
 from warnings import warn
 import PySAM.Geothermal as PySamGeothermal
 import PySAM.Pvwattsv5 as PySamPv5
@@ -542,7 +543,9 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         December 31st is dropped and time steps are shifted to relabel
         Feb 29th as March 1st, March 1st as March 2nd, etc.
         """
-        fname = '{}_weather.csv'.format(self._site)
+        # pylint: disable=attribute-defined-outside-init,consider-using-with
+        self._temp_dir = TemporaryDirectory()
+        fname = os.path.join(self._temp_dir.name, 'weather.csv')
         logger.debug('Creating PySAM weather data file: {}'.format(fname))
 
         # ------- Process metadata
@@ -598,20 +601,12 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
 
         return fname
 
-    def run_gen_and_econ(self, delete_wfile=True):
-        """Run SAM generation and possibility follow-on econ analysis.
-
-        Parameters
-        ----------
-        delete_wfile : bool, optional
-            Delete PySAM weather file after processing is complete.
-            By default, `True`.
-        """
+    def run_gen_and_econ(self):
+        """Run SAM generation and possibility follow-on econ analysis."""
         super().run_gen_and_econ()
-
-        pysam_w_fname = self[self.PYSAM_WEATHER_TAG]
-        if delete_wfile and os.path.exists(pysam_w_fname):
-            os.remove(pysam_w_fname)
+        temp_dir = getattr(self, "_temp_dir", None)
+        if temp_dir is not None:
+            temp_dir.cleanup()
 
 
 class AbstractSamSolar(AbstractSamGeneration, ABC):
