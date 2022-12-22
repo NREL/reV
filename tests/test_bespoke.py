@@ -465,7 +465,8 @@ def test_bespoke():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
-        points = [33, 35]
+        points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
+                               'extra_unused_data': ["not", "useful"]})
         fully_excluded_points = [37]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)

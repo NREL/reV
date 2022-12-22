@@ -1217,6 +1217,34 @@ class BespokeWindPlants(AbstractAggregation):
             meta = meta[0]
         return meta
 
+    def sam_sys_inputs_with_site_data(self, gid):
+        """Update the sam_sys_inputs with site data for the given GID.
+
+        Site data is extracted from the project points DataFrame. Every
+        column in the project DataFrame becomes a key in the site_data
+        output dictionary.
+
+        Parameters
+        ----------
+        gid : int
+            SC point gid for site to pull site data for.
+
+        Returns
+        -------
+        dictionary : dict
+            SAM system config with extra keys from the project points
+            DataFrame.
+        """
+
+        gid_idx = self._project_points.index(gid)
+        site_data = self._project_points.df.iloc[gid_idx]
+
+        site_sys_inputs = self._project_points[gid][1]
+        site_sys_inputs.update({k: v for k, v in site_data.to_dict().items()
+                                if not isinstance(v, float)
+                                or not np.isnan(v)})
+        return site_sys_inputs
+
     def _init_fout(self, out_fpath, sample):
         """Initialize the bespoke output h5 file with meta and time index dsets
 
@@ -1493,7 +1521,7 @@ class BespokeWindPlants(AbstractAggregation):
                     self._excl_fpath,
                     self._res_fpath,
                     self._tm_dset,
-                    self._project_points[gid][1],
+                    self.sam_sys_inputs_with_site_data(gid),
                     self._obj_fun,
                     self._cap_cost_fun,
                     self._foc_fun,
@@ -1577,7 +1605,7 @@ class BespokeWindPlants(AbstractAggregation):
         if max_workers == 1:
             for gid in bsp.gids:
                 si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
-                                    bsp._project_points[gid][1],
+                                    bsp.sam_sys_inputs_with_site_data(gid),
                                     objective_function,
                                     capital_cost_function,
                                     fixed_operating_cost_function,
