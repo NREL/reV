@@ -81,9 +81,13 @@ def test_turbine_placement(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['fixed_operating_cost_multiplier'] = 2
+        sam_sys_inputs['variable_operating_cost_multiplier'] = 5
+
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
+                                 sam_sys_inputs,
                                  objective_function,
                                  cap_cost_fun,
                                  foc_fun,
@@ -93,6 +97,16 @@ def test_turbine_placement(gid=33):
                                  )
 
         place_optimizer = bsp.plant_optimizer
+        assert place_optimizer.turbine_x is None
+        assert place_optimizer.turbine_y is None
+        assert place_optimizer.nturbs is None
+        assert place_optimizer.capacity is None
+        assert place_optimizer.area is None
+        assert place_optimizer.aep is None
+        assert place_optimizer.capital_cost is None
+        assert place_optimizer.fixed_operating_cost is None
+        assert place_optimizer.variable_operating_cost is None
+        assert place_optimizer.objective is None
         place_optimizer.place_turbines(max_time=5)
 
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
@@ -120,8 +134,8 @@ def test_turbine_placement(gid=33):
         aep = place_optimizer.aep
         # pylint: disable=W0123
         capital_cost = eval(cap_cost_fun, globals(), locals())
-        fixed_operating_cost = eval(foc_fun, globals(), locals())
-        variable_operating_cost = eval(voc_fun, globals(), locals())
+        fixed_operating_cost = eval(foc_fun, globals(), locals()) * 2
+        variable_operating_cost = eval(voc_fun, globals(), locals()) * 5
         # pylint: disable=W0123
         assert place_optimizer.objective ==\
             eval(objective_function, globals(), locals())
