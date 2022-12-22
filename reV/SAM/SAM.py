@@ -173,6 +173,9 @@ class SamResourceRetriever:
                     # make precip rate available for curtailment analysis
                     kwargs['precip_rate'] = True
 
+        elif res_handler == GeothermalResource:
+            args += (project_points.d, )
+
         # Check for resource means
         if any(req.endswith('_mean') for req in output_request):
             kwargs['means'] = True
