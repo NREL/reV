@@ -924,8 +924,8 @@ def test_bespoke_run_with_scheduled_losses():
                            out_losses['hourly-2013'])
 
 
-def test_bespoke_wind_plant_with_power_curve_losses():
-    """Test bespoke ``wind_plant`` with power curve losses. """
+def test_bespoke_aep_is_zero_if_no_turbines_placed():
+    """Test that bespoke aep output is zero if no turbines placed. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     cap_cost_fun = ('140 * system_capacity '

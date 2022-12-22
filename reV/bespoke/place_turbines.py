@@ -382,7 +382,7 @@ class PlaceTurbines:
     @none_until_optimized
     def aep(self):
         """This is the annual energy production of the optimized plant (kWh)"""
-        if self.nturbs <= 0 :
+        if self.nturbs <= 0:
             return 0
 
         self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
@@ -419,7 +419,6 @@ class PlaceTurbines:
             'fixed_operating_cost_multiplier', 1)
         return eval(self.fixed_operating_cost_function,
                     globals(), locals()) * mult
-
 
     # pylint: disable=W0641,W0123
     @property
