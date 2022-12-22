@@ -11,6 +11,8 @@
     "reservoir_permeability" : 0.050000000000000003,
     "inj_prod_well_distance" : 1500,
     "fracture_aperature" : 0.00040000000000000002,
+    "fracture_length" : 1000,
+    "fracture_spacing" : 50,
     "num_fractures" : 6,
     "fracture_width" : 175,
     "fracture_angle" : 15,
@@ -25,6 +27,7 @@
     "conversion_subtype" : 0,
     "design_temp" : 200,
     "dt_prod_well" : 0,
+    "prod_well_choice" : 0,
 
     "decline_type" : 0,
     "temp_decline_rate" : 0.5,
@@ -39,6 +42,7 @@
     "excess_pressure_pump" : 50,
     "well_diameter" : 12.25,
     "casing_size" : 9.625,
+    "inj_casing_size" : 11.5,
     "inj_well_diam" : 12.25,
     "specify_pump_work" : 0,
     "specified_pump_work_amount" : 0,
@@ -80,6 +84,10 @@
     "q_sby_frac" : 0.20000000000000001,
     "startup_frac" : 0.20000000000000001,
     "startup_time" : 1,
+
+    "geotherm.cost.inj_cost_curve_welltype" : 0,
+    "geotherm.cost.prod_cost_curve_welltype" : 0,
+    "geotherm.cost.inj_prod_well_ratio" : 0.5,
 
     "capital_cost" : 172485199.53989035,
 	"fixed_operating_cost" : 4885201.7298879623,
