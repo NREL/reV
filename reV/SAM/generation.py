@@ -1209,67 +1209,90 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             elevation, and timezone.
         """
         super().set_resource_data(resource, meta)
+        self._set_resource_temperature(resource)
+        self._set_nameplate_to_match_resource_potential(resource)
+        self._set_resource_potential_to_match_gross_output()
 
-        check_vals = {"resource_temp": "temperature",
-                      "resource_potential": "potential_MW"}
-        for sam_key, resource_col in check_vals.items():
-            if sam_key in self.sam_sys_inputs:
-                continue
+    def _set_resource_temperature(self, resource):
+        """Set resource temp from data if user did not specify it. """
 
-            val = set(resource[resource_col].unique())
-            if len(val) > 1:
-                msg = ('Found multiple values for {!r} for site {}: {}'
-                       .format(resource_col, self.site, val))
-                logger.error(msg)
-                raise InputError(msg)
-            val = val.pop()
-            logger.debug("Input {!r} not found in config - setting "
-                         "to {:.2f} based on input resource data."
-                         .format(sam_key, val))
-            self.sam_sys_inputs[sam_key] = val
+        if "resource_temp" in self.sam_sys_inputs:
+            logger.debug("Found 'resource_temp' value in SAM config: {:.2f}"
+                         .format(self.sam_sys_inputs["resource_temp"]))
+            return
 
-        self._limit_nameplate_capacity_to_resource_potential()
+        val = set(resource["temperature"].unique())
+        logger.debug("Found {} value(s) for 'temperature' in resource data"
+                     .format(len(val)))
+        if len(val) > 1:
+            msg = ("Found multiple values for 'temperature' for site {}: {}"
+                    .format(self.site, val))
+            logger.error(msg)
+            raise InputError(msg)
 
-    def _limit_nameplate_capacity_to_resource_potential(self):
-        """Limit the nameplate capacity if necessary.
+        val = val.pop()
+        logger.debug("Input 'resource_temp' not found in SAM config - setting "
+                     "to {:.2f} based on input resource data."
+                     .format(val))
+        self.sam_sys_inputs["resource_temp"] = val
 
-        The nameplate capacity may need to be reduced such that the
-        gross plant output does not exceed the resource potential at a
-        given site. To figure out the reduction, we use SAM's
-        `ui_calculations_only` capability, and linearly interpolate
-        the nameplate capacity such that the new gross plant output
-        does not exceed resource potential.
-        """
-        super().assign_inputs()
-        self["ui_calculations_only"] = 1
-        self.execute()
-        gross_gen = getattr(self.pysam.Outputs, "gross_output")
-        resource_potential_MW = self.sam_sys_inputs["resource_potential"]
-        if gross_gen > resource_potential_MW:
-            # linearly interpolate down to allowed nameplate cap
-            input_nameplate = self.sam_sys_inputs["nameplate"]
-            self.sam_sys_inputs["nameplate"] = input_nameplate / 2
-            super().assign_inputs()
-            self.execute()
-            gross_gen_halved_nameplate = getattr(self.pysam.Outputs,
-                                                 "gross_output")
-            scale_factor = ((resource_potential_MW - gross_gen)
-                            / (gross_gen - gross_gen_halved_nameplate))
-            scale_factor = 1 + 0.5 * scale_factor
-            new_nameplate = scale_factor * input_nameplate
-            msg = ("The requested nameplate capacity ({:.2f} kW) resulted in "
-                   "gross plant output ({:.2f} MW) that exceeds the resource "
-                   "potential ({:.2f} MW)) at site gid={}. The nameplate "
-                   "capacity is reduced to {:.2f} kW before running "
-                   "generation. Remember to add 'nameplate' to your output "
-                   "requests in order to save this updated value to the "
-                   "output file!"
-                   .format(input_nameplate, gross_gen, resource_potential_MW,
-                           self._site, new_nameplate))
+    def _set_nameplate_to_match_resource_potential(self, resource):
+        """Set the nameplate capacity to match the resource potential. """
+
+        val = set(resource["potential_MW"].unique())
+        if len(val) > 1:
+            msg = ('Found multiple values for "potential_MW" for site {}: {}'
+                   .format(self.site, val))
+            logger.error(msg)
+            raise InputError(msg)
+
+        val = val.pop() * 1000
+        if "nameplate" in self.sam_sys_inputs:
+            msg = ('Setting "nameplate" is not allowed! Updating '
+                   'user input of {} to match the resource potential: {}'
+                   .format(self.sam_sys_inputs["nameplate"], val))
             logger.warning(msg)
             warn(msg)
-            self.sam_sys_inputs["nameplate"] = new_nameplate
 
+        logger.debug("Setting the nameplate to {}".format(val))
+        self.sam_sys_inputs["nameplate"] = val
+
+    def _set_resource_potential_to_match_gross_output(self):
+        """Set the resource potential input to match the gross generation.
+
+        As of 12/20/2022, the resource potential input is only used to
+        calculate the number of well replacements during the lifetime
+        of a geothermal plant. It was decided that reV would not model
+        well replacements, and therefore it is fine to set the resource
+        potential to match (or be just above) the gross potential so
+        that SAM does not throw any errors.
+
+        If SAM throws an error during the UI calculation of the gross
+        output, the resource_potential is simply set to -1 since
+        SAM will error out for this point regardless of the
+        resource_potential input.
+        """
+
+        super().assign_inputs()
+        self["ui_calculations_only"] = 1
+        try:
+            self.execute()
+        except SAMExecutionError:
+            self["ui_calculations_only"] = 0
+            self.sam_sys_inputs["resource_potential"] = -1
+            return
+
+        gross_gen = getattr(self.pysam.Outputs, "gross_output") * 1.001
+        if "resource_potential" in self.sam_sys_inputs:
+            msg = ('Setting "resource_potential" is not allowed! Updating '
+                   'user input of {} to match the gross generation: {}'
+                   .format(self.sam_sys_inputs["resource_potential"],
+                           gross_gen))
+            logger.warning(msg)
+            warn(msg)
+
+        logger.debug("Setting the resource potential to {}".format(gross_gen))
+        self.sam_sys_inputs["resource_potential"] = gross_gen
         self["ui_calculations_only"] = 0
 
     def _create_pysam_wfile(self, resource, meta):
@@ -1301,7 +1324,9 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         December 31st is dropped and time steps are shifted to relabel
         Feb 29th as March 1st, March 1st as March 2nd, etc.
         """
-        fname = '{}_weather.csv'.format(self._site)
+        # pylint: disable=attribute-defined-outside-init, consider-using-with
+        self._temp_dir = TemporaryDirectory()
+        fname = os.path.join(self._temp_dir.name, 'weather.csv')
         logger.debug('Creating PySAM weather data file: {}'.format(fname))
 
         # ------- Process metadata
@@ -1323,7 +1348,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         df['Day'] = time_index.day
         df['Hour'] = time_index.hour
         df['Minute'] = time_index.minute
-
         df.to_csv(fname, index=False, mode='a')
 
         return fname
