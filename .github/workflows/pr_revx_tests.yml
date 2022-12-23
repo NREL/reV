@@ -33,7 +33,8 @@ jobs:
       working-directory: ./reVX
       shell: bash -l {0}
       run: |
-        conda install rtree geopandas
+        conda install rtree pytest
+        pip install geopandas
         pip install --upgrade --force-reinstall shapely~=1.8
         pip install -e .
         pip install HOPP
@@ -41,5 +42,4 @@ jobs:
       working-directory: ./reVX
       shell: bash -l {0}
       run: |
-        conda install pytest
         pytest -v --disable-warnings
