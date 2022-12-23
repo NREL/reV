@@ -459,7 +459,8 @@ def test_extra_outputs(gid=33):
 def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data')
 
     cap_cost_fun = ('140 * system_capacity '
                     '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
@@ -480,8 +481,10 @@ def test_bespoke():
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
         points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
-                               'extra_unused_data': ["not", "useful"]})
-        fully_excluded_points = [37]
+                               'extra_unused_data': [0, 42]})
+        fully_excluded_points = pd.DataFrame({'gid': [37],
+                                              'config': ['default'],
+                                              'extra_unused_data': [0]})
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
@@ -516,7 +519,8 @@ def test_bespoke():
             assert 'possible_y_coords' in meta
 
             dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
-                        'annual_energy-2012', 'cf_mean-means')
+                        'annual_energy-2012', 'cf_mean-means',
+                        'extra_unused_data-2012')
             for dset in dsets_1d:
                 assert dset in list(f)
                 assert isinstance(f[dset], np.ndarray)

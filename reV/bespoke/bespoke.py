@@ -372,21 +372,12 @@ class BespokeSinglePlant:
         -------
         dict
         """
+        config = copy.deepcopy(self._sam_sys_inputs)
         if self._wind_plant_pd is None:
-            return copy.deepcopy(self._sam_sys_inputs)
-        else:
-            config = copy.deepcopy(self._wind_plant_pd.sam_sys_inputs)
-            config['wind_turbine_powercurve_powerout'] = \
-                self._sam_sys_inputs['wind_turbine_powercurve_powerout']
-
-            keys_to_copy = [PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY,
-                            ScheduledLossesMixin.OUTAGE_CONFIG_KEY,
-                            'hourly']
-            for key in keys_to_copy:
-                if key in self._sam_sys_inputs:
-                    config[key] = self._sam_sys_inputs[key]
-
             return config
+
+        config.update(self._wind_plant_pd.sam_sys_inputs)
+        return config
 
     @property
     def sc_point(self):
@@ -928,12 +919,23 @@ class BespokeWindPlants(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         points : int | slice | list | str | PointsControl | None
-            Slice or list specifying project points, string pointing to a
-            project points csv, or a fully instantiated PointsControl object.
-            Can also be a single site integer value. Points csv should have
-            'gid' and 'config' column, the config maps to the sam_configs dict
-            keys. If this is None, all available reV supply curve points are
-            included (or sliced by points_range).
+            Slice or list specifying project points, string pointing to
+            a project points csv, or a fully instantiated PointsControl
+            object. Can also be a single site integer value. Points csv
+            should have 'gid' and 'config' column, the config maps to
+            the sam_configs dict keys. CSV file can also have any of the
+            SAM system config keys as columns. Values of these columns
+            are treated as site-specific inputs for each gid. CSV file
+            can also have these extra columns:
+                - capital_cost_multiplier
+                - fixed_operating_cost_multiplier
+                - variable_operating_cost_multiplier
+            These inputs are treated as multipliers to be applied to
+            the respective cost curves (`capital_cost_function`,
+            `fixed_operating_cost_function`, and
+            `variable_operating_cost_function`) both during and after
+            the optimization. If this is None, all available reV supply
+            curve points are included (or sliced by points_range).
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
