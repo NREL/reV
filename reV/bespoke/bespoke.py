@@ -25,7 +25,6 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
-from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
