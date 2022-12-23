@@ -1242,8 +1242,7 @@ class BespokeWindPlants(AbstractAggregation):
 
         site_sys_inputs = self._project_points[gid][1]
         site_sys_inputs.update({k: v for k, v in site_data.to_dict().items()
-                                if not isinstance(v, float)
-                                or not np.isnan(v)})
+                                if not (isinstance(v, float) and np.isnan(v))})
         return site_sys_inputs
 
     def _init_fout(self, out_fpath, sample):
