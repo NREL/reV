@@ -81,9 +81,13 @@ def test_turbine_placement(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['fixed_operating_cost_multiplier'] = 2
+        sam_sys_inputs['variable_operating_cost_multiplier'] = 5
+
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
+                                 sam_sys_inputs,
                                  objective_function,
                                  cap_cost_fun,
                                  foc_fun,
@@ -93,6 +97,16 @@ def test_turbine_placement(gid=33):
                                  )
 
         place_optimizer = bsp.plant_optimizer
+        assert place_optimizer.turbine_x is None
+        assert place_optimizer.turbine_y is None
+        assert place_optimizer.nturbs is None
+        assert place_optimizer.capacity is None
+        assert place_optimizer.area is None
+        assert place_optimizer.aep is None
+        assert place_optimizer.capital_cost is None
+        assert place_optimizer.fixed_operating_cost is None
+        assert place_optimizer.variable_operating_cost is None
+        assert place_optimizer.objective is None
         place_optimizer.place_turbines(max_time=5)
 
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
@@ -120,8 +134,8 @@ def test_turbine_placement(gid=33):
         aep = place_optimizer.aep
         # pylint: disable=W0123
         capital_cost = eval(cap_cost_fun, globals(), locals())
-        fixed_operating_cost = eval(foc_fun, globals(), locals())
-        variable_operating_cost = eval(voc_fun, globals(), locals())
+        fixed_operating_cost = eval(foc_fun, globals(), locals()) * 2
+        variable_operating_cost = eval(voc_fun, globals(), locals()) * 5
         # pylint: disable=W0123
         assert place_optimizer.objective ==\
             eval(objective_function, globals(), locals())
@@ -445,7 +459,8 @@ def test_extra_outputs(gid=33):
 def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data')
 
     cap_cost_fun = ('140 * system_capacity '
                     '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
@@ -465,8 +480,11 @@ def test_bespoke():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
-        points = [33, 35]
-        fully_excluded_points = [37]
+        points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
+                               'extra_unused_data': [0, 42]})
+        fully_excluded_points = pd.DataFrame({'gid': [37],
+                                              'config': ['default'],
+                                              'extra_unused_data': [0]})
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
@@ -501,7 +519,8 @@ def test_bespoke():
             assert 'possible_y_coords' in meta
 
             dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
-                        'annual_energy-2012', 'cf_mean-means')
+                        'annual_energy-2012', 'cf_mean-means',
+                        'extra_unused_data-2012')
             for dset in dsets_1d:
                 assert dset in list(f)
                 assert isinstance(f[dset], np.ndarray)
@@ -909,8 +928,8 @@ def test_bespoke_run_with_scheduled_losses():
                            out_losses['hourly-2013'])
 
 
-def test_bespoke_wind_plant_with_power_curve_losses():
-    """Test bespoke ``wind_plant`` with power curve losses. """
+def test_bespoke_aep_is_zero_if_no_turbines_placed():
+    """Test that bespoke aep output is zero if no turbines placed. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     cap_cost_fun = ('140 * system_capacity '

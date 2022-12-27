@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=inconsistent-return-statements
 """
 place turbines for bespoke wind plants
 """
@@ -11,7 +12,35 @@ from reV.bespoke.gradient_free import GeneticAlgorithm
 from reV.utilities.exceptions import WhileLoopPackingError
 
 
-class PlaceTurbines():
+def none_until_optimized(func):
+    """Decorator that returns None until `PlaceTurbines` is optimized.
+
+    Meant for exclusive use in `PlaceTurbines` and its subclasses.
+    `PlaceTurbines` is considered optimized when its
+    `optimized_design_variables` attribute is not `None`.
+
+    Parameters
+    ----------
+    func : callable
+        A callable function that should return `None` until
+        `PlaceTurbines` is optimized.
+
+    Returns
+    -------
+    callable
+        New function that returns `None` until `PlaceTurbines` is
+        optimized.
+    """
+
+    def _func(pt):
+        """Wrapper to return `None` if `PlaceTurbines` is not optimized"""
+        if pt.optimized_design_variables is None:
+            return
+        return func(pt)
+    return _func
+
+
+class PlaceTurbines:
     """Framework for optimizing turbine locations for site specific
     exclusions, wind resources, and objective
     """
@@ -207,6 +236,13 @@ class PlaceTurbines():
         variable_operating_cost = eval(self.variable_operating_cost_function,
                                        globals(), locals())
 
+        capital_cost *= self.wind_plant.sam_sys_inputs.get(
+            'capital_cost_multiplier', 1)
+        fixed_operating_cost *= self.wind_plant.sam_sys_inputs.get(
+            'fixed_operating_cost_multiplier', 1)
+        variable_operating_cost *= self.wind_plant.sam_sys_inputs.get(
+            'variable_operating_cost_multiplier', 1)
+
         objective = eval(self.objective_function, globals(), locals())
 
         return objective
@@ -294,44 +330,34 @@ class PlaceTurbines():
         self.optimize(**kwargs)
 
     @property
+    @none_until_optimized
     def turbine_x(self):
         """This is the final optimized turbine x locations (m)"""
-        if self.optimized_design_variables is not None:
-            return self.x_locations[self.optimized_design_variables]
-        else:
-            return None
+        return self.x_locations[self.optimized_design_variables]
 
     @property
+    @none_until_optimized
     def turbine_y(self):
         """This is the final optimized turbine y locations (m)"""
-        if self.optimized_design_variables is not None:
-            return self.y_locations[self.optimized_design_variables]
-        else:
-            return None
+        return self.y_locations[self.optimized_design_variables]
 
     @property
+    @none_until_optimized
     def nturbs(self):
         """This is the final optimized number of turbines"""
-        if self.optimized_design_variables is not None:
-            return np.sum(self.optimized_design_variables)
-        else:
-            return None
+        return np.sum(self.optimized_design_variables)
 
     @property
+    @none_until_optimized
     def capacity(self):
         """This is the final optimized plant nameplate capacity (kW)"""
-        if self.optimized_design_variables is not None:
-            return self.turbine_capacity * self.nturbs
-        else:
-            return None
+        return self.turbine_capacity * self.nturbs
 
     @property
+    @none_until_optimized
     def area(self):
         """This is the area available for wind turbine placement (km2)"""
-        if self.full_polygons is not None:
-            return self.full_polygons.area
-        else:
-            return None
+        return self.full_polygons.area
 
     @property
     def fixed_charge_rate(self):
@@ -345,84 +371,80 @@ class PlaceTurbines():
         defined with the area available after removing the exclusions
         (MW/km2)"""
         if self.full_polygons is None or self.capacity is None:
-            return None
-        else:
-            if self.area != 0.0:
-                return self.capacity / self.area * 1E3
-            else:
-                return 0.0
+            return
+
+        if self.area != 0.0:
+            return self.capacity / self.area * 1E3
+
+        return 0.0
 
     @property
+    @none_until_optimized
     def aep(self):
         """This is the annual energy production of the optimized plant (kWh)"""
-        if self.optimized_design_variables is not None:
-            if self.nturbs > 0:
-                self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
-                self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
-                self.wind_plant["system_capacity"] = self.capacity
-                self.wind_plant.assign_inputs()
-                self.wind_plant.execute()
-                return self.wind_plant.annual_energy()
-            else:
-                return 0
-        else:
-            return None
+        if self.nturbs <= 0:
+            return 0
+
+        self.wind_plant["wind_farm_xCoordinates"] = self.turbine_x
+        self.wind_plant["wind_farm_yCoordinates"] = self.turbine_y
+        self.wind_plant["system_capacity"] = self.capacity
+        self.wind_plant.assign_inputs()
+        self.wind_plant.execute()
+        return self.wind_plant.annual_energy()
 
     # pylint: disable=W0641,W0123
     @property
+    @none_until_optimized
     def capital_cost(self):
         """This is the capital cost of the optimized plant ($)"""
-        if self.optimized_design_variables is not None:
-            fixed_charge_rate = self.fixed_charge_rate
-            n_turbines = self.nturbs
-            system_capacity = self.capacity
-            aep = self.aep
-            return eval(self.capital_cost_function, globals(), locals())
-        else:
-            return None
+        fixed_charge_rate = self.fixed_charge_rate
+        n_turbines = self.nturbs
+        system_capacity = self.capacity
+        aep = self.aep
+        mult = self.wind_plant.sam_sys_inputs.get(
+            'capital_cost_multiplier', 1)
+        return eval(self.capital_cost_function, globals(), locals()) * mult
 
     # pylint: disable=W0641,W0123
     @property
+    @none_until_optimized
     def fixed_operating_cost(self):
         """This is the annual fixed operating cost of the
         optimized plant ($/year)"""
-        if self.optimized_design_variables is not None:
-            fixed_charge_rate = self.fixed_charge_rate
-            n_turbines = self.nturbs
-            system_capacity = self.capacity
-            aep = self.aep
-            return eval(self.fixed_operating_cost_function,
-                        globals(), locals())
-        else:
-            return None
+        fixed_charge_rate = self.fixed_charge_rate
+        n_turbines = self.nturbs
+        system_capacity = self.capacity
+        aep = self.aep
+        mult = self.wind_plant.sam_sys_inputs.get(
+            'fixed_operating_cost_multiplier', 1)
+        return eval(self.fixed_operating_cost_function,
+                    globals(), locals()) * mult
 
     # pylint: disable=W0641,W0123
     @property
+    @none_until_optimized
     def variable_operating_cost(self):
         """This is the annual variable operating cost of the
         optimized plant ($/kWh)"""
-        if self.optimized_design_variables is not None:
-            fixed_charge_rate = self.fixed_charge_rate
-            n_turbines = self.nturbs
-            system_capacity = self.capacity
-            aep = self.aep
-            return eval(self.variable_operating_cost_function,
-                        globals(), locals())
-        else:
-            return None
+        fixed_charge_rate = self.fixed_charge_rate
+        n_turbines = self.nturbs
+        system_capacity = self.capacity
+        aep = self.aep
+        mult = self.wind_plant.sam_sys_inputs.get(
+            'variable_operating_cost_multiplier', 1)
+        return eval(self.variable_operating_cost_function,
+                    globals(), locals()) * mult
 
     # pylint: disable=W0641,W0123
     @property
+    @none_until_optimized
     def objective(self):
         """This is the optimized objective function value"""
-        if self.optimized_design_variables is not None:
-            fixed_charge_rate = self.fixed_charge_rate
-            n_turbines = self.nturbs
-            system_capacity = self.capacity
-            aep = self.aep
-            capital_cost = self.capital_cost
-            fixed_operating_cost = self.fixed_operating_cost
-            variable_operating_cost = self.variable_operating_cost
-            return eval(self.objective_function, globals(), locals())
-        else:
-            return None
+        fixed_charge_rate = self.fixed_charge_rate
+        n_turbines = self.nturbs
+        system_capacity = self.capacity
+        aep = self.aep
+        capital_cost = self.capital_cost
+        fixed_operating_cost = self.fixed_operating_cost
+        variable_operating_cost = self.variable_operating_cost
+        return eval(self.objective_function, globals(), locals())

@@ -25,7 +25,6 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
-from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions
@@ -372,21 +371,12 @@ class BespokeSinglePlant:
         -------
         dict
         """
+        config = copy.deepcopy(self._sam_sys_inputs)
         if self._wind_plant_pd is None:
-            return copy.deepcopy(self._sam_sys_inputs)
-        else:
-            config = copy.deepcopy(self._wind_plant_pd.sam_sys_inputs)
-            config['wind_turbine_powercurve_powerout'] = \
-                self._sam_sys_inputs['wind_turbine_powercurve_powerout']
-
-            keys_to_copy = [PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY,
-                            ScheduledLossesMixin.OUTAGE_CONFIG_KEY,
-                            'hourly']
-            for key in keys_to_copy:
-                if key in self._sam_sys_inputs:
-                    config[key] = self._sam_sys_inputs[key]
-
             return config
+
+        config.update(self._wind_plant_pd.sam_sys_inputs)
+        return config
 
     @property
     def sc_point(self):
@@ -928,12 +918,23 @@ class BespokeWindPlants(AbstractAggregation):
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         points : int | slice | list | str | PointsControl | None
-            Slice or list specifying project points, string pointing to a
-            project points csv, or a fully instantiated PointsControl object.
-            Can also be a single site integer value. Points csv should have
-            'gid' and 'config' column, the config maps to the sam_configs dict
-            keys. If this is None, all available reV supply curve points are
-            included (or sliced by points_range).
+            Slice or list specifying project points, string pointing to
+            a project points csv, or a fully instantiated PointsControl
+            object. Can also be a single site integer value. Points csv
+            should have 'gid' and 'config' column, the config maps to
+            the sam_configs dict keys. CSV file can also have any of the
+            SAM system config keys as columns. Values of these columns
+            are treated as site-specific inputs for each gid. CSV file
+            can also have these extra columns:
+                - capital_cost_multiplier
+                - fixed_operating_cost_multiplier
+                - variable_operating_cost_multiplier
+            These inputs are treated as multipliers to be applied to
+            the respective cost curves (`capital_cost_function`,
+            `fixed_operating_cost_function`, and
+            `variable_operating_cost_function`) both during and after
+            the optimization. If this is None, all available reV supply
+            curve points are included (or sliced by points_range).
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
@@ -1217,6 +1218,33 @@ class BespokeWindPlants(AbstractAggregation):
             meta = meta[0]
         return meta
 
+    def sam_sys_inputs_with_site_data(self, gid):
+        """Update the sam_sys_inputs with site data for the given GID.
+
+        Site data is extracted from the project points DataFrame. Every
+        column in the project DataFrame becomes a key in the site_data
+        output dictionary.
+
+        Parameters
+        ----------
+        gid : int
+            SC point gid for site to pull site data for.
+
+        Returns
+        -------
+        dictionary : dict
+            SAM system config with extra keys from the project points
+            DataFrame.
+        """
+
+        gid_idx = self._project_points.index(gid)
+        site_data = self._project_points.df.iloc[gid_idx]
+
+        site_sys_inputs = self._project_points[gid][1]
+        site_sys_inputs.update({k: v for k, v in site_data.to_dict().items()
+                                if not (isinstance(v, float) and np.isnan(v))})
+        return site_sys_inputs
+
     def _init_fout(self, out_fpath, sample):
         """Initialize the bespoke output h5 file with meta and time index dsets
 
@@ -1493,7 +1521,7 @@ class BespokeWindPlants(AbstractAggregation):
                     self._excl_fpath,
                     self._res_fpath,
                     self._tm_dset,
-                    self._project_points[gid][1],
+                    self.sam_sys_inputs_with_site_data(gid),
                     self._obj_fun,
                     self._cap_cost_fun,
                     self._foc_fun,
@@ -1577,7 +1605,7 @@ class BespokeWindPlants(AbstractAggregation):
         if max_workers == 1:
             for gid in bsp.gids:
                 si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
-                                    bsp._project_points[gid][1],
+                                    bsp.sam_sys_inputs_with_site_data(gid),
                                     objective_function,
                                     capital_cost_function,
                                     fixed_operating_cost_function,
