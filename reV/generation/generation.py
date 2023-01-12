@@ -279,7 +279,7 @@ class Gen(BaseGen):
 
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, gid_map=None, write_mapped_gids=False):
+            scale_outputs=True, gid_map=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -302,9 +302,6 @@ class Gen(BaseGen):
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
             resource gids. This can be None or a pre-extracted dict.
-        write_mapped_gids : bool
-            Option to write mapped gids to output meta instead of resource
-            gids.
 
         Returns
         -------
@@ -322,8 +319,7 @@ class Gen(BaseGen):
             out = cls.OPTIONS[tech].reV_run(
                 points_control, res_file, site_df,
                 output_request=output_request,
-                gid_map=gid_map,
-                write_mapped_gids=write_mapped_gids)
+                gid_map=gid_map)
 
         except Exception as e:
             out = {}

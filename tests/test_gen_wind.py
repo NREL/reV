@@ -179,6 +179,45 @@ def test_gid_map(gid_map):
             assert site_meta['gid'] == res_gid
 
 
+@pytest.mark.parametrize('gid_map',
+                         [{0: 0, 1: 1, 2: 1, 3: 3, 4: 4},
+                          {0: 4, 1: 3, 2: 2, 3: 1, 4: 0},
+                          {10: 14, 11: 13, 12: 12, 13: 11, 20: 0},
+                          {0: 59, 1: 1, 2: 1, 3: 0, 4: 4},
+                          {0: 59, 1: 1, 2: 0, 3: 0, 4: 4},
+                          {0: 1, 1: 1, 2: 0, 3: 0, 4: 0},
+                          {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+                          ])
+def test_write_mapped_gids(gid_map):
+    """Test flag to write mapped gids to meta instead of resource ids
+    """
+    points_test = sorted(list(set(gid_map.keys())))
+    year = 2012
+    max_workers = 1
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
+
+    output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
+                      'monthly_energy')
+
+    baseline = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                           max_workers=max_workers, sites_per_worker=3,
+                           out_fpath=None, output_request=output_request,
+                           gid_map=gid_map, write_mapped_gids=False)
+
+    test = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                       max_workers=max_workers, sites_per_worker=3,
+                       out_fpath=None, output_request=output_request,
+                       gid_map=gid_map, write_mapped_gids=True)
+
+    for key in output_request:
+        assert np.allclose(baseline.out[key], test.out[key])
+
+    breakpoint()
+    for base_gid, test_gid in zip(baseline.meta['gid'], test.meta['gid']):
+        assert base_gid == gid_map[test_gid]
+
+
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     """Test reV 2.0 generation for wind with new outputs."""
     # get full file paths.
