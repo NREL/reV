@@ -213,7 +213,6 @@ def test_write_mapped_gids(gid_map):
     for key in output_request:
         assert np.allclose(baseline.out[key], test.out[key])
 
-    breakpoint()
     for base_gid, test_gid in zip(baseline.meta['gid'], test.meta['gid']):
         assert base_gid == gid_map[test_gid]
 
