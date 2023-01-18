@@ -143,24 +143,37 @@ def test_gid_map(gid_map):
                            max_workers=max_workers, sites_per_worker=3,
                            out_fpath=None, output_request=output_request)
 
-    test = Gen.reV_run('windpower', points_test, sam_files, res_file,
-                       max_workers=max_workers, sites_per_worker=3,
-                       out_fpath=None, output_request=output_request,
-                       gid_map=gid_map)
+    map_test = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                           max_workers=max_workers, sites_per_worker=3,
+                           out_fpath=None, output_request=output_request,
+                           gid_map=gid_map)
 
-    if len(baseline.out['cf_mean']) == len(test.out['cf_mean']):
-        assert not np.allclose(baseline.out['cf_mean'], test.out['cf_mean'])
+    write_gid_test = Gen.reV_run('windpower', points_test, sam_files, res_file,
+                                 max_workers=max_workers, sites_per_worker=3,
+                                 out_fpath=None, output_request=output_request,
+                                 gid_map=gid_map, write_mapped_gids=True)
+
+    for key in output_request:
+        assert np.allclose(map_test.out[key], write_gid_test.out[key])
+
+    for map_test_gid, write_test_gid in zip(map_test.meta['gid'],
+                                            write_gid_test.meta['gid']):
+        assert map_test_gid == gid_map[write_test_gid]
+
+    if len(baseline.out['cf_mean']) == len(map_test.out['cf_mean']):
+        assert not np.allclose(baseline.out['cf_mean'],
+                               map_test.out['cf_mean'])
 
     for gen_gid_test, res_gid in gid_map.items():
         gen_gid_test = points_test.index(gen_gid_test)
         gen_gid_base = points_base.index(res_gid)
         for key in output_request:
-            if len(test.out[key].shape) == 2:
+            if len(map_test.out[key].shape) == 2:
                 assert np.allclose(baseline.out[key][:, gen_gid_base],
-                                   test.out[key][:, gen_gid_test])
+                                   map_test.out[key][:, gen_gid_test])
             else:
                 assert np.allclose(baseline.out[key][gen_gid_base],
-                                   test.out[key][gen_gid_test])
+                                   map_test.out[key][gen_gid_test])
 
     labels = ['latitude', 'longitude']
     with Resource(res_file) as res:
@@ -171,50 +184,12 @@ def test_gid_map(gid_map):
             assert np.allclose(test_coords, true_coords)
             assert site_meta['gid'] == res_gid
 
-        for i, (gen_gid, site_meta) in enumerate(test.meta.iterrows()):
+        for i, (gen_gid, site_meta) in enumerate(map_test.meta.iterrows()):
             res_gid = gid_map[gen_gid]
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
             assert site_meta['gid'] == res_gid
-
-
-@pytest.mark.parametrize('gid_map',
-                         [{0: 0, 1: 1, 2: 1, 3: 3, 4: 4},
-                          {0: 4, 1: 3, 2: 2, 3: 1, 4: 0},
-                          {10: 14, 11: 13, 12: 12, 13: 11, 20: 0},
-                          {0: 59, 1: 1, 2: 1, 3: 0, 4: 4},
-                          {0: 59, 1: 1, 2: 0, 3: 0, 4: 4},
-                          {0: 1, 1: 1, 2: 0, 3: 0, 4: 0},
-                          {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
-                          ])
-def test_write_mapped_gids(gid_map):
-    """Test flag to write mapped gids to meta instead of resource ids
-    """
-    points_test = sorted(list(set(gid_map.keys())))
-    year = 2012
-    max_workers = 1
-    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
-    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
-
-    output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
-                      'monthly_energy')
-
-    baseline = Gen.reV_run('windpower', points_test, sam_files, res_file,
-                           max_workers=max_workers, sites_per_worker=3,
-                           out_fpath=None, output_request=output_request,
-                           gid_map=gid_map, write_mapped_gids=False)
-
-    test = Gen.reV_run('windpower', points_test, sam_files, res_file,
-                       max_workers=max_workers, sites_per_worker=3,
-                       out_fpath=None, output_request=output_request,
-                       gid_map=gid_map, write_mapped_gids=True)
-
-    for key in output_request:
-        assert np.allclose(baseline.out[key], test.out[key])
-
-    for base_gid, test_gid in zip(baseline.meta['gid'], test.meta['gid']):
-        assert base_gid == gid_map[test_gid]
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
