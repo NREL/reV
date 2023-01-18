@@ -113,7 +113,8 @@ class Gen(BaseGen):
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  site_data=None, gid_map=None, out_fpath=None, drop_leap=False,
-                 mem_util_lim=0.4, scale_outputs=True):
+                 mem_util_lim=0.4, scale_outputs=True,
+                 write_mapped_gids=False):
         """
         Parameters
         ----------
@@ -147,6 +148,9 @@ class Gen(BaseGen):
             to disk.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        write_mapped_gids : bool
+            Option to write mapped gids to output meta instead of resource
+            gids.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
@@ -162,6 +166,7 @@ class Gen(BaseGen):
             logger.error(msg)
             raise KeyError(msg)
 
+        self.write_mapped_gids = write_mapped_gids
         self._res_file = res_file
         self._sam_module = self.OPTIONS[self.tech]
         self._run_attrs['sam_module'] = self._sam_module.MODULE
@@ -225,6 +230,8 @@ class Gen(BaseGen):
                 self._meta = res['meta', res_gids]
 
             self._meta.loc[:, 'gid'] = res_gids
+            if self.write_mapped_gids:
+                self._meta.loc[:, 'gid'] = self.project_points.sites
             self._meta.index = self.project_points.sites
             self._meta.index.name = 'gid'
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
@@ -309,9 +316,11 @@ class Gen(BaseGen):
 
         # run generation method for specified technology
         try:
-            out = cls.OPTIONS[tech].reV_run(points_control, res_file, site_df,
-                                            output_request=output_request,
-                                            gid_map=gid_map)
+            out = cls.OPTIONS[tech].reV_run(
+                points_control, res_file, site_df,
+                output_request=output_request,
+                gid_map=gid_map)
+
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -441,7 +450,7 @@ class Gen(BaseGen):
                 gid_map=None, max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, out_fpath=None, mem_util_lim=0.4,
-                scale_outputs=True):
+                scale_outputs=True, write_mapped_gids=False):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -509,6 +518,9 @@ class Gen(BaseGen):
             site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        write_mapped_gids : bool
+            Option to write mapped gids to output meta instead of resource
+            gids.
 
         Returns
         -------
@@ -528,7 +540,8 @@ class Gen(BaseGen):
                   gid_map=gid_map,
                   out_fpath=out_fpath,
                   mem_util_lim=mem_util_lim,
-                  scale_outputs=scale_outputs)
+                  scale_outputs=scale_outputs,
+                  write_mapped_gids=write_mapped_gids)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,

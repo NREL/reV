@@ -217,6 +217,17 @@ class GenConfig(SAMAnalysisConfig):
         return self.get('gid_map', None)
 
     @property
+    def write_mapped_gids(self):
+        """Option to write mapped gids to meta data gids instead of the gids
+        from the resource data.
+
+        Returns
+        -------
+        bool
+        """
+        return self.get('write_mapped_gids', False)
+
+    @property
     def resource_file(self):
         """
         get base resource_file
