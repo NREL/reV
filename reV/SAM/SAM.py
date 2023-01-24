@@ -190,7 +190,7 @@ class SamResourceRetriever:
         """
         if res_handler == WindResource:
             res_handler = MultiFileWTK
-        elif res_handler == NSRDB:
+        elif res_handler in (NSRDB, SolarResource):
             res_handler = MultiFileNSRDB
         else:
             res_handler = MultiFileResource
@@ -498,6 +498,7 @@ class RevPySam(Sam):
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
     RESOURCE_TYPES = {'pvwattsv5': SolarResource,
                       'pvwattsv7': SolarResource,
+                      'pvwattsv8': SolarResource,
                       'pvsamv1': SolarResource,
                       'tcsmoltensalt': SolarResource,
                       'solarwaterheat': SolarResource,
