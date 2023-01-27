@@ -891,6 +891,10 @@ class SupplyCurve:
                                               trans_costs=trans_costs,
                                               avail_cap_frac=avail_cap_frac)
         init_list = [np.nan] * int(1 + np.max(self._sc_gids))
+        columns = list(columns)
+        if sort_on not in columns:
+            columns.append(sort_on)
+
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
         trans_sc_gids = trans_table['sc_gid'].values.astype(int)
@@ -979,32 +983,35 @@ class SupplyCurve:
 
     def _adjust_sort_inputs(self, columns, sort_on, consider_friction):
         """Add extra output columns and set `sort_on` value, if needed. """
-        if consider_friction and 'total_lcoe_friction' in self._trans_table:
-            columns.append('total_lcoe_friction')
-
-        if 'reinforcement_cost' in self._trans_table:
-            sort_on = sort_on or "lcoe_no_reinforcement"
-            columns.append('reinforcement_cost_per_mw')
-            columns.append('reinforcement_dist_km')
-
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
         extra_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
                       'reinforcement_poi_lon', 'eos_mult', 'reg_mult'}
+
+        if consider_friction and 'total_lcoe_friction' in self._trans_table:
+            extra_cols.add('total_lcoe_friction')
+
+        if 'reinforcement_cost' in self._trans_table:
+            sort_on = sort_on or "lcoe_no_reinforcement"
+            extra_cols.add('reinforcement_cost_per_mw')
+            extra_cols.add('reinforcement_dist_km')
+
+        if 'max_cap' in self._trans_table:
+            extra_cols.add('n_parallel_trans')
+
         for col in extra_cols:
-            if col in self._trans_table:
+            if col in self._trans_table and col not in columns:
                 columns.append(col)
 
-        sort_on = sort_on or 'total_lcoe'
-        return columns, sort_on
+        return list(columns), sort_on or 'total_lcoe'
 
     def full_sort(self, fcr, transmission_costs=None,
                   avail_cap_frac=1, line_limited=False,
                   connectable=True, max_workers=None,
                   consider_friction=True, sort_on=None,
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
-                           'n_parallel_trans', 'trans_cap_cost_per_mw',
-                           'dist_km', 'lcot', 'total_lcoe'),
+                           'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                           'total_lcoe'),
                   wind_dirs=None, n_dirs=2, downwind=False,
                   offshore_compete=False):
         """
@@ -1075,6 +1082,9 @@ class SupplyCurve:
         if isinstance(columns, tuple):
             columns = list(columns)
 
+        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
+                                                    consider_friction)
+
         trans_table = self._trans_table.copy()
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values(sort_on)
@@ -1082,9 +1092,6 @@ class SupplyCurve:
         total_lcoe_fric = None
         if consider_friction and 'mean_lcoe_friction' in trans_table:
             total_lcoe_fric = trans_table['total_lcoe_friction'].values
-
-        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
-                                                    consider_friction)
 
         comp_wind_dirs = None
         if wind_dirs is not None:
@@ -1116,9 +1123,8 @@ class SupplyCurve:
     def simple_sort(self, fcr, transmission_costs=None,
                     avail_cap_frac=1, max_workers=None,
                     consider_friction=True, sort_on=None,
-                    columns=('trans_gid', 'trans_type', 'n_parallel_trans',
-                             'lcot', 'total_lcoe', 'dist_km',
-                             'trans_cap_cost_per_mw'),
+                    columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                             'dist_km', 'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
                     offshore_compete=False):
         """
@@ -1187,9 +1193,6 @@ class SupplyCurve:
         if isinstance(columns, tuple):
             columns = list(columns)
 
-        if consider_friction and 'total_lcoe_friction' in trans_table:
-            columns.append('total_lcoe_friction')
-
         columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
                                                     consider_friction)
 
@@ -1219,8 +1222,8 @@ class SupplyCurve:
              transmission_costs=None, avail_cap_frac=1,
              line_limited=False, consider_friction=True, sort_on=None,
              columns=('trans_gid', 'trans_capacity', 'trans_type',
-                      'n_parallel_trans', 'trans_cap_cost_per_mw', 'dist_km',
-                      'lcot', 'total_lcoe'),
+                      'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                      'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
              offshore_compete=False):
         """
@@ -1300,9 +1303,8 @@ class SupplyCurve:
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, consider_friction=True,
                sort_on=None,
-               columns=('trans_gid', 'trans_type', 'n_parallel_trans',
-                        'lcot', 'total_lcoe', 'dist_km',
-                        'trans_cap_cost_per_mw'),
+               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                        'dist_km', 'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """
