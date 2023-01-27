@@ -327,9 +327,8 @@ class SupplyCurve:
         if not any(mask):
             return []
 
-        line_gids = \
-            features.loc[mask,
-                         'trans_line_gids'].apply(cls._parse_trans_line_gids)
+        line_gids = (features.loc[mask, 'trans_line_gids']
+                     .apply(cls._parse_trans_line_gids))
 
         line_gids = np.unique(np.concatenate(line_gids.values))
 
@@ -735,6 +734,18 @@ class SupplyCurve:
             cost /= self._trans_table['capacity']  # $/MW
             self._trans_table['trans_cap_cost_per_mw'] = cost
 
+        if 'reinforcement_cost' in self._trans_table:
+            cf_mean_arr = self._trans_table['mean_cf'].values
+            lcot = (cost * fcr) / (cf_mean_arr * 8760)
+            lcoe = lcot + self._trans_table['mean_lcoe']
+            self._trans_table['lcot_no_reinforcement'] = lcot
+            self._trans_table['lcoe_no_reinforcement'] = lcoe
+
+            r_cost_mw = (self._trans_table['reinforcement_cost']
+                         / self._trans_table['capacity'])
+            self._trans_table['reinforcement_cost_per_mw'] = r_cost_mw
+            cost += r_cost_mw  # $/MW
+
         cf_mean_arr = self._trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
@@ -966,13 +977,34 @@ class SupplyCurve:
             fc = TF.feature_capacity(self._trans_table, **kwargs)
             self._trans_table = self._trans_table.merge(fc, on='trans_gid')
 
+    def _adjust_sort_inputs(self, columns, sort_on, consider_friction):
+        """Add extra output columns and set `sort_on` value, if needed. """
+        if consider_friction and 'total_lcoe_friction' in self._trans_table:
+            columns.append('total_lcoe_friction')
+
+        if 'reinforcement_cost' in self._trans_table:
+            sort_on = sort_on or "lcoe_no_reinforcement"
+            columns.append('reinforcement_cost_per_mw')
+            columns.append('reinforcement_dist_km')
+
+        # These are essentially should-be-defaults that are not
+        # backwards-compatible, so have to explicitly check for them
+        extra_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                      'reinforcement_poi_lon', 'eos_mult', 'reg_mult'}
+        for col in extra_cols:
+            if col in self._trans_table:
+                columns.append(col)
+
+        sort_on = sort_on or 'total_lcoe'
+        return columns, sort_on
+
     def full_sort(self, fcr, transmission_costs=None,
                   avail_cap_frac=1, line_limited=False,
                   connectable=True, max_workers=None,
-                  consider_friction=True, sort_on='total_lcoe',
+                  consider_friction=True, sort_on=None,
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
-                           'trans_cap_cost_per_mw', 'dist_km', 'lcot',
-                           'total_lcoe'),
+                           'n_parallel_trans', 'trans_cap_cost_per_mw',
+                           'dist_km', 'lcot', 'total_lcoe'),
                   wind_dirs=None, n_dirs=2, downwind=False,
                   offshore_compete=False):
         """
@@ -1004,7 +1036,8 @@ class SupplyCurve:
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
-            will be built first, by default 'total_lcoe'
+            will be built first, by default `None`, which will use
+            total LCOE without any reinforcement costs as the sort value.
         columns : list | tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
@@ -1048,8 +1081,10 @@ class SupplyCurve:
 
         total_lcoe_fric = None
         if consider_friction and 'mean_lcoe_friction' in trans_table:
-            columns.append('total_lcoe_friction')
             total_lcoe_fric = trans_table['total_lcoe_friction'].values
+
+        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
+                                                    consider_friction)
 
         comp_wind_dirs = None
         if wind_dirs is not None:
@@ -1080,9 +1115,10 @@ class SupplyCurve:
 
     def simple_sort(self, fcr, transmission_costs=None,
                     avail_cap_frac=1, max_workers=None,
-                    consider_friction=True, sort_on='total_lcoe',
-                    columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                             'dist_km', 'trans_cap_cost_per_mw'),
+                    consider_friction=True, sort_on=None,
+                    columns=('trans_gid', 'trans_type', 'n_parallel_trans',
+                             'lcot', 'total_lcoe', 'dist_km',
+                             'trans_cap_cost_per_mw'),
                     wind_dirs=None, n_dirs=2, downwind=False,
                     offshore_compete=False):
         """
@@ -1115,7 +1151,8 @@ class SupplyCurve:
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
-            will be built first, by default 'total_lcoe'
+            will be built first, by default `None`, which will use
+            total LCOE without any reinforcement costs as the sort value.
         columns : list | tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
@@ -1153,6 +1190,9 @@ class SupplyCurve:
         if consider_friction and 'total_lcoe_friction' in trans_table:
             columns.append('total_lcoe_friction')
 
+        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
+                                                    consider_friction)
+
         connections = trans_table.sort_values(sort_on).groupby('sc_gid')
         connections = connections.first()
         rename = {'trans_gid': 'trans_gid',
@@ -1177,10 +1217,10 @@ class SupplyCurve:
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
              transmission_costs=None, avail_cap_frac=1,
-             line_limited=False, consider_friction=True, sort_on='total_lcoe',
+             line_limited=False, consider_friction=True, sort_on=None,
              columns=('trans_gid', 'trans_capacity', 'trans_type',
-                      'trans_cap_cost_per_mw', 'dist_km', 'lcot',
-                      'total_lcoe'),
+                      'n_parallel_trans', 'trans_cap_cost_per_mw', 'dist_km',
+                      'lcot', 'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
              offshore_compete=False):
         """
@@ -1215,10 +1255,11 @@ class SupplyCurve:
         consider_friction : bool, optional
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
-        sort_on : str
+        sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
-            will be built first.
+            will be built first, by default `None`, which will use
+            total LCOE without any reinforcement costs as the sort value.
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
@@ -1258,9 +1299,10 @@ class SupplyCurve:
     @classmethod
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
                transmission_costs=None, consider_friction=True,
-               sort_on='total_lcoe',
-               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                        'dist_km', 'trans_cap_cost_per_mw'),
+               sort_on=None,
+               columns=('trans_gid', 'trans_type', 'n_parallel_trans',
+                        'lcot', 'total_lcoe', 'dist_km',
+                        'trans_cap_cost_per_mw'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
                offshore_compete=False):
         """
@@ -1288,10 +1330,11 @@ class SupplyCurve:
         consider_friction : bool, optional
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
-        sort_on : str
+        sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
-            will be built first.
+            will be built first, by default `None`, which will use
+            total LCOE without any reinforcement costs as the sort value.
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
