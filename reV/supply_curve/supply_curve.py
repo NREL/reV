@@ -735,6 +735,8 @@ class SupplyCurve:
             self._trans_table['trans_cap_cost_per_mw'] = cost
 
         if 'reinforcement_cost' in self._trans_table:
+            logger.info("'reinforcement_cost' column found in transmission "
+                        "table. Adding reinforcement costs to total LCOE.")
             cf_mean_arr = self._trans_table['mean_cf'].values
             lcot = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe = lcot + self._trans_table['mean_lcoe']
@@ -981,29 +983,27 @@ class SupplyCurve:
             fc = TF.feature_capacity(self._trans_table, **kwargs)
             self._trans_table = self._trans_table.merge(fc, on='trans_gid')
 
-    def _adjust_sort_inputs(self, columns, sort_on, consider_friction):
-        """Add extra output columns and set `sort_on` value, if needed. """
+    def _adjust_output_columns(self, columns, consider_friction):
+        """Add extra output columns, if needed. """
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
         extra_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                      'reinforcement_poi_lon', 'eos_mult', 'reg_mult'}
+                      'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                      'reinforcement_cost_per_mw', 'reinforcement_dist_km',
+                      'n_parallel_trans', 'total_lcoe_friction'}
+        if not consider_friction:
+            extra_cols -= {'total_lcoe_friction'}
 
-        if consider_friction and 'total_lcoe_friction' in self._trans_table:
-            extra_cols.add('total_lcoe_friction')
+        extra_cols = [col for col in extra_cols
+                      if col in self._trans_table and col not in columns]
 
+        return columns + extra_cols
+
+    def _determine_sort_on(self, sort_on):
+        """Determine the `sort_on` column from user input and trans table"""
         if 'reinforcement_cost' in self._trans_table:
             sort_on = sort_on or "lcoe_no_reinforcement"
-            extra_cols.add('reinforcement_cost_per_mw')
-            extra_cols.add('reinforcement_dist_km')
-
-        if 'max_cap' in self._trans_table:
-            extra_cols.add('n_parallel_trans')
-
-        for col in extra_cols:
-            if col in self._trans_table and col not in columns:
-                columns.append(col)
-
-        return list(columns), sort_on or 'total_lcoe'
+        return sort_on or 'total_lcoe'
 
     def full_sort(self, fcr, transmission_costs=None,
                   avail_cap_frac=1, line_limited=False,
@@ -1082,8 +1082,8 @@ class SupplyCurve:
         if isinstance(columns, tuple):
             columns = list(columns)
 
-        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
-                                                    consider_friction)
+        columns = self._adjust_output_columns(columns, consider_friction)
+        sort_on = self._determine_sort_on(sort_on)
 
         trans_table = self._trans_table.copy()
         pos = trans_table['lcot'].isnull()
@@ -1193,8 +1193,8 @@ class SupplyCurve:
         if isinstance(columns, tuple):
             columns = list(columns)
 
-        columns, sort_on = self._adjust_sort_inputs(columns, sort_on,
-                                                    consider_friction)
+        columns = self._adjust_output_columns(columns, consider_friction)
+        sort_on = self._determine_sort_on(sort_on)
 
         connections = trans_table.sort_values(sort_on).groupby('sc_gid')
         connections = connections.first()
