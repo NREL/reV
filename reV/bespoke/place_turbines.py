@@ -329,6 +329,35 @@ class PlaceTurbines:
         self.initialize_packing()
         self.optimize(**kwargs)
 
+    def capital_cost_per_kw_at(self, capacity_mw):
+        """Capital cost function (per kW) evaluated for a given capacity.
+
+        The capacity will be adjusted to be an exact multiple of the
+        turbine rating in order to yield an integer number of
+        turbines.
+
+        Parameters
+        ----------
+        capacity_mw : float
+            The desired capacity (MW) to sample the cost curve at. Note
+            as mentioned above, the capacity will be adjusted to be an
+            exact multiple of the turbine rating in order to yield an
+            integer number of turbines. For best results, set this
+            value to be an integer multiple of the turbine rating.
+
+        Returns
+        -------
+        capital_cost : float
+            Capital cost (per kW) for the (adjusted) plant capacity.
+        """
+
+        fixed_charge_rate = self.fixed_charge_rate
+        n_turbines = int(round(capacity_mw * 1e3 / self.turbine_capacity))
+        system_capacity = n_turbines * self.turbine_capacity
+        mult = self.wind_plant.sam_sys_inputs.get(
+            'capital_cost_multiplier', 1) / system_capacity
+        return eval(self.capital_cost_function, globals(), locals()) * mult
+
     @property
     @none_until_optimized
     def turbine_x(self):
