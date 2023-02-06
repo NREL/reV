@@ -844,7 +844,7 @@ class BespokeSinglePlant:
         self._meta['capacity'] = self.outputs['system_capacity'] / 1e3
 
         # add required ReEDS multipliers to meta
-        baseline_cost = self.plant_optimizer.capital_cost_per_kw_at(
+        baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw)
         self._meta['eos_mult'] = (self.plant_optimizer.capital_cost
                                   / self.plant_optimizer.capacity

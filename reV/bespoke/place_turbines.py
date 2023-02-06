@@ -329,8 +329,8 @@ class PlaceTurbines:
         self.initialize_packing()
         self.optimize(**kwargs)
 
-    def capital_cost_per_kw_at(self, capacity_mw):
-        """Capital cost function (per kW) evaluated for a given capacity.
+    def capital_cost_per_kw(self, capacity_mw):
+        """Capital cost function ($ per kW) evaluated for a given capacity.
 
         The capacity will be adjusted to be an exact multiple of the
         turbine rating in order to yield an integer number of
@@ -348,7 +348,7 @@ class PlaceTurbines:
         Returns
         -------
         capital_cost : float
-            Capital cost (per kW) for the (adjusted) plant capacity.
+            Capital cost ($ per kW) for the (adjusted) plant capacity.
         """
 
         fixed_charge_rate = self.fixed_charge_rate
