@@ -734,19 +734,16 @@ class SupplyCurve:
             cost /= self._trans_table['capacity']  # $/MW
             self._trans_table['trans_cap_cost_per_mw'] = cost
 
-        if 'reinforcement_cost' in self._trans_table:
-            logger.info("'reinforcement_cost' column found in transmission "
-                        "table. Adding reinforcement costs to total LCOE.")
+        if 'reinforcement_cost_per_mw' in self._trans_table:
+            logger.info("'reinforcement_cost_per_mw' column found in "
+                        "transmission table. Adding reinforcement costs "
+                        "to total LCOE.")
             cf_mean_arr = self._trans_table['mean_cf'].values
             lcot = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe = lcot + self._trans_table['mean_lcoe']
             self._trans_table['lcot_no_reinforcement'] = lcot
             self._trans_table['lcoe_no_reinforcement'] = lcoe
-
-            r_cost_mw = (self._trans_table['reinforcement_cost']
-                         / self._trans_table['capacity'])
-            self._trans_table['reinforcement_cost_per_mw'] = r_cost_mw
-            cost += r_cost_mw  # $/MW
+            cost += self._trans_table['reinforcement_cost_per_mw']  # $/MW
 
         cf_mean_arr = self._trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
@@ -1001,7 +998,7 @@ class SupplyCurve:
 
     def _determine_sort_on(self, sort_on):
         """Determine the `sort_on` column from user input and trans table"""
-        if 'reinforcement_cost' in self._trans_table:
+        if 'reinforcement_cost_per_mw' in self._trans_table:
             sort_on = sort_on or "lcoe_no_reinforcement"
         return sort_on or 'total_lcoe'
 

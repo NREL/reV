@@ -344,7 +344,7 @@ def test_least_cost_full_with_reinforcement():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 0
+            in_table["reinforcement_cost_per_mw"] = 0
             in_table["reinforcement_dist_km"] = 0
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
@@ -367,7 +367,7 @@ def test_least_cost_full_with_reinforcement():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 1e6
+            in_table["reinforcement_cost_per_mw"] = 1e6
             in_table["reinforcement_dist_km"] = 10
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
@@ -397,7 +397,7 @@ def test_least_cost_simple_with_reinforcement():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 0
+            in_table["reinforcement_cost_per_mw"] = 0
             in_table["reinforcement_dist_km"] = 0
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
@@ -413,7 +413,7 @@ def test_least_cost_simple_with_reinforcement():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 1e6
+            in_table["reinforcement_cost_per_mw"] = 1e6
             in_table["reinforcement_dist_km"] = 10
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
@@ -439,7 +439,7 @@ def test_least_cost_full_pass_through():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 0
+            in_table["reinforcement_cost_per_mw"] = 0
             for col in check_cols:
                 in_table[col] = 0
             in_table.to_csv(out_fp, index=False)
@@ -471,7 +471,7 @@ def test_least_cost_simple_pass_through():
                                     f'costs_RI_{cap}MW.csv')
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
-            in_table["reinforcement_cost"] = 0
+            in_table["reinforcement_cost_per_mw"] = 0
             for col in check_cols:
                 in_table[col] = 0
             in_table.to_csv(out_fp, index=False)

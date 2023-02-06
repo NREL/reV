@@ -56,7 +56,7 @@ class BespokeSinglePlant:
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
-                 close=True):
+                 eos_mult_baseline_cap_mw=200, close=True):
         """
         Parameters
         ----------
@@ -155,6 +155,13 @@ class BespokeSinglePlant:
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
+        eos_mult_baseline_cap_mw : int | float, optional
+            Baseline plant capacity (MW) used to calculate economies of
+            scale (EOS) multiplier from the `capital_cost_function`. EOS
+            multiplier is calculated as the $-per-kW of the wind plant
+            divided by the $-per-kW of a plant with this baseline
+            capacity. By default, `200` (MW), which aligns the baseline
+            with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -196,6 +203,7 @@ class BespokeSinglePlant:
         self._out_req = list(output_request)
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
+        self._baseline_cap_mw = eos_mult_baseline_cap_mw
 
         self._res_df = None
         self._meta = None
@@ -834,6 +842,15 @@ class BespokeSinglePlant:
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
         self._meta['capacity'] = self.outputs['system_capacity'] / 1e3
+
+        # add required ReEDS multipliers to meta
+        baseline_cost = self.plant_optimizer.capital_cost_per_kw(
+            capacity_mw=self._baseline_cap_mw)
+        self._meta['eos_mult'] = (self.plant_optimizer.capital_cost
+                                  / self.plant_optimizer.capacity
+                                  / baseline_cost)
+        self._meta['reg_mult'] = (self.sam_sys_inputs
+                                  .get("capital_cost_multiplier", 1))
 
         return self.outputs
 

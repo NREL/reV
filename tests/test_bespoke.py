@@ -392,7 +392,7 @@ def test_extra_outputs(gid=33):
 
         sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
         sam_sys_inputs['fixed_charge_rate'] = 0.0975
-
+        test_eos_cap = 200_000
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  sam_sys_inputs,
                                  objective_function, cap_cost_fun,
@@ -401,6 +401,7 @@ def test_extra_outputs(gid=33):
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  data_layers=copy.deepcopy(DATA_LAYERS),
+                                 eos_mult_baseline_cap_mw=test_eos_cap * 1e-3
                                  )
 
         out = bsp.run_plant_optimization()
@@ -452,6 +453,19 @@ def test_extra_outputs(gid=33):
         assert 'pct_slope' in bsp.meta
         assert 'reeds_region' in bsp.meta
         assert 'padus' in bsp.meta
+
+        assert 'eos_mult' in bsp.meta
+        assert 'reg_mult' in bsp.meta
+        assert np.allclose(bsp.meta['reg_mult'], 1)
+
+        n_turbs = round(test_eos_cap / TURB_RATING)
+        test_eos_cap_kw = n_turbs * TURB_RATING
+        baseline_cost = (140 * test_eos_cap_kw
+                         * np.exp(-test_eos_cap_kw / 1E5 * 0.1 + (1 - 0.1)))
+        eos_mult = (bsp.plant_optimizer.capital_cost
+                    / bsp.plant_optimizer.capacity
+                    / (baseline_cost / test_eos_cap_kw))
+        assert np.allclose(bsp.meta['eos_mult'], eos_mult)
 
         bsp.close()
 
