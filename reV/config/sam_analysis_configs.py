@@ -238,6 +238,61 @@ class GenConfig(SAMAnalysisConfig):
         """
         return self['resource_file']
 
+    @property
+    def low_res_resource_file(self):
+        """
+        Optional low resolution resource file that will be dynamically
+        mapped+interpolated to the nominal-resolution resource_file. This needs
+        to be of the same format as resource_file, e.g. they both need to be
+        handled by the same rex Resource handler such as WindResource
+
+        Returns
+        -------
+        str
+        """
+        return self.get('low_res_resource_file', None)
+
+    def _parse_res_files(self, base_res_fp):
+        """Parse the base resource file input into correct ordered list format
+        with year imputed in the {} format string
+
+        Parameters
+        ----------
+        base_res_fp : str | list
+            Base resource filepath with {} for year
+
+        Returns
+        -------
+        res_fps : list
+            List of resource file paths corresponding to the year list
+        """
+
+        # get base filename, may have {} for year format
+        res_fps = base_res_fp
+        if isinstance(res_fps, str) and '{}' in res_fps:
+            # need to make list of res files for each year
+            res_fps = [res_fps.format(year) for year in self.analysis_years]
+        elif isinstance(res_fps, str):
+            # only one resource file request, still put in list
+            res_fps = [res_fps]
+        elif not isinstance(res_fps, (list, tuple)):
+            msg = ('Bad "resource_file" type, needed str, list, or tuple '
+                   'but received: {}, {}'
+                   .format(res_fps, type(res_fps)))
+            logger.error(msg)
+            raise ConfigError(msg)
+
+        if len(res_fps) != len(self.analysis_years):
+            msg = ('The number of resource files does not match '
+                   'the number of analysis years!'
+                   '\n\tResource files: \n\t\t{}'
+                   '\n\tYears: \n\t\t{}'
+                   .format(res_fps, self.analysis_years))
+            logger.error(msg)
+            raise ConfigError(msg)
+
+        return res_fps
+
     def parse_res_files(self):
         """Get a list of the resource files with years filled in.
 
@@ -249,32 +304,24 @@ class GenConfig(SAMAnalysisConfig):
             value is a list with len=1 for a single year run.
         """
         if self._res_files is None:
-            # get base filename, may have {} for year format
-            self._res_files = self.resource_file
-            if isinstance(self._res_files, str) and '{}' in self._res_files:
-                # need to make list of res files for each year
-                self._res_files = [self._res_files.format(year)
-                                   for year in self.analysis_years]
-            elif isinstance(self._res_files, str):
-                # only one resource file request, still put in list
-                self._res_files = [self._res_files]
-            elif not isinstance(self._res_files, (list, tuple)):
-                msg = ('Bad "resource_file" type, needed str, list, or tuple '
-                       'but received: {}, {}'
-                       .format(self._res_files, type(self._res_files)))
-                logger.error(msg)
-                raise ConfigError(msg)
-
-        if len(self._res_files) != len(self.analysis_years):
-            msg = ('The number of resource files does not match '
-                   'the number of analysis years!'
-                   '\n\tResource files: \n\t\t{}'
-                   '\n\tYears: \n\t\t{}'
-                   .format(self._res_files, self.analysis_years))
-            logger.error(msg)
-            raise ConfigError(msg)
-
+            self._res_files = self._parse_res_files(self.resource_file)
         return self._res_files
+
+    def parse_low_res_files(self):
+        """Get a list of the resource files with years filled in.
+
+        Returns
+        -------
+        low_res_files : list
+            List of config-specified low-resolution resource files. Resource
+            files with {} formatting will be filled with the specified year(s).
+            This return value is a list with len=1 for a single year run. This
+            is an optional input so might be list of None.
+        """
+        out = [None] * len(self.analysis_years)
+        if self.low_res_resource_file is not None:
+            out = self._parse_res_files(self.low_res_resource_file)
+        return out
 
 
 class EconConfig(SAMAnalysisConfig):
