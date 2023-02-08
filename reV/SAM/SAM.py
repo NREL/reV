@@ -201,7 +201,7 @@ class SamResourceRetriever:
     @classmethod
     def get(cls, res_file, project_points, module,
             output_request=('cf_mean', ), gid_map=None,
-            lr_res_file=None):
+            lr_res_file=None, nn_map=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -230,6 +230,10 @@ class SamResourceRetriever:
             needs to be of the same format as resource_file, e.g. they both
             need to be handled by the same rex Resource handler such as
             WindResource
+        nn_map : np.ndarray
+            Optional 1D array of nearest neighbor mappings associated with the
+            res_file to lr_res_file spatial mapping. For details on this
+            argument, see the rex.MultiResolutionResource docstring.
 
         Returns
         -------
@@ -256,8 +260,7 @@ class SamResourceRetriever:
             res = res_handler.preload_SAM(res_file, *args, **kwargs)
         else:
             kwargs['handler_class'] = res_handler
-            kwargs['nn_map'] = None
-            kwargs['nn_d'] = None
+            kwargs['nn_map'] = nn_map
             res = MultiResolutionResource.preload_SAM(res_file, lr_res_file,
                                                       *args, **kwargs)
 

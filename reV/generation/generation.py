@@ -25,6 +25,7 @@ from reV.SAM.generation import (PvWattsv5,
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
+from rex.multi_res_resource import MultiResolutionResource
 from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
@@ -181,6 +182,7 @@ class Gen(BaseGen):
 
         self._multi_h5_res, self._hsds = check_res_file(res_file)
         self._gid_map = self._parse_gid_map(gid_map)
+        self._nn_map = self._parse_nn_map()
 
         # initialize output file
         self._init_fpath()
@@ -296,7 +298,8 @@ class Gen(BaseGen):
 
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, lr_res_file=None,
-            output_request=None, scale_outputs=True, gid_map=None):
+            output_request=None, scale_outputs=True, gid_map=None,
+            nn_map=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -325,6 +328,10 @@ class Gen(BaseGen):
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
             resource gids. This can be None or a pre-extracted dict.
+        nn_map : np.ndarray
+            Optional 1D array of nearest neighbor mappings associated with the
+            res_file to lr_res_file spatial mapping. For details on this
+            argument, see the rex.MultiResolutionResource docstring.
 
         Returns
         -------
@@ -343,7 +350,7 @@ class Gen(BaseGen):
                 points_control, res_file, site_df,
                 lr_res_file=lr_res_file,
                 output_request=output_request,
-                gid_map=gid_map)
+                gid_map=gid_map, nn_map=nn_map)
 
         except Exception as e:
             out = {}
@@ -439,6 +446,37 @@ class Gen(BaseGen):
             raise InputError(msg)
 
         return gid_map
+
+    def _parse_nn_map(self):
+        """Parse a nearest-neighbor spatial mapping array if lr_res_file is
+        provided (resource data is at two resolutions and the low-resolution
+        data must be mapped to the nominal-resolution data)
+
+        Returns
+        -------
+        nn_map : np.ndarray
+            Optional 1D array of nearest neighbor mappings associated with the
+            res_file to lr_res_file spatial mapping. For details on this
+            argument, see the rex.MultiResolutionResource docstring.
+        """
+        nn_map = None
+        if self.lr_res_file is not None:
+
+            handler_class = Resource
+            if '*' in self.res_file or '*' in self.lr_res_file:
+                handler_class = MultiFileResource
+
+            with handler_class(self.res_file) as hr_res:
+                with handler_class(self.lr_res_file) as lr_res:
+                    nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
+                                                                       lr_res)
+
+            logger.info('Made nearest neighbor mapping between nominal-'
+                        'resolution and low-resolution resource files. '
+                        'Min / mean / max dist: {:.3f} / {:.3f} / {:.3f}'
+                        .format(nn_d.min(), nn_d.mean(), nn_d.max()))
+
+        return nn_map
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -580,6 +618,7 @@ class Gen(BaseGen):
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
                   'gid_map': gen._gid_map,
+                  'nn_map': gen._nn_map,
                   }
 
         logger.info('Running reV generation for: {}'.format(pc))

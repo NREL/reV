@@ -293,7 +293,6 @@ def test_multi_resolution_wtk():
 
         lr_dsets = ['temperature_100m', 'pressure_100m']
         with WindResource(fp_hr_100m) as hr_res:
-            all_dsets = hr_res.dsets
             ti = hr_res.time_index
             meta = hr_res.meta
             lr_data = [hr_res[dset] for dset in lr_dsets]
