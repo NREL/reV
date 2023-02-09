@@ -1154,7 +1154,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
     MODULE = 'geothermal'
     PYSAM = PySamGeothermal
-    PYSAM_WEATHER_TAG = "geothermal_resource_file"
+    PYSAM_WEATHER_TAG = "file_name"
 
     @staticmethod
     def default():
