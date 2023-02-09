@@ -79,7 +79,7 @@ def test_gen_geothermal(depth):
 
 
 def test_gen_geothermal_temp_too_low():
-    """Test generation for geothermal module when temp too low and sam"""
+    """Test generation for geothermal module when temp too low"""
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
