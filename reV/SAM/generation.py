@@ -1354,6 +1354,15 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
         return fname
 
+    def run_gen_and_econ(self):
+        """Run SAM generation and possibility follow-on econ analysis."""
+        try:
+            super().run_gen_and_econ()
+        except SAMExecutionError as e:
+            logger.error("Skipping site {}; received sam error: {}"
+                         .format(self._site, str(e)))
+            self.outputs = {}
+
 
 class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
     """Base Class for Wind generation from SAM"""
