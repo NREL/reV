@@ -603,10 +603,12 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
 
     def run_gen_and_econ(self):
         """Run SAM generation and possibility follow-on econ analysis."""
-        super().run_gen_and_econ()
-        temp_dir = getattr(self, "_temp_dir", None)
-        if temp_dir is not None:
-            temp_dir.cleanup()
+        try:
+            super().run_gen_and_econ()
+        finally:
+            temp_dir = getattr(self, "_temp_dir", None)
+            if temp_dir is not None:
+                temp_dir.cleanup()
 
 
 class AbstractSamSolar(AbstractSamGeneration, ABC):
