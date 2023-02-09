@@ -1228,7 +1228,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                      .format(len(val)))
         if len(val) > 1:
             msg = ("Found multiple values for 'temperature' for site {}: {}"
-                    .format(self.site, val))
+                   .format(self.site, val))
             logger.error(msg)
             raise InputError(msg)
 
