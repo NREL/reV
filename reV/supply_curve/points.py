@@ -793,14 +793,14 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         if data_layers is not None:
             for name, attrs in data_layers.items():
-
-                if 'fobj' not in attrs:
-                    with ExclusionLayers(attrs['fpath']) as f:
-                        raw = f[attrs['dset'], self.rows, self.cols]
-                        nodata = f.get_nodata_value(attrs['dset'])
+                excl_fp = attrs.get('fpath', self._excl_fpath)
+                if excl_fp != self._excl_fpath:
+                    fh = ExclusionLayers(attrs['fpath'])
                 else:
-                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
-                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
+                    fh = self.exclusions.excl_h5
+
+                raw = fh[attrs['dset'], self.rows, self.cols]
+                nodata = fh.get_nodata_value(attrs['dset'])
 
                 data = raw.flatten()[self.bool_mask]
                 incl_mult = self.include_mask_flat[self.bool_mask].copy()
@@ -820,6 +820,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                 data = self._agg_data_layer_method(data, incl_mult,
                                                    attrs['method'])
                 summary[name] = data
+
+                if excl_fp != self._excl_fpath:
+                    fh.close()
 
         return summary
 

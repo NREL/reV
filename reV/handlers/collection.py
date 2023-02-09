@@ -214,7 +214,8 @@ class DatasetCollector:
             raise CollectionRuntimeError(e)
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
-        if not len(locs) == len(sequential_locs):
+        check = (not len(locs) == len(sequential_locs))
+        if check:
             w = ('GID indices for source file "{}" are not '
                  'sequential in destination file!'.format(fn_source))
             logger.warning(w)
@@ -281,28 +282,8 @@ class DatasetCollector:
             Source filepath
         """
 
-        if self.duplicate_gids:
-            msg = 'Cannot collect duplicate gids in multiple chunks'
-            assert len(all_source_gids) == len(source_gids), msg
-            out_i0 = 0
-            for fp in self._source_files:
-                if fp == fp_source:
-                    break
-                else:
-                    out_i0 += len(self._file_gid_map[fp])
-            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
-            out_slice = slice(out_i0, out_i1)
-            source_slice = slice(None)
-            source_indexer = np.isin(source_gids, self._gids)
-
-        else:
-            out_slice = self._get_gid_slice(self._gids, source_gids,
-                                            os.path.basename(fp_source))
-            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
-            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
-            source_slice = slice(source_i0, source_i1 + 1)
-            source_indexer = np.isin(source_gids, self._gids)
-
+        out_slice, source_slice, source_indexer = self._get_chunk_indices(
+            all_source_gids, source_gids, fp_source)
         try:
             if self._axis == 1:
                 data = f_source[self._dset_in, source_slice]
@@ -322,6 +303,71 @@ class DatasetCollector:
                    .format(self._dset_in, os.path.basename(fp_source), e))
             logger.exception(msg)
             raise CollectionRuntimeError(msg) from e
+
+    def _get_chunk_indices(self, all_source_gids, source_gids, fp_source):
+        """Get slices and indices used for selecting source gids and writing
+        the corresponding data to output.
+
+        Parameters
+        ----------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gids : np.ndarray | list
+            Source gids to be collected. This is the same as all_source_gids if
+            collection is not being done in chunks.
+        f_out : reV.handlers.outputs.Output
+            Output file handler
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+        fp_source : str
+            Source filepath
+
+        Returns
+        -------
+        out_slice : slice | ndarray
+            Slice specifying location of source data in output file. This can
+            also be a boolean array if source gids are not sequential in the
+            output file
+        source_slice : slice
+            Slice specifying index range of source data in input file. If
+            collection is not being done in chunks this is just slice(None).
+        source_indexer : ndarray
+            boolean array specifying which source gids (not just a range)
+            should be stored in output.
+        """
+        source_indexer = np.isin(source_gids, self._gids)
+        out_slice = self._get_gid_slice(self._gids, source_gids,
+                                        os.path.basename(fp_source))
+        if self.duplicate_gids:
+            msg = 'Cannot collect duplicate gids in multiple chunks'
+            assert len(all_source_gids) == len(source_gids), msg
+            out_i0 = 0
+            for fp in self._source_files:
+                if fp == fp_source:
+                    break
+                else:
+                    out_i0 += len(self._file_gid_map[fp])
+            out_i1 = out_i0 + len(self._file_gid_map[fp_source])
+            out_slice = slice(out_i0, out_i1)
+            source_slice = slice(None)
+
+        elif all(sorted(source_gids) == source_gids):
+            source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+            source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+            source_slice = slice(source_i0, source_i1 + 1)
+
+        elif all(source_gids == all_source_gids):
+            source_slice = slice(None)
+
+        else:
+            source_slice = np.isin(all_source_gids, source_gids)
+            msg = ('source_gids is not in ascending order or equal to '
+                   'all_source_gids. This can cause issues with the '
+                   'collection ordering. Please check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
+        return out_slice, source_slice, source_indexer
 
     def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
@@ -500,7 +546,15 @@ class Collector:
             m = 'Cannot parse project_points'
             logger.error(m)
             raise CollectionValueError(m)
-        gids = sorted([int(g) for g in gids])
+
+        gids = gids.astype(int).tolist()
+        if not sorted(gids) == gids:
+            msg = ('Project points contain non-ordered meta data GIDs! This '
+                   'can cause issues with the collection ordering. Please '
+                   'check your data carefully.')
+            logger.warning(msg)
+            warn(msg, CollectionWarning)
+
         return gids
 
     @staticmethod
@@ -768,8 +822,8 @@ class Collector:
                      .format(tt))
 
     @classmethod
-    def add_dataset(cls, h5_file, collect_pattern, dset_name, dset_out=None,
-                    mem_util_lim=0.7):
+    def add_dataset(cls, h5_file, collect_pattern,
+                    dset_name, dset_out=None, mem_util_lim=0.7):
         """
         Collect and add dataset to h5_file from h5_dir
 
@@ -795,9 +849,9 @@ class Collector:
                     .format(dset_name, collect_pattern, h5_file))
         ts = time.time()
         with Outputs(h5_file, mode='r') as f:
-            points = f.meta
+            project_points = f.meta
 
-        clt = cls(h5_file, collect_pattern, points)
+        clt = cls(h5_file, collect_pattern, project_points)
 
         dset_shape = clt.get_dset_shape(dset_name)
         if len(dset_shape) > 1:

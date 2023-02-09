@@ -8,6 +8,7 @@ from pandas.testing import assert_frame_equal
 import pytest
 import warnings
 import numpy as np
+import tempfile
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
@@ -56,7 +57,8 @@ def baseline_verify(sc_full, fpath_baseline):
                            100 * (diff > 0).sum() / len(diff)))
             raise RuntimeError(msg)
 
-        assert_frame_equal(baseline, sc_full, check_dtype=False)
+        assert_frame_equal(baseline, sc_full[baseline.columns],
+                           check_dtype=False)
 
     else:
         sc_full.to_csv(fpath_baseline, index=False)
@@ -328,3 +330,154 @@ def test_multi_parallel_trans():
             lcot_1 = sc_1.loc[(sc_1['sc_gid'] == gid), 'lcot'].values[0]
             lcot_2 = sc_2.loc[(sc_2['sc_gid'] == gid), 'lcot'].values[0]
             assert lcot_2 > lcot_1
+
+
+def test_least_cost_full_with_reinforcement():
+    """
+    Test full supply curve sorting with reinforcement costs in the
+    least-cost path transmission tables
+    """
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 0
+            in_table["reinforcement_dist_km"] = 0
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
+                                   avail_cap_frac=0.1,
+                                   columns=('trans_gid', 'trans_capacity',
+                                            'trans_type',
+                                            'trans_cap_cost_per_mw',
+                                            'dist_km', 'lcot', 'total_lcoe',
+                                            'max_cap', 'n_parallel_trans'))
+
+        fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
+        baseline_verify(sc_full, fpath_baseline)
+        verify_trans_cap(sc_full, trans_tables)
+
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 1e6
+            in_table["reinforcement_dist_km"] = 10
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_full_r = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
+                                     avail_cap_frac=0.1,
+                                     columns=('trans_gid', 'trans_capacity',
+                                              'trans_type',
+                                              'trans_cap_cost_per_mw',
+                                              'dist_km', 'lcot', 'total_lcoe',
+                                              'max_cap', 'n_parallel_trans'))
+        verify_trans_cap(sc_full, trans_tables)
+
+        assert np.allclose(sc_full.trans_gid, sc_full_r.trans_gid)
+        assert not np.allclose(sc_full.total_lcoe, sc_full_r.total_lcoe)
+
+
+def test_least_cost_simple_with_reinforcement():
+    """
+    Test simple supply curve sorting with reinforcement costs in the
+    least-cost path transmission tables
+    """
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 0
+            in_table["reinforcement_dist_km"] = 0
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+        baseline_verify(sc_simple, fpath_baseline)
+        verify_trans_cap(sc_simple, trans_tables)
+
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 1e6
+            in_table["reinforcement_dist_km"] = 10
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_simple_r = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        verify_trans_cap(sc_simple_r, trans_tables)
+
+        assert np.allclose(sc_simple.trans_gid, sc_simple_r.trans_gid)
+        assert not np.allclose(sc_simple.total_lcoe, sc_simple_r.total_lcoe)
+
+
+def test_least_cost_full_pass_through():
+    """
+    Test the full supply curve sorting passes through variables correctly
+    """
+    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                  'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 0
+            for col in check_cols:
+                in_table[col] = 0
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
+                                   avail_cap_frac=0.1,
+                                   columns=('trans_gid', 'trans_capacity',
+                                            'trans_type',
+                                            'trans_cap_cost_per_mw',
+                                            'dist_km', 'lcot', 'total_lcoe',
+                                            'max_cap', 'n_parallel_trans'))
+        for col in check_cols:
+            assert col in sc_full
+            assert np.allclose(sc_full[col], 0)
+
+
+def test_least_cost_simple_pass_through():
+    """
+    Test the simple supply curve sorting passes through variables correctly
+    """
+    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                  'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 0
+            for col in check_cols:
+                in_table[col] = 0
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        for col in check_cols:
+            assert col in sc_simple
+            assert np.allclose(sc_simple[col], 0)

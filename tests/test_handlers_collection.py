@@ -16,6 +16,7 @@ import shutil
 from reV.cli import main
 from reV.handlers.collection import Collector
 from reV import TESTDATADIR
+from reV.utilities.pytest_utils import make_fake_h5_chunks
 
 from rex import Resource
 from rex.utilities.loggers import init_logger, LOGGERS
@@ -50,6 +51,29 @@ def manual_collect(collect_pattern, dset):
             arr.append(f[dset][...])
 
     return np.hstack(arr)
+
+
+def test_unordered_collection():
+    """
+    Test collection of multiple dsets from chunks with unordered gids
+    """
+
+    with tempfile.TemporaryDirectory() as TEMP_DIR:
+        init_logger('reV.handlers.collection')
+        features = ['cf_profile', 'ac']
+        out = make_fake_h5_chunks(TEMP_DIR, features, shuffle=True)
+        out_files = out[0]
+
+        for feature in features:
+            profiles = manual_collect(out_files, feature)
+            h5_file = os.path.join(TEMP_DIR, 'collection.h5')
+            Collector.collect(h5_file, out_files, None, feature, dset_out=None)
+            with h5py.File(h5_file, 'r') as f:
+                cf_profiles = f[feature][...]
+
+            diff = np.mean(np.abs(profiles - cf_profiles))
+            msg = "Arrays differ by {:.4f}".format(diff)
+            assert np.allclose(profiles, cf_profiles), msg
 
 
 def test_collection():

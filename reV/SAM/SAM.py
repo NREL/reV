@@ -209,7 +209,7 @@ class SamResourceRetriever:
         """
         if res_handler == WindResource:
             res_handler = MultiFileWTK
-        elif res_handler == NSRDB:
+        elif res_handler in (NSRDB, SolarResource):
             res_handler = MultiFileNSRDB
         else:
             res_handler = MultiFileResource

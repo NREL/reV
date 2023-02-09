@@ -104,6 +104,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['GID_MAP'] = config.gid_map
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['TIMEOUT'] = config.timeout
+    ctx.obj['WRITE_MAPPED_GIDS'] = config.write_mapped_gids
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['MEM_UTIL_LIM'] = \
@@ -288,13 +289,16 @@ def make_fout(name, year):
               'generation gids to non-unique gids in the resource file. '
               'Should be a filepath to a csv with columns gid and gid_map. '
               'Can be the same csv as project_points input.')
+@click.option('--write_mapped_gids', '-wmg', is_flag=True,
+              help='Option to write mapped gids to output meta instead of '
+              'resource gids.')
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
            logdir, output_request, site_data, mem_util_lim,
-           curtailment, gid_map, verbose):
+           curtailment, gid_map, verbose, write_mapped_gids):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -308,6 +312,7 @@ def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
     ctx.obj['GID_MAP'] = gid_map
+    ctx.obj['WRITE_MAPPED_GIDS'] = write_mapped_gids
 
     ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
     ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
@@ -410,6 +415,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     gid_map = ctx.obj['GID_MAP']
+    write_mapped_gids = ctx.obj['WRITE_MAPPED_GIDS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -441,7 +447,8 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 points_range=points_range,
                 out_fpath=out_fpath,
                 mem_util_lim=mem_util_lim,
-                timeout=timeout)
+                timeout=timeout,
+                write_mapped_gids=write_mapped_gids)
 
     tmp_str = ' with points range {}'.format(points_range)
     dirout, fout = os.path.split(out_fpath)
@@ -550,7 +557,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
-                 curtailment=None, gid_map=None, verbose=False):
+                 curtailment=None, gid_map=None, verbose=False,
+                 write_mapped_gids=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -599,6 +607,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
         gid and gid_map columns or None.
     verbose : bool
         Flag to turn on debug logging. Default is False.
+    write_mapped_gids : bool
+        Option to write mapped gids to output meta instead of resource gids.
 
     Returns
     -------
@@ -630,6 +640,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 
     if gid_map:
         arg_direct.append('-gm {}'.format(SLURM.s(gid_map)))
+
+    if write_mapped_gids:
+        arg_direct.append('-wmg')
 
     # make a cli arg string for local() in this module
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
@@ -701,6 +714,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
     gid_map = ctx.obj['GID_MAP']
+    write_mapped_gids = ctx.obj['WRITE_MAPPED_GIDS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
@@ -727,6 +741,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                            timeout=timeout,
                            curtailment=curtailment,
                            gid_map=gid_map,
+                           write_mapped_gids=write_mapped_gids,
                            verbose=verbose)
 
         if sh_script:

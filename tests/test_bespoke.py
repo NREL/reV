@@ -81,9 +81,13 @@ def test_turbine_placement(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['fixed_operating_cost_multiplier'] = 2
+        sam_sys_inputs['variable_operating_cost_multiplier'] = 5
+
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
+                                 sam_sys_inputs,
                                  objective_function,
                                  cap_cost_fun,
                                  foc_fun,
@@ -93,6 +97,16 @@ def test_turbine_placement(gid=33):
                                  )
 
         place_optimizer = bsp.plant_optimizer
+        assert place_optimizer.turbine_x is None
+        assert place_optimizer.turbine_y is None
+        assert place_optimizer.nturbs is None
+        assert place_optimizer.capacity is None
+        assert place_optimizer.area is None
+        assert place_optimizer.aep is None
+        assert place_optimizer.capital_cost is None
+        assert place_optimizer.fixed_operating_cost is None
+        assert place_optimizer.variable_operating_cost is None
+        assert place_optimizer.objective is None
         place_optimizer.place_turbines(max_time=5)
 
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
@@ -120,8 +134,8 @@ def test_turbine_placement(gid=33):
         aep = place_optimizer.aep
         # pylint: disable=W0123
         capital_cost = eval(cap_cost_fun, globals(), locals())
-        fixed_operating_cost = eval(foc_fun, globals(), locals())
-        variable_operating_cost = eval(voc_fun, globals(), locals())
+        fixed_operating_cost = eval(foc_fun, globals(), locals()) * 2
+        variable_operating_cost = eval(voc_fun, globals(), locals()) * 5
         # pylint: disable=W0123
         assert place_optimizer.objective ==\
             eval(objective_function, globals(), locals())
@@ -378,7 +392,7 @@ def test_extra_outputs(gid=33):
 
         sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
         sam_sys_inputs['fixed_charge_rate'] = 0.0975
-
+        test_eos_cap = 200_000
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  sam_sys_inputs,
                                  objective_function, cap_cost_fun,
@@ -386,7 +400,8 @@ def test_extra_outputs(gid=33):
                                  ga_kwargs={'max_time': 5},
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
-                                 data_layers=DATA_LAYERS,
+                                 data_layers=copy.deepcopy(DATA_LAYERS),
+                                 eos_mult_baseline_cap_mw=test_eos_cap * 1e-3
                                  )
 
         out = bsp.run_plant_optimization()
@@ -405,13 +420,61 @@ def test_extra_outputs(gid=33):
         assert 'reeds_region' in bsp.meta
         assert 'padus' in bsp.meta
 
+        out = None
+        data_layers = copy.deepcopy(DATA_LAYERS)
+        for layer in data_layers:
+            data_layers[layer].pop('fpath', None)
+
+        for layer in data_layers:
+            assert 'fpath' not in data_layers[layer]
+
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, cap_cost_fun,
+                                 foc_fun, voc_fun,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 data_layers=data_layers,
+                                 )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+        bsp.agg_data_layers()
+
+        assert 'lcoe_fcr-2012' in out
+        assert 'lcoe_fcr-2013' in out
+        assert 'lcoe_fcr-means' in out
+
+        assert 'capacity' in bsp.meta
+        assert 'mean_cf' in bsp.meta
+        assert 'mean_lcoe' in bsp.meta
+
+        assert 'pct_slope' in bsp.meta
+        assert 'reeds_region' in bsp.meta
+        assert 'padus' in bsp.meta
+
+        assert 'eos_mult' in bsp.meta
+        assert 'reg_mult' in bsp.meta
+        assert np.allclose(bsp.meta['reg_mult'], 1)
+
+        n_turbs = round(test_eos_cap / TURB_RATING)
+        test_eos_cap_kw = n_turbs * TURB_RATING
+        baseline_cost = (140 * test_eos_cap_kw
+                         * np.exp(-test_eos_cap_kw / 1E5 * 0.1 + (1 - 0.1)))
+        eos_mult = (bsp.plant_optimizer.capital_cost
+                    / bsp.plant_optimizer.capacity
+                    / (baseline_cost / test_eos_cap_kw))
+        assert np.allclose(bsp.meta['eos_mult'], eos_mult)
+
         bsp.close()
 
 
 def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data')
 
     cap_cost_fun = ('140 * system_capacity '
                     '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
@@ -431,9 +494,25 @@ def test_bespoke():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
-        points = [33, 35]
+        points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
+                               'extra_unused_data': [0, 42]})
+        fully_excluded_points = pd.DataFrame({'gid': [37],
+                                              'config': ['default'],
+                                              'extra_unused_data': [0]})
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        assert not os.path.exists(out_fpath)
+        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  fully_excluded_points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 5},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=2,
+                                  out_fpath=out_fpath)
+        assert not os.path.exists(out_fpath)
         _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
                                   objective_function, cap_cost_fun,
                                   foc_fun, voc_fun,
@@ -443,7 +522,7 @@ def test_bespoke():
                                   output_request=output_request,
                                   max_workers=2,
                                   out_fpath=out_fpath)
-
+        assert os.path.exists(out_fpath)
         with Resource(out_fpath) as f:
             meta = f.meta
             assert len(meta) <= len(points)
@@ -454,7 +533,8 @@ def test_bespoke():
             assert 'possible_y_coords' in meta
 
             dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
-                        'annual_energy-2012', 'cf_mean-means')
+                        'annual_energy-2012', 'cf_mean-means',
+                        'extra_unused_data-2012')
             for dset in dsets_1d:
                 assert dset in list(f)
                 assert isinstance(f[dset], np.ndarray)
@@ -862,8 +942,8 @@ def test_bespoke_run_with_scheduled_losses():
                            out_losses['hourly-2013'])
 
 
-def test_bespoke_wind_plant_with_power_curve_losses():
-    """Test bespoke ``wind_plant`` with power curve losses. """
+def test_bespoke_aep_is_zero_if_no_turbines_placed():
+    """Test that bespoke aep output is zero if no turbines placed. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
 
     cap_cost_fun = ('140 * system_capacity '
