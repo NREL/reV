@@ -54,7 +54,6 @@ def test_gen_geothermal(depth):
             np.float32, attrs={"units": "MW"},
         )
 
-
         output_request = ('annual_energy', 'cf_mean', 'cf_profile',
                           'gen_profile', 'lcoe_fcr', 'nameplate')
         gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
@@ -105,7 +104,6 @@ def test_gen_geothermal_temp_too_low():
             geo_res_file, 'potential_MW_2000m', np.array([200]),
             np.float32, attrs={"units": "MW"},
         )
-
 
         output_request = ('annual_energy', 'cf_mean', 'cf_profile',
                           'gen_profile', 'lcoe_fcr', 'nameplate')
