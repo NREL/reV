@@ -19,6 +19,7 @@ from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
                                      MultiFileWTK)
 from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
                                     WaveResource)
+from rex.multi_res_resource import MultiResolutionResource
 from rex.utilities.utilities import check_res_file
 
 
@@ -199,7 +200,8 @@ class SamResourceRetriever:
 
     @classmethod
     def get(cls, res_file, project_points, module,
-            output_request=('cf_mean', ), gid_map=None):
+            output_request=('cf_mean', ), gid_map=None,
+            lr_res_file=None, nn_map=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -222,6 +224,16 @@ class SamResourceRetriever:
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
             resource gids. This can be None or a pre-extracted dict.
+        lr_res_file : str | None
+            Optional low resolution resource file that will be dynamically
+            mapped+interpolated to the nominal-resolution res_file. This
+            needs to be of the same format as resource_file, e.g. they both
+            need to be handled by the same rex Resource handler such as
+            WindResource
+        nn_map : np.ndarray
+            Optional 1D array of nearest neighbor mappings associated with the
+            res_file to lr_res_file spatial mapping. For details on this
+            argument, see the rex.MultiResolutionResource docstring.
 
         Returns
         -------
@@ -244,7 +256,13 @@ class SamResourceRetriever:
         kwargs['time_index_step'] = \
             project_points.sam_config_obj.time_index_step
 
-        res = res_handler.preload_SAM(res_file, *args, **kwargs)
+        if lr_res_file is None:
+            res = res_handler.preload_SAM(res_file, *args, **kwargs)
+        else:
+            kwargs['handler_class'] = res_handler
+            kwargs['nn_map'] = nn_map
+            res = MultiResolutionResource.preload_SAM(res_file, lr_res_file,
+                                                      *args, **kwargs)
 
         return res
 

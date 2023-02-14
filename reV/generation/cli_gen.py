@@ -138,8 +138,10 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
         Flag to turn on debug logging. Default is not verbose.
     """
     res_files = config.parse_res_files()
+    lr_res_files = config.parse_res_files()
     # set the year-specific variables
     ctx.obj['RES_FILE'] = res_files[i]
+    ctx.obj['LR_RES_FILE'] = lr_res_files[i]
 
     # check to make sure that the year matches the resource file
     if str(year) not in res_files[i]:
@@ -236,6 +238,11 @@ def make_fout(name, year):
 @click.option('--res_file', '-rf', required=True,
               help='Filepath to single resource file, multi-h5 directory, '
               'or /h5_dir/prefix*suffix.')
+@click.option('--lr_res_file', '-lrrf', required=False,
+              help='Filepath to single low-resolution resource file, '
+              'multi-h5 directory, or /h5_dir/prefix*suffix. This will be '
+              'dynamically mapped+interpolated to the nominal-resolution '
+              'res_file input.')
 @click.option('--out_fpath', '-o', type=click.Path(), required=True,
               help='Ouput .h5 file path')
 @click.option('--points', '-p', default=None, type=PROJECTPOINTS,
@@ -295,15 +302,16 @@ def make_fout(name, year):
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, tech, sam_files, res_file, out_fpath, points, lat_lon_fpath,
-           lat_lon_coords, regions, region, region_col, sites_per_worker,
-           logdir, output_request, site_data, mem_util_lim,
+def direct(ctx, tech, sam_files, res_file, lr_res_file, out_fpath, points,
+           lat_lon_fpath, lat_lon_coords, regions, region, region_col,
+           sites_per_worker, logdir, output_request, site_data, mem_util_lim,
            curtailment, gid_map, verbose, write_mapped_gids):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['RES_FILE'] = res_file
+    ctx.obj['LR_RES_FILE'] = lr_res_file
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['OUT_FPATH'] = out_fpath
     ctx.obj['LOGDIR'] = logdir
@@ -407,6 +415,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     points = ctx.obj['POINTS']
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
+    lr_res_file = ctx.obj['LR_RES_FILE']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     out_fpath = ctx.obj['OUT_FPATH']
     logdir = ctx.obj['LOGDIR']
@@ -438,6 +447,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 points,
                 sam_files,
                 res_file,
+                lr_res_file=lr_res_file,
                 site_data=site_data,
                 output_request=output_request,
                 curtailment=curtailment,
@@ -553,7 +563,7 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
 
 
 def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
-                 points=slice(0, 100), points_range=None,
+                 lr_res_file=None, points=slice(0, 100), points_range=None,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
@@ -577,6 +587,11 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
         WTK or NSRDB resource file name + path.
     out_fpath : str
         Output .h5 file path
+    lr_res_file : str | None
+        Optional low resolution resource file that will be dynamically
+        mapped+interpolated to the nominal-resolution resource_file. This needs
+        to be of the same format as resource_file, e.g. they both need to be
+        handled by the same rex Resource handler such as WindResource
     points : slice | str | list | tuple
         Slice/list specifying project points, string pointing to a project
     points_range : list | None
@@ -631,6 +646,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                   '-lo {}'.format(SLURM.s(logdir)),
                   '-or {}'.format(SLURM.s(output_request)),
                   '-mem {}'.format(SLURM.s(mem_util_lim))]
+
+    if lr_res_file:
+        arg_direct.append('-lrrf {}'.format(SLURM.s(lr_res_file)))
 
     if site_data:
         arg_direct.append('-sd {}'.format(SLURM.s(site_data)))
@@ -704,6 +722,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     points = ctx.obj['POINTS']
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
+    lr_res_file = ctx.obj['LR_RES_FILE']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     dirout, fout = os.path.split(ctx.obj['OUT_FPATH'])
     logdir = ctx.obj['LOGDIR']
@@ -730,6 +749,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
 
         node_fpath = os.path.join(dirout, fout_node)
         cmd = get_node_cmd(node_name, tech, sam_files, res_file, node_fpath,
+                           lr_res_file=lr_res_file,
                            points=points,
                            points_range=split.split_range,
                            sites_per_worker=sites_per_worker,

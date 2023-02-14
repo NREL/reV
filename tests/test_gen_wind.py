@@ -9,6 +9,7 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
+import shutil
 import h5py
 import pytest
 import pandas as pd
@@ -19,7 +20,7 @@ from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 
-from rex import Resource
+from rex import Resource, WindResource, Outputs
 
 RTOL = 0
 ATOL = 0.001
@@ -271,6 +272,61 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
     assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
     assert np.allclose(test.out['turb_generic_loss'][0:2], np.zeros(2))
     assert np.allclose(test.out['turb_generic_loss'][2:], 16.7 * np.ones(3))
+
+
+def test_multi_resolution_wtk():
+    """Test windpower analysis with wind at 5min and t+p at hourly"""
+    with tempfile.TemporaryDirectory() as td:
+
+        points = slice(0, 2)
+        max_workers = 1
+        sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+        source_fp_100m = TESTDATADIR + '/wtk/wtk_2010_100m.h5'
+        source_fp_200m = TESTDATADIR + '/wtk/wtk_2010_200m.h5'
+
+        fp_hr_100m = os.path.join(td, 'wtk_2010_100m_hr.h5')
+        fp_hr_200m = os.path.join(td, 'wtk_2010_200m_hr.h5')
+        fp_hr = os.path.join(td, 'wtk_2010_*hr.h5')
+        fp_lr = os.path.join(td, 'wtk_2010_lr.h5')
+        shutil.copy(source_fp_100m, fp_hr_100m)
+        shutil.copy(source_fp_200m, fp_hr_200m)
+
+        lr_dsets = ['temperature_100m', 'pressure_100m']
+        with WindResource(fp_hr_100m) as hr_res:
+            ti = hr_res.time_index
+            meta = hr_res.meta
+            lr_data = [hr_res[dset] for dset in lr_dsets]
+            lr_attrs = hr_res.attrs
+            lr_chunks = hr_res.chunks
+            lr_dtypes = hr_res.dtypes
+
+        t_slice = slice(None, None, 12)
+        s_slice = slice(None, None, 10)
+        lr_ti = ti[t_slice]
+        lr_meta = meta.iloc[s_slice]
+        lr_data = [d[t_slice, s_slice] for d in lr_data]
+        lr_shapes = {d: (len(lr_ti), len(lr_meta)) for d in lr_dsets}
+
+        Outputs.init_h5(fp_lr, lr_dsets, lr_shapes, lr_attrs, lr_chunks,
+                        lr_dtypes, lr_meta, lr_ti)
+        for name, arr in zip(lr_dsets, lr_data):
+            Outputs.add_dataset(fp_lr, name, arr, lr_dtypes[name],
+                                attrs=lr_attrs[name], chunks=lr_chunks[name])
+
+        for fp in (fp_hr_100m, fp_hr_200m):
+            with h5py.File(fp, 'a') as f:
+                for dset in lr_dsets:
+                    if dset in f:
+                        del f[dset]
+
+        # run reV 2.0 generation
+        gen = Gen.reV_run('windpower', points, sam_files, fp_hr,
+                          lr_res_file=fp_lr,
+                          max_workers=max_workers,
+                          sites_per_worker=3, out_fpath=None)
+        gen_outs = list(gen._out['cf_mean'])
+        assert len(gen_outs) == 2
+        assert np.mean(gen_outs) > 0.55
 
 
 def execute_pytest(capture='all', flags='-rapP'):
