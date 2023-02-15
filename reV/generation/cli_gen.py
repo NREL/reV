@@ -138,7 +138,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
         Flag to turn on debug logging. Default is not verbose.
     """
     res_files = config.parse_res_files()
-    lr_res_files = config.parse_res_files()
+    lr_res_files = config.parse_low_res_files()
     # set the year-specific variables
     ctx.obj['RES_FILE'] = res_files[i]
     ctx.obj['LR_RES_FILE'] = lr_res_files[i]
