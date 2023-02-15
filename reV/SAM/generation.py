@@ -390,8 +390,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
     @classmethod
     def reV_run(cls, points_control, res_file, site_df,
-                output_request=('cf_mean',), drop_leap=False,
-                gid_map=None):
+                lr_res_file=None, output_request=('cf_mean',),
+                drop_leap=False, gid_map=None, nn_map=None):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -405,6 +405,12 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             Dataframe of site-specific input variables. Row index corresponds
             to site number/gid (via df.loc not df.iloc), column labels are the
             variable keys that will be passed forward as SAM parameters.
+        lr_res_file : str | None
+            Optional low resolution resource file that will be dynamically
+            mapped+interpolated to the nominal-resolution res_file. This
+            needs to be of the same format as resource_file, e.g. they both
+            need to be handled by the same rex Resource handler such as
+            WindResource
         output_request : list | tuple
             Outputs to retrieve from SAM.
         drop_leap : bool
@@ -415,6 +421,10 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
             resource gids. This can be None or a pre-extracted dict.
+        nn_map : np.ndarray
+            Optional 1D array of nearest neighbor mappings associated with the
+            res_file to lr_res_file spatial mapping. For details on this
+            argument, see the rex.MultiResolutionResource docstring.
 
         Returns
         -------
@@ -431,7 +441,9 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
                                          points_control.project_points,
                                          points_control.project_points.tech,
                                          output_request=output_request,
-                                         gid_map=gid_map)
+                                         gid_map=gid_map,
+                                         lr_res_file=lr_res_file,
+                                         nn_map=nn_map)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment

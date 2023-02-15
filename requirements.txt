@@ -1,6 +1,6 @@
 NREL-NRWAL>=0.0.7
 NREL-PySAM>=4.0.0
-NREL-rex>=0.2.77
+NREL-rex>=0.2.78
 packaging>=20.3
 plotly>=4.7.1
 plotting>=0.0.6
