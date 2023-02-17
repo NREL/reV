@@ -1162,7 +1162,21 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
 
 
 class Geothermal(AbstractSamGenerationFromWeatherFile):
-    """Class for geothermal generation from SAM"""
+    """Class for geothermal generation from SAM.
+
+    As of 12/20/2022, the resource potential input is only used to
+    calculate the number of well replacements during the lifetime of a
+    geothermal plant. It was decided that reV would not model well
+    replacements. Therefore, reV sets the resource potential to match
+    (or be just above) the gross potential so that SAM does not throw
+    any errors.
+
+    Also as of 12/20/2022, the SAM GETEM module requires a weather file,
+    but does not actually require any weather data to run. Therefore,
+    reV currently generates an empty weather file to pass to SAM. This
+    behavior can be easily updated in the future should the SAM GETEM
+    module start using weather data.
+    """
 
     MODULE = 'geothermal'
     PYSAM = PySamGeothermal
@@ -1273,13 +1287,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
     def _set_resource_potential_to_match_gross_output(self):
         """Set the resource potential input to match the gross generation.
-
-        As of 12/20/2022, the resource potential input is only used to
-        calculate the number of well replacements during the lifetime
-        of a geothermal plant. It was decided that reV would not model
-        well replacements, and therefore it is fine to set the resource
-        potential to match (or be just above) the gross potential so
-        that SAM does not throw any errors.
 
         If SAM throws an error during the UI calculation of the gross
         output, the resource_potential is simply set to -1 since
