@@ -487,8 +487,17 @@ class PowerCurveLossesMixin:
             return
 
         wind_resource, weights = self.wind_resource_from_input()
-        pc_losses = PowerCurveLosses(self.input_power_curve,
-                                     wind_resource, weights)
+        power_curve = self.input_power_curve
+        if (wind_resource >= power_curve.cutoff_wind_speed).all():
+            msg = ("All wind speeds for site {} are above the wind speed "
+                   "cutoff ({} m/s). No power curve adjustments made!"
+                   .format(getattr(self, "_site", "[unknown]"),
+                           power_curve.cutoff_wind_speed))
+            logger.warning(msg)
+            warnings.warn(msg, reVLossesWarning)
+            return
+
+        pc_losses = PowerCurveLosses(power_curve, wind_resource, weights)
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
