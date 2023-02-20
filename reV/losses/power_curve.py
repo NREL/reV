@@ -43,6 +43,7 @@ class PowerCurve:
     that it adheres to the expected pattern of dropping from max rated
     power to zero power in a single wind speed step.
     """
+
     def __init__(self, wind_speed, generation):
         """
         Parameters
@@ -61,6 +62,7 @@ class PowerCurve:
         self.wind_speed = np.array(wind_speed)
         self.generation = np.array(generation)
         self._cutoff_wind_speed = None
+        self._cutin_wind_speed = None
 
         _validate_arrays_not_empty(self,
                                    array_names=['wind_speed', 'generation'])
@@ -92,6 +94,22 @@ class PowerCurve:
                        "cutoff! - {}".format(self.generation))
                 logger.error(msg)
                 raise reVLossesValueError(msg)
+
+    @property
+    def cutin_wind_speed(self):
+        """The detected cut-in wind speed at which power generation begins
+
+        Returns
+        --------
+        float
+        """
+        if self._cutin_wind_speed is None:
+            ind = np.where(self.generation > 0)[0][0]
+            if ind > 0:
+                self._cutin_wind_speed = self.wind_speed[ind - 1]
+            else:
+                self._cutin_wind_speed = 0
+        return self._cutin_wind_speed
 
     @property
     def cutoff_wind_speed(self):
@@ -488,6 +506,16 @@ class PowerCurveLossesMixin:
 
         wind_resource, weights = self.wind_resource_from_input()
         power_curve = self.input_power_curve
+
+        if (wind_resource <= power_curve.cutin_wind_speed).all():
+            msg = ("All wind speeds for site {} are below the wind speed "
+                   "cutin ({} m/s). No power curve adjustments made!"
+                   .format(getattr(self, "_site", "[unknown]"),
+                           power_curve.cutin_wind_speed))
+            logger.warning(msg)
+            warnings.warn(msg, reVLossesWarning)
+            return
+
         if (wind_resource >= power_curve.cutoff_wind_speed).all():
             msg = ("All wind speeds for site {} are above the wind speed "
                    "cutoff ({} m/s). No power curve adjustments made!"
@@ -636,6 +664,7 @@ class AbstractPowerCurveTransformation(ABC):
         A :obj:`PowerCurve` object representing the "original" power
         curve.
     """
+
     def __init__(self, power_curve):
         """
         Parameters
