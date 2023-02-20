@@ -229,9 +229,11 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
     assert any(og_power_curve != new_power_curve)
 
 
-@pytest.mark.parametrize('config', SAM_FILES[0:2])
-def test_power_curve_losses_mixin_class_wind_resource_too_high(config):
-    """Test mixin class behavior when wind resource is too high. """
+@pytest.mark.parametrize('config', SAM_FILES[:2])
+@pytest.mark.parametrize('ws', [1, 100])
+def test_power_curve_losses_mixin_class_wind_resource_no_power(config, ws):
+    """Test mixin class behavior when there's no power generation from wind
+    resource always below the cutin speed or above the cutout speed. """
 
     with open(config, 'r') as fh:
         sam_config = json.load(fh)
@@ -249,8 +251,9 @@ def test_power_curve_losses_mixin_class_wind_resource_too_high(config):
         'target_losses_percent': 10,
         'transformation': 'horizontal_translation'
     }
+    # order is [(temp_C, pressure_ATM, windspeed_m/s, windir)]
     mixin.sam_sys_inputs['wind_resource_data'] = {
-        'data': [(1, 10, 1_000, 0) for __ in BASIC_WIND_RES]
+        'data': [(20, 1, ws, 0) for __ in BASIC_WIND_RES]
     }
     with pytest.warns(reVLossesWarning):
         mixin.add_power_curve_losses()
