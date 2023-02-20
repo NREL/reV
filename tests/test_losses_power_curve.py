@@ -37,7 +37,7 @@ SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_non_standard_1.json',
     TESTDATADIR + '/SAM/wind_gen_non_standard_2.json'
 ]
-BASIC_WIND_RES = [1, 20, 20]
+BASIC_WIND_RES = [10, 20, 20]
 SINGLE_SITE_PC_LOSSES = {
     'target_losses_percent': 16,
     'transformation': 'horizontal_translation'

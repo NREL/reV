@@ -219,7 +219,7 @@ class PowerCurveLosses:
         corresponding wind speed.
     """
 
-    def __init__(self, power_curve, wind_resource, weights=None):
+    def __init__(self, power_curve, wind_resource, weights=None, site=None):
         """
         Parameters
         ----------
@@ -240,7 +240,10 @@ class PowerCurveLosses:
             An iterable of the same length as ``wind_resource``
             containing weights to apply to each generation value
             calculated for the corresponding wind speed.
+        site : int
+            Site number (gid) for debugging and logging
         """
+
         self.power_curve = power_curve
         self.wind_resource = np.array(wind_resource)
         if weights is None:
@@ -248,6 +251,7 @@ class PowerCurveLosses:
         else:
             self.weights = np.array(weights)
         self._power_gen = None
+        self.site = site
 
         _validate_arrays_not_empty(self,
                                    array_names=['wind_resource', 'weights'])
@@ -257,8 +261,9 @@ class PowerCurveLosses:
     def _validate_wind_resource(self):
         """Validate that the input wind resource is non-negative. """
         if not (self.wind_resource >= 0).all():
-            msg = ("Invalid wind resource input: Contains negative values!"
-                   " - {}".format(self.wind_resource))
+            msg = ("Invalid wind resource input for site {}: Contains "
+                   "negative values! - {}"
+                   .format(self.site, self.wind_resource))
             msg = msg.format(self.wind_resource)
             logger.error(msg)
             raise reVLossesValueError(msg)
@@ -267,9 +272,9 @@ class PowerCurveLosses:
         """Validate that the input weights size matches the wind resource. """
         if self.wind_resource.size != self.weights.size:
             msg = ("Invalid weights input: Does not match size of wind "
-                   "resource! - {} vs {}"
-                   .format(self.weights.size, self.wind_resource.size))
-            msg = msg.format(self.wind_resource)
+                   "resource for site {}! - {} vs {}"
+                   .format(self.site, self.weights.size,
+                           self.wind_resource.size))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -355,17 +360,39 @@ class PowerCurveLosses:
         transformation = transformation(self.power_curve)
         fit_var = minimize_scalar(self._obj,
                                   args=(target, transformation),
-                                  bounds=transformation.bounds,
+                                  bounds=transformation.optm_bounds,
                                   method='bounded').x
         loss_percentage = self._obj(fit_var, target, transformation)
+
         if loss_percentage > 1:
-            msg = ("Unable to find a transformation such that the losses meet "
-                   "the target within 1%! Obtained fit with loss percentage "
-                   "{}% when target was {}%. Consider using a different "
-                   "transformation or reducing the target losses!"
-                   .format(loss_percentage, target))
+            msg = ("Unable to find a transformation for site {} such that the "
+                   "losses meet the target within 1%! Obtained fit with loss "
+                   "percentage {}% when target was {}%. Consider using a "
+                   "different transformation or reducing the target losses!"
+                   .format(self.site, loss_percentage, target))
             logger.warning(msg)
             warnings.warn(msg, reVLossesWarning)
+
+        if fit_var > np.max(transformation.bounds):
+            msg = ('Transformation "{}" for site {} resulted in fit parameter '
+                   '{} greater than the max bound of {}. Limiting to the max '
+                   'bound, but the applied losses may not be correct.'
+                   .format(transformation, self.site, fit_var,
+                           np.max(transformation.bounds)))
+            logger.warning(msg)
+            warnings.warn(msg, reVLossesWarning)
+            fit_var = np.max(transformation.bounds)
+
+        if fit_var < np.min(transformation.bounds):
+            msg = ('Transformation "{}" for site {} resulted in fit parameter '
+                   '{} less than the min bound of {}. Limiting to the min '
+                   'bound, but the applied losses may not be correct.'
+                   .format(transformation, self.site, fit_var,
+                           np.min(transformation.bounds)))
+            logger.warning(msg)
+            warnings.warn(msg, reVLossesWarning)
+            fit_var = np.min(transformation.bounds)
+
         return transformation.apply(fit_var)
 
     @property
@@ -752,7 +779,14 @@ class AbstractPowerCurveTransformation(ABC):
     @property
     @abstractmethod
     def bounds(self):
-        """tuple: Bounds on the ``transformation_var``."""
+        """tuple: true Bounds on the ``transformation_var``."""
+
+    @property
+    def optm_bounds(self):
+        """Bounds for scipy optimization, sometimes more generous than the
+        actual fit parameter bounds which are enforced after the
+        optimization."""
+        return self.bounds
 
 
 class HorizontalTranslation(AbstractPowerCurveTransformation):
@@ -819,7 +853,8 @@ class HorizontalTranslation(AbstractPowerCurveTransformation):
 
     @property
     def bounds(self):
-        """tuple: Bounds on the power curve shift for the fitting procedure."""
+        """tuple: true Bounds on the power curve shift (different from the
+        optimization boundaries)"""
         min_ind = np.where(self.power_curve)[0][0]
         max_ind = np.where(self.power_curve[::-1])[0][0]
         max_shift = (self.power_curve.wind_speed[-max_ind - 1]
@@ -879,7 +914,8 @@ class LinearStretching(AbstractPowerCurveTransformation):
 
     @property
     def bounds(self):
-        """tuple: Bounds on the wind speed multiplier."""
+        """tuple: true Bounds on the wind speed multiplier (different from the
+        optimization boundaries)"""
         min_ind_pc = np.where(self.power_curve)[0][0]
         min_ind_ws = np.where(self.power_curve.wind_speed > 1)[0][0]
         min_ws = self.power_curve.wind_speed[max(min_ind_pc, min_ind_ws)]
@@ -949,6 +985,13 @@ class ExponentialStretching(AbstractPowerCurveTransformation):
                      self.power_curve.cutoff_wind_speed)
         max_exponent = np.ceil(np.log(max_ws) / np.log(min_ws))
         return (1, max_exponent)
+
+    @property
+    def optm_bounds(self):
+        """Bounds for scipy optimization, sometimes more generous than the
+        actual fit parameter bounds which are enforced after the
+        optimization."""
+        return (0.1, self.bounds[1])
 
 
 TRANSFORMATIONS = {
