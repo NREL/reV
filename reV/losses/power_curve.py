@@ -362,16 +362,6 @@ class PowerCurveLosses:
                                   args=(target, transformation),
                                   bounds=transformation.optm_bounds,
                                   method='bounded').x
-        loss_percentage = self._obj(fit_var, target, transformation)
-
-        if loss_percentage > 1:
-            msg = ("Unable to find a transformation for site {} such that the "
-                   "losses meet the target within 1%! Obtained fit with loss "
-                   "percentage {}% when target was {}%. Consider using a "
-                   "different transformation or reducing the target losses!"
-                   .format(self.site, loss_percentage, target))
-            logger.warning(msg)
-            warnings.warn(msg, reVLossesWarning)
 
         if fit_var > np.max(transformation.bounds):
             msg = ('Transformation "{}" for site {} resulted in fit parameter '
@@ -392,6 +382,20 @@ class PowerCurveLosses:
             logger.warning(msg)
             warnings.warn(msg, reVLossesWarning)
             fit_var = np.min(transformation.bounds)
+
+        error = self._obj(fit_var, target, transformation)
+
+        if error > 1:
+            new_power_curve = transformation.apply(fit_var)
+            losses = self.annual_losses_with_transformed_power_curve(
+                new_power_curve)
+            msg = ("Unable to find a transformation for site {} such that the "
+                   "losses meet the target within 1%! Obtained fit with loss "
+                   "percentage {}% when target was {}%. Consider using a "
+                   "different transformation or reducing the target losses!"
+                   .format(self.site, losses, target))
+            logger.warning(msg)
+            warnings.warn(msg, reVLossesWarning)
 
         return transformation.apply(fit_var)
 
@@ -552,7 +556,8 @@ class PowerCurveLossesMixin:
             warnings.warn(msg, reVLossesWarning)
             return
 
-        pc_losses = PowerCurveLosses(power_curve, wind_resource, weights)
+        pc_losses = PowerCurveLosses(power_curve, wind_resource, weights,
+                                     site=getattr(self, 'site', None))
 
         logger.debug("Transforming power curve using the {} transformation to "
                      "meet {}% loss target..."
@@ -991,7 +996,7 @@ class ExponentialStretching(AbstractPowerCurveTransformation):
         """Bounds for scipy optimization, sometimes more generous than the
         actual fit parameter bounds which are enforced after the
         optimization."""
-        return (0.1, self.bounds[1])
+        return (0.5, self.bounds[1])
 
 
 TRANSFORMATIONS = {

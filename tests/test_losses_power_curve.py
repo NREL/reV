@@ -216,8 +216,9 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
         'target_losses_percent': 10,
         'transformation': 'horizontal_translation'
     }
+    # order is [(temp_C, pressure_ATM, windspeed_m/s, windir)]
     mixin.sam_sys_inputs['wind_resource_data'] = {
-        'data': [(1, 10, val, 0) for val in BASIC_WIND_RES]
+        'data': [(20, 1, val, 0) for val in BASIC_WIND_RES]
     }
     mixin.add_power_curve_losses()
     new_power_curve = np.array(
