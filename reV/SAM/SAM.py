@@ -18,7 +18,7 @@ from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
 from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
                                      MultiFileWTK)
 from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
-                                    WaveResource)
+                                    WaveResource, GeothermalResource)
 from rex.multi_res_resource import MultiResolutionResource
 from rex.utilities.utilities import check_res_file
 
@@ -28,6 +28,21 @@ logger = logging.getLogger(__name__)
 
 class SamResourceRetriever:
     """Factory utility to get the SAM resource handler."""
+
+    # Mapping for reV technology and SAM module to h5 resource handler type
+    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
+    RESOURCE_TYPES = {'geothermal': GeothermalResource,
+                      'pvwattsv5': SolarResource,
+                      'pvwattsv7': SolarResource,
+                      'pvwattsv8': SolarResource,
+                      'pvsamv1': SolarResource,
+                      'tcsmoltensalt': SolarResource,
+                      'solarwaterheat': SolarResource,
+                      'troughphysicalheat': SolarResource,
+                      'lineardirectsteam': SolarResource,
+                      'windpower': WindResource,
+                      'mhkwave': WaveResource
+                      }
 
     @staticmethod
     def _get_base_handler(res_file, module):
@@ -51,13 +66,14 @@ class SamResourceRetriever:
         """
 
         try:
-            res_handler = RevPySam.RESOURCE_TYPES[module.lower()]
+            res_handler = SamResourceRetriever.RESOURCE_TYPES[module.lower()]
 
         except KeyError as e:
             msg = ('Cannot interpret what kind of resource handler the SAM '
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
-                   .format(module, list(RevPySam.RESOURCE_TYPES.keys())))
+                   .format(module,
+                           list(SamResourceRetriever.RESOURCE_TYPES.keys())))
             logger.exception(msg)
             raise SAMExecutionError(msg) from e
 
@@ -157,6 +173,9 @@ class SamResourceRetriever:
                 if project_points.curtailment.precipitation:
                     # make precip rate available for curtailment analysis
                     kwargs['precip_rate'] = True
+
+        elif res_handler == GeothermalResource:
+            args += (project_points.d, )
 
         # Check for resource means
         if any(req.endswith('_mean') for req in output_request):
@@ -511,20 +530,6 @@ class RevPySam(Sam):
 
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
-
-    # Mapping for reV technology and SAM module to h5 resource handler type
-    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
-    RESOURCE_TYPES = {'pvwattsv5': SolarResource,
-                      'pvwattsv7': SolarResource,
-                      'pvwattsv8': SolarResource,
-                      'pvsamv1': SolarResource,
-                      'tcsmoltensalt': SolarResource,
-                      'solarwaterheat': SolarResource,
-                      'troughphysicalheat': SolarResource,
-                      'lineardirectsteam': SolarResource,
-                      'windpower': WindResource,
-                      'mhkwave': WaveResource
-                      }
 
     def __init__(self, meta, sam_sys_inputs, output_request,
                  site_sys_inputs=None):

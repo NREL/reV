@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """PySAM default implementations."""
+from abc import abstractmethod
 import json
 import os
 import pandas as pd
+import PySAM.Geothermal as PySamGeothermal
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv8 as PySamPV8
 import PySAM.Pvsamv1 as PySamDetailedPV
@@ -20,25 +22,66 @@ DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULTSDIR = os.path.join(DEFAULTSDIR, 'defaults')
 
 
-class DefaultPvWattsv5:
-    """Class for default PVWattsv5"""
+class AbstractDefaultFromConfigFile:
+    """Class for default PySAM object from a config file."""
 
-    @staticmethod
-    def default():
-        """Get the default PySAM pvwattsv5 object"""
-        res_file = os.path.join(DEFAULTSDIR,
-                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-        config_file = os.path.join(DEFAULTSDIR, 'i_pvwattsv5.json')
+    @property
+    @abstractmethod
+    def CONFIG_FILE_NAME(self):
+        """Name of JSON config file containing default PySAM inputs."""
+        raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def PYSAM_MODULE(self):
+        """PySAM module to initialize (e.g. Pvwattsv5, Geothermal, etc.). """
+        raise NotImplementedError
+
+    @classmethod
+    def init_default_pysam_obj(cls):
+        """Initialize a defualt PySM object from a config file."""
+        config_file = os.path.join(DEFAULTSDIR, cls.CONFIG_FILE_NAME)
+
+        obj = cls.PYSAM_MODULE.new()
         with open(config_file, 'r') as f:
             config = json.load(f)
 
-        obj = PySamPV5.new()
         for k, v in config.items():
             if 'adjust:' not in k and 'file' not in k:
                 obj.value(k, v)
 
         obj.AdjustmentFactors.constant = 0.0
+        return obj
+
+
+class DefaultGeothermal(AbstractDefaultFromConfigFile):
+    """Class for default Geothermal"""
+    CONFIG_FILE_NAME = 'geothermal.json'
+    PYSAM_MODULE = PySamGeothermal
+
+    @staticmethod
+    def default():
+        """Get the default PySAM Geothermal object"""
+        obj = DefaultGeothermal.init_default_pysam_obj()
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        obj.GeoHourly.file_name = res_file
+        obj.execute()
+
+        return obj
+
+
+class DefaultPvWattsv5(AbstractDefaultFromConfigFile):
+    """Class for default PVWattsv5"""
+    CONFIG_FILE_NAME = 'i_pvwattsv5.json'
+    PYSAM_MODULE = PySamPV5
+
+    @staticmethod
+    def default():
+        """Get the default PySAM pvwattsv5 object"""
+        obj = DefaultPvWattsv5.init_default_pysam_obj()
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
 
@@ -46,7 +89,7 @@ class DefaultPvWattsv5:
 
 
 class DefaultPvWattsv8:
-    """class for default PVWattsv7"""
+    """class for default PVWattsv8"""
 
     @staticmethod
     def default():

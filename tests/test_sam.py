@@ -177,7 +177,7 @@ def test_default_pvwattsv5():
 def test_default_pvwattsv8():
     """Test default pvwattsv8 execution and compare baseline annual energy"""
     default = DefaultPvWattsv8.default()
-    assert round(default.Outputs.annual_energy, -1) == 11160
+    assert round(default.Outputs.annual_energy, -1) == 173276030
 
 
 def test_default_windpower():

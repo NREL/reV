@@ -9573,6 +9573,7 @@
   "subarray1_backtrack": 0,
   "subarray1_dcwiring_loss": 2,
   "subarray1_diodeconn_loss": 0.5,
+  "subarray1_electrical_mismatch": 0,
   "subarray1_gcr": 0.3,
   "subarray1_mismatch_loss": 2,
   "subarray1_mod_orient": 0,
@@ -9596,7 +9597,9 @@
   "subarray1_nmodx": 7,
   "subarray1_nmody": 2,
   "subarray1_nstrings": 2,
+  "subarray1_rack_shading": 0,
   "subarray1_rear_irradiance_loss": 0,
+  "subarray1_rear_soiling_loss": 0,
   "subarray1_rotlim": 45,
   "subarray1_shade_mode": 0,
   "subarray1_soiling": [
@@ -9613,6 +9616,8 @@
     5,
     5
   ],
+  "subarray1_slope_azm": 0,
+  "subarray1_slope_tilt": 0,
   "subarray1_tilt": 20,
   "subarray1_tilt_eq_lat": 0,
   "subarray1_track_mode": 0,
