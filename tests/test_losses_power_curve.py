@@ -18,7 +18,7 @@ import pandas as pd
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
-from reV.utilities.exceptions import reVLossesValueError
+from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesMixin,
                                     PowerCurveLossesInput,
@@ -216,8 +216,9 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
         'target_losses_percent': 10,
         'transformation': 'horizontal_translation'
     }
+    # order is [(temp_C, pressure_ATM, windspeed_m/s, windir)]
     mixin.sam_sys_inputs['wind_resource_data'] = {
-        'data': [(1, 10, val, 0) for val in BASIC_WIND_RES]
+        'data': [(20, 1, val, 0) for val in BASIC_WIND_RES]
     }
     mixin.add_power_curve_losses()
     new_power_curve = np.array(
@@ -226,6 +227,42 @@ def test_power_curve_losses_mixin_class_add_power_curve_losses(config):
 
     assert mixin.POWER_CURVE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert any(og_power_curve != new_power_curve)
+
+
+@pytest.mark.parametrize('config', SAM_FILES[:2])
+@pytest.mark.parametrize('ws', [1, 100])
+def test_power_curve_losses_mixin_class_wind_resource_no_power(config, ws):
+    """Test mixin class behavior when there's no power generation from wind
+    resource always below the cutin speed or above the cutout speed. """
+
+    with open(config, 'r') as fh:
+        sam_config = json.load(fh)
+
+    og_power_curve = np.array(sam_config["wind_turbine_powercurve_powerout"])
+
+    # patch required for 'wind_resource_data' access below
+    def get_item_patch(self, key):
+        return self.sam_sys_inputs.get(key)
+    PowerCurveLossesMixin.__getitem__ = get_item_patch
+
+    mixin = PowerCurveLossesMixin()
+    mixin.sam_sys_inputs = copy.deepcopy(sam_config)
+    mixin.sam_sys_inputs[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
+        'target_losses_percent': 10,
+        'transformation': 'horizontal_translation'
+    }
+    # order is [(temp_C, pressure_ATM, windspeed_m/s, windir)]
+    mixin.sam_sys_inputs['wind_resource_data'] = {
+        'data': [(20, 1, ws, 0) for __ in BASIC_WIND_RES]
+    }
+    with pytest.warns(reVLossesWarning):
+        mixin.add_power_curve_losses()
+    new_power_curve = np.array(
+        mixin.sam_sys_inputs["wind_turbine_powercurve_powerout"]
+    )
+
+    assert mixin.POWER_CURVE_CONFIG_KEY not in mixin.sam_sys_inputs
+    assert (og_power_curve == new_power_curve).all()
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
