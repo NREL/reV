@@ -104,6 +104,7 @@ class Gen(BaseGen):
                'windpower': WindPower,
                'mhkwave': MhkWave
                }
+    """reV technology options."""
 
     # Mapping of reV generation outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
@@ -523,6 +524,7 @@ class Gen(BaseGen):
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
             The string should be lower-cased with spaces and _ removed.
+            See :attr:`OPTIONS` for all available options.
         points : int | slice | list | str | PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object. Can

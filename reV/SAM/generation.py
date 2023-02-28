@@ -1162,7 +1162,18 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
 
 
 class Geothermal(AbstractSamGenerationFromWeatherFile):
-    """Class for geothermal generation from SAM.
+    """reV-SAM geothermal generation.
+
+    Unlike wind or solar, reV geothermal dynamically sets the size of a
+    geothermal plant. In particular, the nameplate capacity is set to
+    match the resource potential (obtained form the input data) for each
+    site. As a result, reV allows users to input ``capital_cost_per_kw``
+    and ``fixed_operating_cost_per_kw`` instead of the flat
+    ``capital_cost`` and ``fixed_operating_cost`` values, respectively,
+    in the SAM technology config. If these inputs are detected, reV
+    calculates the total ``capital_cost`` and ``fixed_operating_cost``
+    based on the plant size and automatically adds them to the SAM
+    config on a per-site basis.
 
     As of 12/20/2022, the resource potential input is only used to
     calculate the number of well replacements during the lifetime of a
@@ -1181,6 +1192,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     MODULE = 'geothermal'
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
+    _RESOURCE_POTENTIAL_MULT = 1.001
 
     @staticmethod
     def default():
@@ -1240,6 +1252,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self._set_resource_temperature(resource)
         self._set_nameplate_to_match_resource_potential(resource)
         self._set_resource_potential_to_match_gross_output()
+        self._set_costs()
 
     def _set_resource_temperature(self, resource):
         """Set resource temp from data if user did not specify it. """
@@ -1303,7 +1316,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             self.sam_sys_inputs["resource_potential"] = -1
             return
 
-        gross_gen = getattr(self.pysam.Outputs, "gross_output") * 1.001
+        gross_gen = (getattr(self.pysam.Outputs, "gross_output")
+                     * self._RESOURCE_POTENTIAL_MULT)
         if "resource_potential" in self.sam_sys_inputs:
             msg = ('Setting "resource_potential" is not allowed! Updating '
                    'user input of {} to match the gross generation: {}'
@@ -1312,9 +1326,30 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             logger.warning(msg)
             warn(msg)
 
-        logger.debug("Setting the resource potential to {}".format(gross_gen))
+        logger.debug("Setting the resource potential to {} MW"
+                     .format(gross_gen))
         self.sam_sys_inputs["resource_potential"] = gross_gen
         self["ui_calculations_only"] = 0
+
+    def _set_costs(self):
+        """Set the costs based on gross plant generation."""
+        plant_size_kw = (self.sam_sys_inputs["resource_potential"]
+                         / self._RESOURCE_POTENTIAL_MULT) * 1000
+
+        cc_per_kw = self.sam_sys_inputs.pop("capital_cost_per_kw", None)
+        if cc_per_kw is not None:
+            capital_cost = cc_per_kw * plant_size_kw
+            logger.debug("Setting the capital_cost to ${:,.2f}"
+                         .format(capital_cost))
+            self.sam_sys_inputs["capital_cost"] = capital_cost
+
+        foc_per_kw = self.sam_sys_inputs.pop("fixed_operating_cost_per_kw",
+                                             None)
+        if foc_per_kw is not None:
+            fixed_operating_cost = foc_per_kw * plant_size_kw
+            logger.debug("Setting the fixed_operating_cost to ${:,.2f}"
+                         .format(capital_cost))
+            self.sam_sys_inputs["fixed_operating_cost"] = fixed_operating_cost
 
     def _create_pysam_wfile(self, resource, meta):
         """Create PySAM weather input file.
