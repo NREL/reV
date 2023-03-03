@@ -103,6 +103,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['GID_MAP'] = config.gid_map
     ctx.obj['SITE_DATA'] = config.site_data
+    ctx.obj['BIAS_CORRECT'] = config.bias_correct
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['WRITE_MAPPED_GIDS'] = config.write_mapped_gids
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
@@ -296,6 +297,15 @@ def make_fout(name, year):
               'generation gids to non-unique gids in the resource file. '
               'Should be a filepath to a csv with columns gid and gid_map. '
               'Can be the same csv as project_points input.')
+@click.option('--bias_correct', '-bc', type=click.Path(exists=True),
+              default=None, show_default=True,
+              help='Optional csv filepath to a wind or solar resource bias '
+              'correction table. This has columns: gid, adder, scalar. If '
+              'both adder and scalar are present, the wind or solar resource '
+              'is corrected by (res*scalar)+adder. If either is not present, '
+              'scalar defaults to 1 and adder to 0. Only windspeed, GHI, and '
+              'DNI are corrected. GHI and DNI are corrected with the same '
+              'correction factors.')
 @click.option('--write_mapped_gids', '-wmg', is_flag=True,
               help='Option to write mapped gids to output meta instead of '
               'resource gids.')
@@ -305,13 +315,14 @@ def make_fout(name, year):
 def direct(ctx, tech, sam_files, res_file, lr_res_file, out_fpath, points,
            lat_lon_fpath, lat_lon_coords, regions, region, region_col,
            sites_per_worker, logdir, output_request, site_data, mem_util_lim,
-           curtailment, gid_map, verbose, write_mapped_gids):
+           curtailment, gid_map, bias_correct, verbose, write_mapped_gids):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['RES_FILE'] = res_file
     ctx.obj['LR_RES_FILE'] = lr_res_file
+    ctx.obj['BIAS_CORRECT'] = bias_correct
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['OUT_FPATH'] = out_fpath
     ctx.obj['LOGDIR'] = logdir
@@ -416,6 +427,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
     lr_res_file = ctx.obj['LR_RES_FILE']
+    bias_correct = ctx.obj['BIAS_CORRECT']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     out_fpath = ctx.obj['OUT_FPATH']
     logdir = ctx.obj['LOGDIR']
@@ -458,7 +470,8 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 out_fpath=out_fpath,
                 mem_util_lim=mem_util_lim,
                 timeout=timeout,
-                write_mapped_gids=write_mapped_gids)
+                write_mapped_gids=write_mapped_gids,
+                bias_correct=bias_correct)
 
     tmp_str = ' with points range {}'.format(points_range)
     dirout, fout = os.path.split(out_fpath)
@@ -567,8 +580,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
                  sites_per_worker=None, max_workers=None,
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
-                 curtailment=None, gid_map=None, verbose=False,
-                 write_mapped_gids=False):
+                 curtailment=None, gid_map=None, bias_correct=None,
+                 verbose=False, write_mapped_gids=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -620,6 +633,13 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
     gid_map : NoneType | str
         Pointer to a gid_map csv file (can be the same as project_points) with
         gid and gid_map columns or None.
+    bias_correct : str
+        Optional csv filepath to a wind or solar resource bias correction
+        table. This has columns: gid, adder, scalar. If both adder and scalar
+        are present, the wind or solar resource is corrected by
+        (res*scalar)+adder. If either is not present, scalar defaults to 1 and
+        adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI are
+        corrected with the same correction factors.
     verbose : bool
         Flag to turn on debug logging. Default is False.
     write_mapped_gids : bool
@@ -658,6 +678,9 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
 
     if gid_map:
         arg_direct.append('-gm {}'.format(SLURM.s(gid_map)))
+
+    if bias_correct:
+        arg_direct.append('-bc {}'.format(SLURM.s(bias_correct)))
 
     if write_mapped_gids:
         arg_direct.append('-wmg')
@@ -734,6 +757,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
     curtailment = ctx.obj['CURTAILMENT']
     gid_map = ctx.obj['GID_MAP']
     write_mapped_gids = ctx.obj['WRITE_MAPPED_GIDS']
+    bias_correct = ctx.obj['BIAS_CORRECT']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
@@ -762,6 +786,7 @@ def slurm(ctx, alloc, nodes, memory, walltime, feature, conda_env, module,
                            curtailment=curtailment,
                            gid_map=gid_map,
                            write_mapped_gids=write_mapped_gids,
+                           bias_correct=bias_correct,
                            verbose=verbose)
 
         if sh_script:

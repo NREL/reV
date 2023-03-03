@@ -329,6 +329,37 @@ def test_multi_resolution_wtk():
         assert np.mean(gen_outs) > 0.55
 
 
+def test_wind_bias_correct():
+    """Test rev generation with bias correction."""
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
+
+    # run reV 2.0 generation
+    points = slice(0, 10)
+    pp = ProjectPoints(points, sam_files, 'windpower', res_file=res_file)
+    gen_base = Gen.reV_run('windpower', points, sam_files, res_file,
+                           output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+                           max_workers=1, sites_per_worker=3, out_fpath=None)
+    outs_base = np.array(list(gen_base.out['cf_mean']))
+
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 2})
+    gen = Gen.reV_run('windpower', points, sam_files, res_file,
+                      output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+                      max_workers=1, sites_per_worker=3, out_fpath=None,
+                      bias_correct=bc_df)
+    outs_bc = np.array(list(gen.out['cf_mean']))
+    assert all(outs_bc > outs_base)
+    assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
+
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -100})
+    gen = Gen.reV_run('windpower', points, sam_files, res_file,
+                      output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+                      max_workers=1, sites_per_worker=3, out_fpath=None,
+                      bias_correct=bc_df)
+    for k, arr in gen.out.items():
+        assert (np.array(arr) == 0).all()
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

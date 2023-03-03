@@ -391,7 +391,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     @classmethod
     def reV_run(cls, points_control, res_file, site_df,
                 lr_res_file=None, output_request=('cf_mean',),
-                drop_leap=False, gid_map=None, nn_map=None):
+                drop_leap=False, gid_map=None, nn_map=None,
+                bias_correct=None):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -425,6 +426,14 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             Optional 1D array of nearest neighbor mappings associated with the
             res_file to lr_res_file spatial mapping. For details on this
             argument, see the rex.MultiResolutionResource docstring.
+        bias_correct : None | pd.DataFrame
+            None if not provided or extracted DataFrame with wind or solar
+            resource bias correction table. This has columns: gid (can be index
+            name), adder, scalar. If both adder and scalar are present, the
+            wind or solar resource is corrected by (res*scalar)+adder. If
+            either adder or scalar is not present, scalar defaults to 1 and
+            adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI
+            are corrected with the same correction factors.
 
         Returns
         -------
@@ -443,7 +452,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
                                          output_request=output_request,
                                          gid_map=gid_map,
                                          lr_res_file=lr_res_file,
-                                         nn_map=nn_map)
+                                         nn_map=nn_map,
+                                         bias_correct=bias_correct)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
