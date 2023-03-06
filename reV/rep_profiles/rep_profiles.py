@@ -49,7 +49,6 @@ class RepresentativeMethods:
             representative meanoid / medianoid profile will be returned
             directly
         """
-        log_versions(logger)
         self._rep_method = self.rep_methods[rep_method]
         self._err_method = self.err_methods[err_method]
         self._profiles = profiles
@@ -311,6 +310,8 @@ class RegionRepProfile:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -417,6 +418,8 @@ class RegionRepProfile:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         attr_name : str
             Column label to extract flattened data from (gen_gids,
             gid_counts, etc...)
@@ -517,6 +520,8 @@ class RegionRepProfile:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -564,6 +569,8 @@ class RepProfilesBase(ABC):
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         reg_cols : str | list | None
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
@@ -631,11 +638,15 @@ class RepProfilesBase(ABC):
         ----------
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
 
         Returns
         -------
         rev_summary : pd.DataFrame
-            Aggregated rev supply curve summary file.
+            Aggregated rev supply curve summary file. Full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         """
 
         if isinstance(rev_summary, str):
@@ -692,7 +703,9 @@ class RepProfilesBase(ABC):
         cf_dset : str
             Dataset name to pull generation profiles from.
         rev_summary : pd.DataFrame
-            Aggregated rev supply curve summary file.
+            Aggregated rev supply curve summary file. Full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         """
         with Resource(gen_fpath) as res:
             dsets = res.datasets
@@ -882,6 +895,8 @@ class RepProfiles(RepProfilesBase):
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         reg_cols : str | list | None
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
@@ -903,6 +918,7 @@ class RepProfiles(RepProfilesBase):
             Number of representative profiles to save to fout.
         """
 
+        log_versions(logger)
         logger.info('Finding representative profiles that are most similar '
                     'to the weighted meanoid for each supply curve region.')
 
@@ -1120,6 +1136,8 @@ class RepProfiles(RepProfilesBase):
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
+            Must include "res_gids", "gen_gids", and the "weight" column (if
+            weight is not None)
         reg_cols : str | list | None
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
