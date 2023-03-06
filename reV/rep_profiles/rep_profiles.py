@@ -300,9 +300,9 @@ class RepresentativeMethods:
 class RegionRepProfile:
     """Framework to handle rep profile for one resource region"""
 
-    def __init__(self, gen_fpath, rev_summary, gid_col='gen_gids',
-                 cf_dset='cf_profile', rep_method='meanoid', err_method='rmse',
-                 weight='gid_counts', n_profiles=1):
+    def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse', weight='gid_counts',
+                 n_profiles=1):
         """
         Parameters
         ----------
@@ -311,9 +311,6 @@ class RegionRepProfile:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -326,14 +323,13 @@ class RegionRepProfile:
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
+            weight values corresponding to the res_gids in the same row.
         n_profiles : int
             Number of representative profiles to retrieve.
         """
 
         self._gen_fpath = gen_fpath
         self._rev_summary = rev_summary
-        self._gid_col = gid_col
         self._cf_dset = cf_dset
         self._profiles = None
         self._source_profiles = None
@@ -343,6 +339,50 @@ class RegionRepProfile:
         self._err_method = err_method
         self._weight = weight
         self._n_profiles = n_profiles
+        self._gen_gids = None
+        self._res_gids = None
+
+        self._init_profiles_weights()
+
+    def _init_profiles_weights(self):
+        """Initialize the base source profiles and weight arrays"""
+        gen_gids = self._get_region_attr(self._rev_summary, 'gen_gids')
+        res_gids = self._get_region_attr(self._rev_summary, 'res_gids')
+
+        self._weights = np.ones(len(res_gids))
+        if self._weight is not None:
+            self._weights = self._get_region_attr(self._rev_summary,
+                                                  self._weight)
+
+        df = pd.DataFrame({'gen_gids': gen_gids,
+                           'res_gids': res_gids,
+                           'weights': self._weights})
+        df = df.sort_values('res_gids')
+        self._gen_gids = df['gen_gids'].values
+        self._res_gids = df['res_gids'].values
+        if self._weight is not None:
+            self._weights = df['weights'].values
+        else:
+            self._weights = None
+
+        with Resource(self._gen_fpath) as res:
+            meta = res.meta
+
+            assert 'gid' in meta
+            source_res_gids = meta['gid'].values
+            msg = ('Resource gids from "gid" column in meta data from "{}" '
+                   'must be sorted! reV generation should always be run with '
+                   'sequential project points.'.format(self._gen_fpath))
+            assert np.all(source_res_gids[:-1] <= source_res_gids[1:]), msg
+
+            missing = set(self._res_gids) - set(source_res_gids)
+            msg = ('The following resource gids were found in the rev summary '
+                   'supply curve file but not in the source generation meta '
+                   'data: {}'.format(missing))
+            assert not any(missing), msg
+
+            iloc = np.where(np.isin(source_res_gids, self._res_gids))[0]
+            self._source_profiles = res[self._cf_dset, :, iloc]
 
     @property
     def source_profiles(self):
@@ -353,11 +393,6 @@ class RegionRepProfile:
         profiles : np.ndarray
             Timeseries array of cf profile data.
         """
-        if self._source_profiles is None:
-            gen_gids = self._get_region_attr(self._rev_summary, self._gid_col)
-            with Resource(self._gen_fpath) as res:
-                self._source_profiles = res[self._cf_dset, :, gen_gids]
-
         return self._source_profiles
 
     @property
@@ -371,15 +406,6 @@ class RegionRepProfile:
             curve table data in the weight column should have a list of weight
             values corresponding to the gen_gids list in the same row.
         """
-
-        if self._weights is None:
-            if self._weight is None:
-                self._weights = None
-            else:
-                self._weights = self._get_region_attr(self._rev_summary,
-                                                      self._weight)
-                self._weights = np.array(self._weights)
-
         return self._weights
 
     @staticmethod
@@ -422,14 +448,12 @@ class RegionRepProfile:
         if self.weights is not None:
             if len(self.weights) != self.source_profiles.shape[1]:
                 e = ('Weights column "{}" resulted in {} weight scalars '
-                     'which doesnt match gid column "{}" which yields '
+                     'which doesnt match gid column which yields '
                      'profiles with shape {}.'
                      .format(self._weight, len(self.weights),
-                             self._gid_col, self.source_profiles.shape))
-                gen_gids = self._get_region_attr(self._rev_summary,
-                                                 self._gid_col)
-                logger.debug('Gids from column "{}" with len {}: {}'
-                             .format(self._gid_col, len(gen_gids), gen_gids))
+                             self.source_profiles.shape))
+                logger.debug('Gids from column "res_gids" with len {}: {}'
+                             .format(len(self._res_gids), self._res_gids))
                 logger.debug('Weights from column "{}" with len {}: {}'
                              .format(self._weight, len(self.weights),
                                      self.weights))
@@ -460,7 +484,7 @@ class RegionRepProfile:
     @property
     def rep_gen_gids(self):
         """Get the representative profile gen gids of this region."""
-        gids = self._get_region_attr(self._rev_summary, self._gid_col)
+        gids = self._gen_gids
         if self.i_reps[0] is None:
             rep_gids = None
         else:
@@ -471,11 +495,7 @@ class RegionRepProfile:
     @property
     def rep_res_gids(self):
         """Get the representative profile resource gids of this region."""
-        if self._gid_col == 'gen_gids':
-            gids = self._get_region_attr(self._rev_summary, 'res_gids')
-        else:
-            gids = None
-
+        gids = self._res_gids
         if self.i_reps[0] is None or gids is None:
             rep_gids = [None]
         else:
@@ -484,7 +504,7 @@ class RegionRepProfile:
         return rep_gids
 
     @classmethod
-    def get_region_rep_profile(cls, gen_fpath, rev_summary, gid_col='gen_gids',
+    def get_region_rep_profile(cls, gen_fpath, rev_summary,
                                cf_dset='cf_profile', rep_method='meanoid',
                                err_method='rmse', weight='gid_counts',
                                n_profiles=1):
@@ -497,9 +517,6 @@ class RegionRepProfile:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -512,7 +529,7 @@ class RegionRepProfile:
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
+            weight values corresponding to the res_gids in the same row.
         n_profiles : int
             Number of representative profiles to retrieve.
 
@@ -527,7 +544,7 @@ class RegionRepProfile:
         res_gid_reps : list
             Resource gid(s) of the representative profile(s).
         """
-        r = cls(gen_fpath, rev_summary, gid_col=gid_col, cf_dset=cf_dset,
+        r = cls(gen_fpath, rev_summary, cf_dset=cf_dset,
                 rep_method=rep_method, err_method=err_method, weight=weight,
                 n_profiles=n_profiles)
 
@@ -538,8 +555,7 @@ class RepProfilesBase(ABC):
     """Abstract utility framework for representative profile run classes."""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols=None,
-                 gid_col='gen_gids', cf_dset='cf_profile',
-                 rep_method='meanoid', err_method='rmse',
+                 cf_dset='cf_profile', rep_method='meanoid', err_method='rmse',
                  weight='gid_counts', n_profiles=1):
         """
         Parameters
@@ -552,9 +568,6 @@ class RepProfilesBase(ABC):
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -567,7 +580,7 @@ class RepProfilesBase(ABC):
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
+            weight values corresponding to the res_gids in the same row.
         n_profiles : int
             Number of representative profiles to save to fout.
         """
@@ -576,8 +589,6 @@ class RepProfilesBase(ABC):
                     .format(gen_fpath))
         logger.info('Running rep profiles with rev_summary: "{}"'
                     .format(rev_summary))
-        logger.info('Running rep profiles with gid column: "{}"'
-                    .format(gid_col))
         logger.info('Running rep profiles with region columns: "{}"'
                     .format(reg_cols))
         logger.info('Running rep profiles with representative method: "{}"'
@@ -588,7 +599,6 @@ class RepProfilesBase(ABC):
                     .format(weight))
 
         self._weight = weight
-        self._gid_col = gid_col
         self._n_profiles = n_profiles
         self._cf_dset = cf_dset
         self._gen_fpath = gen_fpath
@@ -599,7 +609,8 @@ class RepProfilesBase(ABC):
 
         self._check_req_cols(self._rev_summary, self._reg_cols)
         self._check_req_cols(self._rev_summary, self._weight)
-        self._check_req_cols(self._rev_summary, self._gid_col)
+        self._check_req_cols(self._rev_summary, 'res_gids')
+        self._check_req_cols(self._rev_summary, 'gen_gids')
 
         self._check_rev_gen(gen_fpath, cf_dset, self._rev_summary)
 
@@ -861,9 +872,8 @@ class RepProfiles(RepProfilesBase):
     error metric vs. a mean or median profile.
     """
 
-    def __init__(self, gen_fpath, rev_summary, reg_cols, gid_col='gen_gids',
-                 cf_dset='cf_profile', rep_method='meanoid',
-                 err_method='rmse', weight='gid_counts',
+    def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse', weight='gid_counts',
                  n_profiles=1):
         """
         Parameters
@@ -876,9 +886,6 @@ class RepProfiles(RepProfilesBase):
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -891,7 +898,7 @@ class RepProfiles(RepProfilesBase):
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
+            weight values corresponding to the res_gids in the same row.
         n_profiles : int
             Number of representative profiles to save to fout.
         """
@@ -911,7 +918,7 @@ class RepProfiles(RepProfilesBase):
             reg_cols = list(reg_cols)
 
         super().__init__(gen_fpath, rev_summary, reg_cols=reg_cols,
-                         gid_col=gid_col, cf_dset=cf_dset,
+                         cf_dset=cf_dset,
                          rep_method=rep_method, err_method=err_method,
                          weight=weight, n_profiles=n_profiles)
 
@@ -976,9 +983,9 @@ class RepProfiles(RepProfilesBase):
                              .format(i + 1, len(meta_static), region_dict))
                 out = RegionRepProfile.get_region_rep_profile(
                     self._gen_fpath, self._rev_summary[mask],
-                    gid_col=self._gid_col, cf_dset=self._cf_dset,
-                    rep_method=self._rep_method, err_method=self._err_method,
-                    weight=self._weight, n_profiles=self._n_profiles)
+                    cf_dset=self._cf_dset, rep_method=self._rep_method,
+                    err_method=self._err_method, weight=self._weight,
+                    n_profiles=self._n_profiles)
                 profiles, _, ggids, rgids = out
                 logger.info('Profile {} out of {} complete '
                             'for region: {}'
@@ -1038,7 +1045,6 @@ class RepProfiles(RepProfilesBase):
                         future = exe.submit(
                             RegionRepProfile.get_region_rep_profile,
                             self._gen_fpath, self._rev_summary[mask],
-                            gid_col=self._gid_col,
                             cf_dset=self._cf_dset,
                             rep_method=self._rep_method,
                             err_method=self._err_method,
@@ -1101,10 +1107,10 @@ class RepProfiles(RepProfilesBase):
         logger.info('Representative profiles complete!')
 
     @classmethod
-    def run(cls, gen_fpath, rev_summary, reg_cols, gid_col='gen_gids',
-            cf_dset='cf_profile', rep_method='meanoid', err_method='rmse',
-            weight='gid_counts', n_profiles=1, fout=None,
-            save_rev_summary=True, scaled_precision=False, max_workers=None):
+    def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
+            rep_method='meanoid', err_method='rmse', weight='gid_counts',
+            n_profiles=1, fout=None, save_rev_summary=True,
+            scaled_precision=False, max_workers=None):
         """Run representative profiles by finding the closest single profile
         to the weighted meanoid for each SC region.
 
@@ -1118,9 +1124,6 @@ class RepProfiles(RepProfilesBase):
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
-        gid_col : str
-            Column label in rev_summary that contains the generation gids
-            (data index in gen_fpath).
         cf_dset : str
             Dataset name to pull generation profiles from.
         rep_method : str
@@ -1133,7 +1136,7 @@ class RepProfiles(RepProfilesBase):
         weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
-            weight values corresponding to the gid_col in the same row.
+            weight values corresponding to the res_gids in the same row.
         n_profiles : int
             Number of representative profiles to save to fout.
         fout : str, optional
@@ -1160,8 +1163,8 @@ class RepProfiles(RepProfilesBase):
             Datetime Index for represntative profiles
         """
 
-        rp = cls(gen_fpath, rev_summary, reg_cols, gid_col=gid_col,
-                 cf_dset=cf_dset, rep_method=rep_method, err_method=err_method,
+        rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                 rep_method=rep_method, err_method=err_method,
                  n_profiles=n_profiles, weight=weight)
 
         rp._run(fout=fout, save_rev_summary=save_rev_summary,

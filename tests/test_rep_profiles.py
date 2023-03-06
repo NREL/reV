@@ -60,7 +60,7 @@ def test_meanoid():
     sites = np.arange(100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
-    r = RegionRepProfile(GEN_FPATH, rev_summary)
+    r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles)
 
@@ -86,7 +86,7 @@ def test_weighted_meanoid():
     sites = np.arange(50)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
-    r = RegionRepProfile(GEN_FPATH, rev_summary)
+    r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles, weights=None)
 
@@ -140,15 +140,16 @@ def test_sc_points():
 
 def test_agg_profile():
     """Test aggregation of weighted meanoid profile for each SC point."""
-
     # make up a rev aggregation summary to pull profiles from GEN_FPATH
-    res_gids = [[0, 1, 2], [10, 11, 12], [54, 61]]
-    gid_counts = [[50, 3, 1], [123, 432, 452], [50, 50]]
+    gen_gids = [[1, 2], [2, 3, 6], [10, 11, 12], [77, 73]]
+    res_gids = [[10, 9], [0, 1, 2], [10, 11, 12], [54, 61]]
+    gid_counts = [[10, 1], [50, 3, 1], [123, 432, 452], [50, 50]]
+    gen_gids = [json.dumps(x) for x in gen_gids]
     res_gids = [json.dumps(x) for x in res_gids]
     gid_counts = [json.dumps(x) for x in gid_counts]
-    timezone = np.random.choice([-4, -5, -6, -7], 3)
-    rev_summary = pd.DataFrame({'sc_gid': np.arange(3),
-                                'gen_gids': res_gids,
+    timezone = np.random.choice([-4, -5, -6, -7], 4)
+    rev_summary = pd.DataFrame({'sc_gid': np.arange(4),
+                                'gen_gids': gen_gids,
                                 'res_gids': res_gids,
                                 'gid_counts': gid_counts,
                                 'timezone': timezone})
@@ -157,15 +158,24 @@ def test_agg_profile():
                                            cf_dset='cf_profile',
                                            scaled_precision=False,
                                            err_method=None,
-                                           max_workers=None)
+                                           max_workers=1)
 
     for index in rev_summary.index:
         gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
+        res_gids = json.loads(rev_summary.loc[index, 'res_gids'])
         weights = np.array(json.loads(rev_summary.loc[index, 'gid_counts']))
 
         with Resource(GEN_FPATH) as res:
-            raw_profiles = res['cf_profile', :, gen_gids]
-            last = res['cf_profile', :, gen_gids[-1]]
+            meta = res.meta
+
+            raw_profiles = []
+            for gid in res_gids:
+                iloc = np.where(meta['gid'] == gid)[0][0]
+                prof = np.expand_dims(res['cf_profile', :, iloc], 1)
+                raw_profiles.append(prof)
+
+            last = raw_profiles[-1].flatten()
+            raw_profiles = np.hstack(raw_profiles)
 
         assert np.allclose(raw_profiles[:, -1], last)
 
