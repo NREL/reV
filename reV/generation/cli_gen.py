@@ -303,9 +303,9 @@ def make_fout(name, year):
               'correction table. This has columns: gid, adder, scalar. If '
               'both adder and scalar are present, the wind or solar resource '
               'is corrected by (res*scalar)+adder. If either is not present, '
-              'scalar defaults to 1 and adder to 0. Only windspeed, GHI, and '
-              'DNI are corrected. GHI and DNI are corrected with the same '
-              'correction factors.')
+              'scalar defaults to 1 and adder to 0. Only windspeed or GHI+DNI '
+              'are corrected depending on the technology. GHI and DNI are '
+              'corrected with the same correction factors.')
 @click.option('--write_mapped_gids', '-wmg', is_flag=True,
               help='Option to write mapped gids to output meta instead of '
               'resource gids.')
@@ -638,8 +638,8 @@ def get_node_cmd(name, tech, sam_files, res_file, out_fpath,
         table. This has columns: gid, adder, scalar. If both adder and scalar
         are present, the wind or solar resource is corrected by
         (res*scalar)+adder. If either is not present, scalar defaults to 1 and
-        adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI are
-        corrected with the same correction factors.
+        adder to 0. Only windspeed or GHI+DNI are corrected depending on the
+        technology. GHI and DNI are corrected with the same correction factors.
     verbose : bool
         Flag to turn on debug logging. Default is False.
     write_mapped_gids : bool

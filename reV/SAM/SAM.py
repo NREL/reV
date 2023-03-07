@@ -259,8 +259,10 @@ class SamResourceRetriever:
             name), adder, scalar. If both adder and scalar are present, the
             wind or solar resource is corrected by (res*scalar)+adder. If
             either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI
-            are corrected with the same correction factors.
+            adder to 0. Only windspeed or GHI+DNI are corrected depending on
+            the technology. GHI and DNI are corrected with the same correction
+            factors.
+
 
         Returns
         -------

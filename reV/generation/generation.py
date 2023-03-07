@@ -167,9 +167,9 @@ class Gen(BaseGen):
             correction table. This has columns: gid (can be index name), adder,
             scalar. If both adder and scalar are present, the wind or solar
             resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed, GHI,
-            and DNI are corrected. GHI and DNI are corrected with the same
-            correction factors.
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
@@ -351,8 +351,9 @@ class Gen(BaseGen):
             name), adder, scalar. If both adder and scalar are present, the
             wind or solar resource is corrected by (res*scalar)+adder. If
             either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI
-            are corrected with the same correction factors.
+            adder to 0. Only windspeed or GHI+DNI are corrected depending on
+            the technology. GHI and DNI are corrected with the same correction
+            factors.
 
         Returns
         -------
@@ -510,9 +511,9 @@ class Gen(BaseGen):
             correction table. This has columns: gid (can be index name), adder,
             scalar. If both adder and scalar are present, the wind or solar
             resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed, GHI,
-            and DNI are corrected. GHI and DNI are corrected with the same
-            correction factors.
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
 
         Returns
         -------
@@ -522,8 +523,9 @@ class Gen(BaseGen):
             name), adder, scalar. If both adder and scalar are present, the
             wind or solar resource is corrected by (res*scalar)+adder. If
             either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed, GHI, and DNI are corrected. GHI and DNI
-            are corrected with the same correction factors.
+            adder to 0. Only windspeed or GHI+DNI are corrected depending on
+            the technology. GHI and DNI are corrected with the same correction
+            factors.
         """
 
         if isinstance(bias_correct, type(None)):
@@ -672,9 +674,9 @@ class Gen(BaseGen):
             correction table. This has columns: gid (can be index name), adder,
             scalar. If both adder and scalar are present, the wind or solar
             resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed, GHI,
-            and DNI are corrected. GHI and DNI are corrected with the same
-            correction factors.
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
 
         Returns
         -------
