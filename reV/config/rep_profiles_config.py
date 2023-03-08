@@ -76,7 +76,9 @@ class RepProfilesConfig(AnalysisConfig):
 
     @property
     def rev_summary(self):
-        """Get the rev summary input arg."""
+        """Get the rev summary input arg. Must be a supply curve or aggregation
+        csv with columns "gen_gids", "res_gids", and the weight column if
+        provided."""
 
         fpath = self['rev_summary']
 

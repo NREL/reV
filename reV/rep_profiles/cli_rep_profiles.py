@@ -151,7 +151,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--gen_fpath', '-g', type=click.Path(exists=True), required=True,
               help='Filepath to reV gen file.')
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
-              required=True, help='Filepath to reV SC summary (agg) file.')
+              required=True, help='Filepath to reV SC summary (agg) file. '
+              'Must have columns "gen_gids", "res_gids", and the weight '
+              'column if provided.')
 @click.option('--reg_cols', '-rc', type=STRLIST, required=True,
               help='List of column rev summary column labels to define '
               'regions to get rep profiles for. If you want a profile for '
