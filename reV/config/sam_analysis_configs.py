@@ -228,6 +228,22 @@ class GenConfig(SAMAnalysisConfig):
         return self.get('write_mapped_gids', False)
 
     @property
+    def bias_correct(self):
+        """
+        Optional csv filepath to a wind or solar resource bias correction
+        table. This has columns: gid, adder, scalar. If both adder and scalar
+        are present, the wind or solar resource is corrected by
+        (res*scalar)+adder. If either is not present, scalar defaults to 1 and
+        adder to 0. Only windspeed or GHI+DNI are corrected depending on the
+        technology. GHI and DNI are corrected with the same correction factors.
+
+        Returns
+        -------
+        str
+        """
+        return self.get('bias_correct', None)
+
+    @property
     def resource_file(self):
         """
         get base resource_file

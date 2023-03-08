@@ -536,6 +536,39 @@ def test_pv_clearsky():
             assert np.allclose(v, gen_cs.out[k])
 
 
+def test_irrad_bias_correct():
+    """Test reV generation with bias correction"""
+    year = 2012
+    points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
+
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc')
+
+    gen_base = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
+                           max_workers=1, sites_per_worker=1, out_fpath=None,
+                           output_request=output_request)
+
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 50})
+    gen = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request, bias_correct=bc_df)
+
+    assert (gen_base.out['cf_mean'] < gen.out['cf_mean']).all()
+    assert (gen_base.out['ghi_mean'] < gen.out['ghi_mean']).all()
+
+    mask = (gen_base.out['cf_profile'] <= gen.out['cf_profile'])
+    assert (mask.sum() / mask.size) > 0.99
+
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -1500})
+    gen = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request, bias_correct=bc_df)
+    for arr in gen.out.values():
+        assert (arr == 0).all()
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

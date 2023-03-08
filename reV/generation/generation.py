@@ -118,7 +118,8 @@ class Gen(BaseGen):
     def __init__(self, points_control, res_file, lr_res_file=None,
                  output_request=('cf_mean',), site_data=None, gid_map=None,
                  out_fpath=None, drop_leap=False, mem_util_lim=0.4,
-                 scale_outputs=True, write_mapped_gids=False):
+                 scale_outputs=True, write_mapped_gids=False,
+                 bias_correct=None):
         """
         Parameters
         ----------
@@ -161,6 +162,14 @@ class Gen(BaseGen):
         write_mapped_gids : bool
             Option to write mapped gids to output meta instead of resource
             gids.
+        bias_correct : str | pd.DataFrame
+            Optional DataFrame or csv filepath to a wind or solar resource bias
+            correction table. This has columns: gid (can be index name), adder,
+            scalar. If both adder and scalar are present, the wind or solar
+            resource is corrected by (res*scalar)+adder. If either is not
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
@@ -186,6 +195,7 @@ class Gen(BaseGen):
         self._multi_h5_res, self._hsds = check_res_file(res_file)
         self._gid_map = self._parse_gid_map(gid_map)
         self._nn_map = self._parse_nn_map()
+        self._bc = self._parse_bc(bias_correct)
 
         # initialize output file
         self._init_fpath()
@@ -302,7 +312,7 @@ class Gen(BaseGen):
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, lr_res_file=None,
             output_request=None, scale_outputs=True, gid_map=None,
-            nn_map=None):
+            nn_map=None, bias_correct=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -335,6 +345,15 @@ class Gen(BaseGen):
             Optional 1D array of nearest neighbor mappings associated with the
             res_file to lr_res_file spatial mapping. For details on this
             argument, see the rex.MultiResolutionResource docstring.
+        bias_correct : None | pd.DataFrame
+            None if not provided or extracted DataFrame with wind or solar
+            resource bias correction table. This has columns: gid (can be index
+            name), adder, scalar. If both adder and scalar are present, the
+            wind or solar resource is corrected by (res*scalar)+adder. If
+            either adder or scalar is not present, scalar defaults to 1 and
+            adder to 0. Only windspeed or GHI+DNI are corrected depending on
+            the technology. GHI and DNI are corrected with the same correction
+            factors.
 
         Returns
         -------
@@ -353,7 +372,8 @@ class Gen(BaseGen):
                 points_control, res_file, site_df,
                 lr_res_file=lr_res_file,
                 output_request=output_request,
-                gid_map=gid_map, nn_map=nn_map)
+                gid_map=gid_map, nn_map=nn_map,
+                bias_correct=bias_correct)
 
         except Exception as e:
             out = {}
@@ -481,6 +501,61 @@ class Gen(BaseGen):
 
         return nn_map
 
+    def _parse_bc(self, bias_correct):
+        """Parse the bias correction data.
+
+        Parameters
+        ----------
+        bias_correct : str | pd.DataFrame | None
+            Optional DataFrame or csv filepath to a wind or solar resource bias
+            correction table. This has columns: gid (can be index name), adder,
+            scalar. If both adder and scalar are present, the wind or solar
+            resource is corrected by (res*scalar)+adder. If either is not
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
+
+        Returns
+        -------
+        bias_correct : None | pd.DataFrame
+            None if not provided or extracted DataFrame with wind or solar
+            resource bias correction table. This has columns: gid (can be index
+            name), adder, scalar. If both adder and scalar are present, the
+            wind or solar resource is corrected by (res*scalar)+adder. If
+            either adder or scalar is not present, scalar defaults to 1 and
+            adder to 0. Only windspeed or GHI+DNI are corrected depending on
+            the technology. GHI and DNI are corrected with the same correction
+            factors.
+        """
+
+        if isinstance(bias_correct, type(None)):
+            return bias_correct
+
+        elif isinstance(bias_correct, str):
+            bias_correct = pd.read_csv(bias_correct)
+
+        msg = ('Bias correction data must be a filepath to csv or a dataframe '
+               'but received: {}'.format(type(bias_correct)))
+        assert isinstance(bias_correct, pd.DataFrame), msg
+
+        if 'adder' not in bias_correct:
+            logger.info('Bias correction table provided, but "adder" not '
+                        'found, defaulting to 0.')
+            bias_correct['adder'] = 0
+
+        if 'scalar' not in bias_correct:
+            logger.info('Bias correction table provided, but "scalar" not '
+                        'found, defaulting to 1.')
+            bias_correct['scalar'] = 1
+
+        msg = ('Bias correction table must have "gid" column but only found: '
+               '{}'.format(list(bias_correct.columns)))
+        assert 'gid' in bias_correct, msg
+
+        bias_correct = bias_correct.set_index('gid')
+
+        return bias_correct
+
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
 
@@ -515,7 +590,8 @@ class Gen(BaseGen):
                 gid_map=None, max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, out_fpath=None, mem_util_lim=0.4,
-                scale_outputs=True, write_mapped_gids=False):
+                scale_outputs=True, write_mapped_gids=False,
+                bias_correct=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -593,6 +669,14 @@ class Gen(BaseGen):
         write_mapped_gids : bool
             Option to write mapped gids to output meta instead of resource
             gids.
+        bias_correct : str | pd.DataFrame
+            Optional DataFrame or csv filepath to a wind or solar resource bias
+            correction table. This has columns: gid (can be index name), adder,
+            scalar. If both adder and scalar are present, the wind or solar
+            resource is corrected by (res*scalar)+adder. If either is not
+            present, scalar defaults to 1 and adder to 0. Only windspeed or
+            GHI+DNI are corrected depending on the technology. GHI and DNI are
+            corrected with the same correction factors.
 
         Returns
         -------
@@ -614,7 +698,8 @@ class Gen(BaseGen):
                   out_fpath=out_fpath,
                   mem_util_lim=mem_util_lim,
                   scale_outputs=scale_outputs,
-                  write_mapped_gids=write_mapped_gids)
+                  write_mapped_gids=write_mapped_gids,
+                  bias_correct=bias_correct)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
@@ -623,6 +708,7 @@ class Gen(BaseGen):
                   'scale_outputs': scale_outputs,
                   'gid_map': gen._gid_map,
                   'nn_map': gen._nn_map,
+                  'bias_correct': gen._bc,
                   }
 
         logger.info('Running reV generation for: {}'.format(pc))
