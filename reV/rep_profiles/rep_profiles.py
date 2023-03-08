@@ -299,6 +299,9 @@ class RepresentativeMethods:
 class RegionRepProfile:
     """Framework to handle rep profile for one resource region"""
 
+    RES_GID_COL = 'res_gids'
+    GEN_GID_COL = 'gen_gids'
+
     def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse', weight='gid_counts',
                  n_profiles=1):
@@ -347,20 +350,20 @@ class RegionRepProfile:
 
     def _init_profiles_weights(self):
         """Initialize the base source profiles and weight arrays"""
-        gen_gids = self._get_region_attr(self._rev_summary, 'gen_gids')
-        res_gids = self._get_region_attr(self._rev_summary, 'res_gids')
+        gen_gids = self._get_region_attr(self._rev_summary, self.GEN_GID_COL)
+        res_gids = self._get_region_attr(self._rev_summary, self.RES_GID_COL)
 
         self._weights = np.ones(len(res_gids))
         if self._weight is not None:
             self._weights = self._get_region_attr(self._rev_summary,
                                                   self._weight)
 
-        df = pd.DataFrame({'gen_gids': gen_gids,
-                           'res_gids': res_gids,
+        df = pd.DataFrame({self.GEN_GID_COL: gen_gids,
+                           self.RES_GID_COL: res_gids,
                            'weights': self._weights})
-        df = df.sort_values('res_gids')
-        self._gen_gids = df['gen_gids'].values
-        self._res_gids = df['res_gids'].values
+        df = df.sort_values(self.RES_GID_COL)
+        self._gen_gids = df[self.GEN_GID_COL].values
+        self._res_gids = df[self.RES_GID_COL].values
         if self._weight is not None:
             self._weights = df['weights'].values
         else:
@@ -616,8 +619,8 @@ class RepProfilesBase(ABC):
 
         self._check_req_cols(self._rev_summary, self._reg_cols)
         self._check_req_cols(self._rev_summary, self._weight)
-        self._check_req_cols(self._rev_summary, 'res_gids')
-        self._check_req_cols(self._rev_summary, 'gen_gids')
+        self._check_req_cols(self._rev_summary, RegionRepProfile.RES_GID_COL)
+        self._check_req_cols(self._rev_summary, RegionRepProfile.GEN_GID_COL)
 
         self._check_rev_gen(gen_fpath, cf_dset, self._rev_summary)
 
