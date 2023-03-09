@@ -139,7 +139,7 @@ class DefaultWindPower:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(DEFAULTSDIR, 'WY Southern-Flat Lands.csv')
+        res_file = os.path.join(DEFAULTSDIR, 'WY Southern-Flat Lands.srw')
         obj = PySamWindPower.default('WindPowerNone')
         obj.Resource.wind_resource_filename = res_file
         obj.execute()
