@@ -8,11 +8,12 @@ Created on Dec 16 2019
 """
 
 import os
-import pandas as pd
 import numpy as np
 import shutil
 import pytest
 import tempfile
+
+from rex.utilities.utilities import pd_date_range
 
 from reV.handlers.outputs import Outputs
 from reV.nrwal.nrwal import RevNrwal
@@ -38,7 +39,7 @@ def test_nrwal():
         nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
-            f.time_index = pd.date_range('20100101', '20110101',
+            f.time_index = pd_date_range('20100101', '20110101',
                                          closed='right', freq='1h')
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
@@ -153,7 +154,7 @@ def test_nrwal_constant_eq_output_request():
         nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
-            f.time_index = pd.date_range('20100101', '20110101',
+            f.time_index = pd_date_range('20100101', '20110101',
                                          closed='right', freq='1h')
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
