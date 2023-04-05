@@ -117,6 +117,9 @@ def test_agg_summary():
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
+        s = s.fillna('None')
+        s_baseline = s_baseline.fillna('None')
+
         assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
 
 
@@ -134,7 +137,6 @@ def test_multi_file_excl():
     with tempfile.TemporaryDirectory() as td:
         excl_temp_1 = os.path.join(td, 'excl1.h5')
         excl_temp_2 = os.path.join(td, 'excl2.h5')
-        excl_files = (excl_temp_1, excl_temp_2)
         shutil.copy(EXCL, excl_temp_1)
         shutil.copy(EXCL, excl_temp_2)
 
@@ -156,6 +158,9 @@ def test_multi_file_excl():
                                                  )
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+
+        summary = summary.fillna('None')
+        s_baseline = s_baseline.fillna('None')
 
         assert np.allclose(summary['area_sq_km'] * 2, s_baseline['area_sq_km'])
 
@@ -182,6 +187,9 @@ def test_pre_extract_inclusions(pre_extract):
             s[c] = s[c].astype(str)
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+
+        s = s.fillna('None')
+        s_baseline = s_baseline.fillna('None')
 
         assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
 

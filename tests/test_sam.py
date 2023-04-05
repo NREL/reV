@@ -7,7 +7,6 @@ from pkg_resources import get_distribution
 from packaging import version
 import pytest
 import numpy as np
-import pandas as pd
 import warnings
 
 from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv8,
@@ -20,6 +19,7 @@ from reV.utilities.exceptions import PySAMVersionWarning
 from reV.utilities.exceptions import InputError
 
 from rex.renewable_resource import NSRDB
+from rex.utilities.utilities import pd_date_range
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def test_leap_year_freq():
     """
     Test ensure_res_len with leap year data
     """
-    time_index = pd.date_range('2012', '2013', freq='h', closed='left')
+    time_index = pd_date_range('2012', '2013', freq='h', closed='left')
     arr = np.arange(len(time_index) * 10).reshape(len(time_index), 10)
     out = PvWattsv5.ensure_res_len(arr, time_index)
     assert np.allclose(arr[:8760], out)
@@ -112,7 +112,7 @@ def test_PV_lat_tilt(res, site_index):
 def test_time_interval(dt):
     """Test the method to get the 'time interval' from the time index obj."""
     baseline = {'1h': 1, '30min': 2, '5min': 12}
-    ti = pd.date_range('1-1-{y}'.format(y=2012), '1-1-{y}'.format(y=2013),
+    ti = pd_date_range('1-1-{y}'.format(y=2012), '1-1-{y}'.format(y=2013),
                        freq=dt)[:-1]
     interval = PvWattsv5.get_time_interval(ti)
     assert interval == baseline[dt]

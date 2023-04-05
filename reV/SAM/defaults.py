@@ -42,6 +42,7 @@ class AbstractDefaultFromConfigFile:
         """Initialize a defualt PySM object from a config file."""
         config_file = os.path.join(DEFAULTSDIR, cls.CONFIG_FILE_NAME)
 
+        # pylint: disable=no-member
         obj = cls.PYSAM_MODULE.new()
         with open(config_file, 'r') as f:
             config = json.load(f)
@@ -202,8 +203,9 @@ class DefaultMhkWave:
         data_dict['lon'] = 124.2477
         data_dict['tz'] = -7
         res_file = os.path.join(DEFAULTSDIR, 'US_Wave.csv')
-        for var, data in pd.read_csv(res_file).iteritems():
-            data_dict[var] = data.values.tolist()
+        df = pd.read_csv(res_file)
+        for col in df.columns:
+            data_dict[col] = df[col].values.flatten().tolist()
 
         obj = PySamMhkWave.default('MEwaveLCOECalculator')
         obj.MHKWave.wave_resource_model_choice = 1

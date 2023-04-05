@@ -37,7 +37,11 @@ def test_summarize(dataset):
         test = summary.summarize_dset(
             dataset, process_size=None, max_workers=1)
 
-    assert_frame_equal(test, baseline, check_dtype=False, atol=1e-5)
+    test = test.fillna('None')
+    baseline = baseline.fillna('None')
+
+    assert_frame_equal(test, baseline, check_dtype=False, atol=1e-5,
+                       check_index_type=False)
 
 
 def test_sc_summarize():
@@ -51,7 +55,8 @@ def test_sc_summarize():
     else:
         test.to_csv(baseline)
 
-    assert_frame_equal(test, baseline, check_dtype=False)
+    assert_frame_equal(test, baseline, check_dtype=False,
+                       check_index_type=False)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -11,6 +11,7 @@ import tempfile
 
 from reV.version import __version__
 from reV.handlers.outputs import Outputs
+from rex.utilities.utilities import pd_date_range
 
 
 arr1 = np.ones(100)
@@ -18,7 +19,7 @@ arr2 = np.ones((8760, 100))
 arr3 = np.ones((8760, 100), dtype=float) * 42.42
 meta = pd.DataFrame({'latitude': np.ones(100),
                      'longitude': np.zeros(100)})
-time_index = pd.date_range('20210101', '20220101', freq='1h', closed='right')
+time_index = pd_date_range('20210101', '20220101', freq='1h', closed='right')
 
 
 def test_create():

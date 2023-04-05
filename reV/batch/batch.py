@@ -239,7 +239,7 @@ class BatchJob:
             job_info['set_tag'] = str(self._set_tags[i])
             job_info['files'] = str(self.file_sets[i])
             job_info = pd.DataFrame(job_info, index=[job_tag])
-            table = table.append(job_info)
+            table = pd.concat([table, job_info])
 
         table.index.name = 'job'
 
