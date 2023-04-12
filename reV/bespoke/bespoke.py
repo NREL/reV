@@ -823,19 +823,26 @@ class BespokeSinglePlant:
         self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
         self._outputs["packing_polygons"] = \
             self.plant_optimizer.packing_polygons
-
-        self._outputs["n_turbines"] = self.plant_optimizer.nturbs
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
-        self._outputs["bespoke_aep"] = self.plant_optimizer.aep
-        self._outputs["bespoke_objective"] = self.plant_optimizer.objective
-        self._outputs["bespoke_capital_cost"] = \
+
+        self._meta["n_turbines"] = self.plant_optimizer.nturbs
+        self._meta["bespoke_aep"] = self.plant_optimizer.aep
+        self._meta["bespoke_objective"] = self.plant_optimizer.objective
+        self._meta["bespoke_capital_cost"] = \
             self.plant_optimizer.capital_cost
-        self._outputs["bespoke_fixed_operating_cost"] = \
+        self._meta["bespoke_fixed_operating_cost"] = \
             self.plant_optimizer.fixed_operating_cost
-        self._outputs["bespoke_variable_operating_cost"] = \
+        self._meta["bespoke_variable_operating_cost"] = \
             self.plant_optimizer.variable_operating_cost
-        self._outputs["included_area_capacity_density"] = \
+        self._meta["included_area"] = self.plant_optimizer.area
+        self._meta["included_area_capacity_density"] = \
             self.plant_optimizer.capacity_density
+        self._meta["convex_hull_area"] = \
+            self.plant_optimizer.convex_hull_area
+        self._meta["convex_hull_capacity_density"] = \
+            self.plant_optimizer.convex_hull_capacity_density
+        self._meta["full_cell_capacity_density"] = \
+            self.plant_optimizer.full_cell_capacity_density
 
         logger.debug('Plant layout optimization complete!')
 
