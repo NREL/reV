@@ -5,7 +5,7 @@ place turbines for bespoke wind plants
 """
 import numpy as np
 
-from shapely.geometry import Point, Polygon, MultiPolygon
+from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 
 from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
@@ -392,9 +392,8 @@ class PlaceTurbines:
     @none_until_optimized
     def convex_hull(self):
         """This is the convex hull of the turbine locations"""
-        turbines = MultiPolygon([Point(x, y)
-                                 for x,y in zip(self.turbine_x,
-                                                self.turbine_y)])
+        turbines = MultiPoint([Point(x, y)
+                               for x,y in zip(self.turbine_x, self.turbine_y)])
         return turbines.convex_hull
 
     @property
