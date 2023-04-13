@@ -112,9 +112,9 @@ def test_turbine_placement(gid=33):
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
         assert place_optimizer.capacity == place_optimizer.nturbs *\
             place_optimizer.turbine_capacity
-        assert place_optimizer.area == place_optimizer.full_polygons.area
+        assert place_optimizer.area == place_optimizer.full_polygons.area / 1e6
         assert place_optimizer.capacity_density == place_optimizer.capacity\
-            / place_optimizer.area * 1E3
+            / place_optimizer.area / 1E3
 
         place_optimizer.wind_plant["wind_farm_xCoordinates"] = \
             place_optimizer.turbine_x
@@ -226,8 +226,9 @@ def test_packing_algorithm(gid=33):
 
         assert len(optimizer.x_locations) < 165
         assert len(optimizer.x_locations) > 145
-        assert np.sum(optimizer.include_mask) ==\
-            optimizer.safe_polygons.area / (optimizer.pixel_side_length**2)
+        assert np.sum(optimizer.include_mask) == (
+            optimizer.safe_polygons.area
+            / (optimizer.pixel_side_length**2))
 
         bsp.close()
 
@@ -315,11 +316,12 @@ def test_single(gid=33):
         assert 'annual_energy-2013' in out
         assert 'annual_energy-means' in out
 
-        assert TURB_RATING * out['n_turbines'] == out['system_capacity']
+        assert (TURB_RATING * bsp.meta['n_turbines'].values[0]
+                == out['system_capacity'])
         x_coords = json.loads(bsp.meta['turbine_x_coords'].values[0])
         y_coords = json.loads(bsp.meta['turbine_y_coords'].values[0])
-        assert out['n_turbines'] == len(x_coords)
-        assert out['n_turbines'] == len(y_coords)
+        assert bsp.meta['n_turbines'].values[0] == len(x_coords)
+        assert bsp.meta['n_turbines'].values[0] == len(y_coords)
 
         for y in (2012, 2013):
             cf = out[f'cf_profile-{y}']
@@ -532,7 +534,7 @@ def test_bespoke():
             assert 'possible_x_coords' in meta
             assert 'possible_y_coords' in meta
 
-            dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
+            dsets_1d = ('system_capacity', 'cf_mean-2012',
                         'annual_energy-2012', 'cf_mean-means',
                         'extra_unused_data-2012')
             for dset in dsets_1d:
@@ -612,8 +614,9 @@ def test_consistent_eval_namespace(gid=33):
                                  )
         out = bsp.run_plant_optimization()
 
-        assert out["bespoke_aep"] == bsp.plant_optimizer.aep
-        assert out["bespoke_objective"] == bsp.plant_optimizer.objective
+        assert bsp.meta["bespoke_aep"].values[0] == bsp.plant_optimizer.aep
+        assert (bsp.meta["bespoke_objective"].values[0]
+                == bsp.plant_optimizer.objective)
 
         bsp.close()
 
