@@ -107,9 +107,9 @@ class GeneticAlgorithm():
             n = 5
         else:
             n = self.population_size
-        logger.debug('The first few parent individuals are:\n{}'
+        logger.debug('The first few parent individuals are: {}'
                      .format(self.parent_population[0:n]))
-        logger.debug('The first few parent fitness values are:\n{}'
+        logger.debug('The first few parent fitness values are: {}'
                      .format(self.parent_fitness[0:n]))
 
     def initialize_design_variables(self):
@@ -270,11 +270,11 @@ class GeneticAlgorithm():
             self.parent_population[np.argmin(self.parent_fitness)])
         self.optimized_design_variables = self.design_variables
 
-        logger.debug('The GA ran for this many generations:\n{}'
+        logger.debug('The GA ran for this many generations: {}'
                      .format(ngens))
-        logger.debug('The GA ran for this many seconds:\n{}'
+        logger.debug('The GA ran for this many seconds: {:.3f}'
                      .format(run_time))
-        logger.debug('The optimized function value was:\n{}'
+        logger.debug('The optimized function value was: {:.3e}'
                      .format(self.optimized_function_value))
-        logger.debug('The optimal design variables were:\n{}'
+        logger.debug('The optimal design variables were: {}'
                      .format(self.optimized_design_variables))

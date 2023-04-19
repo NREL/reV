@@ -56,7 +56,8 @@ class BespokeSinglePlant:
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
-                 eos_mult_baseline_cap_mw=200, close=True):
+                 eos_mult_baseline_cap_mw=200, prior_meta=None,
+                 close=True):
         """
         Parameters
         ----------
@@ -162,9 +163,14 @@ class BespokeSinglePlant:
             divided by the $-per-kW of a plant with this baseline
             capacity. By default, `200` (MW), which aligns the baseline
             with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
+        prior_meta : pd.DataFrame | None
+            Optional meta dataframe belonging to a prior run. This will only
+            run the power generation step and assume that all of the wind plant
+            layouts are fixed given the prior run.
         close : bool
             Flag to close object file handlers on exit.
         """
+
         logger.debug('Initializing BespokeSinglePlant for gid {}...'
                      .format(gid))
         logger.debug('Resource filepath: {}'.format(res))
@@ -206,7 +212,8 @@ class BespokeSinglePlant:
         self._baseline_cap_mw = eos_mult_baseline_cap_mw
 
         self._res_df = None
-        self._meta = None
+        self._prior_meta = prior_meta
+        self._meta = prior_meta
         self._wind_dist = None
         self._ws_edges = None
         self._wd_edges = None
@@ -336,6 +343,16 @@ class BespokeSinglePlant:
         mean_wind_dirs[(mean_wind_dirs < 0)] += 360
 
         return mean_wind_dirs
+
+    @property
+    def gid(self):
+        """SC point gid for this bespoke plant.
+
+        Returns
+        -------
+        int
+        """
+        return self.sc_point.gid
 
     @property
     def include_mask(self):
@@ -891,7 +908,13 @@ class BespokeSinglePlant:
         """
 
         with cls(*args, **kwargs) as bsp:
-            _ = bsp.run_plant_optimization()
+            if bsp._prior_meta is not None:
+                logger.debug('Skipping bespoke plant optimization for gid {}. '
+                             'Received prior meta data for this point.'
+                             .format(bsp.gid))
+            else:
+                _ = bsp.run_plant_optimization()
+
             _ = bsp.run_wind_plant_ts()
             bsp.agg_data_layers()
 
@@ -920,7 +943,7 @@ class BespokeWindPlants(AbstractAggregation):
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False):
+                 pre_extract_inclusions=False, prior_run=None):
         """
         Parameters
         ----------
@@ -1053,6 +1076,10 @@ class BespokeWindPlants(AbstractAggregation):
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
             the inclusion mask on the fly with parallel workers.
+        prior_run : str | None
+            Optional filepath to a bespoke output .h5 file belonging to a prior
+            run. This will only run the power generation step and assume that
+            all of the wind plant layouts are fixed given the prior run.
         """
 
         log_versions(logger)
@@ -1097,6 +1124,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._data_layers = data_layers
+        self._prior_meta = self._parse_prior_run(prior_run)
         self._outputs = {}
         self._check_files()
 
@@ -1173,6 +1201,64 @@ class BespokeWindPlants(AbstractAggregation):
                         tech='windpower', sites_per_worker=sites_per_worker)
 
         return pc
+
+    @staticmethod
+    def _parse_prior_run(prior_run):
+        """Extract bespoke meta data from prior run and verify that the run is
+        compatible with the new job specs.
+
+        Parameters
+        ----------
+        prior_run : str | None
+            Optional filepath to a bespoke output .h5 file belonging to a prior
+            run. This will only run the power generation step and assume that
+            all of the wind plant layouts are fixed given the prior run.
+
+        Returns
+        -------
+        meta : pd.DataFrame | None
+            Meta data from the previous bespoke run. This includes the
+            previously optimized wind farm layouts. All of the nested list
+            columns will be json loaded.
+        """
+
+        meta = None
+
+        if prior_run is not None:
+            assert os.path.isfile(prior_run)
+            assert prior_run.endswith('.h5')
+
+            with Outputs(prior_run, mode='r') as f:
+                meta = f.meta
+
+            for col in meta.columns:
+                val = meta[col].values[0]
+                if isinstance(val, str) and val[0] == '[' and val[-1] == ']':
+                    meta[col] = meta[col].apply(json.loads)
+
+        return meta
+
+    def _get_prior_meta(self, gid):
+        """Get the meta data for a given gid from the prior run (if available)
+
+        Parameters
+        ----------
+        gid : int
+            SC point gid for site to pull prior meta for.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            Prior meta data for just the requested gid.
+        """
+        meta = None
+
+        if self._prior_meta is not None:
+            mask = self._prior_meta['gid'] == gid
+            if any(mask):
+                meta = self._prior_meta[mask]
+
+        return meta
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -1408,6 +1494,7 @@ class BespokeWindPlants(AbstractAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
+                   prior_meta=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -1472,6 +1559,7 @@ class BespokeWindPlants(AbstractAggregation):
                         excl_area=excl_area,
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
+                        prior_meta=prior_meta,
                         close=False)
 
                 except EmptySupplyCurvePointError:
@@ -1589,7 +1677,7 @@ class BespokeWindPlants(AbstractAggregation):
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
-            out_fpath=None):
+            prior_run=None, out_fpath=None):
         """Run the bespoke wind plant optimization in serial or parallel.
         See BespokeWindPlants docstring for parameter description.
         """
@@ -1613,7 +1701,8 @@ class BespokeWindPlants(AbstractAggregation):
                   resolution=resolution,
                   excl_area=excl_area,
                   data_layers=data_layers,
-                  pre_extract_inclusions=pre_extract_inclusions)
+                  pre_extract_inclusions=pre_extract_inclusions,
+                  prior_run=prior_run)
 
         # parallel job distribution test.
         if objective_function == 'test':
@@ -1639,6 +1728,7 @@ class BespokeWindPlants(AbstractAggregation):
                                     resolution=bsp._resolution,
                                     excl_area=bsp._excl_area,
                                     data_layers=bsp._data_layers,
+                                    prior_meta=bsp._get_prior_meta(gid),
                                     gids=gid)
                 bsp._outputs.update(si)
         else:
