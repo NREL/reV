@@ -773,8 +773,9 @@ class RevPySam(Sam):
                         output = output.astype(np.int32)
 
                     if self._is_hourly(output):
-                        output = np.roll(output, int(-1 * self.meta['timezone']
-                                                     * self.time_interval))
+                        n_roll = int(-1 * self.meta['timezone'].values[0]
+                                     * self.time_interval)
+                        output = np.roll(output, n_roll)
 
                     self.outputs[key] = output
 

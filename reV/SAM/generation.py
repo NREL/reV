@@ -718,9 +718,10 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             if var != 'time_index':
 
                 # ensure that resource array length is multiple of 8760
-                arr = np.roll(
-                    self.ensure_res_len(arr, time_index),
-                    int(self._meta['timezone'] * self.time_interval))
+                arr = self.ensure_res_len(arr, time_index)
+                n_roll = int(self._meta['timezone'].values[0]
+                             * self.time_interval)
+                arr = np.roll(arr, n_roll)
 
                 if var in irrad_vars:
                     if np.min(arr) < 0:
@@ -731,12 +732,12 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
                 resource[var] = arr.tolist()
 
-        resource['lat'] = meta['latitude']
-        resource['lon'] = meta['longitude']
-        resource['tz'] = meta['timezone']
+        resource['lat'] = meta['latitude'].values[0]
+        resource['lon'] = meta['longitude'].values[0]
+        resource['tz'] = meta['timezone'].values[0]
 
         if 'elevation' in meta:
-            resource['elev'] = meta['elevation']
+            resource['elev'] = meta['elevation'].values[0]
         else:
             resource['elev'] = 0.0
 
@@ -834,8 +835,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
         if set_tilt:
             # set tilt to abs(latitude)
-            sam_sys_inputs['tilt'] = np.abs(meta['latitude'])
-            if meta['latitude'] > 0:
+            sam_sys_inputs['tilt'] = np.abs(meta['latitude'].values[0])
+            if meta['latitude'].values[0] > 0:
                 # above the equator, az = 180
                 sam_sys_inputs['azimuth'] = 180
             else:
@@ -1491,24 +1492,23 @@ class WindPower(AbstractSamWind):
 
         if 'rh' in resource:
             # set relative humidity for icing.
-            rh = np.roll(self.ensure_res_len(resource['rh'].values,
-                                             time_index),
-                         int(meta['timezone'] * self.time_interval),
-                         axis=0)
+            rh = self.ensure_res_len(resource['rh'].values, time_index)
+            n_roll = int(meta['timezone'].values[0] * self.time_interval)
+            rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
-        temp = np.roll(self.ensure_res_len(resource[var_list].values,
-                                           time_index),
-                       int(meta['timezone'] * self.time_interval), axis=0)
+        temp = self.ensure_res_len(resource[var_list].values, time_index)
+        n_roll = int(meta['timezone'].values[0] * self.time_interval)
+        temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
-        data_dict['lat'] = meta['latitude']
-        data_dict['lon'] = meta['longitude']
-        data_dict['tz'] = meta['timezone']
-        data_dict['elev'] = meta['elevation']
+        data_dict['lat'] = meta['latitude'].values[0]
+        data_dict['lon'] = meta['longitude'].values[0]
+        data_dict['tz'] = meta['timezone'].values[0]
+        data_dict['elev'] = meta['elevation'].values[0]
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute
@@ -1669,13 +1669,13 @@ class MhkWave(AbstractSamGeneration):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
-            data_dict[var] = np.roll(
-                self.ensure_res_len(resource[var].values, time_index),
-                int(meta['timezone'] * self.time_interval), axis=0).tolist()
+            arr = self.ensure_res_len(resource[var].values, time_index)
+            n_roll = int(meta['timezone'].values[0] * self.time_interval)
+            data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
-        data_dict['lat'] = meta['latitude']
-        data_dict['lon'] = meta['longitude']
-        data_dict['tz'] = meta['timezone']
+        data_dict['lat'] = meta['latitude'].values[0]
+        data_dict['lon'] = meta['longitude'].values[0]
+        data_dict['tz'] = meta['timezone'].values[0]
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute
