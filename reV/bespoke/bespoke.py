@@ -165,8 +165,8 @@ class BespokeSinglePlant:
             with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
         prior_meta : pd.DataFrame | None
             Optional meta dataframe belonging to a prior run. This will only
-            run the power generation step and assume that all of the wind plant
-            layouts are fixed given the prior run.
+            run the timeseries power generation step and assume that all of the
+            wind plant layouts are fixed given the prior run.
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -212,7 +212,7 @@ class BespokeSinglePlant:
         self._baseline_cap_mw = eos_mult_baseline_cap_mw
 
         self._res_df = None
-        self._prior_meta = prior_meta
+        self._prior_meta = prior_meta is not None
         self._meta = prior_meta
         self._wind_dist = None
         self._ws_edges = None
@@ -235,6 +235,7 @@ class BespokeSinglePlant:
 
         self._parse_output_req()
         self._data_layers = data_layers
+        self._parse_prior_run()
 
     def __str__(self):
         s = ('BespokeSinglePlant for reV SC gid {} with resolution {}'
@@ -283,6 +284,28 @@ class BespokeSinglePlant:
                    '"fixed_charge_rate" in the SAM system config.')
             logger.error(msg)
             raise KeyError(msg)
+
+    def _parse_prior_run(self):
+        """Parse prior bespoke wind plant optimization run meta data and make
+        sure the SAM system inputs are set accordingly."""
+
+        # {meta_column: sam_sys_input_key}
+        required = {'capacity': 'system_capacity',
+                    'turbine_x_coords': 'wind_farm_xCoordinates',
+                    'turbine_y_coords': 'wind_farm_yCoordinates'}
+
+        if self._prior_meta:
+            missing = [k for k, _ in required.items() if k not in self.meta]
+            msg = ('Prior bespoke run meta data is missing the following '
+                   'required columns: {}'.format(missing))
+            assert not any(missing), msg
+
+            for meta_col, sam_sys_key in required.items():
+                prior_value = self.meta[meta_col].values[0]
+                self._sam_sys_inputs[sam_sys_key] = prior_value
+
+            # convert reV supply curve cap in MW to SAM capacity in kW
+            self._sam_sys_inputs['system_capacity'] *= 1e3
 
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
@@ -908,7 +931,7 @@ class BespokeSinglePlant:
         """
 
         with cls(*args, **kwargs) as bsp:
-            if bsp._prior_meta is not None:
+            if bsp._prior_meta:
                 logger.debug('Skipping bespoke plant optimization for gid {}. '
                              'Received prior meta data for this point.'
                              .format(bsp.gid))
@@ -1078,8 +1101,9 @@ class BespokeWindPlants(AbstractAggregation):
             the inclusion mask on the fly with parallel workers.
         prior_run : str | None
             Optional filepath to a bespoke output .h5 file belonging to a prior
-            run. This will only run the power generation step and assume that
-            all of the wind plant layouts are fixed given the prior run.
+            run. This will only run the timeseries power generation step and
+            assume that all of the wind plant layouts are fixed given the prior
+            run.
         """
 
         log_versions(logger)
@@ -1211,8 +1235,9 @@ class BespokeWindPlants(AbstractAggregation):
         ----------
         prior_run : str | None
             Optional filepath to a bespoke output .h5 file belonging to a prior
-            run. This will only run the power generation step and assume that
-            all of the wind plant layouts are fixed given the prior run.
+            run. This will only run the timeseries power generation step and
+            assume that all of the wind plant layouts are fixed given the prior
+            run.
 
         Returns
         -------

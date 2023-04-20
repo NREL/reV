@@ -502,16 +502,20 @@ def test_bespoke():
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
-        assert not os.path.exists(out_fpath)
-        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
-                                  objective_function, cap_cost_fun,
-                                  foc_fun, voc_fun,
-                                  fully_excluded_points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 5},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=2,
-                                  out_fpath=out_fpath)
+        # test no outputs
+        with pytest.warns(UserWarning) as record:
+            assert not os.path.exists(out_fpath)
+            _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
+                                      objective_function, cap_cost_fun,
+                                      foc_fun, voc_fun,
+                                      fully_excluded_points, SAM_CONFIGS,
+                                      ga_kwargs={'max_time': 5},
+                                      excl_dict=EXCL_DICT,
+                                      output_request=output_request,
+                                      max_workers=2,
+                                      out_fpath=out_fpath)
+            assert 'points are excluded' in str(record[0].message)
+
         assert not os.path.exists(out_fpath)
         _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
                                   objective_function, cap_cost_fun,
@@ -983,3 +987,92 @@ def test_bespoke_aep_is_zero_if_no_turbines_placed():
         bsp.close()
 
     assert aep == 0
+
+
+def test_bespoke_w_prior_run():
+    """Test a follow-on bespoke timeseries generation run based on a prior
+    plant layout optimization."""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data')
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
+        out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+
+        res_fp_all = res_fp.format('*')
+        res_fp_2013 = res_fp.format('2013')
+
+        # gids 33 and 35 are included, 37 is fully excluded
+        points = pd.DataFrame({'gid': [33], 'config': ['default'],
+                               'extra_unused_data': [42]})
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        assert not os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_all, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath1)
+
+        assert os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath2,
+                                  prior_run=out_fpath1)
+        assert os.path.exists(out_fpath2)
+
+        with Resource(out_fpath1) as f1:
+            meta1 = f1.meta
+            dsets1 = f1.dsets
+            data1 = {k: f1[k] for k in f1.dsets}
+
+        with Resource(out_fpath2) as f2:
+            meta2 = f2.meta
+            dsets2 = f2.dsets
+            data2 = {k: f2[k] for k in f2.dsets}
+
+        cols = ['turbine_x_coords', 'turbine_y_coords', 'capacity',
+                'n_gids', 'gid_counts']
+        pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
+
+        # original bespoke run should have bespoke outputs, 2nd run should not
+        assert 'bespoke_objective' in dsets1
+        assert 'bespoke_objective' not in dsets2
+
+        # multi-year means should not match the 2nd run with 2013 only.
+        # 2013 values should match exactly
+        assert not np.allclose(data1['cf_mean-means'], data2['cf_mean-means'])
+        assert np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
+
+        assert not np.allclose(data1['annual_energy-means'],
+                               data2['annual_energy-means'])
+        assert np.allclose(data1['annual_energy-2013'],
+                           data2['annual_energy-2013'])
