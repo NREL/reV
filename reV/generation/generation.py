@@ -141,7 +141,7 @@ class Gen(BaseGen):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        gid_map : None | dict
+        gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
@@ -634,7 +634,7 @@ class Gen(BaseGen):
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
-        gid_map : None | dict
+        gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique

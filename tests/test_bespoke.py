@@ -535,6 +535,7 @@ def test_bespoke():
             assert 'turbine_y_coords' in meta
             assert 'possible_x_coords' in meta
             assert 'possible_y_coords' in meta
+            assert 'res_gids' in meta
 
             dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
                         'annual_energy-2012', 'cf_mean-means',
@@ -1060,7 +1061,7 @@ def test_bespoke_w_prior_run():
             data2 = {k: f2[k] for k in f2.dsets}
 
         cols = ['turbine_x_coords', 'turbine_y_coords', 'capacity',
-                'n_gids', 'gid_counts']
+                'n_gids', 'gid_counts', 'res_gids']
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 
         # original bespoke run should have bespoke outputs, 2nd run should not
@@ -1076,3 +1077,91 @@ def test_bespoke_w_prior_run():
                                data2['annual_energy-means'])
         assert np.allclose(data1['annual_energy-2013'],
                            data2['annual_energy-2013'])
+
+
+def test_gid_map():
+    """Test bespoke run with resource gid map - used to swap resource gids with
+    new resource data files for example so you can run forecasted resource with
+    the same spatial configuration."""
+
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data', 'ws_mean')
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
+        out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+
+        res_fp_2013 = res_fp.format('2013')
+
+        # gids 33 and 35 are included, 37 is fully excluded
+        points = pd.DataFrame({'gid': [33], 'config': ['default'],
+                               'extra_unused_data': [42]})
+
+        gid_map = pd.DataFrame({'gid': [3, 4, 13, 12, 11, 10, 9]})
+        new_gid = 50
+        gid_map['gid_map'] = new_gid
+        fp_gid_map = os.path.join(td, 'gid_map.csv')
+        gid_map.to_csv(fp_gid_map)
+
+        TechMapping.run(excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1)
+
+        assert not os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath1)
+
+        assert os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath2,
+                                  gid_map=fp_gid_map)
+        assert os.path.exists(out_fpath2)
+
+        with Resource(out_fpath1) as f1:
+            meta1 = f1.meta
+            dsets1 = f1.dsets
+            data1 = {k: f1[k] for k in f1.dsets}
+
+        with Resource(out_fpath2) as f2:
+            meta2 = f2.meta
+            dsets2 = f2.dsets
+            data2 = {k: f2[k] for k in f2.dsets}
+
+        hh = SAM_CONFIGS['default']['wind_turbine_hub_ht']
+        with Resource(res_fp_2013) as f3:
+            ws = f3[f'windspeed_{hh}m', :, new_gid]
+
+        cols = ['n_gids', 'gid_counts', 'res_gids']
+        pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
+
+        assert not np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
+        assert not np.allclose(data1['ws_mean'], data2['ws_mean'], atol=0.2)
+        assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)

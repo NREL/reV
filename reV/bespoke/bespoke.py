@@ -56,7 +56,7 @@ class BespokeSinglePlant:
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
-                 eos_mult_baseline_cap_mw=200, prior_meta=None,
+                 eos_mult_baseline_cap_mw=200, prior_meta=None, gid_map=None,
                  close=True):
         """
         Parameters
@@ -167,6 +167,14 @@ class BespokeSinglePlant:
             Optional meta dataframe belonging to a prior run. This will only
             run the timeseries power generation step and assume that all of the
             wind plant layouts are fixed given the prior run.
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -220,6 +228,7 @@ class BespokeSinglePlant:
         self._wind_plant_pd = None
         self._wind_plant_ts = None
         self._plant_optm = None
+        self._gid_map = self._parse_gid_map(gid_map)
         self._outputs = {}
 
         Handler = self.get_wind_handler(res)
@@ -307,6 +316,42 @@ class BespokeSinglePlant:
             # convert reV supply curve cap in MW to SAM capacity in kW
             self._sam_sys_inputs['system_capacity'] *= 1e3
 
+    @staticmethod
+    def _parse_gid_map(gid_map):
+        """Parse the gid map and return the extracted dictionary or None if not
+        provided
+
+        Parameters
+        ----------
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
+
+        Returns
+        -------
+        gid_map : dict | None
+            Pre-extracted gid_map dictionary if provided or None if not.
+        """
+
+        if isinstance(gid_map, str):
+            if gid_map.endswith('.csv'):
+                gid_map = pd.read_csv(gid_map).to_dict()
+                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
+                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
+                           for i in gid_map['gid'].keys()}
+
+            elif gid_map.endswith('.json'):
+                with open(gid_map, 'r') as f:
+                    gid_map = json.load(f)
+
+        return gid_map
+
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
         class was initialized with close=False, this will not close any
@@ -324,7 +369,11 @@ class BespokeSinglePlant:
             the plant inclusions mask.
         """
         gids = self.sc_point.h5_gid_set
-        data = self.sc_point.h5[dset, :, gids]
+        h5_gids = copy.deepcopy(gids)
+        if self._gid_map is not None:
+            h5_gids = [self._gid_map[g] for g in gids]
+
+        data = self.sc_point.h5[dset, :, h5_gids]
 
         weights = np.zeros(len(gids))
         for i, gid in enumerate(gids):
@@ -350,7 +399,11 @@ class BespokeSinglePlant:
 
         dset = f'winddirection_{self.hub_height}m'
         gids = self.sc_point.h5_gid_set
-        dirs = self.sc_point.h5[dset, :, gids]
+        h5_gids = copy.deepcopy(gids)
+        if self._gid_map is not None:
+            h5_gids = [self._gid_map[g] for g in gids]
+
+        dirs = self.sc_point.h5[dset, :, h5_gids]
         angles = np.radians(dirs, dtype=np.float32)
 
         weights = np.zeros(len(gids))
@@ -966,7 +1019,7 @@ class BespokeWindPlants(AbstractAggregation):
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False, prior_run=None):
+                 pre_extract_inclusions=False, prior_run=None, gid_map=None):
         """
         Parameters
         ----------
@@ -1104,6 +1157,14 @@ class BespokeWindPlants(AbstractAggregation):
             run. This will only run the timeseries power generation step and
             assume that all of the wind plant layouts are fixed given the prior
             run.
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
         """
 
         log_versions(logger)
@@ -1149,6 +1210,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._wd_bins = wd_bins
         self._data_layers = data_layers
         self._prior_meta = self._parse_prior_run(prior_run)
+        self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
         self._outputs = {}
         self._check_files()
 
@@ -1519,7 +1581,7 @@ class BespokeWindPlants(AbstractAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
-                   prior_meta=None,
+                   prior_meta=None, gid_map=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -1585,6 +1647,7 @@ class BespokeWindPlants(AbstractAggregation):
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
                         prior_meta=prior_meta,
+                        gid_map=gid_map,
                         close=False)
 
                 except EmptySupplyCurvePointError:
@@ -1671,7 +1734,9 @@ class BespokeWindPlants(AbstractAggregation):
                     data_layers=self._data_layers,
                     gids=gid,
                     exclusion_shape=self.shape,
-                    slice_lookup=slice_lookup))
+                    slice_lookup=slice_lookup,
+                    prior_meta=self._get_prior_meta(gid),
+                    gid_map=self.gid_map))
 
             # gather results
             for future in as_completed(futures):
@@ -1702,7 +1767,7 @@ class BespokeWindPlants(AbstractAggregation):
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
-            prior_run=None, out_fpath=None):
+            prior_run=None, gid_map=None, out_fpath=None):
         """Run the bespoke wind plant optimization in serial or parallel.
         See BespokeWindPlants docstring for parameter description.
         """
@@ -1727,7 +1792,8 @@ class BespokeWindPlants(AbstractAggregation):
                   excl_area=excl_area,
                   data_layers=data_layers,
                   pre_extract_inclusions=pre_extract_inclusions,
-                  prior_run=prior_run)
+                  prior_run=prior_run,
+                  gid_map=gid_map)
 
         # parallel job distribution test.
         if objective_function == 'test':
@@ -1754,6 +1820,7 @@ class BespokeWindPlants(AbstractAggregation):
                                     excl_area=bsp._excl_area,
                                     data_layers=bsp._data_layers,
                                     prior_meta=bsp._get_prior_meta(gid),
+                                    gid_map=bsp._gid_map,
                                     gids=gid)
                 bsp._outputs.update(si)
         else:
