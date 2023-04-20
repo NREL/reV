@@ -57,7 +57,7 @@ class BespokeSinglePlant:
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
                  eos_mult_baseline_cap_mw=200, prior_meta=None, gid_map=None,
-                 close=True):
+                 bias_correct=None, close=True):
         """
         Parameters
         ----------
@@ -175,6 +175,14 @@ class BespokeSinglePlant:
             extract from the resource input). This is useful if you're running
             forecasted resource data (e.g., ECMWF) to complement historical
             meteorology (e.g., WTK).
+        bias_correct : str | pd.DataFrame | None
+            Optional DataFrame or csv filepath to a wind bias correction table.
+            This has columns: gid (can be index name), adder, scalar. If both
+            adder and scalar are present, the wind is corrected by
+            (res*scalar)+adder. If either is not present, scalar defaults to 1
+            and adder to 0. Only windspeed is corrected. Note that if gid_map
+            is provided, the bias_correct gid corresponds to the actual
+            resource data gid and not the techmap gid.
         close : bool
             Flag to close object file handlers on exit.
         """
@@ -229,6 +237,7 @@ class BespokeSinglePlant:
         self._wind_plant_ts = None
         self._plant_optm = None
         self._gid_map = self._parse_gid_map(gid_map)
+        self._bias_correct = Gen._parse_bc(bias_correct)
         self._outputs = {}
 
         Handler = self.get_wind_handler(res)
@@ -374,6 +383,17 @@ class BespokeSinglePlant:
             h5_gids = [self._gid_map[g] for g in gids]
 
         data = self.sc_point.h5[dset, :, h5_gids]
+
+        if self._bias_correct is not None and dset.startswith('windspeed_'):
+            missing = [g for g in h5_gids if g not in self._bias_correct.index]
+            for missing_gid in missing:
+                self._bias_correct.loc[missing_gid, 'scalar'] = 1
+                self._bias_correct.loc[missing_gid, 'adder'] = 0
+
+            scalar = self._bias_correct.loc[h5_gids, 'scalar'].values
+            adder = self._bias_correct.loc[h5_gids, 'adder'].values
+            data = data * scalar + adder
+            data = np.maximum(data, 0)
 
         weights = np.zeros(len(gids))
         for i, gid in enumerate(gids):
@@ -1019,7 +1039,8 @@ class BespokeWindPlants(AbstractAggregation):
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False, prior_run=None, gid_map=None):
+                 pre_extract_inclusions=False, prior_run=None, gid_map=None,
+                 bias_correct=None):
         """
         Parameters
         ----------
@@ -1165,6 +1186,14 @@ class BespokeWindPlants(AbstractAggregation):
             extract from the resource input). This is useful if you're running
             forecasted resource data (e.g., ECMWF) to complement historical
             meteorology (e.g., WTK).
+        bias_correct : str | pd.DataFrame | None
+            Optional DataFrame or csv filepath to a wind bias correction table.
+            This has columns: gid (can be index name), adder, scalar. If both
+            adder and scalar are present, the wind is corrected by
+            (res*scalar)+adder. If either is not present, scalar defaults to 1
+            and adder to 0. Only windspeed is corrected. Note that if gid_map
+            is provided, the bias_correct gid corresponds to the actual
+            resource data gid and not the techmap gid.
         """
 
         log_versions(logger)
@@ -1211,6 +1240,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._data_layers = data_layers
         self._prior_meta = self._parse_prior_run(prior_run)
         self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
+        self._bias_correct = Gen._parse_bc(bias_correct)
         self._outputs = {}
         self._check_files()
 
@@ -1581,7 +1611,7 @@ class BespokeWindPlants(AbstractAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
-                   prior_meta=None, gid_map=None,
+                   prior_meta=None, gid_map=None, bias_correct=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -1648,6 +1678,7 @@ class BespokeWindPlants(AbstractAggregation):
                         exclusion_shape=exclusion_shape,
                         prior_meta=prior_meta,
                         gid_map=gid_map,
+                        bias_correct=bias_correct,
                         close=False)
 
                 except EmptySupplyCurvePointError:
@@ -1736,7 +1767,8 @@ class BespokeWindPlants(AbstractAggregation):
                     exclusion_shape=self.shape,
                     slice_lookup=slice_lookup,
                     prior_meta=self._get_prior_meta(gid),
-                    gid_map=self.gid_map))
+                    gid_map=self._gid_map,
+                    bias_correct=self._bias_correct))
 
             # gather results
             for future in as_completed(futures):
@@ -1767,7 +1799,8 @@ class BespokeWindPlants(AbstractAggregation):
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
-            prior_run=None, gid_map=None, out_fpath=None):
+            prior_run=None, gid_map=None, bias_correct=None,
+            out_fpath=None):
         """Run the bespoke wind plant optimization in serial or parallel.
         See BespokeWindPlants docstring for parameter description.
         """
@@ -1793,7 +1826,8 @@ class BespokeWindPlants(AbstractAggregation):
                   data_layers=data_layers,
                   pre_extract_inclusions=pre_extract_inclusions,
                   prior_run=prior_run,
-                  gid_map=gid_map)
+                  gid_map=gid_map,
+                  bias_correct=bias_correct)
 
         # parallel job distribution test.
         if objective_function == 'test':
@@ -1821,6 +1855,7 @@ class BespokeWindPlants(AbstractAggregation):
                                     data_layers=bsp._data_layers,
                                     prior_meta=bsp._get_prior_meta(gid),
                                     gid_map=bsp._gid_map,
+                                    bias_correct=bsp._bias_correct,
                                     gids=gid)
                 bsp._outputs.update(si)
         else:

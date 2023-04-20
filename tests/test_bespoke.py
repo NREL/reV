@@ -1147,12 +1147,10 @@ def test_gid_map():
 
         with Resource(out_fpath1) as f1:
             meta1 = f1.meta
-            dsets1 = f1.dsets
             data1 = {k: f1[k] for k in f1.dsets}
 
         with Resource(out_fpath2) as f2:
             meta2 = f2.meta
-            dsets2 = f2.dsets
             data2 = {k: f2[k] for k in f2.dsets}
 
         hh = SAM_CONFIGS['default']['wind_turbine_hub_ht']
@@ -1165,3 +1163,81 @@ def test_gid_map():
         assert not np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
         assert not np.allclose(data1['ws_mean'], data2['ws_mean'], atol=0.2)
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
+
+
+if __name__ == '__main__':
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data', 'ws_mean')
+    cap_cost_fun = ('140 * system_capacity '
+                    '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    foc_fun = ('60 * system_capacity '
+               '* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))')
+    voc_fun = '3'
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ aep + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
+        out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+
+        res_fp_2013 = res_fp.format('2013')
+
+        # gids 33 and 35 are included, 37 is fully excluded
+        points = pd.DataFrame({'gid': [33], 'config': ['default'],
+                               'extra_unused_data': [42]})
+
+        # intentionally leaving out WTK gid 13 which only has 5 included 90m
+        # pixels in order to check that this is dynamically patched.
+        bias_correct = pd.DataFrame({'gid': [3, 4, 12, 11, 10, 9]})
+        bias_correct['scalar'] = 0.5
+        fp_bc = os.path.join(td, 'bc.csv')
+        bias_correct.to_csv(fp_bc)
+
+        TechMapping.run(excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1)
+
+        assert not os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath1)
+
+        assert os.path.exists(out_fpath1)
+        assert not os.path.exists(out_fpath2)
+
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  objective_function, cap_cost_fun,
+                                  foc_fun, voc_fun,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath2,
+                                  bias_correct=fp_bc)
+        assert os.path.exists(out_fpath2)
+
+        with Resource(out_fpath1) as f1:
+            meta1 = f1.meta
+            data1 = {k: f1[k] for k in f1.dsets}
+
+        with Resource(out_fpath2) as f2:
+            meta2 = f2.meta
+            data2 = {k: f2[k] for k in f2.dsets}
+
+        cols = ['n_gids', 'gid_counts', 'res_gids']
+        pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
+
+        assert data1['cf_mean-2013'] * 0.5 > data2['cf_mean-2013']
+        assert np.allclose(data1['ws_mean'] * 0.5, data2['ws_mean'], atol=0.01)
