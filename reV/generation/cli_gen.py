@@ -16,7 +16,8 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.pipeline.status import Status
-from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
+from reV.utilities.exceptions import (ConfigError, ConfigWarning,
+                                      ProjectPointsValueError)
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from reV.utilities import ModuleName
 from reV import __version__
@@ -27,6 +28,74 @@ from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year, get_class_properties
 
 logger = logging.getLogger(__name__)
+
+
+def gen_preprocessor(config, analysis_years=None):
+    """Preprocess generation config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    analysis_years : int | list, optional
+        A single year or list of years to perform analysis for. These
+        years will be used to fill in any brackets ``{}`` in the
+        ``resource_file`` input. If ``None``, the ``resource_file``
+        input is assumed to be the full path to the single resource
+        file to be processed.  By default, ``None``.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    if not isinstance(analysis_years, list):
+        analysis_years = [analysis_years]
+
+    if analysis_years[0] is None:
+        warn('Years may not have been specified, may default '
+             'to available years in inputs files.', ConfigWarning)
+
+    config["res_file"] = _parse_res_files(config["res_file"], analysis_years)
+    lr_res_file = config.get("lr_res_file")
+    if lr_res_file is None:
+        config["lr_res_file"] = [None] * len(analysis_years)
+    else:
+        config["lr_res_file"] = _parse_res_files(lr_res_file, analysis_years)
+
+    config['technology'] = (config['technology'].lower()
+                            .replace(' ', '').replace('_', ''))
+    return config
+
+
+def _parse_res_files(res_fps, analysis_years):
+    """Parse the base resource file input into correct ordered list format
+    with year imputed in the {} format string"""
+
+    # get base filename, may have {} for year format
+    if isinstance(res_fps, str) and '{}' in res_fps:
+        # need to make list of res files for each year
+        res_fps = [res_fps.format(year) for year in analysis_years]
+    elif isinstance(res_fps, str):
+        # only one resource file request, still put in list
+        res_fps = [res_fps]
+    elif not isinstance(res_fps, (list, tuple)):
+        msg = ('Bad "resource_file" type, needed str, list, or tuple '
+               'but received: {}, {}'
+               .format(res_fps, type(res_fps)))
+        logger.error(msg)
+        raise ConfigError(msg)
+
+    if len(res_fps) != len(analysis_years):
+        msg = ('The number of resource files does not match '
+               'the number of analysis years!'
+               '\n\tResource files: \n\t\t{}'
+               '\n\tYears: \n\t\t{}'
+               .format(res_fps, analysis_years))
+        logger.error(msg)
+        raise ConfigError(msg)
+
+    return res_fps
 
 
 @click.group()

@@ -51,8 +51,7 @@ class Econ(BaseGen):
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
     def __init__(self, points_control, cf_file, year, site_data=None,
-                 output_request=('lcoe_fcr',), out_fpath=None,
-                 append=False, mem_util_lim=0.4):
+                 output_request=('lcoe_fcr',), mem_util_lim=0.4):
         """Initialize an econ instance.
 
         Parameters
@@ -72,30 +71,15 @@ class Econ(BaseGen):
             Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
-        append : bool
-            Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
-                         out_fpath=out_fpath, mem_util_lim=mem_util_lim)
+                         mem_util_lim=mem_util_lim)
 
         self._cf_file = cf_file
         self._year = year
         self._run_attrs['cf_file'] = cf_file
         self._run_attrs['sam_module'] = self._sam_module.MODULE
-
-        # initialize output file or append econ data to gen file
-        if append:
-            self._out_fpath = self._cf_file
-        else:
-            self._init_fpath()
-
-        mode = 'a' if append else 'w'
-        self._init_h5(mode=mode)
-        self._init_out_arrays()
 
     @property
     def cf_file(self):
@@ -430,9 +414,16 @@ class Econ(BaseGen):
         econ = cls(pc, cf_file,
                    year=year,
                    site_data=site_data,
-                   output_request=output_request,
-                   out_fpath=out_fpath,
-                   append=append)
+                   output_request=output_request)
+
+        # initialize output file or append econ data to gen file
+        if append:
+            econ._out_fpath = econ._cf_file
+        else:
+            econ._init_fpath(out_fpath, '')
+
+        econ._init_h5(mode='a' if append else 'w')
+        econ._init_out_arrays()
 
         diff = list(set(pc.sites) - set(econ.meta['gid'].values))
         if diff:

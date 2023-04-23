@@ -14,6 +14,7 @@ import json
 import sys
 from warnings import warn
 
+from reV.config.output_request import SAMOutputRequest
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.handlers.outputs import Outputs
 from reV.SAM.version_checker import PySamVersionChecker
@@ -68,8 +69,7 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 out_fpath=None, drop_leap=False, mem_util_lim=0.4,
-                 scale_outputs=True):
+                 drop_leap=False, mem_util_lim=0.4, scale_outputs=True):
         """
         Parameters
         ----------
@@ -82,8 +82,6 @@ class BaseGen(ABC):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
         drop_leap : bool
             Drop leap day instead of final day of year during leap years.
         mem_util_lim : float
@@ -98,7 +96,7 @@ class BaseGen(ABC):
         self._year = None
         self._site_limit = None
         self._site_mem = None
-        self._out_fpath = out_fpath
+        self._out_fpath = None
         self._meta = None
         self._time_index = None
         self._sam_module = None
@@ -109,14 +107,13 @@ class BaseGen(ABC):
 
         self._run_attrs = {'points_control': str(points_control),
                            'output_request': output_request,
-                           'out_fpath': str(out_fpath),
                            'site_data': str(site_data),
                            'drop_leap': str(drop_leap),
-                           'mem_util_lim': mem_util_lim,
-                           }
+                           'mem_util_lim': mem_util_lim}
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)
+        output_request = SAMOutputRequest(output_request)
         self._output_request = self._parse_output_request(output_request)
 
         # pre-initialize output arrays to store results when available.
@@ -275,16 +272,6 @@ class BaseGen(ABC):
             SAM object like PySAM.Pvwattsv7 or PySAM.Lcoefcr
         """
         return self._sam_module
-
-    @property
-    def out_fpath(self):
-        """Get the output file path.
-
-        Returns
-        -------
-        out_fpath : str | None
-        """
-        return self._out_fpath
 
     @property
     def meta(self):
@@ -527,13 +514,11 @@ class BaseGen(ABC):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        if not isinstance(points, ProjectPoints):
-            # make Project Points instance
-            pp = ProjectPoints(points, sam_configs, tech=tech,
-                               res_file=res_file, curtailment=curtailment)
-        else:
-            pp = ProjectPoints(points.df, sam_configs, tech=tech,
-                               res_file=res_file, curtailment=curtailment)
+        if hasattr(points, "df"):
+            points = points.df
+
+        pp = ProjectPoints(points, sam_configs, tech=tech, res_file=res_file,
+                           curtailment=curtailment)
 
         #  make Points Control instance
         if points_range is not None:
@@ -866,25 +851,30 @@ class BaseGen(ABC):
 
         return data_shape
 
-    def _init_fpath(self):
+    def _init_fpath(self, out_fpath, tag):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
+        if out_fpath is None:
+            return
 
-        if self._out_fpath is not None:
+        # ensure output file is an h5
+        if not out_fpath.endswith('.h5'):
+            out_fpath += '.h5'
 
-            # ensure output file is an h5
-            if not self._out_fpath .endswith('.h5'):
-                self._out_fpath += '.h5'
+        # ensure year is in out_fpath
+        if str(self.year) not in out_fpath:
+            out_fpath = out_fpath.replace('.h5',
+                                          '_{}{}.h5'.format(self.year, tag))
 
-            # ensure year is in out_fpath
-            if str(self.year) not in self._out_fpath:
-                self._out_fpath = self._out_fpath.replace('.h5',
-                                                          '_{}.h5'
-                                                          .format(self.year))
+        if tag not in out_fpath:
+            out_fpath = out_fpath.replace('.h5', '{}.h5'.format(tag))
 
-            # create and use optional output dir
-            dirout = os.path.dirname(self._out_fpath)
-            if dirout and not os.path.exists(dirout):
-                os.makedirs(dirout)
+        # create and use optional output dir
+        dirout = os.path.dirname(out_fpath)
+        if dirout and not os.path.exists(dirout):
+            os.makedirs(dirout)
+
+        self._out_fpath = out_fpath
+        self._run_attrs['out_fpath'] = out_fpath
 
     def _init_h5(self, mode='w'):
         """Initialize the single h5 output file with all output requests.
@@ -895,49 +885,50 @@ class BaseGen(ABC):
             Mode to instantiate h5py.File instance
         """
 
-        if self._out_fpath is not None:
+        if self._out_fpath is None:
+            return
 
-            if 'w' in mode:
-                logger.info('Initializing full output file: "{}" with mode: {}'
-                            .format(self._out_fpath, mode))
-            elif 'a' in mode:
-                logger.info('Appending data to output file: "{}" with mode: {}'
-                            .format(self._out_fpath, mode))
+        if 'w' in mode:
+            logger.info('Initializing full output file: "{}" with mode: {}'
+                        .format(self._out_fpath, mode))
+        elif 'a' in mode:
+            logger.info('Appending data to output file: "{}" with mode: {}'
+                        .format(self._out_fpath, mode))
 
-            attrs = {d: {} for d in self.output_request}
-            chunks = {}
-            dtypes = {}
-            shapes = {}
+        attrs = {d: {} for d in self.output_request}
+        chunks = {}
+        dtypes = {}
+        shapes = {}
 
-            # flag to write time index if profiles are being output
-            write_ti = False
+        # flag to write time index if profiles are being output
+        write_ti = False
 
-            for dset in self.output_request:
+        for dset in self.output_request:
 
-                tmp = 'other'
-                if dset in self.OUT_ATTRS:
-                    tmp = dset
+            tmp = 'other'
+            if dset in self.OUT_ATTRS:
+                tmp = dset
 
-                attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
-                                                               'unknown')
-                attrs[dset]['scale_factor'] = \
-                    self.OUT_ATTRS[tmp].get('scale_factor', 1)
-                chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
-                dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
-                shapes[dset] = self._get_data_shape(dset, len(self.meta))
-                if len(shapes[dset]) > 1:
-                    write_ti = True
+            attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
+                                                            'unknown')
+            attrs[dset]['scale_factor'] = \
+                self.OUT_ATTRS[tmp].get('scale_factor', 1)
+            chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
+            dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
+            shapes[dset] = self._get_data_shape(dset, len(self.meta))
+            if len(shapes[dset]) > 1:
+                write_ti = True
 
-            # only write time index if profiles were found in output request
-            if write_ti:
-                ti = self.time_index
-            else:
-                ti = None
+        # only write time index if profiles were found in output request
+        if write_ti:
+            ti = self.time_index
+        else:
+            ti = None
 
-            Outputs.init_h5(self._out_fpath, self.output_request, shapes,
-                            attrs, chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_metas, run_attrs=self.run_attrs,
-                            mode=mode)
+        Outputs.init_h5(self._out_fpath, self.output_request, shapes,
+                        attrs, chunks, dtypes, self.meta, time_index=ti,
+                        configs=self.sam_metas, run_attrs=self.run_attrs,
+                        mode=mode)
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
