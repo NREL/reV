@@ -1072,7 +1072,8 @@ def test_gid_map():
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
 
 
-if __name__ == '__main__':
+def test_bespoke_w_bias_correct():
+    """Test bespoke run with bias correction on windspeed data."""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
                       'extra_unused_data', 'ws_mean')
     with tempfile.TemporaryDirectory() as td:

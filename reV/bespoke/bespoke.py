@@ -166,7 +166,9 @@ class BespokeSinglePlant:
         prior_meta : pd.DataFrame | None
             Optional meta dataframe belonging to a prior run. This will only
             run the timeseries power generation step and assume that all of the
-            wind plant layouts are fixed given the prior run.
+            wind plant layouts are fixed given the prior run. The meta data
+            needs columns "capacity", "turbine_x_coords", and
+            "turbine_y_coords".
         gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This can be None, a pre-extracted dict, or
@@ -313,7 +315,7 @@ class BespokeSinglePlant:
                     'turbine_y_coords': 'wind_farm_yCoordinates'}
 
         if self._prior_meta:
-            missing = [k for k, _ in required.items() if k not in self.meta]
+            missing = [k for k in required if k not in self.meta]
             msg = ('Prior bespoke run meta data is missing the following '
                    'required columns: {}'.format(missing))
             assert not any(missing), msg
@@ -1177,7 +1179,8 @@ class BespokeWindPlants(AbstractAggregation):
             Optional filepath to a bespoke output .h5 file belonging to a prior
             run. This will only run the timeseries power generation step and
             assume that all of the wind plant layouts are fixed given the prior
-            run.
+            run. The meta data of this file needs columns "capacity",
+            "turbine_x_coords", and "turbine_y_coords".
         gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This can be None, a pre-extracted dict, or
@@ -1329,7 +1332,8 @@ class BespokeWindPlants(AbstractAggregation):
             Optional filepath to a bespoke output .h5 file belonging to a prior
             run. This will only run the timeseries power generation step and
             assume that all of the wind plant layouts are fixed given the prior
-            run.
+            run. The meta data of this file needs columns "capacity",
+            "turbine_x_coords", and "turbine_y_coords".
 
         Returns
         -------
