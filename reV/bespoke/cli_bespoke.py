@@ -132,6 +132,9 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['EXCL_AREA'] = config.excl_area
     ctx.obj['DATA_LAYERS'] = config.data_layers
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = config.pre_extract_inclusions
+    ctx.obj['PRIOR_RUN'] = config.prior_run
+    ctx.obj['GID_MAP'] = config.gid_map
+    ctx.obj['BIAS_CORRECT'] = config.bias_correct
 
     ctx.obj['LOG_DIR'] = config.log_directory
     ctx.obj['OUT_DIR'] = config.dirout
@@ -213,6 +216,9 @@ def from_config(ctx, config_file, points_range, verbose):
                        'log_dir': config.log_directory,
                        'max_workers': config.execution_control.max_workers,
                        'data_layers': config.data_layers,
+                       'prior_run': config.prior_run,
+                       'gid_map': config.gid_map,
+                       'bias_correct': config.bias_correct,
                        'pre_extract_inclusions': config.pre_extract_inclusions,
                        'verbose': verbose}
                 ctx.invoke(direct, **kws)
@@ -366,6 +372,32 @@ def valid_config_keys():
               'layers to include in the aggregation e.g. '
               '{"slope": {"dset": "srtm_slope", "method": "mean", '
               '"fpath": "./excl.h5"}}')
+@click.option('--prior_run', '-pri', type=STR, default=None,
+              show_default=True,
+              help='Optional filepath to a bespoke output .h5 file belonging '
+              'to a prior run. This will only run the timeseries power '
+              'generation step and assume that all of the wind plant layouts '
+              'are fixed given the prior run. The meta data of this file '
+              'needs columns "capacity", "turbine_x_coords", and '
+              '"turbine_y_coords".')
+@click.option('--gid_map', '-gm', type=STR, default=None,
+              show_default=True,
+              help='Mapping of unique integer generation gids (keys) to '
+              'single integer resource gids (values). This can be a filepath '
+              'to json or csv. If this is a csv, it must have the columns '
+              '"gid" (which matches the techmap) and "gid_map" (gids to '
+              'extract from the resource input). This is useful if youre '
+              'running forecasted resource data (e.g., ECMWF) to complement '
+              'historical meteorology (e.g., WTK).')
+@click.option('--bias_correct', '-bc', type=STR, default=None,
+              show_default=True,
+              help='Optional csv filepath to a wind bias correction table. '
+              'This has columns: gid (can be index name), adder, scalar. If '
+              'both adder and scalar are present, the wind is corrected by '
+              '(res*scalar)+adder. If either is not present, scalar defaults '
+              'to 1 and adder to 0. Only windspeed is corrected. Note that if '
+              'gid_map is provided, the bias_correct gid corresponds to the '
+              'actual resource data gid and not the techmap gid.')
 @click.option('-pre', '--pre_extract_inclusions', is_flag=True,
               help='Optional flag to pre-extract/compute the inclusion mask '
               'from the provided excl_dict, by default False. Typically '
@@ -380,7 +412,7 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            min_spacing, wake_loss_multiplier, ga_kwargs, output_request,
            ws_bins, wd_bins, excl_dict, area_filter_kernel, min_area,
            resolution, excl_area, log_dir, max_workers, data_layers,
-           pre_extract_inclusions, verbose):
+           prior_run, gid_map, bias_correct, pre_extract_inclusions, verbose):
     """Run reV Bespoke directly w/o a config file."""
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['RES_FPATH'] = res_fpath
@@ -406,6 +438,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
     ctx.obj['RESOLUTION'] = resolution
     ctx.obj['EXCL_AREA'] = excl_area
     ctx.obj['DATA_LAYERS'] = data_layers
+    ctx.obj['PRIOR_RUN'] = prior_run
+    ctx.obj['GID_MAP'] = gid_map
+    ctx.obj['BIAS_CORRECT'] = bias_correct
     ctx.obj['PRE_EXTRACT_INCLUSIONS'] = pre_extract_inclusions
     ctx.obj['LOG_DIR'] = log_dir
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -457,6 +492,9 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 resolution=resolution,
                 excl_area=excl_area,
                 data_layers=data_layers,
+                prior_run=prior_run,
+                gid_map=gid_map,
+                bias_correct=bias_correct,
                 pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
                 out_fpath=out_fpath)
@@ -518,6 +556,15 @@ def get_node_cmd(name, kwargs):
         '-d {}'.format(SLURM.s(kwargs['DATA_LAYERS'])),
         '-lo {}'.format(SLURM.s(kwargs['LOG_DIR'])),
         '-mw {}'.format(SLURM.s(kwargs['MAX_WORKERS']))]
+
+    if kwargs['PRIOR_RUN']:
+        arg_direct.append('-pri {}'.format(SLURM.s(kwargs['PRIOR_RUN'])))
+
+    if kwargs['GID_MAP']:
+        arg_direct.append('-gm {}'.format(SLURM.s(kwargs['GID_MAP'])))
+
+    if kwargs['BIAS_CORRECT']:
+        arg_direct.append('-bc {}'.format(SLURM.s(kwargs['BIAS_CORRECT'])))
 
     if kwargs['PRE_EXTRACT_INCLUSIONS']:
         arg_direct.append('-pre')
