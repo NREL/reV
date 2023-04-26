@@ -491,8 +491,12 @@ class Gen(BaseGen):
 
             with handler_class(self.res_file) as hr_res:
                 with handler_class(self.lr_res_file) as lr_res:
+                    logger.info('Making nearest neighbor map for multi '
+                                'resolution resource data...')
                     nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
                                                                        lr_res)
+                    logger.info('Done making nearest neighbor map for multi '
+                                'resolution resource data!')
 
             logger.info('Made nearest neighbor mapping between nominal-'
                         'resolution and low-resolution resource files. '
