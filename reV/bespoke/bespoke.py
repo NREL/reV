@@ -56,7 +56,8 @@ class BespokeSinglePlant:
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
-                 eos_mult_baseline_cap_mw=200, close=True):
+                 eos_mult_baseline_cap_mw=200, prior_meta=None, gid_map=None,
+                 bias_correct=None, close=True):
         """
         Parameters
         ----------
@@ -162,9 +163,32 @@ class BespokeSinglePlant:
             divided by the $-per-kW of a plant with this baseline
             capacity. By default, `200` (MW), which aligns the baseline
             with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
+        prior_meta : pd.DataFrame | None
+            Optional meta dataframe belonging to a prior run. This will only
+            run the timeseries power generation step and assume that all of the
+            wind plant layouts are fixed given the prior run. The meta data
+            needs columns "capacity", "turbine_x_coords", and
+            "turbine_y_coords".
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
+        bias_correct : str | pd.DataFrame | None
+            Optional DataFrame or csv filepath to a wind bias correction table.
+            This has columns: gid (can be index name), adder, scalar. If both
+            adder and scalar are present, the wind is corrected by
+            (res*scalar)+adder. If either is not present, scalar defaults to 1
+            and adder to 0. Only windspeed is corrected. Note that if gid_map
+            is provided, the bias_correct gid corresponds to the actual
+            resource data gid and not the techmap gid.
         close : bool
             Flag to close object file handlers on exit.
         """
+
         logger.debug('Initializing BespokeSinglePlant for gid {}...'
                      .format(gid))
         logger.debug('Resource filepath: {}'.format(res))
@@ -206,13 +230,16 @@ class BespokeSinglePlant:
         self._baseline_cap_mw = eos_mult_baseline_cap_mw
 
         self._res_df = None
-        self._meta = None
+        self._prior_meta = prior_meta is not None
+        self._meta = prior_meta
         self._wind_dist = None
         self._ws_edges = None
         self._wd_edges = None
         self._wind_plant_pd = None
         self._wind_plant_ts = None
         self._plant_optm = None
+        self._gid_map = self._parse_gid_map(gid_map)
+        self._bias_correct = Gen._parse_bc(bias_correct)
         self._outputs = {}
 
         Handler = self.get_wind_handler(res)
@@ -228,6 +255,7 @@ class BespokeSinglePlant:
 
         self._parse_output_req()
         self._data_layers = data_layers
+        self._parse_prior_run()
 
     def __str__(self):
         s = ('BespokeSinglePlant for reV SC gid {} with resolution {}'
@@ -277,6 +305,64 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise KeyError(msg)
 
+    def _parse_prior_run(self):
+        """Parse prior bespoke wind plant optimization run meta data and make
+        sure the SAM system inputs are set accordingly."""
+
+        # {meta_column: sam_sys_input_key}
+        required = {'capacity': 'system_capacity',
+                    'turbine_x_coords': 'wind_farm_xCoordinates',
+                    'turbine_y_coords': 'wind_farm_yCoordinates'}
+
+        if self._prior_meta:
+            missing = [k for k in required if k not in self.meta]
+            msg = ('Prior bespoke run meta data is missing the following '
+                   'required columns: {}'.format(missing))
+            assert not any(missing), msg
+
+            for meta_col, sam_sys_key in required.items():
+                prior_value = self.meta[meta_col].values[0]
+                self._sam_sys_inputs[sam_sys_key] = prior_value
+
+            # convert reV supply curve cap in MW to SAM capacity in kW
+            self._sam_sys_inputs['system_capacity'] *= 1e3
+
+    @staticmethod
+    def _parse_gid_map(gid_map):
+        """Parse the gid map and return the extracted dictionary or None if not
+        provided
+
+        Parameters
+        ----------
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
+
+        Returns
+        -------
+        gid_map : dict | None
+            Pre-extracted gid_map dictionary if provided or None if not.
+        """
+
+        if isinstance(gid_map, str):
+            if gid_map.endswith('.csv'):
+                gid_map = pd.read_csv(gid_map).to_dict()
+                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
+                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
+                           for i in gid_map['gid'].keys()}
+
+            elif gid_map.endswith('.json'):
+                with open(gid_map, 'r') as f:
+                    gid_map = json.load(f)
+
+        return gid_map
+
     def close(self):
         """Close any open file handlers via the sc point attribute. If this
         class was initialized with close=False, this will not close any
@@ -294,7 +380,22 @@ class BespokeSinglePlant:
             the plant inclusions mask.
         """
         gids = self.sc_point.h5_gid_set
-        data = self.sc_point.h5[dset, :, gids]
+        h5_gids = copy.deepcopy(gids)
+        if self._gid_map is not None:
+            h5_gids = [self._gid_map[g] for g in gids]
+
+        data = self.sc_point.h5[dset, :, h5_gids]
+
+        if self._bias_correct is not None and dset.startswith('windspeed_'):
+            missing = [g for g in h5_gids if g not in self._bias_correct.index]
+            for missing_gid in missing:
+                self._bias_correct.loc[missing_gid, 'scalar'] = 1
+                self._bias_correct.loc[missing_gid, 'adder'] = 0
+
+            scalar = self._bias_correct.loc[h5_gids, 'scalar'].values
+            adder = self._bias_correct.loc[h5_gids, 'adder'].values
+            data = data * scalar + adder
+            data = np.maximum(data, 0)
 
         weights = np.zeros(len(gids))
         for i, gid in enumerate(gids):
@@ -320,7 +421,11 @@ class BespokeSinglePlant:
 
         dset = f'winddirection_{self.hub_height}m'
         gids = self.sc_point.h5_gid_set
-        dirs = self.sc_point.h5[dset, :, gids]
+        h5_gids = copy.deepcopy(gids)
+        if self._gid_map is not None:
+            h5_gids = [self._gid_map[g] for g in gids]
+
+        dirs = self.sc_point.h5[dset, :, h5_gids]
         angles = np.radians(dirs, dtype=np.float32)
 
         weights = np.zeros(len(gids))
@@ -336,6 +441,16 @@ class BespokeSinglePlant:
         mean_wind_dirs[(mean_wind_dirs < 0)] += 360
 
         return mean_wind_dirs
+
+    @property
+    def gid(self):
+        """SC point gid for this bespoke plant.
+
+        Returns
+        -------
+        int
+        """
+        return self.sc_point.gid
 
     @property
     def include_mask(self):
@@ -891,7 +1006,13 @@ class BespokeSinglePlant:
         """
 
         with cls(*args, **kwargs) as bsp:
-            _ = bsp.run_plant_optimization()
+            if bsp._prior_meta:
+                logger.debug('Skipping bespoke plant optimization for gid {}. '
+                             'Received prior meta data for this point.'
+                             .format(bsp.gid))
+            else:
+                _ = bsp.run_plant_optimization()
+
             _ = bsp.run_wind_plant_ts()
             bsp.agg_data_layers()
 
@@ -920,7 +1041,8 @@ class BespokeWindPlants(AbstractAggregation):
                  excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False):
+                 pre_extract_inclusions=False, prior_run=None, gid_map=None,
+                 bias_correct=None):
         """
         Parameters
         ----------
@@ -1053,6 +1175,28 @@ class BespokeWindPlants(AbstractAggregation):
             Optional flag to pre-extract/compute the inclusion mask from the
             provided excl_dict, by default False. Typically faster to compute
             the inclusion mask on the fly with parallel workers.
+        prior_run : str | None
+            Optional filepath to a bespoke output .h5 file belonging to a prior
+            run. This will only run the timeseries power generation step and
+            assume that all of the wind plant layouts are fixed given the prior
+            run. The meta data of this file needs columns "capacity",
+            "turbine_x_coords", and "turbine_y_coords".
+        gid_map : None | str | dict
+            Mapping of unique integer generation gids (keys) to single integer
+            resource gids (values). This can be None, a pre-extracted dict, or
+            a filepath to json or csv. If this is a csv, it must have the
+            columns "gid" (which matches the techmap) and "gid_map" (gids to
+            extract from the resource input). This is useful if you're running
+            forecasted resource data (e.g., ECMWF) to complement historical
+            meteorology (e.g., WTK).
+        bias_correct : str | pd.DataFrame | None
+            Optional DataFrame or csv filepath to a wind bias correction table.
+            This has columns: gid (can be index name), adder, scalar. If both
+            adder and scalar are present, the wind is corrected by
+            (res*scalar)+adder. If either is not present, scalar defaults to 1
+            and adder to 0. Only windspeed is corrected. Note that if gid_map
+            is provided, the bias_correct gid corresponds to the actual
+            resource data gid and not the techmap gid.
         """
 
         log_versions(logger)
@@ -1097,6 +1241,9 @@ class BespokeWindPlants(AbstractAggregation):
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._data_layers = data_layers
+        self._prior_meta = self._parse_prior_run(prior_run)
+        self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
+        self._bias_correct = Gen._parse_bc(bias_correct)
         self._outputs = {}
         self._check_files()
 
@@ -1173,6 +1320,66 @@ class BespokeWindPlants(AbstractAggregation):
                         tech='windpower', sites_per_worker=sites_per_worker)
 
         return pc
+
+    @staticmethod
+    def _parse_prior_run(prior_run):
+        """Extract bespoke meta data from prior run and verify that the run is
+        compatible with the new job specs.
+
+        Parameters
+        ----------
+        prior_run : str | None
+            Optional filepath to a bespoke output .h5 file belonging to a prior
+            run. This will only run the timeseries power generation step and
+            assume that all of the wind plant layouts are fixed given the prior
+            run. The meta data of this file needs columns "capacity",
+            "turbine_x_coords", and "turbine_y_coords".
+
+        Returns
+        -------
+        meta : pd.DataFrame | None
+            Meta data from the previous bespoke run. This includes the
+            previously optimized wind farm layouts. All of the nested list
+            columns will be json loaded.
+        """
+
+        meta = None
+
+        if prior_run is not None:
+            assert os.path.isfile(prior_run)
+            assert prior_run.endswith('.h5')
+
+            with Outputs(prior_run, mode='r') as f:
+                meta = f.meta
+
+            for col in meta.columns:
+                val = meta[col].values[0]
+                if isinstance(val, str) and val[0] == '[' and val[-1] == ']':
+                    meta[col] = meta[col].apply(json.loads)
+
+        return meta
+
+    def _get_prior_meta(self, gid):
+        """Get the meta data for a given gid from the prior run (if available)
+
+        Parameters
+        ----------
+        gid : int
+            SC point gid for site to pull prior meta for.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            Prior meta data for just the requested gid.
+        """
+        meta = None
+
+        if self._prior_meta is not None:
+            mask = self._prior_meta['gid'] == gid
+            if any(mask):
+                meta = self._prior_meta[mask]
+
+        return meta
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -1408,6 +1615,7 @@ class BespokeWindPlants(AbstractAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
+                   prior_meta=None, gid_map=None, bias_correct=None,
                    ):
         """
         Standalone serial method to run bespoke optimization.
@@ -1472,6 +1680,9 @@ class BespokeWindPlants(AbstractAggregation):
                         excl_area=excl_area,
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
+                        prior_meta=prior_meta,
+                        gid_map=gid_map,
+                        bias_correct=bias_correct,
                         close=False)
 
                 except EmptySupplyCurvePointError:
@@ -1558,7 +1769,10 @@ class BespokeWindPlants(AbstractAggregation):
                     data_layers=self._data_layers,
                     gids=gid,
                     exclusion_shape=self.shape,
-                    slice_lookup=slice_lookup))
+                    slice_lookup=slice_lookup,
+                    prior_meta=self._get_prior_meta(gid),
+                    gid_map=self._gid_map,
+                    bias_correct=self._bias_correct))
 
             # gather results
             for future in as_completed(futures):
@@ -1589,6 +1803,7 @@ class BespokeWindPlants(AbstractAggregation):
             area_filter_kernel='queen', min_area=None,
             resolution=64, excl_area=None, data_layers=None,
             pre_extract_inclusions=False, max_workers=None,
+            prior_run=None, gid_map=None, bias_correct=None,
             out_fpath=None):
         """Run the bespoke wind plant optimization in serial or parallel.
         See BespokeWindPlants docstring for parameter description.
@@ -1613,7 +1828,10 @@ class BespokeWindPlants(AbstractAggregation):
                   resolution=resolution,
                   excl_area=excl_area,
                   data_layers=data_layers,
-                  pre_extract_inclusions=pre_extract_inclusions)
+                  pre_extract_inclusions=pre_extract_inclusions,
+                  prior_run=prior_run,
+                  gid_map=gid_map,
+                  bias_correct=bias_correct)
 
         # parallel job distribution test.
         if objective_function == 'test':
@@ -1639,6 +1857,9 @@ class BespokeWindPlants(AbstractAggregation):
                                     resolution=bsp._resolution,
                                     excl_area=bsp._excl_area,
                                     data_layers=bsp._data_layers,
+                                    prior_meta=bsp._get_prior_meta(gid),
+                                    gid_map=bsp._gid_map,
+                                    bias_correct=bsp._bias_correct,
                                     gids=gid)
                 bsp._outputs.update(si)
         else:
