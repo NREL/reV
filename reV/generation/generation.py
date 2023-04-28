@@ -141,7 +141,7 @@ class Gen(BaseGen):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        gid_map : None | dict
+        gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique
@@ -491,8 +491,12 @@ class Gen(BaseGen):
 
             with handler_class(self.res_file) as hr_res:
                 with handler_class(self.lr_res_file) as lr_res:
+                    logger.info('Making nearest neighbor map for multi '
+                                'resolution resource data...')
                     nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
                                                                        lr_res)
+                    logger.info('Done making nearest neighbor map for multi '
+                                'resolution resource data!')
 
             logger.info('Made nearest neighbor mapping between nominal-'
                         'resolution and low-resolution resource files. '
@@ -501,7 +505,8 @@ class Gen(BaseGen):
 
         return nn_map
 
-    def _parse_bc(self, bias_correct):
+    @staticmethod
+    def _parse_bc(bias_correct):
         """Parse the bias correction data.
 
         Parameters
@@ -550,9 +555,10 @@ class Gen(BaseGen):
 
         msg = ('Bias correction table must have "gid" column but only found: '
                '{}'.format(list(bias_correct.columns)))
-        assert 'gid' in bias_correct, msg
+        assert 'gid' in bias_correct or bias_correct.index.name == 'gid', msg
 
-        bias_correct = bias_correct.set_index('gid')
+        if bias_correct.index.name != 'gid':
+            bias_correct = bias_correct.set_index('gid')
 
         return bias_correct
 
@@ -634,7 +640,7 @@ class Gen(BaseGen):
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
-        gid_map : None | dict
+        gid_map : None | str | dict
             Mapping of unique integer generation gids (keys) to single integer
             resource gids (values). This enables the user to input unique
             generation gids in the project points that map to non-unique

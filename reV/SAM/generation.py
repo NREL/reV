@@ -224,13 +224,15 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         site_sys_inputs : dict
             Optional set of site-specific SAM system inputs to complement the
             site-agnostic inputs.
-        meta : pd.DataFrame
-            1D table with resource meta data.
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
 
         Returns
         -------
-        meta : pd.DataFrame
-            1D table with resource meta data. Will include "timezone"
+        meta : pd.DataFrame | pd.Series
+            Datafram or series for a single site. Will include "timezone"
             and "elevation" from the sam and site system inputs if found.
         """
 
@@ -530,7 +532,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
             required variables to run the respective SAM simulation.
             Remapping will be done to convert typical NSRDB/WTK names
             into SAM names (e.g. DNI -> dn and wind_speed -> windspeed).
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude,
             elevation, and timezone.
@@ -550,7 +552,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
             required variables to run the respective SAM simulation.
             Remapping will be done to convert typical NSRDB/WTK names
             into SAM names (e.g. DNI -> dn and wind_speed -> windspeed).
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude,
             elevation, and timezone.
@@ -678,7 +680,7 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             variables to run the respective SAM simulation. Remapping will be
             done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
             dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude, elevation,
             and timezone.
@@ -718,9 +720,9 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             if var != 'time_index':
 
                 # ensure that resource array length is multiple of 8760
-                arr = np.roll(
-                    self.ensure_res_len(arr, time_index),
-                    int(self._meta['timezone'] * self.time_interval))
+                arr = self.ensure_res_len(arr, time_index)
+                n_roll = int(self._meta['timezone'] * self.time_interval)
+                arr = np.roll(arr, n_roll)
 
                 if var in irrad_vars:
                     if np.min(arr) < 0:
@@ -793,6 +795,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         """
 
         # need to check tilt=lat and azimuth for pv systems
+        meta = self._parse_meta(meta)
         sam_sys_inputs = self.set_latitude_tilt_az(sam_sys_inputs, meta)
 
         super().__init__(resource, meta, sam_sys_inputs,
@@ -808,8 +811,10 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         ----------
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
-        meta : pd.DataFrame
-            1D table with resource meta data.
+        meta : pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
 
         Returns
         -------
@@ -1254,7 +1259,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             Time series resource data for a single location with a
             pandas DatetimeIndex. There must be columns for all the
             required variables to run the respective SAM simulation.
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude,
             elevation, and timezone.
@@ -1375,7 +1380,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             Time series resource data for a single location with a
             pandas DatetimeIndex. There must be columns for all the
             required variables to run the respective SAM simulation.
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude,
             and timezone.
@@ -1458,7 +1463,7 @@ class WindPower(AbstractSamWind):
             variables to run the respective SAM simulation. Remapping will be
             done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
             dn and wind_speed -> windspeed)
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude, elevation,
             and timezone.
@@ -1491,18 +1496,17 @@ class WindPower(AbstractSamWind):
 
         if 'rh' in resource:
             # set relative humidity for icing.
-            rh = np.roll(self.ensure_res_len(resource['rh'].values,
-                                             time_index),
-                         int(meta['timezone'] * self.time_interval),
-                         axis=0)
+            rh = self.ensure_res_len(resource['rh'].values, time_index)
+            n_roll = int(meta['timezone'] * self.time_interval)
+            rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
-        temp = np.roll(self.ensure_res_len(resource[var_list].values,
-                                           time_index),
-                       int(meta['timezone'] * self.time_interval), axis=0)
+        temp = self.ensure_res_len(resource[var_list].values, time_index)
+        n_roll = int(meta['timezone'] * self.time_interval)
+        temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
         data_dict['lat'] = meta['latitude']
@@ -1639,7 +1643,7 @@ class MhkWave(AbstractSamGeneration):
             Timeseries resource data for a single location with a
             pandas DatetimeIndex. There must be columns for all the required
             variables to run the respective SAM simulation.
-        meta : pd.DataFrame | pd.Series
+        meta : pd.Series
             Meta data corresponding to the resource input for the single
             location. Should include values for latitude, longitude, elevation,
             and timezone.
@@ -1669,9 +1673,9 @@ class MhkWave(AbstractSamGeneration):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
-            data_dict[var] = np.roll(
-                self.ensure_res_len(resource[var].values, time_index),
-                int(meta['timezone'] * self.time_interval), axis=0).tolist()
+            arr = self.ensure_res_len(resource[var].values, time_index)
+            n_roll = int(meta['timezone'] * self.time_interval)
+            data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
         data_dict['lat'] = meta['latitude']
         data_dict['lon'] = meta['longitude']

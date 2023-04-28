@@ -126,7 +126,7 @@ Option 1: Install from PIP or Conda (recommended for analysts):
 ---------------------------------------------------------------
 
 1. Create a new environment:
-    ``conda create --name rev python=3.7``
+    ``conda create --name rev python=3.9``
 
 2. Activate directory:
     ``conda activate rev``

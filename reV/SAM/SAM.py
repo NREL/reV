@@ -550,8 +550,10 @@ class RevPySam(Sam):
 
         Parameters
         ----------
-        meta : pd.DataFrame
-            1D table with resource meta data.
+        meta : pd.DataFrame | pd.Series | None
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone. Can be None for econ runs.
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
         output_request : list
@@ -564,7 +566,6 @@ class RevPySam(Sam):
         """
 
         super().__init__()
-        self._meta = meta
         self._site = None
         self.time_interval = 1
         self.outputs = {}
@@ -574,6 +575,7 @@ class RevPySam(Sam):
         if self.output_request is None:
             self.output_request = []
 
+        self._meta = self._parse_meta(meta)
         self._parse_site_sys_inputs(site_sys_inputs)
 
     @property
@@ -721,6 +723,37 @@ class RevPySam(Sam):
 
         return int(time_interval)
 
+    @staticmethod
+    def _parse_meta(meta):
+        """Make sure the meta data corresponds to a single location and convert
+        to pd.Series.
+
+        Parameters
+        ----------
+        meta : pd.DataFrame | pd.Series | None
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone. Can be None for econ runs.
+
+        Parameters
+        ----------
+        meta : pd.Series | None
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone. Can be None for econ runs.
+        """
+
+        if isinstance(meta, pd.DataFrame):
+            msg = ('Meta data must only be for a single site but received: {}'
+                   .format(meta))
+            assert len(meta) == 1, msg
+            meta = meta.iloc[0]
+
+        if meta is not None:
+            assert isinstance(meta, pd.Series)
+
+        return meta
+
     def _parse_site_sys_inputs(self, site_sys_inputs):
         """Parse site-specific parameters and add to parameter dict.
 
@@ -773,8 +806,9 @@ class RevPySam(Sam):
                         output = output.astype(np.int32)
 
                     if self._is_hourly(output):
-                        output = np.roll(output, int(-1 * self.meta['timezone']
-                                                     * self.time_interval))
+                        n_roll = int(-1 * self.meta['timezone']
+                                     * self.time_interval)
+                        output = np.roll(output, n_roll)
 
                     self.outputs[key] = output
 
