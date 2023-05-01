@@ -1366,7 +1366,7 @@ class BespokeWindPlants(AbstractAggregation):
             is provided, the bias_correct gid corresponds to the actual
             resource data gid and not the techmap gid.
         pre_load_data : bool, optional
-            option to pre-load resource data. this step can be
+            Option to pre-load resource data. This step can be
             time-consuming up front, but it drastically reduces the
             number of parallel reads to the ``res_fpath`` HDF5 file(s),
             and can have a significant overall speedup on systems with
