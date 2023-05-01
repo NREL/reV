@@ -455,7 +455,7 @@ def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data')
+                      'extra_unused_data', 'winddirection', 'ws_mean')
 
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
@@ -527,6 +527,22 @@ def test_bespoke():
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
+
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
+                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                  FOC_FUN, VOC_FUN,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath_pre,
+                                  pre_load_data=True)
+
+        with Resource(out_fpath) as f1, Resource(out_fpath_pre) as f2:
+            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
 def test_collect_bespoke():
@@ -1004,7 +1020,7 @@ def test_gid_map():
     the same spatial configuration."""
 
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data', 'ws_mean')
+                      'extra_unused_data', 'winddirection', 'ws_mean')
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
         out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
@@ -1073,6 +1089,24 @@ def test_gid_map():
         assert not np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
         assert not np.allclose(data1['ws_mean'], data2['ws_mean'], atol=0.2)
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
+
+
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                  FOC_FUN, VOC_FUN,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath_pre,
+                                  gid_map=fp_gid_map,
+                                  pre_load_data=True)
+
+        with Resource(out_fpath2) as f1, Resource(out_fpath_pre) as f2:
+            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
 def test_bespoke_w_bias_correct():
