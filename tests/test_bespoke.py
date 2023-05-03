@@ -603,7 +603,7 @@ def test_consistent_eval_namespace(gid=33):
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
-        out = bsp.run_plant_optimization()
+        _ = bsp.run_plant_optimization()
 
         assert bsp.meta["bespoke_aep"].values[0] == bsp.plant_optimizer.aep
         assert (bsp.meta["bespoke_objective"].values[0]
@@ -1083,7 +1083,6 @@ def test_gid_map():
         assert not np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
         assert not np.allclose(data1['ws_mean'], data2['ws_mean'], atol=0.2)
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
-
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
         _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
