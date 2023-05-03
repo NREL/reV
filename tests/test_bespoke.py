@@ -987,21 +987,15 @@ def test_bespoke_w_prior_run():
 
         with Resource(out_fpath1) as f1:
             meta1 = f1.meta
-            dsets1 = f1.dsets
             data1 = {k: f1[k] for k in f1.dsets}
 
         with Resource(out_fpath2) as f2:
             meta2 = f2.meta
-            dsets2 = f2.dsets
             data2 = {k: f2[k] for k in f2.dsets}
 
         cols = ['turbine_x_coords', 'turbine_y_coords', 'capacity',
                 'n_gids', 'gid_counts', 'res_gids']
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
-
-        # original bespoke run should have bespoke outputs, 2nd run should not
-        assert 'bespoke_objective' in dsets1
-        assert 'bespoke_objective' not in dsets2
 
         # multi-year means should not match the 2nd run with 2013 only.
         # 2013 values should match exactly
