@@ -11,6 +11,8 @@ You can use the NREL developer API as the HSDS endpoint for small workloads
 or stand up your own HSDS local server (instructions further below) for an
 enhanced parallelized data experience.
 
+You might also be interested in these examples of how to set up your own `local HSDS server <https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server>`_ and how to run reV on an `AWS parallel cluster <https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_.
+
 Setting up HSDS
 ---------------
 
