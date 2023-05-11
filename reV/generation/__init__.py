@@ -2,4 +2,4 @@
 """
 reV Generation
 """
-from .generation import Gen
+from .generation import Gen, gen_preprocessor
