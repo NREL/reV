@@ -36,6 +36,9 @@ class ModuleName(str, Enum):
     SUPPLY_CURVE = 'supply-curve'
     SUPPLY_CURVE_AGGREGATION = 'supply-curve-aggregation'
 
+    def __str__(self):
+        return self.value
+
     @classmethod
     def all_names(cls):
         """All module names.
