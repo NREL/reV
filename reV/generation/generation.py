@@ -712,8 +712,7 @@ class Gen(BaseGen):
         """
 
         # make a Gen class instance to operate with
-        gen = cls(points, sam_configs, res_file,
-                  technology=tech,
+        gen = cls(points, sam_configs, tech, res_file,
                   low_res_resource_file=lr_res_file,
                   output_request=output_request,
                   site_data=site_data,
@@ -726,7 +725,7 @@ class Gen(BaseGen):
                   bias_correct=bias_correct)
 
         # initialize output file
-        gen._init_fpath(out_fpath. ModuleName.GENERATION)
+        gen._init_fpath(out_fpath, ModuleName.GENERATION)
         gen._init_h5()
         gen._init_out_arrays()
 
