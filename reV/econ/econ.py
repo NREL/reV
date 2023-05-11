@@ -420,7 +420,7 @@ class Econ(BaseGen):
         if append:
             econ._out_fpath = econ._cf_file
         else:
-            econ._init_fpath(out_fpath, '')
+            econ._init_fpath(out_fpath)
 
         econ._init_h5(mode='a' if append else 'w')
         econ._init_out_arrays()

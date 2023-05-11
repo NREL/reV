@@ -26,6 +26,7 @@ from reV.SAM.generation import (Geothermal,
                                 TroughPhysicalHeat,
                                 LinearDirectSteam,
                                 MhkWave)
+from reV.utilities import ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -725,7 +726,7 @@ class Gen(BaseGen):
                   bias_correct=bias_correct)
 
         # initialize output file
-        gen._init_fpath(out_fpath, '')
+        gen._init_fpath(out_fpath)
         gen._init_h5()
         gen._init_out_arrays()
 

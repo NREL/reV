@@ -851,7 +851,7 @@ class BaseGen(ABC):
 
         return data_shape
 
-    def _init_fpath(self, out_fpath, tag):
+    def _init_fpath(self, out_fpath):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
         if out_fpath is None:
             return
@@ -860,13 +860,14 @@ class BaseGen(ABC):
         if not out_fpath.endswith('.h5'):
             out_fpath += '.h5'
 
+        if ModuleName.GENERATION not in out_fpath:
+            extension_with_module = "_{}.h5".format(ModuleName.GENERATION)
+            out_fpath = out_fpath.replace(".h5", extension_with_module)
+
         # ensure year is in out_fpath
         if str(self.year) not in out_fpath:
-            out_fpath = out_fpath.replace('.h5',
-                                          '_{}{}.h5'.format(self.year, tag))
-
-        if tag not in out_fpath:
-            out_fpath = out_fpath.replace('.h5', '{}.h5'.format(tag))
+            extension_with_year = "_{}.h5".format(self.year)
+            out_fpath = out_fpath.replace(".h5", extension_with_year)
 
         # create and use optional output dir
         dirout = os.path.dirname(out_fpath)
