@@ -800,12 +800,14 @@ def gen_preprocessor(config, analysis_years=None):
         warn('Years may not have been specified, may default '
              'to available years in inputs files.', ConfigWarning)
 
-    config["res_file"] = _parse_res_files(config["res_file"], analysis_years)
-    lr_res_file = config.get("lr_res_file")
+    config["resource_file"] = _parse_res_files(config["resource_file"],
+                                               analysis_years)
+    lr_res_file = config.get("low_res_resource_file")
     if lr_res_file is None:
-        config["lr_res_file"] = [None] * len(analysis_years)
+        config["low_res_resource_file"] = [None] * len(analysis_years)
     else:
-        config["lr_res_file"] = _parse_res_files(lr_res_file, analysis_years)
+        config["low_res_resource_file"] = _parse_res_files(lr_res_file,
+                                                           analysis_years)
 
     config['technology'] = (config['technology'].lower()
                             .replace(' ', '').replace('_', ''))
