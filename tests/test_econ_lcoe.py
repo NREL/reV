@@ -71,7 +71,7 @@ def test_fout(year):
                                  'SAM/i_lcoe_naris_pv_1axis_inv13.json')
         r1f = os.path.join(TESTDATADIR,
                            'ri_pv/scalar_outputs/project_outputs.h5')
-        fout = 'lcoe_out_{}.h5'.format(year)
+        fout = 'lcoe_out_econ_{}.h5'.format(year)
         fpath = os.path.join(dirout, fout)
         points = slice(0, 100)
         Econ.reV_run(points, sam_files, cf_file,

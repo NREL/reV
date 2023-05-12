@@ -184,7 +184,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         sam_files = os.path.join(TESTDATADIR, 'SAM/i_singleowner_windbos.json')
         res_file = os.path.join(TESTDATADIR,
                                 'wtk/ri_100_wtk_{}.h5'.format(year))
-        fn_gen = 'windbos_gen_{}.h5'.format(year)
+        fn_gen = 'windbos_generation_{}.h5'.format(year)
         cf_file = os.path.join(td, fn_gen)
 
         # run reV 2.0 generation
