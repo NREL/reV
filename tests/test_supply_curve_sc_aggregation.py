@@ -16,7 +16,6 @@ import shutil
 import h5py
 import json
 import shutil
-from click.testing import CliRunner
 import traceback
 
 from reV.cli import main
@@ -398,7 +397,7 @@ def test_recalc_lcoe():
     assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
 
 
-def test_cli_basic_agg():
+def test_cli_basic_agg(runner):
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'excl.h5')
         shutil.copy(EXCL, excl_fp)
@@ -421,7 +420,6 @@ def test_cli_basic_agg():
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        runner = CliRunner()
         result = runner.invoke(main, ['-c', config_path,
                                       'supply-curve-aggregation'])
 

@@ -18,7 +18,6 @@ import traceback
 
 import numpy as np
 import pandas as pd
-from click.testing import CliRunner
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
@@ -121,12 +120,6 @@ def so_scheduler(basic_outage_dict):
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """Cli runner."""
-    return CliRunner()
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])

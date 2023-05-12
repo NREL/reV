@@ -8,7 +8,6 @@ import numpy as np
 import os
 import pytest
 import tempfile
-from click.testing import CliRunner
 import json
 import traceback
 import shutil
@@ -175,9 +174,8 @@ def test_means_lcoe():
             assert 'lcoe_fcr' in f
 
 
-def test_cli():
+def test_cli(runner):
     """Test the collection command line interface"""
-    runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as td:
         config = {

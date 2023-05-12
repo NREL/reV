@@ -7,7 +7,6 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-from click.testing import CliRunner
 import h5py
 import json
 import numpy as np
@@ -176,14 +175,6 @@ def test_append_multi_node(node):
             site_data.loc[site_data.gid.isin(meta.gid), 'capital_cost']
         assert np.allclose(test_cap_cost, sd_cap_cost)
         assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """
-    cli runner
-    """
-    return CliRunner()
 
 
 def test_econ_from_config(runner):

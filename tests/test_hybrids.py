@@ -7,8 +7,6 @@ import numpy as np
 import tempfile
 import json
 
-from click.testing import CliRunner
-
 from reV.hybrids import Hybridization, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.hybrids.cli_hybrids import main as hybrids_cli_main
@@ -34,12 +32,6 @@ with Resource(SOLAR_FPATH) as res:
     SOLAR_SCPGIDS = set(res.meta['sc_point_gid'])
 with Resource(WIND_FPATH) as res:
     WIND_SCPGIDS = set(res.meta['sc_point_gid'])
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """Cli runner helper utility. """
-    return CliRunner()
 
 
 def test_hybridization_profile_output_single_resource():

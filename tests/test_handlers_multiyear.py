@@ -9,7 +9,6 @@ import shutil
 import pytest
 import tempfile
 import json
-from click.testing import CliRunner
 import traceback
 
 from reV.handlers.cli_multi_year import main
@@ -28,12 +27,6 @@ H5_FILES = [os.path.join(H5_DIR, 'gen_ri_pv_{}_x000.h5'.format(year))
 H5_PATTERN = os.path.join(H5_DIR, 'gen_ri_pv_201*_x000.h5')
 
 logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """cli runner"""
-    return CliRunner()
 
 
 def manual_means(h5_files, dset):
