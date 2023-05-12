@@ -18,7 +18,6 @@ import pytest
 import tempfile
 import traceback
 
-from rex.utilities.loggers import LOGGERS
 from reV.cli import main
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
@@ -177,7 +176,7 @@ def test_append_multi_node(node):
         assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
 
 
-def test_econ_from_config(runner):
+def test_econ_from_config(runner, clear_loggers):
     """Econ LCOE from config"""
     cf_file = os.path.join(TESTDATADIR,
                            'gen_out/gen_ri_pv_2012_x000.h5')
@@ -230,7 +229,7 @@ def test_econ_from_config(runner):
 
         assert result
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

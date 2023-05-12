@@ -29,7 +29,6 @@ from reV.cli import main
 from reV.handlers.outputs import Outputs
 
 from rex.utilities.utilities import safe_json_load
-from rex.utilities.loggers import LOGGERS
 
 
 REV_POINTS = list(range(3))
@@ -785,7 +784,7 @@ def test_outage_class_allow_outage_overlap(basic_outage_dict):
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv5'),
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv7')
 ])
-def test_scheduled_outages_multi_year(runner, files):
+def test_scheduled_outages_multi_year(runner, files, clear_loggers):
     """Test that scheduled outages are different year to year. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
@@ -832,7 +831,7 @@ def test_scheduled_outages_multi_year(runner, files):
             json.dump(config, f)
 
         result = runner.invoke(main, ['-c', config_path, 'generation'])
-        LOGGERS.clear()
+        clear_loggers()
 
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))

@@ -18,7 +18,7 @@ from reV import TESTDATADIR
 from reV.utilities.pytest_utils import make_fake_h5_chunks
 
 from rex import Resource
-from rex.utilities.loggers import init_logger, LOGGERS
+from rex.utilities.loggers import init_logger
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
@@ -174,7 +174,7 @@ def test_means_lcoe():
             assert 'lcoe_fcr' in f
 
 
-def test_cli(runner):
+def test_cli(runner, clear_loggers):
     """Test the collection command line interface"""
 
     with tempfile.TemporaryDirectory() as td:
@@ -213,7 +213,7 @@ def test_cli(runner):
             shutil.move(os.path.join(H5_DIR, 'chunk_files/', fn),
                         os.path.join(H5_DIR, fn))
         shutil.rmtree(os.path.join(H5_DIR, 'chunk_files/'))
-        LOGGERS.clear()
+        clear_loggers()
 
 
 def test_collect_duplicates():

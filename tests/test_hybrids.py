@@ -16,7 +16,6 @@ from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
-from rex.utilities.loggers import LOGGERS
 from rex.utilities.hpc import SLURM
 
 
@@ -583,7 +582,7 @@ def test_hybrids_data_contains_col():
 @pytest.mark.parametrize("ratio_bounds", [None, (0.5, 1.5), (0.3, 3.6)])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
 def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
-                                 input_combination):
+                                 input_combination, clear_loggers):
     """Test hybrids cli from config"""
     fv = -999
     sfp, wfp = input_files
@@ -616,13 +615,13 @@ def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
             json.dump(config, f)
 
         result = runner.invoke(main, ['-c', config_path, 'hybrids'])
-        LOGGERS.clear()
+        clear_loggers()
 
         if result.exit_code != 0:
             import traceback
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
-            LOGGERS.clear()
+            clear_loggers()
             raise RuntimeError(msg)
 
         h = Hybridization(
@@ -644,14 +643,14 @@ def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
             assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
             assert np.all(f.time_index == h.hybrid_time_index)
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 @pytest.mark.parametrize("bad_fpath", [
     os.path.join(TESTDATADIR, 'rep_profiles_out', 'rep_profiles_sol*.h5'),
     os.path.join(TESTDATADIR, 'rep_profiles_out', 'rep_profiles_dne.h5'),
 ])
-def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
+def test_hybrids_cli_bad_fpath_input(runner, bad_fpath, clear_loggers):
     """Test cli when filepath input is ambiguous or invalid. """
 
     with tempfile.TemporaryDirectory() as td:
@@ -672,13 +671,13 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
             json.dump(config, f)
 
         result = runner.invoke(main, ['-c', config_path, 'hybrids'])
-        LOGGERS.clear()
+        clear_loggers()
 
         if result.exit_code != 0:
             import traceback
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
-            LOGGERS.clear()
+            clear_loggers()
             raise RuntimeError(msg)
 
         dirname = os.path.basename(td)
@@ -686,7 +685,7 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
         assert "WARNING" in result.stdout
         assert fn_out not in os.listdir(td)
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 @pytest.mark.parametrize("input_files", [
@@ -700,7 +699,7 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath):
 @pytest.mark.parametrize("ratio_bounds", [None, (0.5, 1.5), (0.3, 3.6)])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
 def test_hybrids_cli_direct(runner, input_files, ratio, ratio_bounds,
-                            input_combination):
+                            input_combination, clear_loggers):
     """Test hybrids cli 'direct' command. """
 
     fv = -999
@@ -731,13 +730,13 @@ def test_hybrids_cli_direct(runner, input_files, ratio, ratio_bounds,
 
         cmd = '-n {} direct {}'.format(SLURM.s("hybrids-test"), ' '.join(args))
         result = runner.invoke(hybrids_cli_main, cmd)
-        LOGGERS.clear()
+        clear_loggers()
 
         if result.exit_code != 0:
             import traceback
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
-            LOGGERS.clear()
+            clear_loggers()
             raise RuntimeError(msg)
 
         h = Hybridization(
@@ -758,7 +757,7 @@ def test_hybrids_cli_direct(runner, input_files, ratio, ratio_bounds,
             assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
             assert np.all(f.time_index == h.hybrid_time_index)
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),

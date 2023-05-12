@@ -18,7 +18,7 @@ from reV.config.multi_year import MultiYearConfig
 from reV import TESTDATADIR
 
 from rex import Resource
-from rex.utilities.loggers import init_logger, LOGGERS
+from rex.utilities.loggers import init_logger
 
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
@@ -140,7 +140,7 @@ def test_my_collection(source, dset, group):
         assert np.in1d(my_dsets, out_dsets).all(), msg
 
 
-def test_cli(runner):
+def test_cli(runner, clear_loggers):
     """Test multi year collection cli with pass through of some datasets."""
 
     with tempfile.TemporaryDirectory() as temp:
@@ -192,7 +192,7 @@ def test_cli(runner):
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 @pytest.mark.parametrize(('dset', 'group'), [

@@ -12,12 +12,11 @@ import shutil
 import tempfile
 
 from rex import Resource
-from rex.utilities.loggers import LOGGERS
 from reV import TESTDATADIR
 from reV.pipeline.pipeline import Pipeline
 
 
-def test_pipeline_local():
+def test_pipeline_local(clear_loggers):
     """Test the reV pipeline execution on a local machine."""
     with tempfile.TemporaryDirectory() as TEMP_DIR:
         pipeline_dir = os.path.join(TESTDATADIR, 'pipeline/')
@@ -46,7 +45,7 @@ def test_pipeline_local():
                     msg = 'Local pipeline failed for "{}"'.format(dset)
                     assert np.allclose(truth, test, rtol=0.01, atol=0), msg
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

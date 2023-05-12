@@ -24,8 +24,6 @@ from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV import TESTDATADIR
 
-from rex.utilities.loggers import LOGGERS
-
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -397,7 +395,7 @@ def test_recalc_lcoe():
     assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
 
 
-def test_cli_basic_agg(runner):
+def test_cli_basic_agg(runner, clear_loggers):
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'excl.h5')
         shutil.copy(EXCL, excl_fp)
@@ -422,10 +420,7 @@ def test_cli_basic_agg(runner):
 
         result = runner.invoke(main, ['-c', config_path,
                                       'supply-curve-aggregation'])
-
-        # windows doesnt release log file handler
-        # unless we clear log handlers from rex
-        LOGGERS.clear()
+        clear_loggers()
 
         if result.exit_code != 0:
             msg = ('Failed with error {}'
