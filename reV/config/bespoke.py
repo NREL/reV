@@ -278,3 +278,16 @@ class BespokeConfig(AnalysisConfig):
         the inclusion mask on the fly with parallel workers.
         """
         return self.get('pre_extract_inclusions', False)
+
+    @property
+    def pre_load_data(self):
+        """Optional flag to pre-load resource data. This step can be
+        time-consuming up front, but it drastically reduces the
+        number of parallel reads to the ``res_fpath`` HDF5 file(s),
+        and can have a significant overall speedup on systems with
+        slow parallel I/O capabilities. Pre-loaded data can use a
+        significant amount of RAM, so be sure to split execution
+        across many nodes (e.g. 100 nodes, 36 workers each for
+        CONUS) or request large amounts of memory for a smaller
+        number of nodes."""
+        return self.get('pre_load_data', False)

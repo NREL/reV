@@ -984,7 +984,7 @@ class SupplyCurve:
         """Add extra output columns, if needed. """
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
-        extra_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+        extra_cols = {'ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
                       'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
                       'reinforcement_cost_per_mw', 'reinforcement_dist_km',
                       'n_parallel_trans', 'total_lcoe_friction'}

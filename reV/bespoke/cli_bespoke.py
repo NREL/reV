@@ -135,6 +135,7 @@ def from_config(ctx, config_file, points_range, verbose):
     ctx.obj['PRIOR_RUN'] = config.prior_run
     ctx.obj['GID_MAP'] = config.gid_map
     ctx.obj['BIAS_CORRECT'] = config.bias_correct
+    ctx.obj['PRE_LOAD_DATA'] = config.pre_load_data
 
     ctx.obj['LOG_DIR'] = config.log_directory
     ctx.obj['OUT_DIR'] = config.dirout
@@ -220,6 +221,7 @@ def from_config(ctx, config_file, points_range, verbose):
                        'gid_map': config.gid_map,
                        'bias_correct': config.bias_correct,
                        'pre_extract_inclusions': config.pre_extract_inclusions,
+                       'pre_load_data': config.pre_load_data,
                        'verbose': verbose}
                 ctx.invoke(direct, **kws)
 
@@ -403,6 +405,16 @@ def valid_config_keys():
               'from the provided excl_dict, by default False. Typically '
               'faster to compute the inclusion mask on the fly with parallel '
               'workers.')
+@click.option('-pld', '--pre_load_data', is_flag=True,
+              help='Optional flag to pre-load resource data. This step can be '
+                   'time-consuming up front, but it drastically reduces the '
+                   'number of parallel reads to the ``res_fpath`` HDF5 '
+                   'file(s), and can have a significant overall speedup on '
+                   'systems with slow parallel I/O capabilities. Pre-loaded '
+                   'data can use a significant amount of RAM, so be sure to '
+                   'split execution across many nodes (e.g. 100 nodes, 36 '
+                   'workers each for CONUS) or request large amounts of '
+                   'memory for a smaller number of nodes.')
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -412,7 +424,8 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
            min_spacing, wake_loss_multiplier, ga_kwargs, output_request,
            ws_bins, wd_bins, excl_dict, area_filter_kernel, min_area,
            resolution, excl_area, log_dir, max_workers, data_layers,
-           prior_run, gid_map, bias_correct, pre_extract_inclusions, verbose):
+           prior_run, gid_map, bias_correct, pre_extract_inclusions,
+           pre_load_data, verbose):
     """Run reV Bespoke directly w/o a config file."""
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['RES_FPATH'] = res_fpath
@@ -497,7 +510,8 @@ def direct(ctx, excl_fpath, res_fpath, out_fpath, tm_dset, objective_function,
                 bias_correct=bias_correct,
                 pre_extract_inclusions=pre_extract_inclusions,
                 max_workers=max_workers,
-                out_fpath=out_fpath)
+                out_fpath=out_fpath,
+                pre_load_data=pre_load_data)
         except Exception as e:
             msg = ('reV Bespoke optimization failed. Received the '
                    'following error:\n{}'.format(e))
@@ -568,6 +582,9 @@ def get_node_cmd(name, kwargs):
 
     if kwargs['PRE_EXTRACT_INCLUSIONS']:
         arg_direct.append('-pre')
+
+    if kwargs['PRE_LOAD_DATA']:
+        arg_direct.append('-pld')
 
     if kwargs['VERBOSE']:
         arg_direct.append('-v')

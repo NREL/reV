@@ -5,7 +5,7 @@ place turbines for bespoke wind plants
 """
 import numpy as np
 
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 
 from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
@@ -359,6 +359,12 @@ class PlaceTurbines:
         return eval(self.capital_cost_function, globals(), locals()) * mult
 
     @property
+    def fixed_charge_rate(self):
+        """Fixed charge rate if input to the SAM WindPowerPD object, None if
+        not found in inputs."""
+        return self.wind_plant.sam_sys_inputs.get('fixed_charge_rate', None)
+
+    @property
     @none_until_optimized
     def turbine_x(self):
         """This is the final optimized turbine x locations (m)"""
@@ -384,17 +390,36 @@ class PlaceTurbines:
 
     @property
     @none_until_optimized
+    def convex_hull(self):
+        """This is the convex hull of the turbine locations"""
+        turbines = MultiPoint([Point(x, y)
+                               for x,y in zip(self.turbine_x, self.turbine_y)])
+        return turbines.convex_hull
+
+    @property
+    @none_until_optimized
     def area(self):
-        """This is the area available for wind turbine placement (km2)"""
-        return self.full_polygons.area
+        """This is the area available for wind turbine placement (km^2)"""
+        return self.full_polygons.area / 1e6
 
     @property
-    def fixed_charge_rate(self):
-        """Fixed charge rate if input to the SAM WindPowerPD object, None if
-        not found in inputs."""
-        return self.wind_plant.sam_sys_inputs.get('fixed_charge_rate', None)
+    @none_until_optimized
+    def convex_hull_area(self):
+        """This is the area of the convex hull of the turbines (km^2)"""
+        return self.convex_hull.area / 1e6
 
     @property
+    @none_until_optimized
+    def full_cell_area(self):
+        """This is the full non-excluded area available for wind turbine
+        placement (km^2)"""
+        nx, ny = np.shape(self.include_mask)
+        side_x = nx * self.pixel_side_length
+        side_y = ny * self.pixel_side_length
+        return side_x * side_y / 1e6
+
+    @property
+    @none_until_optimized
     def capacity_density(self):
         """This is the optimized capacity density of the wind plant
         defined with the area available after removing the exclusions
@@ -403,8 +428,27 @@ class PlaceTurbines:
             return
 
         if self.area != 0.0:
-            return self.capacity / self.area * 1E3
+            return self.capacity / self.area / 1E3
 
+        return 0.0
+
+    @property
+    @none_until_optimized
+    def convex_hull_capacity_density(self):
+        """This is the optimized capacity density of the wind plant
+        defined with the convex hull area of the turbine layout (MW/km2)"""
+        if self.convex_hull_area != 0.0:
+            return self.capacity / self.convex_hull_area / 1E3
+        return 0.0
+
+    @property
+    @none_until_optimized
+    def full_cell_capacity_density(self):
+        """This is the optimized capacity density of the wind plant
+        defined with the full non-excluded area of the turbine layout (MW/km2)
+        """
+        if self.full_cell_area != 0.0:
+            return self.capacity / self.full_cell_area / 1E3
         return 0.0
 
     @property

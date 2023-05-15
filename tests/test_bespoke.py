@@ -111,9 +111,9 @@ def test_turbine_placement(gid=33):
         assert place_optimizer.nturbs == len(place_optimizer.turbine_x)
         assert place_optimizer.capacity == place_optimizer.nturbs *\
             place_optimizer.turbine_capacity
-        assert place_optimizer.area == place_optimizer.full_polygons.area
+        assert place_optimizer.area == place_optimizer.full_polygons.area / 1e6
         assert place_optimizer.capacity_density == place_optimizer.capacity\
-            / place_optimizer.area * 1E3
+            / place_optimizer.area / 1E3
 
         place_optimizer.wind_plant["wind_farm_xCoordinates"] = \
             place_optimizer.turbine_x
@@ -220,8 +220,9 @@ def test_packing_algorithm(gid=33):
 
         assert len(optimizer.x_locations) < 165
         assert len(optimizer.x_locations) > 145
-        assert np.sum(optimizer.include_mask) ==\
-            optimizer.safe_polygons.area / (optimizer.pixel_side_length**2)
+        assert np.sum(optimizer.include_mask) == (
+            optimizer.safe_polygons.area
+            / (optimizer.pixel_side_length**2))
 
         bsp.close()
 
@@ -299,11 +300,12 @@ def test_single(gid=33):
         assert 'annual_energy-2013' in out
         assert 'annual_energy-means' in out
 
-        assert TURB_RATING * out['n_turbines'] == out['system_capacity']
+        assert (TURB_RATING * bsp.meta['n_turbines'].values[0]
+                == out['system_capacity'])
         x_coords = json.loads(bsp.meta['turbine_x_coords'].values[0])
         y_coords = json.loads(bsp.meta['turbine_y_coords'].values[0])
-        assert out['n_turbines'] == len(x_coords)
-        assert out['n_turbines'] == len(y_coords)
+        assert bsp.meta['n_turbines'].values[0] == len(x_coords)
+        assert bsp.meta['n_turbines'].values[0] == len(y_coords)
 
         for y in (2012, 2013):
             cf = out[f'cf_profile-{y}']
@@ -453,7 +455,7 @@ def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data')
+                      'extra_unused_data', 'winddirection', 'ws_mean')
 
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
@@ -507,7 +509,7 @@ def test_bespoke():
             assert 'possible_y_coords' in meta
             assert 'res_gids' in meta
 
-            dsets_1d = ('n_turbines', 'system_capacity', 'cf_mean-2012',
+            dsets_1d = ('system_capacity', 'cf_mean-2012',
                         'annual_energy-2012', 'cf_mean-means',
                         'extra_unused_data-2012')
             for dset in dsets_1d:
@@ -525,6 +527,22 @@ def test_bespoke():
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
+
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
+                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                  FOC_FUN, VOC_FUN,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath_pre,
+                                  pre_load_data=True)
+
+        with Resource(out_fpath) as f1, Resource(out_fpath_pre) as f2:
+            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
 def test_collect_bespoke():
@@ -585,10 +603,11 @@ def test_consistent_eval_namespace(gid=33):
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request,
                                  )
-        out = bsp.run_plant_optimization()
+        _ = bsp.run_plant_optimization()
 
-        assert out["bespoke_aep"] == bsp.plant_optimizer.aep
-        assert out["bespoke_objective"] == bsp.plant_optimizer.objective
+        assert bsp.meta["bespoke_aep"].values[0] == bsp.plant_optimizer.aep
+        assert (bsp.meta["bespoke_objective"].values[0]
+                == bsp.plant_optimizer.objective)
 
         bsp.close()
 
@@ -968,21 +987,15 @@ def test_bespoke_w_prior_run():
 
         with Resource(out_fpath1) as f1:
             meta1 = f1.meta
-            dsets1 = f1.dsets
             data1 = {k: f1[k] for k in f1.dsets}
 
         with Resource(out_fpath2) as f2:
             meta2 = f2.meta
-            dsets2 = f2.dsets
             data2 = {k: f2[k] for k in f2.dsets}
 
         cols = ['turbine_x_coords', 'turbine_y_coords', 'capacity',
                 'n_gids', 'gid_counts', 'res_gids']
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
-
-        # original bespoke run should have bespoke outputs, 2nd run should not
-        assert 'bespoke_objective' in dsets1
-        assert 'bespoke_objective' not in dsets2
 
         # multi-year means should not match the 2nd run with 2013 only.
         # 2013 values should match exactly
@@ -1001,7 +1014,7 @@ def test_gid_map():
     the same spatial configuration."""
 
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data', 'ws_mean')
+                      'extra_unused_data', 'winddirection', 'ws_mean')
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
         out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
@@ -1070,6 +1083,23 @@ def test_gid_map():
         assert not np.allclose(data1['cf_mean-2013'], data2['cf_mean-2013'])
         assert not np.allclose(data1['ws_mean'], data2['ws_mean'], atol=0.2)
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
+
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
+                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                  FOC_FUN, VOC_FUN,
+                                  points, SAM_CONFIGS,
+                                  ga_kwargs={'max_time': 1},
+                                  excl_dict=EXCL_DICT,
+                                  output_request=output_request,
+                                  max_workers=1,
+                                  out_fpath=out_fpath_pre,
+                                  gid_map=fp_gid_map,
+                                  pre_load_data=True)
+
+        with Resource(out_fpath2) as f1, Resource(out_fpath_pre) as f2:
+            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
 def test_bespoke_w_bias_correct():

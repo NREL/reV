@@ -206,7 +206,7 @@ class DatasetCollector:
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
-        if not any(locs):
+        if len(locs) == 0:
             e = ('DatasetCollector could not locate source gids in '
                  'output gids. \n\t Source gids: {} \n\t Output gids: {}'
                  .format(source_gids, gids_out))
@@ -547,7 +547,7 @@ class Collector:
             logger.error(m)
             raise CollectionValueError(m)
 
-        gids = gids.astype(int).tolist()
+        gids = [int(g) for g in gids]
         if not sorted(gids) == gids:
             msg = ('Project points contain non-ordered meta data GIDs! This '
                    'can cause issues with the collection ordering. Please '

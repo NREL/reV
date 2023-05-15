@@ -175,6 +175,25 @@ def test_means_lcoe():
             assert 'lcoe_fcr' in f
 
 
+def test_collect_zero_gid():
+    """Test memory limited multi chunk collection"""
+    with tempfile.TemporaryDirectory() as TEMP_DIR:
+        init_logger('reV.handlers.collection', log_level='DEBUG')
+        h5_file = os.path.join(TEMP_DIR, 'cf.h5')
+        node_file = os.path.join(H5_DIR, 'peregrine_2012_node00_x000.h5')
+        Collector.collect(h5_file, node_file, [0], 'cf_profile', dset_out=None)
+
+        with h5py.File(h5_file, 'r') as f:
+            assert 'cf_profile' in f
+            data = f['cf_profile'][...]
+
+        with h5py.File(node_file, 'r') as f:
+            source_data = f['cf_profile'][...]
+
+        assert np.allclose(source_data[:, 0], data[:, 0])
+        assert not np.allclose(source_data[:, 1:], data[:, 1:])
+
+
 def test_cli():
     """Test the collection command line interface"""
     runner = CliRunner()
