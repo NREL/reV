@@ -1101,7 +1101,8 @@ def test_gid_map():
                                   pre_load_data=True)
 
         with Resource(out_fpath2) as f1, Resource(out_fpath_pre) as f2:
-            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["winddirection-2013"],
+                               f2["winddirection-2013"])
             assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
