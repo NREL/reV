@@ -455,7 +455,8 @@ def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data', 'winddirection', 'ws_mean')
+                      'extra_unused_data', 'winddirection', 'windspeed',
+                      'ws_mean')
 
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, 'bespoke_out.h5')
@@ -511,7 +512,7 @@ def test_bespoke():
 
             dsets_1d = ('system_capacity', 'cf_mean-2012',
                         'annual_energy-2012', 'cf_mean-means',
-                        'extra_unused_data-2012')
+                        'extra_unused_data-2012', 'ws_mean')
             for dset in dsets_1d:
                 assert dset in list(f)
                 assert isinstance(f[dset], np.ndarray)
@@ -519,7 +520,8 @@ def test_bespoke():
                 assert len(f[dset]) == len(meta)
                 assert f[dset].any()  # not all zeros
 
-            dsets_2d = ('cf_profile-2012', 'cf_profile-2013')
+            dsets_2d = ('cf_profile-2012', 'cf_profile-2013',
+                        'windspeed-2012', 'windspeed-2013')
             for dset in dsets_2d:
                 assert dset in list(f)
                 assert isinstance(f[dset], np.ndarray)
@@ -541,7 +543,8 @@ def test_bespoke():
                                   pre_load_data=True)
 
         with Resource(out_fpath) as f1, Resource(out_fpath_pre) as f2:
-            assert np.allclose(f1["winddirection"], f2["winddirection"])
+            assert np.allclose(f1["winddirection-2012"],
+                               f2["winddirection-2012"])
             assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
