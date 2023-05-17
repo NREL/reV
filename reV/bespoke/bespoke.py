@@ -442,12 +442,18 @@ class BespokeSinglePlant:
             self._out_req.remove('ws_mean')
             self._outputs['ws_mean'] = self.res_df['windspeed'].mean()
 
-        for req in self._out_req:
-            dset = req.replace('_mean', '')
-            available_dsets = ('windspeed', 'winddirection',
-                               'pressure', 'temperature')
-            if dset in available_dsets:
+        for req in copy.deepcopy(self._out_req):
+            if req in self.res_df:
                 self._out_req.remove(req)
+                for annual_ti in self.annual_time_indexes:
+                    year = annual_ti.year[0]
+                    mask = self.res_df.index.isin(annual_ti)
+                    arr = self.res_df.loc[mask, req].values.flatten()
+                    self._outputs[req + f'-{year}'] = arr
+
+            elif req.replace('_mean', '') in self.res_df:
+                self._out_req.remove(req)
+                dset = req.replace('_mean', '')
                 self._outputs[req] = self.res_df[dset].mean()
 
         if ('lcoe_fcr' in self._out_req
