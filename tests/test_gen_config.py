@@ -7,7 +7,6 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-from click.testing import CliRunner
 import json
 import numpy as np
 import os
@@ -16,8 +15,7 @@ import pytest
 import tempfile
 import traceback
 
-from rex.utilities.loggers import LOGGERS
-from reV.cli import main
+from reV.cli import gaps_cli
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
@@ -27,14 +25,6 @@ from rex.utilities.utilities import safe_json_load
 
 RTOL = 0.0
 ATOL = 0.04
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """
-    cli runner
-    """
-    return CliRunner()
 
 
 def get_r1_profiles(year=2012, tech='pv'):
@@ -54,7 +44,7 @@ def get_r1_profiles(year=2012, tech='pv'):
 
 
 @pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
-def test_gen_from_config(runner, tech):  # noqa: C901
+def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
     with tempfile.TemporaryDirectory() as td:
 
@@ -90,8 +80,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
         config_obj = GenConfig(config_path)
 
-        result = runner.invoke(main, ['-c', config_path,
-                                      'generation'])
+        result = runner.invoke(gaps_cli, ['generation', '-c', config_path])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg
@@ -135,7 +124,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
         print(rev1_profiles)
         print(rev2_profiles)
 
-        LOGGERS.clear()
+        clear_loggers()
         msg = ('reV generation from config input failed for "{}" module!'
                .format(tech))
         assert result is True, msg
@@ -155,14 +144,13 @@ def test_sam_config(tech):
         points_config = pd.DataFrame({"gid": range(0, 100),
                                       "config": ['default'] * 100})
 
-        gen_json = Gen.reV_run('pvwattsv5', points, sam_file, res_file,
-                               output_request=('cf_profile',),
-                               max_workers=2, sites_per_worker=50)
+        gen_json = Gen('pvwattsv5', points, sam_file, res_file,
+                       output_request=('cf_profile',), sites_per_worker=50)
+        gen_json.reV_run(max_workers=2)
 
-        gen_dict = Gen.reV_run('pvwattsv5', points_config, sam_config,
-                               res_file,
-                               output_request=('cf_profile',),
-                               max_workers=2, sites_per_worker=50)
+        gen_dict = Gen('pvwattsv5', points_config, sam_config, res_file,
+                       output_request=('cf_profile',), sites_per_worker=50)
+        gen_dict.reV_run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))
@@ -177,14 +165,13 @@ def test_sam_config(tech):
         points_config = pd.DataFrame({"gid": range(0, 10),
                                       "config": ['default'] * 10})
 
-        gen_json = Gen.reV_run('windpower', points, sam_file, res_file,
-                               output_request=('cf_profile',),
-                               max_workers=2, sites_per_worker=3)
+        gen_json = Gen('windpower', points, sam_file, res_file,
+                       output_request=('cf_profile',), sites_per_worker=3)
+        gen_json.reV_run(max_workers=2)
 
-        gen_dict = Gen.reV_run('windpower', points_config, sam_config,
-                               res_file,
-                               output_request=('cf_profile',),
-                               max_workers=2, sites_per_worker=3)
+        gen_dict = Gen('windpower', points_config, sam_config, res_file,
+                       output_request=('cf_profile',), sites_per_worker=3)
+        gen_dict.reV_run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))

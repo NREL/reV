@@ -5,6 +5,10 @@ reV command line interface (CLI).
 import click
 import logging
 
+from reV.generation import Gen, gen_preprocessor
+from reV.utilities import ModuleName
+from gaps.cli import make_cli, CLICommandFromClass
+
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
 from reV.bespoke.cli_bespoke import from_config as run_bespoke_from_config
@@ -365,6 +369,19 @@ def valid_qa_qc_keys(ctx):
     Valid QA/QC config keys
     """
     ctx.invoke(qa_qc_keys)
+
+
+commands = [
+    CLICommandFromClass(Gen,
+                        method="reV_run",
+                        name=str(ModuleName.GENERATION),
+                        add_collect=False,
+                        split_keys=["project_points",
+                                    ("resource_file",
+                                     "low_res_resource_file")],
+                        config_preprocessor=gen_preprocessor)
+]
+gaps_cli = make_cli(commands)  # TODO: Rename back to main after refactor
 
 
 if __name__ == '__main__':

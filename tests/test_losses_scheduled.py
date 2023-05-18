@@ -25,7 +25,7 @@ from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import hourly_indices_for_months
 from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
-from reV.cli import main, gaps_cli
+from reV.cli import gaps_cli
 from reV.handlers.outputs import Outputs
 
 from rex.utilities.utilities import safe_json_load
