@@ -239,9 +239,55 @@ class BespokeConfig(AnalysisConfig):
         return self.get('data_layers', None)
 
     @property
+    def prior_run(self):
+        """Optional filepath to a bespoke output .h5 file belonging to a
+        prior run. This will only run the timeseries power generation step
+        and assume that all of the wind plant layouts are fixed given the
+        prior run. The meta data of this file needs columns "capacity",
+        "turbine_x_coords", and "turbine_y_coords".
+        """
+        return self.get('prior_run', None)
+
+    @property
+    def gid_map(self):
+        """Mapping of unique integer generation gids (keys) to single
+        integer resource gids (values). This can be a filepath to json or
+        csv. If this is a csv, it must have the columns "gid" (which matches
+        the techmap) and "gid_map" (gids to extract from the resource
+        input). This is useful if youre running forecasted resource data
+        (e.g., ECMWF) to complement historical meteorology (e.g., WTK).
+        """
+        return self.get('gid_map', None)
+
+    @property
+    def bias_correct(self):
+        """Optional csv filepath to a wind bias correction table. This has
+        columns: gid (can be index name), adder, scalar. If both adder and
+        scalar are present, the wind is corrected by (res*scalar)+adder. If
+        either is not present, scalar defaults to 1 and adder to 0. Only
+        windspeed is corrected. Note that if gid_map is provided, the
+        bias_correct gid corresponds to the actual resource data gid and not
+        the techmap gid.
+        """
+        return self.get('bias_correct', None)
+
+    @property
     def pre_extract_inclusions(self):
         """Optional flag to pre-extract/compute the inclusion mask from the
         provided excl_dict, by default False. Typically faster to compute
         the inclusion mask on the fly with parallel workers.
         """
         return self.get('pre_extract_inclusions', False)
+
+    @property
+    def pre_load_data(self):
+        """Optional flag to pre-load resource data. This step can be
+        time-consuming up front, but it drastically reduces the
+        number of parallel reads to the ``res_fpath`` HDF5 file(s),
+        and can have a significant overall speedup on systems with
+        slow parallel I/O capabilities. Pre-loaded data can use a
+        significant amount of RAM, so be sure to split execution
+        across many nodes (e.g. 100 nodes, 36 workers each for
+        CONUS) or request large amounts of memory for a smaller
+        number of nodes."""
+        return self.get('pre_load_data', False)
