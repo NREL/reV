@@ -1357,7 +1357,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._gen_data = None
         self._lcoe_data = None
         self._pd_obj = None
-        self._power_density = power_density
+        self._power_density = self._power_density_ac = power_density
         self._friction_layer = friction_layer
         self._recalc_lcoe = recalc_lcoe
 
@@ -1705,6 +1705,56 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self._power_density
 
     @property
+    def power_density_ac(self):
+        """Get the estimated AC power density either from input or
+        inferred from generation output meta.
+
+        This value is only available for solar runs with a "dc_ac_ratio"
+        dataset in the generation file. If these conditions are not met,
+        this value is `None`.
+
+        Returns
+        -------
+        _power_density_ac : float | None
+            Estimated AC power density in MW/km2
+        """
+        if "dc_ac_ratio" not in self.gen.datasets:
+            return None
+
+        ilr = self.gen["dc_ac_ratio", self._gen_gids[self.bool_mask]]
+        ilr = ilr.astype('float32')
+        weights = self.include_mask_flat[self.bool_mask]
+        if self._power_density_ac is None:
+            tech = self.gen.meta['reV_tech'][0]
+            if tech in self.POWER_DENSITY:
+                self._power_density_ac = self.POWER_DENSITY[tech] / ilr
+                self._power_density_ac *= weights
+                self._power_density_ac = (self._power_density_ac.sum()
+                                          / weights.sum())
+            else:
+                warn('Could not recognize reV technology in generation meta '
+                     'data: "{}". Cannot lookup an appropriate power density '
+                     'to calculate SC point capacity.'.format(tech))
+
+        elif isinstance(self._power_density_ac, pd.DataFrame):
+            self._pd_obj = self._power_density_ac
+
+            missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
+            if any(missing):
+                msg = ('Variable power density input is missing the '
+                       'following resource GIDs: {}'.format(missing))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
+                                   'power_density'].values
+            self._power_density_ac = pds.astype(np.float32) / ilr
+            self._power_density_ac *= weights
+            self._power_density_ac = (self._power_density_ac.sum()
+                                      / weights.sum())
+        return self._power_density_ac
+
+    @property
     def capacity(self):
         """Get the estimated capacity in MW of the supply curve point in the
         current resource class with the applied exclusions.
@@ -1721,6 +1771,28 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             capacity = self.area * self.power_density
 
         return capacity
+
+    @property
+    def capacity_ac(self):
+        """Get the AC estimated capacity in MW of the supply curve point in the
+        current resource class with the applied exclusions.
+
+        This values is provided only for solar inputs that have
+        the "dc_ac_ratio" dataset in the generation file. If these
+        conditions are not met, this value is `None`.
+
+        Returns
+        -------
+        capacity : float | None
+            Estimated AC capacity in MW of the supply curve point in the
+            current resource class with the applied exclusions. Only not
+            `None` for solar runs with "dc_ac_ratio" dataset in the
+            generation file
+        """
+        if self.power_density_ac is None:
+            return None
+
+        return self.area * self.power_density_ac
 
     @property
     def h5_dsets_data(self):
@@ -1853,6 +1925,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 'elevation': self.elevation,
                 'timezone': self.timezone,
                 }
+
+        if self.capacity_ac is not None:
+            ARGS['capacity_ac'] = self.capacity_ac
 
         if self.offshore is not None:
             ARGS['offshore'] = self.offshore
