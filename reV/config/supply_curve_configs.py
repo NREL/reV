@@ -279,6 +279,7 @@ class SupplyCurveConfig(AnalysisConfig):
         super().__init__(config)
 
         self._default_sort_on = 'total_lcoe'
+        self._default_sc_capacity_col = 'capacity'
         self._default_n_dirs = 2
         self._default_avail_cap_frac = 1
 
@@ -360,6 +361,12 @@ class SupplyCurveConfig(AnalysisConfig):
         """Get the SC table column label to sort on.
         This determines the ordering of the buildout algorithm."""
         return self.get('sort_on', self._default_sort_on)
+
+    @property
+    def sc_capacity_col(self):
+        """Get the SC table column label that represents the capacity.
+        This determines the size of transmission lines built."""
+        return self.get('sc_capacity_col', self._default_sc_capacity_col)
 
     @property
     def wind_dirs(self):

@@ -96,6 +96,7 @@ def from_config(ctx, config_file, verbose):
                        transmission_costs=config.transmission_costs,
                        avail_cap_frac=config.avail_cap_frac,
                        sort_on=config.sort_on,
+                       sc_capacity_col=config.sc_capacity_col,
                        wind_dirs=config.wind_dirs,
                        n_dirs=config.n_dirs,
                        downwind=config.downwind,
@@ -116,6 +117,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['TRANSMISSION_COSTS'] = config.transmission_costs
         ctx.obj['AVAIL_CAP_FRAC'] = config.avail_cap_frac
         ctx.obj['SORT_ON'] = config.sort_on
+        ctx.obj['SC_CAPACITY_COL'] = config.sc_capacity_col
         ctx.obj['WIND_DIRS'] = config.wind_dirs
         ctx.obj['N_DIRS'] = config.n_dirs
         ctx.obj['DOWNWIND'] = config.downwind
@@ -163,6 +165,11 @@ def from_config(ctx, config_file, verbose):
               show_default=True,
               help='The supply curve table column label to sort on. '
               'This determines the ordering of the SC buildout algorithm.')
+@click.option('--sc_capacity_col', '-scc', type=str, default='capacity',
+              show_default=True,
+              help='The name of the column in the supply curve table that '
+                   'represents the plant capacity. Transmission lines will be '
+                   'sized based in the values in this column.')
 @click.option('--wind_dirs', '-wd', type=click.Path(exists=True), default=None,
               show_default=True,
               help=('Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs'
@@ -197,9 +204,9 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
-           transmission_costs, avail_cap_frac, sort_on, wind_dirs, n_dirs,
-           downwind, offshore_compete, max_workers, out_dir, log_dir,
-           simple, line_limited, verbose):
+           transmission_costs, avail_cap_frac, sort_on, sc_capacity_col,
+           wind_dirs, n_dirs, downwind, offshore_compete, max_workers,
+           out_dir, log_dir, simple, line_limited, verbose):
     """reV Supply Curve CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SC_POINTS'] = sc_points
@@ -209,6 +216,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['TRANSMISSION_COSTS'] = transmission_costs
     ctx.obj['AVAIL_CAP_FRAC'] = avail_cap_frac
     ctx.obj['SORT_ON'] = sort_on
+    ctx.obj['SC_CAPACITY_COL'] = sc_capacity_col
     ctx.obj['WIND_DIRS'] = wind_dirs
     ctx.obj['N_DIRS'] = n_dirs
     ctx.obj['DOWNWIND'] = downwind
@@ -234,7 +242,8 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                                          fixed_charge_rate,
                                          sc_features=sc_features,
                                          transmission_costs=transmission_costs,
-                                         sort_on=sort_on, wind_dirs=wind_dirs,
+                                         sort_on=sort_on, sc_capacity_col=sc_capacity_col,
+                                         wind_dirs=wind_dirs,
                                          n_dirs=n_dirs, downwind=downwind,
                                          max_workers=max_workers,
                                          offshore_compete=offshore_compete)
@@ -245,7 +254,8 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                                        transmission_costs=transmission_costs,
                                        avail_cap_frac=avail_cap_frac,
                                        line_limited=line_limited,
-                                       sort_on=sort_on, wind_dirs=wind_dirs,
+                                       sort_on=sort_on,
+                                       sc_capacity_col=sc_capacity_col,wind_dirs=wind_dirs,
                                        n_dirs=n_dirs, downwind=downwind,
                                        max_workers=max_workers,
                                        offshore_compete=offshore_compete)
@@ -278,9 +288,9 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, avail_cap_frac, sort_on, wind_dirs,
-                 n_dirs, downwind, offshore_compete, max_workers, out_dir,
-                 log_dir, simple, line_limited, verbose):
+                 transmission_costs, avail_cap_frac, sort_on, sc_capacity_col,
+                 wind_dirs, n_dirs, downwind, offshore_compete, max_workers,
+                 out_dir, log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
     args = ['-sc {}'.format(SLURM.s(sc_points)),
@@ -290,6 +300,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-tc {}'.format(SLURM.s(transmission_costs)),
             '-acf {}'.format(SLURM.s(avail_cap_frac)),
             '-so {}'.format(SLURM.s(sort_on)),
+            '-ssc {}'.format(SLURM.s(sc_capacity_col)),
             '-dirs {}'.format(SLURM.s(n_dirs)),
             '-mw {}'.format(SLURM.s(max_workers)),
             '-o {}'.format(SLURM.s(out_dir)),
@@ -359,6 +370,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
     simple = ctx.obj['SIMPLE']
     line_limited = ctx.obj['LINE_LIMITED']
     sort_on = ctx.obj['SORT_ON']
+    sc_capacity_col = ctx.obj['SC_CAPACITY_COL']
     wind_dirs = ctx.obj['WIND_DIRS']
     n_dirs = ctx.obj['N_DIRS']
     downwind = ctx.obj['DOWNWIND']
@@ -373,7 +385,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
                        sc_features, transmission_costs, avail_cap_frac,
-                       sort_on, wind_dirs, n_dirs, downwind,
+                       sort_on, sc_capacity_col, wind_dirs, n_dirs, downwind,
                        offshore_compete, max_workers, out_dir, log_dir,
                        simple, line_limited, verbose)
 
