@@ -5,10 +5,9 @@ reV command line interface (CLI).
 import click
 import logging
 
+from gaps.cli import make_cli, CLICommandFromClass
 from reV.generation import Gen, gen_preprocessor
 from reV.utilities import ModuleName
-from gaps.cli import make_cli, CLICommandFromClass
-
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
 from reV.bespoke.cli_bespoke import from_config as run_bespoke_from_config
