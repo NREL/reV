@@ -188,10 +188,10 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         cf_file = os.path.join(td, fn_gen)
 
         # run reV 2.0 generation
-        Gen.reV_run('windpower', points, sam_files, res_file,
-                    output_request=('cf_mean', 'cf_profile'),
-                    max_workers=max_workers, sites_per_worker=3,
-                    out_fpath=cf_file)
+        gen = Gen('windpower', points, sam_files, res_file,
+                  output_request=('cf_mean', 'cf_profile'),
+                  sites_per_worker=3)
+        gen.reV_run(max_workers=max_workers, out_dir=td, job_name=fn_gen)
 
         econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
                      'project_return_aftertax_npv', 'total_installed_cost',

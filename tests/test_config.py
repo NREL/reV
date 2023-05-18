@@ -153,7 +153,7 @@ def test_sam_config_kw_replace():
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     pp = ProjectPoints(fpp, sam_files, 'windpower')
 
-    gen = Gen(pp, sam_files, technology='windpower', resource_file=res_file,
+    gen = Gen('windpower', pp, sam_files, resource_file=res_file,
               sites_per_worker=100)
     config_on = gen.project_points.sam_inputs['onshore']
     config_of = gen.project_points.sam_inputs['offshore']

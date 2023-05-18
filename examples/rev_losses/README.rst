@@ -50,15 +50,10 @@ of the ``transformation``. We specify both of these options with the
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
+        output_request=('cf_mean', 'cf_profile', 'gen_profile', 'windspeed')
         pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_fp)
-        gen = Gen.reV_run('windpower', pp, sam_fp, res_file,
-                          max_workers=1, out_fpath=None,
-                          output_request=(
-                              'cf_mean',
-                              'cf_profile',
-                              'gen_profile',
-                              'windspeed'
-                          ))
+        gen = Gen('windpower' pp, sam_fp, res_file, output_request=output_request)
+        gen.reV_run(max_workers=1)
     print(gen.out['cf_profile'])
 
     [[0.133, 0.202, 0.15 ],
@@ -116,14 +111,10 @@ as well as the ``percentage_of_capacity_lost`` for each outage.
         with open(sam_fp, 'w+') as fh:
             fh.write(json.dumps(sam_config))
 
+        output_request=('cf_mean', 'cf_profile', 'gen_profile')
         pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_fp)
-        gen = Gen.reV_run('windpower', pp, sam_fp, res_file,
-                        max_workers=1, out_fpath=None,
-                        output_request=(
-                            'cf_mean',
-                            'cf_profile',
-                            'gen_profile',
-                        ))
+        gen = Gen('windpower', pp, sam_fp, res_file, output_request=output_request)
+        gen.reV_run(max_workers=1)
     print(gen.out['cf_profile'][:744].mean(axis=0))
 
     [0.67402536, 0.6644584]

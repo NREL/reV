@@ -56,10 +56,9 @@ def test_gen_geothermal(depth):
 
         output_request = ('annual_energy', 'cf_mean', 'cf_profile',
                           'gen_profile', 'lcoe_fcr', 'nameplate')
-        gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                          max_workers=1, output_request=output_request,
-                          sites_per_worker=1, out_fpath=None,
-                          scale_outputs=True)
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1)
+        gen.reV_run(max_workers=1, scale_outputs=True)
 
         truth_vals = {"annual_energy": 1.74e+09, "cf_mean": 0.993,
                       "cf_profile": 0.993, "gen_profile": 198653.64,
@@ -107,10 +106,9 @@ def test_gen_geothermal_temp_too_low():
 
         output_request = ('annual_energy', 'cf_mean', 'cf_profile',
                           'gen_profile', 'lcoe_fcr', 'nameplate')
-        gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                          max_workers=1, output_request=output_request,
-                          sites_per_worker=1, out_fpath=None,
-                          scale_outputs=True)
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1)
+        gen.reV_run(max_workers=1, scale_outputs=True)
 
         truth_vals = {"annual_energy": 0, "cf_mean": 0, "cf_profile": 0,
                       "gen_profile": 0, "lcoe_fcr": 0, "nameplate": 0,
@@ -165,10 +163,9 @@ def test_per_kw_cost_inputs():
         )
 
         output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
-        gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                          max_workers=1, output_request=output_request,
-                          sites_per_worker=1, out_fpath=None,
-                          scale_outputs=True)
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1)
+        gen.reV_run(max_workers=1, scale_outputs=True)
 
         truth_vals = {"capital_cost": 358_493_472,
                       "fixed_operating_cost": 23899566,

@@ -74,14 +74,16 @@ class Gen(BaseGen):
     >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
     >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
     >>>
-    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res)
+    >>> gen = Gen(sam_tech, sites, fp_sam, fp_res)
+    >>> gen.reV_run()
     >>>
     >>> gen.out
     {'cf_mean': array([0.16966143], dtype=float32)}
     >>>
     >>> sites = [3, 4, 7, 9]
     >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
-    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res, output_request=req)
+    >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
+    >>> gen.reV_run()
     >>>
     >>> gen.out
     {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
@@ -119,7 +121,7 @@ class Gen(BaseGen):
     OUT_ATTRS.update(TPPH_ATTRS)
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
-    def __init__(self, project_points, sam_files, technology, resource_file,
+    def __init__(self, technology, project_points, sam_files, resource_file,
                  low_res_resource_file=None, output_request=('cf_mean',),
                  site_data=None, curtailment=None, gid_map=None,
                  drop_leap=False, sites_per_worker=None, mem_util_lim=0.4,
@@ -128,6 +130,11 @@ class Gen(BaseGen):
         """
         Parameters
         ----------
+        technology : str, optional
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed,
+            by default None
         project_points : int | slice | list | tuple | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
@@ -138,11 +145,6 @@ class Gen(BaseGen):
             CSV. Values are either a JSON SAM config file or dictionary of SAM
             config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
-        technology : str, optional
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed,
-            by default None
         resource_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix
@@ -611,166 +613,79 @@ class Gen(BaseGen):
 
         return list(set(output_request))
 
-    @classmethod
-    def reV_run(cls, tech, points, sam_configs, res_file, lr_res_file=None,
-                output_request=('cf_mean',), site_data=None, curtailment=None,
-                gid_map=None, max_workers=1, sites_per_worker=None,
-                pool_size=(os.cpu_count() * 2), timeout=1800,
-                points_range=None, out_fpath=None, mem_util_lim=0.4,
-                scale_outputs=True, write_mapped_gids=False,
-                bias_correct=None):
+    def reV_run(self, out_dir=None, max_workers=1, timeout=1800,
+                pool_size=(os.cpu_count() * 2), scale_outputs=True,
+                job_name=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
         ----------
-        tech : str
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
-            See :attr:`OPTIONS` for all available options.
-        points : int | slice | list | str | PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object. Can
-            also be a single site integer values.
-        sam_configs : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
-        res_file : str
-            Filepath to single resource file, multi-h5 directory,
-            or /h5_dir/prefix*suffix
-        lr_res_file : str | None
-            Optional low resolution resource file that will be dynamically
-            mapped+interpolated to the nominal-resolution res_file. This
-            needs to be of the same format as resource_file, e.g. they both
-            need to be handled by the same rex Resource handler such as
-            WindResource
-        output_request : list | tuple
-            Output variables requested from SAM.
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        curtailment : NoneType | dict | str | config.curtailment.Curtailment
-            Inputs for curtailment parameters. If not None, curtailment inputs
-            are expected. Can be:
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config json file with path (str)
-                - Instance of curtailment config object
-                  (config.curtailment.Curtailment)
-        gid_map : None | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids.  This can be None, a pre-extracted dict, or a
-            filepath to json or csv. If this is a csv, it must have the columns
-            "gid" (which matches the project points) and "gid_map" (gids to
-            extract from the resource input)
         max_workers : int
             Number of local workers to run on.
-        sites_per_worker : int | None
-            Number of sites to run in series on a worker. None defaults to the
-            resource file chunk size.
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
         timeout : int | float
             Number of seconds to wait for parallel run iteration to complete
             before returning zeros. Default is 1800 seconds.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property. The list is the (Beginning, end) (inclusive/exclusive,
-            respectively) index split parameters for ProjectPoints.split()
-            method.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
-        mem_util_lim : float
-            Memory utilization limit (fractional). This will determine how many
-            site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
-        write_mapped_gids : bool
-            Option to write mapped gids to output meta instead of resource
-            gids.
-        bias_correct : str | pd.DataFrame
-            Optional DataFrame or csv filepath to a wind or solar resource bias
-            correction table. This has columns: gid (can be index name), adder,
-            scalar. If both adder and scalar are present, the wind or solar
-            resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed or
-            GHI+DNI are corrected depending on the technology. GHI and DNI are
-            corrected with the same correction factors.
 
         Returns
         -------
         gen : Gen
             Gen instance with outputs saved to gen.out dict
         """
-
-        # make a Gen class instance to operate with
-        gen = cls(points, sam_configs, tech, res_file,
-                  low_res_resource_file=lr_res_file,
-                  output_request=output_request,
-                  site_data=site_data,
-                  curtailment=curtailment,
-                  gid_map=gid_map,
-                  sites_per_worker=sites_per_worker,
-                  mem_util_lim=mem_util_lim,
-                  scale_outputs=scale_outputs,
-                  write_mapped_gids=write_mapped_gids,
-                  bias_correct=bias_correct)
+        if out_dir is not None:
+            out_dir = os.path.join(out_dir, job_name or ModuleName.GENERATION)
 
         # initialize output file
-        gen._init_fpath(out_fpath, ModuleName.GENERATION)
-        gen._init_h5()
-        gen._init_out_arrays()
+        self._init_fpath(out_dir, module=ModuleName.GENERATION)
+        self._init_h5()
+        self._init_out_arrays()
 
-        kwargs = {'tech': gen.tech,
-                  'res_file': gen.res_file,
-                  'lr_res_file': gen.lr_res_file,
-                  'output_request': gen.output_request,
+        kwargs = {'tech': self.tech,
+                  'res_file': self.res_file,
+                  'lr_res_file': self.lr_res_file,
+                  'output_request': self.output_request,
                   'scale_outputs': scale_outputs,
-                  'gid_map': gen._gid_map,
-                  'nn_map': gen._nn_map,
-                  'bias_correct': gen._bc,
-                  }
+                  'gid_map': self._gid_map,
+                  'nn_map': self._nn_map,
+                  'bias_correct': self._bc}
 
         logger.info('Running reV generation for: {}'
-                    .format(gen.points_control))
+                    .format(self.points_control))
         logger.debug('The following project points were specified: "{}"'
-                     .format(points))
+                     .format(self.project_points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_configs, indent=4)))
+                     .format(pprint.pformat(self.sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
-                     .format(output_request))
+                     .format(self.output_request))
 
         # use serial or parallel execution control based on max_workers
         try:
             if max_workers == 1:
                 logger.debug('Running serial generation for: {}'
-                             .format(gen.points_control))
-                for i, pc_sub in enumerate(gen.points_control):
-                    gen.out = gen.run(pc_sub, **kwargs)
+                             .format(self.points_control))
+                for i, pc_sub in enumerate(self.points_control):
+                    self.out = self.run(pc_sub, **kwargs)
                     logger.info('Finished reV gen serial compute for: {} '
                                 '(iteration {} out of {})'
                                 .format(pc_sub, i + 1,
-                                        len(gen.points_control)))
-                gen.flush()
+                                        len(self.points_control)))
+                self.flush()
             else:
                 logger.debug('Running parallel generation for: {}'
-                             .format(gen.points_control))
-                gen._parallel_run(max_workers=max_workers, pool_size=pool_size,
-                                  timeout=timeout, **kwargs)
+                             .format(self.points_control))
+                self._parallel_run(max_workers=max_workers,
+                                   pool_size=pool_size, timeout=timeout,
+                                   **kwargs)
 
         except Exception as e:
             logger.exception('reV generation failed!')
             raise e
 
-        return gen
+        return self._out_fpath
 
 
 def gen_preprocessor(config, analysis_years=None):

@@ -33,10 +33,9 @@ def test_gen_swh_non_leap_year():
                       'gen_profile')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('solarwaterheat', points, sam_files, res_file,
-                      max_workers=1,
-                      output_request=output_request,
-                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
+    gen = Gen('solarwaterheat', points, sam_files, res_file,
+              output_request=output_request, sites_per_worker=1)
+    gen.reV_run(max_workers=1, scale_outputs=True)
 
     with Resource(BASELINE) as f:
         for dset in output_request:
@@ -64,10 +63,9 @@ def test_gen_swh_leap_year():
                       'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('solarwaterheat', points, sam_files, res_file,
-                      max_workers=1,
-                      output_request=output_request,
-                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
+    gen = Gen('solarwaterheat', points, sam_files, res_file,
+              output_request=output_request, sites_per_worker=1)
+    gen.reV_run(max_workers=1, scale_outputs=True)
 
     with Resource(BASELINE) as f:
         for dset in output_request:
