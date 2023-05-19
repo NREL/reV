@@ -43,8 +43,9 @@ def test_gen_tph():
 
     # run reV 2.0 generation
     gen = Gen('troughphysicalheat', points, sam_files, res_file,
-              output_request=output_request, sites_per_worker=1)
-    gen.reV_run(max_workers=1, scale_outputs=True)
+              output_request=output_request, sites_per_worker=1,
+              scale_outputs=True)
+    gen.reV_run(max_workers=1)
 
     with Resource(BASELINE) as f:
         for dset in output_request:

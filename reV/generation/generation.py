@@ -181,8 +181,6 @@ class Gen(BaseGen):
         sites_per_worker : int | None
             Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
         mem_util_lim : float
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
@@ -620,27 +618,32 @@ class Gen(BaseGen):
         return list(set(output_request))
 
     def reV_run(self, out_dir=None, max_workers=1, timeout=1800,
-                pool_size=(os.cpu_count() * 2), scale_outputs=True,
-                job_name=None):
+                pool_size=(os.cpu_count() * 2), job_name=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
         ----------
-        max_workers : int
-            Number of local workers to run on.
-        pool_size : int
+        out_dir : str, optional
+            Path to output directory. If ``None``, no output file will
+            be written. By default, ``None``.
+        max_workers : int, optional
+            Number of local workers to run on. By default, ``1``.
+        timeout : int, optional
+            Number of seconds to wait for parallel run iteration to
+            complete before returning zeros. By default, ``1800``
+            seconds.
+        pool_size : tuple, optional
             Number of futures to submit to a single process pool for
-            parallel futures.
-        timeout : int | float
-            Number of seconds to wait for parallel run iteration to complete
-            before returning zeros. Default is 1800 seconds.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
+            parallel futures. By default, ``(os.cpu_count() * 2)``.
+        job_name : str, optional
+            Name for job. This string will be incorporated into the reV
+            generation output file name. By default, ``None``.
 
         Returns
         -------
-        gen : Gen
-            Gen instance with outputs saved to gen.out dict
+        str | None
+            Path to output HDF5 file, or ``None`` if results were not
+            written to disk.
         """
         if out_dir is not None:
             out_dir = os.path.join(out_dir, job_name or ModuleName.GENERATION)
@@ -654,7 +657,7 @@ class Gen(BaseGen):
                   'res_file': self.res_file,
                   'lr_res_file': self.lr_res_file,
                   'output_request': self.output_request,
-                  'scale_outputs': scale_outputs,
+                  'scale_outputs': self.scale_outputs,
                   'gid_map': self._gid_map,
                   'nn_map': self._nn_map,
                   'bias_correct': self._bc}
@@ -694,6 +697,7 @@ class Gen(BaseGen):
         return self._out_fpath
 
 
+# TODO: Move this into gen CLIP file
 def gen_preprocessor(config, analysis_years=None):
     """Preprocess generation config user input.
 
