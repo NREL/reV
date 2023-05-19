@@ -637,7 +637,8 @@ class Gen(BaseGen):
             parallel futures. By default, ``(os.cpu_count() * 2)``.
         job_name : str, optional
             Name for job. This string will be incorporated into the reV
-            generation output file name. By default, ``None``.
+            generation output file name.  If ``None``, the module name
+            (generation) will be used. By default, ``None``.
 
         Returns
         -------
@@ -697,7 +698,7 @@ class Gen(BaseGen):
         return self._out_fpath
 
 
-# TODO: Move this into gen CLIP file
+# TODO: Move this into gen CLI file
 def gen_preprocessor(config, analysis_years=None):
     """Preprocess generation config user input.
 
