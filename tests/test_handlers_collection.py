@@ -12,7 +12,7 @@ import json
 import traceback
 import shutil
 
-from reV.cli import main
+from reV.cli import gaps_cli
 from reV.handlers.collection import Collector
 from reV import TESTDATADIR
 from reV.utilities.pytest_utils import make_fake_h5_chunks
@@ -213,7 +213,7 @@ def test_cli(runner, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['-c', config_path, 'collect'])
+        result = runner.invoke(gaps_cli, ['collect', '-c', config_path])
 
         if result.exit_code != 0:
             print('Collect cli failed')

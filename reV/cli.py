@@ -5,7 +5,9 @@ reV command line interface (CLI).
 import click
 import logging
 
-from gaps.cli import make_cli, CLICommandFromClass
+from gaps.cli import make_cli, CLICommandFromClass, CLICommandFromFunction
+from gaps.cli.collect import collect as gaps_collect
+from gaps.cli.preprocessing import preprocess_collect_config
 from reV.generation import Gen, gen_preprocessor
 from reV.econ import Econ, econ_preprocessor
 from reV.utilities import ModuleName
@@ -386,6 +388,10 @@ commands = [
                         add_collect=False,
                         split_keys=["project_points", "cf_file"],
                         config_preprocessor=econ_preprocessor),
+    CLICommandFromFunction(gaps_collect,
+                           name=str(ModuleName.COLLECT),
+                           split_keys=[("_out_path", "_pattern")],
+                           config_preprocessor=preprocess_collect_config),
 ]
 gaps_cli = make_cli(commands)  # TODO: Rename back to main after refactor
 
