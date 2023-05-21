@@ -865,7 +865,7 @@ class BaseGen(ABC):
             out_fpath = out_fpath.replace(".h5", extension_with_module)
 
         # ensure year is in out_fpath
-        if str(self.year) not in out_fpath:
+        if self.year is not None and str(self.year) not in out_fpath:
             module_with_year = "{}_{}".format(module, self.year)
             out_fpath = out_fpath.replace(module, module_with_year)
 
