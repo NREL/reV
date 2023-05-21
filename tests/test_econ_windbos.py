@@ -196,10 +196,9 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
                      'project_return_aftertax_npv', 'total_installed_cost',
                      'turbine_cost', 'sales_tax_cost', 'bos_cost')
-        e = Econ.reV_run(points, sam_files, cf_file,
-                         year=year, site_data=None, output_request=econ_outs,
-                         max_workers=max_workers, sites_per_worker=3,
-                         out_fpath=None)
+        e = Econ(points, sam_files, cf_file, site_data=None,
+                 output_request=econ_outs,sites_per_worker=3)
+        e.reV_run(max_workers=max_workers)
 
         for k in econ_outs:
             msg = 'Failed for {}'.format(k)
@@ -220,11 +219,9 @@ def test_rev_run_bos(points=slice(0, 5), max_workers=1):
 
     econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',
                  'bos_cost')
-    e = Econ.reV_run(points, sam_files, None,
-                     year=None, site_data=site_data,
-                     output_request=econ_outs,
-                     max_workers=max_workers, sites_per_worker=3,
-                     out_fpath=None)
+    e = Econ(points, sam_files, None, site_data=site_data,
+             output_request=econ_outs, sites_per_worker=3)
+    e.reV_run(max_workers=max_workers)
 
     for k in econ_outs:
         check = np.allclose(e.out[k], BASELINE_SITE_BOS[k],

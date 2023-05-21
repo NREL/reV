@@ -15,12 +15,15 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.utilities.exceptions import ExecutionError, OffshoreWindInputWarning
+from reV.utilities.exceptions import (ExecutionError, OffshoreWindInputWarning,
+                                      ConfigError, ConfigWarning)
 from reV.utilities import ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
-from rex.utilities.utilities import check_res_file
+from rex.utilities.utilities import check_res_file, parse_year
+
+from gaps.pipeline import parse_previous_status
 
 logger = logging.getLogger(__name__)
 
@@ -50,20 +53,25 @@ class Econ(BaseGen):
     # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
-    def __init__(self, points_control, cf_file, year, site_data=None,
-                 output_request=('lcoe_fcr',), mem_util_lim=0.4):
+    def __init__(self, project_points, sam_files, cf_file, site_data=None,
+                 output_request=('lcoe_fcr',), sites_per_worker=100,
+                 mem_util_lim=0.4, append=False):
         """Initialize an econ instance.
 
         Parameters
         ----------
-        points_control : reV.config.PointsControl
-            Project points control instance for site and SAM config spec.
+        project_points : int | slice | list | tuple | str | pd.DataFrame | dict
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
+            Can also be a single integer site value.
+        sam_files : dict | str | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s) which map to the config column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary of SAM
+            config inputs. Can also be a single config file path or a
+            pre loaded SAMConfig object.
         cf_file : str
             reV generation capacity factor output file with path.
-        year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
             Site-specific input data for SAM calculation. String should be a
             filepath that points to a csv, DataFrame is pre-extracted data.
@@ -71,13 +79,27 @@ class Econ(BaseGen):
             Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
+        sites_per_worker : int
+            Number of sites to run in series on a worker.
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many site
+            results will be stored in-memory at any given time before flushing
+            to disk.
+        append : bool
+            Flag to append econ datasets to source cf_file. This has priority
+            over the out_fpath and dirout inputs.
         """
 
-        super().__init__(points_control, output_request, site_data=site_data,
+        # get a points control instance
+        pc = self.get_pc(points=project_points, points_range=None,
+                         sam_configs=sam_files, cf_file=cf_file,
+                         sites_per_worker=sites_per_worker, append=append)
+
+        super().__init__(pc, output_request, site_data=site_data,
                          mem_util_lim=mem_util_lim)
 
         self._cf_file = cf_file
-        self._year = year
+        self._append = append
         self._run_attrs['cf_file'] = cf_file
         self._run_attrs['sam_module'] = self._sam_module.MODULE
 
@@ -348,117 +370,89 @@ class Econ(BaseGen):
 
         return data_shape
 
-    @classmethod
-    def reV_run(cls, points, sam_configs, cf_file,
-                year=None, site_data=None, output_request=('lcoe_fcr',),
-                max_workers=1, sites_per_worker=100,
-                pool_size=(os.cpu_count() * 2),
-                timeout=1800, points_range=None, out_fpath=None, append=False):
+    def reV_run(self, out_dir=None, max_workers=1, timeout=1800,
+                pool_size=(os.cpu_count() * 2), job_name=None):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
         ----------
-        points : slice | list | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
-        sam_configs : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
-        cf_file : str
-            reV generation capacity factor output file with path.
-        year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        max_workers : int
-            Number of local workers to run on.
-        sites_per_worker : int
-            Number of sites to run in series on a worker.
-        pool_size : int
+        out_dir : str, optional
+            Path to output directory. If ``None``, no output file will
+            be written. If this class was initialized with
+            ``append=True``, this option has no effect.
+            By default, ``None``.
+        max_workers : int, optional
+            Number of local workers to run on. By default, ``1``.
+        timeout : int, optional
+            Number of seconds to wait for parallel run iteration to
+            complete before returning zeros. By default, ``1800``
+            seconds.
+        pool_size : tuple, optional
             Number of futures to submit to a single process pool for
-            parallel futures.
-        timeout : int | float
-            Number of seconds to wait for parallel run iteration to complete
-            before returning zeros. Default is 1800 seconds.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
-        append : bool
-            Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            parallel futures. By default, ``(os.cpu_count() * 2)``.
+        job_name : str, optional
+            Name for job. This string will be incorporated into the reV
+            generation output file name. If ``None``, the module name
+            (econ) will be used. If this class was initialized with
+            ``append=True``, this option has no effect.
+            By default, ``None``.
 
         Returns
         -------
-        econ : Econ
-            Econ object instance with outputs stored in econ.out dict.
+        str | None
+            Path to output HDF5 file, or ``None`` if results were not
+            written to disk.
         """
 
-        # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_configs, cf_file,
-                        sites_per_worker=sites_per_worker, append=append)
-
-        # make a class instance to operate with
-        econ = cls(pc, cf_file,
-                   year=year,
-                   site_data=site_data,
-                   output_request=output_request)
-
         # initialize output file or append econ data to gen file
-        if append:
-            econ._out_fpath = econ._cf_file
+        if self._append:
+            self._out_fpath = self._cf_file
         else:
-            econ._init_fpath(out_fpath, ModuleName.ECON)
+            if out_dir is not None:
+                out_dir = os.path.join(out_dir, job_name or ModuleName.ECON)
+            self._init_fpath(out_dir, ModuleName.ECON)
 
-        econ._init_h5(mode='a' if append else 'w')
-        econ._init_out_arrays()
+        self._init_h5(mode='a' if self._append else 'w')
+        self._init_out_arrays()
 
-        diff = list(set(pc.sites) - set(econ.meta['gid'].values))
+        diff = list(set(self.points_control.sites)
+                    - set(self.meta['gid'].values))
         if diff:
             raise Exception('The following analysis sites were requested '
                             'through project points for econ but are not '
                             'found in the CF file ("{}"): {}'
-                            .format(econ.cf_file, diff))
+                            .format(self.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'output_request': econ.output_request,
-                  'cf_file': econ.cf_file,
-                  'year': econ.year}
+        kwargs = {'output_request': self.output_request,
+                  'cf_file': self.cf_file,
+                  'year': self.year}
 
         logger.info('Running econ with smart data flushing '
-                    'for: {}'.format(pc))
+                    'for: {}'.format(self.points_control))
         logger.debug('The following project points were specified: "{}"'
-                     .format(points))
+                     .format(self.project_points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_configs, indent=4)))
+                     .format(pprint.pformat(self.sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
-                     .format(output_request))
+                     .format(self.output_request))
 
         try:
-            kwargs['econ_fun'] = econ._fun
+            kwargs['econ_fun'] = self._fun
             if max_workers == 1:
-                logger.debug('Running serial econ for: {}'.format(pc))
-                for i, pc_sub in enumerate(pc):
-                    econ.out = econ.run(pc_sub, **kwargs)
+                logger.debug('Running serial econ for: {}'
+                             .format(self.points_control))
+                for i, pc_sub in enumerate(self.points_control):
+                    self.out = self.run(pc_sub, **kwargs)
                     logger.info('Finished reV econ serial compute for: {} '
                                 '(iteration {} out of {})'
-                                .format(pc_sub, i + 1, len(pc)))
-                econ.flush()
+                                .format(pc_sub, i + 1,
+                                        len(self.points_control)))
+                self.flush()
             else:
-                logger.debug('Running parallel econ for: {}'.format(pc))
-                econ._parallel_run(max_workers=max_workers,
+                logger.debug('Running parallel econ for: {}'
+                             .format(self.points_control))
+                self._parallel_run(max_workers=max_workers,
                                    pool_size=pool_size, timeout=timeout,
                                    **kwargs)
 
@@ -466,4 +460,79 @@ class Econ(BaseGen):
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
 
-        return econ
+        return self._out_fpath
+
+
+def econ_preprocessor(config, project_dir, analysis_years=None):
+    """Preprocess econ config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    analysis_years : int | list, optional
+        A single year or list of years to perform analysis for. These
+        years will be used to fill in any brackets ``{}`` in the
+        ``resource_file`` input. If ``None``, the ``resource_file``
+        input is assumed to be the full path to the single resource
+        file to be processed.  By default, ``None``.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    # TODO: Keep it DRY with gen preprocessor
+    if not isinstance(analysis_years, list):
+        analysis_years = [analysis_years]
+
+    if analysis_years[0] is None:
+        warn('Years may not have been specified, may default '
+             'to available years in inputs files.', ConfigWarning)
+
+    config["cf_file"] = parse_cf_files(config["cf_file"],
+                                       analysis_years, project_dir)
+
+    return config
+
+
+def parse_cf_files(cf_file, analysis_years, project_dir):
+    """Get the capacity factor files (reV generation output data).
+
+    Returns
+    -------
+    cf_files : list
+        Target paths for capacity factor files (reV generation output
+        data) for input to reV LCOE calculation.
+    """
+    # get base filename, may have {} for year format
+    if '{}' in cf_file:
+        # need to make list of res files for each year
+        cf_files = [cf_file.format(year) for year in analysis_years]
+    elif 'PIPELINE' in cf_file:
+        cf_files = parse_previous_status(project_dir,
+                                         command=str(ModuleName.ECON))
+    else:
+        # only one resource file request, still put in list
+        cf_files = [cf_file]
+
+    for f in cf_files:
+        # ignore files that are to be specified using pipeline utils
+        if 'PIPELINE' not in os.path.basename(f):
+            if not os.path.exists(f):
+                raise IOError('File does not exist: {}'.format(f))
+
+    # check year/cf_file matching if not a pipeline input
+    if 'PIPELINE' not in cf_file:
+        if len(cf_files) != len(analysis_years):
+            raise ConfigError('The number of cf files does not match '
+                              'the number of analysis years!'
+                              '\n\tCF files: \n\t\t{}'
+                              '\n\tYears: \n\t\t{}'
+                              .format(cf_files, analysis_years))
+        for year in analysis_years:
+            if str(year) not in str(cf_files):
+                raise ConfigError('Could not find year {} in cf '
+                                  'files: {}'.format(year, cf_files))
+
+    return [fn for fn in cf_files if parse_year(fn) in analysis_years]

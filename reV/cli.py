@@ -7,6 +7,7 @@ import logging
 
 from gaps.cli import make_cli, CLICommandFromClass
 from reV.generation import Gen, gen_preprocessor
+from reV.econ import Econ, econ_preprocessor
 from reV.utilities import ModuleName
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
@@ -378,7 +379,13 @@ commands = [
                         split_keys=["project_points",
                                     ("resource_file",
                                      "low_res_resource_file")],
-                        config_preprocessor=gen_preprocessor)
+                        config_preprocessor=gen_preprocessor),
+    CLICommandFromClass(Econ,
+                        method="reV_run",
+                        name=str(ModuleName.ECON),
+                        add_collect=False,
+                        split_keys=["project_points", "cf_file"],
+                        config_preprocessor=econ_preprocessor),
 ]
 gaps_cli = make_cli(commands)  # TODO: Rename back to main after refactor
 
