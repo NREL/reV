@@ -1727,14 +1727,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if self._power_density_ac is None:
             tech = self.gen.meta['reV_tech'][0]
             if tech in self.POWER_DENSITY:
-                self._power_density_ac = self.POWER_DENSITY[tech] / ilr
-                self._power_density_ac *= weights
-                self._power_density_ac = (self._power_density_ac.sum()
-                                          / weights.sum())
+                power_density_ac = self.POWER_DENSITY[tech] / ilr
+                power_density_ac *= weights
+                power_density_ac = power_density_ac.sum() / weights.sum()
             else:
                 warn('Could not recognize reV technology in generation meta '
                      'data: "{}". Cannot lookup an appropriate power density '
                      'to calculate SC point capacity.'.format(tech))
+                power_density_ac = None
 
         elif isinstance(self._power_density_ac, pd.DataFrame):
             self._pd_obj = self._power_density_ac
@@ -1748,11 +1748,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
             pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
                                    'power_density'].values
-            self._power_density_ac = pds.astype(np.float32) / ilr
-            self._power_density_ac *= weights
-            self._power_density_ac = (self._power_density_ac.sum()
-                                      / weights.sum())
-        return self._power_density_ac
+            power_density_ac = pds.astype(np.float32) / ilr
+            power_density_ac *= weights
+            power_density_ac = power_density_ac.sum() / weights.sum()
+        else:
+            power_density_ac = self._power_density_ac * weights / ilr
+            power_density_ac = power_density_ac.sum() / weights.sum()
+
+        return power_density_ac
 
     @property
     def capacity(self):

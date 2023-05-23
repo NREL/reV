@@ -126,7 +126,8 @@ def test_agg_summary():
     assert "capacity_ac" not in s
 
 
-def test_agg_summary_solar_ac():
+@pytest.mark.parametrize("pd", [None, 45])
+def test_agg_summary_solar_ac(pd):
     """Test the aggregation summary method for solar ac outputs."""
 
     with tempfile.TemporaryDirectory() as td:
@@ -143,7 +144,8 @@ def test_agg_summary_solar_ac():
                                            res_class_dset=RES_CLASS_DSET,
                                            res_class_bins=RES_CLASS_BINS,
                                            data_layers=DATA_LAYERS,
-                                           max_workers=1)
+                                           max_workers=1,
+                                           power_density=pd)
     assert "capacity_ac" in s
     assert np.allclose(s["capacity"] / 1.3, s["capacity_ac"])
 
