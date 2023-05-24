@@ -197,7 +197,7 @@ def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
                      'project_return_aftertax_npv', 'total_installed_cost',
                      'turbine_cost', 'sales_tax_cost', 'bos_cost')
         e = Econ(points, sam_files, cf_file, site_data=None,
-                 output_request=econ_outs,sites_per_worker=3)
+                 output_request=econ_outs, sites_per_worker=3)
         e.run(max_workers=max_workers)
 
         for k in econ_outs:
