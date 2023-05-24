@@ -1150,7 +1150,7 @@ class BaseGen(ABC):
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for pc in pc_chunk:
-                    future = exe.submit(self.run, pc, **kwargs)
+                    future = exe.submit(self._run_single_worker, pc, **kwargs)
                     futures.append(future)
                     chunks[future] = pc
 
