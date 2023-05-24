@@ -237,7 +237,7 @@ class Econ(BaseGen):
         return pc
 
     @staticmethod
-    def run(pc, econ_fun, output_request, **kwargs):
+    def _run_single_worker(pc, econ_fun, output_request, **kwargs):
         """Run the SAM econ calculation.
 
         Parameters
@@ -443,7 +443,7 @@ class Econ(BaseGen):
                 logger.debug('Running serial econ for: {}'
                              .format(self.points_control))
                 for i, pc_sub in enumerate(self.points_control):
-                    self.out = self.run(pc_sub, **kwargs)
+                    self.out = self._run_single_worker(pc_sub, **kwargs)
                     logger.info('Finished reV econ serial compute for: {} '
                                 '(iteration {} out of {})'
                                 .format(pc_sub, i + 1,

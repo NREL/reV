@@ -685,8 +685,8 @@ class BaseGen(ABC):
 
     @staticmethod
     @abstractmethod
-    def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True):
+    def _run_single_worker(points_control, tech=None, res_file=None,
+                           output_request=None, scale_outputs=True):
         """Run a reV-SAM analysis based on the points_control iterator.
 
         Parameters
@@ -1130,7 +1130,7 @@ class BaseGen(ABC):
             Number of seconds to wait for parallel run iteration to complete
             before returning zeros.
         kwargs : dict
-            Keyword arguments to self.run().
+            Keyword arguments to self._run_single_worker().
         """
 
         max_workers = os.cpu_count() if max_workers is None else max_workers

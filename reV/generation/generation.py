@@ -337,9 +337,10 @@ class Gen(BaseGen):
         return self._time_index
 
     @classmethod
-    def run(cls, points_control, tech=None, res_file=None, lr_res_file=None,
-            output_request=None, scale_outputs=True, gid_map=None,
-            nn_map=None, bias_correct=None):
+    def _run_single_worker(cls, points_control, tech=None, res_file=None,
+                           lr_res_file=None, output_request=None,
+                           scale_outputs=True, gid_map=None, nn_map=None,
+                           bias_correct=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -678,7 +679,7 @@ class Gen(BaseGen):
                 logger.debug('Running serial generation for: {}'
                              .format(self.points_control))
                 for i, pc_sub in enumerate(self.points_control):
-                    self.out = self.run(pc_sub, **kwargs)
+                    self.out = self._run_single_worker(pc_sub, **kwargs)
                     logger.info('Finished reV gen serial compute for: {} '
                                 '(iteration {} out of {})'
                                 .format(pc_sub, i + 1,
@@ -699,6 +700,7 @@ class Gen(BaseGen):
 
 
 # TODO: Move this into gen CLI file
+# TODO: Add logging
 def gen_preprocessor(config, analysis_years=None):
     """Preprocess generation config user input.
 
