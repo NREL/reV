@@ -375,7 +375,7 @@ def valid_qa_qc_keys(ctx):
 
 commands = [
     CLICommandFromClass(Gen,
-                        method="reV_run",
+                        method="run",
                         name=str(ModuleName.GENERATION),
                         add_collect=False,
                         split_keys=["project_points",
@@ -383,7 +383,7 @@ commands = [
                                      "low_res_resource_file")],
                         config_preprocessor=gen_preprocessor),
     CLICommandFromClass(Econ,
-                        method="reV_run",
+                        method="run",
                         name=str(ModuleName.ECON),
                         add_collect=False,
                         split_keys=["project_points", "cf_file"],

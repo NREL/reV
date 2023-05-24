@@ -370,8 +370,8 @@ class Econ(BaseGen):
 
         return data_shape
 
-    def reV_run(self, out_dir=None, max_workers=1, timeout=1800,
-                pool_size=(os.cpu_count() * 2), job_name=None):
+    def run(self, out_dir=None, max_workers=1, timeout=1800,
+            pool_size=(os.cpu_count() * 2), job_name=None):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters

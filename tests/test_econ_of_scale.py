@@ -54,7 +54,7 @@ def test_pass_through_lcoe_args():
     # run reV 2.0 generation
     gen = Gen('windpower', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1,)
+    gen.run(max_workers=1,)
 
     checks = [x in gen.out for x in Gen.LCOE_ARGS]
     assert all(checks)

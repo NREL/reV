@@ -47,7 +47,7 @@ def test_single_owner():
 
     econ = Econ(slice(0, 10), sam_files, cf_file,
                 output_request=output_request, sites_per_worker=10)
-    econ.reV_run(max_workers=1)
+    econ.run(max_workers=1)
 
     for k, v in econ.out.items():
         msg = 'Array for "{}" is bad!'.format(k)

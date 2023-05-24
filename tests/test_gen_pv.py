@@ -95,7 +95,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
     gen = Gen('pvwattsv5', rev2_points, sam_files, res_file,
               sites_per_worker=3)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -119,7 +119,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
 
     # run reV 2.0 generation
     gen = Gen('pvwattsv5', rev2_points, sam_files, res_file)
-    gen.reV_run()
+    gen.run()
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -143,7 +143,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                  enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
     gen = Gen('pvwattsv5', rev2_points, sam_files, res_file)
-    gen.reV_run()
+    gen.run()
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -169,7 +169,7 @@ def test_pv_gen_profiles(year):
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
                   output_request=('cf_profile',), sites_per_worker=50)
-        gen.reV_run(max_workers=2, out_dir=td, job_name=fn)
+        gen.run(max_workers=2, out_dir=td, job_name=fn)
 
         with Outputs(rev2_out, 'r') as cf:
             rev2_profiles = cf['cf_profile']
@@ -195,7 +195,7 @@ def test_smart(year):
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
                   output_request=('cf_profile',), sites_per_worker=50)
-        gen.reV_run(max_workers=2, out_dir=td, job_name=fn)
+        gen.run(max_workers=2, out_dir=td, job_name=fn)
 
         with Outputs(rev2_out, 'r') as cf:
             rev2_profiles = cf['cf_profile']
@@ -218,7 +218,7 @@ def test_multi_file_nsrdb_2018(model):
     gen = Gen(model, points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile'),
               sites_per_worker=3)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
 
     means_outs = list(gen.out['cf_mean'])
     assert len(means_outs) == 10
@@ -250,7 +250,7 @@ def test_pv_name_error():
     # run reV 2.0 generation
     with pytest.raises(KeyError) as record:
         gen = Gen('pv', rev2_points, sam_files, res_file, sites_per_worker=1)
-        gen.reV_run(max_workers=1)
+        gen.run(max_workers=1)
         assert 'Did not recognize' in record[0].message
 
 
@@ -265,13 +265,13 @@ def test_southern_hemisphere():
 
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     assert gen.out['azimuth'] == 0
 
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     assert gen.out['azimuth'] == 180
 
 
@@ -291,7 +291,7 @@ def test_pvwattsv7_baseline():
     # run reV 2.0 generation
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
@@ -314,11 +314,11 @@ def test_pvwatts_v5_v7():
     # run reV 2.0 generation
     gen7 = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                sites_per_worker=1)
-    gen7.reV_run(max_workers=1)
+    gen7.run(max_workers=1)
 
     gen5 = Gen('pvwattsv5', rev2_points, sam_files, res_file,
                sites_per_worker=1)
-    gen5.reV_run(max_workers=1)
+    gen5.run(max_workers=1)
 
     msg = 'PVwatts v5 and v7 did not match within test tolerance'
     assert np.allclose(gen7.out['cf_mean'], gen5.out['cf_mean'], atol=3), msg
@@ -333,14 +333,14 @@ def test_bifacial():
     # run reV 2.0 generation
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
     # run reV 2.0 generation
     output_request = ('cf_mean', 'cf_profile', 'surface_albedo')
     gen_bi = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                  sites_per_worker=1, output_request=output_request)
-    gen_bi.reV_run(max_workers=1)
+    gen_bi.run(max_workers=1)
 
     assert 'surface_albedo' in gen_bi.out
     assert all(gen_bi.out['cf_mean'] > gen.out['cf_mean'])
@@ -359,7 +359,7 @@ def test_gen_input_mods():
     # run reV 2.0 generation
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     for i in range(5):
         inputs = gen.project_points[i][1]
         assert inputs['tilt'] == 'latitude'
@@ -376,7 +376,7 @@ def test_gen_input_pass_through():
     # run reV 2.0 generation
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     assert 'gcr' in gen.out
     assert 'azimuth' in gen.out
 
@@ -384,7 +384,7 @@ def test_gen_input_pass_through():
     with pytest.raises(ExecutionError):
         gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                   sites_per_worker=1, output_request=output_request)
-        gen.reV_run(max_workers=1)
+        gen.run(max_workers=1)
 
 
 def test_gen_pv_site_data():
@@ -397,14 +397,14 @@ def test_gen_pv_site_data():
     # run reV 2.0 generation
     baseline = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                    sites_per_worker=1, output_request=output_request)
-    baseline.reV_run(max_workers=1)
+    baseline.run(max_workers=1)
 
     site_data = pd.DataFrame({'gid': np.arange(2),
                               'losses': np.ones(2)})
     test = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                sites_per_worker=1, output_request=output_request,
                site_data=site_data)
-    test.reV_run(max_workers=1)
+    test.run(max_workers=1)
 
     assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
     assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
@@ -424,7 +424,7 @@ def test_clipping():
     # run reV 2.0 generation
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     ac = gen.out['ac']
     dc = gen.out['dc']
@@ -452,7 +452,7 @@ def test_detailed_pv_baseline():
     # run reV 2.0 generation
     gen = Gen('pvsamv1', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     msg = ('PVSAMv1 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
@@ -479,7 +479,7 @@ def test_detailed_pv_bifacial():
     # run reV 2.0 generation
     gen = Gen('pvsamv1', rev2_points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     msg = ('PVSAMv1 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
@@ -515,14 +515,14 @@ def test_pv_clearsky():
         with pytest.raises(ResourceRuntimeError):
             gen = Gen('pvwattsv7', rev2_points, sam_files_cs, res_file,
                       sites_per_worker=1, output_request=output_request_cs)
-            gen.reV_run(max_workers=1)
+            gen.run(max_workers=1)
 
         gen_cs = Gen('pvwattsv7', rev2_points, sam_files_cs, res_cs,
                      sites_per_worker=1, output_request=output_request_cs)
-        gen_cs.reV_run(max_workers=1)
+        gen_cs.run(max_workers=1)
         gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                   sites_per_worker=1, output_request=output_request)
-        gen.reV_run(max_workers=1)
+        gen.run(max_workers=1)
 
         for k, v in gen.out.items():
             if k in ('ghi_mean', 'dni_mean', 'dhi_mean'):
@@ -542,13 +542,13 @@ def test_irrad_bias_correct():
 
     gen_base = Gen('pvwattsv7', points, sam_files, res_file,
                    sites_per_worker=1, output_request=output_request)
-    gen_base.reV_run(max_workers=1)
+    gen_base.run(max_workers=1)
 
     bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 50})
     gen = Gen('pvwattsv7', points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request,
               bias_correct=bc_df)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     assert (gen_base.out['cf_mean'] < gen.out['cf_mean']).all()
     assert (gen_base.out['ghi_mean'] < gen.out['ghi_mean']).all()
@@ -559,7 +559,7 @@ def test_irrad_bias_correct():
     bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -1500})
     gen = Gen('pvwattsv7', points, sam_files, res_file, sites_per_worker=1,
               output_request=output_request, bias_correct=bc_df)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     for arr in gen.out.values():
         assert (arr == 0).all()
 

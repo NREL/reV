@@ -92,7 +92,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     pp = ProjectPoints(rev2_points, sam_files, 'windpower', res_file=res_file)
     gen = Gen('windpower', rev2_points, sam_files, res_file,
               sites_per_worker=3)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -142,17 +142,17 @@ def test_gid_map(gid_map):
 
     baseline = Gen('windpower', points_base, sam_files, res_file,
                    sites_per_worker=3, output_request=output_request)
-    baseline.reV_run(max_workers=max_workers)
+    baseline.run(max_workers=max_workers)
 
     map_test = Gen('windpower', points_test, sam_files, res_file,
                    sites_per_worker=3, output_request=output_request,
                    gid_map=gid_map)
-    map_test.reV_run(max_workers=max_workers)
+    map_test.run(max_workers=max_workers)
 
     write_gid_test = Gen('windpower', points_test, sam_files, res_file,
                          sites_per_worker=3, output_request=output_request,
                          gid_map=gid_map, write_mapped_gids=True)
-    write_gid_test.reV_run(max_workers=max_workers)
+    write_gid_test.run(max_workers=max_workers)
 
     for key in output_request:
         assert np.allclose(map_test.out[key], write_gid_test.out[key])
@@ -204,7 +204,7 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     # run reV 2.0 generation
     gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
               output_request=output_request)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
 
     assert gen.out['cf_mean'].shape == (10, )
     assert gen.out['cf_profile'].shape == (8760, 10)
@@ -228,7 +228,7 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
     # run reV 2.0 generation
     gen = Gen('windpower', rev2_points, sam_files, res_file,
               sites_per_worker=3, output_request=output_requests)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
     assert 'windspeed' in gen.out
     assert gen.out['windspeed'].shape == (8760, 10)
     assert gen._out['windspeed'].max() == 2597
@@ -243,7 +243,7 @@ def test_multi_file_5min_wtk():
     res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
     # run reV 2.0 generation
     gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3)
-    gen.reV_run(max_workers=max_workers)
+    gen.run(max_workers=max_workers)
     gen_outs = list(gen._out['cf_mean'])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
@@ -258,13 +258,13 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
 
     baseline = Gen('windpower', points, sam_files, res_file,
                    sites_per_worker=3, output_request=output_request)
-    baseline.reV_run(max_workers=max_workers)
+    baseline.run(max_workers=max_workers)
 
     site_data = pd.DataFrame({'gid': np.arange(2),
                               'turb_generic_loss': np.zeros(2)})
     test = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
                output_request=output_request, site_data=site_data)
-    test.reV_run(max_workers=max_workers)
+    test.run(max_workers=max_workers)
 
     assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
     assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
@@ -321,7 +321,7 @@ def test_multi_resolution_wtk():
         gen = Gen('windpower', points, sam_files, fp_hr,
                   low_res_resource_file=fp_lr,
                   sites_per_worker=3)
-        gen.reV_run(max_workers=max_workers)
+        gen.run(max_workers=max_workers)
         gen_outs = list(gen._out['cf_mean'])
         assert len(gen_outs) == 2
         assert np.mean(gen_outs) > 0.55
@@ -338,14 +338,14 @@ def test_wind_bias_correct():
     gen_base = Gen('windpower', points, sam_files, res_file,
                    output_request=('cf_mean', 'cf_profile', 'ws_mean'),
                    sites_per_worker=3)
-    gen_base.reV_run(max_workers=1)
+    gen_base.run(max_workers=1)
     outs_base = np.array(list(gen_base.out['cf_mean']))
 
     bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 2})
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     outs_bc = np.array(list(gen.out['cf_mean']))
     assert all(outs_bc > outs_base)
     assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
@@ -354,7 +354,7 @@ def test_wind_bias_correct():
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     for k, arr in gen.out.items():
         assert (np.array(arr) == 0).all()
 

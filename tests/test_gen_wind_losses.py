@@ -57,7 +57,7 @@ def test_wind_generic_losses(loss):
     pc.project_points.sam_inputs[SAM_FILE]['turb_generic_loss'] = loss
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     gen_outs = list(gen.out['cf_mean'])
 
     assert np.allclose(gen_outs, LOSS_BASELINE[loss], rtol=RTOL, atol=ATOL)
@@ -76,7 +76,7 @@ def test_wind_icing_losses(i):
         ICING_BASELINE[i]['rh']
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     gen_outs = list(gen.out['cf_mean'])
 
     assert np.allclose(gen_outs, ICING_BASELINE[i]['output'],
@@ -94,7 +94,7 @@ def test_wind_low_temp_cutoff(i):
         LOW_TEMP_BASELINE[i]['temp']
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
     gen_outs = list(gen.out['cf_mean'])
 
     assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'],

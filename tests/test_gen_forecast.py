@@ -60,12 +60,12 @@ def test_forecast():
         with pytest.raises(SAMExecutionError):
             gen = Gen('pvwattsv7', points, sam_files, res_file,
                       sites_per_worker=3, output_request=output_request)
-            gen.reV_run(max_workers=1)
+            gen.run(max_workers=1)
 
         gen1 = Gen('pvwattsv7', points, sam_files, res_file,
                    sites_per_worker=3, site_data=site_data,
                    output_request=output_request)
-        gen1.reV_run(max_workers=1)
+        gen1.run(max_workers=1)
 
         for i in range(5):
             assert np.allclose(gen1.out['ghi_mean'][i], mean_irrad(ghi[:, i]),
@@ -74,7 +74,7 @@ def test_forecast():
         gen2 = Gen('pvwattsv7', points, sam_files, res_file,
                    sites_per_worker=3, site_data=site_data,
                    gid_map=gid_map, output_request=output_request)
-        gen2.reV_run(max_workers=1)
+        gen2.run(max_workers=1)
 
         for i in range(5):
             j = gid_map[i]

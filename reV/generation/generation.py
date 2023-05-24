@@ -75,7 +75,7 @@ class Gen(BaseGen):
     >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
     >>>
     >>> gen = Gen(sam_tech, sites, fp_sam, fp_res)
-    >>> gen.reV_run()
+    >>> gen.run()
     >>>
     >>> gen.out
     {'cf_mean': array([0.16966143], dtype=float32)}
@@ -83,7 +83,7 @@ class Gen(BaseGen):
     >>> sites = [3, 4, 7, 9]
     >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
     >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
-    >>> gen.reV_run()
+    >>> gen.run()
     >>>
     >>> gen.out
     {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
@@ -618,8 +618,8 @@ class Gen(BaseGen):
 
         return list(set(output_request))
 
-    def reV_run(self, out_dir=None, max_workers=1, timeout=1800,
-                pool_size=(os.cpu_count() * 2), job_name=None):
+    def run(self, out_dir=None, max_workers=1, timeout=1800,
+            pool_size=(os.cpu_count() * 2), job_name=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters

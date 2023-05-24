@@ -36,7 +36,7 @@ def test_gen_swh_non_leap_year():
     gen = Gen('solarwaterheat', points, sam_files, res_file,
               output_request=output_request, sites_per_worker=1,
               scale_outputs=True)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     with Resource(BASELINE) as f:
         for dset in output_request:
@@ -67,7 +67,7 @@ def test_gen_swh_leap_year():
     gen = Gen('solarwaterheat', points, sam_files, res_file,
               output_request=output_request, sites_per_worker=1,
               scale_outputs=True)
-    gen.reV_run(max_workers=1)
+    gen.run(max_workers=1)
 
     with Resource(BASELINE) as f:
         for dset in output_request:

@@ -146,11 +146,11 @@ def test_sam_config(tech):
 
         gen_json = Gen('pvwattsv5', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=50)
-        gen_json.reV_run(max_workers=2)
+        gen_json.run(max_workers=2)
 
         gen_dict = Gen('pvwattsv5', points_config, sam_config, res_file,
                        output_request=('cf_profile',), sites_per_worker=50)
-        gen_dict.reV_run(max_workers=2)
+        gen_dict.run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))
@@ -167,11 +167,11 @@ def test_sam_config(tech):
 
         gen_json = Gen('windpower', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=3)
-        gen_json.reV_run(max_workers=2)
+        gen_json.run(max_workers=2)
 
         gen_dict = Gen('windpower', points_config, sam_config, res_file,
                        output_request=('cf_profile',), sites_per_worker=3)
-        gen_dict.reV_run(max_workers=2)
+        gen_dict.run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))
