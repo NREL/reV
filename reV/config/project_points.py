@@ -587,9 +587,11 @@ class ProjectPoints:
             raise ValueError('Cannot parse Project points data from {}'
                              .format(type(points)))
 
-        if ('gid' not in df.columns or 'config' not in df.columns):
-            raise KeyError('Project points data must contain "gid" and '
-                           '"config" column headers.')
+        if 'gid' not in df.columns:
+            raise KeyError('Project points data must contain "gid" column.')
+
+        if 'config' not in df.columns:
+            df = cls._parse_sites(points["gid"].values, res_file=res_file)
 
         gids = df['gid'].values
         if not np.array_equal(np.sort(gids), gids):
