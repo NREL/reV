@@ -18,6 +18,7 @@ from concurrent.futures import as_completed
 from warnings import warn
 
 from reV.config.project_points import ProjectPoints
+from reV.config.output_request import SAMOutputRequest
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
 from reV.econ.utilities import lcoe_fcr
@@ -29,7 +30,7 @@ from reV.supply_curve.points import SupplyCurvePoint
 from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
-from reV.utilities import log_versions
+from reV.utilities import log_versions, ModuleName
 
 from rex.joint_pd.joint_pd import JointPD
 from rex.renewable_resource import WindResource
@@ -1204,16 +1205,13 @@ class BespokeWindPlants(AbstractAggregation):
     local wind resource and exclusions for the full reV supply curve grid.
     """
 
-    def __init__(self, excl_fpath, res_fpath, tm_dset,
-                 objective_function, capital_cost_function,
-                 fixed_operating_cost_function,
-                 variable_operating_cost_function,
-                 points, sam_configs, points_range=None,
-                 min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
-                 output_request=('system_capacity', 'cf_mean'),
+    def __init__(self, excl_fpath, res_fpath, tm_dset, objective_function,
+                 capital_cost_function, fixed_operating_cost_function,
+                 variable_operating_cost_function, project_points,
+                 sam_files, min_spacing='5x', wake_loss_multiplier=1,
+                 ga_kwargs=None, output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
-                 excl_dict=None,
-                 area_filter_kernel='queen', min_area=None,
+                 excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False, prior_run=None, gid_map=None,
                  bias_correct=None, pre_load_data=False):
@@ -1230,35 +1228,12 @@ class BespokeWindPlants(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        points : int | slice | list | str | PointsControl | None
-            Slice or list specifying project points, string pointing to
-            a project points csv, or a fully instantiated PointsControl
-            object. Can also be a single site integer value. Points csv
-            should have 'gid' and 'config' column, the config maps to
-            the sam_configs dict keys. CSV file can also have any of the
-            SAM system config keys as columns. Values of these columns
-            are treated as site-specific inputs for each gid. CSV file
-            can also have these extra columns:
-                - capital_cost_multiplier
-                - fixed_operating_cost_multiplier
-                - variable_operating_cost_multiplier
-            These inputs are treated as multipliers to be applied to
-            the respective cost curves (`capital_cost_function`,
-            `fixed_operating_cost_function`, and
-            `variable_operating_cost_function`) both during and after
-            the optimization. If this is None, all available reV supply
-            curve points are included (or sliced by points_range).
-        sam_configs : dict | str | SAMConfig
+        sam_files : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
             CSV. Values are either a JSON SAM config file or dictionary of SAM
             config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. The list is the (Beginning, end) (inclusive/exclusive,
-            respectively) index split parameters for ProjectPoints.split()
-            method.
         objective_function : str
             The objective function of the optimization as a string, should
             return the objective to be minimized during layout optimization.
@@ -1288,6 +1263,39 @@ class BespokeWindPlants(AbstractAggregation):
             The plant annual variable operating cost function as a string, must
             return the variable operating cost in $/kWh. Has access to the same
             variables as the objective_function.
+        project_points : int | slice | list | str | PointsControl
+            Slice or list specifying project points, string pointing to
+            a project points csv, or a fully instantiated PointsControl
+            object. Can also be a single site integer value. Points csv
+            should have 'gid' and 'config' column, the config maps to
+            the sam_configs dict keys. CSV file can also have any of the
+            SAM system config keys as columns. Values of these columns
+            are treated as site-specific inputs for each gid. CSV file
+            can also have these extra columns:
+                - capital_cost_multiplier
+                - fixed_operating_cost_multiplier
+                - variable_operating_cost_multiplier
+            These inputs are treated as multipliers to be applied to
+            the respective cost curves (`capital_cost_function`,
+            `fixed_operating_cost_function`, and
+            `variable_operating_cost_function`) both during and after
+            the optimization. If you would like to obtain all available
+            reV supply curve points to run, you can use this code::
+
+                import pandas as pd
+                from reV.supply_curve.extent import SupplyCurveExtent
+
+                excl_fpath = "..."
+                resolution = ...
+                with SupplyCurveExtent(excl_fpath, resolution) as sc:
+                    points = sc.valid_sc_points(tm_dset).tolist()
+                    points = pd.DataFrame({"gid": points})
+                    points["config"] = "default"  # or a list of config choices
+
+                # Use the points directly or save them to csv for CLI usage
+                points.to_csv("project_points.csv", index=False)
+
+
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
@@ -1410,10 +1418,7 @@ class BespokeWindPlants(AbstractAggregation):
 
         BespokeSinglePlant.check_dependencies()
 
-        self._points_control = self._parse_points(excl_fpath, res_fpath,
-                                                  tm_dset, resolution, points,
-                                                  points_range, sam_configs)
-        self._project_points = self._points_control.project_points
+        self._project_points = self._parse_points(project_points, sam_files)
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -1429,7 +1434,7 @@ class BespokeWindPlants(AbstractAggregation):
         self._min_spacing = min_spacing
         self._wake_loss_multiplier = wake_loss_multiplier
         self._ga_kwargs = ga_kwargs or {}
-        self._output_request = output_request
+        self._output_request = SAMOutputRequest(output_request)
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._data_layers = data_layers
@@ -1442,79 +1447,40 @@ class BespokeWindPlants(AbstractAggregation):
         self._pre_loaded_data = None
         self._pre_load_data(pre_load_data)
 
+        self._slice_lookup = None
+
         logger.info('Initialized BespokeWindPlants with project points: {}'
                     .format(self._project_points))
 
     @staticmethod
-    def _parse_points(excl_fpath, res_fpath, tm_dset, resolution,
-                      points, points_range, sam_configs, sites_per_worker=1,
-                      workers=None):
-        """Parse a project points object using either an explicit project
-        points file or if points=None get all available supply curve points
-        based on the exclusion file + resolution + techmap
+    def _parse_points(points, sam_configs):
+        """Parse a project points object using a project points file
 
         Parameters
         ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        res_fpath : str
-            Wind resource h5 filepath in NREL WTK format. Can also include
-            unix-style wildcards like /dir/wind_*.h5 for multiple years of
-            resource data.
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead,
-            by default None
         points : int | slice | list | str | PointsControl | None
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
             'gid' and 'config' column, the config maps to the sam_configs dict
-            keys. If this is None, all available reV supply curve points are
-            included (or sliced by points_range).
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. The list is the (Beginning, end) (inclusive/exclusive,
-            respectively) index split parameters for ProjectPoints.split()
-            method.
+            keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s) which map to the config column in the project points
             CSV. Values are either a JSON SAM config file or dictionary of SAM
             config inputs. Can also be a single config file path or a
             pre loaded SAMConfig object.
-        sites_per_worker : int | None
-            Number of sites to run per project points split.
-        workers : int | None
-            Optional input that will calculate the sites_per_worker based on
-            the number of points
 
         Returns
         -------
-        PointsControl : reV.config.project_points.PointsControl
-            Project points control object laying out the supply curve gids to
+        ProjectPoints : ~reV.config.project_points.ProjectPoints
+            Project points object laying out the supply curve gids to
             analyze.
         """
+        pc = Gen.get_pc(points, points_range=None, sam_configs=sam_configs,
+                        tech='windpower', sites_per_worker=1)
 
-        if points is None:
-            logger.info('Points input is None, parsing available points '
-                        'from exclusion file and techmap dataset.')
-            with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-                points = sc.valid_sc_points(tm_dset).tolist()
-
-        points = ProjectPoints._parse_points(points, res_file=res_fpath)
-
-        if workers is not None:
-            sites_per_worker = int(np.ceil(len(points) / workers))
-
-        pc = Gen.get_pc(points, points_range, sam_configs,
-                        tech='windpower', sites_per_worker=sites_per_worker)
-
-        return pc
+        return pc.project_points
 
     @staticmethod
     def _parse_prior_run(prior_run):
@@ -1681,6 +1647,17 @@ class BespokeWindPlants(AbstractAggregation):
             meta = meta[0]
         return meta
 
+    @property
+    def slice_lookup(self):
+        """dict | None: Lookup mapping sc_point_gid to exclusion slice. """
+        if self._slice_lookup is None and self._inclusion_mask is not None:
+            with SupplyCurveExtent(self._excl_fpath,
+                                   resolution=self._resolution) as sc:
+                assert self.shape == self._inclusion_mask.shape
+                self._slice_lookup = sc.get_slice_lookup(self.gids)
+
+        return self._slice_lookup
+
     def sam_sys_inputs_with_site_data(self, gid):
         """Update the sam_sys_inputs with site data for the given GID.
 
@@ -1729,6 +1706,10 @@ class BespokeWindPlants(AbstractAggregation):
 
         if not out_fpath.endswith('.h5'):
             out_fpath += '.h5'
+
+        if ModuleName.BESPOKE not in out_fpath:
+            extension_with_module = "_{}.h5".format(ModuleName.BESPOKE)
+            out_fpath = out_fpath.replace(".h5", extension_with_module)
 
         out_dir = os.path.dirname(out_fpath)
         if not os.path.exists(out_dir):
@@ -1963,13 +1944,6 @@ class BespokeWindPlants(AbstractAggregation):
                     .format(self.gids[0], self.gids[-1], self._resolution,
                             max_workers))
 
-        slice_lookup = None
-        if self._inclusion_mask is not None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
-                assert self.shape == self._inclusion_mask.shape
-                slice_lookup = sc.get_slice_lookup(self.gids)
-
         futures = []
         out = {}
         n_finished = 0
@@ -1981,7 +1955,7 @@ class BespokeWindPlants(AbstractAggregation):
                 # submit executions and append to futures list
                 gid_incl_mask = None
                 if self._inclusion_mask is not None:
-                    rs, cs = slice_lookup[gid]
+                    rs, cs = self.slice_lookup[gid]
                     gid_incl_mask = self._inclusion_mask[rs, cs]
 
                 futures.append(exe.submit(
@@ -2009,7 +1983,7 @@ class BespokeWindPlants(AbstractAggregation):
                     data_layers=self._data_layers,
                     gids=gid,
                     exclusion_shape=self.shape,
-                    slice_lookup=slice_lookup,
+                    slice_lookup=copy.deepcopy(self.slice_lookup),
                     prior_meta=self._get_prior_meta(gid),
                     gid_map=self._gid_map,
                     bias_correct=self._bias_correct,
@@ -2030,87 +2004,101 @@ class BespokeWindPlants(AbstractAggregation):
 
         return out
 
-    # pylint: disable=arguments-renamed
-    @classmethod
-    def run(cls, excl_fpath, res_fpath, tm_dset,
-            objective_function, capital_cost_function,
-            fixed_operating_cost_function,
-            variable_operating_cost_function,
-            points, sam_configs, points_range=None,
-            min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
-            output_request=('system_capacity', 'cf_mean'),
-            ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
-            excl_dict=None, area_filter_kernel='queen', min_area=None,
-            resolution=64, excl_area=None, data_layers=None,
-            pre_extract_inclusions=False, max_workers=None,
-            prior_run=None, gid_map=None, bias_correct=None,
-            out_fpath=None, pre_load_data=False):
+    def run(self, out_fpath=None, max_workers=None):
         """Run the bespoke wind plant optimization in serial or parallel.
-        See BespokeWindPlants docstring for parameter description.
+
+        Parameters
+        ----------
+        out_fpath : str, optional
+            Path to output file. If ``None``, no output file will
+            be written. If the filepath is specified but the module name
+            (bespoke) is not included, the module name will get added to
+            the output file name. By default, ``None``.
+        max_workers : int, optional
+            Number of local workers to run on. If ``None``, uses all
+            available cores (typically 36). By default, ``None``.
+
+        Returns
+        -------
+        str | None
+            Path to output HDF5 file, or ``None`` if results were not
+            written to disk.
         """
 
-        bsp = cls(excl_fpath, res_fpath, tm_dset,
-                  objective_function,
-                  capital_cost_function,
-                  fixed_operating_cost_function,
-                  variable_operating_cost_function,
-                  points, sam_configs,
-                  points_range=points_range,
-                  min_spacing=min_spacing,
-                  wake_loss_multiplier=wake_loss_multiplier,
-                  ga_kwargs=ga_kwargs,
-                  output_request=output_request,
-                  ws_bins=ws_bins,
-                  wd_bins=wd_bins,
-                  excl_dict=excl_dict,
-                  area_filter_kernel=area_filter_kernel,
-                  min_area=min_area,
-                  resolution=resolution,
-                  excl_area=excl_area,
-                  data_layers=data_layers,
-                  pre_extract_inclusions=pre_extract_inclusions,
-                  prior_run=prior_run,
-                  gid_map=gid_map,
-                  bias_correct=bias_correct,
-                  pre_load_data=pre_load_data)
-
         # parallel job distribution test.
-        if objective_function == 'test':
+        if self._obj_fun == 'test':
             return True
 
         if max_workers == 1:
-            for gid in bsp.gids:
-                sam_inputs = bsp.sam_sys_inputs_with_site_data(gid)
-                prior_meta = bsp._get_prior_meta(gid)
-                pre_loaded_data = bsp._pre_loaded_data_for_sc_gid(gid)
-                si = bsp.run_serial(excl_fpath, res_fpath, tm_dset,
-                                    sam_inputs,
-                                    objective_function,
-                                    capital_cost_function,
-                                    fixed_operating_cost_function,
-                                    variable_operating_cost_function,
-                                    min_spacing=bsp._min_spacing,
-                                    wake_loss_multiplier=wake_loss_multiplier,
-                                    ga_kwargs=bsp._ga_kwargs,
-                                    output_request=bsp._output_request,
-                                    ws_bins=bsp._ws_bins,
-                                    wd_bins=bsp._wd_bins,
-                                    excl_dict=bsp._excl_dict,
-                                    area_filter_kernel=bsp._area_filter_kernel,
-                                    min_area=bsp._min_area,
-                                    resolution=bsp._resolution,
-                                    excl_area=bsp._excl_area,
-                                    data_layers=bsp._data_layers,
-                                    prior_meta=prior_meta,
-                                    gid_map=bsp._gid_map,
-                                    bias_correct=bsp._bias_correct,
-                                    gids=gid,
-                                    pre_loaded_data=pre_loaded_data)
-                bsp._outputs.update(si)
+            slice_lookup = copy.deepcopy(self.slice_lookup)
+            for gid in self.gids:
+                gid_incl_mask = None
+                if self._inclusion_mask is not None:
+                    rs, cs = slice_lookup[gid]
+                    gid_incl_mask = self._inclusion_mask[rs, cs]
+
+                sam_inputs = self.sam_sys_inputs_with_site_data(gid)
+                prior_meta = self._get_prior_meta(gid)
+                pre_loaded_data = self._pre_loaded_data_for_sc_gid(gid)
+                afk = self._area_filter_kernel
+                wlm = self._wake_loss_multiplier
+                si = self.run_serial(self._excl_fpath,
+                                     self._res_fpath,
+                                     self._tm_dset,
+                                     sam_inputs,
+                                     self._obj_fun,
+                                     self._cap_cost_fun,
+                                     self._foc_fun,
+                                     self._voc_fun,
+                                     min_spacing=self._min_spacing,
+                                     wake_loss_multiplier=wlm,
+                                     ga_kwargs=self._ga_kwargs,
+                                     output_request=self._output_request,
+                                     ws_bins=self._ws_bins,
+                                     wd_bins=self._wd_bins,
+                                     excl_dict=self._excl_dict,
+                                     inclusion_mask=gid_incl_mask,
+                                     area_filter_kernel=afk,
+                                     min_area=self._min_area,
+                                     resolution=self._resolution,
+                                     excl_area=self._excl_area,
+                                     data_layers=self._data_layers,
+                                     slice_lookup=slice_lookup,
+                                     prior_meta=prior_meta,
+                                     gid_map=self._gid_map,
+                                     bias_correct=self._bias_correct,
+                                     gids=gid,
+                                     pre_loaded_data=pre_loaded_data)
+                self._outputs.update(si)
         else:
-            bsp._outputs = bsp.run_parallel(max_workers=max_workers)
+            self._outputs = self.run_parallel(max_workers=max_workers)
 
         if out_fpath is not None:
-            bsp.save_outputs(out_fpath)
+            self.save_outputs(out_fpath)
 
-        return bsp
+        return out_fpath
+
+
+def bespoke_preprocessor(config, out_dir, job_name):
+    """Preprocess generation config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of bespoke job. This will be included in the output file
+        name.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    if isinstance(config["sam_files"], str):
+        config["sam_files"] = {'default': config["sam_files"]}
+
+    config["out_fpath"] = os.path.join(out_dir, job_name)
+    return config

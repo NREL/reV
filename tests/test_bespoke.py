@@ -11,8 +11,10 @@ import numpy as np
 import pandas as pd
 import pytest
 import h5py
+import traceback
 
 from reV import TESTDATADIR
+from reV.cli import gaps_cli
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
 from reV.handlers.outputs import Outputs
@@ -21,6 +23,7 @@ from reV.supply_curve.supply_curve import SupplyCurve
 from reV.SAM.generation import WindPower
 from reV.losses.power_curve import PowerCurveLossesMixin
 from reV.losses.scheduled import ScheduledLossesMixin
+from reV.utilities import ModuleName
 
 from rex import Resource
 
@@ -230,41 +233,18 @@ def test_packing_algorithm(gid=33):
 def test_bespoke_points():
     """Test the bespoke points input options"""
     # pylint: disable=W0612
-    with tempfile.TemporaryDirectory() as td:
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
-        shutil.copy(EXCL, excl_fp)
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+    points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
+    pp = BespokeWindPlants._parse_points(points, {'default': SAM})
+    assert len(pp) == 3
+    for gid in pp.gids:
+        assert pp[gid][0] == 'default'
 
-        points = None
-        points_range = None
-        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
-                                             TM_DSET, 64, points,
-                                             points_range, SAM)
-        pp = pc.project_points
-
-        assert len(pp) == 100
-        for gid in pp.gids:
-            assert pp[gid][0] == SAM
-
-        points = None
-        points_range = (0, 10)
-        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
-                                             TM_DSET, 64, points,
-                                             points_range, {'default': SAM})
-        pp = pc.project_points
-        assert len(pp) == 10
-        for gid in pp.gids:
-            assert pp[gid][0] == 'default'
-
-        points = pd.DataFrame({'gid': [33, 34, 35], 'config': ['default'] * 3})
-        points_range = None
-        pc = BespokeWindPlants._parse_points(excl_fp, RES.format(2012),
-                                             TM_DSET, 64, points,
-                                             points_range, {'default': SAM})
-        pp = pc.project_points
-        assert len(pp) == 3
-        for gid in pp.gids:
-            assert pp[gid][0] == 'default'
+    points = pd.DataFrame({'gid': [33, 34, 35]})
+    pp = BespokeWindPlants._parse_points(points, {'default': SAM})
+    assert len(pp) == 3
+    assert 'config' in pp.df.columns
+    for gid in pp.gids:
+        assert pp[gid][0] == 'default'
 
 
 def test_single(gid=33):
@@ -478,27 +458,22 @@ def test_bespoke():
         # test no outputs
         with pytest.warns(UserWarning) as record:
             assert not os.path.exists(out_fpath)
-            _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
-                                      OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                      FOC_FUN, VOC_FUN,
-                                      fully_excluded_points, SAM_CONFIGS,
-                                      ga_kwargs={'max_time': 5},
-                                      excl_dict=EXCL_DICT,
-                                      output_request=output_request,
-                                      max_workers=2,
-                                      out_fpath=out_fpath)
+            bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET,
+                                    OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                    FOC_FUN, VOC_FUN, fully_excluded_points,
+                                    SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                    excl_dict=EXCL_DICT,
+                                    output_request=output_request)
+            bsp.run(max_workers=2, out_fpath=out_fpath)
             assert 'points are excluded' in str(record[0].message)
 
         assert not os.path.exists(out_fpath)
-        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 5},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=2,
-                                  out_fpath=out_fpath)
+        bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, points,
+                                SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        bsp.run(max_workers=2, out_fpath=out_fpath)
         assert os.path.exists(out_fpath)
         with Resource(out_fpath) as f:
             meta = f.meta
@@ -531,16 +506,13 @@ def test_bespoke():
                 assert f[dset].any()  # not all zeros
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
-        _ = BespokeWindPlants.run(excl_fp, res_fp, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath_pre,
-                                  pre_load_data=True)
+        bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, points,
+                                SAM_CONFIGS, ga_kwargs={'max_time': 1},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                pre_load_data=True)
+        bsp.run(max_workers=1, out_fpath=out_fpath_pre)
 
         with Resource(out_fpath) as f1, Resource(out_fpath_pre) as f2:
             assert np.allclose(f1["winddirection-2012"],
@@ -963,29 +935,23 @@ def test_bespoke_w_prior_run():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_all, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath1)
+        bsp = BespokeWindPlants(excl_fp, res_fp_all, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath2,
-                                  prior_run=out_fpath1)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                prior_run=out_fpath1)
+        bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
         with Resource(out_fpath1) as f1:
@@ -1043,29 +1009,23 @@ def test_gid_map():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath1)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath2,
-                                  gid_map=fp_gid_map)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                gid_map=fp_gid_map)
+        bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
         with Resource(out_fpath1) as f1:
@@ -1088,17 +1048,13 @@ def test_gid_map():
         assert np.allclose(ws.mean(), data2['ws_mean'], atol=0.01)
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath_pre,
-                                  gid_map=fp_gid_map,
-                                  pre_load_data=True)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                gid_map=fp_gid_map, pre_load_data=True)
+        bsp.run(max_workers=1, out_fpath=out_fpath_pre)
 
         with Resource(out_fpath2) as f1, Resource(out_fpath_pre) as f2:
             assert np.allclose(f1["winddirection-2013"],
@@ -1136,29 +1092,23 @@ def test_bespoke_w_bias_correct():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath1)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        _ = BespokeWindPlants.run(excl_fp, res_fp_2013, TM_DSET,
-                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                  FOC_FUN, VOC_FUN,
-                                  points, SAM_CONFIGS,
-                                  ga_kwargs={'max_time': 1},
-                                  excl_dict=EXCL_DICT,
-                                  output_request=output_request,
-                                  max_workers=1,
-                                  out_fpath=out_fpath2,
-                                  bias_correct=fp_bc)
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                bias_correct=fp_bc)
+        bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
         with Resource(out_fpath1) as f1:
@@ -1174,3 +1124,101 @@ def test_bespoke_w_bias_correct():
 
         assert data1['cf_mean-2013'] * 0.5 > data2['cf_mean-2013']
         assert np.allclose(data1['ws_mean'] * 0.5, data2['ws_mean'], atol=0.01)
+
+
+def test_cli(runner, clear_loggers):
+    """Test bespoke CLI"""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'winddirection', 'windspeed', 'ws_mean')
+
+    with tempfile.TemporaryDirectory() as td:
+        dirname = os.path.basename(td)
+        fn_out = "{}_{}.h5".format(dirname, ModuleName.BESPOKE)
+        out_fpath = os.path.join(td, fn_out)
+
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+
+        config = {
+            "log_directory": td,
+            "log_level": "INFO",
+            "execution_control": {
+                "option": "local",
+                "max_workers": 2,
+            },
+            "excl_fpath": excl_fp,
+            "res_fpath": res_fp,
+            "tm_dset": TM_DSET,
+            "objective_function": OBJECTIVE_FUNCTION,
+            "capital_cost_function": CAP_COST_FUN,
+            "fixed_operating_cost_function": FOC_FUN,
+            "variable_operating_cost_function": VOC_FUN,
+            "project_points": [33, 35],
+            "sam_files": SAM_CONFIGS,
+            "min_spacing": '5x',
+            "wake_loss_multiplier": 1,
+            "ga_kwargs": {'max_time': 5},
+            "output_request": output_request,
+            "ws_bins": (0, 20, 5),
+            "wd_bins": (0, 360, 45),
+            "excl_dict": EXCL_DICT,
+            "area_filter_kernel": 'queen',
+            "min_area": None,
+            "resolution": 64,
+            "excl_area":None,
+            "data_layers": None,
+            "pre_extract_inclusions": False,
+            "prior_run": None,
+            "gid_map": None,
+            "bias_correct": None,
+            "pre_load_data": False,
+        }
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        assert not os.path.exists(out_fpath)
+        result = runner.invoke(gaps_cli, ['bespoke', '-c', config_path])
+        if result.exit_code != 0:
+            msg = ('Failed with error {}'
+                   .format(traceback.print_exception(*result.exc_info)))
+            raise RuntimeError(msg)
+
+        assert os.path.exists(out_fpath)
+
+        with Resource(out_fpath) as f:
+            meta = f.meta
+            assert len(meta) == 2
+            assert 'sc_point_gid' in meta
+            assert 'turbine_x_coords' in meta
+            assert 'turbine_y_coords' in meta
+            assert 'possible_x_coords' in meta
+            assert 'possible_y_coords' in meta
+            assert 'res_gids' in meta
+
+            dsets_1d = ('system_capacity', 'cf_mean-2012',
+                        'annual_energy-2012', 'cf_mean-means', 'ws_mean')
+            for dset in dsets_1d:
+                assert dset in list(f)
+                assert isinstance(f[dset], np.ndarray)
+                assert len(f[dset].shape) == 1
+                assert len(f[dset]) == len(meta)
+                assert f[dset].any()  # not all zeros
+
+            dsets_2d = ('cf_profile-2012', 'cf_profile-2013',
+                        'windspeed-2012', 'windspeed-2013')
+            for dset in dsets_2d:
+                assert dset in list(f)
+                assert isinstance(f[dset], np.ndarray)
+                assert len(f[dset].shape) == 2
+                assert len(f[dset]) == 8760
+                assert f[dset].shape[1] == len(meta)
+                assert f[dset].any()  # not all zeros
+
+        clear_loggers()

@@ -8,6 +8,7 @@ import logging
 from gaps.cli import make_cli, CLICommandFromClass, CLICommandFromFunction
 from gaps.cli.collect import collect as gaps_collect
 from gaps.cli.preprocessing import preprocess_collect_config
+from reV.bespoke import BespokeWindPlants, bespoke_preprocessor
 from reV.generation import Gen, gen_preprocessor
 from reV.econ import Econ, econ_preprocessor
 from reV.utilities import ModuleName
@@ -374,6 +375,13 @@ def valid_qa_qc_keys(ctx):
 
 
 commands = [
+    CLICommandFromClass(BespokeWindPlants,
+                        method="run",
+                        name=str(ModuleName.BESPOKE),
+                        add_collect=False,
+                        split_keys=["project_points"],
+                        config_preprocessor=bespoke_preprocessor,
+                        skip_doc_params=["out_fpath"]),
     CLICommandFromClass(Gen,
                         method="run",
                         name=str(ModuleName.GENERATION),
