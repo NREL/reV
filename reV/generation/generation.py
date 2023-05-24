@@ -618,15 +618,18 @@ class Gen(BaseGen):
 
         return list(set(output_request))
 
-    def run(self, out_dir=None, max_workers=1, timeout=1800,
-            pool_size=(os.cpu_count() * 2), job_name=None):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800,
+            pool_size=(os.cpu_count() * 2)):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
         ----------
-        out_dir : str, optional
-            Path to output directory. If ``None``, no output file will
-            be written. By default, ``None``.
+        out_fpath : str, optional
+            Path to output file. If ``None``, no output file will
+            be written. If the filepath is specified but the module name
+            (generation) and/or resource data year is not included, the
+            module name and/or resource data year will get added to the
+            output file name. By default, ``None``.
         max_workers : int, optional
             Number of local workers to run on. By default, ``1``.
         timeout : int, optional
@@ -636,10 +639,6 @@ class Gen(BaseGen):
         pool_size : tuple, optional
             Number of futures to submit to a single process pool for
             parallel futures. By default, ``(os.cpu_count() * 2)``.
-        job_name : str, optional
-            Name for job. This string will be incorporated into the reV
-            generation output file name.  If ``None``, the module name
-            (generation) will be used. By default, ``None``.
 
         Returns
         -------
@@ -647,11 +646,8 @@ class Gen(BaseGen):
             Path to output HDF5 file, or ``None`` if results were not
             written to disk.
         """
-        if out_dir is not None:
-            out_dir = os.path.join(out_dir, job_name or ModuleName.GENERATION)
-
         # initialize output file
-        self._init_fpath(out_dir, module=ModuleName.GENERATION)
+        self._init_fpath(out_fpath, module=ModuleName.GENERATION)
         self._init_h5()
         self._init_out_arrays()
 
@@ -701,13 +697,18 @@ class Gen(BaseGen):
 
 # TODO: Move this into gen CLI file
 # TODO: Add logging
-def gen_preprocessor(config, analysis_years=None):
+def gen_preprocessor(config, out_dir, job_name, analysis_years=None):
     """Preprocess generation config user input.
 
     Parameters
     ----------
     config : dict
         User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of bespoke job. This will be included in the output file
+        name.
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -738,6 +739,7 @@ def gen_preprocessor(config, analysis_years=None):
 
     config['technology'] = (config['technology'].lower()
                             .replace(' ', '').replace('_', ''))
+    config["out_fpath"] = os.path.join(out_dir, job_name)
     return config
 
 

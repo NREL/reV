@@ -169,7 +169,7 @@ def test_pv_gen_profiles(year):
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
                   output_request=('cf_profile',), sites_per_worker=50)
-        gen.run(max_workers=2, out_dir=td, job_name=fn)
+        gen.run(max_workers=2, out_fpath=rev2_out)
 
         with Outputs(rev2_out, 'r') as cf:
             rev2_profiles = cf['cf_profile']
@@ -195,7 +195,7 @@ def test_smart(year):
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
                   output_request=('cf_profile',), sites_per_worker=50)
-        gen.run(max_workers=2, out_dir=td, job_name=fn)
+        gen.run(max_workers=2, out_fpath=rev2_out)
 
         with Outputs(rev2_out, 'r') as cf:
             rev2_profiles = cf['cf_profile']

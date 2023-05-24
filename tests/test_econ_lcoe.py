@@ -75,7 +75,7 @@ def test_fout(year):
         points = slice(0, 100)
         econ = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
                     sites_per_worker=25)
-        econ.run(max_workers=1, out_dir=dirout, job_name='lcoe_out')
+        econ.run(max_workers=1, out_fpath=fpath)
         with Outputs(fpath) as f:
             lcoe = f['lcoe_fcr']
 

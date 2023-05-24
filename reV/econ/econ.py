@@ -370,17 +370,19 @@ class Econ(BaseGen):
 
         return data_shape
 
-    def run(self, out_dir=None, max_workers=1, timeout=1800,
-            pool_size=(os.cpu_count() * 2), job_name=None):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800,
+            pool_size=(os.cpu_count() * 2)):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
         ----------
-        out_dir : str, optional
-            Path to output directory. If ``None``, no output file will
-            be written. If this class was initialized with
-            ``append=True``, this option has no effect.
-            By default, ``None``.
+        out_fpath : str, optional
+            Path to output file. If this class was initialized with
+            ``append=True``, this input has no effect. If ``None``, no
+            output file will be written. If the filepath is specified
+            but the module name (econ) and/or resource data year is not
+            included, the module name and/or resource data year will get
+            added to the output file name. By default, ``None``.
         max_workers : int, optional
             Number of local workers to run on. By default, ``1``.
         timeout : int, optional
@@ -390,12 +392,6 @@ class Econ(BaseGen):
         pool_size : tuple, optional
             Number of futures to submit to a single process pool for
             parallel futures. By default, ``(os.cpu_count() * 2)``.
-        job_name : str, optional
-            Name for job. This string will be incorporated into the reV
-            generation output file name. If ``None``, the module name
-            (econ) will be used. If this class was initialized with
-            ``append=True``, this option has no effect.
-            By default, ``None``.
 
         Returns
         -------
@@ -408,9 +404,7 @@ class Econ(BaseGen):
         if self._append:
             self._out_fpath = self._cf_file
         else:
-            if out_dir is not None:
-                out_dir = os.path.join(out_dir, job_name or ModuleName.ECON)
-            self._init_fpath(out_dir, ModuleName.ECON)
+            self._init_fpath(out_fpath, ModuleName.ECON)
 
         self._init_h5(mode='a' if self._append else 'w')
         self._init_out_arrays()
@@ -463,13 +457,18 @@ class Econ(BaseGen):
         return self._out_fpath
 
 
-def econ_preprocessor(config, project_dir, analysis_years=None):
+def econ_preprocessor(config, out_dir, job_name, analysis_years=None):
     """Preprocess econ config user input.
 
     Parameters
     ----------
     config : dict
         User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of bespoke job. This will be included in the output file
+        name.
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -490,28 +489,22 @@ def econ_preprocessor(config, project_dir, analysis_years=None):
         warn('Years may not have been specified, may default '
              'to available years in inputs files.', ConfigWarning)
 
-    config["cf_file"] = parse_cf_files(config["cf_file"],
-                                       analysis_years, project_dir)
+    config["cf_file"] = _parse_cf_files(config["cf_file"],
+                                        analysis_years, out_dir)
+    config["out_fpath"] = os.path.join(out_dir, job_name)
 
     return config
 
 
-def parse_cf_files(cf_file, analysis_years, project_dir):
-    """Get the capacity factor files (reV generation output data).
+def _parse_cf_files(cf_file, analysis_years, out_dir):
+    """Get the capacity factor files (reV generation output data). """
 
-    Returns
-    -------
-    cf_files : list
-        Target paths for capacity factor files (reV generation output
-        data) for input to reV LCOE calculation.
-    """
     # get base filename, may have {} for year format
     if '{}' in cf_file:
         # need to make list of res files for each year
         cf_files = [cf_file.format(year) for year in analysis_years]
     elif 'PIPELINE' in cf_file:
-        cf_files = parse_previous_status(project_dir,
-                                         command=str(ModuleName.ECON))
+        cf_files = parse_previous_status(out_dir, command=str(ModuleName.ECON))
     else:
         # only one resource file request, still put in list
         cf_files = [cf_file]
