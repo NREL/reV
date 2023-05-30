@@ -27,7 +27,7 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.supply_curve.aggregation import AbstractAggregation, AggFileHandler
+from reV.supply_curve.aggregation import BaseAggregation, AggFileHandler
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions, ModuleName
@@ -1200,7 +1200,7 @@ class BespokeSinglePlant:
         return out
 
 
-class BespokeWindPlants(AbstractAggregation):
+class BespokeWindPlants(BaseAggregation):
     """Framework for analyzing optimized wind plant layouts specific to the
     local wind resource and exclusions for the full reV supply curve grid.
     """

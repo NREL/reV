@@ -17,7 +17,7 @@ from warnings import warn
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          AbstractAggregation)
+                                          BaseAggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
@@ -220,7 +220,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         return self._friction_layer
 
 
-class SupplyCurveAggregation(AbstractAggregation):
+class SupplyCurveAggregation(BaseAggregation):
     """
     Supply curve points aggregation framework.
 
@@ -343,7 +343,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             unique value.
     """
 
-    def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
+    def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
                  pre_extract_inclusions=False, res_class_dset=None,
@@ -357,8 +357,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         excl_fpath : str | list | tuple
             Filepath to exclusions h5 with techmap dataset
             (can be one or more filepaths).
-        gen_fpath : str
-            Filepath to .h5 reV generation output results.
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -446,7 +444,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                          excl_area=excl_area, gids=gids,
                          pre_extract_inclusions=pre_extract_inclusions)
 
-        self._gen_fpath = gen_fpath
         self._econ_fpath = econ_fpath
         self._res_class_dset = res_class_dset
         self._res_class_bins = self._convert_bins(res_class_bins)
@@ -477,26 +474,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             warn(msg, InputWarning)
 
         self._check_data_layers()
-        self._gen_index = self._parse_gen_index(self._gen_fpath)
-
-    def _check_files(self):
-        """Do a preflight check on input files"""
-
-        check_exists = [self._excl_fpath, self._gen_fpath]
-        if self._econ_fpath is not None:
-            check_exists.append(self._econ_fpath)
-
-        for fpath in check_exists:
-            if not os.path.exists(fpath):
-                raise FileNotFoundError('Could not find input file: {}'
-                                        .format(fpath))
-
-        with h5py.File(self._excl_fpath, 'r') as f:
-            if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
 
     def _check_data_layers(self, methods=('mean', 'max', 'min',
                            'mode', 'sum', 'category')):
@@ -880,11 +857,14 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, max_workers=None, sites_per_worker=100):
+    def run_parallel(self, gen_fpath, args=None, max_workers=None,
+                     sites_per_worker=100):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
         ----------
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -899,6 +879,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary : list
             List of dictionaries, each being an SC point summary.
         """
+
+        gen_index = self._parse_gen_index(gen_fpath)
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
         chunks = np.array_split(self.gids, chunks)
 
@@ -933,8 +915,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                 futures.append(exe.submit(
                     self.run_serial,
-                    self._excl_fpath, self._gen_fpath,
-                    self._tm_dset, self._gen_index,
+                    self._excl_fpath, gen_fpath,
+                    self._tm_dset, gen_index,
                     econ_fpath=self._econ_fpath,
                     excl_dict=self._excl_dict,
                     inclusion_mask=chunk_incl_masks,
@@ -1029,12 +1011,15 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, max_workers=None, sites_per_worker=100):
+    def summarize(self, gen_fpath, args=None, max_workers=None,
+                  sites_per_worker=100):
         """
         Get the supply curve points aggregation summary
 
         Parameters
         ----------
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -1053,9 +1038,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             max_workers = os.cpu_count()
 
         if max_workers == 1:
+            gen_index = self._parse_gen_index(gen_fpath)
             afk = self._area_filter_kernel
-            summary = self.run_serial(self._excl_fpath, self._gen_fpath,
-                                      self._tm_dset, self._gen_index,
+            summary = self.run_serial(self._excl_fpath, gen_fpath,
+                                      self._tm_dset, gen_index,
                                       econ_fpath=self._econ_fpath,
                                       excl_dict=self._excl_dict,
                                       inclusion_mask=self._inclusion_mask,
@@ -1076,7 +1062,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       cap_cost_scale=self._cap_cost_scale,
                                       recalc_lcoe=self._recalc_lcoe)
         else:
-            summary = self.run_parallel(args=args,
+            summary = self.run_parallel(gen_fpath=gen_fpath, args=args,
                                         max_workers=max_workers,
                                         sites_per_worker=sites_per_worker)
 
@@ -1199,7 +1185,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             Summary of the SC points.
         """
 
-        agg = cls(excl_fpath, gen_fpath, tm_dset,
+        agg = cls(excl_fpath, tm_dset,
                   econ_fpath=econ_fpath,
                   excl_dict=excl_dict,
                   res_class_dset=res_class_dset,
@@ -1220,7 +1206,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                   cap_cost_scale=cap_cost_scale,
                   recalc_lcoe=recalc_lcoe)
 
-        summary = agg.summarize(args=args,
+        summary = agg.summarize(gen_fpath=gen_fpath, args=args,
                                 max_workers=max_workers,
                                 sites_per_worker=sites_per_worker)
 

@@ -148,7 +148,7 @@ class AggFileHandler(AbstractAggFileHandler):
         self._h5.close()
 
 
-class AbstractAggregation(ABC):
+class BaseAggregation(ABC):
     """Abstract supply curve points aggregation framework based on only an
     exclusion file and techmap."""
 
@@ -282,21 +282,6 @@ class AbstractAggregation(ABC):
 
         return excl_area
 
-    @abstractmethod
-    def _check_files(self):
-        """Do a preflight check on input files"""
-
-        if not os.path.exists(self._excl_fpath):
-            raise FileNotFoundError('Could not find required input file: '
-                                    '{}'.format(self._excl_fpath))
-
-        with h5py.File(self._excl_fpath, 'r') as f:
-            if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
-
     @staticmethod
     def _check_inclusion_mask(inclusion_mask, gids, excl_shape):
         """
@@ -417,323 +402,12 @@ class AbstractAggregation(ABC):
 
         return gen_index
 
-    @classmethod
-    @abstractmethod
-    def run_serial(cls, sc_point_method, excl_fpath, tm_dset,
-                   excl_dict=None, inclusion_mask=None,
-                   area_filter_kernel='queen', min_area=None, resolution=64,
-                   gids=None, args=None, kwargs=None):
-        """Standalone method to create agg summary - can be parallelized.
 
-        Parameters
-        ----------
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        tm_dset : str
-            Dataset name in the exclusions file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict | None
-            Dictionary of exclusion keyword arugments of the format
-            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
-            dataset in the exclusion h5 file and kwarg is a keyword argument to
-            the reV.supply_curve.exclusions.LayerMask class.
-            by default None
-        inclusion_mask : np.ndarray, optional
-            2D array pre-extracted inclusion mask where 1 is included and 0 is
-            excluded. This must be either match the full exclusion shape or
-            be a list of single-sc-point exclusion masks corresponding to the
-            gids input, by default None
-        area_filter_kernel : str, optional
-            Contiguous area filter method to use on final exclusions mask,
-            by default "queen"
-        min_area : float, optional
-            Minimum required contiguous area filter in sq-km, by default None
-        resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead,
-            by default None
-        gids : list, optional
-            List of supply curve point gids to get summary for (can use to
-            subset if running in parallel), or None for all gids in the SC
-            extent, by default None
-        args : list, optional
-            List of positional args for sc_point_method, by default None
-        kwargs : dict, optional
-            Dict of kwargs for sc_point_method, by default None
-
-        Returns
-        -------
-        output : list
-            List of output objects from sc_point_method.
-        """
-
-        if args is None:
-            args = []
-        if kwargs is None:
-            kwargs = {}
-
-        output = []
-
-        with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-            exclusion_shape = sc.exclusions.shape
-            if gids is None:
-                gids = sc.valid_sc_points(tm_dset)
-            elif np.issubdtype(type(gids), np.number):
-                gids = [gids]
-
-            slice_lookup = sc.get_slice_lookup(gids)
-
-        cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
-
-        # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'excl_dict': excl_dict,
-                       'area_filter_kernel': area_filter_kernel,
-                       'min_area': min_area}
-        # pylint: disable=abstract-class-instantiated
-        with AbstractAggFileHandler(excl_fpath, **file_kwargs) as fh:
-
-            for gid in gids:
-                gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, gid, slice_lookup,
-                    resolution=resolution)
-                try:
-                    gid_out = sc_point_method(
-                        gid,
-                        fh.exclusions,
-                        tm_dset,
-                        *args,
-                        inclusion_mask=gid_inclusions,
-                        excl_dict=excl_dict,
-                        resolution=resolution,
-                        exclusion_shape=exclusion_shape,
-                        close=False,
-                        **kwargs)
-
-                except EmptySupplyCurvePointError:
-                    pass
-
-                except Exception:
-                    logger.exception('SC gid {} failed!'.format(gid))
-                    raise
-
-                else:
-                    output.append(gid_out)
-
-        return output
-
-    @abstractmethod
-    def run_parallel(self, sc_point_method, args=None, kwargs=None,
-                     max_workers=None, sites_per_worker=100):
-        """
-        Aggregate with sc_point_method in parallel
-
-        Parameters
-        ----------
-        sc_point_method : function
-            Function to apply to each supply curve point
-        args : list, optional
-            List of positional args for sc_point_method, by default None
-        kwargs : dict, optional
-            Dict of kwargs for sc_point_method, by default None
-        max_workers : int, optional
-            Number of cores to run summary on. None is all available cpus,
-            by default None
-        sites_per_worker : int, optional
-            Number of SC points to process on a single parallel worker,
-            by default 100
-
-        Returns
-        -------
-        summary : list
-            List of outputs from sc_point_method.
-        """
-        chunks = np.array_split(
-            self.gids, int(np.ceil(len(self.gids) / sites_per_worker)))
-
-        slice_lookup = None
-        if self._inclusion_mask is not None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
-                assert sc.exclusions.shape == self._inclusion_mask.shape
-                slice_lookup = sc.get_slice_lookup(self.gids)
-
-        logger.info('Running supply curve point aggregation for '
-                    'points {} through {} at a resolution of {} '
-                    'on {} cores in {} chunks.'
-                    .format(self.gids[0], self.gids[-1], self._resolution,
-                            max_workers, len(chunks)))
-
-        n_finished = 0
-        futures = []
-        output = []
-        loggers = [__name__, 'reV.supply_curve.points', 'reV']
-        with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
-
-            # iterate through split executions, submitting each to worker
-            for gid_set in chunks:
-                # submit executions and append to futures list
-                chunk_incl_masks = None
-                if self._inclusion_mask is not None:
-                    chunk_incl_masks = {}
-                    for gid in gid_set:
-                        rs, cs = slice_lookup[gid]
-                        chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
-
-                futures.append(exe.submit(
-                    self.run_serial,
-                    sc_point_method, self._excl_fpath, self._tm_dset,
-                    excl_dict=self._excl_dict,
-                    inclusion_mask=chunk_incl_masks,
-                    area_filter_kernel=self._area_filter_kernel,
-                    min_area=self._min_area,
-                    resolution=self._resolution,
-                    gids=gid_set,
-                    args=args,
-                    kwargs=kwargs))
-
-            # gather results
-            for future in as_completed(futures):
-                n_finished += 1
-                logger.info('Parallel aggregation futures collected: '
-                            '{} out of {}'
-                            .format(n_finished, len(chunks)))
-                output += future.result()
-
-        return output
-
-    def aggregate(self, sc_point_method, args=None, kwargs=None,
-                  max_workers=None, sites_per_worker=100):
-        """
-        Aggregate with sc_point_method
-
-        Parameters
-        ----------
-        sc_point_method : function
-            Function to apply to each supply curve point
-        args : list, optional
-            List of positional args for sc_point_method, by default None
-        kwargs : dict, optional
-            Dict of kwargs for sc_point_method, by default None
-        max_workers : int, optional
-            Number of cores to run summary on. None is all available cpus,
-            by default None
-        sites_per_worker : int, optional
-            Number of SC points to process on a single parallel worker,
-            by default 100
-
-        Returns
-        -------
-        summary : list
-            List of outputs from sc_point_method.
-        """
-        if max_workers is None:
-            max_workers = os.cpu_count()
-
-        if max_workers == 1:
-            agg = self.run_serial(sc_point_method, self._excl_fpath,
-                                  self._tm_dset,
-                                  excl_dict=self._excl_dict,
-                                  area_filter_kernel=self._area_filter_kernel,
-                                  min_area=self._min_area,
-                                  resolution=self._resolution,
-                                  gids=self.gids,
-                                  args=args,
-                                  kwargs=kwargs)
-        else:
-            agg = self.run_parallel(sc_point_method, args=args,
-                                    kwargs=kwargs, max_workers=max_workers,
-                                    sites_per_worker=sites_per_worker)
-
-        if not any(agg):
-            e = ('Supply curve aggregation found no non-excluded SC points. '
-                 'Please check your exclusions or subset SC GID selection.')
-            logger.error(e)
-            raise EmptySupplyCurvePointError(e)
-
-        return agg
-
-    @classmethod
-    def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
-            area_filter_kernel='queen', min_area=None,
-            resolution=64, gids=None, excl_area=None,
-            pre_extract_inclusions=False, args=None, kwargs=None,
-            max_workers=None, sites_per_worker=100):
-        """Get the supply curve points aggregation summary.
-
-        Parameters
-        ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        excl_dict : dict | None
-            Dictionary of exclusion keyword arugments of the format
-            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
-            dataset in the exclusion h5 file and kwarg is a keyword argument to
-            the reV.supply_curve.exclusions.LayerMask class.
-            by default None
-        area_filter_kernel : str, optional
-            Contiguous area filter method to use on final exclusions mask,
-            by default "queen"
-        min_area : float, optional
-            Minimum required contiguous area filter in sq-km, by default None
-        resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead,
-            by default 64
-        gids : list, optional
-            List of supply curve point gids to get summary for (can use to
-            subset if running in parallel), or None for all gids in the SC
-            extent, by default None
-        excl_area : float, optional
-            Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath,
-            by default None
-        pre_extract_inclusions : bool, optional
-            Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default False. Typically faster to compute
-            the inclusion mask on the fly with parallel workers.
-        args : list, optional
-            List of positional args for sc_point_method, by default None
-        kwargs : dict, optional
-            Dict of kwargs for sc_point_method, by default None
-        max_workers : int, optional
-            Number of cores to run summary on. None is all available cpus,
-            by default None
-        sites_per_worker : int, optional
-            Number of SC points to process on a single parallel worker,
-            by default 100
-
-        Returns
-        -------
-        summary : DataFrame
-            Summary of the SC points.
-        """
-
-        agg = cls(excl_fpath, tm_dset, excl_dict=excl_dict,
-                  area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  resolution=resolution, excl_area=excl_area, gids=gids,
-                  pre_extract_inclusions=pre_extract_inclusions)
-
-        aggregation = agg.aggregate(sc_point_method, args=args, kwargs=kwargs,
-                                    max_workers=max_workers,
-                                    sites_per_worker=sites_per_worker)
-
-        return aggregation
-
-
-class Aggregation(AbstractAggregation):
+class Aggregation(BaseAggregation):
     """Concrete but generalized aggregation framework to aggregate ANY reV h5
     file to a supply curve grid (based on an aggregated exclusion grid)."""
 
-    def __init__(self, excl_fpath, h5_fpath, tm_dset, *agg_dset,
+    def __init__(self, excl_fpath, tm_dset, *agg_dset,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
                  pre_extract_inclusions=False):
@@ -743,8 +417,6 @@ class Aggregation(AbstractAggregation):
         excl_fpath : str | list | tuple
             Filepath to exclusions h5 with techmap dataset
             (can be one or more filepaths).
-        h5_fpath : str
-            Filepath to .h5 file to aggregate
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -792,25 +464,21 @@ class Aggregation(AbstractAggregation):
                          excl_area=excl_area, gids=gids,
                          pre_extract_inclusions=pre_extract_inclusions)
 
-        self._h5_fpath = h5_fpath
         if isinstance(agg_dset, str):
             agg_dset = (agg_dset, )
 
         self._agg_dsets = agg_dset
 
-        self._check_files()
-        self._gen_index = self._parse_gen_index(self._h5_fpath)
-
-    def _check_files(self):
+    def _check_files(self, h5_fpath):
         """Do a preflight check on input files"""
 
         if not os.path.exists(self._excl_fpath):
             raise FileNotFoundError('Could not find required exclusions file: '
                                     '{}'.format(self._excl_fpath))
 
-        if not os.path.exists(self._h5_fpath):
+        if not os.path.exists(h5_fpath):
             raise FileNotFoundError('Could not find required h5 file: '
-                                    '{}'.format(self._h5_fpath))
+                                    '{}'.format(h5_fpath))
 
         with h5py.File(self._excl_fpath, 'r') as f:
             if self._tm_dset not in f:
@@ -819,12 +487,12 @@ class Aggregation(AbstractAggregation):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-        with Resource(self._h5_fpath) as f:
+        with Resource(h5_fpath) as f:
             for dset in self._agg_dsets:
                 if dset not in f:
                     raise FileInputError('Could not find provided dataset "{}"'
                                          ' in h5 file: {}'
-                                         .format(dset, self._h5_fpath))
+                                         .format(dset, h5_fpath))
 
     @classmethod
     def run_serial(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
@@ -947,13 +615,15 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def run_parallel(self, agg_method='mean', excl_area=None,
+    def run_parallel(self, h5_fpath, agg_method='mean', excl_area=None,
                      max_workers=None, sites_per_worker=100):
         """
         Aggregate in parallel
 
         Parameters
         ----------
+        h5_fpath : str
+            Filepath to .h5 file to aggregate
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
         excl_area : float, optional
@@ -970,6 +640,9 @@ class Aggregation(AbstractAggregation):
         agg_out : dict
             Aggregated values for each aggregation dataset
         """
+
+        self._check_files(h5_fpath)
+        gen_index = self._parse_gen_index(h5_fpath)
 
         slice_lookup = None
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
@@ -1007,7 +680,7 @@ class Aggregation(AbstractAggregation):
                 futures.append(exe.submit(
                     self.run_serial,
                     self._excl_fpath,
-                    self._h5_fpath,
+                    h5_fpath,
                     self._tm_dset,
                     *self._agg_dsets,
                     agg_method=agg_method,
@@ -1018,7 +691,7 @@ class Aggregation(AbstractAggregation):
                     resolution=self._resolution,
                     excl_area=excl_area,
                     gids=gid_set,
-                    gen_index=self._gen_index))
+                    gen_index=gen_index))
 
             # gather results
             for future in futures:
@@ -1032,13 +705,15 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def aggregate(self, agg_method='mean', max_workers=None,
+    def aggregate(self, h5_fpath, agg_method='mean', max_workers=None,
                   sites_per_worker=100):
         """
         Aggregate with given agg_method
 
         Parameters
         ----------
+        h5_fpath : str
+            Filepath to .h5 file to aggregate
         agg_method : str, optional
             Aggregation method, either mean or sum/aggregate, by default "mean"
         max_workers : int, optional
@@ -1057,8 +732,10 @@ class Aggregation(AbstractAggregation):
             max_workers = os.cpu_count()
 
         if max_workers == 1:
+            self._check_files(h5_fpath)
+            gen_index = self._parse_gen_index(h5_fpath)
             agg = self.run_serial(self._excl_fpath,
-                                  self._h5_fpath,
+                                  h5_fpath,
                                   self._tm_dset,
                                   *self._agg_dsets,
                                   agg_method=agg_method,
@@ -1069,9 +746,10 @@ class Aggregation(AbstractAggregation):
                                   min_area=self._min_area,
                                   resolution=self._resolution,
                                   excl_area=self._excl_area,
-                                  gen_index=self._gen_index)
+                                  gen_index=gen_index)
         else:
-            agg = self.run_parallel(agg_method=agg_method,
+            agg = self.run_parallel(h5_fpath=h5_fpath,
+                                    agg_method=agg_method,
                                     excl_area=self._excl_area,
                                     max_workers=max_workers,
                                     sites_per_worker=sites_per_worker)
@@ -1098,7 +776,7 @@ class Aggregation(AbstractAggregation):
 
         return agg
 
-    def save_agg_to_h5(self, out_fpath, aggregation):
+    def save_agg_to_h5(self, h5_fpath, out_fpath, aggregation):
         """
         Save aggregated data to disc in .h5 format
 
@@ -1123,7 +801,7 @@ class Aggregation(AbstractAggregation):
         chunks = {}
         dtypes = {}
         time_index = None
-        with Resource(self._h5_fpath) as f:
+        with Resource(h5_fpath) as f:
             for dset, data in agg_out.items():
                 dsets.append(dset)
                 shape = data.shape
@@ -1212,17 +890,17 @@ class Aggregation(AbstractAggregation):
             Aggregated values for each aggregation dataset
         """
 
-        agg = cls(excl_fpath, h5_fpath, tm_dset, *agg_dset,
+        agg = cls(excl_fpath, tm_dset, *agg_dset,
                   excl_dict=excl_dict, area_filter_kernel=area_filter_kernel,
                   min_area=min_area, resolution=resolution,
                   excl_area=excl_area, gids=gids,
                   pre_extract_inclusions=pre_extract_inclusions)
 
-        aggregation = agg.aggregate(agg_method=agg_method,
+        aggregation = agg.aggregate(h5_fpath=h5_fpath, agg_method=agg_method,
                                     max_workers=max_workers,
                                     sites_per_worker=sites_per_worker)
 
         if out_fpath is not None:
-            agg.save_agg_to_h5(out_fpath, aggregation)
+            agg.save_agg_to_h5(h5_fpath, out_fpath, aggregation)
 
         return aggregation
