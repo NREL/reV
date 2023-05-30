@@ -80,8 +80,13 @@ class SupplyCurve:
             curve features, e.g. transmission multipliers, regions,
             by default None
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
@@ -251,8 +256,13 @@ class SupplyCurve:
         trans_sc_table : pandas.DataFrame
             Table mapping supply curve points to transmission features.
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
 
         Returns
         -------
@@ -434,8 +444,13 @@ class SupplyCurve:
             If the `sc_capacity_col` is not included, it will get added.
             by default ('sc_gid', 'mean_cf', 'mean_lcoe')
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
 
         Returns
         -------
@@ -501,8 +516,13 @@ class SupplyCurve:
             If the `sc_capacity_col` is not included, it will get added.
             by default ('sc_gid', 'mean_cf', 'mean_lcoe')
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
 
         Returns
         -------
@@ -605,8 +625,13 @@ class SupplyCurve:
             Flag to ensure SC point can connect to transmission features,
             by default True
         sc_capacity_col : str, optional
-            Name of capacity column in `sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
 
         Returns
         -------
@@ -661,8 +686,13 @@ class SupplyCurve:
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
 
         Returns
         -------
@@ -1297,8 +1327,13 @@ class SupplyCurve:
             will be built first, by default `None`, which will use
             total LCOE without any reinforcement costs as the sort value.
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
@@ -1375,8 +1410,13 @@ class SupplyCurve:
             will be built first, by default `None`, which will use
             total LCOE without any reinforcement costs as the sort value.
         sc_capacity_col : str, optional
-            Name of capacity column in `trans_sc_table`, by default
-            ``"capacity"``.
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this capacity must be the one that was
+            used to derive the "mean_cf" data.
+            By default, ``"capacity"``.
         columns : list | tuple
             Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
