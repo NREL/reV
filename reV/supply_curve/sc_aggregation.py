@@ -17,18 +17,21 @@ from warnings import warn
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          BaseAggregation)
+                                          BaseAggregation, Aggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
+from reV.supply_curve.tech_mapping import TechMapping
+from reV.utilities.exceptions import (ConfigError, EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
-                                      InputWarning)
-from reV.utilities import log_versions
+                                      InputWarning, PipelineError)
+from reV.utilities import log_versions, ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
+
+from gaps.pipeline import Status
 
 logger = logging.getLogger(__name__)
 
@@ -1011,6 +1014,34 @@ class SupplyCurveAggregation(BaseAggregation):
 
         return summary
 
+    def _validate_tech_mapping(self, res_fpath):
+        """Check that tech mapping exists and create it if it doesn't"""
+
+        with ExclusionLayers(self._excl_fpath) as f:
+            dsets = f.h5.dsets
+
+        excl_fp_is_str = isinstance(self._excl_fpath, str)
+        tm_in_excl = self._tm_dset in dsets
+        if tm_in_excl:
+            logger.info('Found techmap "{}".'.format(self._tm_dset))
+        elif not tm_in_excl and not excl_fp_is_str:
+            msg = ('Could not find techmap dataset "{}" and cannot run '
+                   'techmap with arbitrary multiple exclusion filepaths '
+                   'to write to: {}'.format(self._tm_dset, self._excl_fpath))
+            logger.error(msg)
+            raise RuntimeError(msg)
+        else:
+            logger.info('Could not find techmap "{}". Running techmap module.'
+                        .format(self._tm_dset))
+            try:
+                TechMapping.run(self._excl_fpath, res_fpath,
+                                dset=self._tm_dset)
+            except Exception as e:
+                msg = ('TechMapping process failed. Received the '
+                       'following error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg) from e
+
     def summarize(self, gen_fpath, args=None, max_workers=None,
                   sites_per_worker=100):
         """
@@ -1076,6 +1107,62 @@ class SupplyCurveAggregation(BaseAggregation):
 
         return summary
 
+    def run(self, out_fpath, gen_fpath=None, res_fpath=None, args=None,
+            max_workers=None, sites_per_worker=100):
+        """Run a supply curve aggregation.
+
+        Parameters
+        ----------
+        gen_fpath : str, optional
+            Path to .h5 reV generation output results.
+            By default, ``None``.
+        res_fpath : str, optional
+            Resource file (e.g. WTK or NSRDB), required if techmap dset
+            is to be created or if ``gen_fpath is`` not input.
+            By default, ``None``.
+        args : tuple | list, optional
+            List of summary arguments to include. ``None`` defaults to
+            all available args defined in the class attr.
+            By default, ``None``.
+        max_workers : int, optional
+            Number of cores to run summary on. ``None`` is all available
+            CPUs. By default, ``None``.
+        sites_per_worker : int, optional
+            Number of sc_points to summarize on each worker.
+            By default, ``100``.
+
+        Returns
+        -------
+        str
+            Path to output CSV file containing supply curve aggregation.
+        """
+
+        self._validate_tech_mapping(res_fpath)
+
+        if gen_fpath is None:
+            out = Aggregation.run(
+                self._excl_fpath, res_fpath, self._tm_dset,
+                excl_dict=self._excl_dict,
+                resolution=self._resolution,
+                excl_area=self._excl_area,
+                area_filter_kernel=self._area_filter_kernel,
+                min_area=self._min_area,
+                pre_extract_inclusions=self._pre_extract_inclusions,
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker)
+            summary = out['meta']
+        else:
+            summary = self.summarize(gen_fpath=gen_fpath, args=args,
+                                     max_workers=max_workers,
+                                     sites_per_worker=sites_per_worker)
+
+        if not out_fpath.endswith(".csv"):
+            out_fpath = '{}.csv'.format(out_fpath)
+
+        summary.to_csv(out_fpath)
+
+        return out_fpath
+
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                 excl_dict=None, area_filter_kernel='queen', min_area=None,
@@ -1102,7 +1189,7 @@ class SupplyCurveAggregation(BaseAggregation):
             Filepath to .h5 reV econ output results. This is optional and only
             used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
-            Dictionary of exclusion keyword arugments of the format
+            Dictionary of exclusion keyword arguments of the format
             {layer_dset_name: {kwarg: value}} where layer_dset_name is a
             dataset in the exclusion h5 file and kwarg is a keyword argument to
             the reV.supply_curve.exclusions.LayerMask class.
@@ -1211,3 +1298,86 @@ class SupplyCurveAggregation(BaseAggregation):
                                 sites_per_worker=sites_per_worker)
 
         return summary
+
+
+def agg_preprocessor(config, out_dir, job_name):
+    """Preprocess generation config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of bespoke job. This will be included in the output file
+        name.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    config = _format_res_fpath(config)
+    _validate_tm(config)
+
+    key_to_modules = {"gen_fpath": [ModuleName.MULTI_YEAR,
+                                    ModuleName.COLLECT,
+                                    ModuleName.GENERATION],
+                      "econ_fpath": [ModuleName.MULTI_YEAR,
+                                     ModuleName.COLLECT,
+                                     ModuleName.ECON],}
+    for key, modules in key_to_modules.items():
+        config = _parse_from_pipeline(config, out_dir, key, modules)
+
+    config["out_fpath"] = os.path.join(out_dir, job_name)
+    return config
+
+
+def _format_res_fpath(config):
+    """Format res_fpath with year, if need be. """
+    res_fpath = config.setdefault("res_fpath", None)
+    if isinstance(res_fpath, str) and '{}' in res_fpath:
+        for year in range(1998, 2018):
+            if os.path.exists(res_fpath.format(year)):
+                break
+
+        config["res_fpath"] = res_fpath.format(year)
+
+    return config
+
+
+def _validate_tm(config):
+    """Check that tm_dset exists or that res_fpath is given (to generate tm)"""
+    paths = config["excl_fpath"]
+    if isinstance(paths, str):
+        paths = [paths]
+
+    with MultiFileResource(paths, check_files=False) as res:
+        dsets = res.datasets
+
+    if config["tm_dset"] not in dsets and config["res_fpath"] is None:
+        raise ConfigError('Techmap dataset "{}" not found in exclusions '
+                          'file, resource file input "res_fpath" is '
+                          'required to create the techmap file.'
+                          .format(config["tm_dset"]))
+
+
+def _parse_from_pipeline(config, out_dir, key, target_modules):
+    """Parse the out file from target modules and set as the values for key """
+    val = config.get(key, None)
+
+    if val == 'PIPELINE':
+        for target_module in target_modules:
+            val = Status.parse_command_status(out_dir, target_module)
+            if len(val) == 1:
+                break
+        else:
+            raise PipelineError('Could not parse {} from previous '
+                                'pipeline jobs.'.format(key))
+
+        config[key] = val[0]
+        logger.info('Supply curve aggregation using the following '
+                    'pipeline input for {}: {}'.format(key, val[0]))
+
+    return config
