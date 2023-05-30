@@ -200,6 +200,7 @@ class BaseAggregation(ABC):
         self._area_filter_kernel = area_filter_kernel
         self._min_area = min_area
         self._gids = gids
+        self._pre_extract_inclusions = pre_extract_inclusions
         self._excl_area = self._get_excl_area(excl_fpath, excl_area=excl_area)
         self._shape = None
 
