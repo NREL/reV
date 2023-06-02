@@ -1189,7 +1189,10 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     in the SAM technology config. If these inputs are detected, reV
     calculates the total ``capital_cost`` and ``fixed_operating_cost``
     based on the plant size and automatically adds them to the SAM
-    config on a per-site basis.
+    config on a per-site basis. Users can also provide a
+    ``drill_cost_per_well`` value, which will be used to calculate
+    total drilling costs base don the number of wells at each plant.
+    The drilling costs will be added to the capital cost input.
 
     As of 12/20/2022, the resource potential input is only used to
     calculate the number of well replacements during the lifetime of a
@@ -1209,6 +1212,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
     _RESOURCE_POTENTIAL_MULT = 1.001
+    _DEFAULT_NUM_CONFIRMATION_WELLS = 2  # SAM GUI default as of 5/26/23
 
     @staticmethod
     def default():
@@ -1345,6 +1349,13 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         logger.debug("Setting the resource potential to {} MW"
                      .format(gross_gen))
         self.sam_sys_inputs["resource_potential"] = gross_gen
+
+        ncw = self.sam_sys_inputs.pop("num_confirmation_wells",
+                                      self._DEFAULT_NUM_CONFIRMATION_WELLS)
+        self.sam_sys_inputs["prod_and_inj_wells_to_drill"] = (
+            getattr(self.pysam.Outputs, "num_wells_getem_output")
+            - ncw
+            + getattr(self.pysam.Outputs, "num_wells_getem_inj"))
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
@@ -1358,6 +1369,23 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             logger.debug("Setting the capital_cost to ${:,.2f}"
                          .format(capital_cost))
             self.sam_sys_inputs["capital_cost"] = capital_cost
+
+        dc_per_well = self.sam_sys_inputs.pop("drill_cost_per_well", None)
+        num_wells = self.sam_sys_inputs.pop("prod_and_inj_wells_to_drill",
+                                            None)
+        if dc_per_well is not None:
+            if num_wells is None:
+                msg = ('Could not determine number of wells to be drilled. '
+                       'No drilling costs added!')
+                logger.warning(msg)
+                warn(msg)
+            else:
+                capital_cost = self.sam_sys_inputs["capital_cost"]
+                drill_cost = dc_per_well * num_wells
+                logger.debug("Setting the drilling cost to ${:,.2f} "
+                             "({:.2f} wells at ${:,.2f} per well)"
+                             .format(drill_cost, num_wells, dc_per_well))
+                self.sam_sys_inputs["capital_cost"] = capital_cost + drill_cost
 
         foc_per_kw = self.sam_sys_inputs.pop("fixed_operating_cost_per_kw",
                                              None)
