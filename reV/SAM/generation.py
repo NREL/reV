@@ -1277,6 +1277,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         """
         super().set_resource_data(resource, meta)
         self._set_resource_temperature(resource)
+        self._set_egs_plant_design_temperature()
         self._set_nameplate_to_match_resource_potential(resource)
         self._set_resource_potential_to_match_gross_output()
         self._set_costs()
@@ -1303,6 +1304,22 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                      "to {:.2f} based on input resource data."
                      .format(val))
         self.sam_sys_inputs["resource_temp"] = val
+
+    def _set_egs_plant_design_temperature(self):
+        """Set the EGS plant temp to match resource, if necessary"""
+        if self.sam_sys_inputs.get("resource_type") != 1:
+            return  # Not EGS run
+
+        egs_plant_design_temp = self.sam_sys_inputs.get("design_temp", 0)
+        resource_temp = self.sam_sys_inputs["resource_temp"]
+        if egs_plant_design_temp > resource_temp:
+            msg = ('EGS plant design temperature ({}C) exceeds resource '
+                   'temperature ({}C). Lowering EGS plant design temperature '
+                   'to match resource temperature'
+                   .format(egs_plant_design_temp, resource_temp))
+            logger.warning(msg)
+            warn(msg)
+            self.sam_sys_inputs["design_temp"] = resource_temp
 
     def _set_nameplate_to_match_resource_potential(self, resource):
         """Set the nameplate capacity to match the resource potential. """
