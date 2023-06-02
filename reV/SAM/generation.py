@@ -1183,16 +1183,23 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     Unlike wind or solar, reV geothermal dynamically sets the size of a
     geothermal plant. In particular, the nameplate capacity is set to
     match the resource potential (obtained form the input data) for each
-    site. As a result, reV allows users to input ``capital_cost_per_kw``
+    site. To override this behavior, users can specify their own
+    nameplate capacity (either a single value for all sites in the SAM
+    geothermal config or a site-dependent value in the project points
+    CSV). In this case, the resource potential from the input data will
+    be ignored completely.
+
+    reV also allows users to input ``capital_cost_per_kw``
     and ``fixed_operating_cost_per_kw`` instead of the flat
     ``capital_cost`` and ``fixed_operating_cost`` values, respectively,
-    in the SAM technology config. If these inputs are detected, reV
-    calculates the total ``capital_cost`` and ``fixed_operating_cost``
-    based on the plant size and automatically adds them to the SAM
-    config on a per-site basis. Users can also provide a
-    ``drill_cost_per_well`` value, which will be used to calculate
-    total drilling costs base don the number of wells at each plant.
-    The drilling costs will be added to the capital cost input.
+    in the SAM technology config, since the capacity of geothermal
+    plants may be set dynamically by reV. If these inputs are detected,
+    reV calculates the total ``capital_cost`` and
+    ``fixed_operating_cost`` based on the plant size and automatically
+    adds them to the SAM config on a per-site basis. Users can also
+    provide a ``drill_cost_per_well`` value, which will be used to
+    calculate total drilling costs base don the number of wells at each
+    plant. The drilling costs will be added to the capital cost input.
 
     As of 12/20/2022, the resource potential input is only used to
     calculate the number of well replacements during the lifetime of a
@@ -1300,6 +1307,13 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     def _set_nameplate_to_match_resource_potential(self, resource):
         """Set the nameplate capacity to match the resource potential. """
 
+        if "nameplate" in self.sam_sys_inputs:
+            msg = ('Found "nameplate" input in config! Resource potential '
+                   'from input data will be ignored. Nameplate capacity is {}'
+                   .format(self.sam_sys_inputs["nameplate"]))
+            logger.info(msg)
+            return
+
         val = set(resource["potential_MW"].unique())
         if len(val) > 1:
             msg = ('Found multiple values for "potential_MW" for site {}: {}'
@@ -1308,12 +1322,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             raise InputError(msg)
 
         val = val.pop() * 1000
-        if "nameplate" in self.sam_sys_inputs:
-            msg = ('Setting "nameplate" is not allowed! Updating '
-                   'user input of {} to match the resource potential: {}'
-                   .format(self.sam_sys_inputs["nameplate"], val))
-            logger.warning(msg)
-            warn(msg)
 
         logger.debug("Setting the nameplate to {}".format(val))
         self.sam_sys_inputs["nameplate"] = val
