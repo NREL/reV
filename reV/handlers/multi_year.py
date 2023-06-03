@@ -733,7 +733,7 @@ def my_collect_groups(out_fpath, groups):
 
     """
     if not out_fpath.endswith(".h5"):
-        out_fpath = ".".join([out_fpath, "h5"])
+        out_fpath = '{}.h5'.format(out_fpath)
     out_dir = os.path.dirname(out_fpath)
     groups = MultiYearGroup._factory(out_dir, groups)
     group_params = {name: group._dict_rep()
@@ -767,6 +767,8 @@ def my_collect_groups(out_fpath, groups):
     runtime = (time.time() - ts) / 60
     logger.info('Multi-year collection completed in : {:.2f} min.'
                 .format(runtime))
+
+    return out_fpath
 
 
 def my_preprocessor(config, out_dir, job_name):
