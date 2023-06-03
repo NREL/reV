@@ -1346,5 +1346,16 @@ def sc_preprocessor(config, out_dir, job_name):
                     'pipeline input for sc_points: {}'
                     .format(config["sc_points"]))
 
+    if config.get("simple"):
+        no_effect = [key for key in ['avail_cap_frac', 'line_limited']
+                     if key in config]
+        if no_effect:
+            msg = ('The following key(s) have no effect when running '
+                   'supply curve with "simple=True": "{}". To silence this '
+                   'warning, please remove them from the config'
+                   .format(', '.join(no_effect)))
+            logger.warning(msg)
+            warn(msg)
+
     config["out_fpath"] = os.path.join(out_dir, job_name)
     return config

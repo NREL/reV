@@ -18,13 +18,16 @@ from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import FileInputError, DataShapeError
-from reV.utilities import log_versions
+from reV.utilities.exceptions import (FileInputError, DataShapeError,
+                                      PipelineError, ConfigWarning)
+from reV.utilities import log_versions, ModuleName
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import parse_year, to_records_array
+
+from gaps.pipeline import Status
 
 logger = logging.getLogger(__name__)
 
@@ -890,35 +893,48 @@ class RepProfiles(RepProfilesBase):
 
     def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse', weight='gid_counts',
-                 n_profiles=1):
+                 n_profiles=1, aggregate_profiles=False):
         """
         Parameters
         ----------
         gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
+            Filepath to reV gen output file to extract "cf_profile"
+            from.
         rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-            Must include "res_gids", "gen_gids", and the "weight" column (if
-            weight is not None)
+            Aggregated rev supply curve summary file. Str filepath or
+            full df. Must include "res_gids", "gen_gids", and the
+            "weight" column (if weight is not None).
         reg_cols : str | list | None
-            Label(s) for a categorical region column(s) to extract profiles
-            for. e.g. "state" will extract a rep profile for each unique entry
-            in the "state" column in rev_summary.
-        cf_dset : str
+            Label(s) for a categorical region column(s) to extract
+            profiles for. e.g. "state" will extract a rep profile for
+            each unique entry in the "state" column in rev_summary.
+        cf_dset : str, optional
             Dataset name to pull generation profiles from.
-        rep_method : str
-            Method identifier for calculation of the representative profile.
-        err_method : str | None
-            Method identifier for calculation of error from the representative
-            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
-            representative meanoid / medianoid profile will be returned
-            directly
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the res_gids in the same row.
-        n_profiles : int
+            By default, ``'cf_profile'``
+        rep_method : str, optional
+            Method identifier for calculation of the representative
+            profile. By default, ``'meanoid'``
+        err_method : str, optional
+            Method identifier for calculation of error from the
+            representative profile (e.g. "rmse", "mae", "mbe"). If this
+            is ``None``, the representative meanoid / medianoid profile
+            will be returned directly. By default, ``'rmse'``.
+        weight : str, optional
+            Column in rev_summary used to apply weighted mean to
+            profiles. The supply curve table data in the weight column
+            should have weight values corresponding to the res_gids in
+            the same row. By default, ``'gid_counts'``.
+        n_profiles : int, optional
             Number of representative profiles to save to fout.
+            By default, ``1``.
+        aggregate_profiles : bool, optional
+            Flag to calculate the aggregate (weighted meanoid) profile
+            for each supply curve point. This behavior is instead of
+            finding the single profile per region closest to the
+            meanoid. If you set this flag to ``True``, the
+            ``rep_method``, ``err_method``, and ``n_profiles`` inputs
+            will be forcibly set to the default values.
+            By default, ``False``.
         """
 
         log_versions(logger)
@@ -935,6 +951,15 @@ class RepProfiles(RepProfilesBase):
             reg_cols = [reg_cols]
         elif not isinstance(reg_cols, list):
             reg_cols = list(reg_cols)
+
+        self._aggregate_profiles = aggregate_profiles
+        if self._aggregate_profiles:
+            logger.info("Aggregate profiles input set to `True`. Setting "
+                        "'rep_method' to `'meanoid'`, 'err_method' to `None`, "
+                        "and 'n_profiles' to `1`")
+            rep_method = 'meanoid'
+            err_method = None
+            n_profiles = 1
 
         super().__init__(gen_fpath, rev_summary, reg_cols=reg_cols,
                          cf_dset=cf_dset,
@@ -1095,8 +1120,8 @@ class RepProfiles(RepProfilesBase):
                         self._meta.at[i, 'rep_gen_gid'] = str(ggids)
                         self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
-    def _run(self, fout=None, save_rev_summary=True, scaled_precision=False,
-             max_workers=None):
+    def run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+            max_workers=None):
         """
         Run representative profiles in serial or parallel and save to disc
 
@@ -1114,81 +1139,137 @@ class RepProfiles(RepProfilesBase):
             Number of parallel workers. 1 will run serial, None will use all
             available., by default None
         """
+
         if max_workers == 1:
             self._run_serial()
         else:
             self._run_parallel(max_workers=max_workers)
 
         if fout is not None:
+            if self._aggregate_profiles:
+                logger.info("Aggregate profiles input set to `True`. Setting "
+                            "'save_rev_summary' input to `False`")
+                save_rev_summary = False
             self.save_profiles(fout, save_rev_summary=save_rev_summary,
                                scaled_precision=scaled_precision)
 
         logger.info('Representative profiles complete!')
 
-    @classmethod
-    def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
-            rep_method='meanoid', err_method='rmse', weight='gid_counts',
-            n_profiles=1, fout=None, save_rev_summary=True,
-            scaled_precision=False, max_workers=None):
-        """Run representative profiles by finding the closest single profile
-        to the weighted meanoid for each SC region.
+        return fout
 
-        Parameters
-        ----------
-        gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
-        rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-            Must include "res_gids", "gen_gids", and the "weight" column (if
-            weight is not None)
-        reg_cols : str | list | None
-            Label(s) for a categorical region column(s) to extract profiles
-            for. e.g. "state" will extract a rep profile for each unique entry
-            in the "state" column in rev_summary.
-        cf_dset : str
-            Dataset name to pull generation profiles from.
-        rep_method : str
-            Method identifier for calculation of the representative profile.
-        err_method : str | None
-            Method identifier for calculation of error from the representative
-            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
-            representative meanoid / medianoid profile will be returned
-            directly
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the res_gids in the same row.
-        n_profiles : int
-            Number of representative profiles to save to fout.
-        fout : str, optional
-            filepath to output h5 file, by default None
-        save_rev_summary : bool, optional
-            Flag to save full reV SC table to rep profile output.,
-            by default True
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
 
-        Returns
-        -------
-        profiles : dict
-            dict of n_profile-keyed arrays with shape (time, n) for the
-            representative profiles for each region.
-        meta : pd.DataFrame
-            Meta dataframes recording the regions and the selected rep profile
-            gid.
-        time_index : pd.DatatimeIndex
-            Datetime Index for represntative profiles
-        """
+def rep_profiles_preprocessor(config, out_dir, job_name, analysis_years=None):
+    """Preprocess rep-profiles config user input.
 
-        rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
-                 rep_method=rep_method, err_method=err_method,
-                 n_profiles=n_profiles, weight=weight)
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of rep-profiles job. This will be included in the output
+        file name.
+    analysis_years : int | list, optional
+        A single year or list of years to perform analysis for. These
+        years will be used to fill in any brackets ``{}`` in the
+        ``cf_dset`` or ``gen_fpath`` inputs. If ``None``, the
+        ``cf_dset`` and ``gen_fpath`` inputs are assumed to be the full
+        dataset name and the full path to the single resource
+        file to be processed, respectively. Note that only one of
+        ``cf_dset`` or ``gen_fpath`` are allowed to contain brackets
+        (``{}``) to be filled in by the analysis years.
+        By default, ``None``.
 
-        rp._run(fout=fout, save_rev_summary=save_rev_summary,
-                scaled_precision=scaled_precision, max_workers=max_workers)
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
 
-        return rp._profiles, rp._meta, rp._time_index
+    if not isinstance(analysis_years, list):
+        analysis_years = [analysis_years]
+
+    if analysis_years[0] is None:
+        warn('Years may not have been specified, may default '
+             'to available years in inputs files.', ConfigWarning)
+
+    reg_cols = config.get('reg_cols', None)
+    if isinstance(reg_cols, str):
+        config["reg_cols"] = [reg_cols]
+
+    key_to_modules = {"gen_fpath": [ModuleName.MULTI_YEAR,
+                                    ModuleName.COLLECT,
+                                    ModuleName.GENERATION,
+                                    ModuleName.SUPPLY_CURVE_AGGREGATION],
+                      "rev_summary": [ModuleName.SUPPLY_CURVE_AGGREGATION,
+                                      ModuleName.SUPPLY_CURVE]}
+    for key, modules in key_to_modules.items():
+        config = _parse_from_pipeline(config, out_dir, key, modules)
+
+    config = _set_split_keys(config, out_dir, job_name, analysis_years)
+
+    if config.get("aggregate_profiles"):
+        check_keys = ['rep_method', 'err_method', 'n_profiles',
+                      'save_rev_summary']
+        no_effect = [key for key in check_keys if key in config]
+        if no_effect:
+            msg = ('The following key(s) have no effect when running '
+                   'supply curve with "aggregate_profiles=True": "{}". '
+                   'To silence this warning, please remove them from the '
+                   'config'.format(', '.join(no_effect)))
+            logger.warning(msg)
+            warn(msg)
+
+    return config
+
+
+def _set_split_keys(config, out_dir, job_name, analysis_years):
+    """Set the gen_fpath, fout, and cf_dset keys"""
+
+    cf_dset = config.get("cf_dset")
+    gen_fpath = config.get("gen_fpath")
+    if analysis_years[0] is not None and '{}' in cf_dset:
+        config["gen_fpath"] = [gen_fpath for _ in analysis_years]
+        config["fout"] = [os.path.join(out_dir, '{}_{}.h5'.format(job_name, y))
+                          for y in analysis_years]
+        config["cf_dset"] = [cf_dset.format(y) for y in analysis_years]
+    elif analysis_years[0] is not None and '{}' in gen_fpath:
+        config["gen_fpath"] = [gen_fpath.format(y) for y in analysis_years]
+        config["fout"] = [os.path.join(out_dir, '{}_{}.h5'.format(job_name, y))
+                          for y in analysis_years]
+        config["cf_dset"] = [cf_dset for _ in analysis_years]
+
+    else:
+        config["gen_fpath"] = [gen_fpath]
+        config["fout"] = [os.path.join(out_dir, '{}.h5'.format(job_name))]
+        config["cf_dset"] = [cf_dset]
+
+    return config
+
+
+def _parse_from_pipeline(config, out_dir, config_key, target_modules):
+    """Parse the out file from target modules and set as the values for key """
+    val = config.get(config_key, None)
+
+    if val == 'PIPELINE':
+        for target_module in target_modules:
+            gen_config_key = "gen" in config_key
+            module_sca = target_module == ModuleName.SUPPLY_CURVE_AGGREGATION
+            if gen_config_key and module_sca:
+                target_key = "gen_fpath"
+            else:
+                target_key = "fpath"
+            val = Status.parse_command_status(out_dir, target_module,
+                                              target_key)
+            if len(val) == 1:
+                break
+        else:
+            raise PipelineError('Could not parse {} from previous '
+                                'pipeline jobs.'.format(config_key))
+
+        config[config_key] = val[0]
+        logger.info('Rep profiles using the following '
+                    'pipeline input for {}: {}'.format(config_key, val[0]))
+
+    return config

@@ -107,10 +107,11 @@ def test_integrated():
                                 'weight': ones,
                                 'region': regions,
                                 'timezone': timezone})
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                max_workers=1, weight='weight')
-    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                max_workers=None, weight='weight')
+    rp = RepProfiles(GEN_FPATH, rev_summary, 'region', weight='weight')
+    rp.run(max_workers=1)
+    p1, m1 = rp.profiles, rp.meta
+    rp.run(max_workers=None)
+    p2, m2 = rp.profiles, rp.meta
 
     assert np.allclose(m1['rep_res_gid'].values.astype(int),
                        m2['rep_res_gid'].values.astype(int))
@@ -129,13 +130,13 @@ def test_sc_points():
                                 'res_gids': sites,
                                 'timezone': timezone})
 
-    p1 = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
-                         weight=None, max_workers=1)[0]
+    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', weight=None)
+    rp.run(max_workers=1)
 
     with Resource(GEN_FPATH) as res:
         truth = res['cf_profile', :, slice(0, 10)]
 
-    assert np.allclose(p1[0], truth)
+    assert np.allclose(rp.profiles[0], truth)
 
 
 def test_agg_profile():
@@ -154,11 +155,9 @@ def test_agg_profile():
                                 'gid_counts': gid_counts,
                                 'timezone': timezone})
 
-    profiles, p_meta, __ = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
-                                           cf_dset='cf_profile',
-                                           scaled_precision=False,
-                                           err_method=None,
-                                           max_workers=1)
+    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', cf_dset='cf_profile',
+                     err_method=None)
+    rp.run(scaled_precision=False, max_workers=1)
 
     for index in rev_summary.index:
         gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
@@ -185,15 +184,15 @@ def test_agg_profile():
         assert len(truth) == len(raw_profiles)
         truth = truth / weights.sum()
 
-        assert np.allclose(profiles[0][:, index], truth)
+        assert np.allclose(rp.profiles[0][:, index], truth)
 
     passthrough_cols = ['gen_gids', 'res_gids', 'gid_counts']
     for col in passthrough_cols:
-        assert col in p_meta
+        assert col in rp.meta
 
     assert_frame_equal(
         rev_summary[passthrough_cols],
-        p_meta[passthrough_cols]
+        rp.meta[passthrough_cols]
     )
 
 
@@ -211,17 +210,17 @@ def test_many_regions():
                                 'region2': region2,
                                 'timezone': timezone})
     reg_cols = ['region1', 'region2']
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols,
-                                weight=None)
+    rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight=None)
+    rp.run()
 
-    assert p1[0].shape == (17520, 6)
-    assert len(m1) == 6
+    assert rp.profiles[0].shape == (17520, 6)
+    assert len(rp.meta) == 6
 
     for r1 in set(region1):
-        assert r1 in m1['region1'].values
+        assert r1 in rp.meta['region1'].values
 
     for r2 in set(region2):
-        assert r2 in m1['region2'].values
+        assert r2 in rp.meta['region2'].values
 
 
 def test_write_to_file():
@@ -237,8 +236,9 @@ def test_write_to_file():
                                     'region': regions,
                                     'timezone': timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
-        p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                    fout=fout, n_profiles=3, weight=None)
+        rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
+                         weight=None)
+        rp.run(fout=fout)
         with Resource(fout) as res:
             disk_profiles = res['rep_profiles_0']
             disk_meta = res.meta
@@ -247,11 +247,11 @@ def test_write_to_file():
                                   res['rep_profiles_1'])
             assert not test
 
-        assert np.allclose(p1[0], disk_profiles)
+        assert np.allclose(rp.profiles[0], disk_profiles)
         assert len(disk_meta) == 3
 
-        for i in m1.index:
-            v1 = json.loads(m1.loc[i, 'rep_gen_gid'])
+        for i in rp.meta.index:
+            v1 = json.loads(rp.meta.loc[i, 'rep_gen_gid'])
             v2 = json.loads(disk_meta.loc[i, 'rep_gen_gid'])
             assert v1 == v2
 
@@ -269,11 +269,9 @@ def test_file_options():
                                     'region': regions,
                                     'timezone': timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
-        p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                   fout=fout, n_profiles=3,
-                                   save_rev_summary=False,
-                                   scaled_precision=True,
-                                   weight=None)
+        rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
+                         weight=None)
+        rp.run(fout=fout, save_rev_summary=False, scaled_precision=True)
         with Resource(fout) as res:
             dtype = res.get_dset_properties('rep_profiles_0')[1]
             attrs = res.get_attrs('rep_profiles_0')
@@ -282,7 +280,7 @@ def test_file_options():
 
         assert np.issubdtype(dtype, np.integer)
         assert attrs['scale_factor'] == 1000
-        assert np.allclose(p1[0], disk_profiles)
+        assert np.allclose(rp.profiles[0], disk_profiles)
         assert 'rev_summary' not in disk_dsets
 
 
