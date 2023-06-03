@@ -16,10 +16,12 @@ from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
-from reV.utilities import log_versions
+from reV.utilities import log_versions, ModuleName
 
 from rex import Resource
 from rex.utilities import parse_table, SpawnProcessPool
+
+from gaps.pipeline import parse_previous_status
 
 logger = logging.getLogger(__name__)
 
@@ -1214,157 +1216,135 @@ class SupplyCurve:
 
         return supply_curve
 
-    @classmethod
-    def full(cls, sc_points, trans_table, fcr, sc_features=None,
-             transmission_costs=None, avail_cap_frac=1,
-             line_limited=False, consider_friction=True, sort_on=None,
-             columns=('trans_gid', 'trans_capacity', 'trans_type',
-                      'trans_cap_cost_per_mw', 'dist_km', 'lcot',
-                      'total_lcoe'),
-             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
-             offshore_compete=False):
-        """
-        Run full supply curve taking into account available capacity of
-        tranmission features when making connections.
+    def run(self, out_fpath, fcr, simple=True, avail_cap_frac=1,
+            line_limited=False, transmission_costs=None,
+            consider_friction=True, sort_on=None,
+            columns=('trans_gid', 'trans_type', 'trans_cap_cost_per_mw',
+                     'dist_km', 'lcot', 'total_lcoe'),
+            max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
+            offshore_compete=False):
+        """Run Supply Curve Transmission calculations.
 
         Parameters
         ----------
-        sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve point
-            summary. Can also now be a filepath to a bespoke h5 where the
-            "meta" dataset has the same format as the sc aggregation output.
-        trans_table : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
-            transmission mapping
+        out_fpath : str
+            Full path to output CSV file. Does not need to include file
+            ending - it will be added automatically if missing.
         fcr : float
-            Fixed charge rate, used to compute LCOT
-        sc_features : str | pandas.DataFrame, optional
-            Path to .csv or .json or DataFrame containing additional supply
-            curve features, e.g. transmission multipliers, regions,
-            by default None
-        transmission_costs : str | dict, optional
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost, by default None
+            Fixed charge rate, used to compute LCOT.
+        simple : bool, optional
+            Option to run the simple sort. If ``False``, a full
+            transmission sort is run. Note that the full transmission
+            sort requires the ``avail_cap_frac`` and ``line_limited``
+            inputs. By default, ``True``.
         avail_cap_frac : int, optional
-            Fraction of transmissions features capacity 'ac_cap' to make
-            available for connection to supply curve points, by default 1
+            This input has no effect if ``simple=True``. Fraction of
+            transmissions features capacity ``ac_cap`` to make available
+            for connection to supply curve points. By default, ``1``.
         line_limited : bool, optional
-            Flag to have substation connection is limited by maximum capacity
-            of the attached lines, legacy method, by default False
+            This input has no effect if ``simple=True``. Flag to have
+            substation connection limited by maximum capacity
+            of the attached lines. This is a legacy method.
+            By default, ``False``.
+        transmission_costs : str | dict, optional
+            Dictionary of transmission features or path to JSON file
+            containing a dictionary of transmission features. This
+            dictionary must include:
+
+                - line_tie_in_cost
+                - line_cost
+                - station_tie_in_cost
+                - center_tie_in_cost
+                - sink_tie_in_cost
+
+            By default, ``None``.
         consider_friction : bool, optional
-            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
-            is in the sc points input, by default True
+            Flag to consider friction layer on LCOE when
+            ``mean_lcoe_friction`` is in the sc points input.
+            By default, ``True``.
         sort_on : str, optional
-            Column label to sort the Supply Curve table on. This affects the
-            build priority - connections with the lowest value in this column
-            will be built first, by default `None`, which will use
-            total LCOE without any reinforcement costs as the sort value.
-        columns : list | tuple
+            Column label to sort the Supply Curve table on. This affects
+            the build priority - connections with the lowest value in
+            this column will be built first. If ``None``, the algorithm
+            will use total LCOE without any reinforcement costs as the
+            sort value. By default, ``None``.
+        columns : tuple, optional
             Columns to preserve in output supply curve dataframe.
-        max_workers : int | NoneType
-            Number of workers to use to compute lcot, if > 1 run in parallel.
-            None uses all available cpu's.
-        wind_dirs : pandas.DataFrame | str
-            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
-            the neighboring supply curve point gids and power-rose value at
-            each cardinal direction
+            By default, ``('trans_gid', 'trans_type',
+            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')``.
+        max_workers : int, optional
+            Number of workers to use to compute LCOT. If > 1,
+            computation is run in parallel. If ``None``, computation
+            uses all available CPU's. By default, ``None``.
+        wind_dirs : pandas.DataFrame | str, optional
+            Path to CSV file or :class:`reVX.wind_dirs.wind_dirs.WindDirs`
+            output with the neighboring supply curve point gids and
+            power-rose value at each cardinal direction.
+            By default, ``None``.
         n_dirs : int, optional
-            Number of prominent directions to use, by default 2
+            Number of prominent directions to use. By default, ``2``.
         downwind : bool, optional
-            Flag to remove downwind neighbors as well as upwind neighbors
-        offshore_compete : bool, default
+            Flag to remove downwind neighbors as well as upwind
+            neighbors. By default, ``False``.
+        offshore_compete : bool, optional
             Flag as to whether offshore farms should be included during
-            CompetitiveWindFarms, by default False
+            :class:`CompetitiveWindFarms`. By default, ``False``.
 
         Returns
         -------
-        supply_curve : pandas.DataFrame
-            Updated sc_points table with transmission connections, LCOT
-            and LCOE+LCOT
+        str
+            Path to output supply curve.
         """
-        sc = cls(sc_points, trans_table, sc_features=sc_features)
-        supply_curve = sc.full_sort(fcr, transmission_costs=transmission_costs,
-                                    avail_cap_frac=avail_cap_frac,
-                                    line_limited=line_limited,
-                                    max_workers=max_workers,
-                                    consider_friction=consider_friction,
-                                    sort_on=sort_on, columns=columns,
-                                    wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                    downwind=downwind,
-                                    offshore_compete=offshore_compete)
 
-        return supply_curve
+        kwargs = {"fcr": fcr,
+                  "transmission_costs": transmission_costs,
+                  "consider_friction": consider_friction,
+                  "sort_on": sort_on,
+                  "columns": columns,
+                  "wind_dirs": wind_dirs,
+                  "n_dirs": n_dirs,
+                  "downwind": downwind,
+                  "offshore_compete": offshore_compete,
+                  "max_workers": max_workers}
+        if simple:
+            supply_curve = self.simple_sort(**kwargs)
+        else:
+            kwargs["avail_cap_frac"] = avail_cap_frac
+            kwargs["line_limited"] = line_limited
+            supply_curve = self.full_sort(**kwargs)
 
-    @classmethod
-    def simple(cls, sc_points, trans_table, fcr, sc_features=None,
-               transmission_costs=None, consider_friction=True,
-               sort_on=None,
-               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                        'dist_km', 'trans_cap_cost_per_mw'),
-               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
-               offshore_compete=False):
-        """
-        Run simple supply curve by connecting to the cheapest tranmission
-        feature.
+        if not out_fpath.endswith(".csv"):
+            out_fpath = '{}.csv'.format(out_fpath)
 
-        Parameters
-        ----------
-        sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve point
-            summary. Can also now be a filepath to a bespoke h5 where the
-            "meta" dataset has the same format as the sc aggregation output.
-        trans_table : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
-            transmission mapping
-        fcr : float
-            Fixed charge rate, used to compute LCOT
-        sc_features : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing additional supply
-            curve features, e.g. transmission multipliers, regions
-        transmission_costs : str | dict
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-        consider_friction : bool, optional
-            Flag to consider friction layer on LCOE when "mean_lcoe_friction"
-            is in the sc points input, by default True
-        sort_on : str, optional
-            Column label to sort the Supply Curve table on. This affects the
-            build priority - connections with the lowest value in this column
-            will be built first, by default `None`, which will use
-            total LCOE without any reinforcement costs as the sort value.
-        columns : list | tuple
-            Columns to preserve in output supply curve dataframe.
-        max_workers : int | NoneType
-            Number of workers to use to compute lcot, if > 1 run in parallel.
-            None uses all available cpu's.
-        wind_dirs : pandas.DataFrame | str
-            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
-            the neighboring supply curve point gids and power-rose value at
-            each cardinal direction
-        n_dirs : int, optional
-            Number of prominent directions to use, by default 2
-        downwind : bool, optional
-            Flag to remove downwind neighbors as well as upwind neighbors
-        offshore_compete : bool, default
-            Flag as to whether offshore farms should be included during
-            CompetitiveWindFarms, by default False
+        supply_curve.to_csv(out_fpath)
 
-        Returns
-        -------
-        supply_curve : pandas.DataFrame
-            Updated sc_points table with transmission connections, LCOT
-            and LCOE+LCOT
-        """
-        sc = cls(sc_points, trans_table, sc_features=sc_features)
-        supply_curve = sc.simple_sort(fcr,
-                                      transmission_costs=transmission_costs,
-                                      max_workers=max_workers,
-                                      consider_friction=consider_friction,
-                                      sort_on=sort_on, columns=columns,
-                                      wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                      downwind=downwind,
-                                      offshore_compete=offshore_compete)
+        return out_fpath
 
-        return supply_curve
+
+def sc_preprocessor(config, out_dir, job_name):
+    """Preprocess supply curve config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of supply curve job. This will be included in the output
+        file name.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    if config.get("sc_points") == 'PIPELINE':
+        config["sc_points"] = parse_previous_status(out_dir,
+                                                    ModuleName.SUPPLY_CURVE)
+        logger.info('Supply curve using the following '
+                    'pipeline input for sc_points: {}'
+                    .format(config["sc_points"]))
+
+    config["out_fpath"] = os.path.join(out_dir, job_name)
+    return config

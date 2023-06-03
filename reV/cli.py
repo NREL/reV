@@ -13,6 +13,7 @@ from reV.generation import Gen, gen_preprocessor
 from reV.econ import Econ, econ_preprocessor
 from reV.handlers import my_collect_groups, my_preprocessor
 from reV.supply_curve import SupplyCurveAggregation, agg_preprocessor
+from reV.supply_curve import SupplyCurve, sc_preprocessor
 from reV.utilities import ModuleName
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
@@ -415,6 +416,13 @@ commands = [
                         add_collect=False,
                         split_keys=None,
                         config_preprocessor=agg_preprocessor,
+                        skip_doc_params=["out_fpath"]),
+    CLICommandFromClass(SupplyCurve,
+                        method="run",
+                        name=str(ModuleName.SUPPLY_CURVE),
+                        add_collect=False,
+                        split_keys=None,
+                        config_preprocessor=sc_preprocessor,
                         skip_doc_params=["out_fpath"]),
 ]
 gaps_cli = make_cli(commands)  # TODO: Rename back to main after refactor

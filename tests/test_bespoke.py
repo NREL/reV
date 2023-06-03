@@ -612,8 +612,8 @@ def test_bespoke_supply_curve():
                                      f'costs_RI_{cap}MW.csv')
                         for cap in [100, 200, 400, 1000]]
 
-        sc_full = SupplyCurve.full(bespoke_sc_fp, trans_tables, fcr=0.1,
-                                   avail_cap_frac=0.1)
+        sc = SupplyCurve(bespoke_sc_fp, trans_tables)
+        sc_full = sc.full_sort(fcr=0.1, avail_cap_frac=0.1)
 
         assert all(gid in sc_full['sc_gid']
                    for gid in normal_sc_points['sc_gid'])
