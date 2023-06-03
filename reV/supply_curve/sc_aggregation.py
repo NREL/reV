@@ -1190,7 +1190,7 @@ def agg_preprocessor(config, out_dir, job_name):
                                     ModuleName.GENERATION],
                       "econ_fpath": [ModuleName.MULTI_YEAR,
                                      ModuleName.COLLECT,
-                                     ModuleName.ECON],}
+                                     ModuleName.ECON]}
     for key, modules in key_to_modules.items():
         config = _parse_from_pipeline(config, out_dir, key, modules)
 
