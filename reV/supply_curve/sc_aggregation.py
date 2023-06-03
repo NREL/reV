@@ -1165,7 +1165,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
 
 def agg_preprocessor(config, out_dir, job_name):
-    """Preprocess generation config user input.
+    """Preprocess aggregation config user input.
 
     Parameters
     ----------
@@ -1174,8 +1174,8 @@ def agg_preprocessor(config, out_dir, job_name):
     out_dir : str
         Path to output file directory.
     job_name : str
-        Name of bespoke job. This will be included in the output file
-        name.
+        Name of aggregation job. This will be included in the output
+        file name.
 
     Returns
     -------
