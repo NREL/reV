@@ -33,19 +33,18 @@ RTOL = 0.001
 def test_vpd():
     """Test variable power density"""
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS,
-                                       max_workers=1, power_density=FVPD)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS, power_density=FVPD)
+    summary = sca.summarize(GEN, max_workers=1)
 
     vpd = pd.read_csv(FVPD, index_col=0)
-    for i in s.index:
-        capacity = s.loc[i, 'capacity']
-        area = s.loc[i, 'area_sq_km']
-        res_gids = np.array(s.loc[i, 'res_gids'])
-        gid_counts = np.array(s.loc[i, 'gid_counts'])
+    for i in summary.index:
+        capacity = summary.loc[i, 'capacity']
+        area = summary.loc[i, 'area_sq_km']
+        res_gids = np.array(summary.loc[i, 'res_gids'])
+        gid_counts = np.array(summary.loc[i, 'gid_counts'])
         vpd_per_gid = vpd.loc[res_gids, 'power_density'].values
         truth = area * (vpd_per_gid * gid_counts).sum() / gid_counts.sum()
 
@@ -61,27 +60,25 @@ def test_vpd_fractional_excl():
 
     gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
-    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                        excl_dict=excl_dict_1,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        power_density=FVPD,
-                                        max_workers=1, gids=gids_subset)
+    sca_1 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
+                                   res_class_dset=RES_CLASS_DSET,
+                                   res_class_bins=RES_CLASS_BINS,
+                                   data_layers=DATA_LAYERS, power_density=FVPD,
+                                   gids=gids_subset)
+    summary_1 = sca_1.summarize(GEN, max_workers=1)
 
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
-    s2 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                        excl_dict=excl_dict_2,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        power_density=FVPD,
-                                        max_workers=1, gids=gids_subset)
+    sca_2 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_2,
+                                   res_class_dset=RES_CLASS_DSET,
+                                   res_class_bins=RES_CLASS_BINS,
+                                   data_layers=DATA_LAYERS, power_density=FVPD,
+                                   gids=gids_subset)
+    summary_2 = sca_2.summarize(GEN, max_workers=1)
 
-    for i in s1.index:
-        cap_full = s1.loc[i, 'capacity']
-        cap_half = s2.loc[i, 'capacity']
+    for i in summary_1.index:
+        cap_full = summary_1.loc[i, 'capacity']
+        cap_half = summary_2.loc[i, 'capacity']
 
         msg = ('Variable power density for fractional exclusions failed! '
                'Index {} has cap full {} and cap half {}'
@@ -91,13 +88,13 @@ def test_vpd_fractional_excl():
 
 def test_vpd_incomplete():
     """Test an incomplete VPD input and make sure an exception is raised"""
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS,
+                                 power_density=FVPDI)
     try:
-        SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS,
-                                       max_workers=1, power_density=FVPDI)
+        sca.summarize(GEN, max_workers=1)
     except FileInputError as e:
         if '1314958' in str(e):
             pass
