@@ -12,10 +12,12 @@ import json
 import traceback
 
 from reV.handlers.cli_multi_year import main
+from reV.cli import gaps_cli
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
 from reV.config.multi_year import MultiYearConfig
 from reV import TESTDATADIR
+from reV.utilities import ModuleName
 
 from rex import Resource
 from rex.utilities.loggers import init_logger
@@ -155,7 +157,7 @@ def test_cli(runner, clear_loggers):
 
         dirname = os.path.basename(temp)
         fn = "{}_{}.h5".format(dirname, MultiYearConfig.NAME)
-        my_out = os.path.join(temp, fn)
+        my_out = os.path.join(temp, fn).replace("-", "_")
         temp_h5_files = [os.path.join(temp, os.path.basename(fp))
                          for fp in H5_FILES]
         for fp, fp_temp in zip(H5_FILES, temp_h5_files):
@@ -173,7 +175,8 @@ def test_cli(runner, clear_loggers):
         with open(fp_config, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['from-config', '-c', fp_config])
+        result = runner.invoke(gaps_cli, [str(ModuleName.MULTI_YEAR),
+                                          '-c', fp_config])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg

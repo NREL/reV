@@ -3,6 +3,7 @@
 Classes to collect reV outputs from multiple annual files.
 """
 import glob
+import time
 import logging
 import numpy as np
 import os
@@ -10,12 +11,218 @@ import pandas as pd
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import HandlerRuntimeError
-from reV.utilities import log_versions
+from reV.pipeline.pipeline import Pipeline
+from reV.config.output_request import SAMOutputRequest
+from reV.utilities.exceptions import HandlerRuntimeError, ConfigError
+from reV.utilities import log_versions, ModuleName
+
+from rex import Resource
+from rex.utilities.utilities import get_class_properties
 
 from rex.utilities.utilities import parse_year, get_lat_lon_cols
 
 logger = logging.getLogger(__name__)
+
+
+class MultiYearGroup:
+    """
+    Handle group parameters for MultiYearConfig
+    """
+
+    def __init__(self, name, out_dir, source_files=None,
+                 source_dir=None, source_prefix=None,
+                 source_pattern=None,
+                 dsets=('cf_mean',), pass_through_dsets=None):
+        """
+        Parameters
+        ----------
+        name : str
+            Group name, can be "none" for no collection groups.
+        out_dir : str
+            Output directory, used for Pipeline handling
+        source_files : str | list | NoneType
+            Explicit list of source files - either use this OR
+            source_dir + source_prefix
+            If this arg is "PIPELINE", determine source_files from
+            the status file of the previous pipeline step.
+            If None, use source_dir and source_prefix
+        source_dir : str | NoneType
+            Directory to extract source files from
+            (must be paired with source_prefix)
+        source_prefix : str | NoneType
+            File prefix to search for in source directory
+            (must be paired with source_dir)
+        source_pattern : str | NoneType
+            Optional unix-style /filepath/pattern*.h5 to specify the source
+            files. This takes priority over source_dir and source_prefix but is
+            not used if source_files are specified Explicitly.
+        dsets : list | tuple
+            List of datasets to collect
+        pass_through_dsets : list | tuple | None
+            Optional list of datasets that are identical in the multi-year
+            files (e.g. input datasets that don't vary from year to year) that
+            should be copied to the output multi-year file once without a
+            year suffix or means/stdev calculation
+        """
+        self._name = name
+        self._dirout = out_dir
+        self._source_files = source_files
+        self._source_dir = source_dir
+        self._source_prefix = source_prefix
+        self._source_pattern = source_pattern
+        self._pass_through_dsets = None
+        if pass_through_dsets is not None:
+            self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
+
+        self._dsets = self._parse_dsets(dsets)
+
+    def _parse_dsets(self, dsets):
+        """Parse a multi-year dataset collection request. Can handle PIPELINE
+        argument which will find all datasets from one of the files being
+        collected ignoring meta, time index, and pass_through_dsets
+
+        Parameters
+        ----------
+        dsets : str | list
+            One or more datasets to collect, or "PIPELINE"
+
+        Returns
+        -------
+        dsets : SAMOutputRequest
+            Dataset list object.
+        """
+        if isinstance(dsets, str) and dsets == 'PIPELINE':
+            files = Pipeline.parse_previous(self._dirout, 'collect',
+                                            target='fpath')
+            with Resource(files[0]) as res:
+                dsets = [d for d in res
+                         if not d.startswith('time_index')
+                         and d != 'meta'
+                         and d not in self.pass_through_dsets]
+
+        dsets = SAMOutputRequest(dsets)
+
+        return dsets
+
+    @property
+    def name(self):
+        """
+        Returns
+        -------
+        name : str
+            Group name
+        """
+        name = self._name if self._name.lower() != "none" else None
+        return name
+
+    @property
+    def source_files(self):
+        """
+        Returns
+        -------
+        source_files : list
+            list of source files to collect from
+        """
+        if self._source_files is not None:
+            if isinstance(self._source_files, (list, tuple)):
+                source_files = self._source_files
+            elif self._source_files == "PIPELINE":
+                source_files = Pipeline.parse_previous(
+                    self._dirout, module=ModuleName.MULTI_YEAR, target='fpath')
+            else:
+                e = "source_files must be a list, tuple, or 'PIPELINE'"
+                logger.error(e)
+                raise ConfigError(e)
+
+        elif self._source_pattern:
+            source_files = glob.glob(self._source_pattern)
+            if not all(fp.endswith('.h5') for fp in source_files):
+                msg = ('Source pattern resulted in non-h5 files that cannot '
+                       'be collected: {}, pattern: {}'
+                       .format(source_files, self._source_pattern))
+                logger.error(msg)
+                raise RuntimeError(msg)
+
+        elif self._source_dir and self._source_prefix:
+            source_files = []
+            for file in os.listdir(self._source_dir):
+                if (file.startswith(self._source_prefix)
+                        and file.endswith('.h5') and '_node' not in file):
+                    source_files.append(os.path.join(self._source_dir,
+                                                     file))
+        else:
+            e = ("source_files or both source_dir and "
+                 "source_prefix must be provided")
+            logger.error(e)
+            raise ConfigError(e)
+
+        if not any(source_files):
+            e = ('Could not find any source files for '
+                 'multi-year collection group: "{}" in "{}"'
+                 .format(self.name, self._source_dir))
+            logger.error(e)
+            raise FileNotFoundError(e)
+
+        return source_files
+
+    @property
+    def dsets(self):
+        """
+        Returns
+        -------
+        _dsets :list | tuple
+            Datasets to collect
+        """
+        return self._dsets
+
+    @property
+    def pass_through_dsets(self):
+        """Optional list of datasets that are identical in the multi-year
+        files (e.g. input datasets that don't vary from year to year) that
+        should be copied to the output multi-year file once without a
+        year suffix or means/stdev calculation
+
+        Returns
+        -------
+        list | tuple | None
+        """
+        return self._pass_through_dsets
+
+    def _dict_rep(self):
+        """Get a dictionary representation of this multi year collection group
+
+        Returns
+        -------
+        dict
+        """
+        props = get_class_properties(self.__class__)
+        out = {k: getattr(self, k) for k in props}
+        out['group'] = self.name
+        return out
+
+    @classmethod
+    def _factory(cls, out_dir, groups_dict):
+        """
+        Generate dictionary of MultiYearGroup objects for all groups in groups
+
+        Parameters
+        ----------
+        out_dir : str
+            Output directory, used for Pipeline handling
+        groups_dict : dict
+            Dictionary of group parameters, parsed from multi-year config file
+
+        Returns
+        -------
+        groups : dict
+            Dictionary of MultiYearGroup objects for each group in groups
+        """
+        groups = {}
+        for name, kwargs in groups_dict.items():
+            groups[name] = cls(name, out_dir, **kwargs)
+
+        return groups
+
 
 
 class MultiYear(Outputs):
@@ -503,3 +710,82 @@ class MultiYear(Outputs):
         source_files = cls.parse_source_files_pattern(source_files)
         with cls(my_file, mode='a', group=group) as my:
             my.collect(source_files, dset, profiles=True)
+
+
+def my_collect_groups(out_fpath, groups):
+    """Collect all groups into a single multi-year HDF5 file.
+
+    Parameters
+    ----------
+    out_fpath : str
+        Path to multi-year HDF5 file to use for multi-year
+        collection.
+    groups : dict
+        Dictionary of collection groups and their parameters. This
+        should be a dictionary mapping group names (keys) to a set
+        of key word arguments to initialize :class:`MultiYearGroup`
+        (e.g. ``dsets``, ``source_pattern``). You can have only one
+        group with name "none" for no group collection. For
+        example::
+
+            {group1: {group: null, source_files: [], dsets: []}}
+
+
+    """
+    if not out_fpath.endswith(".h5"):
+        out_fpath = ".".join([out_fpath, "h5"])
+    out_dir = os.path.dirname(out_fpath)
+    groups = MultiYearGroup._factory(out_dir, groups)
+    group_params = {name: group._dict_rep()
+                    for name, group in groups.items()}
+
+    logger.info('Multi-year collection is being run with output path: {}'
+                .format(out_fpath))
+    ts = time.time()
+    for group_name, group in group_params.items():
+        logger.info('- Collecting datasets "{}" from "{}" into "{}/"'
+                    .format(group['dsets'], group['source_files'],
+                            group_name))
+        t0 = time.time()
+        for dset in group['dsets']:
+            if MultiYear.is_profile(group['source_files'], dset):
+                MultiYear.collect_profiles(out_fpath, group['source_files'],
+                                           dset, group=group['group'])
+            else:
+                MultiYear.collect_means(out_fpath, group['source_files'],
+                                        dset, group=group['group'])
+
+        if group.get('pass_through_dsets', None) is not None:
+            for dset in group['pass_through_dsets']:
+                MultiYear.pass_through(out_fpath, group['source_files'],
+                                       dset, group=group['group'])
+
+        runtime = (time.time() - t0) / 60
+        logger.info('- {} collection completed in: {:.2f} min.'
+                    .format(group_name, runtime))
+
+    runtime = (time.time() - ts) / 60
+    logger.info('Multi-year collection completed in : {:.2f} min.'
+                .format(runtime))
+
+
+def my_preprocessor(config, out_dir, job_name):
+    """Preprocess Multi-year config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of multi-year job. This will be included in the output file
+        name.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    config["out_fpath"] = os.path.join(out_dir, job_name)
+    return config

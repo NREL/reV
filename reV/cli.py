@@ -11,6 +11,7 @@ from gaps.cli.preprocessing import preprocess_collect_config
 from reV.bespoke import BespokeWindPlants, bespoke_preprocessor
 from reV.generation import Gen, gen_preprocessor
 from reV.econ import Econ, econ_preprocessor
+from reV.handlers import my_collect_groups, my_preprocessor
 from reV.supply_curve import SupplyCurveAggregation, agg_preprocessor
 from reV.utilities import ModuleName
 from reV.batch.cli_batch import from_config as run_batch_from_config
@@ -403,6 +404,11 @@ commands = [
                            name=str(ModuleName.COLLECT),
                            split_keys=[("_out_path", "_pattern")],
                            config_preprocessor=preprocess_collect_config),
+    CLICommandFromFunction(my_collect_groups,
+                           name=str(ModuleName.MULTI_YEAR),
+                           split_keys=None,
+                           config_preprocessor=my_preprocessor,
+                           skip_doc_params=["out_fpath"]),
     CLICommandFromClass(SupplyCurveAggregation,
                         method="run",
                         name=str(ModuleName.SUPPLY_CURVE_AGGREGATION),
