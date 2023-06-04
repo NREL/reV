@@ -2,5 +2,5 @@
 """
 reV hybridization tool
 """
-from .hybrids import Hybridization
+from .hybrids import Hybridization, hybrids_preprocessor
 from .hybrid_methods import HYBRID_METHODS

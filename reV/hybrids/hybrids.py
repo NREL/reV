@@ -3,7 +3,8 @@
 
 @author: ppinchuk
 """
-
+import os
+import glob
 import logging
 import numpy as np
 import re
@@ -14,11 +15,12 @@ from collections import namedtuple
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (FileInputError, InputError,
-                                      InputWarning, OutputWarning)
+                                      InputWarning, OutputWarning,
+                                      PipelineError)
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
 
 from rex.resource import Resource
-from rex.utilities.utilities import to_records_array
+from rex.utilities.utilities import to_records_array, parse_year
 
 logger = logging.getLogger(__name__)
 
@@ -846,53 +848,57 @@ class Hybridization:
         Parameters
         ----------
         solar_fpath : str
-            Filepath to rep profile output file to extract solar profiles and
-            summaries from.
+            Filepath to rep profile output file to extract solar
+            profiles and summaries from.
         wind_fpath : str
-            Filepath to rep profile output file to extract wind profiles and
-            summaries from.
+            Filepath to rep profile output file to extract wind profiles
+            and summaries from.
         allow_solar_only : bool, optional
-            Option to allow SC points with only solar capcity (no wind), by
-            default False.
+            Option to allow SC points with only solar capacity
+            (no wind), by default False.
         allow_wind_only : bool, optional
-            Option to allow SC points with only wind capcity (no solar), by
-            default False.
+            Option to allow SC points with only wind capacity
+            (no solar), by default False.
         fillna : dict, optional
-            Dictionary containing column_name, fill_value pairs reprenting any
-            fill values that should be applied after merging the wind and solar
-            meta. Note that column names will likely have to be prefixed
-            with "solar_" or "wind_". By default None.
+            Dictionary containing column_name, fill_value pairs
+            representing any fill values that should be applied after
+            merging the wind and solar meta. Note that column names will
+            likely have to be prefixed with "solar_" or "wind_".
+            By default None.
         limits : dict, optional
             Option to specify mapping (in the form of a dictionary) of
-            {colum_name: max_value} representing the upper limit (maximum
-            value) for the values of a column in the merged meta. For example,
-            `limits={'solar_capacity': 100}` would limit all the values of the
-            solar capacity in the merged meta to a maximum value of 100.
-            This limit is applied *BEFORE* ratio calculations. The names of
-            the columns should match the column names in the merged meta, so
-            they are likely prefixed with one of the prefixes defined at the
-            top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
-            None (no limits applied).
+            {colum_name: max_value} representing the upper limit
+            (maximum value) for the values of a column in the merged
+            meta. For example, `limits={'solar_capacity': 100}` would
+            limit all the values of the solar capacity in the merged
+            meta to a maximum value of 100. This limit is applied
+            *BEFORE* ratio calculations. The names of the columns should
+            match the column names in the merged meta, so they are
+            likely prefixed with one of the prefixes defined at the
+            top of this module (SOLAR_PREFIX or WIND_PREFIX).
+            By default, None (no limits applied).
         ratio_bounds : tuple, optional
-            Option to set ratio bounds (in two-tuple form) on the columns of
-            the `ratio` input. For example, `ratio_bounds=(0.5, 1.5)`
-            would adjust the values of both of the `ratio` columns
-            such that their ratio is always between half and double (e.g., no
-            value would be more than double the other). To specify a single
-            ratio value, use the same value as the upper and lower bound. For
-            example, `ratio_bounds=(1, 1)` would adjust the values of both of
+            Option to set ratio bounds (in two-tuple form) on the
+            columns of the `ratio` input. For example,
+            `ratio_bounds=(0.5, 1.5)` would adjust the values of both of
+            the `ratio` columns such that their ratio is always between
+            half and double (e.g., no value would be more than double
+            the other). To specify a single ratio value, use the same
+            value as the upper and lower bound. For example,
+            `ratio_bounds=(1, 1)` would adjust the values of both of
             the `ratio` columns such that their ratio is always equal.
             By default, None (no limit on the ratio).
         ratio : str, optional
-            Option to specify the columns used to calculate the ratio that is
-            limited by the `ratio_bounds` input. This input is a string in the
-            form "numerator_column_name/denominator_column_name".
+            Option to specify the columns used to calculate the ratio
+            that is limited by the `ratio_bounds` input. This input is a
+            string in the form
+            "numerator_column_name/denominator_column_name".
             For example, `ratio='solar_capacity/wind_capacity'`
-            would limit the ratio of the solar to wind capacities as specified
-            by the `ratio_bounds` input. If `ratio_bounds` is None, this input
-            does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            By default 'solar_capacity/wind_capacity'.
+            would limit the ratio of the solar to wind capacities as
+            specified by the `ratio_bounds` input. If `ratio_bounds`
+            is None, this input does nothing. The names of the columns
+            should be prefixed with one of the prefixes defined as class
+            variables. By default 'solar_capacity/wind_capacity'.
         """
 
         logger.info('Running hybridization of rep profiles with solar_fpath: '
@@ -1004,7 +1010,7 @@ class Hybridization:
         """
         return self._profiles
 
-    def run_all(self, fout=None, save_hybrid_meta=True):
+    def run(self, fout=None, save_hybrid_meta=True):
         """Run hybridization of profiles and save to disc.
 
         Parameters
@@ -1017,9 +1023,8 @@ class Hybridization:
 
         Returns
         -------
-        `Hybridization`
-            Instance of Hybridization object (itself) containing the
-            hybridized meta and profiles as attributes.
+        str
+            Filepath to output h5 file.
         """
 
         self.run_meta()
@@ -1029,7 +1034,7 @@ class Hybridization:
             self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta)
 
         logger.info('Hybridization of representative profiles complete!')
-        return self
+        return fout
 
     def run_meta(self):
         """Compute the hybridized profiles.
@@ -1173,3 +1178,118 @@ class Hybridization:
 
         self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
         self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
+
+
+
+
+def hybrids_preprocessor(config, out_dir, job_name):
+    """Preprocess hybrids config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+    job_name : str
+        Name of hybrids job. This will be included in the output
+        file name.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    for key in ["solar_fpath", "wind_fpath"]:
+        config[key] = _glob_to_yearly_dict(config[key])
+
+    config = _set_paths(config, out_dir, job_name)
+    return config
+
+
+def _glob_to_yearly_dict(fpath):
+    """Glob the filepaths into a dictionary based on years. """
+    _raise_err_if_pipeline(fpath)
+    paths = {}
+    for fp in glob.glob(fpath):
+        fname = os.path.basename(fp)
+
+        try:
+            year = parse_year(fname)
+        except RuntimeError:
+            year = None
+
+        paths.setdefault(year, []).append(fp)
+
+    return paths
+
+
+def _raise_err_if_pipeline(fpath):
+    """Raise error if fpath input is 'PIPELINE'. """
+
+    if fpath == 'PIPELINE':
+        msg = ('Hybrids module cannot infer fpath from "PIPELINE" - '
+               'input is ambiguous. Please specify both the solar and '
+               'wind fpath before running hybrids module.')
+        logger.error(msg)
+        raise PipelineError(msg)
+
+
+def _set_paths(config, out_dir, job_name):
+    """Pair solar and wind files and corresponding process names. """
+
+    solar_glob_paths = config["solar_fpath"]
+    wind_glob_paths = config["wind_fpath"]
+    all_years = set(solar_glob_paths) | set(wind_glob_paths)
+    common_years = set(solar_glob_paths) & set(wind_glob_paths)
+    if not all_years:
+        msg = "No files found that match the input: {!r} and/or {!r}"
+        e = msg.format(config['solar_fpath'], config['wind_fpath'])
+        logger.error(e)
+        raise RuntimeError(e)
+
+    solar_fpaths = []
+    wind_fpaths = []
+    out_files = []
+    for year in all_years:
+        if year not in common_years:
+            msg = ("No corresponding {} file found for {} input file "
+                   "(year: '{}'): {!r}. No hybridization performed for "
+                   "this input!")
+            resources = (['solar', 'wind'] if year not in solar_glob_paths else
+                         ['wind', 'solar'])
+            paths = (solar_glob_paths.get(year, [])
+                     + wind_glob_paths.get(year, []))
+            w = msg.format(*resources, paths, year)
+            logger.warning(w)
+            warn(w)
+            continue
+
+        for fpaths in (solar_glob_paths, wind_glob_paths):
+            if len(fpaths[year]) > 1:
+                msg = ("Ambiguous number of files found for year '{}': {!r} "
+                       "Please ensure there is only one input file per year. "
+                       "No hybridization performed for this input!")
+                w = msg.format(year, fpaths[year])
+                logger.warning(w)
+                warn(w)
+                break
+        else:
+            solar_fpaths += solar_glob_paths[year]
+            wind_fpaths += wind_glob_paths[year]
+            out_fn = ("{}.h5".format(job_name)
+                      if year is None
+                      else "{}_{}.h5".format(job_name, year))
+            out_files += [os.path.join(out_dir, out_fn)]
+
+    if not solar_fpaths or not wind_fpaths:
+        msg = "No files found that match the input: {!r} and/or {!r}"
+        e = msg.format(config['solar_fpath'], config['wind_fpath'])
+        logger.error(e)
+        raise RuntimeError(e)
+
+    config["solar_fpath"] = solar_fpaths
+    config["wind_fpath"] = wind_fpaths
+    config["fout"] = out_files
+
+    return config

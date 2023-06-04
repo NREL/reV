@@ -15,6 +15,7 @@ from reV.handlers import my_collect_groups, my_preprocessor
 from reV.supply_curve import SupplyCurveAggregation, agg_preprocessor
 from reV.supply_curve import SupplyCurve, sc_preprocessor
 from reV.rep_profiles import RepProfiles, rep_profiles_preprocessor
+from reV.hybrids import Hybridization, hybrids_preprocessor
 from reV.utilities import ModuleName
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
@@ -431,6 +432,13 @@ commands = [
                         add_collect=False,
                         split_keys=[("gen_fpath", "fout", "cf_dset")],
                         config_preprocessor=rep_profiles_preprocessor,
+                        skip_doc_params=["fout"]),
+    CLICommandFromClass(Hybridization,
+                        method="run",
+                        name=str(ModuleName.HYBRIDS),
+                        add_collect=False,
+                        split_keys=[("solar_fpath", "wind_fpath", "fout")],
+                        config_preprocessor=hybrids_preprocessor,
                         skip_doc_params=["fout"]),
 ]
 gaps_cli = make_cli(commands)  # TODO: Rename back to main after refactor
