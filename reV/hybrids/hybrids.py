@@ -1180,8 +1180,6 @@ class Hybridization:
         self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
 
 
-
-
 def hybrids_preprocessor(config, out_dir, job_name):
     """Preprocess hybrids config user input.
 
