@@ -6,11 +6,15 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+from warnings import warn
 
 from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve, SummaryPlots,
                                SupplyCurvePlot, ExclusionsMask)
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.utilities import log_versions
+from reV.utilities import log_versions, ModuleName
+from reV.utilities.exceptions import PipelineError
+
+from gaps.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -240,3 +244,256 @@ class QaQc:
         else:
             logger.info('Finished QAQC on file: {} output directory: {}'
                         .format(os.path.basename(excl_h5), out_dir))
+
+
+class QaQcModule:
+    """Class to handle Module QA/QC"""
+
+    def __init__(self, module_name, config, out_root):
+        """
+        Parameters
+        ----------
+        config : dict
+            Dictionary with pre-extracted config input group.
+        """
+        if not isinstance(config, dict):
+            raise TypeError('Config input must be a dict but received: {}'
+                            .format(type(config)))
+
+        self._name = module_name
+        self._config = config
+        self._out_root = out_root
+        self._default_plot_type = 'plotly'
+        self._default_cmap = 'viridis'
+        self._default_plot_step = 100
+        self._default_lcoe = 'mean_lcoe'
+        self._default_area_filter_kernel = 'queen'
+
+    @property
+    def fpath(self):
+        """Get the reV module output filepath(s)
+
+        Returns
+        -------
+        fpaths : str | list
+            One or more filepaths output by current module being QA'd
+        """
+
+        fpath = self._config['fpath']
+
+        if fpath == 'PIPELINE':
+            target_modules = [self._name]
+            for target_module in target_modules:
+                fpath = Status.parse_command_status(self._out_root,
+                                                    target_module)
+                if len(fpath) == 1:
+                    break
+            else:
+                raise PipelineError('Could not parse fpath from previous '
+                                    'pipeline jobs.')
+            fpath = fpath[0]
+            logger.info('QA/QC using the following '
+                        'pipeline input for fpath: {}'.format(fpath))
+
+        return fpath
+
+    @property
+    def sub_dir(self):
+        """
+        QA/QC sub directory for this module's outputs
+        """
+        return self._config.get('sub_dir', None)
+
+    @property
+    def plot_type(self):
+        """Get the QA/QC plot type: either 'plot' or 'plotly'"""
+        return self._config.get('plot_type', self._default_plot_type)
+
+    @property
+    def dsets(self):
+        """Get the reV_h5 dsets to QA/QC"""
+        return self._config.get('dsets', None)
+
+    @property
+    def group(self):
+        """Get the reV_h5 group to QA/QC"""
+        return self._config.get('group', None)
+
+    @property
+    def process_size(self):
+        """Get the reV_h5 process_size for QA/QC"""
+        return self._config.get('process_size', None)
+
+    @property
+    def cmap(self):
+        """Get the QA/QC plot colormap"""
+        return self._config.get('cmap', self._default_cmap)
+
+    @property
+    def plot_step(self):
+        """Get the QA/QC step between exclusion mask points to plot"""
+        return self._config.get('cmap', self._default_plot_step)
+
+    @property
+    def columns(self):
+        """Get the supply_curve columns to QA/QC"""
+        return self._config.get('columns', None)
+
+    @property
+    def lcoe(self):
+        """Get the supply_curve lcoe column to plot"""
+        return self._config.get('lcoe', self._default_lcoe)
+
+    @property
+    def excl_fpath(self):
+        """Get the source exclusions filepath"""
+        excl_fpath = self._config.get('excl_fpath', 'PIPELINE')
+
+        if excl_fpath == 'PIPELINE':
+            target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
+            excl_fpath = Status.parse_command_status(self._out_root,
+                                                     target_module,
+                                                     key='excl_fpath')
+            if not excl_fpath:
+                excl_fpath = None
+                msg = ('Could not parse excl_fpath from previous '
+                       'pipeline jobs, defaulting to: {}'.format(excl_fpath))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                excl_fpath = excl_fpath[0]
+                logger.info('QA/QC using the following '
+                            'pipeline input for excl_fpath: {}'
+                            .format(excl_fpath))
+
+        return excl_fpath
+
+    @property
+    def excl_dict(self):
+        """Get the exclusions dictionary"""
+        excl_dict = self._config.get('excl_dict', 'PIPELINE')
+
+        if excl_dict == 'PIPELINE':
+            target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
+            excl_dict = Status.parse_command_status(self._out_root,
+                                                    target_module,
+                                                    key='excl_dict')
+            if not excl_dict:
+                excl_dict = None
+                msg = ('Could not parse excl_dict from previous '
+                       'pipeline jobs, defaulting to: {}'.format(excl_dict))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                excl_dict = excl_dict[0]
+                logger.info('QA/QC using the following '
+                            'pipeline input for excl_dict: {}'
+                            .format(excl_dict))
+
+        return excl_dict
+
+    @property
+    def area_filter_kernel(self):
+        """Get the minimum area filter kernel name ('queen' or 'rook')."""
+        area_filter_kernel = self._config.get('area_filter_kernel', 'PIPELINE')
+
+        if area_filter_kernel == 'PIPELINE':
+            target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
+            key = 'area_filter_kernel'
+            area_filter_kernel = Status.parse_command_status(self._out_root,
+                                                             target_module,
+                                                             key=key)
+            if not area_filter_kernel:
+                area_filter_kernel = self._default_area_filter_kernel
+                msg = ('Could not parse area_filter_kernel from previous '
+                       'pipeline jobs, defaulting to: {}'
+                       .format(area_filter_kernel))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                area_filter_kernel = area_filter_kernel[0]
+                logger.info('QA/QC using the following '
+                            'pipeline input for area_filter_kernel: {}'
+                            .format(area_filter_kernel))
+
+        return area_filter_kernel
+
+    @property
+    def min_area(self):
+        """Get the minimum area filter minimum area in km2."""
+        min_area = self._config.get('min_area', 'PIPELINE')
+
+        if min_area == 'PIPELINE':
+            target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
+            min_area = Status.parse_command_status(self._out_root,
+                                                   target_module,
+                                                   key='min_area')
+            if not min_area:
+                min_area = None
+                msg = ('Could not parse min_area from previous '
+                       'pipeline jobs, defaulting to: {}'
+                       .format(min_area))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                min_area = min_area[0]
+                logger.info('QA/QC using the following '
+                            'pipeline input for min_area: {}'
+                            .format(min_area))
+
+        return min_area
+
+
+def cli_qa_qc(modules, out_dir, max_workers=None):
+    """Run QA/QC on reV outputs
+
+    Parameters
+    ----------
+    modules : dict
+        Dictionary of modules to QA/QC.
+    out_dir : str
+        Path to output directory
+    max_workers : int, optional
+        Max number of workers to run for QA/QA. If ``None``, uses all
+        CPU cores. By default, ``None``.
+
+    Raises
+    ------
+    ValueError
+        If fpath is not an H5 or CSV file.
+    """
+    for module, mcf in modules.items():
+        module_config = QaQcModule(module, mcf,out_dir)
+
+        qa_dir = out_dir
+        if module_config.sub_dir is not None:
+            qa_dir = os.path.join(out_dir, module_config.sub_dir)
+
+        if module.lower() == 'exclusions':
+            QaQc.exclusions_mask(module_config.fpath, qa_dir,
+                                 layers_dict=module_config.excl_dict,
+                                 min_area=module_config.min_area,
+                                 kernel=module_config.area_filter_kernel,
+                                 plot_type=module_config.plot_type,
+                                 cmap=module_config.cmap,
+                                 plot_step=module_config.plot_step)
+
+        elif module_config.fpath.endswith('.h5'):
+            QaQc.h5(module_config.fpath, qa_dir, dsets=module_config.dsets,
+                    group=module_config.group,
+                    process_size=module_config.process_size,
+                    max_workers=max_workers,
+                    plot_type=module_config.plot_type, cmap=module_config.cmap)
+
+        elif module_config.fpath.endswith('.csv'):
+            QaQc.supply_curve(module_config.fpath, qa_dir,
+                              columns=module_config.columns,
+                              lcoe=module_config.lcoe,
+                              plot_type=module_config.plot_type,
+                              cmap=module_config.cmap)
+        else:
+            msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
+                    "or '*.csv' reV output file, but {} was given!"
+                    .format(module, module_config.fpath))
+            logger.error(msg)
+            raise ValueError(msg)
