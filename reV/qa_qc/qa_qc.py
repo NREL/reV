@@ -463,7 +463,7 @@ def cli_qa_qc(modules, out_dir, max_workers=None):
         If fpath is not an H5 or CSV file.
     """
     for module, mcf in modules.items():
-        module_config = QaQcModule(module, mcf,out_dir)
+        module_config = QaQcModule(module, mcf, out_dir)
 
         qa_dir = out_dir
         if module_config.sub_dir is not None:
@@ -493,7 +493,7 @@ def cli_qa_qc(modules, out_dir, max_workers=None):
                               cmap=module_config.cmap)
         else:
             msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
-                    "or '*.csv' reV output file, but {} was given!"
-                    .format(module, module_config.fpath))
+                   "or '*.csv' reV output file, but {} was given!"
+                   .format(module, module_config.fpath))
             logger.error(msg)
             raise ValueError(msg)
