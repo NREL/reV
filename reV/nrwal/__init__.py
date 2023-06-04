@@ -2,3 +2,4 @@
 """
 reV offshore wind econ and generation analysis module
 """
+from .nrwal import RevNrwal, nrwal_preprocessor

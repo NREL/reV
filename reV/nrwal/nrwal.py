@@ -10,6 +10,7 @@ Everything in this module operates on the spatiotemporal resolution of the reV
 generation output file. This is usually the wind or solar resource resolution
 but could be the supply curve resolution after representative profiles is run.
 """
+import glob
 import numpy as np
 import pandas as pd
 import logging
@@ -20,7 +21,9 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (DataShapeError,
                                       OffshoreWindInputWarning,
                                       OffshoreWindInputError)
-from reV.utilities import log_versions
+from reV.utilities import log_versions, ModuleName
+
+from gaps.pipeline import parse_previous_status
 
 
 logger = logging.getLogger(__name__)
@@ -683,76 +686,61 @@ class RevNrwal:
         logger.info('Finished writing NRWAL outputs to: {}'
                     .format(self._gen_fpath))
 
-    @classmethod
-    def run(cls, gen_fpath, site_data, sam_files, nrwal_configs,
-            output_request, save_raw=True, meta_gid_col='gid',
-            site_meta_cols=None):
-        """Initialize and run the NRWAL analysis object.
-
-        Parameters
-        ----------
-        gen_fpath : str
-            Full filepath to reV generation or rep_profiles h5 output file.
-            Anything in the output_request is added and/or manipulated in this
-            file.
-        site_data : str | pd.DataFrame
-            Site-specific input data for NRWAL calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column that
-            corresponds to the "meta_gid_col" in the gen_fpath meta data and a
-            "config" column that corresponds to the nrwal_configs input. Only
-            sites with a gid in this file's "gid" column will be run through
-            NRWAL.
-        sam_files : dict
-            Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the
-            nrwal_configs lookup input.
-        nrwal_configs : dict
-            Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the
-            sam_files lookup in project_points
-        output_request : list | tuple
-            List of output dataset names you want written to the gen_fpath
-            file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_files) is available to be exported as an output
-            dataset. If you want to manipulate a dset like cf_mean from
-            gen_fpath and include it in the output_request, you should set
-            save_raw=True and then in the NRWAL equations use cf_mean_raw as
-            the input and then define cf_mean as the manipulated data that will
-            be included in the output_request.
-        save_raw : bool
-            Flag to save a copy of existing datasets in gen_fpath that are part
-            of the output_request. For example, if you request cf_mean in
-            output_request and manipulate the cf_mean dataset in the NRWAL
-            equations, the original cf_mean will be archived under the
-            "cf_mean_raw" dataset in gen_fpath.
-        meta_gid_col : str
-            Column label in the source meta data from gen_fpath that contains
-            the unique gid identifier. This will be joined to the site_data
-            "gid" column
-        site_meta_cols : list | tuple | None
-            Column labels from site_data to be added to the meta data table in
-            gen_fpath. None (default) will use class variable
-            DEFAULT_META_COLS, and any additional cols requested here will be
-            added to DEFAULT_META_COLS.
+    def run(self):
+        """Run NRWAL analysis.
 
         Returns
         -------
-        obj : RevNrwal
-            Instantiated and run RevNrwal analysis object.
+        str
+            Path to output file.
         """
 
-        obj = cls(gen_fpath, site_data, sam_files, nrwal_configs,
-                  output_request,
-                  save_raw=save_raw,
-                  meta_gid_col=meta_gid_col,
-                  site_meta_cols=site_meta_cols)
-
-        if any(obj.analysis_gids):
-            obj.run_nrwal()
-            obj.check_outputs()
-            obj.write_to_gen_fpath()
+        if any(self.analysis_gids):
+            self.run_nrwal()
+            self.check_outputs()
+            self.write_to_gen_fpath()
 
         logger.info('NRWAL module complete!')
 
-        return obj
+        return self._gen_fpath
+
+
+def nrwal_preprocessor(config, out_dir):
+    """Preprocess NRWAL config user input.
+
+    Parameters
+    ----------
+    config : dict
+        User configuration file input as (nested) dict.
+    out_dir : str
+        Path to output file directory.
+
+    Returns
+    -------
+    dict
+        Updated config file.
+    """
+    config = _parse_gen_fpath(config, out_dir)
+    return config
+
+
+def _parse_gen_fpath(config, out_dir):
+    """Parse gen_fpath user input and convert to list"""
+
+    fpaths = config['gen_fpath']
+    if fpaths == 'PIPELINE':
+        fpaths = parse_previous_status(out_dir,ModuleName.NRWAL)
+
+    if isinstance(fpaths, str) and '*' in fpaths:
+        fpaths = glob(fpaths)
+        if not any(fpaths):
+            msg = ('Could not find any file paths for '
+                    'gen_fpath glob pattern.')
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+    if isinstance(fpaths, str):
+        fpaths = [fpaths]
+
+    config['gen_fpath'] = fpaths
+    return config
