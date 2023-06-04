@@ -1321,7 +1321,7 @@ class SupplyCurve:
         return out_fpath
 
 
-def sc_preprocessor(config, out_dir, job_name):
+def sc_preprocessor(config, out_dir):
     """Preprocess supply curve config user input.
 
     Parameters
@@ -1330,9 +1330,6 @@ def sc_preprocessor(config, out_dir, job_name):
         User configuration file input as (nested) dict.
     out_dir : str
         Path to output file directory.
-    job_name : str
-        Name of supply curve job. This will be included in the output
-        file name.
 
     Returns
     -------
@@ -1357,5 +1354,4 @@ def sc_preprocessor(config, out_dir, job_name):
             logger.warning(msg)
             warn(msg)
 
-    config["out_fpath"] = os.path.join(out_dir, job_name)
     return config

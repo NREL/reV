@@ -697,18 +697,13 @@ class Gen(BaseGen):
 
 # TODO: Move this into gen CLI file
 # TODO: Add logging
-def gen_preprocessor(config, out_dir, job_name, analysis_years=None):
+def gen_preprocessor(config, analysis_years=None):
     """Preprocess generation config user input.
 
     Parameters
     ----------
     config : dict
         User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-    job_name : str
-        Name of bespoke job. This will be included in the output file
-        name.
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -739,7 +734,6 @@ def gen_preprocessor(config, out_dir, job_name, analysis_years=None):
 
     config['technology'] = (config['technology'].lower()
                             .replace(' ', '').replace('_', ''))
-    config["out_fpath"] = os.path.join(out_dir, job_name)
     return config
 
 

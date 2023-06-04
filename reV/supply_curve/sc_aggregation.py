@@ -1163,7 +1163,7 @@ class SupplyCurveAggregation(BaseAggregation):
         return out_fpath
 
 
-def agg_preprocessor(config, out_dir, job_name):
+def agg_preprocessor(config, out_dir):
     """Preprocess aggregation config user input.
 
     Parameters
@@ -1172,9 +1172,6 @@ def agg_preprocessor(config, out_dir, job_name):
         User configuration file input as (nested) dict.
     out_dir : str
         Path to output file directory.
-    job_name : str
-        Name of aggregation job. This will be included in the output
-        file name.
 
     Returns
     -------
@@ -1193,7 +1190,6 @@ def agg_preprocessor(config, out_dir, job_name):
     for key, modules in key_to_modules.items():
         config = _parse_from_pipeline(config, out_dir, key, modules)
 
-    config["out_fpath"] = os.path.join(out_dir, job_name)
     return config
 
 

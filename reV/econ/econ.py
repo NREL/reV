@@ -457,7 +457,7 @@ class Econ(BaseGen):
         return self._out_fpath
 
 
-def econ_preprocessor(config, out_dir, job_name, analysis_years=None):
+def econ_preprocessor(config, out_dir, analysis_years=None):
     """Preprocess econ config user input.
 
     Parameters
@@ -466,9 +466,6 @@ def econ_preprocessor(config, out_dir, job_name, analysis_years=None):
         User configuration file input as (nested) dict.
     out_dir : str
         Path to output file directory.
-    job_name : str
-        Name of bespoke job. This will be included in the output file
-        name.
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -491,7 +488,6 @@ def econ_preprocessor(config, out_dir, job_name, analysis_years=None):
 
     config["cf_file"] = _parse_cf_files(config["cf_file"],
                                         analysis_years, out_dir)
-    config["out_fpath"] = os.path.join(out_dir, job_name)
 
     return config
 

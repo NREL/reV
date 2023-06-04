@@ -2079,18 +2079,13 @@ class BespokeWindPlants(BaseAggregation):
         return out_fpath
 
 
-def bespoke_preprocessor(config, out_dir, job_name):
-    """Preprocess generation config user input.
+def bespoke_preprocessor(config):
+    """Preprocess bespoke config user input.
 
     Parameters
     ----------
     config : dict
         User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-    job_name : str
-        Name of bespoke job. This will be included in the output file
-        name.
 
     Returns
     -------
@@ -2100,5 +2095,4 @@ def bespoke_preprocessor(config, out_dir, job_name):
     if isinstance(config["sam_files"], str):
         config["sam_files"] = {'default': config["sam_files"]}
 
-    config["out_fpath"] = os.path.join(out_dir, job_name)
     return config

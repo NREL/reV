@@ -769,25 +769,3 @@ def my_collect_groups(out_fpath, groups):
                 .format(runtime))
 
     return out_fpath
-
-
-def my_preprocessor(config, out_dir, job_name):
-    """Preprocess Multi-year config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-    job_name : str
-        Name of multi-year job. This will be included in the output file
-        name.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    config["out_fpath"] = os.path.join(out_dir, job_name)
-    return config
