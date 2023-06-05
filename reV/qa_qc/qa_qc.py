@@ -286,7 +286,7 @@ class QaQcModule:
             for target_module in target_modules:
                 fpath = Status.parse_command_status(self._out_root,
                                                     target_module)
-                if len(fpath) == 1:
+                if fpath:
                     break
             else:
                 raise PipelineError('Could not parse fpath from previous '

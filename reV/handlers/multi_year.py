@@ -21,6 +21,8 @@ from rex.utilities.utilities import get_class_properties
 
 from rex.utilities.utilities import parse_year, get_lat_lon_cols
 
+from gaps.pipeline import parse_previous_status
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,8 +94,7 @@ class MultiYearGroup:
             Dataset list object.
         """
         if isinstance(dsets, str) and dsets == 'PIPELINE':
-            files = Pipeline.parse_previous(self._dirout, 'collect',
-                                            target='fpath')
+            files = parse_previous_status(self._dirout, ModuleName.MULTI_YEAR)
             with Resource(files[0]) as res:
                 dsets = [d for d in res
                          if not d.startswith('time_index')
@@ -127,8 +128,8 @@ class MultiYearGroup:
             if isinstance(self._source_files, (list, tuple)):
                 source_files = self._source_files
             elif self._source_files == "PIPELINE":
-                source_files = Pipeline.parse_previous(
-                    self._dirout, module=ModuleName.MULTI_YEAR, target='fpath')
+                source_files = parse_previous_status(self._dirout,
+                                                     ModuleName.MULTI_YEAR)
             else:
                 e = "source_files must be a list, tuple, or 'PIPELINE'"
                 logger.error(e)

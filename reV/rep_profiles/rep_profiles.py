@@ -1259,7 +1259,7 @@ def _parse_from_pipeline(config, out_dir, config_key, target_modules):
             if gen_config_key and module_sca:
                 target_key = "gen_fpath"
             else:
-                target_key = "fpath"
+                target_key = "out_file"
             val = Status.parse_command_status(out_dir, target_module,
                                               target_key)
             if len(val) == 1:

@@ -15,7 +15,8 @@ from warnings import warn
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
-from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
+from reV.utilities.exceptions import (SupplyCurveInputError, SupplyCurveError,
+                                      PipelineError)
 from reV.utilities import log_versions, ModuleName
 
 from rex import Resource
@@ -1216,7 +1217,7 @@ class SupplyCurve:
 
         return supply_curve
 
-    def run(self, out_fpath, fcr, simple=True, avail_cap_frac=1,
+    def run(self, out_fpath, fixed_charge_rate, simple=True, avail_cap_frac=1,
             line_limited=False, transmission_costs=None,
             consider_friction=True, sort_on=None,
             columns=('trans_gid', 'trans_type', 'trans_cap_cost_per_mw',
@@ -1230,7 +1231,7 @@ class SupplyCurve:
         out_fpath : str
             Full path to output CSV file. Does not need to include file
             ending - it will be added automatically if missing.
-        fcr : float
+        fixed_charge_rate : float
             Fixed charge rate, used to compute LCOT.
         simple : bool, optional
             Option to run the simple sort. If ``False``, a full
@@ -1296,7 +1297,7 @@ class SupplyCurve:
             Path to output supply curve.
         """
 
-        kwargs = {"fcr": fcr,
+        kwargs = {"fcr": fixed_charge_rate,
                   "transmission_costs": transmission_costs,
                   "consider_friction": consider_friction,
                   "sort_on": sort_on,
@@ -1337,8 +1338,11 @@ def sc_preprocessor(config, out_dir):
         Updated config file.
     """
     if config.get("sc_points") == 'PIPELINE':
-        config["sc_points"] = parse_previous_status(out_dir,
-                                                    ModuleName.SUPPLY_CURVE)
+        sc_points = parse_previous_status(out_dir, ModuleName.SUPPLY_CURVE)
+        if not sc_points:
+            raise PipelineError('Could not parse "sc_points" from previous '
+                                'pipeline jobs.')
+        config["sc_points"] = sc_points[0]
         logger.info('Supply curve using the following '
                     'pipeline input for sc_points: {}'
                     .format(config["sc_points"]))
