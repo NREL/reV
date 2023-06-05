@@ -853,6 +853,19 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                                  sam_sys_inputs['azimuth']))
         return sam_sys_inputs
 
+    def system_capacity_ac(self):
+        """Get AC system capacity from SAM inputs.
+
+        NOTE: AC nameplate = DC nameplate / ILR
+
+        Returns
+        -------
+        cf_profile : float
+            AC nameplate = DC nameplate / ILR
+        """
+        return (self.sam_sys_inputs['system_capacity']
+                / self.sam_sys_inputs['dc_ac_ratio'])
+
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
 
@@ -865,6 +878,19 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             PV CF is calculated as AC power / DC nameplate.
         """
         return self['capacity_factor'] / 100
+
+    def cf_mean_ac(self):
+        """Get mean AC capacity factor (fractional) from SAM.
+
+        NOTE: This value only available in PVWattsV8 and up.
+
+        Returns
+        -------
+        output : float
+            Mean AC capacity factor (fractional).
+            PV AC CF is calculated as AC power / AC nameplate.
+        """
+        return self['capacity_factor_ac'] / 100
 
     def cf_profile(self):
         """Get hourly capacity factor (frac) profile in local timezone.
@@ -880,6 +906,22 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             PV CF is calculated as AC power / DC nameplate.
         """
         return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+
+    def cf_profile_ac(self):
+        """Get hourly AC capacity factor (frac) profile in local timezone.
+        See self.outputs attribute for collected output data in UTC.
+
+        NOTE: PV AC capacity factor is the AC power production / the AC
+        nameplate. AC nameplate = DC nameplate / ILR
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+            PV AC CF is calculated as AC power / AC nameplate.
+        """
+        return self.gen_profile() / self.system_capacity_ac()
 
     def gen_profile(self):
         """Get AC inverter power generation profile (local timezone) in kW.
@@ -954,13 +996,16 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
         if output_lookup is None:
             output_lookup = {'cf_mean': self.cf_mean,
+                             'cf_mean_ac': self.cf_mean_ac,
                              'cf_profile': self.cf_profile,
+                             'cf_profile_ac': self.cf_profile_ac,
                              'annual_energy': self.annual_energy,
                              'energy_yield': self.energy_yield,
                              'gen_profile': self.gen_profile,
                              'ac': self.ac,
                              'dc': self.dc,
-                             'clipped_power': self.clipped_power
+                             'clipped_power': self.clipped_power,
+                             'system_capacity_ac': self.system_capacity_ac,
                              }
 
         super().collect_outputs(output_lookup=output_lookup)

@@ -569,6 +569,43 @@ def test_irrad_bias_correct():
         assert (arr == 0).all()
 
 
+def test_ac_outputs():
+    """Test reV pvwattsv8 AC outputs"""
+    baseline_cf_mean = np.array([0.1517, 0.1518, 0.1570])
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv8.json'
+
+    output_request = ('cf_mean', 'cf_mean_ac', 'cf_profile', 'cf_profile_ac',
+                      'system_capacity', 'system_capacity_ac', 'ac', 'dc',
+                      'dc_ac_ratio')
+
+    # run reV 2.0 generation
+    gen = Gen.reV_run('pvwattsv8', rev2_points, sam_files, res_file,
+                      max_workers=1, sites_per_worker=1, out_fpath=None,
+                      output_request=output_request)
+
+    msg = ('PVWattsv8 cf_mean results {} did not match baseline: {}'
+           .format(gen.out['cf_mean'], baseline_cf_mean))
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=0.005, atol=0.0), msg
+
+    for req in ['cf_mean', 'cf_profile']:
+        ac_req = '{}_ac'.format(req)
+        assert req in gen.out
+        assert ac_req in gen.out
+        assert (gen.out[req] <= gen.out[ac_req]).all()
+
+    assert (gen.out["dc"] >= gen.out["ac"]).all()
+    assert np.allclose(gen.out['system_capacity'] / gen.out['dc_ac_ratio'],
+                       gen.out['system_capacity_ac'])
+
+    assert not np.isclose(gen.out['cf_profile'], 1).any()
+    assert np.isclose(gen.out['cf_profile_ac'], 1).any()
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

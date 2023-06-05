@@ -193,7 +193,7 @@ def test_parallel():
     assert_frame_equal(sc_full_parallel, sc_full_serial)
 
 
-def verify_trans_cap(sc_table, trans_tables):
+def verify_trans_cap(sc_table, trans_tables, cap_col='capacity'):
     """
     Verify that sc_points are connected to features in the correct capacity
     bins
@@ -210,8 +210,8 @@ def verify_trans_cap(sc_table, trans_tables):
         sc_table = sc_table.drop('max_cap', axis=1)
 
     test = sc_table.merge(trans_features, on='trans_gid', how='left')
-    mask = test['capacity'] > test['max_cap']
-    cols = ['sc_gid', 'trans_gid', 'capacity', 'max_cap']
+    mask = test[cap_col] > test['max_cap']
+    cols = ['sc_gid', 'trans_gid', cap_col, 'max_cap']
     msg = ("SC points connected to transmission features with "
            "max_cap < sc_cap:\n{}"
            .format(test.loc[mask, cols]))
@@ -481,3 +481,52 @@ def test_least_cost_simple_pass_through():
         for col in check_cols:
             assert col in sc_simple
             assert np.allclose(sc_simple[col], 0)
+
+
+def test_least_cost_simple_with_ac_capacity_column():
+    """
+    Test simple supply curve sorting with reinforcement costs in the
+    least-cost path transmission tables and AC capacity column as capacity
+    """
+    with tempfile.TemporaryDirectory() as td:
+
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 1e6
+            in_table["reinforcement_dist_km"] = 10
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        verify_trans_cap(sc_simple, trans_tables)
+
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(TESTDATADIR, 'trans_tables',
+                                    f'costs_RI_{cap}MW.csv')
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f'costs_RI_{cap}MW.csv')
+            in_table["reinforcement_cost_per_mw"] = 1e6
+            in_table["reinforcement_dist_km"] = 10
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        sc = SC_POINTS.copy()
+        sc["capacity_ac"] = sc["capacity"] / 1.02
+
+        sc_simple_ac_cap = SupplyCurve.simple(sc, trans_tables, fcr=0.1,
+                                              sc_capacity_col="capacity_ac")
+        verify_trans_cap(sc_simple_ac_cap, trans_tables, cap_col="capacity_ac")
+
+        assert np.allclose(sc_simple["trans_cap_cost_per_mw"] * 1.02,
+                           sc_simple_ac_cap["trans_cap_cost_per_mw"])
+        assert np.allclose(sc_simple["reinforcement_cost_per_mw"],
+                           sc_simple_ac_cap["reinforcement_cost_per_mw"])
+
+        # Final reinforcement costs are slightly cheaper for AC capacity
+        assert np.all(sc_simple["lcot"] > sc_simple_ac_cap["lcot"])
+        assert np.all(sc_simple["total_lcoe"] > sc_simple_ac_cap["total_lcoe"])
