@@ -333,9 +333,9 @@ def test_gen_egs_too_high_egs_plant_design_temp():
         output_request = ('design_temp',)
         with pytest.warns(UserWarning):
             gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                            max_workers=1, output_request=output_request,
-                            sites_per_worker=1, out_fpath=None,
-                            scale_outputs=True)
+                              max_workers=1, output_request=output_request,
+                              sites_per_worker=1, out_fpath=None,
+                              scale_outputs=True)
 
         truth_vals = {"design_temp": 150}
         for dset in output_request:
