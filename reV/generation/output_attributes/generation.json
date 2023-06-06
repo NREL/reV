@@ -159,6 +159,13 @@
     "type": "scalar",
     "units": "kWh/m2/day"
   },
+  "nameplate": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kW"
+  },
   "poa": {
     "chunks": [
       null,
