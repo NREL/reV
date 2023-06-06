@@ -16,6 +16,7 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from rex import Outputs
 
+DEFAULT_GEO_SAM_FILE = TESTDATADIR + '/SAM/geothermal_default.json'
 RTOL = 0.1
 ATOL = 0.01
 
@@ -24,7 +25,6 @@ ATOL = 0.01
 def test_gen_geothermal(depth):
     """Test generation for geothermal module"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -33,7 +33,7 @@ def test_gen_geothermal(depth):
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        with open(sam_files, "r") as fh:
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
             geo_config = json.load(fh)
 
         geo_config["resource_depth"] = depth
@@ -80,7 +80,6 @@ def test_gen_geothermal(depth):
 def test_gen_geothermal_temp_too_low():
     """Test generation for geothermal module when temp too low"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -89,7 +88,7 @@ def test_gen_geothermal_temp_too_low():
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        shutil.copy(sam_files, geo_sam_file)
+        shutil.copy(DEFAULT_GEO_SAM_FILE, geo_sam_file)
 
         with Outputs(geo_res_file, 'w') as f:
             f.meta = meta
@@ -130,7 +129,6 @@ def test_gen_geothermal_temp_too_low():
 def test_per_kw_cost_inputs():
     """Test per_kw cost inputs for geothermal module"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -139,7 +137,7 @@ def test_per_kw_cost_inputs():
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        with open(sam_files, "r") as fh:
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
             geo_config = json.load(fh)
 
         geo_config["resource_depth"] = 2000
@@ -185,7 +183,6 @@ def test_per_kw_cost_inputs():
 def test_drill_cost_inputs():
     """Test per_kw cost inputs for geothermal module"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -194,7 +191,7 @@ def test_drill_cost_inputs():
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        with open(sam_files, "r") as fh:
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
             geo_config = json.load(fh)
 
         geo_config["resource_depth"] = 2000
@@ -241,7 +238,6 @@ def test_drill_cost_inputs():
 def test_gen_with_nameplate_input():
     """Test generation for geothermal module with user nameplate input"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -250,7 +246,7 @@ def test_gen_with_nameplate_input():
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        with open(sam_files, "r") as fh:
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
             geo_config = json.load(fh)
 
         geo_config["resource_depth"] = 2000
@@ -298,7 +294,6 @@ def test_gen_with_nameplate_input():
 def test_gen_egs_too_high_egs_plant_design_temp():
     """Test generation for EGS too high plant design temp"""
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/geothermal_default.json'
 
     meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
                          "timezone": [-5]})
@@ -307,7 +302,7 @@ def test_gen_egs_too_high_egs_plant_design_temp():
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")
-        with open(sam_files, "r") as fh:
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
             geo_config = json.load(fh)
 
         geo_config["resource_depth"] = 2000
