@@ -79,7 +79,7 @@ def test_integrated_sc_full(i, trans_costs):
     sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full = sc.run(out_fpath, fcr=0.1, simple=False,
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac,
                          columns=SC_FULL_COLUMNS)
@@ -97,7 +97,7 @@ def test_integrated_sc_simple(i, trans_costs):
     sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True,
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
                            transmission_costs=tcosts)
 
         fpath_baseline = os.path.join(TESTDATADIR,
@@ -112,7 +112,7 @@ def test_integrated_sc_full_friction():
     sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full = sc.run(out_fpath, fcr=0.1, simple=False,
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac,
                          columns=SC_FULL_COLUMNS,
@@ -136,7 +136,7 @@ def test_integrated_sc_simple_friction():
     sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True,
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
                            transmission_costs=tcosts,
                            sort_on='total_lcoe_friction')
         sc_simple = pd.read_csv(sc_simple)
@@ -161,8 +161,9 @@ def test_sc_warning1():
         sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
         with tempfile.TemporaryDirectory() as td:
             out_fpath = os.path.join(td, "sc")
-            sc.run(out_fpath, fcr=0.1, simple=False, transmission_costs=tcosts,
-                   avail_cap_frac=avail_cap_frac, columns=SC_FULL_COLUMNS)
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   transmission_costs=tcosts, avail_cap_frac=avail_cap_frac,
+                   columns=SC_FULL_COLUMNS)
 
         s1 = str(list(range(10))).replace(']', '').replace('[', '')
         s2 = str(w[0].message)
@@ -182,8 +183,8 @@ def test_sc_warning2():
         sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
         with tempfile.TemporaryDirectory() as td:
             out_fpath = os.path.join(td, "sc")
-            sc.run(out_fpath, fcr=0.1, simple=False, transmission_costs=tcosts,
-                   avail_cap_frac=avail_cap_frac,
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   transmission_costs=tcosts, avail_cap_frac=avail_cap_frac,
                    columns=SC_FULL_COLUMNS)
         s1 = 'Unconnected sc_gid'
         s2 = str(w[0].message)
@@ -200,12 +201,12 @@ def test_parallel():
     sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full_parallel = sc.run(out_fpath, fcr=0.1, simple=False,
-                                  transmission_costs=tcosts,
+        sc_full_parallel = sc.run(out_fpath, fixed_charge_rate=0.1,
+                                  simple=False, transmission_costs=tcosts,
                                   avail_cap_frac=avail_cap_frac,
                                   columns=SC_FULL_COLUMNS,
                                   max_workers=4)
-        sc_full_serial = sc.run(out_fpath, fcr=0.1, simple=False,
+        sc_full_serial = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
                                 transmission_costs=tcosts,
                                 avail_cap_frac=avail_cap_frac,
                                 columns=SC_FULL_COLUMNS,
@@ -254,7 +255,8 @@ def test_least_cost_full():
     sc = SupplyCurve(SC_POINTS, trans_tables, sc_features=None)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full = sc.run(out_fpath, fcr=0.1, simple=False, avail_cap_frac=0.1,
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
                          columns=list(SC_FULL_COLUMNS) + ["max_cap"])
 
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
@@ -272,7 +274,7 @@ def test_least_cost_simple():
     sc = SupplyCurve(SC_POINTS, trans_tables)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
 
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
         baseline_verify(sc_simple, fpath_baseline)
@@ -290,7 +292,7 @@ def test_simple_trans_table():
     sc = SupplyCurve(SC_POINTS, trans_table)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
 
         fpath_baseline = os.path.join(TESTDATADIR,
                                       'sc_out/ri_sc_simple_lc.csv')
@@ -311,8 +313,9 @@ def test_substation_conns():
         sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
         with tempfile.TemporaryDirectory() as td:
             out_fpath = os.path.join(td, "sc")
-            sc.run(out_fpath, fcr=0.1, simple=False, columns=SC_FULL_COLUMNS,
-                   avail_cap_frac=avail_cap_frac, max_workers=4)
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   columns=SC_FULL_COLUMNS, avail_cap_frac=avail_cap_frac,
+                   max_workers=4)
 
 
 def test_multi_parallel_trans():
@@ -384,7 +387,8 @@ def test_least_cost_full_with_reinforcement():
 
         out_fpath = os.path.join(td, "sc")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_full = sc.run(out_fpath, fcr=0.1, simple=False, avail_cap_frac=0.1,
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
                          columns=list(SC_FULL_COLUMNS) + ["max_cap"])
         sc_full = pd.read_csv(sc_full)
 
@@ -405,7 +409,7 @@ def test_least_cost_full_with_reinforcement():
 
         out_fpath = os.path.join(td, "sc_r")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_full_r = sc.run(out_fpath, fcr=0.1, simple=False,
+        sc_full_r = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
                            avail_cap_frac=0.1,
                            columns=list(SC_FULL_COLUMNS) + ["max_cap"])
         sc_full_r = pd.read_csv(sc_full_r)
@@ -434,7 +438,7 @@ def test_least_cost_simple_with_reinforcement():
 
         out_fpath = os.path.join(td, "sc")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
         sc_simple = pd.read_csv(sc_simple)
 
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
@@ -454,7 +458,7 @@ def test_least_cost_simple_with_reinforcement():
 
         out_fpath = os.path.join(td, "sc_r")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_simple_r = sc.run(out_fpath, fcr=0.1, simple=True)
+        sc_simple_r = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
         sc_simple_r = pd.read_csv(sc_simple_r)
 
         verify_trans_cap(sc_simple_r, trans_tables)
@@ -485,7 +489,8 @@ def test_least_cost_full_pass_through():
 
         out_fpath = os.path.join(td, "sc")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_full = sc.run(out_fpath, fcr=0.1, simple=False, avail_cap_frac=0.1,
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
                          columns=list(SC_FULL_COLUMNS) + ["max_cap"])
         sc_full = pd.read_csv(sc_full)
 
@@ -516,7 +521,7 @@ def test_least_cost_simple_pass_through():
 
         out_fpath = os.path.join(td, "sc")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_simple = sc.run(out_fpath, fcr=0.1, simple=True)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
         sc_simple = pd.read_csv(sc_simple)
 
         for col in check_cols:
@@ -542,7 +547,8 @@ def test_least_cost_simple_with_ac_capacity_column():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.simple_sort(fcr=0.1)
         verify_trans_cap(sc_simple, trans_tables)
 
         trans_tables = []
@@ -559,8 +565,8 @@ def test_least_cost_simple_with_ac_capacity_column():
         sc = SC_POINTS.copy()
         sc["capacity_ac"] = sc["capacity"] / 1.02
 
-        sc_simple_ac_cap = SupplyCurve.simple(sc, trans_tables, fcr=0.1,
-                                              sc_capacity_col="capacity_ac")
+        sc = SupplyCurve(sc, trans_tables, sc_capacity_col="capacity_ac")
+        sc_simple_ac_cap = sc.simple_sort(fcr=0.1)
         verify_trans_cap(sc_simple_ac_cap, trans_tables, cap_col="capacity_ac")
 
         assert np.allclose(sc_simple["trans_cap_cost_per_mw"] * 1.02,
