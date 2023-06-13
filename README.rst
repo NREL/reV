@@ -57,7 +57,6 @@ reV command line tools
 ======================
 
 - `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
-- `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
 - `reV-bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
 - `reV-collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
 - `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
