@@ -15,14 +15,12 @@ from warnings import warn
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
-from reV.utilities.exceptions import (SupplyCurveInputError, SupplyCurveError,
-                                      PipelineError)
-from reV.utilities import log_versions, ModuleName
+from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
+from reV.utilities import log_versions
 
 from rex import Resource
 from rex.utilities import parse_table, SpawnProcessPool
 
-from gaps.pipeline import parse_previous_status
 
 logger = logging.getLogger(__name__)
 
@@ -1401,42 +1399,3 @@ class SupplyCurve:
         supply_curve.to_csv(out_fpath)
 
         return out_fpath
-
-
-def sc_preprocessor(config, out_dir):
-    """Preprocess supply curve config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    if config.get("sc_points") == 'PIPELINE':
-        sc_points = parse_previous_status(out_dir, ModuleName.SUPPLY_CURVE)
-        if not sc_points:
-            raise PipelineError('Could not parse "sc_points" from previous '
-                                'pipeline jobs.')
-        config["sc_points"] = sc_points[0]
-        logger.info('Supply curve using the following '
-                    'pipeline input for sc_points: {}'
-                    .format(config["sc_points"]))
-
-    if config.get("simple"):
-        no_effect = [key for key in ['avail_cap_frac', 'line_limited']
-                     if key in config]
-        if no_effect:
-            msg = ('The following key(s) have no effect when running '
-                   'supply curve with "simple=True": "{}". To silence this '
-                   'warning, please remove them from the config'
-                   .format(', '.join(no_effect)))
-            logger.warning(msg)
-            warn(msg)
-
-    return config

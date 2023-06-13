@@ -11,7 +11,7 @@ from reV.hybrids import Hybridization, HYBRID_METHODS
 from reV.hybrids.hybrids import HybridsData, MERGE_COLUMN, OUTPUT_PROFILE_NAMES
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 from reV.utilities import ModuleName
-from reV.cli import main, gaps_cli
+from reV.cli import main
 from reV import Outputs, TESTDATADIR
 
 from rex.resource import Resource
@@ -631,8 +631,8 @@ def test_hybrids_cli_from_config(runner, input_files, ratio, ratio_bounds,
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, [str(ModuleName.HYBRIDS),
-                                          '-c', config_path])
+        result = runner.invoke(main, [str(ModuleName.HYBRIDS),
+                                      '-c', config_path])
 
         if result.exit_code != 0:
             import traceback
@@ -688,8 +688,8 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, [str(ModuleName.HYBRIDS),
-                                          '-c', config_path])
+        result = runner.invoke(main, [str(ModuleName.HYBRIDS),
+                                      '-c', config_path])
 
         assert result.exit_code != 0
         assert "No files found" in str(result.exc_info)

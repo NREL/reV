@@ -14,7 +14,7 @@ import h5py
 import traceback
 
 from reV import TESTDATADIR
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.handlers.collection import Collector
 from reV.handlers.outputs import Outputs
@@ -1184,7 +1184,7 @@ def test_cli(runner, clear_loggers):
             json.dump(config, f)
 
         assert not os.path.exists(out_fpath)
-        result = runner.invoke(gaps_cli, ['bespoke', '-c', config_path])
+        result = runner.invoke(main, ['bespoke', '-c', config_path])
         if result.exit_code != 0:
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))

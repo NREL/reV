@@ -2,5 +2,5 @@
 """
 reV Econ analysis module.
 """
-from .econ import Econ, econ_preprocessor
+from .econ import Econ
 from .economies_of_scale import EconomiesOfScale

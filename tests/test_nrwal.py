@@ -17,7 +17,7 @@ import tempfile
 
 from rex.utilities.utilities import pd_date_range
 
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.nrwal.nrwal import RevNrwal
 from reV.utilities import ModuleName
@@ -244,8 +244,8 @@ def test_nrwal_cli(runner, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, [str(ModuleName.NRWAL),
-                                          '-c', config_path])
+        result = runner.invoke(main, [str(ModuleName.NRWAL),
+                                      '-c', config_path])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg
@@ -279,8 +279,8 @@ def test_nrwal_cli(runner, clear_loggers):
 
         clear_loggers()
 
-        result = runner.invoke(gaps_cli, [str(ModuleName.NRWAL),
-                                          '-c', config_path])
+        result = runner.invoke(main, [str(ModuleName.NRWAL),
+                                      '-c', config_path])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg

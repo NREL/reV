@@ -17,7 +17,6 @@ from numbers import Number
 from concurrent.futures import as_completed
 from warnings import warn
 
-from reV.config.project_points import ProjectPoints
 from reV.config.output_request import SAMOutputRequest
 from reV.generation.generation import Gen
 from reV.SAM.generation import WindPower, WindPowerPD
@@ -2077,22 +2076,3 @@ class BespokeWindPlants(BaseAggregation):
             self.save_outputs(out_fpath)
 
         return out_fpath
-
-
-def bespoke_preprocessor(config):
-    """Preprocess bespoke config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    if isinstance(config["sam_files"], str):
-        config["sam_files"] = {'default': config["sam_files"]}
-
-    return config

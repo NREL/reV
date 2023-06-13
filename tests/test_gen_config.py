@@ -15,7 +15,7 @@ import pytest
 import tempfile
 import traceback
 
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
@@ -80,7 +80,7 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
 
         config_obj = GenConfig(config_path)
 
-        result = runner.invoke(gaps_cli, ['generation', '-c', config_path])
+        result = runner.invoke(main, ['generation', '-c', config_path])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg

@@ -18,7 +18,7 @@ import json
 import shutil
 import traceback
 
-from reV.cli import main, gaps_cli
+from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
@@ -431,8 +431,8 @@ def test_cli_basic_agg(runner, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, ['supply-curve-aggregation',
-                                          '-c', config_path])
+        result = runner.invoke(main, [ModuleName.SUPPLY_CURVE_AGGREGATION,
+                                      '-c', config_path])
         clear_loggers()
 
         if result.exit_code != 0:

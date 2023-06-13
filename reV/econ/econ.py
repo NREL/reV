@@ -15,15 +15,12 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.utilities.exceptions import (ExecutionError, OffshoreWindInputWarning,
-                                      ConfigError, ConfigWarning)
+from reV.utilities.exceptions import (ExecutionError, OffshoreWindInputWarning)
 from reV.utilities import ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
-from rex.utilities.utilities import check_res_file, parse_year
-
-from gaps.pipeline import parse_previous_status
+from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 
@@ -455,73 +452,3 @@ class Econ(BaseGen):
             raise e
 
         return self._out_fpath
-
-
-def econ_preprocessor(config, out_dir, analysis_years=None):
-    """Preprocess econ config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-    analysis_years : int | list, optional
-        A single year or list of years to perform analysis for. These
-        years will be used to fill in any brackets ``{}`` in the
-        ``resource_file`` input. If ``None``, the ``resource_file``
-        input is assumed to be the full path to the single resource
-        file to be processed.  By default, ``None``.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    # TODO: Keep it DRY with gen preprocessor
-    if not isinstance(analysis_years, list):
-        analysis_years = [analysis_years]
-
-    if analysis_years[0] is None:
-        warn('Years may not have been specified, may default '
-             'to available years in inputs files.', ConfigWarning)
-
-    config["cf_file"] = _parse_cf_files(config["cf_file"],
-                                        analysis_years, out_dir)
-
-    return config
-
-
-def _parse_cf_files(cf_file, analysis_years, out_dir):
-    """Get the capacity factor files (reV generation output data). """
-
-    # get base filename, may have {} for year format
-    if '{}' in cf_file:
-        # need to make list of res files for each year
-        cf_files = [cf_file.format(year) for year in analysis_years]
-    elif 'PIPELINE' in cf_file:
-        cf_files = parse_previous_status(out_dir, command=str(ModuleName.ECON))
-    else:
-        # only one resource file request, still put in list
-        cf_files = [cf_file]
-
-    for f in cf_files:
-        # ignore files that are to be specified using pipeline utils
-        if 'PIPELINE' not in os.path.basename(f):
-            if not os.path.exists(f):
-                raise IOError('File does not exist: {}'.format(f))
-
-    # check year/cf_file matching if not a pipeline input
-    if 'PIPELINE' not in cf_file:
-        if len(cf_files) != len(analysis_years):
-            raise ConfigError('The number of cf files does not match '
-                              'the number of analysis years!'
-                              '\n\tCF files: \n\t\t{}'
-                              '\n\tYears: \n\t\t{}'
-                              .format(cf_files, analysis_years))
-        for year in analysis_years:
-            if str(year) not in str(cf_files):
-                raise ConfigError('Could not find year {} in cf '
-                                  'files: {}'.format(year, cf_files))
-
-    return [fn for fn in cf_files if parse_year(fn) in analysis_years]

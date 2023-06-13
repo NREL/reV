@@ -4,7 +4,6 @@ PyTest file reV utilities module
 
 @author: ppinchuk
 """
-
 import os
 import pytest
 

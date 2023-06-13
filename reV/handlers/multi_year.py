@@ -10,18 +10,15 @@ import os
 import pandas as pd
 from warnings import warn
 
+from rex import Resource
+from rex.utilities.utilities import (get_class_properties, parse_year,
+                                     get_lat_lon_cols)
+from gaps.pipeline import parse_previous_status
+
 from reV.handlers.outputs import Outputs
-from reV.pipeline.pipeline import Pipeline
 from reV.config.output_request import SAMOutputRequest
 from reV.utilities.exceptions import HandlerRuntimeError, ConfigError
 from reV.utilities import log_versions, ModuleName
-
-from rex import Resource
-from rex.utilities.utilities import get_class_properties
-
-from rex.utilities.utilities import parse_year, get_lat_lon_cols
-
-from gaps.pipeline import parse_previous_status
 
 logger = logging.getLogger(__name__)
 

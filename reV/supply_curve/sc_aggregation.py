@@ -21,10 +21,10 @@ from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities.exceptions import (ConfigError, EmptySupplyCurvePointError,
+from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
-                                      InputWarning, PipelineError)
-from reV.utilities import log_versions, ModuleName
+                                      InputWarning)
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -1161,82 +1161,3 @@ class SupplyCurveAggregation(BaseAggregation):
         summary.to_csv(out_fpath)
 
         return out_fpath
-
-
-def agg_preprocessor(config, out_dir):
-    """Preprocess aggregation config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    config = _format_res_fpath(config)
-    _validate_tm(config)
-
-    key_to_modules = {"gen_fpath": [ModuleName.MULTI_YEAR,
-                                    ModuleName.COLLECT,
-                                    ModuleName.GENERATION],
-                      "econ_fpath": [ModuleName.MULTI_YEAR,
-                                     ModuleName.COLLECT,
-                                     ModuleName.ECON]}
-    for key, modules in key_to_modules.items():
-        config = _parse_from_pipeline(config, out_dir, key, modules)
-
-    return config
-
-
-def _format_res_fpath(config):
-    """Format res_fpath with year, if need be. """
-    res_fpath = config.setdefault("res_fpath", None)
-    if isinstance(res_fpath, str) and '{}' in res_fpath:
-        for year in range(1998, 2018):
-            if os.path.exists(res_fpath.format(year)):
-                break
-
-        config["res_fpath"] = res_fpath.format(year)
-
-    return config
-
-
-def _validate_tm(config):
-    """Check that tm_dset exists or that res_fpath is given (to generate tm)"""
-    paths = config["excl_fpath"]
-    if isinstance(paths, str):
-        paths = [paths]
-
-    with MultiFileResource(paths, check_files=False) as res:
-        dsets = res.datasets
-
-    if config["tm_dset"] not in dsets and config["res_fpath"] is None:
-        raise ConfigError('Techmap dataset "{}" not found in exclusions '
-                          'file, resource file input "res_fpath" is '
-                          'required to create the techmap file.'
-                          .format(config["tm_dset"]))
-
-
-def _parse_from_pipeline(config, out_dir, key, target_modules):
-    """Parse the out file from target modules and set as the values for key """
-    val = config.get(key, None)
-
-    if val == 'PIPELINE':
-        for target_module in target_modules:
-            val = Status.parse_command_status(out_dir, target_module)
-            if len(val) == 1:
-                break
-        else:
-            raise PipelineError('Could not parse {} from previous '
-                                'pipeline jobs.'.format(key))
-
-        config[key] = val[0]
-        logger.info('Supply curve aggregation using the following '
-                    'pipeline input for {}: {}'.format(key, val[0]))
-
-    return config

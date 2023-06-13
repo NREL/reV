@@ -10,7 +10,6 @@ Everything in this module operates on the spatiotemporal resolution of the reV
 generation output file. This is usually the wind or solar resource resolution
 but could be the supply curve resolution after representative profiles is run.
 """
-import glob
 import numpy as np
 import pandas as pd
 import logging
@@ -703,44 +702,3 @@ class RevNrwal:
         logger.info('NRWAL module complete!')
 
         return self._gen_fpath
-
-
-def nrwal_preprocessor(config, out_dir):
-    """Preprocess NRWAL config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-    config = _parse_gen_fpath(config, out_dir)
-    return config
-
-
-def _parse_gen_fpath(config, out_dir):
-    """Parse gen_fpath user input and convert to list"""
-
-    fpaths = config['gen_fpath']
-    if fpaths == 'PIPELINE':
-        fpaths = parse_previous_status(out_dir,ModuleName.NRWAL)
-
-    if isinstance(fpaths, str) and '*' in fpaths:
-        fpaths = glob(fpaths)
-        if not any(fpaths):
-            msg = ('Could not find any file paths for '
-                    'gen_fpath glob pattern.')
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-    if isinstance(fpaths, str):
-        fpaths = [fpaths]
-
-    config['gen_fpath'] = fpaths
-    return config

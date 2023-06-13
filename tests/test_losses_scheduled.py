@@ -25,7 +25,7 @@ from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 from reV.losses.utils import hourly_indices_for_months
 from reV.losses.scheduled import (Outage, OutageScheduler,
                                   SingleOutageScheduler, ScheduledLossesMixin)
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.handlers.outputs import Outputs
 
 from rex.utilities.utilities import safe_json_load
@@ -836,7 +836,7 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, ['generation', '-c', config_path])
+        result = runner.invoke(main, ['generation', '-c', config_path])
         clear_loggers()
 
         msg = ('Failed with error {}'

@@ -18,7 +18,7 @@ import pytest
 import tempfile
 import traceback
 
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -205,7 +205,7 @@ def test_econ_from_config(runner, clear_loggers):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, ['econ', '-c', config_path])
+        result = runner.invoke(main, ['econ', '-c', config_path])
         if result.exit_code != 0:
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))

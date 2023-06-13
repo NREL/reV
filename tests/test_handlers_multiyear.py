@@ -11,8 +11,7 @@ import tempfile
 import json
 import traceback
 
-from reV.handlers.cli_multi_year import main
-from reV.cli import gaps_cli
+from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
 from reV.config.multi_year import MultiYearConfig
@@ -175,8 +174,8 @@ def test_cli(runner, clear_loggers):
         with open(fp_config, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(gaps_cli, [str(ModuleName.MULTI_YEAR),
-                                          '-c', fp_config])
+        result = runner.invoke(main, [str(ModuleName.MULTI_YEAR),
+                                      '-c', fp_config])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg

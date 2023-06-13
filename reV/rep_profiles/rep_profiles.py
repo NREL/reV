@@ -18,16 +18,13 @@ from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (FileInputError, DataShapeError,
-                                      PipelineError, ConfigWarning)
-from reV.utilities import log_versions, ModuleName
+from reV.utilities.exceptions import FileInputError, DataShapeError
+from reV.utilities import log_versions
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
 from rex.utilities.utilities import parse_year, to_records_array
-
-from gaps.pipeline import Status
 
 logger = logging.getLogger(__name__)
 
@@ -1156,120 +1153,3 @@ class RepProfiles(RepProfilesBase):
         logger.info('Representative profiles complete!')
 
         return fout
-
-
-def rep_profiles_preprocessor(config, out_dir, job_name, analysis_years=None):
-    """Preprocess rep-profiles config user input.
-
-    Parameters
-    ----------
-    config : dict
-        User configuration file input as (nested) dict.
-    out_dir : str
-        Path to output file directory.
-    job_name : str
-        Name of rep-profiles job. This will be included in the output
-        file name.
-    analysis_years : int | list, optional
-        A single year or list of years to perform analysis for. These
-        years will be used to fill in any brackets ``{}`` in the
-        ``cf_dset`` or ``gen_fpath`` inputs. If ``None``, the
-        ``cf_dset`` and ``gen_fpath`` inputs are assumed to be the full
-        dataset name and the full path to the single resource
-        file to be processed, respectively. Note that only one of
-        ``cf_dset`` or ``gen_fpath`` are allowed to contain brackets
-        (``{}``) to be filled in by the analysis years.
-        By default, ``None``.
-
-    Returns
-    -------
-    dict
-        Updated config file.
-    """
-
-    if not isinstance(analysis_years, list):
-        analysis_years = [analysis_years]
-
-    if analysis_years[0] is None:
-        warn('Years may not have been specified, may default '
-             'to available years in inputs files.', ConfigWarning)
-
-    reg_cols = config.get('reg_cols', None)
-    if isinstance(reg_cols, str):
-        config["reg_cols"] = [reg_cols]
-
-    key_to_modules = {"gen_fpath": [ModuleName.MULTI_YEAR,
-                                    ModuleName.COLLECT,
-                                    ModuleName.GENERATION,
-                                    ModuleName.SUPPLY_CURVE_AGGREGATION],
-                      "rev_summary": [ModuleName.SUPPLY_CURVE_AGGREGATION,
-                                      ModuleName.SUPPLY_CURVE]}
-    for key, modules in key_to_modules.items():
-        config = _parse_from_pipeline(config, out_dir, key, modules)
-
-    config = _set_split_keys(config, out_dir, job_name, analysis_years)
-
-    if config.get("aggregate_profiles"):
-        check_keys = ['rep_method', 'err_method', 'n_profiles',
-                      'save_rev_summary']
-        no_effect = [key for key in check_keys if key in config]
-        if no_effect:
-            msg = ('The following key(s) have no effect when running '
-                   'supply curve with "aggregate_profiles=True": "{}". '
-                   'To silence this warning, please remove them from the '
-                   'config'.format(', '.join(no_effect)))
-            logger.warning(msg)
-            warn(msg)
-
-    return config
-
-
-def _set_split_keys(config, out_dir, job_name, analysis_years):
-    """Set the gen_fpath, fout, and cf_dset keys"""
-
-    cf_dset = config.get("cf_dset")
-    gen_fpath = config.get("gen_fpath")
-    if analysis_years[0] is not None and '{}' in cf_dset:
-        config["gen_fpath"] = [gen_fpath for _ in analysis_years]
-        config["fout"] = [os.path.join(out_dir, '{}_{}.h5'.format(job_name, y))
-                          for y in analysis_years]
-        config["cf_dset"] = [cf_dset.format(y) for y in analysis_years]
-    elif analysis_years[0] is not None and '{}' in gen_fpath:
-        config["gen_fpath"] = [gen_fpath.format(y) for y in analysis_years]
-        config["fout"] = [os.path.join(out_dir, '{}_{}.h5'.format(job_name, y))
-                          for y in analysis_years]
-        config["cf_dset"] = [cf_dset for _ in analysis_years]
-
-    else:
-        config["gen_fpath"] = [gen_fpath]
-        config["fout"] = [os.path.join(out_dir, '{}.h5'.format(job_name))]
-        config["cf_dset"] = [cf_dset]
-
-    return config
-
-
-def _parse_from_pipeline(config, out_dir, config_key, target_modules):
-    """Parse the out file from target modules and set as the values for key """
-    val = config.get(config_key, None)
-
-    if val == 'PIPELINE':
-        for target_module in target_modules:
-            gen_config_key = "gen" in config_key
-            module_sca = target_module == ModuleName.SUPPLY_CURVE_AGGREGATION
-            if gen_config_key and module_sca:
-                target_key = "gen_fpath"
-            else:
-                target_key = "out_file"
-            val = Status.parse_command_status(out_dir, target_module,
-                                              target_key)
-            if len(val) == 1:
-                break
-        else:
-            raise PipelineError('Could not parse {} from previous '
-                                'pipeline jobs.'.format(config_key))
-
-        config[config_key] = val[0]
-        logger.info('Rep profiles using the following '
-                    'pipeline input for {}: {}'.format(config_key, val[0]))
-
-    return config
