@@ -16,7 +16,7 @@ import tempfile
 import traceback
 
 from reV.cli import main
-from reV.config.sam_analysis_configs import GenConfig
+from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -78,8 +78,6 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        config_obj = GenConfig(config_path)
-
         result = runner.invoke(main, ['generation', '-c', config_path])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
@@ -87,11 +85,11 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
 
         # get reV 2.0 generation profiles from disk
         rev2_profiles = None
-        flist = os.listdir(config_obj.dirout)
+        flist = os.listdir(td)
         print(flist)
         for fname in flist:
             if fname.endswith('.h5'):
-                path = os.path.join(config_obj.dirout, fname)
+                path = os.path.join(td, fname)
                 with Outputs(path, 'r') as cf:
 
                     msg = 'cf_profile not written to disk'
@@ -113,10 +111,9 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
             raise RuntimeError(msg)
 
         # get reV 1.0 generation profiles
-        rev1_profiles = \
-            get_r1_profiles(year=config_obj.analysis_years[0], tech=tech)
-        rev1_profiles = \
-            rev1_profiles[:, config_obj.parse_points_control().sites]
+        points = ProjectPoints(project_points, sam_files, tech=tech)
+        rev1_profiles = get_r1_profiles(year=2012, tech=tech)
+        rev1_profiles = rev1_profiles[:, points.sites]
 
         result = np.allclose(rev1_profiles, rev2_profiles,
                              rtol=RTOL, atol=ATOL)

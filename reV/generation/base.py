@@ -240,7 +240,7 @@ class BaseGen(ABC):
 
         Returns
         -------
-        sam_configs : reV.config.sam.SAMGenConfig
+        sam_configs : dict
             SAM config from the project points instance.
         """
         return self.project_points.sam_inputs
