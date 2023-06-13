@@ -43,7 +43,7 @@ Setting up an AWS Parallel Cluster
 #. Try running the reV ``aws_pcluster`` example:
 
     #. ``cd /shared/reV/examples/aws_pcluster``
-    #. ``reV -c config_pipeline.json pipeline``
+    #. ``reV pipeline -c config_pipeline.json``
     #. Check the slurm queue with ``squeue`` and the compute cluster status in the ec2 console or with ``sinfo``
     #. Jobs will be in state ``CF`` (configuring) while the nodes spin up (this can take several minutes) and then ``R`` (running)
 

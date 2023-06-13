@@ -12,7 +12,6 @@ from reV.rep_profiles.rep_profiles import RepProfiles
 from reV.utilities import ModuleName
 from reV.utilities.cli_functions import (format_analysis_years,
                                          parse_from_pipeline)
-from reV.utilities.exceptions import ConfigWarning
 
 
 logger = logging.getLogger(__name__)

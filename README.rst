@@ -64,7 +64,6 @@ reV command line tools
 - `reV-hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
 - `reV-multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
 - `reV-nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
-- `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
 - `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
 - `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
 - `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_

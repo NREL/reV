@@ -17,7 +17,7 @@ The user executes the following command:
 
 .. code-block:: bash
 
-    reV -c "../config_batch.json" batch
+    reV batch -c "../config_batch.json"
 
 This creates and executes three batch job pipelines. You should be able to see
 in ``config_batch.json`` how the actual input generation files are
