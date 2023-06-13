@@ -16,6 +16,7 @@ from reV.rep_profiles.cli_rep_profiles import rep_profiles_command
 from reV.hybrids.cli_hybrids import hybrids_command
 from reV.nrwal.cli_nrwal import nrwal_command
 from reV.qa_qc.cli_qa_qc import qa_qc_command, qa_qc_extra
+from reV.config.cli_project_points import project_points
 from reV import __version__
 
 
@@ -27,6 +28,7 @@ commands = [bespoke_command, gen_command, econ_command, collect_command,
             hybrids_command, nrwal_command, qa_qc_command]
 main = make_cli(commands, info={"version": __version__})
 main.add_command(qa_qc_extra)
+main.add_command(project_points)
 
 
 if __name__ == '__main__':

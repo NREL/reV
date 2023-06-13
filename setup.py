@@ -71,6 +71,8 @@ setup(
                              "cli_rep_profiles:main"),
                             "reV-QA-QC=reV.qa_qc.cli_qa_qc:main",
                             "reV-hybrids=reV.hybrids.cli_hybrids:main",
+                            ("reV-project-points=reV.config."
+                             "cli_project_points:project_points"),
                             ],
     },
     package_data={'reV': ['SAM/defaults/*.json', 'SAM/defaults/*.csv',
