@@ -13,10 +13,10 @@ import pytest
 import h5py
 import traceback
 
+from gaps.collection import Collector
 from reV import TESTDATADIR
 from reV.cli import main
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
-from reV.handlers.collection import Collector
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.supply_curve import SupplyCurve
@@ -529,9 +529,8 @@ def test_collect_bespoke():
         assert len(source_fps) > 1
 
         h5_file = os.path.join(td, 'collection.h5')
-
-        Collector.collect(h5_file, source_pattern, None, 'cf_profile-2012',
-                          dset_out=None)
+        collector = Collector(h5_file, source_pattern, None)
+        collector.collect('cf_profile-2012')
 
         with Resource(h5_file) as fout:
             meta = fout.meta
