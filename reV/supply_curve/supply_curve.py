@@ -65,7 +65,8 @@ class SupplyCurve:
         scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
     """
 
-    def __init__(self, sc_points, trans_table, sc_features=None):
+    def __init__(self, sc_points, trans_table, sc_features=None,
+                 sc_capacity_col='capacity'):
         """
         Parameters
         ----------
@@ -81,14 +82,26 @@ class SupplyCurve:
             Path to .csv or .json or DataFrame containing additional supply
             curve features, e.g. transmission multipliers, regions,
             by default None
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
         logger.info('Transmission table input: {}'.format(trans_table))
+        logger.info('Supply curve capacity column: {}'.format(sc_capacity_col))
 
+        self._sc_capacity_col = sc_capacity_col
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
-        self._trans_table = self._map_tables(self._sc_points, trans_table)
+        self._trans_table = self._map_tables(self._sc_points, trans_table,
+                                             sc_capacity_col=sc_capacity_col)
         self._sc_gids, self._mask = self._parse_sc_gids(self._trans_table)
 
     def __repr__(self):
@@ -236,7 +249,7 @@ class SupplyCurve:
         return trans_table
 
     @staticmethod
-    def _map_trans_capacity(trans_sc_table):
+    def _map_trans_capacity(trans_sc_table, sc_capacity_col='capacity'):
         """
         Map SC gids to transmission features based on capacity. For any SC
         gids with capacity > the maximum transmission feature capacity, map
@@ -246,6 +259,15 @@ class SupplyCurve:
         ----------
         trans_sc_table : pandas.DataFrame
             Table mapping supply curve points to transmission features.
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
 
         Returns
         -------
@@ -254,7 +276,7 @@ class SupplyCurve:
             based on maximum capacity
         """
 
-        nx = trans_sc_table['capacity'] / trans_sc_table['max_cap']
+        nx = trans_sc_table[sc_capacity_col] / trans_sc_table['max_cap']
         nx = np.ceil(nx).astype(int)
         trans_sc_table['n_parallel_trans'] = nx
 
@@ -409,8 +431,9 @@ class SupplyCurve:
 
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
-                               sc_cols=('capacity', 'sc_gid', 'mean_cf',
-                                        'mean_lcoe')):
+                               sc_cols=('sc_gid', 'capacity', 'mean_cf',
+                                        'mean_lcoe'),
+                               sc_capacity_col='capacity'):
         """
         Merge the supply curve table with the transmission features table.
 
@@ -424,7 +447,17 @@ class SupplyCurve:
              line voltage (capacity) or pre-loaded dataframe).
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
-            by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
+            If the `sc_capacity_col` is not included, it will get added.
+            by default ('sc_gid', 'capacity', 'mean_cf', 'mean_lcoe')
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
 
         Returns
         -------
@@ -432,11 +465,15 @@ class SupplyCurve:
             Updated table mapping supply curve points to transmission features.
             This is performed by an inner merging with trans_table
         """
+        if sc_capacity_col not in sc_cols:
+            sc_cols = tuple([sc_capacity_col] + list(sc_cols))
+
         if isinstance(trans_table, (list, tuple)):
             trans_sc_table = []
             for table in trans_table:
                 trans_sc_table.append(cls._merge_sc_trans_tables(
-                    sc_points, table, sc_cols=sc_cols))
+                    sc_points, table, sc_cols=sc_cols,
+                    sc_capacity_col=sc_capacity_col))
 
             trans_sc_table = pd.concat(trans_sc_table)
         else:
@@ -460,11 +497,7 @@ class SupplyCurve:
                 sc_cols.append('transmission_multiplier')
 
             sc_cols += merge_cols
-            if 'capacity' not in sc_cols:
-                sc_cols += ['capacity']
-
             sc_points = sc_points[sc_cols].copy()
-
             trans_sc_table = trans_table.merge(sc_points, on=merge_cols,
                                                how='inner')
 
@@ -472,9 +505,10 @@ class SupplyCurve:
 
     @classmethod
     def _map_tables(cls, sc_points, trans_table,
-                    sc_cols=('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')):
+                    sc_cols=('sc_gid', 'capacity', 'mean_cf', 'mean_lcoe'),
+                    sc_capacity_col='capacity'):
         """
-        Map supply curve points to tranmission features
+        Map supply curve points to transmission features
 
         Parameters
         ----------
@@ -483,10 +517,20 @@ class SupplyCurve:
         trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
             (either str filepath to table file, list of filepaths to tables by
-             line voltage (capacity) or pre-loaded dataframe).
+             line voltage (capacity) or pre-loaded DataFrame).
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
-            by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
+            If the `sc_capacity_col` is not included, it will get added.
+            by default ('sc_gid', 'capacity', 'mean_cf', 'mean_lcoe')
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
 
         Returns
         -------
@@ -494,11 +538,14 @@ class SupplyCurve:
             Updated table mapping supply curve points to transmission features.
             This is performed by an inner merging with trans_table
         """
+        scc = sc_capacity_col
         trans_sc_table = cls._merge_sc_trans_tables(sc_points, trans_table,
-                                                    sc_cols=sc_cols)
+                                                    sc_cols=sc_cols,
+                                                    sc_capacity_col=scc)
 
         if 'max_cap' in trans_sc_table:
-            trans_sc_table = cls._map_trans_capacity(trans_sc_table)
+            trans_sc_table = cls._map_trans_capacity(trans_sc_table,
+                                                     sc_capacity_col=scc)
 
         trans_sc_table = \
             trans_sc_table.sort_values(
@@ -570,7 +617,8 @@ class SupplyCurve:
         return sc_gids, mask
 
     @staticmethod
-    def _get_capacity(sc_gid, sc_table, connectable=True):
+    def _get_capacity(sc_gid, sc_table, connectable=True,
+                      sc_capacity_col='capacity'):
         """
         Get capacity of supply curve point
 
@@ -584,6 +632,15 @@ class SupplyCurve:
         connectable : bool, optional
             Flag to ensure SC point can connect to transmission features,
             by default True
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
 
         Returns
         -------
@@ -591,7 +648,7 @@ class SupplyCurve:
             Capacity of supply curve point
         """
         if connectable:
-            capacity = sc_table['capacity'].unique()
+            capacity = sc_table[sc_capacity_col].unique()
             if len(capacity) == 1:
                 capacity = capacity[0]
             else:
@@ -608,7 +665,8 @@ class SupplyCurve:
     @classmethod
     def _compute_trans_cap_cost(cls, trans_table, trans_costs=None,
                                 avail_cap_frac=1, max_workers=None,
-                                connectable=True, line_limited=False):
+                                connectable=True, line_limited=False,
+                                sc_capacity_col='capacity'):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -617,7 +675,7 @@ class SupplyCurve:
         ----------
         trans_table : pd.DataFrame
             Table mapping supply curve points to transmission features
-            MUST contain supply curve point capacity
+            MUST contain `sc_capacity_col` column.
         fcr : float
             Fixed charge rate needed to compute LCOT
         trans_costs : str | dict
@@ -636,6 +694,15 @@ class SupplyCurve:
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
+        sc_capacity_col : str, optional
+            Name of capacity column in `trans_sc_table`. The values in
+            this column determine the size of transmission lines built.
+            The transmission capital costs per MW and the reinforcement
+            costs per MW will be returned in terms of these capacity
+            values. Note that if this column != "capacity", then
+            "capacity" must also be included in `trans_sc_table` since
+            those values match the "mean_cf" data (which is used to
+            calculate LCOT and Total LCOE). By default, ``"capacity"``.
 
         Returns
         -------
@@ -646,10 +713,11 @@ class SupplyCurve:
             Capital cost of tramsmission for all supply curve - transmission
             feature connections
         """
-        if 'capacity' not in trans_table:
+        scc = sc_capacity_col
+        if scc not in trans_table:
             raise SupplyCurveInputError('Supply curve table must have '
-                                        'supply curve point capacity '
-                                        'to compute lcot')
+                                        'supply curve point capacity column'
+                                        '({}) to compute lcot'.format(scc))
 
         if trans_costs is not None:
             trans_costs = TF._parse_dictionary(trans_costs)
@@ -668,7 +736,8 @@ class SupplyCurve:
                 futures = []
                 for sc_gid, sc_table in groups:
                     capacity = cls._get_capacity(sc_gid, sc_table,
-                                                 connectable=connectable)
+                                                 connectable=connectable,
+                                                 sc_capacity_col=scc)
                     futures.append(exe.submit(TC.feature_costs, sc_table,
                                               capacity=capacity,
                                               avail_cap_frac=avail_cap_frac,
@@ -680,7 +749,8 @@ class SupplyCurve:
             cost = []
             for sc_gid, sc_table in groups:
                 capacity = cls._get_capacity(sc_gid, sc_table,
-                                             connectable=connectable)
+                                             connectable=connectable,
+                                             sc_capacity_col=scc)
                 cost.append(TC.feature_costs(sc_table,
                                              capacity=capacity,
                                              avail_cap_frac=avail_cap_frac,
@@ -725,17 +795,22 @@ class SupplyCurve:
             is in the sc points input, by default True
         """
         if 'trans_cap_cost' not in self._trans_table:
+            scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(self._trans_table,
                                                 trans_costs=transmission_costs,
                                                 avail_cap_frac=avail_cap_frac,
                                                 line_limited=line_limited,
                                                 connectable=connectable,
-                                                max_workers=max_workers)
+                                                max_workers=max_workers,
+                                                sc_capacity_col=scc)
             self._trans_table['trans_cap_cost_per_mw'] = cost  # $/MW
         else:
             cost = self._trans_table['trans_cap_cost'].values.copy()  # $
-            cost /= self._trans_table['capacity']  # $/MW
+            cost /= self._trans_table[self._sc_capacity_col]  # $/MW
             self._trans_table['trans_cap_cost_per_mw'] = cost
+
+        cost *= self._trans_table[self._sc_capacity_col]
+        cost /= self._trans_table['capacity']  # align with "mean_cf"
 
         if 'reinforcement_cost_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_per_mw' column found in "
@@ -746,7 +821,11 @@ class SupplyCurve:
             lcoe = lcot + self._trans_table['mean_lcoe']
             self._trans_table['lcot_no_reinforcement'] = lcot
             self._trans_table['lcoe_no_reinforcement'] = lcoe
-            cost += self._trans_table['reinforcement_cost_per_mw']  # $/MW
+            r_cost = (self._trans_table['reinforcement_cost_per_mw']
+                      .values.copy())
+            r_cost *= self._trans_table[self._sc_capacity_col]
+            r_cost /= self._trans_table['capacity']  # align with "mean_cf"
+            cost += r_cost  # $/MW
 
         cf_mean_arr = self._trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
@@ -916,7 +995,7 @@ class SupplyCurve:
         arrays = {final_key: trans_table[source_key].values
                   for final_key, source_key in all_cols.items()}
 
-        sc_capacities = trans_table['capacity'].values
+        sc_capacities = trans_table[self._sc_capacity_col].values
 
         connected = 0
         progress = 0
@@ -987,10 +1066,10 @@ class SupplyCurve:
         """Add extra output columns, if needed. """
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
-        extra_cols = {'ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+        extra_cols = ['ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
                       'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
                       'reinforcement_cost_per_mw', 'reinforcement_dist_km',
-                      'n_parallel_trans', 'total_lcoe_friction'}
+                      'n_parallel_trans', 'total_lcoe_friction']
         if not consider_friction:
             extra_cols -= {'total_lcoe_friction'}
 
@@ -1226,6 +1305,9 @@ class SupplyCurve:
             offshore_compete=False):
         """Run Supply Curve Transmission calculations.
 
+        Run full supply curve taking into account available capacity of
+        tranmission features when making connections.
+
         Parameters
         ----------
         out_fpath : str
@@ -1264,12 +1346,11 @@ class SupplyCurve:
             ``mean_lcoe_friction`` is in the sc points input.
             By default, ``True``.
         sort_on : str, optional
-            Column label to sort the Supply Curve table on. This affects
-            the build priority - connections with the lowest value in
-            this column will be built first. If ``None``, the algorithm
-            will use total LCOE without any reinforcement costs as the
-            sort value. By default, ``None``.
-        columns : tuple, optional
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first, by default `None`, which will use
+            total LCOE without any reinforcement costs as the sort value.
+        columns : list | tuple
             Columns to preserve in output supply curve dataframe.
             By default, ``('trans_gid', 'trans_type',
             'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')``.

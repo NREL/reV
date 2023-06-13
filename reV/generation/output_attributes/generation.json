@@ -33,7 +33,24 @@
     "type": "scalar",
     "units": "unitless"
   },
+  "cf_mean_ac": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "unitless"
+  },
   "cf_profile": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "array",
+    "units": "unitless"
+  },
+  "cf_profile_ac": {
     "chunks": [
       null,
       100
@@ -159,6 +176,13 @@
     "type": "scalar",
     "units": "kWh/m2/day"
   },
+  "nameplate": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kW"
+  },
   "poa": {
     "chunks": [
       null,
@@ -216,6 +240,13 @@
     "scale_factor": 100,
     "type": "array",
     "units": "unitless"
+  },
+  "system_capacity_ac": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kW"
   },
   "temperature": {
     "chunks": [

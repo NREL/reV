@@ -24,6 +24,8 @@ from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV.utilities import ModuleName
 from reV import TESTDATADIR
+from rex import Outputs
+from rex.utilities.loggers import LOGGERS
 
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -110,6 +112,32 @@ def test_agg_summary():
         s_baseline = s_baseline.fillna('None')
 
         assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
+
+    assert "capacity_ac" not in s
+
+
+@pytest.mark.parametrize("pd", [None, 45])
+def test_agg_summary_solar_ac(pd):
+    """Test the aggregation summary method for solar ac outputs."""
+
+    with tempfile.TemporaryDirectory() as td:
+        gen = os.path.join(td, 'gen.h5')
+        shutil.copy(GEN, gen)
+        Outputs.add_dataset(gen, 'dc_ac_ratio', np.array([1.3] * 188),
+                            np.float32)
+
+        with Outputs(gen, "r") as out:
+            assert "dc_ac_ratio" in out.datasets
+
+        s = SupplyCurveAggregation.summary(EXCL, gen, TM_DSET,
+                                           excl_dict=EXCL_DICT,
+                                           res_class_dset=RES_CLASS_DSET,
+                                           res_class_bins=RES_CLASS_BINS,
+                                           data_layers=DATA_LAYERS,
+                                           max_workers=1,
+                                           power_density=pd)
+    assert "capacity_ac" in s
+    assert np.allclose(s["capacity"] / 1.3, s["capacity_ac"])
 
 
 def test_multi_file_excl():

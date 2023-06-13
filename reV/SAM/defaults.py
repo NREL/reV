@@ -48,8 +48,11 @@ class AbstractDefaultFromConfigFile:
             config = json.load(f)
 
         for k, v in config.items():
-            if 'adjust:' not in k and 'file' not in k:
-                obj.value(k, v)
+            if 'adjust:' in k or'file' in k :
+                continue
+            if 'geotherm.cost' in k:
+                k = k.replace(".", "_")
+            obj.value(k, v)
 
         obj.AdjustmentFactors.constant = 0.0
         return obj

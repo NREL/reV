@@ -853,6 +853,19 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                                  sam_sys_inputs['azimuth']))
         return sam_sys_inputs
 
+    def system_capacity_ac(self):
+        """Get AC system capacity from SAM inputs.
+
+        NOTE: AC nameplate = DC nameplate / ILR
+
+        Returns
+        -------
+        cf_profile : float
+            AC nameplate = DC nameplate / ILR
+        """
+        return (self.sam_sys_inputs['system_capacity']
+                / self.sam_sys_inputs['dc_ac_ratio'])
+
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
 
@@ -865,6 +878,19 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             PV CF is calculated as AC power / DC nameplate.
         """
         return self['capacity_factor'] / 100
+
+    def cf_mean_ac(self):
+        """Get mean AC capacity factor (fractional) from SAM.
+
+        NOTE: This value only available in PVWattsV8 and up.
+
+        Returns
+        -------
+        output : float
+            Mean AC capacity factor (fractional).
+            PV AC CF is calculated as AC power / AC nameplate.
+        """
+        return self['capacity_factor_ac'] / 100
 
     def cf_profile(self):
         """Get hourly capacity factor (frac) profile in local timezone.
@@ -880,6 +906,22 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             PV CF is calculated as AC power / DC nameplate.
         """
         return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+
+    def cf_profile_ac(self):
+        """Get hourly AC capacity factor (frac) profile in local timezone.
+        See self.outputs attribute for collected output data in UTC.
+
+        NOTE: PV AC capacity factor is the AC power production / the AC
+        nameplate. AC nameplate = DC nameplate / ILR
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+            PV AC CF is calculated as AC power / AC nameplate.
+        """
+        return self.gen_profile() / self.system_capacity_ac()
 
     def gen_profile(self):
         """Get AC inverter power generation profile (local timezone) in kW.
@@ -954,13 +996,16 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
         if output_lookup is None:
             output_lookup = {'cf_mean': self.cf_mean,
+                             'cf_mean_ac': self.cf_mean_ac,
                              'cf_profile': self.cf_profile,
+                             'cf_profile_ac': self.cf_profile_ac,
                              'annual_energy': self.annual_energy,
                              'energy_yield': self.energy_yield,
                              'gen_profile': self.gen_profile,
                              'ac': self.ac,
                              'dc': self.dc,
-                             'clipped_power': self.clipped_power
+                             'clipped_power': self.clipped_power,
+                             'system_capacity_ac': self.system_capacity_ac,
                              }
 
         super().collect_outputs(output_lookup=output_lookup)
@@ -1183,13 +1228,23 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     Unlike wind or solar, reV geothermal dynamically sets the size of a
     geothermal plant. In particular, the nameplate capacity is set to
     match the resource potential (obtained form the input data) for each
-    site. As a result, reV allows users to input ``capital_cost_per_kw``
+    site. To override this behavior, users can specify their own
+    nameplate capacity (either a single value for all sites in the SAM
+    geothermal config or a site-dependent value in the project points
+    CSV). In this case, the resource potential from the input data will
+    be ignored completely.
+
+    reV also allows users to input ``capital_cost_per_kw``
     and ``fixed_operating_cost_per_kw`` instead of the flat
     ``capital_cost`` and ``fixed_operating_cost`` values, respectively,
-    in the SAM technology config. If these inputs are detected, reV
-    calculates the total ``capital_cost`` and ``fixed_operating_cost``
-    based on the plant size and automatically adds them to the SAM
-    config on a per-site basis.
+    in the SAM technology config, since the capacity of geothermal
+    plants may be set dynamically by reV. If these inputs are detected,
+    reV calculates the total ``capital_cost`` and
+    ``fixed_operating_cost`` based on the plant size and automatically
+    adds them to the SAM config on a per-site basis. Users can also
+    provide a ``drill_cost_per_well`` value, which will be used to
+    calculate total drilling costs base don the number of wells at each
+    plant. The drilling costs will be added to the capital cost input.
 
     As of 12/20/2022, the resource potential input is only used to
     calculate the number of well replacements during the lifetime of a
@@ -1209,6 +1264,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
     _RESOURCE_POTENTIAL_MULT = 1.001
+    _DEFAULT_NUM_CONFIRMATION_WELLS = 2  # SAM GUI default as of 5/26/23
 
     @staticmethod
     def default():
@@ -1266,6 +1322,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         """
         super().set_resource_data(resource, meta)
         self._set_resource_temperature(resource)
+        self._set_egs_plant_design_temperature()
         self._set_nameplate_to_match_resource_potential(resource)
         self._set_resource_potential_to_match_gross_output()
         self._set_costs()
@@ -1293,8 +1350,31 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                      .format(val))
         self.sam_sys_inputs["resource_temp"] = val
 
+    def _set_egs_plant_design_temperature(self):
+        """Set the EGS plant temp to match resource, if necessary"""
+        if self.sam_sys_inputs.get("resource_type") != 1:
+            return  # Not EGS run
+
+        egs_plant_design_temp = self.sam_sys_inputs.get("design_temp", 0)
+        resource_temp = self.sam_sys_inputs["resource_temp"]
+        if egs_plant_design_temp > resource_temp:
+            msg = ('EGS plant design temperature ({}C) exceeds resource '
+                   'temperature ({}C). Lowering EGS plant design temperature '
+                   'to match resource temperature'
+                   .format(egs_plant_design_temp, resource_temp))
+            logger.warning(msg)
+            warn(msg)
+            self.sam_sys_inputs["design_temp"] = resource_temp
+
     def _set_nameplate_to_match_resource_potential(self, resource):
         """Set the nameplate capacity to match the resource potential. """
+
+        if "nameplate" in self.sam_sys_inputs:
+            msg = ('Found "nameplate" input in config! Resource potential '
+                   'from input data will be ignored. Nameplate capacity is {}'
+                   .format(self.sam_sys_inputs["nameplate"]))
+            logger.info(msg)
+            return
 
         val = set(resource["potential_MW"].unique())
         if len(val) > 1:
@@ -1304,12 +1384,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             raise InputError(msg)
 
         val = val.pop() * 1000
-        if "nameplate" in self.sam_sys_inputs:
-            msg = ('Setting "nameplate" is not allowed! Updating '
-                   'user input of {} to match the resource potential: {}'
-                   .format(self.sam_sys_inputs["nameplate"], val))
-            logger.warning(msg)
-            warn(msg)
 
         logger.debug("Setting the nameplate to {}".format(val))
         self.sam_sys_inputs["nameplate"] = val
@@ -1345,6 +1419,13 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         logger.debug("Setting the resource potential to {} MW"
                      .format(gross_gen))
         self.sam_sys_inputs["resource_potential"] = gross_gen
+
+        ncw = self.sam_sys_inputs.pop("num_confirmation_wells",
+                                      self._DEFAULT_NUM_CONFIRMATION_WELLS)
+        self.sam_sys_inputs["prod_and_inj_wells_to_drill"] = (
+            getattr(self.pysam.Outputs, "num_wells_getem_output")
+            - ncw
+            + getattr(self.pysam.Outputs, "num_wells_getem_inj"))
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
@@ -1358,6 +1439,23 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             logger.debug("Setting the capital_cost to ${:,.2f}"
                          .format(capital_cost))
             self.sam_sys_inputs["capital_cost"] = capital_cost
+
+        dc_per_well = self.sam_sys_inputs.pop("drill_cost_per_well", None)
+        num_wells = self.sam_sys_inputs.pop("prod_and_inj_wells_to_drill",
+                                            None)
+        if dc_per_well is not None:
+            if num_wells is None:
+                msg = ('Could not determine number of wells to be drilled. '
+                       'No drilling costs added!')
+                logger.warning(msg)
+                warn(msg)
+            else:
+                capital_cost = self.sam_sys_inputs["capital_cost"]
+                drill_cost = dc_per_well * num_wells
+                logger.debug("Setting the drilling cost to ${:,.2f} "
+                             "({:.2f} wells at ${:,.2f} per well)"
+                             .format(drill_cost, num_wells, dc_per_well))
+                self.sam_sys_inputs["capital_cost"] = capital_cost + drill_cost
 
         foc_per_kw = self.sam_sys_inputs.pop("fixed_operating_cost_per_kw",
                                              None)

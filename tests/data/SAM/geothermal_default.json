@@ -19,7 +19,6 @@
     "subsurface_water_loss" : 2,
 
     "analysis_type" : 0,
-    "nameplate" : 30000,
     "num_wells" : 3,
     "num_wells_getem" : 4.2419632544315728,
     "conversion_type" : 0,
