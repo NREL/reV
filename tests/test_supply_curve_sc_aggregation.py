@@ -21,7 +21,6 @@ import traceback
 from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV.utilities import ModuleName
 from reV import TESTDATADIR
 from rex import Outputs
