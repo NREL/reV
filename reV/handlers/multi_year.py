@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class MultiYearGroup:
     """
-    Handle group parameters for MultiYearConfig
+    Handle group parameters
     """
 
     def __init__(self, name, out_dir, source_files=None,

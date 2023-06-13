@@ -14,7 +14,6 @@ import traceback
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
-from reV.config.multi_year import MultiYearConfig
 from reV import TESTDATADIR
 from reV.utilities import ModuleName
 
@@ -155,7 +154,7 @@ def test_cli(runner, clear_loggers):
                   "log_level": "INFO"}
 
         dirname = os.path.basename(temp)
-        fn = "{}_{}.h5".format(dirname, MultiYearConfig.NAME)
+        fn = "{}_{}.h5".format(dirname, ModuleName.MULTI_YEAR)
         my_out = os.path.join(temp, fn).replace("-", "_")
         temp_h5_files = [os.path.join(temp, os.path.basename(fp))
                          for fp in H5_FILES]
