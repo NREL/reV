@@ -578,9 +578,9 @@ def test_ac_outputs():
                       'dc_ac_ratio')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('pvwattsv8', rev2_points, sam_files, res_file,
-                      max_workers=1, sites_per_worker=1, out_fpath=None,
-                      output_request=output_request)
+    gen = Gen('pvwattsv8', rev2_points, sam_files, res_file,
+              sites_per_worker=1, output_request=output_request)
+    gen.run(max_workers=1)
 
     msg = ('PVWattsv8 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))

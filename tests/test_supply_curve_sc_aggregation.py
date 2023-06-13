@@ -113,7 +113,7 @@ def test_agg_summary():
 
         assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
 
-    assert "capacity_ac" not in s
+    assert "capacity_ac" not in summary
 
 
 @pytest.mark.parametrize("pd", [None, 45])
@@ -129,15 +129,15 @@ def test_agg_summary_solar_ac(pd):
         with Outputs(gen, "r") as out:
             assert "dc_ac_ratio" in out.datasets
 
-        s = SupplyCurveAggregation.summary(EXCL, gen, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
-                                           data_layers=DATA_LAYERS,
-                                           max_workers=1,
-                                           power_density=pd)
-    assert "capacity_ac" in s
-    assert np.allclose(s["capacity"] / 1.3, s["capacity_ac"])
+        sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                     res_class_dset=RES_CLASS_DSET,
+                                     res_class_bins=RES_CLASS_BINS,
+                                     data_layers=DATA_LAYERS,
+                                     power_density=pd)
+        summary = sca.summarize(gen, max_workers=1)
+
+    assert "capacity_ac" in summary
+    assert np.allclose(summary["capacity"] / 1.3, summary["capacity_ac"])
 
 
 def test_multi_file_excl():

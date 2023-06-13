@@ -218,10 +218,10 @@ def test_drill_cost_inputs():
         )
 
         output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
-        gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                          max_workers=1, output_request=output_request,
-                          sites_per_worker=1, out_fpath=None,
-                          scale_outputs=True)
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
+        gen.run(max_workers=1)
 
         truth_vals = {"capital_cost": 466_134_733,
                       "fixed_operating_cost": 25539104,
@@ -270,10 +270,10 @@ def test_gen_with_nameplate_input():
 
         output_request = ('annual_energy', 'cf_mean', 'cf_profile',
                           'gen_profile', 'lcoe_fcr', 'nameplate')
-        gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                          max_workers=1, output_request=output_request,
-                          sites_per_worker=1, out_fpath=None,
-                          scale_outputs=True)
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
+        gen.run(max_workers=1)
 
         truth_vals = {"annual_energy": 3.47992e+08, "cf_mean": 0.993,
                       "cf_profile": 0.993, "gen_profile": 39725.117,
@@ -327,10 +327,10 @@ def test_gen_egs_too_high_egs_plant_design_temp():
 
         output_request = ('design_temp',)
         with pytest.warns(UserWarning):
-            gen = Gen.reV_run('geothermal', points, geo_sam_file, geo_res_file,
-                              max_workers=1, output_request=output_request,
-                              sites_per_worker=1, out_fpath=None,
-                              scale_outputs=True)
+            gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
+            gen.run(max_workers=1)
 
         truth_vals = {"design_temp": 150}
         for dset in output_request:
