@@ -750,6 +750,7 @@ class BaseGen(ABC):
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
 
+            # pylint: disable=no-member
             if site_data.index.name != 'gid':
                 # make gid the dataframe index if not already
                 site_data = site_data.set_index('gid', drop=True)

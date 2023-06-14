@@ -697,6 +697,7 @@ def test_hybrids_cli_bad_fpath_input(runner, bad_fpath, clear_loggers):
         clear_loggers()
 
 
+# pylint: disable=no-member
 def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
                    drop_cols=None, duplicate_rows=False,
                    duplicate_coord_values=False):

@@ -17,7 +17,7 @@ from reV.utilities.exceptions import (FileInputError, InputError,
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
 
 from rex.resource import Resource
-from rex.utilities.utilities import to_records_array, parse_year
+from rex.utilities.utilities import to_records_array
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=no-member
 """
 PyTest file for reV LCOE economies of scale
 """

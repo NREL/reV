@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=no-member
 """
 reV-NRWAL analysis module.
 
@@ -20,9 +21,7 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (DataShapeError,
                                       OffshoreWindInputWarning,
                                       OffshoreWindInputError)
-from reV.utilities import log_versions, ModuleName
-
-from gaps.pipeline import parse_previous_status
+from reV.utilities import log_versions
 
 
 logger = logging.getLogger(__name__)

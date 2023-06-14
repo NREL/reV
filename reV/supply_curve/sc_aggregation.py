@@ -30,8 +30,6 @@ from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
 
-from gaps.pipeline import Status
-
 logger = logging.getLogger(__name__)
 
 

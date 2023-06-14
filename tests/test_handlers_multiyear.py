@@ -140,6 +140,7 @@ def test_my_collection(source, dset, group):
         assert np.in1d(my_dsets, out_dsets).all(), msg
 
 
+# pylint: disable=no-member
 def test_cli(runner, clear_loggers):
     """Test multi year collection cli with pass through of some datasets."""
 

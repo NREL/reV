@@ -1512,6 +1512,7 @@ class BespokeWindPlants(BaseAggregation):
             with Outputs(prior_run, mode='r') as f:
                 meta = f.meta
 
+            # pylint: disable=no-member
             for col in meta.columns:
                 val = meta[col].values[0]
                 if isinstance(val, str) and val[0] == '[' and val[-1] == ']':

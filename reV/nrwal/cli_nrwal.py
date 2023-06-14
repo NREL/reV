@@ -42,7 +42,7 @@ def _parse_gen_fpath(config, out_dir):
         fpaths = parse_previous_status(out_dir,ModuleName.NRWAL)
 
     if isinstance(fpaths, str) and '*' in fpaths:
-        fpaths = glob(fpaths)
+        fpaths = glob.glob(fpaths)
         if not any(fpaths):
             msg = ('Could not find any file paths for '
                    'gen_fpath glob pattern.')

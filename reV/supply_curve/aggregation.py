@@ -3,7 +3,6 @@
 reV aggregation framework.
 """
 from abc import ABC, abstractmethod
-from concurrent.futures import as_completed
 import h5py
 import logging
 import numpy as np
@@ -777,7 +776,8 @@ class Aggregation(BaseAggregation):
 
         return agg
 
-    def save_agg_to_h5(self, h5_fpath, out_fpath, aggregation):
+    @staticmethod
+    def save_agg_to_h5(h5_fpath, out_fpath, aggregation):
         """
         Save aggregated data to disc in .h5 format
 

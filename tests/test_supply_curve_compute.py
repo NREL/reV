@@ -368,6 +368,7 @@ def test_multi_parallel_trans():
             assert lcot_2 > lcot_1
 
 
+# pylint: disable=no-member
 def test_least_cost_full_with_reinforcement():
     """
     Test full supply curve sorting with reinforcement costs in the
@@ -419,6 +420,7 @@ def test_least_cost_full_with_reinforcement():
         assert not np.allclose(sc_full.total_lcoe, sc_full_r.total_lcoe)
 
 
+# pylint: disable=no-member
 def test_least_cost_simple_with_reinforcement():
     """
     Test simple supply curve sorting with reinforcement costs in the

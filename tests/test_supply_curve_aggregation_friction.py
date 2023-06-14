@@ -99,6 +99,7 @@ def test_agg_friction(gid):
                            s['mean_lcoe'] * mean_friction), m
 
 
+# pylint: disable=no-member
 def make_friction_file():
     """Script to make a test friction file"""
     import matplotlib.pyplot as plt
