@@ -39,7 +39,7 @@ def _parse_gen_fpath(config, out_dir):
 
     fpaths = config['gen_fpath']
     if fpaths == 'PIPELINE':
-        fpaths = parse_previous_status(out_dir,ModuleName.NRWAL)
+        fpaths = parse_previous_status(out_dir, ModuleName.NRWAL)
 
     if isinstance(fpaths, str) and '*' in fpaths:
         fpaths = glob.glob(fpaths)

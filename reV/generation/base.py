@@ -812,45 +812,55 @@ class BaseGen(ABC):
         """
 
         if dset in self.OUT_ATTRS:
-            if self.OUT_ATTRS[dset]['type'] == 'array':
-                data_shape = (len(self.time_index), n_sites)
-            else:
-                data_shape = (n_sites, )
+            return self._get_data_shape_from_out_attrs(dset, n_sites)
 
-        elif dset in self.project_points.all_sam_input_keys:
-            data = list(self.project_points.sam_inputs.values())[0][dset]
-            if isinstance(data, (list, tuple, np.ndarray)):
-                data_shape = (*np.array(data).shape, n_sites)
-            elif isinstance(data, str):
-                msg = ('Cannot pass through non-scalar SAM input key "{}" '
-                       'as an output_request!'.format(dset))
-                logger.error(msg)
-                raise ExecutionError(msg)
-            else:
-                data_shape = (n_sites, )
+        if dset in self.project_points.all_sam_input_keys:
+            return self._get_data_shape_from_sam_config(dset, n_sites)
 
-        else:
-            if self._sam_obj_default is None:
-                self._sam_obj_default = self.sam_module.default()
+        return self._get_data_shape_from_pysam(dset, n_sites)
 
-            try:
-                out_data = getattr(self._sam_obj_default.Outputs, dset)
-            except AttributeError as e:
-                msg = ('Could not get data shape for dset "{}" '
-                       'from object "{}". '
-                       'Received the following error: "{}"'
-                       .format(dset, self._sam_obj_default, e))
-                logger.error(msg)
-                raise ExecutionError(msg) from e
-            else:
-                if isinstance(out_data, (int, float, str)):
-                    data_shape = (n_sites, )
-                elif len(out_data) % len(self.time_index) == 0:
-                    data_shape = (len(self.time_index), n_sites)
-                else:
-                    data_shape = (len(out_data), n_sites)
+    def _get_data_shape_from_out_attrs(self, dset, n_sites):
+        """Get data shape from ``OUT_ATTRS`` variable"""
+        if self.OUT_ATTRS[dset]['type'] == 'array':
+            return (len(self.time_index), n_sites)
+        return (n_sites,)
 
-        return data_shape
+    def _get_data_shape_from_sam_config(self, dset, n_sites):
+        """Get data shape from SAM input config """
+        data = list(self.project_points.sam_inputs.values())[0][dset]
+        if isinstance(data, (list, tuple, np.ndarray)):
+            return (*np.array(data).shape, n_sites)
+
+        if isinstance(data, str):
+            msg = ('Cannot pass through non-scalar SAM input key "{}" '
+                   'as an output_request!'.format(dset))
+            logger.error(msg)
+            raise ExecutionError(msg)
+
+        return (n_sites, )
+
+    def _get_data_shape_from_pysam(self, dset, n_sites):
+        """Get data shape from PySAM output object"""
+        if self._sam_obj_default is None:
+            self._sam_obj_default = self.sam_module.default()
+
+        try:
+            out_data = getattr(self._sam_obj_default.Outputs, dset)
+        except AttributeError as e:
+            msg = ('Could not get data shape for dset "{}" '
+                   'from object "{}". '
+                   'Received the following error: "{}"'
+                   .format(dset, self._sam_obj_default, e))
+            logger.error(msg)
+            raise ExecutionError(msg) from e
+
+        if isinstance(out_data, (int, float, str)):
+            return (n_sites,)
+
+        if len(out_data) % len(self.time_index) == 0:
+            return (len(self.time_index), n_sites)
+
+        return (len(out_data), n_sites)
 
     def _init_fpath(self, out_fpath, module):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
@@ -912,7 +922,7 @@ class BaseGen(ABC):
                 tmp = dset
 
             attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
-                                                            'unknown')
+                                                           'unknown')
             attrs[dset]['scale_factor'] = \
                 self.OUT_ATTRS[tmp].get('scale_factor', 1)
             chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)

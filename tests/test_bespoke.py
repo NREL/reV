@@ -1170,7 +1170,7 @@ def test_cli(runner, clear_loggers):
             "area_filter_kernel": 'queen',
             "min_area": None,
             "resolution": 64,
-            "excl_area":None,
+            "excl_area": None,
             "data_layers": None,
             "pre_extract_inclusions": False,
             "prior_run": None,

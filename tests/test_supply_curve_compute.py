@@ -101,7 +101,7 @@ def test_integrated_sc_simple(i, trans_costs):
                            transmission_costs=tcosts)
 
         fpath_baseline = os.path.join(TESTDATADIR,
-                                    'sc_out/sc_simple_out_{}.csv'.format(i))
+                                      'sc_out/sc_simple_out_{}.csv'.format(i))
         baseline_verify(sc_simple, fpath_baseline)
 
 
@@ -125,7 +125,7 @@ def test_integrated_sc_full_friction():
         assert np.allclose(test, sc_full['total_lcoe_friction'])
 
         fpath_baseline = os.path.join(TESTDATADIR,
-                                    'sc_out/sc_full_out_friction.csv')
+                                      'sc_out/sc_full_out_friction.csv')
         baseline_verify(sc_full, fpath_baseline)
 
 
@@ -146,7 +146,7 @@ def test_integrated_sc_simple_friction():
         assert np.allclose(test, sc_simple['total_lcoe_friction'])
 
         fpath_baseline = os.path.join(TESTDATADIR,
-                                    'sc_out/sc_simple_out_friction.csv')
+                                      'sc_out/sc_simple_out_friction.csv')
         baseline_verify(sc_simple, fpath_baseline)
 
 

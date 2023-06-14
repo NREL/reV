@@ -222,7 +222,6 @@ class MultiYearGroup:
         return groups
 
 
-
 class MultiYear(Outputs):
     """
     Class to handle multiple years of data and:

@@ -5,7 +5,7 @@ Bespoke wind plant optimization CLI utility functions.
 import logging
 from reV.bespoke.bespoke import BespokeWindPlants
 from reV.utilities import ModuleName
-from gaps.cli import as_click_command,CLICommandFromClass
+from gaps.cli import as_click_command, CLICommandFromClass
 
 
 logger = logging.getLogger(__name__)
