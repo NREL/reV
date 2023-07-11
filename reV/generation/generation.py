@@ -53,16 +53,18 @@ class Gen(BaseGen):
 
     Examples
     --------
-    The following is an example of the most simple way to run reV generation.
-    The reV code pipes in renewable energy resource data (usually from the
-    NSRDB or WTK), loads the SAM config, and then executes the PySAM compute
-    module for a given technology. If economic parameters are supplied, you can
-    bundle a "follow-on" econ calculation by just adding the desired econ
-    output keys to the output_request kwarg. You can request reV to run the
-    analysis for one or more "sites", which correspond to the meta indices in
-    the resource data (also commonly called the gid's). Note that the
-    TESTDATADIR refers to the local cloned repository and will need to be
-    replaced with a valid path if you installed reV via a simple pip install.
+    The following is an example of the most simple way to run reV
+    generation. The reV code pipes in renewable energy resource data
+    (usually from the NSRDB or WTK), loads the SAM config, and then
+    executes the PySAM compute module for a given technology. If
+    economic parameters are supplied, you can bundle a "follow-on" econ
+    calculation by just adding the desired econ output keys to the
+    output_request kwarg. You can request reV to run the analysis for
+    one or more "sites", which correspond to the meta indices in the
+    resource data (also commonly called the gid's). Note that the
+    TESTDATADIR refers to the local cloned repository and will need to
+    be replaced with a valid path if you installed reV via a simple pip
+    install.
 
     >>> import os
     >>> from reV import Gen, TESTDATADIR
@@ -128,74 +130,148 @@ class Gen(BaseGen):
         """
         Parameters
         ----------
-        technology : str, optional
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed,
-            by default None
-        project_points : int | slice | list | tuple | str | pd.DataFrame | dict
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-            Can also be a single integer site value.
-        sam_files : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
+        technology : str
+            String indicating which SAM technology to analyze. Must be
+            one of the keys of
+            :attr:`~reV.generation.generation.Gen.OPTIONS`. The string
+            should be lower-cased with spaces and underscores removed.
+        project_points : int | list | tuple | str | dict | pd.DataFrame | slice
+            Input specifying which sites to process. A single integer
+            representing the GID of a site may be specified to evaluate
+            reV at a single location. A list or tuple of integers
+            (or slice) representing the GIDs of multiple sites can be
+            specified to evaluate reV at multiple specific locations.
+            A string pointing to a project points CSV file may also be
+            specified. Typically, the CSV contains two columns:
+
+                - ``gid``: Integer specifying the GID of each site.
+                - ``config``: Key in the ``sam_files`` input dictionary
+                  (see below) corresponding to the SAM configuration to
+                  use for each particular site. This value can also be
+                  ``None`` (or left out completely) if you specify only
+                  a single SAM JSON configuration file as the
+                  ``sam_files`` input.
+
+            The CSV file may also contain site-specific inputs by
+            including a column named after a config keyword (e.g. a
+            column called ``capital_cost`` may be included to specify a
+            site-specific capital cost value for each location). Columns
+            that do not correspond to a config key may also be included,
+            but they will be ignored. A DataFrame following the same
+            guidelines as the CSV inout (or a dictionary that can be
+            used to initialize such a DataFrame) may be used as input as
+            well.
+        sam_files : dict | str
+            A dictionary mapping SAM input configuration ID(s) to SAM
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the ``config`` column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary
+            of SAM config inputs. This input can also be a string
+            pointing to a single SAM JSON config file. In this case, the
+            ``config`` column of the CSV points input should be set to
+            ``None`` or left out completely.
         resource_file : str
-            Filepath to single resource file, multi-h5 directory,
-            or /h5_dir/prefix*suffix
-        low_res_resource_file : str | None
-            Optional low resolution resource file that will be dynamically
-            mapped+interpolated to the nominal-resolution res_file. This
-            needs to be of the same format as resource_file, e.g. they both
-            need to be handled by the same rex Resource handler such as
-            WindResource
-        output_request : list | tuple
-            Output variables requested from SAM.
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        curtailment : NoneType | dict | str | config.curtailment.Curtailment
-            Inputs for curtailment parameters. If not None, curtailment inputs
-            are expected. Can be:
+            Filepath to resource data. This input can be path to a
+            single resource HDF5 file, a path to a directory containing
+            data spread across multiple HDF5 files, or a path including
+            a wildcard input like ``/h5_dir/prefix*suffix``. In all
+            cases, it must be readable by
+            `rex.Resource <https://tinyurl.com/y4yu5bxj/>`_ or
+            `rex.MultiFileResource <https://tinyurl.com/m4z75v5t/>`_.
+            This means the data file(s) must contain a 1D ``time_index``
+            dataset indicating the UTC time of observation, a 1D
+            ``meta`` dataset represented by a DataFrame with
+            site-specific columns, and 2D resource datasets that match
+            the dimensions of (time_index, meta). The time index must
+            start at 00:00 of January 1st of the year under
+            consideration, and its shape must be a multiple of 8760.
+            If executing ``reV`` from the command line, this path can
+            contain brackets ``{}`` that will be filled in by the
+            ``analysis_years`` input.
+        low_res_resource_file : str, optional
+            Optional low resolution resource file that will be
+            dynamically mapped+interpolated to the nominal-resolution
+            ``resource_file``. This needs to be of the same format as
+            ``resource_file`` - both files need to be handled by the
+            same ``rex Resource`` handler (e.g. ``WindResource``). All
+            of the requirements from the ``resource_file`` apply to this
+            input as well. If ``None``, no dynamic mapping to higher
+            resolutions is performed. By default, ``None``.
+        output_request : list | tuple, optional
+            List of output variables requested from SAM. Can be any
+            of the parameters in the "Outputs" group of the
+            `PySAM module <https://tinyurl.com/bdhff7jj/>`_ being
+            executed. This list can also include a select number of SAM
+            config/resource parameters to include in the output:
+            any key in any of the
+            `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
+            may be requested. If ``cf_mean`` is not included in this
+            list, it will automatically be added.
+            By default, ``('cf_mean',)``.
+        site_data : str | pd.DataFrame, optional
+            Site-specific input data for SAM calculation. If this input
+            is a string, it should be a path that points to a CSV file.
+            Otherwise, this input should be a DataFrame with
+            pre-extracted site data. Rows in this table should match
+            the input sites via a ``gid`` column. The rest of the
+            columns should match configuration input keys that will take
+            site-specific values. Note that some or all site-specific
+            inputs can be specified via the ``project_points`` input
+            table instead. If ``None``, no site-specific data is
+            considered. By default, ``None``.
+        curtailment : dict | str, optional
+            Inputs for curtailment parameters. If not ``None``,
+            curtailment inputs are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config json file with path (str)
-                - Instance of curtailment config object
-                  (config.curtailment.Curtailment)
-        gid_map : None | str | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids.  This can be None, a pre-extracted dict, or a
-            filepath to json or csv. If this is a csv, it must have the columns
-            "gid" (which matches the project points) and "gid_map" (gids to
-            extract from the resource input)
-        drop_leap : bool
-            Drop leap day instead of final day of year during leap years
-        sites_per_worker : int | None
-            Number of sites to run in series on a worker. None defaults to the
-            resource file chunk size.
-        mem_util_lim : float
-            Memory utilization limit (fractional). This sets how many site
-            results will be stored in-memory at any given time before flushing
-            to disk.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
-        write_mapped_gids : bool
-            Option to write mapped gids to output meta instead of resource
-            gids.
-        bias_correct : str | pd.DataFrame
-            Optional DataFrame or csv filepath to a wind or solar resource bias
-            correction table. This has columns: gid (can be index name), adder,
-            scalar. If both adder and scalar are present, the wind or solar
-            resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed or
-            GHI+DNI are corrected depending on the technology. GHI and DNI are
-            corrected with the same correction factors.
+                - Pointer to curtailment config JSON file with path
+                  (str)
+
+            By default, ``None``.
+        gid_map : dict | str, optional
+            Mapping of unique integer generation gids (keys) to single
+            integer resource gids (values). This enables the user to
+            input unique generation gids in the project points that map
+            to non-unique resource gids. This input can be a
+            pre-extracted dictionary or a path to a JSON or CSV file. If
+            this input points to a CSV file, the file must have the
+            columns ``gid`` (which matches the project points) and
+            ``gid_map`` (gids to extract from the resource input). If
+            ``None``, the GID values in the project points are assumed
+            to match the resource GID values. By default, ``None``.
+        drop_leap : bool, optional
+            Drop leap day instead of final day of year when handling
+            leap years. Be default, ``False``.
+        sites_per_worker : int, optional
+            Number of sites to run in series on a worker. ``None``
+            defaults to the resource file chunk size.
+            By default, ``None``.
+        mem_util_lim : float, optional
+            Memory utilization limit (fractional). Must be a value
+            between 0 and 1. This input sets how many site results will
+            be stored in-memory at any given time before flushing to
+            disk. Be default, ``0.4``.
+        scale_outputs : bool, optional
+            Flag to scale outputs in-place immediately upon ``Gen``
+            returning data. Be default, ``True``.
+        write_mapped_gids : bool, optional
+            Option to write mapped gids to output meta instead of
+            resource gids. By default, ``False``.
+        bias_correct : str | pd.DataFrame, optional
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name)
+                - ``adder``: Value to add to resource at each site
+                - ``scalar``: Value to scale resource at each site by
+
+            If both adder and scalar are present, the wind or solar
+            resource is corrected by (res*scalar)+adder. If either is
+            not present, scalar defaults to 1 and adder to 0. Only
+            ``windspeed`` **or** ``GHI`` + ``DNI`` are corrected,
+            depending on the technology (wind for the former, solar for
+            the latter). ``GHI`` and ``DNI`` are corrected with the same
+            correction factors.
         """
         pc = self.get_pc(points=project_points, points_range=None,
                          sam_configs=sam_files, tech=technology,
