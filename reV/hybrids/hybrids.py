@@ -869,7 +869,7 @@ class Hybridization:
             Option to specify mapping (in the form of a dictionary) of
             {colum_name: max_value} representing the upper limit
             (maximum value) for the values of a column in the merged
-            meta. For example, `limits={'solar_capacity': 100}` would
+            meta. For example, ``limits={'solar_capacity': 100}`` would
             limit all the values of the solar capacity in the merged
             meta to a maximum value of 100. This limit is applied
             *BEFORE* ratio calculations. The names of the columns should
@@ -878,23 +878,22 @@ class Hybridization:
             By default, ``None`` (no limits applied).
         ratio_bounds : tuple, optional
             Option to set ratio bounds (in two-tuple form) on the
-            columns of the `ratio` input. For example,
-            `ratio_bounds=(0.5, 1.5)` would adjust the values of both of
-            the `ratio` columns such that their ratio is always between
-            half and double (e.g., no value would be more than double
-            the other). To specify a single ratio value, use the same
-            value as the upper and lower bound. For example,
-            `ratio_bounds=(1, 1)` would adjust the values of both of
-            the `ratio` columns such that their ratio is always equal.
+            columns of the ``ratio`` input. For example,
+            ``ratio_bounds=(0.5, 1.5)`` would adjust the values of both
+            of the ``ratio`` columns such that their ratio is always
+            between half and double (e.g., no value would be more than
+            double the other). To specify a single ratio value, use the
+            same value as the upper and lower bound. For example,
+            ``ratio_bounds=(1, 1)`` would adjust the values of both of
+            the ``ratio`` columns such that their ratio is always equal.
             By default, ``None`` (no limit on the ratio).
         ratio : str, optional
             Option to specify the columns used to calculate the ratio
             that is limited by the `ratio_bounds` input. This input is a
-            string in the form
-            "numerator_column_name/denominator_column_name".
-            For example, `ratio='solar_capacity/wind_capacity'`
+            string in the form "{numerator_column}/{denominator_column}".
+            For example, ``ratio='solar_capacity/wind_capacity'``
             would limit the ratio of the solar to wind capacities as
-            specified by the `ratio_bounds` input. If `ratio_bounds`
+            specified by the ``ratio_bounds`` input. If ``ratio_bounds``
             is None, this input does nothing. The names of the columns
             should be prefixed with one of the prefixes defined as class
             variables. By default ``'solar_capacity/wind_capacity'``.
