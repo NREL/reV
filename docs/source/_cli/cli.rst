@@ -11,7 +11,6 @@ Command Line Interfaces (CLIs)
    reV-hybrids
    reV-multiyear
    reV-nrwal
-   reV-project-points
    reV-QA-QC
    reV-rep-profiles
    reV-supply-curve-aggregation
