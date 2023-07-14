@@ -57,34 +57,76 @@ class Econ(BaseGen):
 
         Parameters
         ----------
-        project_points : int | slice | list | tuple | str | pd.DataFrame | dict
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-            Can also be a single integer site value.
-        sam_files : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
+        project_points : int | list | tuple | str | dict | pd.DataFrame | slice
+            Input specifying which sites to process. A single integer
+            representing the GID of a site may be specified to evaluate
+            reV at a single location. A list or tuple of integers
+            (or slice) representing the GIDs of multiple sites can be
+            specified to evaluate reV at multiple specific locations.
+            A string pointing to a project points CSV file may also be
+            specified. Typically, the CSV contains two columns:
+
+                - ``gid``: Integer specifying the GID of each site.
+                - ``config``: Key in the ``sam_files`` input dictionary
+                  (see below) corresponding to the SAM configuration to
+                  use for each particular site. This value can also be
+                  ``None`` (or left out completely) if you specify only
+                  a single SAM JSON configuration file as the
+                  ``sam_files`` input.
+
+            The CSV file may also contain site-specific inputs by
+            including a column named after a config keyword (e.g. a
+            column called ``capital_cost`` may be included to specify a
+            site-specific capital cost value for each location). Columns
+            that do not correspond to a config key may also be included,
+            but they will be ignored. A DataFrame following the same
+            guidelines as the CSV input (or a dictionary that can be
+            used to initialize such a DataFrame) may be used for this
+            input as well.
+        sam_files : dict | str
+            A dictionary mapping SAM input configuration ID(s) to SAM
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the ``config`` column in the project points
+            CSV. Values are either a JSON SAM config file or dictionary
+            of SAM config inputs. This input can also be a string
+            pointing to a single SAM JSON config file. In this case, the
+            ``config`` column of the CSV points input should be set to
+            ``None`` or left out completely.
         cf_file : str
-            reV generation capacity factor output file with path.
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        sites_per_worker : int
-            Number of sites to run in series on a worker.
-        mem_util_lim : float
-            Memory utilization limit (fractional). This sets how many site
-            results will be stored in-memory at any given time before flushing
-            to disk.
+            Path to reV output generation file containing a capacity
+            factor output.
+        site_data : str | pd.DataFrame, optional
+            Site-specific input data for SAM calculation. If this input
+            is a string, it should be a path that points to a CSV file.
+            Otherwise, this input should be a DataFrame with
+            pre-extracted site data. Rows in this table should match
+            the input sites via a ``gid`` column. The rest of the
+            columns should match configuration input keys that will take
+            site-specific values. Note that some or all site-specific
+            inputs can be specified via the ``project_points`` input
+            table instead. If ``None``, no site-specific data is
+            considered. By default, ``None``.
+        output_request : list | tuple, optional
+            List of output variables requested from SAM. Can be any
+            of the parameters in the "Outputs" group of the
+            `PySAM module <https://tinyurl.com/bdhff7jj/>`_ being
+            executed. This list can also include a select number of SAM
+            config/resource parameters to include in the output:
+            any key in any of the
+            `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
+            may be requested. By default, ``('lcoe_fcr',)``.
+        sites_per_worker : int, optional
+            Number of sites to run in series on a worker. ``None``
+            defaults to the resource file chunk size.
+            By default, ``None``.
+        mem_util_lim : float, optional
+            Memory utilization limit (fractional). Must be a value
+            between 0 and 1. This input sets how many site results will
+            be stored in-memory at any given time before flushing to
+            disk. By default, ``0.4``.
         append : bool
-            Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            Option to append econ datasets to source ``cf_file``.
+            By default, ``False``.
         """
 
         # get a points control instance
@@ -216,7 +258,7 @@ class Econ(BaseGen):
             resource file chunk size.
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            over the out_fpath input.
 
         Returns
         -------
