@@ -158,9 +158,9 @@ class Gen(BaseGen):
             site-specific capital cost value for each location). Columns
             that do not correspond to a config key may also be included,
             but they will be ignored. A DataFrame following the same
-            guidelines as the CSV inout (or a dictionary that can be
-            used to initialize such a DataFrame) may be used as input as
-            well.
+            guidelines as the CSV input (or a dictionary that can be
+            used to initialize such a DataFrame) may be used for this
+            input as well.
         sam_files : dict | str
             A dictionary mapping SAM input configuration ID(s) to SAM
             configuration(s). Keys are the SAM config ID(s) which
@@ -241,7 +241,7 @@ class Gen(BaseGen):
             to match the resource GID values. By default, ``None``.
         drop_leap : bool, optional
             Drop leap day instead of final day of year when handling
-            leap years. Be default, ``False``.
+            leap years. By default, ``False``.
         sites_per_worker : int, optional
             Number of sites to run in series on a worker. ``None``
             defaults to the resource file chunk size.
@@ -250,10 +250,10 @@ class Gen(BaseGen):
             Memory utilization limit (fractional). Must be a value
             between 0 and 1. This input sets how many site results will
             be stored in-memory at any given time before flushing to
-            disk. Be default, ``0.4``.
+            disk. By default, ``0.4``.
         scale_outputs : bool, optional
             Flag to scale outputs in-place immediately upon ``Gen``
-            returning data. Be default, ``True``.
+            returning data. By default, ``True``.
         write_mapped_gids : bool, optional
             Option to write mapped gids to output meta instead of
             resource gids. By default, ``False``.
