@@ -36,32 +36,35 @@ class MultiYearGroup:
         Parameters
         ----------
         name : str
-            Group name, can be "none" for no collection groups.
+            Group name. Can be ``"none"`` for no collection groups.
         out_dir : str
-            Output directory, used for Pipeline handling
-        source_files : str | list | NoneType
-            Explicit list of source files - either use this OR
-            source_dir + source_prefix
-            If this arg is "PIPELINE", determine source_files from
+            Output directory - used for Pipeline handling.
+        source_files : str | list, optional
+            Explicit list of source files. Use either this input *OR*
+            `source_dir` + `source_prefix`. If this input is
+            ``"PIPELINE"``, the `source_files` input is determined from
             the status file of the previous pipeline step.
-            If None, use source_dir and source_prefix
-        source_dir : str | NoneType
-            Directory to extract source files from
-            (must be paired with source_prefix)
-        source_prefix : str | NoneType
-            File prefix to search for in source directory
-            (must be paired with source_dir)
-        source_pattern : str | NoneType
-            Optional unix-style /filepath/pattern*.h5 to specify the source
-            files. This takes priority over source_dir and source_prefix but is
-            not used if source_files are specified Explicitly.
-        dsets : list | tuple
-            List of datasets to collect
-        pass_through_dsets : list | tuple | None
-            Optional list of datasets that are identical in the multi-year
-            files (e.g. input datasets that don't vary from year to year) that
-            should be copied to the output multi-year file once without a
-            year suffix or means/stdev calculation
+            If ``None``, use `source_dir` and `source_prefix`.
+            By default, ``None``.
+        source_dir : str, optional
+            Directory to extract source files from (must be paired with
+            `source_prefix`). By default, ``None``.
+        source_prefix : str, optional
+            File prefix to search for in source directory (must be
+            paired with `source_dir`). By default, ``None``.
+        source_pattern : str, optional
+            Optional unix-style ``/filepath/pattern*.h5`` to specify the
+            source files. This takes priority over `source_dir` and
+            `source_prefix` but is not used if `source_files` are
+            specified explicitly. By default, ``None``.
+        dsets : list | tuple, optional
+            List of datasets to collect. By default, ``('cf_mean',)``.
+        pass_through_dsets : list | tuple, optional
+            Optional list of datasets that are identical in the
+            multi-year files (e.g. input datasets that don't vary from
+            year to year) that should be copied to the output multi-year
+            file once without a year suffix or means/stdev calculation.
+            By default, ``None``.
         """
         self._name = name
         self._dirout = out_dir
@@ -720,13 +723,50 @@ def my_collect_groups(out_fpath, groups):
     groups : dict
         Dictionary of collection groups and their parameters. This
         should be a dictionary mapping group names (keys) to a set
-        of key word arguments to initialize :class:`MultiYearGroup`
-        (e.g. ``dsets``, ``source_pattern``). You can have only one
-        group with name "none" for no group collection. For
-        example::
+        of key word arguments (values) that can be used to initialize
+        :class:`~reV.handlers.multi_year.MultiYearGroup` (excluding the
+        required ``name`` and ``out_dir`` inputs, which are populated
+        automatically). For example::
 
-            {group1: {group: null, source_files: [], dsets: []}}
+            groups = {
+                "none": {
+                    "dsets": [
+                        "cf_profile",
+                        "cf_mean",
+                        "ghi_mean",
+                        "lcoe_fcr",
+                    ],
+                    "source_dir": "./",
+                    "source_prefix": "",
+                    "pass_through_dsets": [
+                        "capital_cost",
+                        "fixed_operating_cost",
+                        "system_capacity",
+                        "fixed_charge_rate",
+                        "variable_operating_cost",
+                    ]
+                },
+                "solar_group": {
+                    "source_files": "PIPELINE",
+                    "dsets": [
+                        "cf_profile_ac",
+                        "cf_mean_ac",
+                        "ac",
+                        "dc",
+                        "clipped_power"
+                    ],
+                    "pass_through_dsets": [
+                        "system_capacity_ac",
+                        "dc_ac_ratio"
+                    ]
+                },
+                ...
+            }
 
+        The group names will be used as the HDF5 file group name under
+        which the collected data will be stored. You can have exactly
+        one group with the name ``"none"`` for a "no group" collection
+        (this is typically what you want and all you need to specify).
 
     """
     if not out_fpath.endswith(".h5"):
