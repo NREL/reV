@@ -145,12 +145,12 @@ class Gen(BaseGen):
             specified. Typically, the CSV contains two columns:
 
                 - ``gid``: Integer specifying the GID of each site.
-                - ``config``: Key in the ``sam_files`` input dictionary
+                - ``config``: Key in the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
                   ``None`` (or left out completely) if you specify only
                   a single SAM JSON configuration file as the
-                  ``sam_files`` input.
+                  `sam_files` input.
 
             The CSV file may also contain site-specific inputs by
             including a column named after a config keyword (e.g. a
@@ -187,14 +187,14 @@ class Gen(BaseGen):
             consideration, and its shape must be a multiple of 8760.
             If executing ``reV`` from the command line, this path can
             contain brackets ``{}`` that will be filled in by the
-            ``analysis_years`` input.
+            `analysis_years` input.
         low_res_resource_file : str, optional
             Optional low resolution resource file that will be
             dynamically mapped+interpolated to the nominal-resolution
-            ``resource_file``. This needs to be of the same format as
-            ``resource_file`` - both files need to be handled by the
+            `resource_file`. This needs to be of the same format as
+            `resource_file` - both files need to be handled by the
             same ``rex Resource`` handler (e.g. ``WindResource``). All
-            of the requirements from the ``resource_file`` apply to this
+            of the requirements from the `resource_file` apply to this
             input as well. If ``None``, no dynamic mapping to higher
             resolutions is performed. By default, ``None``.
         output_request : list | tuple, optional
@@ -216,29 +216,34 @@ class Gen(BaseGen):
             the input sites via a ``gid`` column. The rest of the
             columns should match configuration input keys that will take
             site-specific values. Note that some or all site-specific
-            inputs can be specified via the ``project_points`` input
+            inputs can be specified via the `project_points` input
             table instead. If ``None``, no site-specific data is
             considered. By default, ``None``.
         curtailment : dict | str, optional
-            Inputs for curtailment parameters. If not ``None``,
-            curtailment inputs are expected. Can be:
+            Inputs for curtailment parameters, which can be:
 
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config JSON file with path
                   (str)
 
-            By default, ``None``.
+            The allowed key-value input pairs in the curtailment
+            configuration are documented as properties of the
+            :class:`reV.config.curtailment.Curtailment` class. If
+            ``None``, no curtailment is modeled. By default, ``None``.
         gid_map : dict | str, optional
             Mapping of unique integer generation gids (keys) to single
-            integer resource gids (values). This enables the user to
-            input unique generation gids in the project points that map
-            to non-unique resource gids. This input can be a
-            pre-extracted dictionary or a path to a JSON or CSV file. If
-            this input points to a CSV file, the file must have the
-            columns ``gid`` (which matches the project points) and
-            ``gid_map`` (gids to extract from the resource input). If
-            ``None``, the GID values in the project points are assumed
-            to match the resource GID values. By default, ``None``.
+            integer resource gids (values). This enables unique
+            generation gids in the project points to map to non-unique
+            resource gids, which can be useful when evaluating multiple
+            resource datasets in ``reV`` (e.g., forecasted ECMWF
+            resource data to complement historical WTK meteorology).
+            This input can be a pre-extracted dictionary or a path to a
+            JSON or CSV file. If this input points to a CSV file, the
+            file must have the columns ``gid`` (which matches the
+            project points) and ``gid_map`` (gids to extract from the
+            resource input). If ``None``, the GID values in the project
+            points are assumed to match the resource GID values.
+            By default, ``None``.
         drop_leap : bool, optional
             Drop leap day instead of final day of year when handling
             leap years. By default, ``False``.
@@ -271,7 +276,8 @@ class Gen(BaseGen):
             ``windspeed`` **or** ``GHI`` + ``DNI`` are corrected,
             depending on the technology (wind for the former, solar for
             the latter). ``GHI`` and ``DNI`` are corrected with the same
-            correction factors.
+            correction factors. If ``None``, no corrections are applied.
+            By default, ``None``.
         """
         pc = self.get_pc(points=project_points, points_range=None,
                          sam_configs=sam_files, tech=technology,
