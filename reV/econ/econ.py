@@ -67,12 +67,12 @@ class Econ(BaseGen):
             specified. Typically, the CSV contains two columns:
 
                 - ``gid``: Integer specifying the GID of each site.
-                - ``config``: Key in the ``sam_files`` input dictionary
+                - ``config``: Key in the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
                   ``None`` (or left out completely) if you specify only
                   a single SAM JSON configuration file as the
-                  ``sam_files`` input.
+                  `sam_files` input.
 
             The CSV file may also contain site-specific inputs by
             including a column named after a config keyword (e.g. a
@@ -103,7 +103,7 @@ class Econ(BaseGen):
             the input sites via a ``gid`` column. The rest of the
             columns should match configuration input keys that will take
             site-specific values. Note that some or all site-specific
-            inputs can be specified via the ``project_points`` input
+            inputs can be specified via the `project_points` input
             table instead. If ``None``, no site-specific data is
             considered. By default, ``None``.
         output_request : list | tuple, optional
@@ -125,7 +125,7 @@ class Econ(BaseGen):
             be stored in-memory at any given time before flushing to
             disk. By default, ``0.4``.
         append : bool
-            Option to append econ datasets to source ``cf_file``.
+            Option to append econ datasets to source `cf_file`.
             By default, ``False``.
         """
 
