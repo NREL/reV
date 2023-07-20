@@ -1327,7 +1327,9 @@ class BespokeWindPlants(BaseAggregation):
             guidelines as the CSV input (or a dictionary that can be
             used to initialize such a DataFrame) may be used for this
             input as well. If you would like to obtain all available
-            ``reV`` supply curve points to run, you can use::
+            ``reV`` supply curve points to run, you can use the
+            :class:`reV.supply_curve.extent.SupplyCurveExtent` class
+            like so::
 
                 import pandas as pd
                 from reV.supply_curve.extent import SupplyCurveExtent
