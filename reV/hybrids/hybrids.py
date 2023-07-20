@@ -337,7 +337,7 @@ class MetaHybridizer:
             Dictionary containing column_name, fill_value pairs
             representing any fill values that should be applied after
             merging the wind and solar meta. Note that column names will
-            likely have to be prefixed with ``solar_`` or ``wind_``.
+            likely have to be prefixed with ``solar`` or ``wind``.
             By default, ``None``.
         limits : dict, optional
             Option to specify mapping (in the form of a dictionary) of
@@ -348,7 +348,7 @@ class MetaHybridizer:
             meta to a maximum value of 100. This limit is applied
             *BEFORE* ratio calculations. The names of the columns should
             match the column names in the merged meta, so they are
-            likely prefixed with ``solar_`` or ``wind_`. By default,
+            likely prefixed with ``solar`` or ``wind`. By default,
             ``None`` (no limits applied).
         ratio_bounds : tuple, optional
             Option to set ratio bounds (in two-tuple form) on the
@@ -863,7 +863,7 @@ class Hybridization:
             Dictionary containing column_name, fill_value pairs
             representing any fill values that should be applied after
             merging the wind and solar meta. Note that column names will
-            likely have to be prefixed with ``solar_`` or ``wind_``.
+            likely have to be prefixed with ``solar`` or ``wind``.
             By default ``None``.
         limits : dict, optional
             Option to specify mapping (in the form of a dictionary) of
@@ -874,7 +874,7 @@ class Hybridization:
             meta to a maximum value of 100. This limit is applied
             *BEFORE* ratio calculations. The names of the columns should
             match the column names in the merged meta, so they are
-            likely prefixed with ``solar_`` or ``wind_``.
+            likely prefixed with ``solar`` or ``wind``.
             By default, ``None`` (no limits applied).
         ratio_bounds : tuple, optional
             Option to set ratio bounds (in two-tuple form) on the
@@ -1014,10 +1014,11 @@ class Hybridization:
         Parameters
         ----------
         fout : str, optional
-            Filepath to output h5 file, by default None.
+            Filepath to output HDF5 file. If ``None``, output data are
+            not written to a file. By default, ``None``.
         save_hybrid_meta : bool, optional
-            Flag to save hybrid SC table to hybrid rep profile output,
-            by default True.
+            Flag to save hybrid SC table to hybrid rep profile output.
+            By default, ``True``.
 
         Returns
         -------
