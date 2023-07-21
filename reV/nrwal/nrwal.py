@@ -42,7 +42,10 @@ class RevNrwal:
         gen_fpath : str
             Full filepath to HDF5 file with ``reV`` generation or
             rep_profiles output. Anything in the `output_request` input
-            is added to and/or manipulated within this file.
+            is added to and/or manipulated within this file. If running
+            ``reV`` from the command line, this input can also be
+            ``"PIPELINE"`` to parse the output of the previous step and
+            use it as input to this call.
         site_data : str | pd.DataFrame
             Site-specific input data for NRWAL calculation.If this input
             is a string, it should be a path that points to a CSV file.
