@@ -26,9 +26,13 @@ def cli_qa_qc(modules, out_dir, max_workers=None):
     Parameters
     ----------
     modules : dict
-        Dictionary of modules to QA/QC.
+        Dictionary of modules to QA/QC. Keys should be the names of the
+        modules to QA/QC. The values are dictionaries that represent the
+        config for the respective QA/QC step. Allowed config keys for
+        QA/QC are the "property" attributes of
+        :class:`~reV.qa_qc.qa_qc.QaQcModule`.
     out_dir : str
-        Path to output directory
+        Path to output directory.
     max_workers : int, optional
         Max number of workers to run for QA/QA. If ``None``, uses all
         CPU cores. By default, ``None``.
