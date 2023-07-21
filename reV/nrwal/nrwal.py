@@ -30,60 +30,100 @@ logger = logging.getLogger(__name__)
 class RevNrwal:
     """Framework to handle reV-NRWAL analysis."""
 
-    # Default columns from the site_data table to join to the output meta data
     DEFAULT_META_COLS = ('config', )
+    """Columns from the `site_data` table to join to the output meta data"""
 
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw=True, meta_gid_col='gid',
-                 site_meta_cols=None,
-                 ):
+                 site_meta_cols=None):
         """
         Parameters
         ----------
         gen_fpath : str
-            Full filepath to reV generation or rep_profiles h5 output file.
-            Anything in the output_request is added and/or manipulated in this
-            file.
+            Full filepath to HDF5 file with ``reV`` generation or
+            rep_profiles output. Anything in the `output_request` input
+            is added to and/or manipulated within this file.
         site_data : str | pd.DataFrame
-            Site-specific input data for NRWAL calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column that
-            corresponds to the "meta_gid_col" in the gen_fpath meta data and a
-            "config" column that corresponds to the nrwal_configs input. Only
-            sites with a gid in this file's "gid" column will be run through
-            NRWAL.
-        sam_files : dict
-            Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the
-            nrwal_configs lookup input.
+            Site-specific input data for NRWAL calculation.If this input
+            is a string, it should be a path that points to a CSV file.
+            Otherwise, this input should be a DataFrame with
+            pre-extracted site data. Rows in this table should match
+            the `meta_gid_col` in the `gen_fpath` meta data input
+            sites via a ``gid`` column. A ``config`` column must also be
+            provided that corresponds to the `nrwal_configs` input. Only
+            sites with a gid in this file's ``gid`` column will be run
+            through NRWAL.
+        sam_files : dict | str
+            A dictionary mapping SAM input configuration ID(s) to SAM
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the keys in the `nrwal_configs` input. Values
+            for each key are either a path to a corresponding JSON SAM
+            config file or a full dictionary of SAM config inputs. For
+            example::
+
+                sam_files = {
+                    "default": "/path/to/default/sam.json",
+                    "onshore": "/path/to/onshore/sam_config.json",
+                    "offshore": {
+                        "sam_key_1": "sam_value_1",
+                        "sam_key_2": "sam_value_2",
+                        ...
+                    },
+                    ...
+                }
+
+            This input can also be a string pointing to a single SAM
+            JSON config file. In this case, the ``config`` column of the
+            CSV points input should be set to ``None`` or left out
+            completely.
         nrwal_configs : dict
-            Dictionary lookup of config_id (keys) mapped to config filepaths
-            (values). The same config_id values will be used from the
-            sam_files lookup in project_points
+            A dictionary mapping SAM input configuration ID(s) to NRWAL
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the keys in the `sam_files` input. Values
+            for each key are either a path to a corresponding JSON or
+            YAML NRWAL config file or a full dictionary of NRWAL config
+            inputs. For example::
+
+                nrwal_configs = {
+                        "default": "/path/to/default/nrwal.json",
+                        "onshore": "/path/to/onshore/nrwal_config.yaml",
+                        "offshore": {
+                            "nrwal_key_1": "nrwal_value_1",
+                            "nrwal_key_2": "nrwal_value_2",
+                            ...
+                        },
+                        ...
+                    }
+
         output_request : list | tuple
-            List of output dataset names you want written to the gen_fpath
-            file. Any key from the NRWAL configs or any of the inputs
-            (site_data or sam_files) is available to be exported as an output
-            dataset. If you want to manipulate a dset like cf_mean from
-            gen_fpath and include it in the output_request, you should set
-            save_raw=True and then in the NRWAL equations use cf_mean_raw as
-            the input and then define cf_mean as the manipulated data that will
-            be included in the output_request.
-        save_raw : bool
-            Flag to save a copy of existing datasets in gen_fpath that are part
-            of the output_request. For example, if you request cf_mean in
-            output_request and manipulate the cf_mean dataset in the NRWAL
-            equations, the original cf_mean will be archived under the
-            "cf_mean_raw" dataset in gen_fpath.
-        meta_gid_col : str
-            Column label in the source meta data from gen_fpath that contains
-            the unique gid identifier. This will be joined to the site_data
-            "gid" column
-        site_meta_cols : list | tuple | None
-            Column labels from site_data to be added to the meta data table in
-            gen_fpath. None (default) will use class variable
-            DEFAULT_META_COLS, and any additional cols requested here will be
-            added to DEFAULT_META_COLS.
+            List of output dataset names to be written to the
+            `gen_fpath` file. Any key from the NRWAL configs or any of
+            the inputs (site_data or sam_files) is available to be
+            exported as an output dataset. If you want to manipulate a
+            dset like ``cf_mean`` from `gen_fpath` and include it in the
+            `output_request`, you should set ``save_raw=True`` and then
+            use ``cf_mean_raw`` in the NRWAL equations as the input.
+            This allows you to define an equation in the NRWAL configs
+            for a manipulated ``cf_mean`` output that can be included in
+            the `output_request` list.
+        save_raw : bool, optional
+            Flag to save an initial ("raw") copy of input datasets from
+            `gen_fpath` that are also part of the `output_request`. For
+            example, if you request ``cf_mean`` in output_request but
+            also manipulate the ``cf_mean`` dataset in the NRWAL
+            equations, the original ``cf_mean`` will be archived under
+            the ``cf_mean_raw`` dataset in `gen_fpath`.
+            By default, ``True``.
+        meta_gid_col : str, optional
+            Column label in the source meta data from `gen_fpath` that
+            contains the unique gid identifier. This will be joined to
+            the site_data ``gid`` column. By default, ``"gid"``.
+        site_meta_cols : list | tuple, optional
+            Column labels from `site_data` to be added to the meta data
+            table in `gen_fpath`. If ``None``, only the columns in
+            :attr:`DEFAULT_META_COLS` will be added. Any columns
+            requested via this input will be considered *in addition to*
+            the :attr:`DEFAULT_META_COLS`. By default, ``None``.
         """
 
         log_versions(logger)
