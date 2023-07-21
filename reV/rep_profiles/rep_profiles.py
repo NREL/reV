@@ -896,7 +896,9 @@ class RepProfiles(RepProfilesBase):
         ----------
         gen_fpath : str
             Filepath to ``reV`` generation output HDF5 file to extract
-            `cf_dset` dataset from.
+            `cf_dset` dataset from. If executing ``reV`` from the
+            command line, this path can contain brackets ``{}`` that
+            will be filled in by the `analysis_years` input.
         rev_summary : str | pd.DataFrame
             Aggregated ``reV`` supply curve summary file. Must include
             the following columns:
@@ -907,7 +909,7 @@ class RepProfiles(RepProfilesBase):
                 - ``gen_gids`` : string representation of python list
                   containing the ``reV`` generation GID values
                   corresponding to each supply curve point.
-                - weight column (based on `weight` input) : string
+                - weight column (name based on `weight` input) : string
                   representation of python list containing the resource
                   GID weights for each supply curve point.
 
@@ -927,7 +929,7 @@ class RepProfiles(RepProfilesBase):
             profile. By default, ``'meanoid'``
         err_method : {'mbe', 'mae', 'rmse'}, optional
             Method identifier for calculation of error from the
-            representative profile. If this input is ``None``, the r
+            representative profile. If this input is ``None``, the
             representative meanoid / medianoid profile will be returned
             directly. By default, ``'rmse'``.
         weight : str, optional

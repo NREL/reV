@@ -85,15 +85,15 @@ class RevNrwal:
             inputs. For example::
 
                 nrwal_configs = {
-                        "default": "/path/to/default/nrwal.json",
-                        "onshore": "/path/to/onshore/nrwal_config.yaml",
-                        "offshore": {
-                            "nrwal_key_1": "nrwal_value_1",
-                            "nrwal_key_2": "nrwal_value_2",
-                            ...
-                        },
+                    "default": "/path/to/default/nrwal.json",
+                    "onshore": "/path/to/onshore/nrwal_config.yaml",
+                    "offshore": {
+                        "nrwal_key_1": "nrwal_value_1",
+                        "nrwal_key_2": "nrwal_value_2",
                         ...
-                    }
+                    },
+                    ...
+                }
 
         output_request : list | tuple
             List of output dataset names to be written to the
