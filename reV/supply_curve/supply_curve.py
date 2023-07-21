@@ -69,17 +69,27 @@ class SupplyCurve:
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve point
-            summary. Can also now be a filepath to a bespoke h5 where the
-            "meta" dataset has the same format as the sc aggregation output.
+            Path to CSV or JSON or DataFrame containing supply curve
+            point summary. Can also be a filepath to a ``reV`` bespoke
+            HDF5 output file where the ``meta`` dataset has the same
+            format as the supply curve aggregation output. If running
+            ``reV`` from the command line, this input can also be
+            ``"PIPELINE"`` to parse the output of the previous step and
+            use it as input to this call.
         trans_table : str | pandas.DataFrame | list
-            Path to .csv or .json or DataFrame containing supply curve
-            transmission mapping, can also be a list of transmission tables
-            with different line voltage (capacity) ratings.
+            Path to CSV or JSON or DataFrame containing supply curve
+            transmission mapping. This can also be a list of
+            transmission tables with different line voltage (capacity)
+            ratings. See the `reVX Least Cost Transmission Paths
+            <https://github.com/NREL/reVX/tree/main/reVX/least_cost_xmission>`_
+            utility to generate these input tables.
         sc_features : str | pandas.DataFrame, optional
-            Path to .csv or .json or DataFrame containing additional supply
-            curve features, e.g. transmission multipliers, regions,
-            by default None
+            Path to CSV or JSON or DataFrame containing additional
+            supply curve features (e.g. transmission multipliers,
+            regions, etc.). These features will be merged to the
+            `sc_points` input table on ALL columns that both have in
+            common. If ``None``, no extra supply curve features are
+            added. By default, ``None``.
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
             this column determine the size of transmission lines built.
@@ -88,7 +98,10 @@ class SupplyCurve:
             values. Note that if this column != "capacity", then
             "capacity" must also be included in `trans_sc_table` since
             those values match the "mean_cf" data (which is used to
-            calculate LCOT and Total LCOE). By default, ``"capacity"``.
+            calculate LCOT and Total LCOE). This input can be used to,
+            e.g., size transmission lines based on solar AC capacity (
+            ``sc_capacity_col="capacity_ac"``). By default,
+            ``"capacity"``.
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
@@ -840,7 +853,7 @@ class SupplyCurve:
         found make a total LCOE column with friction."""
 
         if 'mean_lcoe_friction' in self._trans_table:
-            lcoe_friction = (self._trans_table['lcot']
+            lcoe_friction = (self._trans_table['total_lcoe']
                              + self._trans_table['mean_lcoe_friction'])
             self._trans_table['total_lcoe_friction'] = lcoe_friction
             logger.info('Found mean LCOE with friction. Adding key '
@@ -1299,8 +1312,7 @@ class SupplyCurve:
             consider_friction=True, sort_on=None,
             columns=('trans_gid', 'trans_type', 'trans_cap_cost_per_mw',
                      'dist_km', 'lcot', 'total_lcoe'),
-            max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
-            offshore_compete=False):
+            max_workers=None, competition=None):
         """Run Supply Curve Transmission calculations.
 
         Run full supply curve taking into account available capacity of
@@ -1312,12 +1324,16 @@ class SupplyCurve:
             Full path to output CSV file. Does not need to include file
             ending - it will be added automatically if missing.
         fixed_charge_rate : float
-            Fixed charge rate, used to compute LCOT.
+            Fixed charge rate, (in decimal form: 5% = 0.05). This value
+            is used to compute LCOT.
         simple : bool, optional
-            Option to run the simple sort. If ``False``, a full
-            transmission sort is run. Note that the full transmission
-            sort requires the ``avail_cap_frac`` and ``line_limited``
-            inputs. By default, ``True``.
+            Option to run the simple sort (does not keep track of
+            capacity available on the existing transmission grid). If
+            ``False``, a full transmission sort (where connections are
+            limited based on available transmission capacity) is run.
+            Note that the full transmission sort requires the
+            `avail_cap_frac` and `line_limited` inputs.
+            By default, ``True``.
         avail_cap_frac : int, optional
             This input has no effect if ``simple=True``. Fraction of
             transmissions features capacity ``ac_cap`` to make available
@@ -1328,9 +1344,12 @@ class SupplyCurve:
             of the attached lines. This is a legacy method.
             By default, ``False``.
         transmission_costs : str | dict, optional
-            Dictionary of transmission features or path to JSON file
-            containing a dictionary of transmission features. This
-            dictionary must include:
+            Dictionary of transmission feature costs or path to JSON
+            file containing a dictionary of transmission feature costs.
+            These costs are used to compute transmission capital cost
+            if the input transmission tables do not have a
+            ``"trans_cap_cost"`` column (this input is ignored
+            otherwise). The dictionary must include:
 
                 - line_tie_in_cost
                 - line_cost
@@ -1340,15 +1359,21 @@ class SupplyCurve:
 
             By default, ``None``.
         consider_friction : bool, optional
-            Flag to consider friction layer on LCOE when
-            ``mean_lcoe_friction`` is in the sc points input.
+            Flag to add a new ``"total_lcoe_friction"`` column to the
+            supply curve output that contains the sum of the computed
+            ``"total_lcoe"`` value and the input
+            ``"mean_lcoe_friction"`` values. If ``"mean_lcoe_friction"``
+            is not in the `sc_points` input, this option is ignored.
             By default, ``True``.
         sort_on : str, optional
-            Column label to sort the Supply Curve table on. This affects the
-            build priority - connections with the lowest value in this column
-            will be built first, by default `None`, which will use
-            total LCOE without any reinforcement costs as the sort value.
-        columns : list | tuple
+            Column label to sort the supply curve table on. This affects
+            the build priority when doing a "full" sort - connections
+            with the lowest value in this column will be built first. If
+            ``None``, the sort is performed on the total LCOE *without*
+            any reinforcement costs added (this is typically what you
+            want - it avoids unrealistically long spur connections).
+            By default ``None``.
+        columns : list | tuple, optional
             Columns to preserve in output supply curve dataframe.
             By default, ``('trans_gid', 'trans_type',
             'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')``.
@@ -1356,36 +1381,48 @@ class SupplyCurve:
             Number of workers to use to compute LCOT. If > 1,
             computation is run in parallel. If ``None``, computation
             uses all available CPU's. By default, ``None``.
-        wind_dirs : pandas.DataFrame | str, optional
-            Path to CSV file or :class:`reVX.wind_dirs.wind_dirs.WindDirs`
-            output with the neighboring supply curve point gids and
-            power-rose value at each cardinal direction.
-            By default, ``None``.
-        n_dirs : int, optional
-            Number of prominent directions to use. By default, ``2``.
-        downwind : bool, optional
-            Flag to remove downwind neighbors as well as upwind
-            neighbors. By default, ``False``.
-        offshore_compete : bool, optional
-            Flag as to whether offshore farms should be included during
-            :class:`CompetitiveWindFarms`. By default, ``False``.
+        competition : dict, optional
+            Optional dictionary of arguments for competitive wind farm
+            exclusions, which removes supply curve points upwind (and
+            optionally downwind) of the lowest LCOE supply curves.
+            If ``None``, no competition is applied. Otherwise, this
+            dictionary can have up to four keys:
+
+                - ``wind_dirs`` (required) : A path to a CSV file or
+                  `reVX ProminentWindDirections
+                  <https://tinyurl.com/2k8apwuv/>`_
+                  output with the neighboring supply curve point gids
+                  and power-rose values at each cardinal direction.
+                - ``n_dirs`` (optional) : An integer representing the
+                  number of prominent directions to use during wind farm
+                  competition. By default, ``2``.
+                - ``downwind`` (optional) : A flag indicating that
+                  downwind neighbors should be removed in addition to
+                  upwind neighbors during wind farm competition.
+                  By default, ``False``.
+                - ``offshore_compete`` (optional) : A flag indicating
+                  that offshore farms should be included during wind
+                  farm competition. By default, ``False``.
+
+            By default ``None``.
 
         Returns
         -------
         str
             Path to output supply curve.
         """
-
         kwargs = {"fcr": fixed_charge_rate,
                   "transmission_costs": transmission_costs,
                   "consider_friction": consider_friction,
                   "sort_on": sort_on,
                   "columns": columns,
-                  "wind_dirs": wind_dirs,
-                  "n_dirs": n_dirs,
-                  "downwind": downwind,
-                  "offshore_compete": offshore_compete,
-                  "max_workers": max_workers}
+                  "max_workers": max_workers,
+                  "wind_dirs": None,
+                  "n_dirs": 2,
+                  "downwind":  False,
+                  "offshore_compete": False}
+        kwargs.update(competition or {})
+
         if simple:
             supply_curve = self.simple_sort(**kwargs)
         else:
