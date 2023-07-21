@@ -87,11 +87,25 @@ class Econ(BaseGen):
             A dictionary mapping SAM input configuration ID(s) to SAM
             configuration(s). Keys are the SAM config ID(s) which
             correspond to the ``config`` column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary
-            of SAM config inputs. This input can also be a string
-            pointing to a single SAM JSON config file. In this case, the
-            ``config`` column of the CSV points input should be set to
-            ``None`` or left out completely.
+            CSV. Values for each key are either a path to a
+            corresponding JSON SAM config file or a full dictionary
+            of SAM config inputs. For example::
+
+                sam_files = {
+                    "default": "/path/to/default/sam.json",
+                    "onshore": "/path/to/onshore/sam_config.json",
+                    "offshore": {
+                        "sam_key_1": "sam_value_1",
+                        "sam_key_2": "sam_value_2",
+                        ...
+                    },
+                    ...
+                }
+
+            This input can also be a string pointing to a single SAM
+            JSON config file. In this case, the ``config`` column of the
+            CSV points input should be set to ``None`` or left out
+            completely.
         cf_file : str
             Path to reV output generation file containing a capacity
             factor output.
@@ -410,7 +424,7 @@ class Econ(BaseGen):
         return data_shape
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800,
-            pool_size=(os.cpu_count() * 2)):
+            pool_size=os.cpu_count() * 2):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -428,9 +442,9 @@ class Econ(BaseGen):
             Number of seconds to wait for parallel run iteration to
             complete before returning zeros. By default, ``1800``
             seconds.
-        pool_size : tuple, optional
+        pool_size : int, optional
             Number of futures to submit to a single process pool for
-            parallel futures. By default, ``(os.cpu_count() * 2)``.
+            parallel futures. By default, ``os.cpu_count() * 2``.
 
         Returns
         -------

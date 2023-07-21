@@ -1090,7 +1090,7 @@ class BaseGen(ABC):
 
             logger.debug('Flushed output successfully to disk.')
 
-    def _pre_split_pc(self, pool_size=(os.cpu_count() * 2)):
+    def _pre_split_pc(self, pool_size=os.cpu_count() * 2):
         """Pre-split project control iterator into sub chunks to further
         split the parallelization.
 
@@ -1126,7 +1126,7 @@ class BaseGen(ABC):
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=(os.cpu_count() * 2),
+    def _parallel_run(self, max_workers=None, pool_size=os.cpu_count() * 2,
                       timeout=1800, **kwargs):
         """Execute parallel compute.
 
