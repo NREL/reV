@@ -32,11 +32,11 @@ def _preprocessor(config, out_dir, job_name, analysis_years=None):
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
-        ``cf_dset`` or ``gen_fpath`` inputs. If ``None``, the
-        ``cf_dset`` and ``gen_fpath`` inputs are assumed to be the full
+        `cf_dset` or `gen_fpath` inputs. If ``None``, the
+        `cf_dset` and `gen_fpath` inputs are assumed to be the full
         dataset name and the full path to the single resource
         file to be processed, respectively. Note that only one of
-        ``cf_dset`` or ``gen_fpath`` are allowed to contain brackets
+        `cf_dset` or `gen_fpath` are allowed to contain brackets
         (``{}``) to be filled in by the analysis years.
         By default, ``None``.
 

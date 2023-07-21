@@ -895,43 +895,57 @@ class RepProfiles(RepProfilesBase):
         Parameters
         ----------
         gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile"
-            from.
+            Filepath to ``reV`` generation output HDF5 file to extract
+            `cf_dset` dataset from.
         rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or
-            full df. Must include "res_gids", "gen_gids", and the
-            "weight" column (if weight is not None).
-        reg_cols : str | list | None
+            Aggregated ``reV`` supply curve summary file. Must include
+            the following columns:
+
+                - ``res_gids`` : string representation of python list
+                  containing the resource GID values corresponding to
+                  each supply curve point.
+                - ``gen_gids`` : string representation of python list
+                  containing the ``reV`` generation GID values
+                  corresponding to each supply curve point.
+                - weight column (based on `weight` input) : string
+                  representation of python list containing the resource
+                  GID weights for each supply curve point.
+
+        reg_cols : str | list
             Label(s) for a categorical region column(s) to extract
-            profiles for. e.g. "state" will extract a rep profile for
-            each unique entry in the "state" column in rev_summary.
+            profiles for. For example, ``"state"`` will extract a rep
+            profile for each unique entry in the ``"state"`` column in
+            `rev_summary`. To get a profile for each supply curve point,
+            try setting `reg_cols` to a primary key such as
+            ``"sc_gid"``.
         cf_dset : str, optional
-            Dataset name to pull generation profiles from.
-            By default, ``'cf_profile'``
-        rep_method : str, optional
+            Dataset name to pull generation profiles from. This dataset
+            must be present in the `gen_fpath` HDF5 file.
+            By default, ``"cf_profile"``
+        rep_method : {'mean', 'meanoid', 'median', 'medianoid'}, optional
             Method identifier for calculation of the representative
             profile. By default, ``'meanoid'``
-        err_method : str, optional
+        err_method : {'mbe', 'mae', 'rmse'}, optional
             Method identifier for calculation of error from the
-            representative profile (e.g. "rmse", "mae", "mbe"). If this
-            is ``None``, the representative meanoid / medianoid profile
-            will be returned directly. By default, ``'rmse'``.
+            representative profile. If this input is ``None``, the r
+            representative meanoid / medianoid profile will be returned
+            directly. By default, ``'rmse'``.
         weight : str, optional
-            Column in rev_summary used to apply weighted mean to
+            Column in `rev_summary` used to apply weighted mean to
             profiles. The supply curve table data in the weight column
-            should have weight values corresponding to the res_gids in
-            the same row. By default, ``'gid_counts'``.
+            should have weight values corresponding to the `res_gids` in
+            the same row (i.e. string representation of python list
+            containing weight values). By default, ``'gid_counts'``.
         n_profiles : int, optional
-            Number of representative profiles to save to fout.
-            By default, ``1``.
+            Number of representative profiles to save to the output
+            file. By default, ``1``.
         aggregate_profiles : bool, optional
             Flag to calculate the aggregate (weighted meanoid) profile
-            for each supply curve point. This behavior is instead of
+            for each supply curve point. This behavior is in lieu of
             finding the single profile per region closest to the
-            meanoid. If you set this flag to ``True``, the
-            ``rep_method``, ``err_method``, and ``n_profiles`` inputs
-            will be forcibly set to the default values.
-            By default, ``False``.
+            meanoid. If you set this flag to ``True``, the `rep_method`,
+            `err_method`, and `n_profiles` inputs will be forcibly set
+            to the default values. By default, ``False``.
         """
 
         log_versions(logger)
@@ -1125,16 +1139,18 @@ class RepProfiles(RepProfilesBase):
         Parameters
         ----------
         fout : str, optional
-            filepath to output h5 file, by default None
+            Filepath to output HDF5 file. If ``None``, output data are
+            not written to a file. By default, ``None``.
         save_rev_summary : bool, optional
-            Flag to save full reV SC table to rep profile output.,
-            by default True
+            Flag to save full ``reV`` supply curve table to rep profile
+            output. By default, ``True``.
         scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
+            Flag to scale `cf_profiles` by 1000 and save as uint16.
+            By default, ``False``.
         max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
+            Number of parallel rep profile workers. ``1`` will run
+            serial, while ``None`` will use all available.
+            By default, ``None``.
         """
 
         if max_workers == 1:
