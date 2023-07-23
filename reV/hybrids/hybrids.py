@@ -839,12 +839,12 @@ class MetaHybridizer:
 
 
 class Hybridization:
-    """Framework to handle hybridization of SC and corresponding profiles."""
+    """Hybridization"""
 
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
                  allow_wind_only=False, fillna=None, limits=None,
                  ratio_bounds=None, ratio='solar_capacity/wind_capacity'):
-        """Initialize Hybridization.
+        """Framework to handle hybridization of SC and corresponding profiles.
 
         ``reV`` hybrids computes a "hybrid" wind and solar supply curve,
         where each supply curve point contains some wind and some solar

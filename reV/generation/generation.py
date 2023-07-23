@@ -48,45 +48,7 @@ with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
 
 
 class Gen(BaseGen):
-    """reV generation analysis class
-
-    Examples
-    --------
-    The following is an example of the most simple way to run reV
-    generation. Note that the ``TESTDATADIR`` refers to the local cloned
-    repository and will need to be replaced with a valid path if you
-    installed ``reV`` via a simple pip install.
-
-    >>> import os
-    >>> from reV import Gen, TESTDATADIR
-    >>>
-    >>> sam_tech = 'pvwattsv7'
-    >>> sites = 0
-    >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
-    >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
-    >>>
-    >>> gen = Gen(sam_tech, sites, fp_sam, fp_res)
-    >>> gen.run()
-    >>>
-    >>> gen.out
-    {'cf_mean': array([0.16966143], dtype=float32)}
-    >>>
-    >>> sites = [3, 4, 7, 9]
-    >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
-    >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
-    >>> gen.run()
-    >>>
-    >>> gen.out
-    {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-     'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-     'cf_profile': array([[0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            ...,
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.]])}
-    """
+    """Gen"""
 
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'geothermal': Geothermal,
@@ -118,7 +80,7 @@ class Gen(BaseGen):
                  drop_leap=False, sites_per_worker=None, mem_util_lim=0.4,
                  scale_outputs=True, write_mapped_gids=False,
                  bias_correct=None):
-        """Initialize Gen.
+        """reV generation analysis class.
 
         ``reV`` generation analysis runs SAM simulations by piping in
         renewable energy resource data (usually from the NSRDB or WTK),
@@ -129,6 +91,43 @@ class Gen(BaseGen):
         input. You can request ``reV`` to run the analysis for one or
         more "sites", which correspond to the meta indices in the
         resource data (also commonly called the ``gid's``).
+
+        Examples
+        --------
+        The following is an example of the most simple way to run reV
+        generation. Note that the ``TESTDATADIR`` refers to the local cloned
+        repository and will need to be replaced with a valid path if you
+        installed ``reV`` via a simple pip install.
+
+        >>> import os
+        >>> from reV import Gen, TESTDATADIR
+        >>>
+        >>> sam_tech = 'pvwattsv7'
+        >>> sites = 0
+        >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
+        >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
+        >>>
+        >>> gen = Gen(sam_tech, sites, fp_sam, fp_res)
+        >>> gen.run()
+        >>>
+        >>> gen.out
+        {'cf_mean': array([0.16966143], dtype=float32)}
+        >>>
+        >>> sites = [3, 4, 7, 9]
+        >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
+        >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
+        >>> gen.run()
+        >>>
+        >>> gen.out
+        {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
+        'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
+        'cf_profile': array([[0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                ...,
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.]])}
 
         Parameters
         ----------
@@ -185,7 +184,12 @@ class Gen(BaseGen):
             This input can also be a string pointing to a single SAM
             JSON config file. In this case, the ``config`` column of the
             CSV points input should be set to ``None`` or left out
-            completely.
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
         resource_file : str
             Filepath to resource data. This input can be path to a
             single resource HDF5 file, a path to a directory containing

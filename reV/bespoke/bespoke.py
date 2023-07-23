@@ -1201,9 +1201,7 @@ class BespokeSinglePlant:
 
 
 class BespokeWindPlants(BaseAggregation):
-    """Framework for analyzing optimized wind plant layouts specific to the
-    local wind resource and exclusions for the full reV supply curve grid.
-    """
+    """BespokeWindPlants"""
 
     def __init__(self, excl_fpath, res_fpath, tm_dset, objective_function,
                  capital_cost_function, fixed_operating_cost_function,
@@ -1215,7 +1213,7 @@ class BespokeWindPlants(BaseAggregation):
                  resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False, prior_run=None, gid_map=None,
                  bias_correct=None, pre_load_data=False):
-        """Initialize Bespoke Wind Plants.
+        """reV bespoke analysis class.
 
         Much like generation, ``reV`` bespoke analysis runs SAM
         simulations by piping in renewable energy resource data (usually
@@ -1377,7 +1375,12 @@ class BespokeWindPlants(BaseAggregation):
             This input can also be a string pointing to a single SAM
             JSON config file. In this case, the ``config`` column of the
             CSV points input should be set to ``None`` or left out
-            completely.
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
         min_spacing : float | int | str, optional
             Minimum spacing between turbines (in meters). This input can
             also be a string like "5x", which is interpreted as 5 times

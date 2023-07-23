@@ -221,127 +221,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
 
 class SupplyCurveAggregation(BaseAggregation):
-    """
-    Supply curve points aggregation framework.
-
-    Examples
-    --------
-    Standard outputs:
-
-    sc_gid : int
-        Unique supply curve gid. This is the enumerated supply curve points,
-        which can have overlapping geographic locations due to different
-        resource bins at the same geographic SC point.
-    res_gids : list
-        Stringified list of resource gids (e.g. original WTK or NSRDB resource
-        GIDs) corresponding to each SC point.
-    gen_gids : list
-        Stringified list of generation gids (e.g. GID in the reV generation
-        output, which corresponds to the reV project points and not
-        necessarily the resource GIDs).
-    gid_counts : list
-        Stringified list of the sum of inclusion scalar values corresponding
-        to each gen_gid and res_gid, where 1 is included, 0 is excluded, and
-        0.7 is included with 70 percent of available land. Each entry in this
-        list is associated with the corresponding entry in the gen_gids and
-        res_gids lists.
-    n_gids : int
-        Total number of included pixels. This is a boolean sum and considers
-        partial inclusions to be included (e.g. 1).
-    mean_cf : float
-        Mean capacity factor of each supply curve point (the arithmetic mean is
-        weighted by the inclusion layer) (unitless).
-    mean_lcoe : float
-        Mean LCOE of each supply curve point (the arithmetic mean is weighted
-        by the inclusion layer). Units match the reV econ output ($/MWh). By
-        default, the LCOE is re-calculated using the multi-year mean capacity
-        factor and annual energy production. This requires several datasets to
-        be aggregated in the h5_dsets input: fixed_charge_rate, capital_cost,
-        fixed_operating_cost, annual_energy_production, and
-        variable_operating_cost. This recalc behavior can be disabled by
-        setting recalc_lcoe=False.
-    mean_res : float
-        Mean resource, the resource dataset to average is provided by the user
-        in 'res_class_dset'. The arithmetic mean is weighted by the inclusion
-        layer.
-    capacity : float
-        Total capacity of each supply curve point (MW). Units are contingent on
-        the 'power_density' input units of MW/km2.
-    area_sq_km : float
-        Total included area for each supply curve point in km2. This is based
-        on the nominal area of each exclusion pixel which by default is
-        calculated from the exclusion profile attributes. The NREL reV default
-        is 0.0081 km2 pixels (90m x 90m). The area sum considers partial
-        inclusions.
-    latitude : float
-        Supply curve point centroid latitude coordinate, in degrees
-        (does not consider exclusions).
-    longitude : float
-        Supply curve point centroid longitude coordinate, in degrees
-        (does not consider exclusions).
-    country : str
-        Country of the supply curve point based on the most common country
-        of the associated resource meta data. Does not consider exclusions.
-    state : str
-        State of the supply curve point based on the most common state
-        of the associated resource meta data. Does not consider exclusions.
-    county : str
-        County of the supply curve point based on the most common county
-        of the associated resource meta data. Does not consider exclusions.
-    elevation : float
-        Mean elevation of the supply curve point based on the mean elevation
-        of the associated resource meta data. Does not consider exclusions.
-    timezone : int
-        UTC offset of local timezone based on the most common timezone of the
-        associated resource meta data. Does not consider exclusions.
-    sc_point_gid : int
-        Spatially deterministic supply curve point gid. Duplicate sc_point_gid
-        values can exist due to resource binning.
-    sc_row_ind : int
-        Row index of the supply curve point in the aggregated exclusion grid.
-    sc_col_ind : int
-        Column index of the supply curve point in the aggregated exclusion grid
-    res_class : int
-        Resource class for the supply curve gid. Each geographic supply curve
-        point (sc_point_gid) can have multiple resource classes associated with
-        it, resulting in multiple supply curve gids (sc_gid) associated with
-        the same spatially deterministic supply curve point.
-
-
-    Optional outputs:
-
-    mean_friction : float
-        Mean of the friction data provided in 'friction_fpath' and
-        'friction_dset'. The arithmetic mean is weighted by boolean
-        inclusions and considers partial inclusions to be included.
-    mean_lcoe_friction : float
-        Mean of the nominal LCOE multiplied by mean_friction value.
-    mean_{dset} : float
-        Mean input h5 dataset(s) provided by the user in 'h5_dsets'. These
-        mean calculations are weighted by the partial inclusion layer.
-    data_layers : float | int | str | dict
-        Requested data layer aggregations, each data layer must be the same
-        shape as the exclusion layers.
-        - mode: int | str
-            Most common value of a given data layer after applying the
-            boolean inclusion mask.
-        - mean : float
-            Arithmetic mean value of a given data layer weighted by the
-            scalar inclusion mask (considers partial inclusions).
-        - min : float | int
-            Minimum value of a given data layer after applying the
-            boolean inclusion mask.
-        - max : float | int
-            Maximum value of a given data layer after applying the
-            boolean inclusion mask.
-        - sum : float
-            Sum of a given data layer weighted by the scalar inclusion mask
-            (considers partial inclusions).
-        - category : dict
-            Dictionary mapping the unique values in the data_layer to the
-            sum of inclusion scalar values associated with all pixels with that
-            unique value.
-    """
+    """SupplyCurveAggregation"""
 
     def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
@@ -351,7 +231,7 @@ class SupplyCurveAggregation(BaseAggregation):
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
                  cap_cost_scale=None, recalc_lcoe=True):
-        """Initialize SupplyCurveAggregation.
+        """reV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
         (e.g. 90m) exclusion dataset with a (typically) lower resolution
@@ -563,6 +443,139 @@ class SupplyCurveAggregation(BaseAggregation):
                 - ``variable_operating_cost``
 
             By default, ``True``.
+
+        Examples
+        --------
+        Standard outputs:
+
+        sc_gid : int
+            Unique supply curve gid. This is the enumerated supply curve
+            points, which can have overlapping geographic locations due
+            to different resource bins at the same geographic SC point.
+        res_gids : list
+            Stringified list of resource gids (e.g. original WTK or
+            NSRDB resource GIDs) corresponding to each SC point.
+        gen_gids : list
+            Stringified list of generation gids (e.g. GID in the reV
+            generation output, which corresponds to the reV project
+            points and not necessarily the resource GIDs).
+        gid_counts : list
+            Stringified list of the sum of inclusion scalar values
+            corresponding to each `gen_gid` and `res_gid`, where 1 is
+            included, 0 is excluded, and 0.7 is included with 70 percent
+            of available land. Each entry in this list is associated
+            with the corresponding entry in the `gen_gids` and
+            `res_gids` lists.
+        n_gids : int
+            Total number of included pixels. This is a boolean sum and
+            considers partial inclusions to be included (e.g. 1).
+        mean_cf : float
+            Mean capacity factor of each supply curve point (the
+            arithmetic mean is weighted by the inclusion layer)
+            (unitless).
+        mean_lcoe : float
+            Mean LCOE of each supply curve point (the arithmetic mean is
+            weighted by the inclusion layer). Units match the reV econ
+            output ($/MWh). By default, the LCOE is re-calculated using
+            the multi-year mean capacity factor and annual energy
+            production. This requires several datasets to be aggregated
+            in the h5_dsets input: ``fixed_charge_rate``,
+            ``capital_cost``,
+            ``fixed_operating_cost``, ``annual_energy_production``, and
+            ``variable_operating_cost``. This recalc behavior can be
+            disabled by setting ``recalc_lcoe=False``.
+        mean_res : float
+            Mean resource, the resource dataset to average is provided
+            by the user in `res_class_dset`. The arithmetic mean is
+            weighted by the inclusion layer.
+        capacity : float
+            Total capacity of each supply curve point (MW). Units are
+            contingent on the `power_density` input units of MW/km2.
+        area_sq_km : float
+            Total included area for each supply curve point in km2. This
+            is based on the nominal area of each exclusion pixel which
+            by default is calculated from the exclusion profile
+            attributes. The NREL reV default is 0.0081 km2 pixels
+            (90m x 90m). The area sum considers partial inclusions.
+        latitude : float
+            Supply curve point centroid latitude coordinate, in degrees
+            (does not consider exclusions).
+        longitude : float
+            Supply curve point centroid longitude coordinate, in degrees
+            (does not consider exclusions).
+        country : str
+            Country of the supply curve point based on the most common
+            country of the associated resource meta data. Does not
+            consider exclusions.
+        state : str
+            State of the supply curve point based on the most common
+            state of the associated resource meta data. Does not
+            consider exclusions.
+        county : str
+            County of the supply curve point based on the most common
+            county of the associated resource meta data. Does not
+            consider exclusions.
+        elevation : float
+            Mean elevation of the supply curve point based on the mean
+            elevation of the associated resource meta data. Does not
+            consider exclusions.
+        timezone : int
+            UTC offset of local timezone based on the most common
+            timezone of the associated resource meta data. Does not
+            consider exclusions.
+        sc_point_gid : int
+            Spatially deterministic supply curve point gid. Duplicate
+            `sc_point_gid` values can exist due to resource binning.
+        sc_row_ind : int
+            Row index of the supply curve point in the aggregated
+            exclusion grid.
+        sc_col_ind : int
+            Column index of the supply curve point in the aggregated
+            exclusion grid
+        res_class : int
+            Resource class for the supply curve gid. Each geographic
+            supply curve point (`sc_point_gid`) can have multiple
+            resource classes associated with it, resulting in multiple
+            supply curve gids (`sc_gid`) associated with the same
+            spatially deterministic supply curve point.
+
+
+        Optional outputs:
+
+        mean_friction : float
+            Mean of the friction data provided in 'friction_fpath' and
+            'friction_dset'. The arithmetic mean is weighted by boolean
+            inclusions and considers partial inclusions to be included.
+        mean_lcoe_friction : float
+            Mean of the nominal LCOE multiplied by mean_friction value.
+        mean_{dset} : float
+            Mean input h5 dataset(s) provided by the user in 'h5_dsets'.
+            These mean calculations are weighted by the partial
+            inclusion layer.
+        data_layers : float | int | str | dict
+            Requested data layer aggregations, each data layer must be
+            the same shape as the exclusion layers.
+
+                - mode: int | str
+                    Most common value of a given data layer after
+                    applying the boolean inclusion mask.
+                - mean : float
+                    Arithmetic mean value of a given data layer weighted
+                    by the scalar inclusion mask (considers partial
+                    inclusions).
+                - min : float | int
+                    Minimum value of a given data layer after applying
+                    the boolean inclusion mask.
+                - max : float | int
+                    Maximum value of a given data layer after applying
+                    the boolean inclusion mask.
+                - sum : float
+                    Sum of a given data layer weighted by the scalar
+                    inclusion mask (considers partial inclusions).
+                - category : dict
+                    Dictionary mapping the unique values in the
+                    `data_layer` to the sum of inclusion scalar values
+                    associated with all pixels with that unique value.
         """
         log_versions(logger)
         logger.info('Initializing SupplyCurveAggregation...')

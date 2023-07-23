@@ -768,6 +768,27 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                  output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
 
+        See the PySAM :py:class:`~PySAM.Pvwattsv8.Pvwattsv8` (or older
+        version model) documentation for the configuration keys required
+        in the `sam_sys_inputs` config. You may also include the
+        following ``reV``-specific keys:
+
+            - ``reV_outages`` : Specification for ``reV``-scheduled
+              stochastic outage losses. See the description of
+              :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+              for instructions on how to specify this input.
+            - ``reV_outages_seed`` : Integer value used to seed the RNG
+              used to compute stochastic outage losses.
+            - ``time_index_step`` : Integer representing the step size
+              used to sample the ``time_index`` in the resource data.
+              This can be used to reduce temporal resolution (i.e. for
+              30 minute NSRDB input data, ``time_index_step=1`` yields
+              the full 30 minute time series as output, while
+              ``time_index_step=2`` yields hourly output, and so forth).
+            - ``clearsky`` : Boolean flag value indicating wether
+              computation should use clearsky resource data to compute
+              generation data.
+
         Parameters
         ----------
         resource : pd.DataFrame
@@ -1258,6 +1279,24 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     reV currently generates an empty weather file to pass to SAM. This
     behavior can be easily updated in the future should the SAM GETEM
     module start using weather data.
+
+    See the PySAM :py:class:`~PySAM.Geothermal.Geothermal` documentation
+    for the configuration keys required in the `sam_sys_inputs` config.
+    You may also include the following ``reV``-specific keys:
+
+        - ``reV_outages`` : Specification for ``reV``-scheduled
+        stochastic outage losses. See the description of
+          :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+          for instructions on how to specify this input.
+        - ``reV_outages_seed`` : Integer value used to seed the RNG
+          used to compute stochastic outage losses.
+        - ``time_index_step`` : Integer representing the step size
+          used to sample the ``time_index`` in the resource data.
+          This can be used to reduce temporal resolution (i.e. for
+          30 minute NSRDB input data, ``time_index_step=1`` yields
+          the full 30 minute time series as output, while
+          ``time_index_step=2`` yields hourly output, and so forth).
+
     """
 
     MODULE = 'geothermal'
@@ -1533,12 +1572,58 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
 
 class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
-    """Base Class for Wind generation from SAM"""
+    """AbstractSamWind"""
 
     def __init__(self, *args, **kwargs):
-        """
-        See docstring for :class:`AbstractSamGeneration` for full input
-        parameter descriptions.
+        """Wind generation from SAM.
+
+        See the PySAM :py:class:`~PySAM.Windpower.Windpower`
+        documentation for the configuration keys required in the
+        `sam_sys_inputs` config. You may also include the following
+        ``reV``-specific keys:
+
+            - ``reV_power_curve_losses`` : A dictionary that can be used
+              to initialize
+              :class:`~reV.losses.power_curve.PowerCurveLossesInput`.
+              See the description of that class for instructions on how
+              to specify this input.
+            - ``reV_outages`` : Specification for ``reV``-scheduled
+              stochastic outage losses. See the description of
+              :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+              for instructions on how to specify this input.
+            - ``reV_outages_seed`` : Integer value used to seed the RNG
+              used to compute stochastic outage losses.
+            - ``time_index_step`` : Integer representing the step size
+              used to sample the ``time_index`` in the resource data.
+              This can be used to reduce temporal resolution (i.e. for
+              30 minute NSRDB input data, ``time_index_step=1`` yields
+              the full 30 minute time series as output, while
+              ``time_index_step=2`` yields hourly output, and so forth).
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
         super().__init__(*args, **kwargs)
         self.add_power_curve_losses()

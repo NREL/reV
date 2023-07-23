@@ -884,20 +884,19 @@ class RepProfilesBase(ABC):
 
 
 class RepProfiles(RepProfilesBase):
-    """Framework for calculating the representative profiles based on an
-    error metric vs. a mean or median profile.
-    """
+    """RepProfiles"""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse', weight='gid_counts',
                  n_profiles=1, aggregate_profiles=False):
-        """Initialize RepProfiles.
+        """reV rep profiles class.
 
         ``reV`` rep profiles compute representative generation profiles
         for each supply curve point output by ``reV`` supply curve
         aggregation. Representative profiles can either be a spatial
         aggregation of generation profiles or actual generation profiles
-        that most closely resemble an aggregated profile.
+        that most closely resemble an aggregated profile (selected based
+        on an error metric).
 
         Parameters
         ----------

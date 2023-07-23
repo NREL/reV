@@ -431,17 +431,20 @@ class PowerCurveLossesInput:
             A dictionary containing specifications for the power curve
             losses. This dictionary must contain the following keys:
                 - `target_losses_percent`
-                    An integer or float value representing the
-                    total percentage of annual energy production that
-                    should be lost due to the power curve
-                    transformation. This value must be in the range
-                    [0, 100].
+                   An integer or float value representing the
+                   total percentage of annual energy production that
+                   should be lost due to the power curve
+                   transformation. This value must be in the range
+                   [0, 100].
             The input dictionary can also provide the following optional
             keys:
                 - `transformation` - by default, ``horizontal_translation``
-                    A string representing the type of transformation to
-                    apply to the power curve. This sting must be one of
-                    the keys of :obj:`TRANSFORMATIONS`.
+                  A string representing the type of transformation to
+                  apply to the power curve. This sting must be one of
+                  the keys of :obj:`TRANSFORMATIONS`. See the relevant
+                  transformation class documentation for detailed
+                  information on that type of power curve
+                  transformation.
 
         """
         self._specs = specs

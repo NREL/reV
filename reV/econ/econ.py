@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class Econ(BaseGen):
-    """reV econ analysis class to run SAM simulations"""
+    """Econ"""
 
     # Mapping of reV econ output strings to SAM econ modules
     OPTIONS = {'lcoe_fcr': SAM_LCOE,
@@ -54,7 +54,7 @@ class Econ(BaseGen):
     def __init__(self, project_points, sam_files, cf_file, site_data=None,
                  output_request=('lcoe_fcr',), sites_per_worker=100,
                  mem_util_lim=0.4, append=False):
-        """Initialize an econ instance.
+        """reV econ analysis class.
 
         ``reV`` econ analysis runs SAM econ calculations, typically to
         compute LCOE (using :py:class:`PySAM.Lcoefcr.Lcoefcr`), though
@@ -118,7 +118,12 @@ class Econ(BaseGen):
             This input can also be a string pointing to a single SAM
             JSON config file. In this case, the ``config`` column of the
             CSV points input should be set to ``None`` or left out
-            completely.
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
         cf_file : str
             Path to reV output generation file containing a capacity
             factor output. If executing ``reV`` from the command line,

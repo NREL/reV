@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class RevNrwal:
-    """Framework to handle reV-NRWAL analysis."""
+    """RevNrwal"""
 
     DEFAULT_META_COLS = ('config', )
     """Columns from the `site_data` table to join to the output meta data"""
@@ -36,7 +36,7 @@ class RevNrwal:
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw=True, meta_gid_col='gid',
                  site_meta_cols=None):
-        """Initialize RevNrwal.
+        """Framework to handle reV-NRWAL analysis.
 
         ``reV`` NRWAL analysis runs ``reV`` data through the NRWAL
         compute library. Everything in this module operates on the
@@ -44,7 +44,6 @@ class RevNrwal:
         (usually the wind or solar resource resolution but could also be
         the supply curve resolution after representative profiles is
         run).
-
 
         Parameters
         ----------
@@ -87,7 +86,12 @@ class RevNrwal:
             This input can also be a string pointing to a single SAM
             JSON config file. In this case, the ``config`` column of the
             CSV points input should be set to ``None`` or left out
-            completely.
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
         nrwal_configs : dict
             A dictionary mapping SAM input configuration ID(s) to NRWAL
             configuration(s). Keys are the SAM config ID(s) which

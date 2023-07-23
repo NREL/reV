@@ -26,46 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 class SupplyCurve:
-    """
-    Class to handle LCOT calcuation and SupplyCurve sorting
-
-    Examples
-    --------
-    Standard outputs in addition to the values provided in sc_points,
-    produced by `SupplyCurveAggregation <https://nrel.github.io/reV/reV/reV.
-    supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.
-    SupplyCurveAggregation>`_:
-
-    transmission_multiplier : int | float
-        Transmission cost multiplier that scales the line cost but not the
-        tie-in cost in the calculation of LCOT.
-    trans_gid : int
-        Unique transmission feature identifier that each supply curve point
-        was connected to.
-    trans_capacity : float
-        Total capacity (not available capacity) of the transmission feature
-        that each supply curve point was connected to. Default units are MW.
-    trans_type : str
-        Tranmission feature type that each supply curve point was connected to
-        (e.g. Transline, Substation).
-    trans_cap_cost_per_mw : float
-        Capital cost of connecting each supply curve point to their respective
-        transmission feature. This value includes line cost with
-        transmission_multiplier and the tie-in cost. Default units are $/MW.
-    dist_km : float
-        Distance in km from supply curve point to transmission connection.
-    lcot : float
-        Levelized cost of connecting to transmission ($/MWh).
-    total_lcoe : float
-        Total LCOE of each supply curve point (mean_lcoe + lcot) ($/MWh).
-    total_lcoe_friction : float
-        Total LCOE of each supply curve point considering the LCOE friction
-        scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
-    """
+    """SupplyCurve"""
 
     def __init__(self, sc_points, trans_table, sc_features=None,
                  sc_capacity_col='capacity'):
-        """Initialize SupplyCurve.
+        """reV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
         with each supply curve point output by ``reV`` supply curve
@@ -117,6 +82,43 @@ class SupplyCurve:
             e.g., size transmission lines based on solar AC capacity (
             ``sc_capacity_col="capacity_ac"``). By default,
             ``"capacity"``.
+
+        Examples
+        --------
+        Standard outputs in addition to the values provided in
+        `sc_points`, produced by
+        :class:`reV.supply_curve.sc_aggregation.SupplyCurveAggregation`:
+
+            - transmission_multiplier : int | float
+                Transmission cost multiplier that scales the line cost
+                but not the tie-in cost in the calculation of LCOT.
+            - trans_gid : int
+                Unique transmission feature identifier that each supply
+                curve point was connected to.
+            - trans_capacity : float
+                Total capacity (not available capacity) of the
+                transmission feature that each supply curve point was
+                connected to. Default units are MW.
+            - trans_type : str
+                Tranmission feature type that each supply curve point
+                was connected to (e.g. Transline, Substation).
+            - trans_cap_cost_per_mw : float
+                Capital cost of connecting each supply curve point to
+                their respective transmission feature. This value
+                includes line cost with transmission_multiplier and the
+                tie-in cost. Default units are $/MW.
+            - dist_km : float
+                Distance in km from supply curve point to transmission
+                connection.
+            - lcot : float
+                Levelized cost of connecting to transmission ($/MWh).
+            - total_lcoe : float
+                Total LCOE of each supply curve point (mean_lcoe + lcot)
+                ($/MWh).
+            - total_lcoe_friction : float
+                Total LCOE of each supply curve point considering the
+                LCOE friction scalar from the aggregation step
+                (mean_lcoe_friction + lcot) ($/MWh).
         """
         log_versions(logger)
         logger.info('Supply curve points input: {}'.format(sc_points))
