@@ -45,6 +45,7 @@ class Econ(BaseGen):
                'fixed_operating_cost': SAM_LCOE,
                'variable_operating_cost': SAM_LCOE,
                }
+    """Available ``reV`` econ `output_request` options"""
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
@@ -54,6 +55,18 @@ class Econ(BaseGen):
                  output_request=('lcoe_fcr',), sites_per_worker=100,
                  mem_util_lim=0.4, append=False):
         """Initialize an econ instance.
+
+        ``reV`` econ analysis runs SAM econ calculations, typically to
+        compute LCOE (using :py:class:`PySAM.Lcoefcr.Lcoefcr`), though
+        :py:class:`PySAM.Singleowner.Singleowner` or
+        :py:class:`PySAM.Windbos.Windbos` calculations can also be
+        performed simply by requesting outputs from those computation
+        modules. See the keys of
+        :attr:`Econ.OPTIONS <~reV.econ.econ.Econ.OPTIONS>` for all
+        available econ outputs. Econ computations rely on an input a
+        generation (i.e. capacity factor) profile. You can request
+        ``reV`` to run the analysis for one or more "sites", which
+        correspond to the meta indices in the generation data.
 
         Parameters
         ----------
@@ -126,8 +139,10 @@ class Econ(BaseGen):
             considered. By default, ``None``.
         output_request : list | tuple, optional
             List of output variables requested from SAM. Can be any
-            of the parameters in the "Outputs" group of the
-            `PySAM module <https://tinyurl.com/bdhff7jj/>`_ being
+            of the parameters in the "Outputs" group of the PySAM module
+            (e.g. :py:class:`PySAM.Windpower.Windpower.Outputs`,
+            :py:class:`PySAM.Pvwattsv8.Pvwattsv8.Outputs`,
+            :py:class:`PySAM.Geothermal.Geothermal.Outputs`, etc.) being
             executed. This list can also include a select number of SAM
             config/resource parameters to include in the output:
             any key in any of the

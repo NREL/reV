@@ -65,7 +65,22 @@ class SupplyCurve:
 
     def __init__(self, sc_points, trans_table, sc_features=None,
                  sc_capacity_col='capacity'):
-        """
+        """Initialize SupplyCurve.
+
+        ``reV`` supply curve computes the transmission costs associated
+        with each supply curve point output by ``reV`` supply curve
+        aggregation. Transmission costs can either be computed
+        competitively (where total capacity remaining on the
+        transmission grid is tracked and updated after each new
+        connection) or non-competitively (where the cheapest connections
+        for each supply curve point are allowed regardless of the
+        remaining transmission grid capacity). In both cases, the
+        permutation of transmission costs between supply curve points
+        and transmission grid features should be computed using the
+        `reVX Least Cost Transmission Paths
+        <https://github.com/NREL/reVX/tree/main/reVX/least_cost_xmission>`_
+        utility.
+
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
@@ -1389,8 +1404,8 @@ class SupplyCurve:
             dictionary can have up to four keys:
 
                 - ``wind_dirs`` (required) : A path to a CSV file or
-                  `reVX ProminentWindDirections
-                  <https://tinyurl.com/2k8apwuv/>`_
+                  :py:class:`reVX ProminentWindDirections
+                  <reVX.wind_dirs.prominent_wind_dirs.ProminentWindDirections>`
                   output with the neighboring supply curve point gids
                   and power-rose values at each cardinal direction.
                 - ``n_dirs`` (optional) : An integer representing the

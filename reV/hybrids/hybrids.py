@@ -844,7 +844,15 @@ class Hybridization:
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
                  allow_wind_only=False, fillna=None, limits=None,
                  ratio_bounds=None, ratio='solar_capacity/wind_capacity'):
-        """
+        """Initialize Hybridization.
+
+        ``reV`` hybrids computes a "hybrid" wind and solar supply curve,
+        where each supply curve point contains some wind and some solar
+        capacity. Various ratio limits on wind-to-solar farm properties
+        (e.g. wind-to-solar capacity) can be applied during the
+        hybridization process. Hybrid generation profiles are also
+        computed during this process.
+
         Parameters
         ----------
         solar_fpath : str

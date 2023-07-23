@@ -48,23 +48,14 @@ with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
 
 
 class Gen(BaseGen):
-    """reV generation analysis class to run SAM simulations
-
+    """reV generation analysis class
 
     Examples
     --------
     The following is an example of the most simple way to run reV
-    generation. The reV code pipes in renewable energy resource data
-    (usually from the NSRDB or WTK), loads the SAM config, and then
-    executes the PySAM compute module for a given technology. If
-    economic parameters are supplied, you can bundle a "follow-on" econ
-    calculation by just adding the desired econ output keys to the
-    output_request kwarg. You can request reV to run the analysis for
-    one or more "sites", which correspond to the meta indices in the
-    resource data (also commonly called the gid's). Note that the
-    TESTDATADIR refers to the local cloned repository and will need to
-    be replaced with a valid path if you installed reV via a simple pip
-    install.
+    generation. Note that the ``TESTDATADIR`` refers to the local cloned
+    repository and will need to be replaced with a valid path if you
+    installed ``reV`` via a simple pip install.
 
     >>> import os
     >>> from reV import Gen, TESTDATADIR
@@ -127,7 +118,18 @@ class Gen(BaseGen):
                  drop_leap=False, sites_per_worker=None, mem_util_lim=0.4,
                  scale_outputs=True, write_mapped_gids=False,
                  bias_correct=None):
-        """
+        """Initialize Gen.
+
+        ``reV`` generation analysis runs SAM simulations by piping in
+        renewable energy resource data (usually from the NSRDB or WTK),
+        loading the SAM config, and then executing the PySAM compute
+        module for a given technology. If economic parameters are
+        supplied, you can bundle a "follow-on" econ calculation by
+        just adding the desired econ output keys to the `output_request`
+        input. You can request ``reV`` to run the analysis for one or
+        more "sites", which correspond to the meta indices in the
+        resource data (also commonly called the ``gid's``).
+
         Parameters
         ----------
         technology : str
@@ -190,8 +192,8 @@ class Gen(BaseGen):
             data spread across multiple HDF5 files, or a path including
             a wildcard input like ``/h5_dir/prefix*suffix``. In all
             cases, it must be readable by
-            `rex.Resource <https://tinyurl.com/y4yu5bxj/>`_ or
-            `rex.MultiFileResource <https://tinyurl.com/m4z75v5t/>`_.
+            :py:class:`rex.resource.Resource`
+            or :py:class:`rex.multi_file_resource.MultiFileResource`.
             This means the data file(s) must contain a 1D ``time_index``
             dataset indicating the UTC time of observation, a 1D
             ``meta`` dataset represented by a DataFrame with
@@ -213,8 +215,10 @@ class Gen(BaseGen):
             resolutions is performed. By default, ``None``.
         output_request : list | tuple, optional
             List of output variables requested from SAM. Can be any
-            of the parameters in the "Outputs" group of the
-            `PySAM module <https://tinyurl.com/bdhff7jj/>`_ being
+            of the parameters in the "Outputs" group of the PySAM module
+            (e.g. :py:class:`PySAM.Windpower.Windpower.Outputs`,
+            :py:class:`PySAM.Pvwattsv8.Pvwattsv8.Outputs`,
+            :py:class:`PySAM.Geothermal.Geothermal.Outputs`, etc.) being
             executed. This list can also include a select number of SAM
             config/resource parameters to include in the output:
             any key in any of the

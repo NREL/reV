@@ -715,6 +715,12 @@ class MultiYear(Outputs):
 def my_collect_groups(out_fpath, groups):
     """Collect all groups into a single multi-year HDF5 file.
 
+    ``reV`` multi-year combines ``reV`` generation data from multiple
+    years (typically stored in separate files) into a single multi-year
+    file. Each dataset in the multi-year file is labeled with the
+    corresponding years, and multi-year averages of the yearly datasets
+    are also computed.
+
     Parameters
     ----------
     out_fpath : str

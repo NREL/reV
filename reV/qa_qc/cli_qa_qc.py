@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 def cli_qa_qc(modules, out_dir, max_workers=None):
     """Run QA/QC on reV outputs
 
+    ``reV`` QA/QC performs quality assurance checks on ``reV`` output
+    data. Users can specify the type of QA/QC that should be applied
+    to each ``reV`` module.
+
     Parameters
     ----------
     modules : dict

@@ -1215,7 +1215,18 @@ class BespokeWindPlants(BaseAggregation):
                  resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False, prior_run=None, gid_map=None,
                  bias_correct=None, pre_load_data=False):
-        """
+        """Initialize Bespoke Wind Plants.
+
+        Much like generation, ``reV`` bespoke analysis runs SAM
+        simulations by piping in renewable energy resource data (usually
+        from the WTK), loading the SAM config, and then executing the
+        :py:class:`PySAM.Windpower.Windpower` compute module.
+        However, unlike ``reV`` generation, bespoke analysis is
+        performed on the supply-curve grid resolution, and the plant
+        layout is optimized for every supply-curve point based on an
+        optimization objective specified by the user. See the NREL
+        publication on the bespoke methodology for more information.
+
         Parameters
         ----------
         excl_fpath : str | list | tuple
@@ -1235,9 +1246,9 @@ class BespokeWindPlants(BaseAggregation):
             including a wildcard input like ``/h5_dir/prefix*suffix`` to
             run bespoke on multiple years of resource data. The former
             must be readable by
-            `rex.WindResource <https://tinyurl.com/25kk53vk/>`_ while
-            the latter mult be readable by
-            `rex.MultiYearWindResource <https://tinyurl.com/2wa6yrnh/>`_.
+            :py:class:`rex.renewable_resource.WindResource` while the
+            latter must be readable by
+            or :py:class:`rex.multi_year_resource.MultiYearWindResource`.
             This means the data file(s) must contain a 1D ``time_index``
             dataset indicating the UTC time of observation, a 1D
             ``meta`` dataset represented by a DataFrame with

@@ -351,7 +351,19 @@ class SupplyCurveAggregation(BaseAggregation):
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
                  cap_cost_scale=None, recalc_lcoe=True):
-        """
+        """Initialize SupplyCurveAggregation.
+
+        ``reV`` supply curve aggregation combines a high-resolution
+        (e.g. 90m) exclusion dataset with a (typically) lower resolution
+        (e.g. 2km) generation dataset by mapping all data onto the high-
+        resolution grid and aggregating it by a large factor (e.g. 64 or
+        128). The result is coarsely-gridded data that summarizes
+        capacity and generation potential as well as associated
+        economics under a particular land access scenario. This module
+        can also summarize extra data layers during the aggregation
+        process, allowing for complementary land characterization
+        analysis.
+
         Parameters
         ----------
         excl_fpath : str | list | tuple

@@ -36,7 +36,16 @@ class RevNrwal:
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw=True, meta_gid_col='gid',
                  site_meta_cols=None):
-        """
+        """Initialize RevNrwal.
+
+        ``reV`` NRWAL analysis runs ``reV`` data through the NRWAL
+        compute library. Everything in this module operates on the
+        spatiotemporal resolution of the ``reV`` generation output file
+        (usually the wind or solar resource resolution but could also be
+        the supply curve resolution after representative profiles is
+        run).
+
+
         Parameters
         ----------
         gen_fpath : str
