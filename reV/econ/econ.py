@@ -62,7 +62,7 @@ class Econ(BaseGen):
         :py:class:`PySAM.Windbos.Windbos` calculations can also be
         performed simply by requesting outputs from those computation
         modules. See the keys of
-        :attr:`Econ.OPTIONS <~reV.econ.econ.Econ.OPTIONS>` for all
+        :attr:`Econ.OPTIONS <reV.econ.econ.Econ.OPTIONS>` for all
         available econ outputs. Econ computations rely on an input a
         generation (i.e. capacity factor) profile. You can request
         ``reV`` to run the analysis for one or more "sites", which
