@@ -995,8 +995,10 @@ class RepProfiles(RepProfilesBase):
             self._meta = self._rev_summary
         else:
             self._meta = self._rev_summary.groupby(self._reg_cols)
-            self._meta = \
-                self._meta['timezone'].apply(lambda x: stats.mode(x).mode[0])
+            self._meta = (
+                self._meta['timezone']
+                .apply(lambda x: stats.mode(x, keepdims=True).mode[0])
+            )
             self._meta = self._meta.reset_index()
 
         self._meta['rep_gen_gid'] = None
