@@ -62,7 +62,14 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
+    'matplotlib': ('https://matplotlib.org/stable', None),
+    'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
+    'PySAM': ('https://nrel-pysam.readthedocs.io/en/latest/', None),
+    'rex': ('https://nrel.github.io/rex/', None),
+    'reVX': ('https://nrel.github.io/reVX/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
