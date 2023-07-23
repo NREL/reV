@@ -868,7 +868,7 @@ class SupplyCurve:
         found make a total LCOE column with friction."""
 
         if 'mean_lcoe_friction' in self._trans_table:
-            lcoe_friction = (self._trans_table['total_lcoe']
+            lcoe_friction = (self._trans_table['lcot']
                              + self._trans_table['mean_lcoe_friction'])
             self._trans_table['total_lcoe_friction'] = lcoe_friction
             logger.info('Found mean LCOE with friction. Adding key '
@@ -1431,11 +1431,7 @@ class SupplyCurve:
                   "consider_friction": consider_friction,
                   "sort_on": sort_on,
                   "columns": columns,
-                  "max_workers": max_workers,
-                  "wind_dirs": None,
-                  "n_dirs": 2,
-                  "downwind":  False,
-                  "offshore_compete": False}
+                  "max_workers": max_workers}
         kwargs.update(competition or {})
 
         if simple:
