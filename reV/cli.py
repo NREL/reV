@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 commands = [bespoke_command, gen_command, econ_command, collect_command,
             my_command, sc_agg_command, sc_command, rep_profiles_command,
             hybrids_command, nrwal_command, qa_qc_command]
-main = make_cli(commands, info={"version": __version__})
+main = make_cli(commands, info={"name": "reV", "version": __version__})
 main.add_command(qa_qc_extra)
 main.add_command(project_points)
 
