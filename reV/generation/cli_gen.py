@@ -2,27 +2,34 @@
 """
 Generation CLI utility functions.
 """
+import pprint
 import logging
 
 from gaps.cli import as_click_command, CLICommandFromClass
 
 from reV.generation.generation import Gen
 from reV.utilities import ModuleName
-from reV.utilities.cli_functions import format_analysis_years
+from reV.utilities.cli_functions import format_analysis_years, init_cli_logging
 from reV.utilities.exceptions import ConfigError
 
 
 logger = logging.getLogger(__name__)
 
 
-# TODO: Add logging
-def _preprocessor(config, analysis_years=None):
+def _preprocessor(config, job_name, log_directory, verbose,
+                  analysis_years=None):
     """Preprocess generation config user input.
 
     Parameters
     ----------
     config : dict
         User configuration file input as (nested) dict.
+    job_name : str
+        Name of ``reV`` job being run.
+    log_directory : str
+        Path to log output directory.
+    verbose : bool
+        Flag to signal ``DEBUG`` verbosity (``verbose=True``).
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -35,6 +42,7 @@ def _preprocessor(config, analysis_years=None):
     dict
         Updated config file.
     """
+    init_cli_logging(job_name, log_directory, verbose)
     analysis_years = format_analysis_years(analysis_years)
 
     config["resource_file"] = _parse_res_files(config["resource_file"],
@@ -48,6 +56,7 @@ def _preprocessor(config, analysis_years=None):
 
     config['technology'] = (config['technology'].lower()
                             .replace(' ', '').replace('_', ''))
+    _log_generation_cli_inputs(config)
     return config
 
 
@@ -79,6 +88,18 @@ def _parse_res_files(res_fps, analysis_years):
         raise ConfigError(msg)
 
     return res_fps
+
+
+def _log_generation_cli_inputs(config):
+    """Log initial generation CLI inputs"""
+
+    logger.info('The following project points were specified: "{}"'
+                .format(config.get('project_points', None)))
+    logger.info('The following SAM configs are available to this run:\n{}'
+                .format(pprint.pformat(config.get('sam_files', None),
+                                       indent=4)))
+    logger.info('The following is being used for site specific input data: '
+                '"{}"'.format(config.get("site_data")))
 
 
 gen_command = CLICommandFromClass(Gen, method="run",

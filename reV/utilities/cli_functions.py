@@ -6,12 +6,28 @@ import logging
 from warnings import warn
 
 from gaps.pipeline import Status
+from rex.utilities.loggers import init_mult
 
 from reV.utilities import ModuleName
 from reV.utilities.exceptions import ConfigWarning, PipelineError
 
 
 logger = logging.getLogger(__name__)
+
+
+def init_cli_logging(name, log_directory, verbose):
+    """Initialize CLI logger
+
+    Parameters
+    ----------
+    name : str
+        The name to use for the log file written to disk.
+    log_directory : str
+        Path to log file output directory.
+    verbose : bool
+        Option to make logger verbose (DEBUG).
+    """
+    init_mult(name, log_directory, modules=['reV', 'rex'], verbose=verbose)
 
 
 def format_analysis_years(analysis_years=None):
