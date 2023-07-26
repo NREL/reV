@@ -345,6 +345,48 @@ def test_gen_egs_too_high_egs_plant_design_temp():
             assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
+def test_gen_with_time_index_step_input():
+    """Test generation for geothermal module with time_index_step=2"""
+    points = slice(0, 1)
+
+    meta = pd.DataFrame({"latitude": [41.29], "longitude": [-71.86],
+                         "timezone": [-5]})
+    meta.index.name = "gid"
+
+    with TemporaryDirectory() as td:
+        geo_sam_file = os.path.join(td, "geothermal_sam.json")
+        geo_res_file = os.path.join(td, "test_geo.h5")
+        with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+            geo_config = json.load(fh)
+
+        geo_config["time_index_step"] = 2
+        with open(geo_sam_file, "w") as fh:
+            json.dump(geo_config, fh)
+
+        with Outputs(geo_res_file, 'w') as f:
+            f.meta = meta
+            f.time_index = pd.date_range(start='1/1/2018', end='1/1/2019',
+                                         freq='H')[:-1]
+
+        Outputs.add_dataset(
+            geo_res_file, 'temperature_2000m', np.array([150]),
+            np.float32, attrs={"units": "C"},
+        )
+        Outputs.add_dataset(
+            geo_res_file, 'potential_MW_2000m', np.array([20]),
+            np.float32, attrs={"units": "MW"},
+        )
+
+        output_request = ('annual_energy', 'cf_mean', 'cf_profile',
+                          'gen_profile', 'lcoe_fcr', 'nameplate')
+        gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
+        gen.run(max_workers=1)
+
+        assert gen.out["cf_profile"].shape[0] == 8760 // 2
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
