@@ -811,7 +811,7 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
             sam_config['losses'] = 0
             with open(sam_fp, 'w+') as fh:
                 fh.write(json.dumps(sam_config))
-            sam_files = {"sam_gen_pv_1": sam_fp}
+            sam_files = {"sam gen pv_1": sam_fp}
         else:
             config_file_path = 'local_wind.json'
             project_points = os.path.join(TESTDATADIR, 'config',

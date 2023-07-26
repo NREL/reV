@@ -177,7 +177,7 @@ def test_econ_from_config(runner, clear_loggers):
                            'gen_out/gen_ri_pv_2012_x000.h5')
     sam_file = os.path.join(TESTDATADIR,
                             'SAM/i_lcoe_naris_pv_1axis_inv13.json')
-    project_points = os.path.join(TESTDATADIR, 'pipeline',
+    project_points = os.path.join(TESTDATADIR, 'config',
                                   'project_points_10.csv')
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
@@ -197,7 +197,7 @@ def test_econ_from_config(runner, clear_loggers):
             ],
             "project_points": project_points,
             "sam_files": {
-                "sam_gen_pv_1": sam_file
+                "sam gen pv_1": sam_file
             },
             "technology": "pvwattsv5"
         }

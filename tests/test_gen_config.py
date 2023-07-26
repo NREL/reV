@@ -54,7 +54,7 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
                                           'config', "project_points_10.csv")
             resource_file = os.path.join(TESTDATADIR,
                                          'nsrdb/ri_100_nsrdb_{}.h5')
-            sam_files = {"sam_gen_pv_1":
+            sam_files = {"sam gen pv_1":
                          os.path.join(TESTDATADIR,
                                       "SAM/../SAM/naris_pv_1axis_inv13.json")}
         elif tech == 'wind':
