@@ -1445,6 +1445,6 @@ class SupplyCurve:
         if not out_fpath.endswith(".csv"):
             out_fpath = '{}.csv'.format(out_fpath)
 
-        supply_curve.to_csv(out_fpath)
+        supply_curve.to_csv(out_fpath, index=False)
 
         return out_fpath

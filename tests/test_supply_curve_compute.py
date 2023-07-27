@@ -44,6 +44,7 @@ def baseline_verify(sc_full, fpath_baseline):
     """Verify numerical columns in a CSV against a baseline file."""
     if isinstance(sc_full, str) and os.path.exists(sc_full):
         sc_full = pd.read_csv(sc_full)
+        assert not any("Unnamed" in col_name for col_name in sc_full.columns)
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
