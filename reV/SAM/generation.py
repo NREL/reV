@@ -774,9 +774,31 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         following ``reV``-specific keys:
 
             - ``reV_outages`` : Specification for ``reV``-scheduled
-              stochastic outage losses. See the description of
+              stochastic outage losses. For example::
+
+                    outage_info = [
+                        {
+                            'count': 6,
+                            'duration': 24,
+                            'percentage_of_capacity_lost': 100,
+                            'allowed_months': ['January', 'March'],
+                            'allow_outage_overlap': True
+                        },
+                        {
+                            'count': 10,
+                            'duration': 1,
+                            'percentage_of_capacity_lost': 10,
+                            'allowed_months': ['January'],
+                            'allow_outage_overlap': False
+                        },
+                        ...
+                    ]
+
+              See the description of
               :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
-              for instructions on how to specify this input.
+              or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
             - ``reV_outages_seed`` : Integer value used to seed the RNG
               used to compute stochastic outage losses.
             - ``time_index_step`` : Integer representing the step size
@@ -785,6 +807,12 @@ class AbstractSamPv(AbstractSamSolar, ABC):
               30 minute NSRDB input data, ``time_index_step=1`` yields
               the full 30 minute time series as output, while
               ``time_index_step=2`` yields hourly output, and so forth).
+
+              .. Note:: The reduced data shape (i.e. after applying a
+                        step size of `time_index_step`) must still be an
+                        integer multiple of 8760, or the execution will
+                        fail.
+
             - ``clearsky`` : Boolean flag value indicating wether
               computation should use clearsky resource data to compute
               generation data.
@@ -1285,9 +1313,31 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     You may also include the following ``reV``-specific keys:
 
         - ``reV_outages`` : Specification for ``reV``-scheduled
-        stochastic outage losses. See the description of
+          stochastic outage losses. For example::
+
+                outage_info = [
+                    {
+                        'count': 6,
+                        'duration': 24,
+                        'percentage_of_capacity_lost': 100,
+                        'allowed_months': ['January', 'March'],
+                        'allow_outage_overlap': True
+                    },
+                    {
+                        'count': 10,
+                        'duration': 1,
+                        'percentage_of_capacity_lost': 10,
+                        'allowed_months': ['January'],
+                        'allow_outage_overlap': False
+                    },
+                    ...
+                ]
+
+          See the description of
           :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
-          for instructions on how to specify this input.
+          or the
+          `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+          for detailed instructions on how to specify this input.
         - ``reV_outages_seed`` : Integer value used to seed the RNG
           used to compute stochastic outage losses.
         - ``time_index_step`` : Integer representing the step size
@@ -1585,20 +1635,55 @@ class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
             - ``reV_power_curve_losses`` : A dictionary that can be used
               to initialize
               :class:`~reV.losses.power_curve.PowerCurveLossesInput`.
-              See the description of that class for instructions on how
-              to specify this input.
+              For example::
+
+                    reV_power_curve_losses = {
+                        'target_losses_percent': 9.8,
+                        'transformation': 'exponential_stretching'
+                    }
+
+              See the description of the class mentioned above or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
             - ``reV_outages`` : Specification for ``reV``-scheduled
-              stochastic outage losses. See the description of
+              stochastic outage losses. For example::
+
+                    outage_info = [
+                        {
+                            'count': 6,
+                            'duration': 24,
+                            'percentage_of_capacity_lost': 100,
+                            'allowed_months': ['January', 'March'],
+                            'allow_outage_overlap': True
+                        },
+                        {
+                            'count': 10,
+                            'duration': 1,
+                            'percentage_of_capacity_lost': 10,
+                            'allowed_months': ['January'],
+                            'allow_outage_overlap': False
+                        },
+                        ...
+                    ]
+
+              See the description of
               :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
-              for instructions on how to specify this input.
+              or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
             - ``reV_outages_seed`` : Integer value used to seed the RNG
               used to compute stochastic outage losses.
             - ``time_index_step`` : Integer representing the step size
               used to sample the ``time_index`` in the resource data.
               This can be used to reduce temporal resolution (i.e. for
-              30 minute NSRDB input data, ``time_index_step=1`` yields
-              the full 30 minute time series as output, while
+              30 minute input data, ``time_index_step=1`` yields the
+              full 30 minute time series as output, while
               ``time_index_step=2`` yields hourly output, and so forth).
+
+              .. Note:: The reduced data shape (i.e. after applying a
+                        step size of `time_index_step`) must still be
+                        an integer multiple of 8760, or the execution
+                        will fail.
 
         Parameters
         ----------
