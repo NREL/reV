@@ -1059,8 +1059,7 @@ class SupplyCurve:
         connections = pd.DataFrame(conn_lists, index=index)
         connections.index.name = 'sc_gid'
         connections = connections.dropna(subset=[sort_on])
-        connections = connections[columns]
-        connections = connections.reset_index()
+        connections = connections[columns].reset_index()
 
         sc_gids = self._sc_points['sc_gid'].values
         connected = connections['sc_gid'].values
@@ -1194,7 +1193,7 @@ class SupplyCurve:
 
         trans_table = self._trans_table.copy()
         pos = trans_table['lcot'].isnull()
-        trans_table = trans_table.loc[~pos].sort_values(sort_on)
+        trans_table = trans_table.loc[~pos].sort_values([sort_on, 'trans_gid'])
 
         total_lcoe_fric = None
         if consider_friction and 'mean_lcoe_friction' in trans_table:
@@ -1303,8 +1302,8 @@ class SupplyCurve:
         columns = self._adjust_output_columns(columns, consider_friction)
         sort_on = self._determine_sort_on(sort_on)
 
-        connections = trans_table.sort_values(sort_on).groupby('sc_gid')
-        connections = connections.first()
+        connections = trans_table.sort_values([sort_on, 'trans_gid'])
+        connections = connections.groupby('sc_gid').first()
         rename = {'trans_gid': 'trans_gid',
                   'category': 'trans_type'}
         connections = connections.rename(columns=rename)
