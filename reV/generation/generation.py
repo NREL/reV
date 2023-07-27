@@ -229,6 +229,16 @@ class Gen(BaseGen):
             `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
             may be requested. If ``cf_mean`` is not included in this
             list, it will automatically be added.
+
+            .. Note:: If you are performing ``reV`` solar runs using
+              ``PVWatts`` and would like ``reV`` to include AC capacity
+              values in your aggregation/supply curves, then you must
+              include the ``"dc_ac_ratio"`` time series as an output in
+              `output_request` when running ``reV`` generation. The AC
+              capacity outputs will automatically be added during the
+              aggregation/supply curve step if the ``"dc_ac_ratio"``
+              dataset is detected in the generation file.
+
             By default, ``('cf_mean',)``.
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input

@@ -1384,10 +1384,12 @@ class SupplyCurve:
         sort_on : str, optional
             Column label to sort the supply curve table on. This affects
             the build priority when doing a "full" sort - connections
-            with the lowest value in this column will be built first. If
-            ``None``, the sort is performed on the total LCOE *without*
-            any reinforcement costs added (this is typically what you
-            want - it avoids unrealistically long spur connections).
+            with the lowest value in this column will be built first.
+            For a "simple" sort, only connections with the lowest value
+            in this column will be considered. If ``None``, the sort is
+            performed on the total LCOE *without* any reinforcement
+            costs added (this is typically what you want - it avoids
+            unrealistically long spur-line connections).
             By default ``None``.
         columns : list | tuple, optional
             Columns to preserve in output supply curve dataframe.
