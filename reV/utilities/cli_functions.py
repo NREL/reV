@@ -28,6 +28,10 @@ def init_cli_logging(name, log_directory, verbose):
         Option to make logger verbose (DEBUG).
     """
     init_mult(name, log_directory, modules=['reV', 'rex'], verbose=verbose)
+    logger.info("Initialized reV/rex {}loggers with name {!r} and log "
+                "directory {!r}"
+                .format("verbose " if verbose else "", name,
+                        str(log_directory)))
 
 
 def format_analysis_years(analysis_years=None):
