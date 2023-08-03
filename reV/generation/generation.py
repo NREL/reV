@@ -77,9 +77,9 @@ class Gen(BaseGen):
     def __init__(self, technology, project_points, sam_files, resource_file,
                  low_res_resource_file=None, output_request=('cf_mean',),
                  site_data=None, curtailment=None, gid_map=None,
-                 drop_leap=False, sites_per_worker=None, mem_util_lim=0.4,
-                 scale_outputs=True, write_mapped_gids=False,
-                 bias_correct=None):
+                 drop_leap=False, sites_per_worker=None,
+                 memory_utilization_limit=0.4, scale_outputs=True,
+                 write_mapped_gids=False, bias_correct=None):
         """reV generation analysis class.
 
         ``reV`` generation analysis runs SAM simulations by piping in
@@ -283,7 +283,7 @@ class Gen(BaseGen):
             Number of sites to run in series on a worker. ``None``
             defaults to the resource file chunk size.
             By default, ``None``.
-        mem_util_lim : float, optional
+        memory_utilization_limit : float, optional
             Memory utilization limit (fractional). Must be a value
             between 0 and 1. This input sets how many site results will
             be stored in-memory at any given time before flushing to
@@ -318,7 +318,8 @@ class Gen(BaseGen):
                          curtailment=curtailment)
 
         super().__init__(pc, output_request, site_data=site_data,
-                         drop_leap=drop_leap, mem_util_lim=mem_util_lim,
+                         drop_leap=drop_leap,
+                         memory_utilization_limit=memory_utilization_limit,
                          scale_outputs=scale_outputs)
 
         if self.tech not in self.OPTIONS:

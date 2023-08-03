@@ -69,7 +69,8 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 drop_leap=False, mem_util_lim=0.4, scale_outputs=True):
+                 drop_leap=False, memory_utilization_limit=0.4,
+                 scale_outputs=True):
         """
         Parameters
         ----------
@@ -84,7 +85,7 @@ class BaseGen(ABC):
             Input as None if no site-specific data.
         drop_leap : bool
             Drop leap day instead of final day of year during leap years.
-        mem_util_lim : float
+        memory_utilization_limit : float
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
@@ -102,14 +103,14 @@ class BaseGen(ABC):
         self._sam_module = None
         self._sam_obj_default = None
         self._drop_leap = drop_leap
-        self.mem_util_lim = mem_util_lim
+        self.mem_util_lim = memory_utilization_limit
         self.scale_outputs = scale_outputs
 
         self._run_attrs = {'points_control': str(points_control),
                            'output_request': output_request,
                            'site_data': str(site_data),
                            'drop_leap': str(drop_leap),
-                           'mem_util_lim': mem_util_lim}
+                           'memory_utilization_limit': self.mem_util_lim}
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)

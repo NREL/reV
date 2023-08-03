@@ -53,7 +53,7 @@ class Econ(BaseGen):
 
     def __init__(self, project_points, sam_files, cf_file, site_data=None,
                  output_request=('lcoe_fcr',), sites_per_worker=100,
-                 mem_util_lim=0.4, append=False):
+                 memory_utilization_limit=0.4, append=False):
         """reV econ analysis class.
 
         ``reV`` econ analysis runs SAM econ calculations, typically to
@@ -157,7 +157,7 @@ class Econ(BaseGen):
             Number of sites to run in series on a worker. ``None``
             defaults to the resource file chunk size.
             By default, ``None``.
-        mem_util_lim : float, optional
+        memory_utilization_limit : float, optional
             Memory utilization limit (fractional). Must be a value
             between 0 and 1. This input sets how many site results will
             be stored in-memory at any given time before flushing to
@@ -173,7 +173,7 @@ class Econ(BaseGen):
                          sites_per_worker=sites_per_worker, append=append)
 
         super().__init__(pc, output_request, site_data=site_data,
-                         mem_util_lim=mem_util_lim)
+                         memory_utilization_limit=memory_utilization_limit)
 
         self._cf_file = cf_file
         self._append = append
