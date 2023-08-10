@@ -223,7 +223,8 @@ class Gen(BaseGen):
                   - For solar data, ensure the DNI/DHI are not zero. You
                     can calculate one of these these inputs from the
                     other using the relationship
-                    :math:`GHI = DNI * cos(SZA) + DHI`
+
+                    .. math:: `GHI = DNI * cos(SZA) + DHI`
 
         low_res_resource_file : str, optional
             Optional low resolution resource file that will be
