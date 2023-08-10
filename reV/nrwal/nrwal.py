@@ -96,9 +96,9 @@ class RevNrwal:
             A dictionary mapping SAM input configuration ID(s) to NRWAL
             configuration(s). Keys are the SAM config ID(s) which
             correspond to the keys in the `sam_files` input. Values
-            for each key are either a path to a corresponding NRWAL
-            config file or a full dictionary of NRWAL config inputs. For
-            example::
+            for each key are either a path to a corresponding NRWAL YAML
+            or JSON config file or a full dictionary of NRWAL config
+            inputs. For example::
 
                 nrwal_configs = {
                     "default": "/path/to/default/nrwal.json",
