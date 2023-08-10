@@ -17,12 +17,6 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://badge.fury.io/py/NREL-reV.svg
     :target: https://badge.fury.io/py/NREL-reV
 
-.. image:: https://anaconda.org/nrel/nrel-rev/badges/version.svg
-    :target: https://anaconda.org/nrel/nrel-rev
-
-.. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
-    :target: https://anaconda.org/nrel/nrel-rev
-
 .. image:: https://codecov.io/gh/nrel/reV/branch/main/graph/badge.svg?token=U4ZU9F0K0Z
     :target: https://codecov.io/gh/nrel/reV
 
@@ -131,7 +125,6 @@ Option 1: Install from PIP or Conda (recommended for analysts):
 
 3. Install reV:
     1) ``pip install NREL-reV`` or
-    2) ``conda install nrel-rev --channel=nrel``
 
        - NOTE: If you install using conda and want to use `HSDS <https://github.com/NREL/hsds-examples>`_
          you will also need to install h5pyd manually: ``pip install h5pyd``
