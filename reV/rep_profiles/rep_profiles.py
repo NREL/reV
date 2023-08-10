@@ -385,8 +385,10 @@ class RegionRepProfile:
                    'data: {}'.format(missing))
             assert not any(missing), msg
 
-            iloc = np.where(np.isin(source_res_gids, self._res_gids))[0]
-            self._source_profiles = res[self._cf_dset, :, iloc]
+            unique_res_gids, u_idxs = np.unique(self._res_gids,
+                                                return_inverse=True)
+            iloc = np.where(np.isin(source_res_gids, unique_res_gids))[0]
+            self._source_profiles = res[self._cf_dset, :, iloc[u_idxs]]
 
     @property
     def source_profiles(self):
@@ -613,7 +615,6 @@ class RepProfilesBase(ABC):
         self._cf_dset = cf_dset
         self._gen_fpath = gen_fpath
         self._reg_cols = reg_cols
-        self._regions = None
 
         self._rev_summary = self._parse_rev_summary(rev_summary)
 
@@ -623,10 +624,6 @@ class RepProfilesBase(ABC):
         self._check_req_cols(self._rev_summary, RegionRepProfile.GEN_GID_COL)
 
         self._check_rev_gen(gen_fpath, cf_dset, self._rev_summary)
-
-        if self._reg_cols is not None:
-            self._regions = {k: self._rev_summary[k].unique().tolist()
-                             for k in self._reg_cols}
         self._time_index = None
         self._meta = None
         self._profiles = None
@@ -939,11 +936,24 @@ class RepProfiles(RepProfilesBase):
             representative meanoid / medianoid profile will be returned
             directly. By default, ``'rmse'``.
         weight : str, optional
-            Column in `rev_summary` used to apply weighted mean to
-            profiles. The supply curve table data in the weight column
-            should have weight values corresponding to the `res_gids` in
-            the same row (i.e. string representation of python list
-            containing weight values). By default, ``'gid_counts'``.
+            Column in `rev_summary` used to apply weights when computing
+            mean profiles. The supply curve table data in the weight
+            column should have weight values corresponding to the
+            `res_gids` in the same row (i.e. string representation of
+            python list containing weight values).
+
+            .. Important: You'll often want to set this value to
+               something other than ``None`` (typically ``"gid_counts"``
+               if running on standard ``reV`` outputs). Otherwise, the
+               unique generation profiles within each supply curve point
+               are weighted equally. For example, if you have a 64x64
+               supply curve point, and one generation profile takes up
+               4095 (99.98%) 90m cells while a second generation profile
+               takes up only one 90m cell (0.02%), they will contribute
+               *equally* to the meanoid profile unless these weights are
+               specified.
+
+            By default, ``'gid_counts'``.
         n_profiles : int, optional
             Number of representative profiles to save to the output
             file. By default, ``1``.

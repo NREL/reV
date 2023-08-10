@@ -196,7 +196,8 @@ def test_agg_profile():
     )
 
 
-def test_many_regions():
+@pytest.mark.parametrize("use_weights", [True, False])
+def test_many_regions(use_weights):
     """Test multiple complicated regions."""
     sites = np.arange(100)
     zeros = np.zeros((100,))
@@ -208,9 +209,45 @@ def test_many_regions():
                                 'res_class': zeros,
                                 'region1': region1,
                                 'region2': region2,
+                                'weight': sites + 1,
                                 'timezone': timezone})
     reg_cols = ['region1', 'region2']
-    rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight=None)
+    if use_weights:
+        rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight="weight")
+    else:
+        rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight=None)
+    rp.run()
+
+    assert rp.profiles[0].shape == (17520, 6)
+    assert len(rp.meta) == 6
+
+    for r1 in set(region1):
+        assert r1 in rp.meta['region1'].values
+
+    for r2 in set(region2):
+        assert r2 in rp.meta['region2'].values
+
+
+def test_many_regions_with_list_weights():
+    """Test multiple complicated regions with multiple weights per row."""
+    sites = [list(np.random.choice(np.arange(100), np.random.randint(10) + 10))
+             for __ in np.arange(100)]
+    weights = [str(list(np.random.choice(np.arange(100), len(row))))
+               for row in sites]
+    sites = [str(row) for row in sites]
+    zeros = np.zeros((100,))
+    region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
+    timezone = np.random.choice([-4, -5, -6, -7], 100)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites,
+                                'res_class': zeros,
+                                'region1': region1,
+                                'region2': region2,
+                                'weights': weights,
+                                'timezone': timezone})
+    reg_cols = ['region1', 'region2']
+    rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight='weights')
     rp.run()
 
     assert rp.profiles[0].shape == (17520, 6)
