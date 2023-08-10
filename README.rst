@@ -64,22 +64,6 @@ reV command line tools
 - `reV-supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
 - `reV-supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
 
-Using Eagle Env
-===============
-
-If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled
-conda env:
-
-.. code-block:: bash
-
-    conda activate /shared-projects/rev/modulefiles/conda/envs/rev/
-
-or
-
-.. code-block:: bash
-
-    source activate /shared-projects/rev/modulefiles/conda/envs/rev/
-
 
 Launching a run
 ---------------
