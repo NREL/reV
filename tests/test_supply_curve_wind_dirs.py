@@ -43,6 +43,9 @@ def test_competitive_wind_dirs(downwind):
     else:
         baseline = pd.read_csv(baseline)
 
+    sc_points = sc_points.sort_values(by="sc_gid").reset_index(drop=True)
+    baseline = baseline.sort_values(by="sc_gid").reset_index(drop=True)
+
     assert_frame_equal(sc_points, baseline, check_dtype=False)
 
 
