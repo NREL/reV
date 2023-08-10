@@ -6,7 +6,7 @@
   "log_directory": "/scratch/gbuster/rev/test_pipeline",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "nodes": 5,
     "option": "eagle",
     "walltime": 10.0

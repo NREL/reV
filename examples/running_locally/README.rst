@@ -83,36 +83,3 @@ Command Line Interface (CLI)
 `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
-
-windpower
-+++++++++
-
-Compute wind capacity factors for a given set of latitude and longitude
-coordinates:
-
-.. code-block:: bash
-
-    out_file='./project_points.csv'
-
-    TESTDATADIR=reV/tests/data
-    res_file=${TESTDATADIR}/wtk/ri_100_wtk_2012.h5
-    sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
-
-    reV-gen direct --tech=windpower --res_file=${res_file} --sam_files=${sam_file} --lat_lon_coords 41.77 -71.74 local
-
-pvwatts
-+++++++
-
-NOTE: ``pvwattsv5`` and ``pvwattsv7`` are both available from reV.
-
-Compute pvcapacity factors for all resource gids in a Rhode Island:
-
-.. code-block:: bash
-
-    out_file='./project_points.csv'
-
-    TESTDATADIR=../tests/data
-    res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
-    sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
-
-    reV-gen direct --tech=pvwattsv5 --res_file=${res_file} --sam_files=${sam_file} --region="Rhode Island" --region_col=state local

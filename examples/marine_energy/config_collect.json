@@ -29,7 +29,7 @@
   ],
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "option": "eagle",
     "walltime": 1
   },

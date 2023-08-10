@@ -2,7 +2,7 @@
   "log_directory": "./logs/",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "max_workers": 1,
     "option": "eagle",
     "walltime": 1

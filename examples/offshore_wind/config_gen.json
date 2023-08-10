@@ -6,7 +6,7 @@
   "log_directory": "./logs/",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "nodes": 5,
     "option": "eagle",
     "sites_per_worker": 25,

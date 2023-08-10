@@ -5,7 +5,7 @@
   "excl_fpath": "/shared-projects/rev/exclusions/Offshore_Exclusions.h5",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "option": "eagle",
     "walltime": 4.0
   },

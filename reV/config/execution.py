@@ -125,7 +125,6 @@ class HPCConfig(BaseExecutionConfig):
 
             For EAGLE, a full additional flag.
             Config should look like:
-                "feature": "--qos=high"
                 "feature": "--depend=[state:job_id]"
         """
         return self.get('feature', None)
