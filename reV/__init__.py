@@ -3,6 +3,9 @@
 The Renewable Energy Potential Model
 """
 from __future__ import print_function, division, absolute_import
+import logging
+if not logging.getLogger().handlers:
+    logging.getLogger().addHandler(logging.NullHandler())
 import os
 
 from reV.econ import Econ
