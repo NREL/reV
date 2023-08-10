@@ -942,7 +942,7 @@ class RepProfiles(RepProfilesBase):
             `res_gids` in the same row (i.e. string representation of
             python list containing weight values).
 
-            .. Important: You'll often want to set this value to
+            .. Important:: You'll often want to set this value to
                something other than ``None`` (typically ``"gid_counts"``
                if running on standard ``reV`` outputs). Otherwise, the
                unique generation profiles within each supply curve point
