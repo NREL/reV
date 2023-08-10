@@ -852,6 +852,39 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                          output_request=output_request,
                          drop_leap=drop_leap)
 
+    def set_resource_data(self, resource, meta):
+        """Set NSRDB resource data arrays.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+
+        Raises
+        ------
+        ValueError : If lat/lon outside of -90 to 90 and -180 to 180,
+                     respectively.
+
+        """
+        bad_location_input = ((meta['latitude'] < -90)
+                              | (meta['latitude'] > 90)
+                              | (meta['longitude'] < -180)
+                              | (meta['longitude'] > 180))
+        if bad_location_input.any():
+            raise ValueError("Detected latitude/longitude values outside of "
+                             "the range -90 to 90 and -180 to 180, "
+                             "respectively. Please ensure input resource data"
+                             "locations conform to these ranges. ")
+        return super().set_resource_data(resource, meta)
+
     @staticmethod
     def set_latitude_tilt_az(sam_sys_inputs, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0

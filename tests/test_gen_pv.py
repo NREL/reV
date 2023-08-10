@@ -601,6 +601,29 @@ def test_ac_outputs():
     assert np.isclose(gen.out['cf_profile_ac'], 1).any()
 
 
+@pytest.mark.parametrize("bad_input", [("latitude", -91),
+                                       ("latitude", 91),
+                                       ("longitude", -181),
+                                       ("longitude", 181)])
+def test_bad_loc_inputs(bad_input):
+    """Test that error is thrown for bad lat/lon inputs."""
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    col, val = bad_input
+    with tempfile.TemporaryDirectory() as td:
+        res_file_bad = os.path.join(td, 'res_bad_loc.h5')
+        shutil.copy(res_file, res_file_bad)
+        with Outputs(res_file_bad, mode='a') as f:
+            meta = f.meta.copy()
+            meta.loc[0, col] = val
+            f.meta = meta
+
+        gen = Gen('pvwattsv8', slice(0, 3), sam_files, res_file_bad,
+                  output_request=('cf_profile',), sites_per_worker=50)
+        with pytest.raises(ValueError):
+            gen.run(max_workers=1)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

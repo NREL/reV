@@ -202,12 +202,31 @@ class Gen(BaseGen):
             dataset indicating the UTC time of observation, a 1D
             ``meta`` dataset represented by a DataFrame with
             site-specific columns, and 2D resource datasets that match
-            the dimensions of (time_index, meta). The time index must
-            start at 00:00 of January 1st of the year under
+            the dimensions of (``time_index``, ``meta``). The time index
+            must start at 00:00 of January 1st of the year under
             consideration, and its shape must be a multiple of 8760.
             If executing ``reV`` from the command line, this path can
             contain brackets ``{}`` that will be filled in by the
             `analysis_years` input.
+
+            .. Important:: If you are using custom resource data (i.e.
+              not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
+
+                  - The ``meta`` DataFrame is organized such that every
+                    row is a pixel at least ``latitude``, ``longitude``,
+                    ``timezone``, and ``elevation`` are given for each
+                    location.
+                  - The time index and associated temporal data is in
+                    UTC.
+                  - The latitude is between -90 and 90 and longitude is
+                    between -180 and 180.
+                  - For solar data, ensure the DNI/DHI are not zero. You
+                    can calculate one of these these inputs from the
+                    other using the relationship
+
+                    .. math:: GHI = DNI * cos(SZA) + DHI
+
+
         low_res_resource_file : str, optional
             Optional low resolution resource file that will be
             dynamically mapped+interpolated to the nominal-resolution
@@ -228,7 +247,8 @@ class Gen(BaseGen):
             any key in any of the
             `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
             may be requested. If ``cf_mean`` is not included in this
-            list, it will automatically be added.
+            list, it will automatically be added. Time-series profiles
+            requested via this input are output in UTC.
 
             .. Note:: If you are performing ``reV`` solar runs using
               ``PVWatts`` and would like ``reV`` to include AC capacity
@@ -239,8 +259,7 @@ class Gen(BaseGen):
               aggregation/supply curve step if the ``"dc_ac_ratio"``
               dataset is detected in the generation file.
 
-            Time-series profiles requested via this input are output in
-            UTC. By default, ``('cf_mean',)``.
+            By default, ``('cf_mean',)``.
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input
             is a string, it should be a path that points to a CSV file.
