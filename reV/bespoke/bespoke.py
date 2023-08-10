@@ -1404,8 +1404,16 @@ class BespokeWindPlants(BaseAggregation):
             By default, ``None``.
         output_request : list | tuple, optional
             Outputs requested from the SAM windpower simulation after
-            the bespoke plant layout optimization. This input can also
-            be used to request resource means like ``"ws_mean"``,
+            the bespoke plant layout optimization. Can be any of the
+            parameters in the "Outputs" group of the PySAM module
+            :py:class:`PySAM.Windpower.Windpower.Outputs`, PySAM module.
+            This list can also include a select number of SAM
+            config/resource parameters to include in the output:
+            any key in any of the
+            `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
+            may be requested. Time-series profiles requested via this
+            input are output in UTC. This input can also be used to
+            request resource means like ``"ws_mean"``,
             ``"windspeed_mean"``, ``"temperature_mean"``, and
             ``"pressure_mean"``. By default,
             ``('system_capacity', 'cf_mean')``.

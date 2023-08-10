@@ -152,7 +152,8 @@ class Econ(BaseGen):
             config/resource parameters to include in the output:
             any key in any of the
             `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
-            may be requested. By default, ``('lcoe_fcr',)``.
+            may be requested. Time-series profiles requested via this
+            input are output in UTC. By default, ``('lcoe_fcr',)``.
         sites_per_worker : int, optional
             Number of sites to run in series on a worker. ``None``
             defaults to the resource file chunk size.

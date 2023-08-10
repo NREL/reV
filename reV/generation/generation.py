@@ -239,7 +239,8 @@ class Gen(BaseGen):
               aggregation/supply curve step if the ``"dc_ac_ratio"``
               dataset is detected in the generation file.
 
-            By default, ``('cf_mean',)``.
+            Time-series profiles requested via this input are output in
+            UTC. By default, ``('cf_mean',)``.
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input
             is a string, it should be a path that points to a CSV file.
