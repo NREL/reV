@@ -709,7 +709,7 @@ class ProjectPoints:
         df_configs = self.df['config'].unique()
         sam_configs = self.sam_inputs
 
-        # Checks to make sure that the same number of SAM config .json files
+        # Checks to make sure that the same number of SAM config files
         # as references in project_points DataFrame
         if len(df_configs) > len(sam_configs):
             msg = ('Points references {} configs while only '

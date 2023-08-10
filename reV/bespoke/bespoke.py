@@ -1313,8 +1313,8 @@ class BespokeWindPlants(BaseAggregation):
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
                   ``None`` (or left out completely) if you specify only
-                  a single SAM JSON configuration file as the
-                  `sam_files` input.
+                  a single SAM configuration file as the `sam_files`
+                  input.
 
             The CSV file may also contain site-specific inputs by
             including a column named after a config keyword (e.g. a
@@ -1358,12 +1358,12 @@ class BespokeWindPlants(BaseAggregation):
             configuration(s). Keys are the SAM config ID(s) which
             correspond to the ``config`` column in the project points
             CSV. Values for each key are either a path to a
-            corresponding JSON SAM config file or a full dictionary
+            corresponding SAM config file or a full dictionary
             of SAM config inputs. For example::
 
                 sam_files = {
                     "default": "/path/to/default/sam.json",
-                    "onshore": "/path/to/onshore/sam_config.json",
+                    "onshore": "/path/to/onshore/sam_config.yaml",
                     "offshore": {
                         "sam_key_1": "sam_value_1",
                         "sam_key_2": "sam_value_2",
@@ -1373,7 +1373,7 @@ class BespokeWindPlants(BaseAggregation):
                 }
 
             This input can also be a string pointing to a single SAM
-            JSON config file. In this case, the ``config`` column of the
+            config file. In this case, the ``config`` column of the
             CSV points input should be set to ``None`` or left out
             completely. See the documentation for the ``reV`` SAM class
             (e.g. :class:`reV.SAM.generation.WindPower`,

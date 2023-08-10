@@ -8,6 +8,7 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 from rex.utilities import check_eval_str
+from gaps.config import load_config
 from reV.config.base_config import BaseConfig
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class Curtailment(BaseConfig):
 
         if isinstance(curtailment_parameters, str):
             # received json, extract to dictionary
-            curtailment_parameters = self.get_file(curtailment_parameters)
+            curtailment_parameters = load_config(curtailment_parameters)
 
         # intialize config object with curtailment parameters
         super().__init__(curtailment_parameters)
