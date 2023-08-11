@@ -8,17 +8,16 @@ import matplotlib.pyplot as plt
 
 def get_xy(A):
     """separate polygon exterior coordinates to x and y
+
     Parameters
     ----------
     A : Polygon.exteroir.coords
-    exterior coordinates from a shapely Polygon
+        Exterior coordinates from a shapely Polygon
 
     Outputs
     ----------
-    x : array
-    boundary polygon x coordinates
-    y : array
-    boundary polygon y coordinates
+    x, y : array
+        Boundary polygon x and y coordinates
     """
     x = np.zeros(len(A))
     y = np.zeros(len(A))
@@ -30,19 +29,21 @@ def get_xy(A):
 
 def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
     """plot the wind plant boundaries
+
     Parameters
     ----------
     geom : Polygon | MultiPolygon
-        the shapely.Polygon or shapely.MultiPolygon that define the wind plant
-    boundary(ies).
-    ax (:py:class:`matplotlib.pyplot.axes`, optional):
-        The figure axes on which the wind rose is plotted. Defaults to None.
-    color : string (optional)
-        the color for the wind plant boundaries
-    linestyle : string (optional)
-        style to plot the boundary lines
-    linewidth : float (optional)
-        the width of the boundary lines
+        The shapely.Polygon or shapely.MultiPolygon that define the wind
+        plant boundary(ies).
+    ax : :py:class:`matplotlib.pyplot.axes`, optional
+        The figure axes on which the wind rose is plotted.
+        Defaults to :obj:`None`.
+    color : string, optional
+        The color for the wind plant boundaries
+    linestyle : string, optional
+        Style to plot the boundary lines
+    linewidth : float, optional
+        The width of the boundary lines
     """
     if ax is None:
         _, ax = plt.subplots()
@@ -78,20 +79,20 @@ def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):
 
 def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
     """plot wind turbine locations
+
     Parameters
     ----------
-    x : array
-        wind turbine x locations
-    y : array
-        wind turbine y locations
+    x, y : array
+        Wind turbine x and y locations
     r : float
-        wind turbine radius
-    ax (:py:class:`matplotlib.pyplot.axes`, optional):
-        The figure axes on which the wind rose is plotted. Defaults to None.
-    color : string (optional)
-        the color for the wind plant boundaries
-    nums : Bool (optional)
-        show the turbine numbers next to each turbine
+        Wind turbine radius
+    ax :py:class:`matplotlib.pyplot.axes`, optional
+        The figure axes on which the wind rose is plotted.
+        Defaults to :obj:`None`.
+    color : string, optional
+        The color for the wind plant boundaries
+    nums : bool, optional
+        Option to show the turbine numbers next to each turbine
     """
     # Set up figure
     if ax is None:
@@ -110,18 +111,20 @@ def plot_turbines(x, y, r, ax=None, color="C0", nums=False):
 def plot_windrose(wind_directions, wind_speeds, wind_frequencies, ax=None,
                   colors=None):
     """plot windrose
+
     Parameters
     ----------
     wind_directions : 1D array
-        wind direction samples
+        Wind direction samples
     wind_speeds : 1D array
-        wind speed samples
+        Wind speed samples
     wind_frequencies : 2D array
-        frequency of wind direction and speed samples
-    ax (:py:class:`matplotlib.pyplot.axes`, optional):
-        The figure axes on which the wind rose is plotted. Defaults to None.
-    color : array (optional)
-        the color for the different wind speed bins
+        Frequency of wind direction and speed samples
+    ax :py:class:`matplotlib.pyplot.axes`, optional
+        The figure axes on which the wind rose is plotted.
+        Defaults to :obj:`None`.
+    color : array, optional
+        The color for the different wind speed bins
     """
     if ax is None:
         _, ax = plt.subplots(subplot_kw=dict(polar=True))

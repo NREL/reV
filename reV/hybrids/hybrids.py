@@ -801,6 +801,7 @@ class MetaHybridizer:
     @property
     def solar_profile_indices_map(self):
         """Map hybrid to solar rep indices.
+
         Returns
         -------
         hybrid_indices : np.ndarray
@@ -808,7 +809,7 @@ class MetaHybridizer:
         solar_indices : np.ndarray
             Index values of the solar rep profiles corresponding
             to the hybrid rep profile indices.
-        # """
+        """
 
         if self._hybrid_meta is None:
             return np.array([]), np.array([])
@@ -821,6 +822,7 @@ class MetaHybridizer:
     @property
     def wind_profile_indices_map(self):
         """Map hybrid to wind rep indices.
+
         Returns
         -------
         hybrid_indices : np.ndarray

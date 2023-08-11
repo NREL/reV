@@ -63,6 +63,7 @@ class PlaceTurbines:
             The objective function of the optimization as a string, should
             return the objective to be minimized during layout optimization.
             Variables available are:
+
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
@@ -77,6 +78,7 @@ class PlaceTurbines:
                 - self.wind_plant: the SAM wind plant object, through which
                   all SAM variables can be accessed
                 - cost: the annual cost of the wind plant (from cost_function)
+
         capital_cost_function : str
             The plant capital cost function as a string, must return the total
             capital cost in $. Has access to the same variables as the

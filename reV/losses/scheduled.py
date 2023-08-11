@@ -548,8 +548,10 @@ class ScheduledLossesMixin:
         factors via the ``hourly`` key, the effect is combined. For
         example, if the user inputs a 33% hourly adjustment factor and
         reV schedules an outage for 70% of the farm down for the same
-        hour, then the resulting adjustment factor is::
-            1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
+        hour, then the resulting adjustment factor is
+
+            .. math: 1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
+
         This means the generation will be reduced by ~80%, because the
         user requested 33% losses for the 30% the farm that remained
         operational during the scheduled outage (i.e. 20% remaining of

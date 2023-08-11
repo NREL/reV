@@ -195,7 +195,6 @@ class ProjectPoints:
 
     Examples
     --------
-
     >>> import os
     >>> from reV import TESTDATADIR
     >>> from reV.config.project_points import ProjectPoints
@@ -237,10 +236,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
         """
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
@@ -880,10 +881,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------
@@ -966,10 +969,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------

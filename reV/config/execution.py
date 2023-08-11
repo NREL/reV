@@ -121,11 +121,9 @@ class HPCConfig(BaseExecutionConfig):
         Returns
         -------
         feature : str | NoneType
-            Feature request string.
-
-            For EAGLE, a full additional flag.
+            Feature request string. For EAGLE, a full additional flag.
             Config should look like:
-                "feature": "--depend=[state:job_id]"
+            ``"feature": "--depend=[state:job_id]"``
         """
         return self.get('feature', None)
 

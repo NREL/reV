@@ -19,9 +19,7 @@ class ModuleName(str, Enum):
     Reference
     ---------
     See this line in the click source code to get the most up-to-date
-    click name conversions:
-        https://tinyurl.com/4rehbsvf
-
+    click name conversions: https://tinyurl.com/4rehbsvf
     """
 
     BESPOKE = 'bespoke'
