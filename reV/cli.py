@@ -30,6 +30,12 @@ main = make_cli(commands, info={"name": "reV", "version": __version__})
 main.add_command(qa_qc_extra)
 main.add_command(project_points)
 
+# export GAPs commands to namespace for documentation
+batch = main.commands["batch"]
+pipeline = main.commands["pipeline"]
+status = main.commands["status"]
+template_configs = main.commands["template-configs"]
+
 
 if __name__ == '__main__':
     try:
