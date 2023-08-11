@@ -34,7 +34,7 @@ equally well-suited for regional infrastructure and deployment planning and anal
 For a detailed description of reV capabilities and functionality, see the
 `NREL reV technical report <https://www.nrel.gov/docs/fy19osti/73067.pdf>`_.
 
-How does reV work
+How does reV work?
 ==================
 reV is a set of `python classes and functions <https://nrel.github.io/reV/_autosummary/reV.html>`_
 that can be executed on HPC systems using :ref:`CLI commands <cli-docs>`.
