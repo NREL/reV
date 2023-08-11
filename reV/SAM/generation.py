@@ -431,12 +431,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         bias_correct : None | pd.DataFrame
             None if not provided or extracted DataFrame with wind or solar
             resource bias correction table. This has columns: gid (can be index
-            name), adder, scalar. If both adder and scalar are present, the
-            wind or solar resource is corrected by (res*scalar)+adder. If
-            either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed or GHI+DNI are corrected depending on
-            the technology. GHI and DNI are corrected with the same correction
-            factors.
+            name), adder, scalar. The gid field should match the true resource
+            gid regardless of the optional gid_map input. If both adder and
+            scalar are present, the wind or solar resource is corrected by
+            (res*scalar)+adder. If either adder or scalar is not present,
+            scalar defaults to 1 and adder to 0. Only windspeed or GHI+DNI are
+            corrected depending on the technology. GHI and DNI are corrected
+            with the same correction factors.
 
         Returns
         -------
