@@ -195,10 +195,12 @@ class Gen(BaseGen):
             single resource HDF5 file, a path to a directory containing
             data spread across multiple HDF5 files, or a path including
             a wildcard input like ``/h5_dir/prefix*suffix``. In all
-            cases, it must be readable by
+            cases, the resource data must be readable by
             :py:class:`rex.resource.Resource`
             or :py:class:`rex.multi_file_resource.MultiFileResource`.
-            This means the data file(s) must contain a 1D ``time_index``
+            (i.e. the resource data conform to the
+            `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
+            means the data file(s) must contain a 1D ``time_index``
             dataset indicating the UTC time of observation, a 1D
             ``meta`` dataset represented by a DataFrame with
             site-specific columns, and 2D resource datasets that match
@@ -212,10 +214,12 @@ class Gen(BaseGen):
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
 
+                  - The data conforms to the
+                    `rex data format <https://tinyurl.com/3fy7v5kx>`_.
                   - The ``meta`` DataFrame is organized such that every
-                    row is a pixel at least ``latitude``, ``longitude``,
-                    ``timezone``, and ``elevation`` are given for each
-                    location.
+                    row is a pixel and at least the columns
+                    ``latitude``, ``longitude``, ``timezone``, and
+                    ``elevation`` are given for each location.
                   - The time index and associated temporal data is in
                     UTC.
                   - The latitude is between -90 and 90 and longitude is

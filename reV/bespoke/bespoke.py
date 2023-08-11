@@ -1248,8 +1248,10 @@ class BespokeWindPlants(BaseAggregation):
             must be readable by
             :py:class:`rex.renewable_resource.WindResource` while the
             latter must be readable by
-            or :py:class:`rex.multi_year_resource.MultiYearWindResource`.
-            This means the data file(s) must contain a 1D ``time_index``
+            or :py:class:`rex.multi_year_resource.MultiYearWindResource`
+            (i.e. the resource data conform to the
+            `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
+            means the data file(s) must contain a 1D ``time_index``
             dataset indicating the UTC time of observation, a 1D
             ``meta`` dataset represented by a DataFrame with
             site-specific columns, and 2D resource datasets that match
