@@ -6,8 +6,8 @@ Command Line Interfaces (CLIs)
    reV
    reV batch
    reV pipeline
-   reV geneneration
    reV bespoke
+   reV geneneration
    reV collect
    reV econ
    reV multiyear
