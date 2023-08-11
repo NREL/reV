@@ -321,14 +321,14 @@ class Gen(BaseGen):
                 - ``scalar``: Value to scale resource at each site by
 
             The ``gid`` field should match the true resource ``gid``
-            regardless of the optional ``gid_map`` input. If both adder
-            and scalar are present, the wind or solar resource is
-            corrected by :math:`(res*scalar)+adder`. If either is not
-            present, scalar defaults to 1 and adder to 0. Only
-            ``windspeed`` **or** ``GHI`` + ``DNI`` are corrected,
-            depending on the technology (wind for the former, solar
-            for the latter). ``GHI`` and ``DNI`` are corrected with the
-            same correction factors. If ``None``, no corrections are
+            regardless of the optional ``gid_map`` input. If both
+            ``adder`` and ``scalar`` are present, the wind or solar
+            resource is corrected by :math:`(res*scalar)+adder`. If
+            *either* is missing, ``scalar`` defaults to 1 and
+            ``adder`` to 0. Only `windspeed` **or** `GHI` + `DNI` are
+            corrected, depending on the technology (wind for the former,
+            solar for the latter). `GHI` and `DNI` are corrected with
+            the same correction factors. If ``None``, no corrections are
             applied. By default, ``None``.
         """
         pc = self.get_pc(points=project_points, points_range=None,

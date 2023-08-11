@@ -33,7 +33,7 @@ def _preprocessor(config, job_name, log_directory, verbose,
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
-        ``resource_file`` input. If ``None``, the ``resource_file``
+        `resource_file` input. If ``None``, the `resource_file`
         input is assumed to be the full path to the single resource
         file to be processed.  By default, ``None``.
 
