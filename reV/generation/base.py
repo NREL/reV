@@ -541,8 +541,7 @@ class BaseGen(ABC):
 
         Parameters
         ----------
-        points : int | slice | list | str | pandas.DataFrame
-                 | reV.config.project_points.PointsControl
+        points : int | slice | list | str | pandas.DataFrame | PointsControl
             Single site integer,
             or slice or list specifying project points,
             or string pointing to a project points csv,
@@ -571,10 +570,12 @@ class BaseGen(ABC):
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------

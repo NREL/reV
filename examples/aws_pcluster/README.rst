@@ -77,7 +77,7 @@ The current recommended approach for setting up an HSDS service for reV is to st
         hs_api_key = None
         hs_bucket = nrel-pds-hsds
 
-#. Copy the ``start_hsds.sh`` script from this example (source file is `here <https://github.com/NREL/reV/blob/main/examples/aws_pcluster/start_hsds.sh>`_) to your home directory in the pcluster login node (e.g. ``cp /shared/reV/examples/aws_pcluster/start_hsds.sh ~/``).
+#. Copy the ``start_hsds.sh`` script from this example (`source file <https://github.com/NREL/reV/blob/main/examples/aws_pcluster/start_hsds.sh>`_) to your home directory in the pcluster login node (e.g. ``cp /shared/reV/examples/aws_pcluster/start_hsds.sh ~/``).
 #. Replace the following environment variables in ``start_hsds.sh`` with your values: ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``BUCKET_NAME`` (note that you should use AWS keys from an IAM user with admin privileges and not your AWS console root user).
 #. Optional, to test your HSDS local server config, do the following:
 

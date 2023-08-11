@@ -223,19 +223,21 @@ class BespokeSinglePlant:
             The objective function of the optimization as a string, should
             return the objective to be minimized during layout optimization.
             Variables available are:
+
                 - n_turbines: the number of turbines
                 - system_capacity: wind plant capacity
                 - aep: annual energy production
                 - fixed_charge_rate: user input fixed_charge_rate if included
                   as part of the sam system config.
                 - self.wind_plant: the SAM wind plant object, through which
-                all SAM variables can be accessed
+                  all SAM variables can be accessed
                 - capital_cost: plant capital cost as evaluated
                   by `capital_cost_function`
                 - fixed_operating_cost: plant fixed annual operating cost as
                   evaluated by `fixed_operating_cost_function`
                 - variable_operating_cost: plant variable annual operating cost
                   as evaluated by `variable_operating_cost_function`
+
         capital_cost_function : str
             The plant capital cost function as a string, must return the total
             capital cost in $. Has access to the same variables as the
@@ -1390,9 +1392,9 @@ class BespokeWindPlants(BaseAggregation):
             wake losses.
 
             .. WARNING:: This multiplier will ONLY be applied during the
-                optimization process and will NOT come through in output
-                values such as the hourly profiles, aep, any of the cost
-                functions, or even the output objective.
+               optimization process and will NOT come through in output
+               values such as the hourly profiles, aep, any of the cost
+               functions, or even the output objective.
 
             By default, ``1``.
         ga_kwargs : dict, optional
@@ -1429,7 +1431,7 @@ class BespokeWindPlants(BaseAggregation):
             distribution. The stop value is inclusive, so
             ``wd_bins=(0, 360, 90)`` would result in four bins with bin
             edges (0, 90, 180, 270, 360).
-            By default, ``(0.0, 360.0, 45.0)`.
+            By default, ``(0.0, 360.0, 45.0)``.
         excl_dict : dict, optional
             Dictionary of exclusion keyword arguments of the format
             ``{layer_dset_name: {kwarg: value}}``, where
