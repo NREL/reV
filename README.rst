@@ -1,6 +1,5 @@
-******************************************************
 Welcome to the Renewable Energy Potential (reV) Model!
-******************************************************
+======================================================
 
 .. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
@@ -26,7 +25,8 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
 
-.. inclusion-intro
+
+.. inclusion-citation
 
 
 Recommended Citation
@@ -45,6 +45,9 @@ Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis
 Williams. The Renewable Energy Potential Model (reV).
 https://github.com/NREL/reV (version v0.5.0), 2021.
 https://doi.org/10.5281/zenodo.4711470.
+
+
+.. inclusion-intro
 
 
 reV command line tools
