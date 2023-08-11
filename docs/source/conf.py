@@ -118,7 +118,11 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {"navigation_depth": 4, "collapse_navigation": False}
+html_theme_options = {
+    "navigation_depth": 4,
+    "collapse_navigation": False,
+    "logo_only": True,
+}
 html_css_file = ["custom.css"]
 
 html_context = {
@@ -144,6 +148,9 @@ html_static_path = ['_static']
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
+
+# Logo
+html_logo = "_static/logo.png"
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
