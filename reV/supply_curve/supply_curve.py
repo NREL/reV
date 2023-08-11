@@ -1154,8 +1154,7 @@ class SupplyCurve:
         columns : list | tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
-                        'trans_cap_cost_per_mw', 'dist_km', 'lcot',
-                        'total_lcoe')
+            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')
         wind_dirs : pandas.DataFrame | str, optional
             path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
             the neighboring supply curve point gids and power-rose value at
@@ -1268,8 +1267,7 @@ class SupplyCurve:
         columns : list | tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
-                        'trans_cap_cost_per_mw', 'dist_km', 'lcot',
-                        'total_lcoe')
+            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')
         wind_dirs : pandas.DataFrame | str, optional
             path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
             the neighboring supply curve point gids and power-rose value at
