@@ -224,7 +224,7 @@ class Gen(BaseGen):
                     can calculate one of these these inputs from the
                     other using the relationship
 
-                    .. math:: `GHI = DNI * cos(SZA) + DHI`
+                    .. math:: GHI = DNI * cos(SZA) + DHI
 
         low_res_resource_file : str, optional
             Optional low resolution resource file that will be
@@ -320,15 +320,16 @@ class Gen(BaseGen):
                 - ``adder``: Value to add to resource at each site
                 - ``scalar``: Value to scale resource at each site by
 
-            The ``gid`` field should match the true resource ``gid`` regardless
-            of the optional ``gid_map`` input. If both adder and scalar are
-            present, the wind or solar resource is corrected by
-            (res*scalar)+adder. If either is not present, scalar defaults to 1
-            and adder to 0. Only ``windspeed`` **or** ``GHI`` + ``DNI`` are
-            corrected, depending on the technology (wind for the former, solar
+            The ``gid`` field should match the true resource ``gid``
+            regardless of the optional ``gid_map`` input. If both adder
+            and scalar are present, the wind or solar resource is
+            corrected by :math:`(res*scalar)+adder`. If either is not
+            present, scalar defaults to 1 and adder to 0. Only
+            ``windspeed`` **or** ``GHI`` + ``DNI`` are corrected,
+            depending on the technology (wind for the former, solar
             for the latter). ``GHI`` and ``DNI`` are corrected with the
-            same correction factors. If ``None``, no corrections are applied.
-            By default, ``None``.
+            same correction factors. If ``None``, no corrections are
+            applied. By default, ``None``.
         """
         pc = self.get_pc(points=project_points, points_range=None,
                          sam_configs=sam_files, tech=technology,
