@@ -255,10 +255,10 @@ class SupplyCurveAggregation(BaseAggregation):
             be spread out across multiple files, in which case this
             input should be a list or tuple of filepaths to multiple
             exclusion HDF5 files containing the layers. Note that each
-            data layer must be uniquely defined (i.e.only appear once
+            data layer must be uniquely defined (i.e. only appear once
             and in a single input file).
         tm_dset : str
-            Dataset name in the ``excl_fpath`` file containing the
+            Dataset name in the `excl_fpath` file containing the
             techmap (exclusions-to-resource mapping data). This dataset
             uniquely couples the (typically high-resolution) exclusion
             layers to the (typically lower-resolution) resource data,
@@ -268,7 +268,7 @@ class SupplyCurveAggregation(BaseAggregation):
             is not in the exclusions HDF5 file, and ``reV`` will
             calculate the techmap for you. Note however that computing
             the techmap and writing it to the exclusion HDF5 file is a
-            blocking operation, so you may only run a single ``reV`
+            blocking operation, so you may only run a single ``reV``
             aggregation step at a time this way.
         econ_fpath : str, optional
             Filepath to HDF5 file with ``reV`` econ output results
