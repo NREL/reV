@@ -1,7 +1,7 @@
 .. raw:: html
 
     <p align="center">
-        <img height="200" src="docs/source/_static/logo.png" />
+        <img height="150" src="docs/source/_static/logo.png" />
     </p>
 
 ---------
