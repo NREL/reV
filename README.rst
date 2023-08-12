@@ -1,5 +1,10 @@
-Welcome to the Renewable Energy Potential (reV) Model!
-======================================================
+.. raw:: html
+
+    <p align="center">
+        <img height="250" src="docs/source/_static/logo.png" />
+    </p>
+
+---------
 
 .. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
@@ -26,73 +31,76 @@ Welcome to the Renewable Energy Potential (reV) Model!
     :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
 
 
-.. inclusion-citation
-
-
-Recommended Citation
-====================
-
-Please cite both the technical paper and the software with the version and
-DOI you used:
-
-Maclaurin, Galen J., Nicholas W. Grue, Anthony J. Lopez, Donna M. Heimiller,
-Michael Rossol, Grant Buster, and Travis Williams. 2019. “The Renewable Energy
-Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply
-Curve Modeling.” Golden, Colorado, United States: National Renewable Energy
-Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
-
-Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis
-Williams. The Renewable Energy Potential Model (reV).
-https://github.com/NREL/reV (version v0.5.0), 2021.
-https://doi.org/10.5281/zenodo.4711470.
-
-
 .. inclusion-intro
 
+**reV** (the Renewable Energy Potential model)
+is an open-source geospatial techno-economic tool that
+estimates renewable energy technical potential (capacity and generation),
+system cost, and supply curves for solar photovoltaics (PV),
+concentrating solar power (CSP), geothermal, and wind energy.
+reV allows researchers to include exhaustive spatial representation
+of the built and natural environment into the generation and cost estimates
+that it computes.
 
-reV command line tools
-======================
-
-- `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
-- `reV-bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
-- `reV-collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
-- `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
-- `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
-- `reV-hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
-- `reV-multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
-- `reV-nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
-- `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
-- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
-- `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
-- `reV-supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
-- `reV-supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
+reV is highly dynamic, allowing analysts to assess potential at varying levels
+of detail — from a single site up to an entire continent at temporal resolutions
+ranging from five minutes to hourly, spanning a single year or multiple decades.
+The reV model can (and has been used to) provide broad coverage across large spatial
+extents, including North America, South and Central Asia, the Middle East, South America,
+and South Africa to inform national and international-scale analyses. Still, reV is
+equally well-suited for regional infrastructure and deployment planning and analysis.
 
 
-Launching a run
----------------
+For a detailed description of reV capabilities and functionality, see the
+`NREL reV technical report <https://www.nrel.gov/docs/fy19osti/73067.pdf>`_.
 
-Tips
+How does reV work?
+==================
+reV is a set of `Python classes and functions <https://nrel.github.io/reV/_autosummary/reV.html>`_
+that can be executed on HPC systems using `CLI commands <https://nrel.github.io/reV/_cli/cli.html>`_.
+A full reV execution consists of one or more compute modules
+(each consisting of their own Python class/CLI command)
+strung together using a `pipeline framework <https://nrel.github.io/reV/_cli/reV-pipeline.html>`_,
+or configured using `batch <https://nrel.github.io/reV/_cli/reV-batch.html>`_.
 
-- Only use a screen session if running the pipeline module: `screen -S rev`
-- `Full pipeline execution <https://nrel.github.io/reV/misc/examples.full_pipeline_execution.html>`_
+A typical reV workflow begins with input wind/solar/geothermal resource data
+(following the `rex data format <https://nrel.github.io/rex/misc/examples.nsrdb.html#data-format>`_)
+that is passed through the generation module. This output is then collected across space and time
+(if executed on the HPC), before being sent off to be aggregated under user-specified land exclusion scenarios.
+Exclusion data is typically provided via a collection of high-resolution spatial data layers stored in an HDF5 file.
+This file must be readable by reV's
+`ExclusionLayers <https://nrel.github.io/reV/_autosummary/reV.handlers.exclusions.ExclusionLayers.html#reV.handlers.exclusions.ExclusionLayers>`_
+class. See the `reVX Setbacks utility <https://nrel.github.io/reVX/misc/examples.setbacks.html>`_
+for instructions on generating setback exclusions for use in reV.
+Next, transmission costs are computed for each aggregated
+"supply-curve point" using user-provided transmission cost tables.
+See the `reVX transmission cost calculator utility <https://github.com/NREL/reVX/tree/main/reVX/least_cost_xmission/>`_
+for instructions on generating transmission cost tables.
+Finally, the supply curves and initial generation data can be used to
+extract representative generation profiles for each supply curve point.
 
-.. code-block:: bash
+A visual summary of this process is given below:
 
-    reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-- Running simply generation or econ can just be done from the console:
+.. inclusion-flowchart
 
-.. code-block:: bash
+.. raw:: html
 
-    reV -c "/scratch/user/rev/config_gen.json" generation
+    <p align="center">
+        <img height="550" src="docs/source/_static/rev_flow_chart.png" />
+    </p>
 
-General Run times and Node configuration on Eagle
--------------------------------------------------
+|
 
-- WTK Conus: 10-20 nodes per year walltime 1-4 hours
-- NSRDB Conus: 5 nodes walltime 2 hours
+.. inclusion-get-started
 
-`Eagle node requests <https://nrel.github.io/reV/misc/examples.eagle_node_requests.html>`_
+To get up and running with reV, first head over to the `installation page <https://nrel.github.io/reV/misc/installation.html>`_,
+then check out some of the `Examples <https://nrel.github.io/reV/misc/examples.html>`_ or
+go straight to the `CLI Documentation <https://nrel.github.io/reV/_cli/cli.html>`_!
+
+
+.. inclusion-install
+
 
 Installing reV
 ==============
@@ -136,3 +144,69 @@ Option 2: Clone repo (recommended for developers)
        help pages for the CLI's.
 
         - ``reV``
+
+
+reV command line tools
+======================
+
+- `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
+- `reV bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
+- `reV collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
+- `reV econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
+- `reV gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
+- `reV hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
+- `reV multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
+- `reV nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
+- `reV project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
+- `reV QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
+- `reV rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
+- `reV supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
+- `reV supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
+
+
+Launching a run
+---------------
+
+Tips
+
+- Only use a screen session if running the pipeline module: `screen -S rev`
+- `Full pipeline execution <https://nrel.github.io/reV/misc/examples.full_pipeline_execution.html>`_
+
+.. code-block:: bash
+
+    reV -c "/scratch/user/rev/config_pipeline.json" pipeline
+
+- Running simply generation or econ can just be done from the console:
+
+.. code-block:: bash
+
+    reV -c "/scratch/user/rev/config_gen.json" generation
+
+General Run times and Node configuration on Eagle
+-------------------------------------------------
+
+- WTK Conus: 10-20 nodes per year walltime 1-4 hours
+- NSRDB Conus: 5 nodes walltime 2 hours
+
+`Eagle node requests <https://nrel.github.io/reV/misc/examples.eagle_node_requests.html>`_
+
+
+.. inclusion-citation
+
+
+Recommended Citation
+====================
+
+Please cite both the technical paper and the software with the version and
+DOI you used:
+
+Maclaurin, Galen J., Nicholas W. Grue, Anthony J. Lopez, Donna M. Heimiller,
+Michael Rossol, Grant Buster, and Travis Williams. 2019. “The Renewable Energy
+Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply
+Curve Modeling.” Golden, Colorado, United States: National Renewable Energy
+Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
+
+Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis
+Williams. The Renewable Energy Potential Model (reV).
+https://github.com/NREL/reV (version v0.5.0), 2021.
+https://doi.org/10.5281/zenodo.4711470.
