@@ -33,6 +33,8 @@
 
 .. inclusion-intro
 
+|
+
 **reV** (the Renewable Energy Potential model)
 is an open-source geospatial techno-economic tool that
 estimates renewable energy technical potential (capacity and generation),
