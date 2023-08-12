@@ -1,7 +1,7 @@
 .. raw:: html
 
     <p align="center">
-        <img height="250" src="docs/source/_static/logo.png" />
+        <img height="200" src="docs/source/_static/logo.png" />
     </p>
 
 ---------
@@ -87,7 +87,7 @@ A visual summary of this process is given below:
 .. raw:: html
 
     <p align="center">
-        <img height="550" src="docs/source/_static/rev_flow_chart.png" />
+        <img height="400" src="docs/source/_static/rev_flow_chart.png" />
     </p>
 
 |
