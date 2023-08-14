@@ -11,30 +11,17 @@ from warnings import warn
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+PYPI_DISALLOWED_RST = {"raw::", "<p", "</p", "<img", "---------"}
+readme = []
 with open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
-    readme = f.read()
+    for line in f.readlines():
+        if any(substr in line for substr in PYPI_DISALLOWED_RST):
+            continue
+        readme.append(line)
 
-readme = readme.replace(
-    """.. raw:: html
-
-    <p align="center">
-        <img height="180" src="docs/source/_static/logo.png" />
-    </p>""",
-    """.. image:: docs/source/_static/logo.png
-   :align: center
-   :height: 180"""
+readme = "".join(readme).replace(
+    "A visual summary of this process is given below:", ""
 )
-readme = readme.replace(
-    """.. raw:: html
-
-    <p align="center">
-        <img height="400" src="docs/source/_static/rev_flow_chart.png" />
-    </p>""",
-    """.. image:: docs/source/_static/rev_flow_chart.png
-   :align: center
-   :height: 400"""
-)
-
 
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
     version = f.read()
