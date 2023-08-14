@@ -14,6 +14,28 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
     readme = f.read()
 
+readme = readme.replace(
+    """.. raw:: html
+
+    <p align="center">
+        <img height="180" src="docs/source/_static/logo.png" />
+    </p>""",
+    """.. image:: docs/source/_static/logo.png
+   :align: center
+   :height: 180"""
+)
+readme = readme.replace(
+    """.. raw:: html
+
+    <p align="center">
+        <img height="400" src="docs/source/_static/rev_flow_chart.png" />
+    </p>""",
+    """.. image:: docs/source/_static/rev_flow_chart.png
+   :align: center
+   :height: 400"""
+)
+
+
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
     version = f.read()
 
