@@ -62,8 +62,8 @@ reV is a set of `Python classes and functions <https://nrel.github.io/reV/_autos
 that can be executed on HPC systems using `CLI commands <https://nrel.github.io/reV/_cli/cli.html>`_.
 A full reV execution consists of one or more compute modules
 (each consisting of their own Python class/CLI command)
-strung together using a `pipeline framework <https://nrel.github.io/reV/_cli/reV-pipeline.html>`_,
-or configured using `batch <https://nrel.github.io/reV/_cli/reV-batch.html>`_.
+strung together using a `pipeline framework <https://nrel.github.io/reV/_cli/reV%20pipeline.html>`_,
+or configured using `batch <https://nrel.github.io/reV/_cli/reV%20batch.html>`_.
 
 A typical reV workflow begins with input wind/solar/geothermal resource data
 (following the `rex data format <https://nrel.github.io/rex/misc/examples.nsrdb.html#data-format>`_)
@@ -152,18 +152,23 @@ reV command line tools
 ======================
 
 - `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
-- `reV bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
-- `reV collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
-- `reV econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
-- `reV gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
-- `reV hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
-- `reV multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
-- `reV nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
-- `reV project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
-- `reV QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
-- `reV rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
-- `reV supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
-- `reV supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
+- `reV template-configs <https://nrel.github.io/reV/_cli/reV%20template-configs.html>`_
+- `reV batch <https://nrel.github.io/reV/_cli/reV%20batch.html>`_
+- `reV pipeline <https://nrel.github.io/reV/_cli/reV%20pipeline.html>`_
+- `reV project-points <https://nrel.github.io/reV/_cli/reV%20project-points.html>`_
+- `reV bespoke <https://nrel.github.io/reV/_cli/reV%20bespoke.html>`_
+- `reV generation <https://nrel.github.io/reV/_cli/reV%20generation.html>`_
+- `reV econ <https://nrel.github.io/reV/_cli/reV%20econ.html>`_
+- `reV collect <https://nrel.github.io/reV/_cli/reV%20collect.html>`_
+- `reV hybrids <https://nrel.github.io/reV/_cli/reV%20hybrids.html>`_
+- `reV multiyear <https://nrel.github.io/reV/_cli/reV%20multiyear.html>`_
+- `reV supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV%20supply-curve-aggregation.html>`_
+- `reV supply-curve <https://nrel.github.io/reV/_cli/reV%20supply-curve.html>`_
+- `reV rep-profiles <https://nrel.github.io/reV/_cli/reV%20rep-profiles.html>`_
+- `reV hybrids <https://nrel.github.io/reV/_cli/reV%20hybrids.html>`_
+- `reV nrwal <https://nrel.github.io/reV/_cli/reV%20nrwal.html>`_
+- `reV qa-qc <https://nrel.github.io/reV/_cli/reV%20qa-qc.html>`_
+- `reV status <https://nrel.github.io/reV/_cli/reV%20status.html>`_
 
 
 Launching a run
