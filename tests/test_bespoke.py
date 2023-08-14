@@ -439,7 +439,8 @@ def test_bespoke():
                       'ws_mean')
 
     with tempfile.TemporaryDirectory() as td:
-        out_fpath = os.path.join(td, 'bespoke_out.h5')
+        out_fpath_request = os.path.join(td, 'wind')
+        out_fpath_truth = os.path.join(td, 'wind_bespoke.h5')
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')
         shutil.copy(EXCL, excl_fp)
@@ -457,25 +458,27 @@ def test_bespoke():
 
         # test no outputs
         with pytest.warns(UserWarning) as record:
-            assert not os.path.exists(out_fpath)
+            assert not os.path.exists(out_fpath_truth)
             bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET,
                                     OBJECTIVE_FUNCTION, CAP_COST_FUN,
                                     FOC_FUN, VOC_FUN, fully_excluded_points,
                                     SAM_CONFIGS, ga_kwargs={'max_time': 5},
                                     excl_dict=EXCL_DICT,
                                     output_request=output_request)
-            bsp.run(max_workers=2, out_fpath=out_fpath)
+            test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
+            assert out_fpath_truth == test_fpath
             assert 'points are excluded' in str(record[0].message)
 
-        assert not os.path.exists(out_fpath)
+        assert not os.path.exists(out_fpath_truth)
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
                                 CAP_COST_FUN, FOC_FUN, VOC_FUN, points,
                                 SAM_CONFIGS, ga_kwargs={'max_time': 5},
                                 excl_dict=EXCL_DICT,
                                 output_request=output_request)
-        bsp.run(max_workers=2, out_fpath=out_fpath)
-        assert os.path.exists(out_fpath)
-        with Resource(out_fpath) as f:
+        test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
+        assert out_fpath_truth == test_fpath
+        assert os.path.exists(out_fpath_truth)
+        with Resource(out_fpath_truth) as f:
             meta = f.meta
             assert len(meta) <= len(points)
             assert 'sc_point_gid' in meta
@@ -514,7 +517,7 @@ def test_bespoke():
                                 pre_load_data=True)
         bsp.run(max_workers=1, out_fpath=out_fpath_pre)
 
-        with Resource(out_fpath) as f1, Resource(out_fpath_pre) as f2:
+        with Resource(out_fpath_truth) as f1, Resource(out_fpath_pre) as f2:
             assert np.allclose(f1["winddirection-2012"],
                                f2["winddirection-2012"])
             assert np.allclose(f1["ws_mean"], f2["ws_mean"])

@@ -1882,21 +1882,7 @@ class BespokeWindPlants(BaseAggregation):
         sample : dict
             A single sample BespokeSinglePlant output dict that has been run
             and has output data.
-
-        Returns
-        -------
-        out_fpath : str
-            Full filepath to desired .h5 output file, the .h5 extension has
-            been added if it was not already present.
         """
-
-        if not out_fpath.endswith('.h5'):
-            out_fpath += '.h5'
-
-        if ModuleName.BESPOKE not in out_fpath:
-            extension_with_module = "_{}.h5".format(ModuleName.BESPOKE)
-            out_fpath = out_fpath.replace(".h5", extension_with_module)
-
         out_dir = os.path.dirname(out_fpath)
         if not os.path.exists(out_dir):
             create_dirs(out_dir)
@@ -1908,8 +1894,6 @@ class BespokeWindPlants(BaseAggregation):
             for dset in ti_dsets:
                 f._set_time_index(dset, sample[dset], attrs={})
                 f._set_time_index('time_index', sample[dset], attrs={})
-
-        return out_fpath
 
     def _collect_out_arr(self, dset, sample):
         """Collect single-plant data arrays into complete arrays with data from
@@ -1970,16 +1954,29 @@ class BespokeWindPlants(BaseAggregation):
         out_fpath : str
             Full filepath to an output .h5 file to save Bespoke data to. The
             parent directories will be created if they do not already exist.
+
+        Returns
+        -------
+        out_fpath : str
+            Full filepath to desired .h5 output file, the .h5 extension has
+            been added if it was not already present.
         """
+        if not out_fpath.endswith('.h5'):
+            out_fpath += '.h5'
+
+        if ModuleName.BESPOKE not in out_fpath:
+            extension_with_module = "_{}.h5".format(ModuleName.BESPOKE)
+            out_fpath = out_fpath.replace(".h5", extension_with_module)
+
         if not self.completed_gids:
             msg = ("No output data found! It is likely that all requested "
                    "points are excluded.")
             logger.warning(msg)
             warn(msg)
-            return
+            return out_fpath
 
         sample = self.outputs[self.completed_gids[0]]
-        out_fpath = self._init_fout(out_fpath, sample)
+        self._init_fout(out_fpath, sample)
 
         dsets = [d for d in sample.keys()
                  if not d.startswith('time_index-')
@@ -2006,6 +2003,7 @@ class BespokeWindPlants(BaseAggregation):
                         raise IOError(msg) from e
 
         logger.info('Saved output data to: {}'.format(out_fpath))
+        return out_fpath
 
     # pylint: disable=arguments-renamed
     @classmethod
@@ -2260,6 +2258,6 @@ class BespokeWindPlants(BaseAggregation):
             self._outputs = self.run_parallel(max_workers=max_workers)
 
         if out_fpath is not None:
-            self.save_outputs(out_fpath)
+            out_fpath = self.save_outputs(out_fpath)
 
         return out_fpath
