@@ -160,7 +160,6 @@ reV command line tools
 - `reV generation <https://nrel.github.io/reV/_cli/reV%20generation.html>`_
 - `reV econ <https://nrel.github.io/reV/_cli/reV%20econ.html>`_
 - `reV collect <https://nrel.github.io/reV/_cli/reV%20collect.html>`_
-- `reV hybrids <https://nrel.github.io/reV/_cli/reV%20hybrids.html>`_
 - `reV multiyear <https://nrel.github.io/reV/_cli/reV%20multiyear.html>`_
 - `reV supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV%20supply-curve-aggregation.html>`_
 - `reV supply-curve <https://nrel.github.io/reV/_cli/reV%20supply-curve.html>`_
