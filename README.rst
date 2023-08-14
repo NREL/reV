@@ -31,9 +31,9 @@
     :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
 
 
-.. inclusion-intro
-
 |
+
+.. inclusion-intro
 
 **reV** (the Renewable Energy Potential model)
 is an open-source geospatial techno-economic tool that
