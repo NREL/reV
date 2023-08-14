@@ -7,7 +7,6 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-from click.testing import CliRunner
 import h5py
 import json
 import numpy as np
@@ -19,12 +18,11 @@ import pytest
 import tempfile
 import traceback
 
-from rex.utilities.loggers import LOGGERS
 from reV.cli import main
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
-from reV.config.sam_analysis_configs import EconConfig
+from reV.utilities import ModuleName
 
 RTOL = 0.01
 ATOL = 0.001
@@ -48,10 +46,9 @@ def test_lcoe(year, max_workers, spw):
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
     points = slice(0, 100)
-    obj = Econ.reV_run(points, sam_files, cf_file,
-                       year=year, output_request='lcoe_fcr',
-                       max_workers=max_workers, sites_per_worker=spw,
-                       points_range=None, out_fpath=None)
+    obj = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
+               sites_per_worker=spw)
+    obj.run(max_workers=max_workers)
     lcoe = list(obj.out['lcoe_fcr'])
 
     with h5py.File(r1f, mode='r') as f:
@@ -73,14 +70,12 @@ def test_fout(year):
                                  'SAM/i_lcoe_naris_pv_1axis_inv13.json')
         r1f = os.path.join(TESTDATADIR,
                            'ri_pv/scalar_outputs/project_outputs.h5')
-        fout = 'lcoe_out_{}.h5'.format(year)
+        fout = 'lcoe_out_econ_{}.h5'.format(year)
         fpath = os.path.join(dirout, fout)
         points = slice(0, 100)
-        Econ.reV_run(points, sam_files, cf_file,
-                     year=year, output_request='lcoe_fcr',
-                     max_workers=1, sites_per_worker=25,
-                     points_range=None, out_fpath=fpath)
-
+        econ = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
+                    sites_per_worker=25)
+        econ.run(max_workers=1, out_fpath=fpath)
         with Outputs(fpath) as f:
             lcoe = f['lcoe_fcr']
 
@@ -108,10 +103,9 @@ def test_append_data(year):
         r1f = os.path.join(TESTDATADIR,
                            'ri_pv/scalar_outputs/project_outputs.h5')
         points = slice(0, 100)
-        Econ.reV_run(points, sam_files, cf_file,
-                     year=year, output_request='lcoe_fcr',
-                     max_workers=1, sites_per_worker=25,
-                     points_range=None, append=True)
+        econ = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
+                    sites_per_worker=25, append=True)
+        econ.run(max_workers=1)
 
         with Outputs(cf_file) as f:
             new_dsets = f.dsets
@@ -156,11 +150,10 @@ def test_append_multi_node(node):
         site_data = os.path.join(
             TESTDATADIR,
             'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
-        econ = Econ.reV_run(points, sam_files, cf_file, year=year,
-                            output_request=('lcoe_fcr', 'capital_cost'),
-                            max_workers=1, sites_per_worker=25,
-                            points_range=None, append=True,
-                            site_data=site_data)
+        econ = Econ(points, sam_files, cf_file,
+                    output_request=('lcoe_fcr', 'capital_cost'),
+                    sites_per_worker=25, append=True, site_data=site_data)
+        econ.run(max_workers=1)
 
         with Outputs(original_file) as out:
             data_baseline = out['lcoe_fcr']
@@ -178,21 +171,13 @@ def test_append_multi_node(node):
         assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
 
 
-@pytest.fixture(scope="module")
-def runner():
-    """
-    cli runner
-    """
-    return CliRunner()
-
-
-def test_econ_from_config(runner):
+def test_econ_from_config(runner, clear_loggers):
     """Econ LCOE from config"""
     cf_file = os.path.join(TESTDATADIR,
                            'gen_out/gen_ri_pv_2012_x000.h5')
     sam_file = os.path.join(TESTDATADIR,
                             'SAM/i_lcoe_naris_pv_1axis_inv13.json')
-    project_points = os.path.join(TESTDATADIR, 'pipeline',
+    project_points = os.path.join(TESTDATADIR, 'config',
                                   'project_points_10.csv')
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
@@ -212,7 +197,7 @@ def test_econ_from_config(runner):
             ],
             "project_points": project_points,
             "sam_files": {
-                "sam_gen_pv_1": sam_file
+                "sam gen pv_1": sam_file
             },
             "technology": "pvwattsv5"
         }
@@ -220,14 +205,14 @@ def test_econ_from_config(runner):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['-c', config_path, 'econ'])
+        result = runner.invoke(main, ['econ', '-c', config_path])
         if result.exit_code != 0:
             msg = ('Failed with error {}'
                    .format(traceback.print_exception(*result.exc_info)))
             raise RuntimeError(msg)
 
         dirname = os.path.basename(td)
-        fn_out = "{}_{}_2012.h5".format(dirname, EconConfig.NAME)
+        fn_out = "{}_{}_2012.h5".format(dirname, ModuleName.ECON)
         out_fpath = os.path.join(td, fn_out)
         with Outputs(out_fpath, 'r') as f:
             lcoe = f['lcoe_fcr']
@@ -239,7 +224,7 @@ def test_econ_from_config(runner):
 
         assert result
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

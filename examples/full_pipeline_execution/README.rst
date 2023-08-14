@@ -8,7 +8,7 @@ The full pipeline can be executed using the following CLI call:
 
 .. code-block:: bash
 
-    reV -c ./config_pipeline.json pipeline
+    reV pipeline -c ./config_pipeline.json
 
 You can also use the ``--monitor`` flag to continuously monitor the pipeline
 and submit jobs for the next pipeline step when the current pipeline step is
@@ -16,7 +16,7 @@ complete:
 
 .. code-block:: bash
 
-    reV -c ./config_pipeline.json pipeline --monitor
+    reV pipeline -c ./config_pipeline.json --monitor
 
 The continuous monitoring will stop when the full pipeline completes
 successfully or if any part of a pipeline step fails. The continuous monitoring
@@ -25,7 +25,7 @@ adding the ``--background`` flag:
 
 .. code-block:: bash
 
-    reV -c ./config_pipeline.json pipeline --monitor --background
+    reV pipeline -c ./config_pipeline.json --monitor --background
 
 It's important to note that background monitoring will not capture the
 stdout/stderr, so you should set the ``log_file`` argument in the pipeline
@@ -36,7 +36,7 @@ the ``--cancel`` flag:
 
 .. code-block:: bash
 
-    reV -c ./config_pipeline.json pipeline --cancel
+    reV pipeline -c ./config_pipeline.json --cancel
 
 Pipeline Input Requirements
 ---------------------------

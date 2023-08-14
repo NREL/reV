@@ -28,10 +28,10 @@ def test_gen_csp():
 
     # run reV 2.0 generation
     output_request = ('cf_mean', 'cf_profile', 'gen_profile')
-    gen = Gen.reV_run('tcsmoltensalt', points, sam_files, res_file,
-                      max_workers=1,
-                      output_request=output_request,
-                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
+    gen = Gen('tcsmoltensalt', points, sam_files, res_file,
+              output_request=output_request, sites_per_worker=1,
+              scale_outputs=True)
+    gen.run(max_workers=1)
 
     with Resource(BASELINE) as f:
         for dset in output_request:

@@ -40,9 +40,9 @@ def test_mhkwave():
     points = slice(0, 100)
     output_request = ('cf_mean', 'cf_profile')
 
-    test = Gen.reV_run('mhkwave', points, sam_files, res_file,
-                       max_workers=1, sites_per_worker=3,
-                       out_fpath=None, output_request=output_request)
+    test = Gen('mhkwave', points, sam_files, res_file,
+               sites_per_worker=3, output_request=output_request)
+    test.run(max_workers=1)
 
     with Resource(BASELINE) as f:
         assert np.allclose(test.out['cf_mean'], f['cf_mean'],

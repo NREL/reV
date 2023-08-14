@@ -19,9 +19,7 @@ class ModuleName(str, Enum):
     Reference
     ---------
     See this line in the click source code to get the most up-to-date
-    click name conversions:
-        https://tinyurl.com/4rehbsvf
-
+    click name conversions: https://tinyurl.com/4rehbsvf
     """
 
     BESPOKE = 'bespoke'
@@ -35,6 +33,9 @@ class ModuleName(str, Enum):
     REP_PROFILES = 'rep-profiles'
     SUPPLY_CURVE = 'supply-curve'
     SUPPLY_CURVE_AGGREGATION = 'supply-curve-aggregation'
+
+    def __str__(self):
+        return self.value
 
     @classmethod
     def all_names(cls):

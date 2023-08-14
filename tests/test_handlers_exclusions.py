@@ -127,6 +127,7 @@ def test_shape():
         assert np.allclose(truth, test)
 
 
+# pylint: disable=no-member
 @pytest.mark.parametrize(('layer', 'ds_slice'), [
     ('excl_test', None),
     ('excl_test', (100, 100)),

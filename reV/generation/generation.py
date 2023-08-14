@@ -2,16 +2,17 @@
 """
 reV generation module.
 """
+import os
 import copy
+import json
 import logging
+
+import pprint
 import numpy as np
 import pandas as pd
-import os
-import pprint
-import json
 
 from reV.generation.base import BaseGen
-from reV.utilities.exceptions import ProjectPointsValueError, InputError
+from reV.utilities.exceptions import (ProjectPointsValueError, InputError)
 from reV.SAM.generation import (Geothermal,
                                 PvWattsv5,
                                 PvWattsv7,
@@ -23,6 +24,7 @@ from reV.SAM.generation import (Geothermal,
                                 TroughPhysicalHeat,
                                 LinearDirectSteam,
                                 MhkWave)
+from reV.utilities import ModuleName
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -46,50 +48,7 @@ with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
 
 
 class Gen(BaseGen):
-    """reV generation analysis class to run SAM simulations
-
-
-    Examples
-    --------
-    The following is an example of the most simple way to run reV generation.
-    The reV code pipes in renewable energy resource data (usually from the
-    NSRDB or WTK), loads the SAM config, and then executes the PySAM compute
-    module for a given technology. If economic parameters are supplied, you can
-    bundle a "follow-on" econ calculation by just adding the desired econ
-    output keys to the output_request kwarg. You can request reV to run the
-    analysis for one or more "sites", which correspond to the meta indices in
-    the resource data (also commonly called the gid's). Note that the
-    TESTDATADIR refers to the local cloned repository and will need to be
-    replaced with a valid path if you installed reV via a simple pip install.
-
-    >>> import os
-    >>> from reV import Gen, TESTDATADIR
-    >>>
-    >>> sam_tech = 'pvwattsv7'
-    >>> sites = 0
-    >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
-    >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
-    >>>
-    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res)
-    >>>
-    >>> gen.out
-    {'cf_mean': array([0.16966143], dtype=float32)}
-    >>>
-    >>> sites = [3, 4, 7, 9]
-    >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
-    >>> gen = Gen.reV_run(sam_tech, sites, fp_sam, fp_res, output_request=req)
-    >>>
-    >>> gen.out
-    {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-     'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-     'cf_profile': array([[0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            ...,
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.],
-            [0., 0., 0., 0.]])}
-    """
+    """Gen"""
 
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'geothermal': Geothermal,
@@ -115,66 +74,276 @@ class Gen(BaseGen):
     OUT_ATTRS.update(TPPH_ATTRS)
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
-    def __init__(self, points_control, res_file, lr_res_file=None,
-                 output_request=('cf_mean',), site_data=None, gid_map=None,
-                 out_fpath=None, drop_leap=False, mem_util_lim=0.4,
-                 scale_outputs=True, write_mapped_gids=False,
-                 bias_correct=None):
-        """
+    def __init__(self, technology, project_points, sam_files, resource_file,
+                 low_res_resource_file=None, output_request=('cf_mean',),
+                 site_data=None, curtailment=None, gid_map=None,
+                 drop_leap=False, sites_per_worker=None,
+                 memory_utilization_limit=0.4, scale_outputs=True,
+                 write_mapped_gids=False, bias_correct=None):
+        """reV generation analysis class.
+
+        ``reV`` generation analysis runs SAM simulations by piping in
+        renewable energy resource data (usually from the NSRDB or WTK),
+        loading the SAM config, and then executing the PySAM compute
+        module for a given technology. If economic parameters are
+        supplied, you can bundle a "follow-on" econ calculation by
+        just adding the desired econ output keys to the `output_request`
+        input. You can request ``reV`` to run the analysis for one or
+        more "sites", which correspond to the meta indices in the
+        resource data (also commonly called the ``gid's``).
+
+        Examples
+        --------
+        The following is an example of the most simple way to run reV
+        generation. Note that the ``TESTDATADIR`` refers to the local cloned
+        repository and will need to be replaced with a valid path if you
+        installed ``reV`` via a simple pip install.
+
+        >>> import os
+        >>> from reV import Gen, TESTDATADIR
+        >>>
+        >>> sam_tech = 'pvwattsv7'
+        >>> sites = 0
+        >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
+        >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
+        >>>
+        >>> gen = Gen(sam_tech, sites, fp_sam, fp_res)
+        >>> gen.run()
+        >>>
+        >>> gen.out
+        {'cf_mean': array([0.16966143], dtype=float32)}
+        >>>
+        >>> sites = [3, 4, 7, 9]
+        >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
+        >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
+        >>> gen.run()
+        >>>
+        >>> gen.out
+        {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
+        'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
+        'cf_profile': array([[0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                ...,
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.]])}
+
         Parameters
         ----------
-        points_control : reV.config.project_points.PointsControl
-            Project points control instance for site and SAM config spec.
-        res_file : str
-            Filepath to single resource file, multi-h5 directory,
-            or /h5_dir/prefix*suffix
-        lr_res_file : str | None
-            Optional low resolution resource file that will be dynamically
-            mapped+interpolated to the nominal-resolution res_file. This
-            needs to be of the same format as resource_file, e.g. they both
-            need to be handled by the same rex Resource handler such as
-            WindResource
-        output_request : list | tuple
-            Output variables requested from SAM.
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        gid_map : None | str | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids.  This can be None, a pre-extracted dict, or a
-            filepath to json or csv. If this is a csv, it must have the columns
-            "gid" (which matches the project points) and "gid_map" (gids to
-            extract from the resource input)
-        out_fpath : str, optional
-            Output .h5 file path, by default None
-        drop_leap : bool
-            Drop leap day instead of final day of year during leap years
-        mem_util_lim : float
-            Memory utilization limit (fractional). This sets how many site
-            results will be stored in-memory at any given time before flushing
-            to disk.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
-        write_mapped_gids : bool
-            Option to write mapped gids to output meta instead of resource
-            gids.
-        bias_correct : str | pd.DataFrame
-            Optional DataFrame or csv filepath to a wind or solar resource bias
-            correction table. This has columns: gid (can be index name), adder,
-            scalar. If both adder and scalar are present, the wind or solar
-            resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed or
-            GHI+DNI are corrected depending on the technology. GHI and DNI are
-            corrected with the same correction factors.
-        """
+        technology : str
+            String indicating which SAM technology to analyze. Must be
+            one of the keys of
+            :attr:`~reV.generation.generation.Gen.OPTIONS`. The string
+            should be lower-cased with spaces and underscores removed.
+        project_points : int | list | tuple | str | dict | pd.DataFrame | slice
+            Input specifying which sites to process. A single integer
+            representing the GID of a site may be specified to evaluate
+            reV at a single location. A list or tuple of integers
+            (or slice) representing the GIDs of multiple sites can be
+            specified to evaluate reV at multiple specific locations.
+            A string pointing to a project points CSV file may also be
+            specified. Typically, the CSV contains two columns:
 
-        super().__init__(points_control, output_request, site_data=site_data,
-                         out_fpath=out_fpath, drop_leap=drop_leap,
-                         mem_util_lim=mem_util_lim,
+                - ``gid``: Integer specifying the GID of each site.
+                - ``config``: Key in the `sam_files` input dictionary
+                  (see below) corresponding to the SAM configuration to
+                  use for each particular site. This value can also be
+                  ``None`` (or left out completely) if you specify only
+                  a single SAM configuration file as the `sam_files`
+                  input.
+
+            The CSV file may also contain site-specific inputs by
+            including a column named after a config keyword (e.g. a
+            column called ``capital_cost`` may be included to specify a
+            site-specific capital cost value for each location). Columns
+            that do not correspond to a config key may also be included,
+            but they will be ignored. A DataFrame following the same
+            guidelines as the CSV input (or a dictionary that can be
+            used to initialize such a DataFrame) may be used for this
+            input as well.
+        sam_files : dict | str
+            A dictionary mapping SAM input configuration ID(s) to SAM
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the ``config`` column in the project points
+            CSV. Values for each key are either a path to a
+            corresponding SAM config file or a full dictionary
+            of SAM config inputs. For example::
+
+                sam_files = {
+                    "default": "/path/to/default/sam.json",
+                    "onshore": "/path/to/onshore/sam_config.yaml",
+                    "offshore": {
+                        "sam_key_1": "sam_value_1",
+                        "sam_key_2": "sam_value_2",
+                        ...
+                    },
+                    ...
+                }
+
+            This input can also be a string pointing to a single SAM
+            config file. In this case, the ``config`` column of the
+            CSV points input should be set to ``None`` or left out
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
+        resource_file : str
+            Filepath to resource data. This input can be path to a
+            single resource HDF5 file, a path to a directory containing
+            data spread across multiple HDF5 files, or a path including
+            a wildcard input like ``/h5_dir/prefix*suffix``. In all
+            cases, the resource data must be readable by
+            :py:class:`rex.resource.Resource`
+            or :py:class:`rex.multi_file_resource.MultiFileResource`.
+            (i.e. the resource data conform to the
+            `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
+            means the data file(s) must contain a 1D ``time_index``
+            dataset indicating the UTC time of observation, a 1D
+            ``meta`` dataset represented by a DataFrame with
+            site-specific columns, and 2D resource datasets that match
+            the dimensions of (``time_index``, ``meta``). The time index
+            must start at 00:00 of January 1st of the year under
+            consideration, and its shape must be a multiple of 8760.
+            If executing ``reV`` from the command line, this path can
+            contain brackets ``{}`` that will be filled in by the
+            `analysis_years` input.
+
+            .. Important:: If you are using custom resource data (i.e.
+              not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
+
+                  - The data conforms to the
+                    `rex data format <https://tinyurl.com/3fy7v5kx>`_.
+                  - The ``meta`` DataFrame is organized such that every
+                    row is a pixel and at least the columns
+                    ``latitude``, ``longitude``, ``timezone``, and
+                    ``elevation`` are given for each location.
+                  - The time index and associated temporal data is in
+                    UTC.
+                  - The latitude is between -90 and 90 and longitude is
+                    between -180 and 180.
+                  - For solar data, ensure the DNI/DHI are not zero. You
+                    can calculate one of these these inputs from the
+                    other using the relationship
+
+                    .. math:: GHI = DNI * cos(SZA) + DHI
+
+        low_res_resource_file : str, optional
+            Optional low resolution resource file that will be
+            dynamically mapped+interpolated to the nominal-resolution
+            `resource_file`. This needs to be of the same format as
+            `resource_file` - both files need to be handled by the
+            same ``rex Resource`` handler (e.g. ``WindResource``). All
+            of the requirements from the `resource_file` apply to this
+            input as well. If ``None``, no dynamic mapping to higher
+            resolutions is performed. By default, ``None``.
+        output_request : list | tuple, optional
+            List of output variables requested from SAM. Can be any
+            of the parameters in the "Outputs" group of the PySAM module
+            (e.g. :py:class:`PySAM.Windpower.Windpower.Outputs`,
+            :py:class:`PySAM.Pvwattsv8.Pvwattsv8.Outputs`,
+            :py:class:`PySAM.Geothermal.Geothermal.Outputs`, etc.) being
+            executed. This list can also include a select number of SAM
+            config/resource parameters to include in the output:
+            any key in any of the
+            `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
+            may be requested. If ``cf_mean`` is not included in this
+            list, it will automatically be added. Time-series profiles
+            requested via this input are output in UTC.
+
+            .. Note:: If you are performing ``reV`` solar runs using
+              ``PVWatts`` and would like ``reV`` to include AC capacity
+              values in your aggregation/supply curves, then you must
+              include the ``"dc_ac_ratio"`` time series as an output in
+              `output_request` when running ``reV`` generation. The AC
+              capacity outputs will automatically be added during the
+              aggregation/supply curve step if the ``"dc_ac_ratio"``
+              dataset is detected in the generation file.
+
+            By default, ``('cf_mean',)``.
+        site_data : str | pd.DataFrame, optional
+            Site-specific input data for SAM calculation. If this input
+            is a string, it should be a path that points to a CSV file.
+            Otherwise, this input should be a DataFrame with
+            pre-extracted site data. Rows in this table should match
+            the input sites via a ``gid`` column. The rest of the
+            columns should match configuration input keys that will take
+            site-specific values. Note that some or all site-specific
+            inputs can be specified via the `project_points` input
+            table instead. If ``None``, no site-specific data is
+            considered. By default, ``None``.
+        curtailment : dict | str, optional
+            Inputs for curtailment parameters, which can be:
+
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config file with path (str)
+
+            The allowed key-value input pairs in the curtailment
+            configuration are documented as properties of the
+            :class:`reV.config.curtailment.Curtailment` class. If
+            ``None``, no curtailment is modeled. By default, ``None``.
+        gid_map : dict | str, optional
+            Mapping of unique integer generation gids (keys) to single
+            integer resource gids (values). This enables unique
+            generation gids in the project points to map to non-unique
+            resource gids, which can be useful when evaluating multiple
+            resource datasets in ``reV`` (e.g., forecasted ECMWF
+            resource data to complement historical WTK meteorology).
+            This input can be a pre-extracted dictionary or a path to a
+            JSON or CSV file. If this input points to a CSV file, the
+            file must have the columns ``gid`` (which matches the
+            project points) and ``gid_map`` (gids to extract from the
+            resource input). If ``None``, the GID values in the project
+            points are assumed to match the resource GID values.
+            By default, ``None``.
+        drop_leap : bool, optional
+            Drop leap day instead of final day of year when handling
+            leap years. By default, ``False``.
+        sites_per_worker : int, optional
+            Number of sites to run in series on a worker. ``None``
+            defaults to the resource file chunk size.
+            By default, ``None``.
+        memory_utilization_limit : float, optional
+            Memory utilization limit (fractional). Must be a value
+            between 0 and 1. This input sets how many site results will
+            be stored in-memory at any given time before flushing to
+            disk. By default, ``0.4``.
+        scale_outputs : bool, optional
+            Flag to scale outputs in-place immediately upon ``Gen``
+            returning data. By default, ``True``.
+        write_mapped_gids : bool, optional
+            Option to write mapped gids to output meta instead of
+            resource gids. By default, ``False``.
+        bias_correct : str | pd.DataFrame, optional
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name)
+                - ``adder``: Value to add to resource at each site
+                - ``scalar``: Value to scale resource at each site by
+
+            The ``gid`` field should match the true resource ``gid``
+            regardless of the optional ``gid_map`` input. If both
+            ``adder`` and ``scalar`` are present, the wind or solar
+            resource is corrected by :math:`(res*scalar)+adder`. If
+            *either* is missing, ``scalar`` defaults to 1 and
+            ``adder`` to 0. Only `windspeed` **or** `GHI` + `DNI` are
+            corrected, depending on the technology (wind for the former,
+            solar for the latter). `GHI` and `DNI` are corrected with
+            the same correction factors. If ``None``, no corrections are
+            applied. By default, ``None``.
+        """
+        pc = self.get_pc(points=project_points, points_range=None,
+                         sam_configs=sam_files, tech=technology,
+                         sites_per_worker=sites_per_worker,
+                         res_file=resource_file,
+                         curtailment=curtailment)
+
+        super().__init__(pc, output_request, site_data=site_data,
+                         drop_leap=drop_leap,
+                         memory_utilization_limit=memory_utilization_limit,
                          scale_outputs=scale_outputs)
 
         if self.tech not in self.OPTIONS:
@@ -186,21 +355,16 @@ class Gen(BaseGen):
             raise KeyError(msg)
 
         self.write_mapped_gids = write_mapped_gids
-        self._res_file = res_file
-        self._lr_res_file = lr_res_file
+        self._res_file = resource_file
+        self._lr_res_file = low_res_resource_file
         self._sam_module = self.OPTIONS[self.tech]
         self._run_attrs['sam_module'] = self._sam_module.MODULE
-        self._run_attrs['res_file'] = res_file
+        self._run_attrs['res_file'] = resource_file
 
-        self._multi_h5_res, self._hsds = check_res_file(res_file)
+        self._multi_h5_res, self._hsds = check_res_file(resource_file)
         self._gid_map = self._parse_gid_map(gid_map)
         self._nn_map = self._parse_nn_map()
         self._bc = self._parse_bc(bias_correct)
-
-        # initialize output file
-        self._init_fpath()
-        self._init_h5()
-        self._init_out_arrays()
 
     @property
     def res_file(self):
@@ -310,9 +474,10 @@ class Gen(BaseGen):
         return self._time_index
 
     @classmethod
-    def run(cls, points_control, tech=None, res_file=None, lr_res_file=None,
-            output_request=None, scale_outputs=True, gid_map=None,
-            nn_map=None, bias_correct=None):
+    def _run_single_worker(cls, points_control, tech=None, res_file=None,
+                           lr_res_file=None, output_request=None,
+                           scale_outputs=True, gid_map=None, nn_map=None,
+                           bias_correct=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -590,158 +755,78 @@ class Gen(BaseGen):
 
         return list(set(output_request))
 
-    @classmethod
-    def reV_run(cls, tech, points, sam_configs, res_file, lr_res_file=None,
-                output_request=('cf_mean',), site_data=None, curtailment=None,
-                gid_map=None, max_workers=1, sites_per_worker=None,
-                pool_size=(os.cpu_count() * 2), timeout=1800,
-                points_range=None, out_fpath=None, mem_util_lim=0.4,
-                scale_outputs=True, write_mapped_gids=False,
-                bias_correct=None):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800,
+            pool_size=os.cpu_count() * 2):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
         ----------
-        tech : str
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
-            See :attr:`OPTIONS` for all available options.
-        points : int | slice | list | str | PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object. Can
-            also be a single site integer values.
-        sam_configs : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
-        res_file : str
-            Filepath to single resource file, multi-h5 directory,
-            or /h5_dir/prefix*suffix
-        lr_res_file : str | None
-            Optional low resolution resource file that will be dynamically
-            mapped+interpolated to the nominal-resolution res_file. This
-            needs to be of the same format as resource_file, e.g. they both
-            need to be handled by the same rex Resource handler such as
-            WindResource
-        output_request : list | tuple
-            Output variables requested from SAM.
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        curtailment : NoneType | dict | str | config.curtailment.Curtailment
-            Inputs for curtailment parameters. If not None, curtailment inputs
-            are expected. Can be:
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config json file with path (str)
-                - Instance of curtailment config object
-                  (config.curtailment.Curtailment)
-        gid_map : None | str | dict
-            Mapping of unique integer generation gids (keys) to single integer
-            resource gids (values). This enables the user to input unique
-            generation gids in the project points that map to non-unique
-            resource gids.  This can be None, a pre-extracted dict, or a
-            filepath to json or csv. If this is a csv, it must have the columns
-            "gid" (which matches the project points) and "gid_map" (gids to
-            extract from the resource input)
-        max_workers : int
-            Number of local workers to run on.
-        sites_per_worker : int | None
-            Number of sites to run in series on a worker. None defaults to the
-            resource file chunk size.
-        pool_size : int
-            Number of futures to submit to a single process pool for
-            parallel futures.
-        timeout : int | float
-            Number of seconds to wait for parallel run iteration to complete
-            before returning zeros. Default is 1800 seconds.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property. The list is the (Beginning, end) (inclusive/exclusive,
-            respectively) index split parameters for ProjectPoints.split()
-            method.
         out_fpath : str, optional
-            Output .h5 file path, by default None
-        mem_util_lim : float
-            Memory utilization limit (fractional). This will determine how many
-            site results are stored in memory at any given time.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
-        write_mapped_gids : bool
-            Option to write mapped gids to output meta instead of resource
-            gids.
-        bias_correct : str | pd.DataFrame
-            Optional DataFrame or csv filepath to a wind or solar resource bias
-            correction table. This has columns: gid (can be index name), adder,
-            scalar. If both adder and scalar are present, the wind or solar
-            resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed or
-            GHI+DNI are corrected depending on the technology. GHI and DNI are
-            corrected with the same correction factors.
+            Path to output file. If ``None``, no output file will
+            be written. If the filepath is specified but the module name
+            (generation) and/or resource data year is not included, the
+            module name and/or resource data year will get added to the
+            output file name. By default, ``None``.
+        max_workers : int, optional
+            Number of local workers to run on. By default, ``1``.
+        timeout : int, optional
+            Number of seconds to wait for parallel run iteration to
+            complete before returning zeros. By default, ``1800``
+            seconds.
+        pool_size : int, optional
+            Number of futures to submit to a single process pool for
+            parallel futures. By default, ``os.cpu_count() * 2``.
 
         Returns
         -------
-        gen : Gen
-            Gen instance with outputs saved to gen.out dict
+        str | None
+            Path to output HDF5 file, or ``None`` if results were not
+            written to disk.
         """
+        # initialize output file
+        self._init_fpath(out_fpath, module=ModuleName.GENERATION)
+        self._init_h5()
+        self._init_out_arrays()
 
-        # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_configs, tech,
-                        sites_per_worker=sites_per_worker, res_file=res_file,
-                        curtailment=curtailment)
+        kwargs = {'tech': self.tech,
+                  'res_file': self.res_file,
+                  'lr_res_file': self.lr_res_file,
+                  'output_request': self.output_request,
+                  'scale_outputs': self.scale_outputs,
+                  'gid_map': self._gid_map,
+                  'nn_map': self._nn_map,
+                  'bias_correct': self._bc}
 
-        # make a Gen class instance to operate with
-        gen = cls(pc, res_file,
-                  lr_res_file=lr_res_file,
-                  output_request=output_request,
-                  site_data=site_data,
-                  gid_map=gid_map,
-                  out_fpath=out_fpath,
-                  mem_util_lim=mem_util_lim,
-                  scale_outputs=scale_outputs,
-                  write_mapped_gids=write_mapped_gids,
-                  bias_correct=bias_correct)
-
-        kwargs = {'tech': gen.tech,
-                  'res_file': gen.res_file,
-                  'lr_res_file': gen.lr_res_file,
-                  'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs,
-                  'gid_map': gen._gid_map,
-                  'nn_map': gen._nn_map,
-                  'bias_correct': gen._bc,
-                  }
-
-        logger.info('Running reV generation for: {}'.format(pc))
+        logger.info('Running reV generation for: {}'
+                    .format(self.points_control))
         logger.debug('The following project points were specified: "{}"'
-                     .format(points))
+                     .format(self.project_points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_configs, indent=4)))
+                     .format(pprint.pformat(self.sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
-                     .format(output_request))
+                     .format(self.output_request))
 
         # use serial or parallel execution control based on max_workers
         try:
             if max_workers == 1:
-                logger.debug('Running serial generation for: {}'.format(pc))
-                for i, pc_sub in enumerate(pc):
-                    gen.out = gen.run(pc_sub, **kwargs)
+                logger.debug('Running serial generation for: {}'
+                             .format(self.points_control))
+                for i, pc_sub in enumerate(self.points_control):
+                    self.out = self._run_single_worker(pc_sub, **kwargs)
                     logger.info('Finished reV gen serial compute for: {} '
                                 '(iteration {} out of {})'
-                                .format(pc_sub, i + 1, len(pc)))
-                gen.flush()
+                                .format(pc_sub, i + 1,
+                                        len(self.points_control)))
+                self.flush()
             else:
-                logger.debug('Running parallel generation for: {}'.format(pc))
-                gen._parallel_run(max_workers=max_workers, pool_size=pool_size,
-                                  timeout=timeout, **kwargs)
+                logger.debug('Running parallel generation for: {}'
+                             .format(self.points_control))
+                self._parallel_run(max_workers=max_workers,
+                                   pool_size=pool_size, timeout=timeout,
+                                   **kwargs)
 
         except Exception as e:
             logger.exception('reV generation failed!')
             raise e
 
-        return gen
+        return self._out_fpath

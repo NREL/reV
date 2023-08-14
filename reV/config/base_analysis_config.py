@@ -55,6 +55,7 @@ class AnalysisConfig(BaseConfig):
     @property
     def analysis_years(self):
         """Get the analysis years.
+
         Returns
         -------
         analysis_years : list
@@ -88,6 +89,7 @@ class AnalysisConfig(BaseConfig):
     @property
     def execution_control(self):
         """Get the execution control object.
+
         Returns
         -------
         _ec : BaseExecutionConfig | EagleConfig

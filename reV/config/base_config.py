@@ -7,8 +7,8 @@ import logging
 import os
 from pathlib import Path
 
-from rex.utilities import safe_json_load
 from rex.utilities.utilities import get_class_properties, unstupify_path
+from gaps.config import load_config
 
 from reV.utilities.exceptions import ConfigError
 
@@ -192,14 +192,14 @@ class BaseConfig(dict):
 
         # str is either json file path or serialized json object
         if isinstance(config, str):
-            if config.endswith('.json'):
+            try:
+                # attempt to deserialize JSON-style string
+                config = json.loads(config)
+            except json.JSONDecodeError:
                 self._config_dir = os.path.dirname(unstupify_path(config))
                 self._config_dir += '/'
                 self._config_dir = self._config_dir.replace('\\', '/')
-                config = self.get_file(config)
-            else:
-                # attempt to deserialize non-json string
-                config = json.loads(config)
+                config = load_config(config)
 
         # Perform string replacement, save config to self instance
         if self._perform_str_rep:
@@ -273,32 +273,6 @@ class BaseConfig(dict):
         """
         for key, val in dictlike.items():
             self[key] = val
-
-    @staticmethod
-    def get_file(fname):
-        """Read the config file.
-
-        Parameters
-        ----------
-        fname : str
-            Full path + filename. Must be a .json file.
-
-        Returns
-        -------
-        config : dict
-            Config data.
-        """
-
-        logger.debug('Getting "{}"'.format(fname))
-        if os.path.exists(fname) and fname.endswith('.json'):
-            config = safe_json_load(fname)
-        elif os.path.exists(fname) is False:
-            raise FileNotFoundError('Configuration file does not exist: "{}"'
-                                    .format(fname))
-        else:
-            raise ConfigError('Unknown error getting configuration file: "{}"'
-                              .format(fname))
-        return config
 
     def resolve_path(self, path):
         """Resolve a file path represented by the input string.

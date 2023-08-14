@@ -1,6 +1,10 @@
-******************************************************
-Welcome to the Renewable Energy Potential (reV) Model!
-******************************************************
+.. raw:: html
+
+    <p align="center">
+        <img height="180" src="docs/source/_static/logo.png" />
+    </p>
+
+---------
 
 .. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
@@ -17,12 +21,6 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://badge.fury.io/py/NREL-reV.svg
     :target: https://badge.fury.io/py/NREL-reV
 
-.. image:: https://anaconda.org/nrel/nrel-rev/badges/version.svg
-    :target: https://anaconda.org/nrel/nrel-rev
-
-.. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
-    :target: https://anaconda.org/nrel/nrel-rev
-
 .. image:: https://codecov.io/gh/nrel/reV/branch/main/graph/badge.svg?token=U4ZU9F0K0Z
     :target: https://codecov.io/gh/nrel/reV
 
@@ -32,61 +30,140 @@ Welcome to the Renewable Energy Potential (reV) Model!
 .. image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
 
+
 .. inclusion-intro
 
+|
 
-Recommended Citation
-====================
+**reV** (the Renewable Energy Potential model)
+is an open-source geospatial techno-economic tool that
+estimates renewable energy technical potential (capacity and generation),
+system cost, and supply curves for solar photovoltaics (PV),
+concentrating solar power (CSP), geothermal, and wind energy.
+reV allows researchers to include exhaustive spatial representation
+of the built and natural environment into the generation and cost estimates
+that it computes.
 
-Please cite both the technical paper and the software with the version and
-DOI you used:
+reV is highly dynamic, allowing analysts to assess potential at varying levels
+of detail — from a single site up to an entire continent at temporal resolutions
+ranging from five minutes to hourly, spanning a single year or multiple decades.
+The reV model can (and has been used to) provide broad coverage across large spatial
+extents, including North America, South and Central Asia, the Middle East, South America,
+and South Africa to inform national and international-scale analyses. Still, reV is
+equally well-suited for regional infrastructure and deployment planning and analysis.
 
-Maclaurin, Galen J., Nicholas W. Grue, Anthony J. Lopez, Donna M. Heimiller,
-Michael Rossol, Grant Buster, and Travis Williams. 2019. “The Renewable Energy
-Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply
-Curve Modeling.” Golden, Colorado, United States: National Renewable Energy
-Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
 
-Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis
-Williams. The Renewable Energy Potential Model (reV).
-https://github.com/NREL/reV (version v0.5.0), 2021.
-https://doi.org/10.5281/zenodo.4711470.
+For a detailed description of reV capabilities and functionality, see the
+`NREL reV technical report <https://www.nrel.gov/docs/fy19osti/73067.pdf>`_.
+
+How does reV work?
+==================
+reV is a set of `Python classes and functions <https://nrel.github.io/reV/_autosummary/reV.html>`_
+that can be executed on HPC systems using `CLI commands <https://nrel.github.io/reV/_cli/cli.html>`_.
+A full reV execution consists of one or more compute modules
+(each consisting of their own Python class/CLI command)
+strung together using a `pipeline framework <https://nrel.github.io/reV/_cli/reV-pipeline.html>`_,
+or configured using `batch <https://nrel.github.io/reV/_cli/reV-batch.html>`_.
+
+A typical reV workflow begins with input wind/solar/geothermal resource data
+(following the `rex data format <https://nrel.github.io/rex/misc/examples.nsrdb.html#data-format>`_)
+that is passed through the generation module. This output is then collected across space and time
+(if executed on the HPC), before being sent off to be aggregated under user-specified land exclusion scenarios.
+Exclusion data is typically provided via a collection of high-resolution spatial data layers stored in an HDF5 file.
+This file must be readable by reV's
+`ExclusionLayers <https://nrel.github.io/reV/_autosummary/reV.handlers.exclusions.ExclusionLayers.html#reV.handlers.exclusions.ExclusionLayers>`_
+class. See the `reVX Setbacks utility <https://nrel.github.io/reVX/misc/examples.setbacks.html>`_
+for instructions on generating setback exclusions for use in reV.
+Next, transmission costs are computed for each aggregated
+"supply-curve point" using user-provided transmission cost tables.
+See the `reVX transmission cost calculator utility <https://github.com/NREL/reVX/tree/main/reVX/least_cost_xmission/>`_
+for instructions on generating transmission cost tables.
+Finally, the supply curves and initial generation data can be used to
+extract representative generation profiles for each supply curve point.
+
+A visual summary of this process is given below:
+
+
+.. inclusion-flowchart
+
+.. raw:: html
+
+    <p align="center">
+        <img height="400" src="docs/source/_static/rev_flow_chart.png" />
+    </p>
+
+|
+
+.. inclusion-get-started
+
+To get up and running with reV, first head over to the `installation page <https://nrel.github.io/reV/misc/installation.html>`_,
+then check out some of the `Examples <https://nrel.github.io/reV/misc/examples.html>`_ or
+go straight to the `CLI Documentation <https://nrel.github.io/reV/_cli/cli.html>`_!
+
+
+.. inclusion-install
+
+
+Installing reV
+==============
+
+NOTE: The installation instruction below assume that you have python installed
+on your machine and are using `conda <https://docs.conda.io/en/latest/index.html>`_
+as your package/environment manager.
+
+Option 1: Install from PIP or Conda (recommended for analysts):
+---------------------------------------------------------------
+
+1. Create a new environment:
+    ``conda create --name rev python=3.9``
+
+2. Activate directory:
+    ``conda activate rev``
+
+3. Install reV:
+    1) ``pip install NREL-reV`` or
+
+       - NOTE: If you install using conda and want to use `HSDS <https://github.com/NREL/hsds-examples>`_
+         you will also need to install h5pyd manually: ``pip install h5pyd``
+
+Option 2: Clone repo (recommended for developers)
+-------------------------------------------------
+
+1. from home dir, ``git clone git@github.com:NREL/reV.git``
+
+2. Create ``reV`` environment and install package
+    1) Create a conda env: ``conda create -n rev``
+    2) Run the command: ``conda activate rev``
+    3) cd into the repo cloned in 1.
+    4) prior to running ``pip`` below, make sure the branch is correct (install
+       from main!)
+    5) Install ``reV`` and its dependencies by running:
+       ``pip install .`` (or ``pip install -e .`` if running a dev branch
+       or working on the source code)
+
+3. Check that ``reV`` was installed successfully
+    1) From any directory, run the following commands. This should return the
+       help pages for the CLI's.
+
+        - ``reV``
 
 
 reV command line tools
 ======================
 
 - `reV <https://nrel.github.io/reV/_cli/reV.html#reV>`_
-- `reV-batch <https://nrel.github.io/reV/_cli/reV-batch.html#rev-batch>`_
-- `reV-bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
-- `reV-collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
-- `reV-econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
-- `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
-- `reV-hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
-- `reV-multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
-- `reV-nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
-- `reV-pipeline <https://nrel.github.io/reV/_cli/reV-pipeline.html#rev-pipeline>`_
-- `reV-project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
-- `reV-QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
-- `reV-rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
-- `reV-supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
-- `reV-supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
-
-Using Eagle Env
-===============
-
-If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled
-conda env:
-
-.. code-block:: bash
-
-    conda activate /shared-projects/rev/modulefiles/conda/envs/rev/
-
-or
-
-.. code-block:: bash
-
-    source activate /shared-projects/rev/modulefiles/conda/envs/rev/
+- `reV bespoke <https://nrel.github.io/reV/_cli/reV-bespoke.html#rev-bespoke>`_
+- `reV collect <https://nrel.github.io/reV/_cli/reV-collect.html#rev-collect>`_
+- `reV econ <https://nrel.github.io/reV/_cli/reV-econ.html#rev-econ>`_
+- `reV gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
+- `reV hybrids <https://nrel.github.io/reV/_cli/reV-hybrids.html#rev-hybrids>`_
+- `reV multiyear <https://nrel.github.io/reV/_cli/reV-multiyear.html#rev-multiyear>`_
+- `reV nrwal <https://nrel.github.io/reV/_cli/reV-nrwal.html#rev-nrwal>`_
+- `reV project-points <https://nrel.github.io/reV/_cli/reV-project-points.html#reV-project-points>`_
+- `reV QA-QC <https://nrel.github.io/reV/_cli/reV-QA-QC.html#rev-qa-qc>`_
+- `reV rep-profiles <https://nrel.github.io/reV/_cli/reV-rep-profiles.html#rev-rep-profiles>`_
+- `reV supply-curve-aggregation <https://nrel.github.io/reV/_cli/reV-supply-curve-aggregation.html#rev-supply-curve-aggregation>`_
+- `reV supply-curve <https://nrel.github.io/reV/_cli/reV-supply-curve.html#rev-supply-curve>`_
 
 
 Launching a run
@@ -115,46 +192,23 @@ General Run times and Node configuration on Eagle
 
 `Eagle node requests <https://nrel.github.io/reV/misc/examples.eagle_node_requests.html>`_
 
-Installing reV
-==============
 
-NOTE: The installation instruction below assume that you have python installed
-on your machine and are using `conda <https://docs.conda.io/en/latest/index.html>`_
-as your package/environment manager.
+.. inclusion-citation
 
-Option 1: Install from PIP or Conda (recommended for analysts):
----------------------------------------------------------------
 
-1. Create a new environment:
-    ``conda create --name rev python=3.9``
+Recommended Citation
+====================
 
-2. Activate directory:
-    ``conda activate rev``
+Please cite both the technical paper and the software with the version and
+DOI you used:
 
-3. Install reV:
-    1) ``pip install NREL-reV`` or
-    2) ``conda install nrel-rev --channel=nrel``
+Maclaurin, Galen J., Nicholas W. Grue, Anthony J. Lopez, Donna M. Heimiller,
+Michael Rossol, Grant Buster, and Travis Williams. 2019. “The Renewable Energy
+Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply
+Curve Modeling.” Golden, Colorado, United States: National Renewable Energy
+Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
 
-       - NOTE: If you install using conda and want to use `HSDS <https://github.com/NREL/hsds-examples>`_
-         you will also need to install h5pyd manually: ``pip install h5pyd``
-
-Option 2: Clone repo (recommended for developers)
--------------------------------------------------
-
-1. from home dir, ``git clone git@github.com:NREL/reV.git``
-
-2. Create ``reV`` environment and install package
-    1) Create a conda env: ``conda create -n rev``
-    2) Run the command: ``conda activate rev``
-    3) cd into the repo cloned in 1.
-    4) prior to running ``pip`` below, make sure the branch is correct (install
-       from main!)
-    5) Install ``reV`` and its dependencies by running:
-       ``pip install .`` (or ``pip install -e .`` if running a dev branch
-       or working on the source code)
-
-3. Check that ``reV`` was installed successfully
-    1) From any directory, run the following commands. This should return the
-       help pages for the CLI's.
-
-        - ``reV``
+Michael Rossol, Grant Buster, Mike Bannister, Robert Spencer, and Travis
+Williams. The Renewable Energy Potential Model (reV).
+https://github.com/NREL/reV (version v0.5.0), 2021.
+https://doi.org/10.5281/zenodo.4711470.

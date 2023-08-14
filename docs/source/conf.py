@@ -57,10 +57,19 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_rtd_theme",
     'sphinx_click.ext',
+    "sphinx_tabs.tabs",
+    "sphinx_copybutton",
 ]
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
+    'matplotlib': ('https://matplotlib.org/stable', None),
+    'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
+    'PySAM': ('https://nrel-pysam.readthedocs.io/en/latest/', None),
+    'rex': ('https://nrel.github.io/rex/', None),
+    'reVX': ('https://nrel.github.io/reVX/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -81,7 +90,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -109,7 +118,11 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {"navigation_depth": 4, "collapse_navigation": False}
+html_theme_options = {
+    "navigation_depth": 4,
+    "collapse_navigation": False,
+    "logo_only": True,
+}
 html_css_file = ["custom.css"]
 
 html_context = {
@@ -135,6 +148,9 @@ html_static_path = ['_static']
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
+
+# Logo
+html_logo = "_static/logo.png"
 
 
 # -- Options for HTMLHelp output ---------------------------------------------

@@ -45,12 +45,11 @@ def test_single_owner():
     output_request = ('ppa_price', 'project_return_aftertax_npv', 'lcoe_nom',
                       'lcoe_real', 'size_of_equity', 'wacc')
 
-    obj = Econ.reV_run(slice(0, 10), sam_files, cf_file, year=2012,
-                       output_request=output_request,
-                       max_workers=1, sites_per_worker=10,
-                       points_range=None, out_fpath=None)
+    econ = Econ(slice(0, 10), sam_files, cf_file,
+                output_request=output_request, sites_per_worker=10)
+    econ.run(max_workers=1)
 
-    for k, v in obj.out.items():
+    for k, v in econ.out.items():
         msg = 'Array for "{}" is bad!'.format(k)
         result = np.allclose(v, OUT_BASELINE[k], rtol=RTOL, atol=ATOL)
         assert result, msg

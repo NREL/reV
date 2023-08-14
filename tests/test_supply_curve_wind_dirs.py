@@ -43,6 +43,9 @@ def test_competitive_wind_dirs(downwind):
     else:
         baseline = pd.read_csv(baseline)
 
+    sc_points = sc_points.sort_values(by="sc_gid").reset_index(drop=True)
+    baseline = baseline.sort_values(by="sc_gid").reset_index(drop=True)
+
     assert_frame_equal(sc_points, baseline, check_dtype=False)
 
 
@@ -50,11 +53,10 @@ def test_competitive_wind_dirs(downwind):
 def test_sc_full_wind_dirs(downwind):
     """Run the full SC test and verify results against baseline file."""
 
-    sc_out = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                              sc_features=MULTIPLIERS,
-                              transmission_costs=TRANS_COSTS,
-                              avail_cap_frac=AVAIL_CAP_FRAC,
-                              wind_dirs=WIND_DIRS, downwind=downwind)
+    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    sc_out = sc.full_sort(fcr=0.1, transmission_costs=TRANS_COSTS,
+                          avail_cap_frac=AVAIL_CAP_FRAC, wind_dirs=WIND_DIRS,
+                          downwind=downwind)
 
     if downwind:
         baseline = os.path.join(TESTDATADIR, 'comp_wind_farms',
@@ -74,11 +76,9 @@ def test_sc_full_wind_dirs(downwind):
 @pytest.mark.parametrize('downwind', [False, True])
 def test_sc_simple_wind_dirs(downwind):
     """Run the simple SC test and verify results against baseline file."""
-
-    sc_out = SupplyCurve.simple(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                                sc_features=MULTIPLIERS,
-                                transmission_costs=TRANS_COSTS,
-                                wind_dirs=WIND_DIRS, downwind=downwind)
+    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    sc_out = sc.simple_sort(fcr=0.1,transmission_costs=TRANS_COSTS,
+                            wind_dirs=WIND_DIRS, downwind=downwind)
 
     if downwind:
         baseline = os.path.join(TESTDATADIR, 'comp_wind_farms',

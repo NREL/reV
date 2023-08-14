@@ -26,10 +26,9 @@ def test_gen_downscaling():
     res_file = os.path.join(TESTDATADIR, 'nsrdb', 'nsrdb_surfrad_2017.h5')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('pvwattsv5', slice(0, None), sam_files, res_file,
-                      output_request=('cf_mean', 'cf_profile'),
-                      max_workers=1, sites_per_worker=100,
-                      out_fpath=None)
+    gen = Gen('pvwattsv5', slice(0, None), sam_files, res_file,
+              output_request=('cf_mean', 'cf_profile'), sites_per_worker=100)
+    gen.run(max_workers=1)
     gen_outs = gen.out['cf_profile'].astype(np.int32)
 
     if not os.path.exists(baseline):

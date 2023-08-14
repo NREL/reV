@@ -6,7 +6,7 @@ import logging
 import os
 from warnings import warn
 
-from rex.utilities import safe_json_load
+from gaps.config import load_config
 
 from reV.utilities.exceptions import SAMInputError, SAMInputWarning
 from reV.config.base_config import BaseConfig
@@ -159,7 +159,8 @@ class SAMConfig(BaseConfig):
 
     @property
     def inputs(self):
-        """Get the SAM input file(s) (JSON) and return as a dictionary.
+        """Get the SAM input file(s) (JSON/JSON5/YAML/TOML) and return
+        as a dictionary.
 
         Parameters
         ----------
@@ -173,17 +174,14 @@ class SAMConfig(BaseConfig):
                 # key is ID (i.e. sam_param_0) that matches project points json
                 # fname is the actual SAM config file name (with path)
                 if isinstance(config, str):
-                    if not config.endswith('.json'):
-                        raise IOError('SAM config file must be a JSON: "{}"'
-                                      .format(config))
-                    elif not os.path.exists(config):
+                    if not os.path.exists(config):
                         raise IOError('SAM config file does not exist: "{}"'
                                       .format(config))
                     else:
-                        config = safe_json_load(config)
+                        config = load_config(config)
 
                 if not isinstance(config, dict):
-                    raise RuntimeError('SAM config must be a JSON file or a '
+                    raise RuntimeError('SAM config must be a file or a '
                                        'pre-extracted dictionary, but got: {}'
                                        .format(config))
 

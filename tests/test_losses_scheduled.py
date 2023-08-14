@@ -18,7 +18,6 @@ import traceback
 
 import numpy as np
 import pandas as pd
-from click.testing import CliRunner
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
@@ -30,7 +29,6 @@ from reV.cli import main
 from reV.handlers.outputs import Outputs
 
 from rex.utilities.utilities import safe_json_load
-from rex.utilities.loggers import LOGGERS
 
 
 REV_POINTS = list(range(3))
@@ -121,12 +119,6 @@ def so_scheduler(basic_outage_dict):
     outage = Outage(basic_outage_dict)
     scheduler = OutageScheduler([])
     return SingleOutageScheduler(outage, scheduler)
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """Cli runner."""
-    return CliRunner()
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
@@ -345,9 +337,10 @@ def _run_gen_with_and_without_losses(
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(site_outages)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -372,9 +365,9 @@ def _run_gen_with_and_without_losses(
     if haf is not None:
         pc.project_points.sam_inputs[sam_file]['hourly'] = haf.tolist()
 
-    gen = Gen.reV_run(tech, pc, sam_file, res_file,
-                      output_request=('gen_profile'),
-                      max_workers=None, sites_per_worker=3, out_fpath=None)
+    gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
+              sites_per_worker=3)
+    gen.run(max_workers=None)
     gen_profiles = gen.out['gen_profile']
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
@@ -426,9 +419,10 @@ def test_scheduled_losses_repeatability(
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(site_outages)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
         gen_profiles_first_run = gen.out['gen_profile']
 
         outages = copy.deepcopy(outages)
@@ -438,9 +432,10 @@ def test_scheduled_losses_repeatability(
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(site_outages)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -472,9 +467,10 @@ def test_scheduled_losses_repeatability_with_seed(files):
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
         gen_profiles_first_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -484,9 +480,10 @@ def test_scheduled_losses_repeatability_with_seed(files):
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
         gen_profiles_second_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -496,9 +493,10 @@ def test_scheduled_losses_repeatability_with_seed(files):
             fh.write(json.dumps(sam_config))
 
         site_data = _make_site_data_df(SINGLE_SITE_OUTAGE)
-        gen = Gen.reV_run(tech, REV_POINTS, sam_fp, res_file,
-                          output_request=('gen_profile'), site_data=site_data,
-                          max_workers=None, sites_per_worker=3, out_fpath=None)
+        gen = Gen(tech, REV_POINTS, sam_fp, res_file,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=None)
         gen_profiles_third_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -792,7 +790,7 @@ def test_outage_class_allow_outage_overlap(basic_outage_dict):
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv5'),
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv7')
 ])
-def test_scheduled_outages_multi_year(runner, files):
+def test_scheduled_outages_multi_year(runner, files, clear_loggers):
     """Test that scheduled outages are different year to year. """
     sam_file, res_file, tech = files
     with open(sam_file, 'r') as fh:
@@ -813,7 +811,7 @@ def test_scheduled_outages_multi_year(runner, files):
             sam_config['losses'] = 0
             with open(sam_fp, 'w+') as fh:
                 fh.write(json.dumps(sam_config))
-            sam_files = {"sam_gen_pv_1": sam_fp}
+            sam_files = {"sam gen pv_1": sam_fp}
         else:
             config_file_path = 'local_wind.json'
             project_points = os.path.join(TESTDATADIR, 'config',
@@ -838,8 +836,8 @@ def test_scheduled_outages_multi_year(runner, files):
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['-c', config_path, 'generation'])
-        LOGGERS.clear()
+        result = runner.invoke(main, ['generation', '-c', config_path])
+        clear_loggers()
 
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))

@@ -9,7 +9,7 @@
   ],
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=normal",
+    "qos": "normal",
     "memory": 90,
     "option": "eagle",
     "walltime": 0.5

@@ -14,6 +14,7 @@ import json
 import sys
 from warnings import warn
 
+from reV.config.output_request import SAMOutputRequest
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.handlers.outputs import Outputs
 from reV.SAM.version_checker import PySamVersionChecker
@@ -68,7 +69,7 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 out_fpath=None, drop_leap=False, mem_util_lim=0.4,
+                 drop_leap=False, memory_utilization_limit=0.4,
                  scale_outputs=True):
         """
         Parameters
@@ -82,11 +83,9 @@ class BaseGen(ABC):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
         drop_leap : bool
             Drop leap day instead of final day of year during leap years.
-        mem_util_lim : float
+        memory_utilization_limit : float
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
@@ -98,25 +97,24 @@ class BaseGen(ABC):
         self._year = None
         self._site_limit = None
         self._site_mem = None
-        self._out_fpath = out_fpath
+        self._out_fpath = None
         self._meta = None
         self._time_index = None
         self._sam_module = None
         self._sam_obj_default = None
         self._drop_leap = drop_leap
-        self.mem_util_lim = mem_util_lim
+        self.mem_util_lim = memory_utilization_limit
         self.scale_outputs = scale_outputs
 
         self._run_attrs = {'points_control': str(points_control),
                            'output_request': output_request,
-                           'out_fpath': str(out_fpath),
                            'site_data': str(site_data),
                            'drop_leap': str(drop_leap),
-                           'mem_util_lim': mem_util_lim,
-                           }
+                           'memory_utilization_limit': self.mem_util_lim}
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)
+        output_request = SAMOutputRequest(output_request)
         self._output_request = self._parse_output_request(output_request)
 
         # pre-initialize output arrays to store results when available.
@@ -243,7 +241,7 @@ class BaseGen(ABC):
 
         Returns
         -------
-        sam_configs : reV.config.sam.SAMGenConfig
+        sam_configs : dict
             SAM config from the project points instance.
         """
         return self.project_points.sam_inputs
@@ -275,16 +273,6 @@ class BaseGen(ABC):
             SAM object like PySAM.Pvwattsv7 or PySAM.Lcoefcr
         """
         return self._sam_module
-
-    @property
-    def out_fpath(self):
-        """Get the output file path.
-
-        Returns
-        -------
-        out_fpath : str | None
-        """
-        return self._out_fpath
 
     @property
     def meta(self):
@@ -527,13 +515,11 @@ class BaseGen(ABC):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        if not isinstance(points, ProjectPoints):
-            # make Project Points instance
-            pp = ProjectPoints(points, sam_configs, tech=tech,
-                               res_file=res_file, curtailment=curtailment)
-        else:
-            pp = ProjectPoints(points.df, sam_configs, tech=tech,
-                               res_file=res_file, curtailment=curtailment)
+        if hasattr(points, "df"):
+            points = points.df
+
+        pp = ProjectPoints(points, sam_configs, tech=tech, res_file=res_file,
+                           curtailment=curtailment)
 
         #  make Points Control instance
         if points_range is not None:
@@ -555,8 +541,7 @@ class BaseGen(ABC):
 
         Parameters
         ----------
-        points : int | slice | list | str | pandas.DataFrame
-                 | reV.config.project_points.PointsControl
+        points : int | slice | list | str | pandas.DataFrame | PointsControl
             Single site integer,
             or slice or list specifying project points,
             or string pointing to a project points csv,
@@ -585,10 +570,12 @@ class BaseGen(ABC):
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------
@@ -700,8 +687,8 @@ class BaseGen(ABC):
 
     @staticmethod
     @abstractmethod
-    def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True):
+    def _run_single_worker(points_control, tech=None, res_file=None,
+                           output_request=None, scale_outputs=True):
         """Run a reV-SAM analysis based on the points_control iterator.
 
         Parameters
@@ -765,6 +752,7 @@ class BaseGen(ABC):
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
 
+            # pylint: disable=no-member
             if site_data.index.name != 'gid':
                 # make gid the dataframe index if not already
                 site_data = site_data.set_index('gid', drop=True)
@@ -826,65 +814,81 @@ class BaseGen(ABC):
         """
 
         if dset in self.OUT_ATTRS:
-            if self.OUT_ATTRS[dset]['type'] == 'array':
-                data_shape = (len(self.time_index), n_sites)
-            else:
-                data_shape = (n_sites, )
+            return self._get_data_shape_from_out_attrs(dset, n_sites)
 
-        elif dset in self.project_points.all_sam_input_keys:
-            data = list(self.project_points.sam_inputs.values())[0][dset]
-            if isinstance(data, (list, tuple, np.ndarray)):
-                data_shape = (*np.array(data).shape, n_sites)
-            elif isinstance(data, str):
-                msg = ('Cannot pass through non-scalar SAM input key "{}" '
-                       'as an output_request!'.format(dset))
-                logger.error(msg)
-                raise ExecutionError(msg)
-            else:
-                data_shape = (n_sites, )
+        if dset in self.project_points.all_sam_input_keys:
+            return self._get_data_shape_from_sam_config(dset, n_sites)
 
-        else:
-            if self._sam_obj_default is None:
-                self._sam_obj_default = self.sam_module.default()
+        return self._get_data_shape_from_pysam(dset, n_sites)
 
-            try:
-                out_data = getattr(self._sam_obj_default.Outputs, dset)
-            except AttributeError as e:
-                msg = ('Could not get data shape for dset "{}" '
-                       'from object "{}". '
-                       'Received the following error: "{}"'
-                       .format(dset, self._sam_obj_default, e))
-                logger.error(msg)
-                raise ExecutionError(msg) from e
-            else:
-                if isinstance(out_data, (int, float, str)):
-                    data_shape = (n_sites, )
-                elif len(out_data) % len(self.time_index) == 0:
-                    data_shape = (len(self.time_index), n_sites)
-                else:
-                    data_shape = (len(out_data), n_sites)
+    def _get_data_shape_from_out_attrs(self, dset, n_sites):
+        """Get data shape from ``OUT_ATTRS`` variable"""
+        if self.OUT_ATTRS[dset]['type'] == 'array':
+            return (len(self.time_index), n_sites)
+        return (n_sites,)
 
-        return data_shape
+    def _get_data_shape_from_sam_config(self, dset, n_sites):
+        """Get data shape from SAM input config """
+        data = list(self.project_points.sam_inputs.values())[0][dset]
+        if isinstance(data, (list, tuple, np.ndarray)):
+            return (*np.array(data).shape, n_sites)
 
-    def _init_fpath(self):
+        if isinstance(data, str):
+            msg = ('Cannot pass through non-scalar SAM input key "{}" '
+                   'as an output_request!'.format(dset))
+            logger.error(msg)
+            raise ExecutionError(msg)
+
+        return (n_sites, )
+
+    def _get_data_shape_from_pysam(self, dset, n_sites):
+        """Get data shape from PySAM output object"""
+        if self._sam_obj_default is None:
+            self._sam_obj_default = self.sam_module.default()
+
+        try:
+            out_data = getattr(self._sam_obj_default.Outputs, dset)
+        except AttributeError as e:
+            msg = ('Could not get data shape for dset "{}" '
+                   'from object "{}". '
+                   'Received the following error: "{}"'
+                   .format(dset, self._sam_obj_default, e))
+            logger.error(msg)
+            raise ExecutionError(msg) from e
+
+        if isinstance(out_data, (int, float, str)):
+            return (n_sites,)
+
+        if len(out_data) % len(self.time_index) == 0:
+            return (len(self.time_index), n_sites)
+
+        return (len(out_data), n_sites)
+
+    def _init_fpath(self, out_fpath, module):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
+        if out_fpath is None:
+            return
 
-        if self._out_fpath is not None:
+        # ensure output file is an h5
+        if not out_fpath.endswith('.h5'):
+            out_fpath += '.h5'
 
-            # ensure output file is an h5
-            if not self._out_fpath .endswith('.h5'):
-                self._out_fpath += '.h5'
+        if module not in out_fpath:
+            extension_with_module = "_{}.h5".format(module)
+            out_fpath = out_fpath.replace(".h5", extension_with_module)
 
-            # ensure year is in out_fpath
-            if str(self.year) not in self._out_fpath:
-                self._out_fpath = self._out_fpath.replace('.h5',
-                                                          '_{}.h5'
-                                                          .format(self.year))
+        # ensure year is in out_fpath
+        if self.year is not None and str(self.year) not in out_fpath:
+            module_with_year = "{}_{}".format(module, self.year)
+            out_fpath = out_fpath.replace(module, module_with_year)
 
-            # create and use optional output dir
-            dirout = os.path.dirname(self._out_fpath)
-            if dirout and not os.path.exists(dirout):
-                os.makedirs(dirout)
+        # create and use optional output dir
+        dirout = os.path.dirname(out_fpath)
+        if dirout and not os.path.exists(dirout):
+            os.makedirs(dirout)
+
+        self._out_fpath = out_fpath
+        self._run_attrs['out_fpath'] = out_fpath
 
     def _init_h5(self, mode='w'):
         """Initialize the single h5 output file with all output requests.
@@ -895,49 +899,50 @@ class BaseGen(ABC):
             Mode to instantiate h5py.File instance
         """
 
-        if self._out_fpath is not None:
+        if self._out_fpath is None:
+            return
 
-            if 'w' in mode:
-                logger.info('Initializing full output file: "{}" with mode: {}'
-                            .format(self._out_fpath, mode))
-            elif 'a' in mode:
-                logger.info('Appending data to output file: "{}" with mode: {}'
-                            .format(self._out_fpath, mode))
+        if 'w' in mode:
+            logger.info('Initializing full output file: "{}" with mode: {}'
+                        .format(self._out_fpath, mode))
+        elif 'a' in mode:
+            logger.info('Appending data to output file: "{}" with mode: {}'
+                        .format(self._out_fpath, mode))
 
-            attrs = {d: {} for d in self.output_request}
-            chunks = {}
-            dtypes = {}
-            shapes = {}
+        attrs = {d: {} for d in self.output_request}
+        chunks = {}
+        dtypes = {}
+        shapes = {}
 
-            # flag to write time index if profiles are being output
-            write_ti = False
+        # flag to write time index if profiles are being output
+        write_ti = False
 
-            for dset in self.output_request:
+        for dset in self.output_request:
 
-                tmp = 'other'
-                if dset in self.OUT_ATTRS:
-                    tmp = dset
+            tmp = 'other'
+            if dset in self.OUT_ATTRS:
+                tmp = dset
 
-                attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
-                                                               'unknown')
-                attrs[dset]['scale_factor'] = \
-                    self.OUT_ATTRS[tmp].get('scale_factor', 1)
-                chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
-                dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
-                shapes[dset] = self._get_data_shape(dset, len(self.meta))
-                if len(shapes[dset]) > 1:
-                    write_ti = True
+            attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
+                                                           'unknown')
+            attrs[dset]['scale_factor'] = \
+                self.OUT_ATTRS[tmp].get('scale_factor', 1)
+            chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
+            dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
+            shapes[dset] = self._get_data_shape(dset, len(self.meta))
+            if len(shapes[dset]) > 1:
+                write_ti = True
 
-            # only write time index if profiles were found in output request
-            if write_ti:
-                ti = self.time_index
-            else:
-                ti = None
+        # only write time index if profiles were found in output request
+        if write_ti:
+            ti = self.time_index
+        else:
+            ti = None
 
-            Outputs.init_h5(self._out_fpath, self.output_request, shapes,
-                            attrs, chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_metas, run_attrs=self.run_attrs,
-                            mode=mode)
+        Outputs.init_h5(self._out_fpath, self.output_request, shapes,
+                        attrs, chunks, dtypes, self.meta, time_index=ti,
+                        configs=self.sam_metas, run_attrs=self.run_attrs,
+                        mode=mode)
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
@@ -1087,7 +1092,7 @@ class BaseGen(ABC):
 
             logger.debug('Flushed output successfully to disk.')
 
-    def _pre_split_pc(self, pool_size=(os.cpu_count() * 2)):
+    def _pre_split_pc(self, pool_size=os.cpu_count() * 2):
         """Pre-split project control iterator into sub chunks to further
         split the parallelization.
 
@@ -1123,7 +1128,7 @@ class BaseGen(ABC):
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=(os.cpu_count() * 2),
+    def _parallel_run(self, max_workers=None, pool_size=os.cpu_count() * 2,
                       timeout=1800, **kwargs):
         """Execute parallel compute.
 
@@ -1138,7 +1143,7 @@ class BaseGen(ABC):
             Number of seconds to wait for parallel run iteration to complete
             before returning zeros.
         kwargs : dict
-            Keyword arguments to self.run().
+            Keyword arguments to self._run_single_worker().
         """
 
         max_workers = os.cpu_count() if max_workers is None else max_workers
@@ -1158,7 +1163,7 @@ class BaseGen(ABC):
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for pc in pc_chunk:
-                    future = exe.submit(self.run, pc, **kwargs)
+                    future = exe.submit(self._run_single_worker, pc, **kwargs)
                     futures.append(future)
                     chunks[future] = pc
 

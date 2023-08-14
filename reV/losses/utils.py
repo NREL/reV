@@ -204,6 +204,7 @@ def full_month_name_from_abbr(month_name):
     ----------
     month_name : str
         Abbreviated month name. Must be one of:
+
             - "Jan"
             - "Feb"
             - "Mar"
@@ -216,6 +217,7 @@ def full_month_name_from_abbr(month_name):
             - "Oct"
             - "Nov"
             - "Dec"
+
         If the input does not match one of these, this function returns
         :obj:`None`.
 

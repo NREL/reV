@@ -60,11 +60,10 @@ def test_cf_curtailment(year, site):
     points = slice(site, site + 1)
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file, out_fpath=None,
-                      output_request=('cf_profile',),
-                      curtailment=curtailment,
-                      max_workers=1, sites_per_worker=50,
-                      scale_outputs=True)
+    gen = Gen('windpower', points, sam_files, res_file,
+              output_request=('cf_profile',), curtailment=curtailment,
+              sites_per_worker=50, scale_outputs=True)
+    gen.run(max_workers=1)
     results, check_curtailment = test_res_curtailment(year, site=site)
     results['cf_profile'] = gen.out['cf_profile'].flatten()
 
@@ -108,12 +107,10 @@ def test_curtailment_res_mean(year):
     truth = resources['mean_windspeed']
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file, out_fpath=None,
-                      output_request=output_request,
-                      curtailment=curtailment,
-                      max_workers=1, sites_per_worker=50,
-                      scale_outputs=True)
-
+    gen = Gen('windpower', points, sam_files, res_file,
+              output_request=output_request, curtailment=curtailment,
+              sites_per_worker=50, scale_outputs=True)
+    gen.run(max_workers=1)
     test = gen.out['ws_mean']
 
     assert np.allclose(truth, test, rtol=0.001)
@@ -145,12 +142,10 @@ def test_random(year, site):
         points = slice(site, site + 1)
 
         # run reV 2.0 generation and write to disk
-        gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                          out_fpath=None,
-                          output_request=('cf_profile',),
-                          curtailment=c,
-                          max_workers=1, sites_per_worker=50,
-                          scale_outputs=True)
+        gen = Gen('windpower', points, sam_files, res_file,
+                  output_request=('cf_profile',), curtailment=c,
+                  sites_per_worker=50, scale_outputs=True)
+        gen.run(max_workers=1)
 
         results.append(gen.out['cf_mean'])
 

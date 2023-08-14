@@ -15,7 +15,7 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.utilities.exceptions import ExecutionError, OffshoreWindInputWarning
+from reV.utilities.exceptions import (ExecutionError, OffshoreWindInputWarning)
 from reV.utilities import ModuleName
 
 from rex.resource import Resource
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class Econ(BaseGen):
-    """reV econ analysis class to run SAM simulations"""
+    """Econ"""
 
     # Mapping of reV econ output strings to SAM econ modules
     OPTIONS = {'lcoe_fcr': SAM_LCOE,
@@ -45,57 +45,141 @@ class Econ(BaseGen):
                'fixed_operating_cost': SAM_LCOE,
                'variable_operating_cost': SAM_LCOE,
                }
+    """Available ``reV`` econ `output_request` options"""
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
-    def __init__(self, points_control, cf_file, year, site_data=None,
-                 output_request=('lcoe_fcr',), out_fpath=None,
-                 append=False, mem_util_lim=0.4):
-        """Initialize an econ instance.
+    def __init__(self, project_points, sam_files, cf_file, site_data=None,
+                 output_request=('lcoe_fcr',), sites_per_worker=100,
+                 memory_utilization_limit=0.4, append=False):
+        """reV econ analysis class.
+
+        ``reV`` econ analysis runs SAM econ calculations, typically to
+        compute LCOE (using :py:class:`PySAM.Lcoefcr.Lcoefcr`), though
+        :py:class:`PySAM.Singleowner.Singleowner` or
+        :py:class:`PySAM.Windbos.Windbos` calculations can also be
+        performed simply by requesting outputs from those computation
+        modules. See the keys of
+        :attr:`Econ.OPTIONS <reV.econ.econ.Econ.OPTIONS>` for all
+        available econ outputs. Econ computations rely on an input a
+        generation (i.e. capacity factor) profile. You can request
+        ``reV`` to run the analysis for one or more "sites", which
+        correspond to the meta indices in the generation data.
 
         Parameters
         ----------
-        points_control : reV.config.PointsControl
-            Project points control instance for site and SAM config spec.
+        project_points : int | list | tuple | str | dict | pd.DataFrame | slice
+            Input specifying which sites to process. A single integer
+            representing the GID of a site may be specified to evaluate
+            reV at a single location. A list or tuple of integers
+            (or slice) representing the GIDs of multiple sites can be
+            specified to evaluate reV at multiple specific locations.
+            A string pointing to a project points CSV file may also be
+            specified. Typically, the CSV contains two columns:
+
+                - ``gid``: Integer specifying the GID of each site.
+                - ``config``: Key in the `sam_files` input dictionary
+                  (see below) corresponding to the SAM configuration to
+                  use for each particular site. This value can also be
+                  ``None`` (or left out completely) if you specify only
+                  a single SAM configuration file as the `sam_files`
+                  input.
+
+            The CSV file may also contain site-specific inputs by
+            including a column named after a config keyword (e.g. a
+            column called ``capital_cost`` may be included to specify a
+            site-specific capital cost value for each location). Columns
+            that do not correspond to a config key may also be included,
+            but they will be ignored. A DataFrame following the same
+            guidelines as the CSV input (or a dictionary that can be
+            used to initialize such a DataFrame) may be used for this
+            input as well.
+        sam_files : dict | str
+            A dictionary mapping SAM input configuration ID(s) to SAM
+            configuration(s). Keys are the SAM config ID(s) which
+            correspond to the ``config`` column in the project points
+            CSV. Values for each key are either a path to a
+            corresponding SAM config file or a full dictionary
+            of SAM config inputs. For example::
+
+                sam_files = {
+                    "default": "/path/to/default/sam.json",
+                    "onshore": "/path/to/onshore/sam_config.yaml",
+                    "offshore": {
+                        "sam_key_1": "sam_value_1",
+                        "sam_key_2": "sam_value_2",
+                        ...
+                    },
+                    ...
+                }
+
+            This input can also be a string pointing to a single SAM
+            config file. In this case, the ``config`` column of the
+            CSV points input should be set to ``None`` or left out
+            completely. See the documentation for the ``reV`` SAM class
+            (e.g. :class:`reV.SAM.generation.WindPower`,
+            :class:`reV.SAM.generation.PvWattsv8`,
+            :class:`reV.SAM.generation.Geothermal`, etc.) for
+            documentation on the allowed and/or required SAM config file
+            inputs.
         cf_file : str
-            reV generation capacity factor output file with path.
-        year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        out_fpath : str, optional
-            Output .h5 file path, by default None
+            Path to reV output generation file containing a capacity
+            factor output. If executing ``reV`` from the command line,
+            this path can contain brackets ``{}`` that will be filled in
+            by the `analysis_years` input. Alternatively, this input can
+            be set to ``"PIPELINE"`` to parse the output of the previous
+            step (``reV`` generation) and use it as input to this call.
+        site_data : str | pd.DataFrame, optional
+            Site-specific input data for SAM calculation. If this input
+            is a string, it should be a path that points to a CSV file.
+            Otherwise, this input should be a DataFrame with
+            pre-extracted site data. Rows in this table should match
+            the input sites via a ``gid`` column. The rest of the
+            columns should match configuration input keys that will take
+            site-specific values. Note that some or all site-specific
+            inputs can be specified via the `project_points` input
+            table instead. If ``None``, no site-specific data is
+            considered. By default, ``None``.
+        output_request : list | tuple, optional
+            List of output variables requested from SAM. Can be any
+            of the parameters in the "Outputs" group of the PySAM module
+            (e.g. :py:class:`PySAM.Windpower.Windpower.Outputs`,
+            :py:class:`PySAM.Pvwattsv8.Pvwattsv8.Outputs`,
+            :py:class:`PySAM.Geothermal.Geothermal.Outputs`, etc.) being
+            executed. This list can also include a select number of SAM
+            config/resource parameters to include in the output:
+            any key in any of the
+            `output attribute JSON files <https://tinyurl.com/4bmrpe3j/>`_
+            may be requested. Time-series profiles requested via this
+            input are output in UTC. By default, ``('lcoe_fcr',)``.
+        sites_per_worker : int, optional
+            Number of sites to run in series on a worker. ``None``
+            defaults to the resource file chunk size.
+            By default, ``None``.
+        memory_utilization_limit : float, optional
+            Memory utilization limit (fractional). Must be a value
+            between 0 and 1. This input sets how many site results will
+            be stored in-memory at any given time before flushing to
+            disk. By default, ``0.4``.
         append : bool
-            Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            Option to append econ datasets to source `cf_file`.
+            By default, ``False``.
         """
 
-        super().__init__(points_control, output_request, site_data=site_data,
-                         out_fpath=out_fpath, mem_util_lim=mem_util_lim)
+        # get a points control instance
+        pc = self.get_pc(points=project_points, points_range=None,
+                         sam_configs=sam_files, cf_file=cf_file,
+                         sites_per_worker=sites_per_worker, append=append)
+
+        super().__init__(pc, output_request, site_data=site_data,
+                         memory_utilization_limit=memory_utilization_limit)
 
         self._cf_file = cf_file
-        self._year = year
+        self._append = append
         self._run_attrs['cf_file'] = cf_file
         self._run_attrs['sam_module'] = self._sam_module.MODULE
-
-        # initialize output file or append econ data to gen file
-        if append:
-            self._out_fpath = self._cf_file
-        else:
-            self._init_fpath()
-
-        mode = 'a' if append else 'w'
-        self._init_h5(mode=mode)
-        self._init_out_arrays()
 
     @property
     def cf_file(self):
@@ -213,7 +297,7 @@ class Econ(BaseGen):
             resource file chunk size.
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            over the out_fpath input.
 
         Returns
         -------
@@ -231,7 +315,7 @@ class Econ(BaseGen):
         return pc
 
     @staticmethod
-    def run(pc, econ_fun, output_request, **kwargs):
+    def _run_single_worker(pc, econ_fun, output_request, **kwargs):
         """Run the SAM econ calculation.
 
         Parameters
@@ -364,110 +448,83 @@ class Econ(BaseGen):
 
         return data_shape
 
-    @classmethod
-    def reV_run(cls, points, sam_configs, cf_file,
-                year=None, site_data=None, output_request=('lcoe_fcr',),
-                max_workers=1, sites_per_worker=100,
-                pool_size=(os.cpu_count() * 2),
-                timeout=1800, points_range=None, out_fpath=None, append=False):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800,
+            pool_size=os.cpu_count() * 2):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
         ----------
-        points : slice | list | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
-        sam_configs : dict | str | SAMConfig
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s) which map to the config column in the project points
-            CSV. Values are either a JSON SAM config file or dictionary of SAM
-            config inputs. Can also be a single config file path or a
-            pre loaded SAMConfig object.
-        cf_file : str
-            reV generation capacity factor output file with path.
-        year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
-        site_data : str | pd.DataFrame | None
-            Site-specific input data for SAM calculation. String should be a
-            filepath that points to a csv, DataFrame is pre-extracted data.
-            Rows match sites, columns are input keys. Need a "gid" column.
-            Input as None if no site-specific data.
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        max_workers : int
-            Number of local workers to run on.
-        sites_per_worker : int
-            Number of sites to run in series on a worker.
-        pool_size : int
-            Number of futures to submit to a single process pool for
-            parallel futures.
-        timeout : int | float
-            Number of seconds to wait for parallel run iteration to complete
-            before returning zeros. Default is 1800 seconds.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property.
         out_fpath : str, optional
-            Output .h5 file path, by default None
-        append : bool
-            Flag to append econ datasets to source cf_file. This has priority
-            over the out_fpath and dirout inputs.
+            Path to output file. If this class was initialized with
+            ``append=True``, this input has no effect. If ``None``, no
+            output file will be written. If the filepath is specified
+            but the module name (econ) and/or resource data year is not
+            included, the module name and/or resource data year will get
+            added to the output file name. By default, ``None``.
+        max_workers : int, optional
+            Number of local workers to run on. By default, ``1``.
+        timeout : int, optional
+            Number of seconds to wait for parallel run iteration to
+            complete before returning zeros. By default, ``1800``
+            seconds.
+        pool_size : int, optional
+            Number of futures to submit to a single process pool for
+            parallel futures. By default, ``os.cpu_count() * 2``.
 
         Returns
         -------
-        econ : Econ
-            Econ object instance with outputs stored in econ.out dict.
+        str | None
+            Path to output HDF5 file, or ``None`` if results were not
+            written to disk.
         """
 
-        # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_configs, cf_file,
-                        sites_per_worker=sites_per_worker, append=append)
+        # initialize output file or append econ data to gen file
+        if self._append:
+            self._out_fpath = self._cf_file
+        else:
+            self._init_fpath(out_fpath, ModuleName.ECON)
 
-        # make a class instance to operate with
-        econ = cls(pc, cf_file,
-                   year=year,
-                   site_data=site_data,
-                   output_request=output_request,
-                   out_fpath=out_fpath,
-                   append=append)
+        self._init_h5(mode='a' if self._append else 'w')
+        self._init_out_arrays()
 
-        diff = list(set(pc.sites) - set(econ.meta['gid'].values))
+        diff = list(set(self.points_control.sites)
+                    - set(self.meta['gid'].values))
         if diff:
             raise Exception('The following analysis sites were requested '
                             'through project points for econ but are not '
                             'found in the CF file ("{}"): {}'
-                            .format(econ.cf_file, diff))
+                            .format(self.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'output_request': econ.output_request,
-                  'cf_file': econ.cf_file,
-                  'year': econ.year}
+        kwargs = {'output_request': self.output_request,
+                  'cf_file': self.cf_file,
+                  'year': self.year}
 
         logger.info('Running econ with smart data flushing '
-                    'for: {}'.format(pc))
+                    'for: {}'.format(self.points_control))
         logger.debug('The following project points were specified: "{}"'
-                     .format(points))
+                     .format(self.project_points))
         logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(sam_configs, indent=4)))
+                     .format(pprint.pformat(self.sam_configs, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
-                     .format(output_request))
+                     .format(self.output_request))
 
         try:
-            kwargs['econ_fun'] = econ._fun
+            kwargs['econ_fun'] = self._fun
             if max_workers == 1:
-                logger.debug('Running serial econ for: {}'.format(pc))
-                for i, pc_sub in enumerate(pc):
-                    econ.out = econ.run(pc_sub, **kwargs)
+                logger.debug('Running serial econ for: {}'
+                             .format(self.points_control))
+                for i, pc_sub in enumerate(self.points_control):
+                    self.out = self._run_single_worker(pc_sub, **kwargs)
                     logger.info('Finished reV econ serial compute for: {} '
                                 '(iteration {} out of {})'
-                                .format(pc_sub, i + 1, len(pc)))
-                econ.flush()
+                                .format(pc_sub, i + 1,
+                                        len(self.points_control)))
+                self.flush()
             else:
-                logger.debug('Running parallel econ for: {}'.format(pc))
-                econ._parallel_run(max_workers=max_workers,
+                logger.debug('Running parallel econ for: {}'
+                             .format(self.points_control))
+                self._parallel_run(max_workers=max_workers,
                                    pool_size=pool_size, timeout=timeout,
                                    **kwargs)
 
@@ -475,4 +532,4 @@ class Econ(BaseGen):
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
 
-        return econ
+        return self._out_fpath

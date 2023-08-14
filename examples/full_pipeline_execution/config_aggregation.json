@@ -30,7 +30,7 @@
   "excl_fpath": "./rev_conus_exclusions.h5",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "memory": 90,
     "nodes": 1,
     "option": "eagle",

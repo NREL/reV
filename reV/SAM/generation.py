@@ -431,12 +431,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         bias_correct : None | pd.DataFrame
             None if not provided or extracted DataFrame with wind or solar
             resource bias correction table. This has columns: gid (can be index
-            name), adder, scalar. If both adder and scalar are present, the
-            wind or solar resource is corrected by (res*scalar)+adder. If
-            either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed or GHI+DNI are corrected depending on
-            the technology. GHI and DNI are corrected with the same correction
-            factors.
+            name), adder, scalar. The gid field should match the true resource
+            gid regardless of the optional gid_map input. If both adder and
+            scalar are present, the wind or solar resource is corrected by
+            (res*scalar)+adder. If either adder or scalar is not present,
+            scalar defaults to 1 and adder to 0. Only windspeed or GHI+DNI are
+            corrected depending on the technology. GHI and DNI are corrected
+            with the same correction factors.
 
         Returns
         -------
@@ -768,6 +769,55 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                  output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
 
+        See the PySAM :py:class:`~PySAM.Pvwattsv8.Pvwattsv8` (or older
+        version model) documentation for the configuration keys required
+        in the `sam_sys_inputs` config. You may also include the
+        following ``reV``-specific keys:
+
+            - ``reV_outages`` : Specification for ``reV``-scheduled
+              stochastic outage losses. For example::
+
+                    outage_info = [
+                        {
+                            'count': 6,
+                            'duration': 24,
+                            'percentage_of_capacity_lost': 100,
+                            'allowed_months': ['January', 'March'],
+                            'allow_outage_overlap': True
+                        },
+                        {
+                            'count': 10,
+                            'duration': 1,
+                            'percentage_of_capacity_lost': 10,
+                            'allowed_months': ['January'],
+                            'allow_outage_overlap': False
+                        },
+                        ...
+                    ]
+
+              See the description of
+              :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+              or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
+            - ``reV_outages_seed`` : Integer value used to seed the RNG
+              used to compute stochastic outage losses.
+            - ``time_index_step`` : Integer representing the step size
+              used to sample the ``time_index`` in the resource data.
+              This can be used to reduce temporal resolution (i.e. for
+              30 minute NSRDB input data, ``time_index_step=1`` yields
+              the full 30 minute time series as output, while
+              ``time_index_step=2`` yields hourly output, and so forth).
+
+              .. Note:: The reduced data shape (i.e. after applying a
+                        step size of `time_index_step`) must still be an
+                        integer multiple of 8760, or the execution will
+                        fail.
+
+            - ``clearsky`` : Boolean flag value indicating wether
+              computation should use clearsky resource data to compute
+              generation data.
+
         Parameters
         ----------
         resource : pd.DataFrame
@@ -802,6 +852,39 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                          site_sys_inputs=site_sys_inputs,
                          output_request=output_request,
                          drop_leap=drop_leap)
+
+    def set_resource_data(self, resource, meta):
+        """Set NSRDB resource data arrays.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+
+        Raises
+        ------
+        ValueError : If lat/lon outside of -90 to 90 and -180 to 180,
+                     respectively.
+
+        """
+        bad_location_input = ((meta['latitude'] < -90)
+                              | (meta['latitude'] > 90)
+                              | (meta['longitude'] < -180)
+                              | (meta['longitude'] > 180))
+        if bad_location_input.any():
+            raise ValueError("Detected latitude/longitude values outside of "
+                             "the range -90 to 90 and -180 to 180, "
+                             "respectively. Please ensure input resource data"
+                             "locations conform to these ranges. ")
+        return super().set_resource_data(resource, meta)
 
     @staticmethod
     def set_latitude_tilt_az(sam_sys_inputs, meta):
@@ -1225,30 +1308,9 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
 class Geothermal(AbstractSamGenerationFromWeatherFile):
     """reV-SAM geothermal generation.
 
-    Unlike wind or solar, reV geothermal dynamically sets the size of a
-    geothermal plant. In particular, the nameplate capacity is set to
-    match the resource potential (obtained form the input data) for each
-    site. To override this behavior, users can specify their own
-    nameplate capacity (either a single value for all sites in the SAM
-    geothermal config or a site-dependent value in the project points
-    CSV). In this case, the resource potential from the input data will
-    be ignored completely.
-
-    reV also allows users to input ``capital_cost_per_kw``
-    and ``fixed_operating_cost_per_kw`` instead of the flat
-    ``capital_cost`` and ``fixed_operating_cost`` values, respectively,
-    in the SAM technology config, since the capacity of geothermal
-    plants may be set dynamically by reV. If these inputs are detected,
-    reV calculates the total ``capital_cost`` and
-    ``fixed_operating_cost`` based on the plant size and automatically
-    adds them to the SAM config on a per-site basis. Users can also
-    provide a ``drill_cost_per_well`` value, which will be used to
-    calculate total drilling costs base don the number of wells at each
-    plant. The drilling costs will be added to the capital cost input.
-
-    As of 12/20/2022, the resource potential input is only used to
-    calculate the number of well replacements during the lifetime of a
-    geothermal plant. It was decided that reV would not model well
+    As of 12/20/2022, the resource potential input in SAM is only used
+    to calculate the number of well replacements during the lifetime of
+    a geothermal plant. It was decided that reV would not model well
     replacements. Therefore, reV sets the resource potential to match
     (or be just above) the gross potential so that SAM does not throw
     any errors.
@@ -1258,6 +1320,149 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
     reV currently generates an empty weather file to pass to SAM. This
     behavior can be easily updated in the future should the SAM GETEM
     module start using weather data.
+
+    See the PySAM :py:class:`~PySAM.Geothermal.Geothermal` documentation
+    for the configuration keys required in the `sam_sys_inputs` config.
+    Some notable keys include (non-exhaustive):
+
+        - ``resource_type`` : Integer flag representing either
+          Hydrothermal (0) or EGS (1) resource. Only values of 0 or 1
+          allowed.
+        - ``resource_potential`` : Total resource potential at location
+          (in MW).
+
+          .. Important:: ``reV`` automatically sets the resource
+             potential to match the gross potential (see documentation
+             above), so this key should be left out of the config (it
+             will be overridden in any case).
+
+        - ``resource_temp`` : Temperature of resource (in C).
+
+          .. Important:: This value is set by ``reV`` based on the
+             user's geothermal resource data input. To override this
+             behavior, users *may* specify their own ``resource_temp``
+             value (either a single value for all sites in the SAM
+             geothermal config or a  site-dependent value in the project
+             points CSV). In this case, the resource temperature from
+             the input data will be ignored completely, and the
+             temperature at each location will be determined solely from
+             this input.
+
+        - ``resource_depth`` : Depth to geothermal resource (in m).
+        - ``analysis_type`` : Integer flag representing the plant
+          configuration. If the ``nameplate`` input is to be used to
+          specify the plant capacity, then this flag should be set to 0
+          (this is the default ``reV`` assumption). Otherwise, if the
+          ``num_wells`` input is to be used to specify the plant site,
+          then this flag should be set to 1. Only values of 0 or 1
+          allowed.
+
+        - ``nameplate`` : Geothermal plant size (in kW). Only affects
+          the output if ``analysis_type=0``.
+
+          .. Important:: Unlike wind or solar, ``reV`` geothermal
+             dynamically sets the size of a geothermal plant. In
+             particular, the plant capacity is set to match the resource
+             potential (obtained from the input data) for each site. For
+             this to work, users **must** leave out the ``nameplate``
+             key from the SAM config.
+
+             Alternatively, users *may* specify their own ``nameplate``
+             capacity value (either a single value for all sites in the
+             SAM geothermal config or a site-dependent value in the
+             project points CSV). In this case, the resource potential
+             from the input data will be ignored completely, and the
+             capacity at each location will be determined solely from
+             this input.
+
+        - ``num_wells`` : Number of wells at each plant. This value is
+          used to determined plant capacity if ``analysis_type=1``.
+          Otherwise this input has no effect.
+        - ``num_wells_getem`` : Number of wells assumed at each plant
+          for power block calculations. Only affects power block outputs
+          if ``analysis_type=0`` (otherwise the ``num_wells`` input is
+          used in power block calculations).
+
+          .. Note:: ``reV`` does not currently adjust this value based
+             on the resource input (as it probably should). If any
+             power block outputs are required in the future, there may
+             need to be extra development to set this value based on
+             the dynamically calculated plant size.
+
+        - ``conversion_type`` : Integer flag representing the conversion
+          plant type. Either Binary (0) or Flash (1). Only values of 0
+          or 1 allowed.
+        - ``design_temp`` : EGS plant design temperature (in C). Only
+          affects EGS runs. If this value is set lower than the
+          resource temperature input, ``reV`` will adjust it to match
+          the latter in order to avoid SAM errors.
+        - ``geotherm.cost.inj_prod_well_ratio`` : Fraction representing
+          the injection to production well ratio (0-1). SAM GUI defaults
+          to 0.5 for this value, but it is recommended to set this to
+          the GETEM default of 0.75.
+
+
+    You may also include the following ``reV``-specific keys:
+
+        - ``num_confirmation_wells`` : Number of confirmation wells that
+          can also be used as production wells. This number is used to
+          determined to total number of wells required at each plant,
+          and therefore the total drilling costs. This value defaults to
+          2 (to match the SAM GUI as of 8/1/2023). However, the default
+          value can lead to negative costs if the plant size is small
+          (e.g. only 1 production well is needed, so the costs equal
+          -1 * ``drill_cost_per_well``). This is a limitation of the
+          SAM calculations (as of 8/1/2023), and it is therefore useful
+          to set ``num_confirmation_wells=0`` when performing ``reV``
+          runs for small plant sizes.
+        - ``capital_cost_per_kw`` : Capital cost values in $/kW. If
+          this value is specified in the config, reV calculates and
+          overrides the total ``capital_cost`` value based on the
+          geothermal plant size (capacity) at each location.
+        - ``fixed_operating_cost`` : Fixed operating cost values in
+          $/kW. If this value is specified in the config, reV calculates
+          and overrides the total ``fixed_operating_cost`` value based
+          on the geothermal plant size (capacity) at each location.
+        - ``drill_cost_per_well`` : Drilling cost per well, in $. If
+          this value is specified in the config, reV calculates the
+          total drilling costs based on the number of wells that need to
+          be drilled at each location. The drilling costs are added to
+          the total ``capital_cost`` at each location.
+        - ``reV_outages`` : Specification for ``reV``-scheduled
+          stochastic outage losses. For example::
+
+                outage_info = [
+                    {
+                        'count': 6,
+                        'duration': 24,
+                        'percentage_of_capacity_lost': 100,
+                        'allowed_months': ['January', 'March'],
+                        'allow_outage_overlap': True
+                    },
+                    {
+                        'count': 10,
+                        'duration': 1,
+                        'percentage_of_capacity_lost': 10,
+                        'allowed_months': ['January'],
+                        'allow_outage_overlap': False
+                    },
+                    ...
+                ]
+
+          See the description of
+          :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+          or the
+          `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+          for detailed instructions on how to specify this input.
+        - ``reV_outages_seed`` : Integer value used to seed the RNG
+          used to compute stochastic outage losses.
+        - ``time_index_step`` : Integer representing the step size
+          used to sample the ``time_index`` in the resource data.
+          This can be used to reduce temporal resolution (i.e. for
+          30 minute NSRDB input data, ``time_index_step=1`` yields
+          the full 30 minute time series as output, while
+          ``time_index_step=2`` yields hourly output, and so forth).
+
     """
 
     MODULE = 'geothermal'
@@ -1533,12 +1738,93 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
 
 class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
-    """Base Class for Wind generation from SAM"""
+    """AbstractSamWind"""
 
     def __init__(self, *args, **kwargs):
-        """
-        See docstring for :class:`AbstractSamGeneration` for full input
-        parameter descriptions.
+        """Wind generation from SAM.
+
+        See the PySAM :py:class:`~PySAM.Windpower.Windpower`
+        documentation for the configuration keys required in the
+        `sam_sys_inputs` config. You may also include the following
+        ``reV``-specific keys:
+
+            - ``reV_power_curve_losses`` : A dictionary that can be used
+              to initialize
+              :class:`~reV.losses.power_curve.PowerCurveLossesInput`.
+              For example::
+
+                    reV_power_curve_losses = {
+                        'target_losses_percent': 9.8,
+                        'transformation': 'exponential_stretching'
+                    }
+
+              See the description of the class mentioned above or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
+            - ``reV_outages`` : Specification for ``reV``-scheduled
+              stochastic outage losses. For example::
+
+                    outage_info = [
+                        {
+                            'count': 6,
+                            'duration': 24,
+                            'percentage_of_capacity_lost': 100,
+                            'allowed_months': ['January', 'March'],
+                            'allow_outage_overlap': True
+                        },
+                        {
+                            'count': 10,
+                            'duration': 1,
+                            'percentage_of_capacity_lost': 10,
+                            'allowed_months': ['January'],
+                            'allow_outage_overlap': False
+                        },
+                        ...
+                    ]
+
+              See the description of
+              :meth:`~reV.losses.scheduled.ScheduledLossesMixin.add_scheduled_losses`
+              or the
+              `reV losses demo notebook <https://tinyurl.com/4d7uutt3/>`_
+              for detailed instructions on how to specify this input.
+            - ``reV_outages_seed`` : Integer value used to seed the RNG
+              used to compute stochastic outage losses.
+            - ``time_index_step`` : Integer representing the step size
+              used to sample the ``time_index`` in the resource data.
+              This can be used to reduce temporal resolution (i.e. for
+              30 minute input data, ``time_index_step=1`` yields the
+              full 30 minute time series as output, while
+              ``time_index_step=2`` yields hourly output, and so forth).
+
+              .. Note:: The reduced data shape (i.e. after applying a
+                        step size of `time_index_step`) must still be
+                        an integer multiple of 8760, or the execution
+                        will fail.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Timeseries solar or wind resource data for a single location with a
+            pandas DatetimeIndex.  There must be columns for all the required
+            variables to run the respective SAM simulation. Remapping will be
+            done to convert typical NSRDB/WTK names into SAM names (e.g. DNI ->
+            dn and wind_speed -> windspeed)
+        meta : pd.DataFrame | pd.Series
+            Meta data corresponding to the resource input for the single
+            location. Should include values for latitude, longitude, elevation,
+            and timezone.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
         super().__init__(*args, **kwargs)
         self.add_power_curve_losses()

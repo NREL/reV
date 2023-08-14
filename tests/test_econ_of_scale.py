@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=no-member
 """
 PyTest file for reV LCOE economies of scale
 """
 import h5py
 import numpy as np
+import pandas as pd
 import pytest
 import os
 import shutil
@@ -52,10 +54,9 @@ def test_pass_through_lcoe_args():
                       'fixed_operating_cost')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
-                      max_workers=1,
-                      sites_per_worker=1, out_fpath=None,
-                      output_request=output_request)
+    gen = Gen('windpower', rev2_points, sam_files, res_file,
+              sites_per_worker=1, output_request=output_request)
+    gen.run(max_workers=1,)
 
     checks = [x in gen.out for x in Gen.LCOE_ARGS]
     assert all(checks)
@@ -140,25 +141,27 @@ def test_econ_of_scale_baseline():
                 res.create_dataset(k, res['meta'].shape, data=arr)
                 res[k].attrs['scale_factor'] = 1.0
 
-        base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                              excl_dict=EXCL_DICT,
-                                              res_class_dset=RES_CLASS_DSET,
-                                              res_class_bins=RES_CLASS_BINS,
-                                              data_layers=DATA_LAYERS,
-                                              gids=list(np.arange(10)),
-                                              max_workers=1)
+        out_fp_base = os.path.join(td, "base")
+        base = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                      res_class_dset=RES_CLASS_DSET,
+                                      res_class_bins=RES_CLASS_BINS,
+                                      data_layers=DATA_LAYERS,
+                                      gids=list(np.arange(10)))
+        base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
-        s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
-                                           data_layers=DATA_LAYERS,
-                                           gids=list(np.arange(10)),
-                                           max_workers=1,
-                                           cap_cost_scale='1')
+        out_fp_sc = os.path.join(td, "sc")
+        sc = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                    res_class_dset=RES_CLASS_DSET,
+                                    res_class_bins=RES_CLASS_BINS,
+                                    data_layers=DATA_LAYERS,
+                                    gids=list(np.arange(10)),
+                                    cap_cost_scale='1')
+        sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
-        assert np.allclose(base['mean_lcoe'], s['mean_lcoe'])
-        assert (s['capital_cost_scalar'] == 1).all()
+        base_df = pd.read_csv(out_fp_base + ".csv")
+        sc_df = pd.read_csv(out_fp_sc + ".csv")
+        assert np.allclose(base_df['mean_lcoe'], sc_df['mean_lcoe'])
+        assert (sc_df['capital_cost_scalar'] == 1).all()
 
 
 def test_sc_agg_econ_scale():
@@ -180,53 +183,58 @@ def test_sc_agg_econ_scale():
                 res[k].attrs['scale_factor'] = 1.0
 
         eqn = '2 * np.multiply(1000, capacity) ** -0.3'
-        base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                              excl_dict=EXCL_DICT,
-                                              res_class_dset=RES_CLASS_DSET,
-                                              res_class_bins=RES_CLASS_BINS,
-                                              data_layers=DATA_LAYERS,
-                                              gids=list(np.arange(10)),
-                                              max_workers=1)
-        s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
-                                           data_layers=DATA_LAYERS,
-                                           gids=list(np.arange(10)),
-                                           max_workers=1, cap_cost_scale=eqn)
+        out_fp_base = os.path.join(td, "base")
+        base = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                      res_class_dset=RES_CLASS_DSET,
+                                      res_class_bins=RES_CLASS_BINS,
+                                      data_layers=DATA_LAYERS,
+                                      gids=list(np.arange(10)))
+        base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
+
+        out_fp_sc = os.path.join(td, "sc")
+        sc = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                    res_class_dset=RES_CLASS_DSET,
+                                    res_class_bins=RES_CLASS_BINS,
+                                    data_layers=DATA_LAYERS,
+                                    gids=list(np.arange(10)),
+                                    cap_cost_scale=eqn)
+        sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
+
+        base_df = pd.read_csv(out_fp_base + ".csv")
+        sc_df = pd.read_csv(out_fp_sc + ".csv")
 
         # check that econ of scale saved the raw lcoe and that it reduced all
         # of the mean lcoe values from baseline
-        assert np.allclose(s['raw_lcoe'], base['mean_lcoe'])
-        assert all(s['mean_lcoe'] < base['mean_lcoe'])
+        assert np.allclose(sc_df['raw_lcoe'], base_df['mean_lcoe'])
+        assert all(sc_df['mean_lcoe'] < base_df['mean_lcoe'])
 
-        aep = ((s['mean_fixed_charge_rate'] * s['mean_capital_cost']
-                + s['mean_fixed_operating_cost']) / s['raw_lcoe'])
+        aep = ((sc_df['mean_fixed_charge_rate'] * sc_df['mean_capital_cost']
+                + sc_df['mean_fixed_operating_cost']) / sc_df['raw_lcoe'])
 
         true_raw_lcoe = ((data['fixed_charge_rate'] * data['capital_cost']
                           + data['fixed_operating_cost'])
                          / aep + data['variable_operating_cost'])
 
-        eval_inputs = {k: s[k].values.flatten() for k in s.columns}
+        eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used
         scalars = eval(str(eqn), globals(), eval_inputs)
-        s['scalars'] = scalars
+        sc_df['scalars'] = scalars
         true_scaled_lcoe = ((data['fixed_charge_rate']
                              * scalars * data['capital_cost']
                              + data['fixed_operating_cost'])
                             / aep + data['variable_operating_cost'])
 
-        assert np.allclose(scalars, s['capital_cost_scalar'])
+        assert np.allclose(scalars, sc_df['capital_cost_scalar'])
 
-        assert np.allclose(true_scaled_lcoe, s['mean_lcoe'])
-        assert np.allclose(true_raw_lcoe, s['raw_lcoe'])
-        s = s.sort_values('capacity')
-        assert all(s['mean_lcoe'].diff()[1:] < 0)
-        for i in s.index.values:
-            if s.loc[i, 'scalars'] < 1:
-                assert s.loc[i, 'mean_lcoe'] < s.loc[i, 'raw_lcoe']
+        assert np.allclose(true_scaled_lcoe, sc_df['mean_lcoe'])
+        assert np.allclose(true_raw_lcoe, sc_df['raw_lcoe'])
+        sc_df = sc_df.sort_values('capacity')
+        assert all(sc_df['mean_lcoe'].diff()[1:] < 0)
+        for i in sc_df.index.values:
+            if sc_df.loc[i, 'scalars'] < 1:
+                assert sc_df.loc[i, 'mean_lcoe'] < sc_df.loc[i, 'raw_lcoe']
             else:
-                assert s.loc[i, 'mean_lcoe'] >= s.loc[i, 'raw_lcoe']
+                assert sc_df.loc[i, 'mean_lcoe'] >= sc_df.loc[i, 'raw_lcoe']
 
 
 def execute_pytest(capture='all', flags='-rapP'):

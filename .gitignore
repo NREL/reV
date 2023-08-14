@@ -112,3 +112,7 @@ ENV/
 # vim
 *.swp
 tags
+
+# Scratch and temp work
+.tmp/
+.scratch/

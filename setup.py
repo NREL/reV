@@ -57,13 +57,11 @@ setup(
     package_dir={"reV": "reV"},
     entry_points={
         "console_scripts": ["reV=reV.cli:main",
-                            "reV-batch=reV.batch.cli_batch:main",
                             "reV-bespoke=reV.bespoke.cli_bespoke:main",
                             "reV-collect=reV.handlers.cli_collect:main",
                             "reV-econ=reV.econ.cli_econ:main",
                             "reV-gen=reV.generation.cli_gen:main",
                             "reV-multiyear=reV.handlers.cli_multi_year:main",
-                            "reV-pipeline=reV.pipeline.cli_pipeline:main",
                             ("reV-supply-curve-aggregation=reV.supply_curve."
                              "cli_sc_aggregation:main"),
                             ("reV-supply-curve=reV.supply_curve."
@@ -72,9 +70,9 @@ setup(
                             ("reV-rep-profiles=reV.rep_profiles."
                              "cli_rep_profiles:main"),
                             "reV-QA-QC=reV.qa_qc.cli_qa_qc:main",
-                            ("reV-project-points=reV.config."
-                             "cli_project_points:main"),
                             "reV-hybrids=reV.hybrids.cli_hybrids:main",
+                            ("reV-project-points=reV.config."
+                             "cli_project_points:project_points"),
                             ],
     },
     package_data={'reV': ['SAM/defaults/*.json', 'SAM/defaults/*.csv',

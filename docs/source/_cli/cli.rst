@@ -1,20 +1,23 @@
+.. _cli-docs:
+
 Command Line Interfaces (CLIs)
 ==============================
 
 .. toctree::
 
    reV
-   reV-batch
-   reV-bespoke
-   reV-collect
-   reV-econ
-   reV-gen
-   reV-hybrids
-   reV-multiyear
-   reV-nrwal
-   reV-pipeline
-   reV-project-points
-   reV-QA-QC
-   reV-rep-profiles
-   reV-supply-curve-aggregation
-   reV-supply-curve
+   reV batch
+   reV pipeline
+   reV bespoke
+   reV geneneration
+   reV collect
+   reV econ
+   reV multiyear
+   reV supply-curve-aggregation
+   reV supply-curve
+   reV rep-profiles
+   reV hybrids
+   reV nrwal
+   reV qa-qc
+   reV status
+   reV template-configs

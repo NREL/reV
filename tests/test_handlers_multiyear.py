@@ -9,17 +9,16 @@ import shutil
 import pytest
 import tempfile
 import json
-from click.testing import CliRunner
 import traceback
 
-from reV.handlers.cli_multi_year import main
+from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
-from reV.config.multi_year import MultiYearConfig
 from reV import TESTDATADIR
+from reV.utilities import ModuleName
 
 from rex import Resource
-from rex.utilities.loggers import init_logger, LOGGERS
+from rex.utilities.loggers import init_logger
 
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
@@ -28,12 +27,6 @@ H5_FILES = [os.path.join(H5_DIR, 'gen_ri_pv_{}_x000.h5'.format(year))
 H5_PATTERN = os.path.join(H5_DIR, 'gen_ri_pv_201*_x000.h5')
 
 logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
-
-
-@pytest.fixture(scope="module")
-def runner():
-    """cli runner"""
-    return CliRunner()
 
 
 def manual_means(h5_files, dset):
@@ -147,7 +140,8 @@ def test_my_collection(source, dset, group):
         assert np.in1d(my_dsets, out_dsets).all(), msg
 
 
-def test_cli(runner):
+# pylint: disable=no-member
+def test_cli(runner, clear_loggers):
     """Test multi year collection cli with pass through of some datasets."""
 
     with tempfile.TemporaryDirectory() as temp:
@@ -161,8 +155,8 @@ def test_cli(runner):
                   "log_level": "INFO"}
 
         dirname = os.path.basename(temp)
-        fn = "{}_{}.h5".format(dirname, MultiYearConfig.NAME)
-        my_out = os.path.join(temp, fn)
+        fn = "{}_{}.h5".format(dirname, ModuleName.MULTI_YEAR)
+        my_out = os.path.join(temp, fn).replace("-", "_")
         temp_h5_files = [os.path.join(temp, os.path.basename(fp))
                          for fp in H5_FILES]
         for fp, fp_temp in zip(H5_FILES, temp_h5_files):
@@ -180,7 +174,8 @@ def test_cli(runner):
         with open(fp_config, 'w') as f:
             json.dump(config, f)
 
-        result = runner.invoke(main, ['from-config', '-c', fp_config])
+        result = runner.invoke(main, [str(ModuleName.MULTI_YEAR),
+                                      '-c', fp_config])
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg
@@ -199,7 +194,7 @@ def test_cli(runner):
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
 
-        LOGGERS.clear()
+        clear_loggers()
 
 
 @pytest.mark.parametrize(('dset', 'group'), [

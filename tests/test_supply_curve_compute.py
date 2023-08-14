@@ -35,9 +35,16 @@ TRANS_TABLE = pd.read_csv(path)
 path = os.path.join(TESTDATADIR, 'trans_tables/transmission_multipliers.csv')
 MULTIPLIERS = pd.read_csv(path)
 
+SC_FULL_COLUMNS = ('trans_gid', 'trans_type', 'trans_capacity',
+                   'trans_cap_cost_per_mw', 'dist_km', 'lcot',
+                   'total_lcoe')
+
 
 def baseline_verify(sc_full, fpath_baseline):
     """Verify numerical columns in a CSV against a baseline file."""
+    if isinstance(sc_full, str) and os.path.exists(sc_full):
+        sc_full = pd.read_csv(sc_full)
+        assert not any("Unnamed" in col_name for col_name in sc_full.columns)
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
@@ -70,13 +77,16 @@ def test_integrated_sc_full(i, trans_costs):
     """Run the full SC test and verify results against baseline file."""
     tcosts = trans_costs.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                               sc_features=MULTIPLIERS,
-                               transmission_costs=tcosts,
-                               avail_cap_frac=avail_cap_frac)
-    fpath_baseline = os.path.join(TESTDATADIR,
-                                  'sc_out/sc_full_out_{}.csv'.format(i))
-    baseline_verify(sc_full, fpath_baseline)
+    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac,
+                         columns=SC_FULL_COLUMNS)
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_full_out_{}.csv'.format(i))
+        baseline_verify(sc_full, fpath_baseline)
 
 
 @pytest.mark.parametrize(('i', 'trans_costs'), ((1, TRANS_COSTS_1),
@@ -85,52 +95,60 @@ def test_integrated_sc_simple(i, trans_costs):
     """Run the simple SC test and verify results against baseline file."""
     tcosts = trans_costs.copy()
     tcosts.pop('available_capacity', 1)
-    sc_simple = SupplyCurve.simple(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                                   sc_features=MULTIPLIERS,
-                                   transmission_costs=tcosts)
+    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
+                           transmission_costs=tcosts)
 
-    fpath_baseline = os.path.join(TESTDATADIR,
-                                  'sc_out/sc_simple_out_{}.csv'.format(i))
-    baseline_verify(sc_simple, fpath_baseline)
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_simple_out_{}.csv'.format(i))
+        baseline_verify(sc_simple, fpath_baseline)
 
 
 def test_integrated_sc_full_friction():
     """Run the full SC algorithm with friction"""
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full = SupplyCurve.full(SC_POINTS_FRICTION, TRANS_TABLE, fcr=0.1,
-                               sc_features=MULTIPLIERS,
-                               transmission_costs=tcosts,
-                               avail_cap_frac=avail_cap_frac,
-                               sort_on='total_lcoe_friction')
+    sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac,
+                         columns=SC_FULL_COLUMNS,
+                         sort_on='total_lcoe_friction')
 
-    assert 'mean_lcoe_friction' in sc_full
-    assert 'total_lcoe_friction' in sc_full
-    test = sc_full['mean_lcoe_friction'] + sc_full['lcot']
-    assert np.allclose(test, sc_full['total_lcoe_friction'])
+        sc_full = pd.read_csv(sc_full)
+        assert 'mean_lcoe_friction' in sc_full
+        assert 'total_lcoe_friction' in sc_full
+        test = sc_full['mean_lcoe_friction'] + sc_full['lcot']
+        assert np.allclose(test, sc_full['total_lcoe_friction'])
 
-    fpath_baseline = os.path.join(TESTDATADIR,
-                                  'sc_out/sc_full_out_friction.csv')
-    baseline_verify(sc_full, fpath_baseline)
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_full_out_friction.csv')
+        baseline_verify(sc_full, fpath_baseline)
 
 
 def test_integrated_sc_simple_friction():
     """Run the simple SC algorithm with friction"""
     tcosts = TRANS_COSTS_1.copy()
     tcosts.pop('available_capacity', 1)
-    sc_simple = SupplyCurve.simple(SC_POINTS_FRICTION, TRANS_TABLE, fcr=0.1,
-                                   sc_features=MULTIPLIERS,
-                                   transmission_costs=tcosts,
-                                   sort_on='total_lcoe_friction')
+    sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
+                           transmission_costs=tcosts,
+                           sort_on='total_lcoe_friction')
+        sc_simple = pd.read_csv(sc_simple)
+        assert 'mean_lcoe_friction' in sc_simple
+        assert 'total_lcoe_friction' in sc_simple
+        test = sc_simple['mean_lcoe_friction'] + sc_simple['lcot']
+        assert np.allclose(test, sc_simple['total_lcoe_friction'])
 
-    assert 'mean_lcoe_friction' in sc_simple
-    assert 'total_lcoe_friction' in sc_simple
-    test = sc_simple['mean_lcoe_friction'] + sc_simple['lcot']
-    assert np.allclose(test, sc_simple['total_lcoe_friction'])
-
-    fpath_baseline = os.path.join(TESTDATADIR,
-                                  'sc_out/sc_simple_out_friction.csv')
-    baseline_verify(sc_simple, fpath_baseline)
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_simple_out_friction.csv')
+        baseline_verify(sc_simple, fpath_baseline)
 
 
 def test_sc_warning1():
@@ -141,10 +159,12 @@ def test_sc_warning1():
     avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
-                         sc_features=MULTIPLIERS,
-                         transmission_costs=tcosts,
-                         avail_cap_frac=avail_cap_frac)
+        sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
+        with tempfile.TemporaryDirectory() as td:
+            out_fpath = os.path.join(td, "sc")
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   transmission_costs=tcosts, avail_cap_frac=avail_cap_frac,
+                   columns=SC_FULL_COLUMNS)
 
         s1 = str(list(range(10))).replace(']', '').replace('[', '')
         s2 = str(w[0].message)
@@ -161,11 +181,12 @@ def test_sc_warning2():
     avail_cap_frac = tcosts.pop('available_capacity', 1)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
-                         sc_features=MULTIPLIERS,
-                         transmission_costs=tcosts,
-                         avail_cap_frac=avail_cap_frac)
-
+        sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
+        with tempfile.TemporaryDirectory() as td:
+            out_fpath = os.path.join(td, "sc")
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   transmission_costs=tcosts, avail_cap_frac=avail_cap_frac,
+                   columns=SC_FULL_COLUMNS)
         s1 = 'Unconnected sc_gid'
         s2 = str(w[0].message)
         msg = ('Warning failed! Should have Unconnected sc_gid: '
@@ -178,17 +199,21 @@ def test_parallel():
 
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop('available_capacity', 1)
-    sc_full_parallel = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                                        sc_features=MULTIPLIERS,
-                                        transmission_costs=tcosts,
-                                        avail_cap_frac=avail_cap_frac,
-                                        max_workers=4)
-
-    sc_full_serial = SupplyCurve.full(SC_POINTS, TRANS_TABLE, fcr=0.1,
-                                      sc_features=MULTIPLIERS,
-                                      transmission_costs=tcosts,
-                                      avail_cap_frac=avail_cap_frac,
-                                      max_workers=1)
+    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_full_parallel = sc.run(out_fpath, fixed_charge_rate=0.1,
+                                  simple=False, transmission_costs=tcosts,
+                                  avail_cap_frac=avail_cap_frac,
+                                  columns=SC_FULL_COLUMNS,
+                                  max_workers=4)
+        sc_full_serial = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                                transmission_costs=tcosts,
+                                avail_cap_frac=avail_cap_frac,
+                                columns=SC_FULL_COLUMNS,
+                                max_workers=1)
+        sc_full_parallel = pd.read_csv(sc_full_parallel)
+        sc_full_serial = pd.read_csv(sc_full_serial)
 
     assert_frame_equal(sc_full_parallel, sc_full_serial)
 
@@ -205,6 +230,9 @@ def verify_trans_cap(sc_table, trans_tables, cap_col='capacity'):
         trans_features.append(df[['trans_gid', 'max_cap']])
 
     trans_features = pd.concat(trans_features)
+
+    if isinstance(sc_table, str) and os.path.exists(sc_table):
+        sc_table = pd.read_csv(sc_table)
 
     if 'max_cap' in sc_table and 'max_cap' in trans_features:
         sc_table = sc_table.drop('max_cap', axis=1)
@@ -225,16 +253,16 @@ def test_least_cost_full():
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
-                               avail_cap_frac=0.1,
-                               columns=('trans_gid', 'trans_capacity',
-                                        'trans_type', 'trans_cap_cost_per_mw',
-                                        'dist_km', 'lcot', 'total_lcoe',
-                                        'max_cap', 'n_parallel_trans'))
+    sc = SupplyCurve(SC_POINTS, trans_tables, sc_features=None)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
+                         columns=list(SC_FULL_COLUMNS) + ["max_cap"])
 
-    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
-    baseline_verify(sc_full, fpath_baseline)
-    verify_trans_cap(sc_full, trans_tables)
+        fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
+        baseline_verify(sc_full, fpath_baseline)
+        verify_trans_cap(sc_full, trans_tables)
 
 
 def test_least_cost_simple():
@@ -244,10 +272,14 @@ def test_least_cost_simple():
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
-    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
-    baseline_verify(sc_simple, fpath_baseline)
-    verify_trans_cap(sc_simple, trans_tables)
+    sc = SupplyCurve(SC_POINTS, trans_tables)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
+
+        fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
+        baseline_verify(sc_simple, fpath_baseline)
+        verify_trans_cap(sc_simple, trans_tables)
 
 
 def test_simple_trans_table():
@@ -258,10 +290,14 @@ def test_simple_trans_table():
     trans_table = os.path.join(TESTDATADIR,
                                'trans_tables',
                                'ri_simple_transmission_table.csv')
-    sc_simple = SupplyCurve.simple(SC_POINTS, trans_table, fcr=0.1)
+    sc = SupplyCurve(SC_POINTS, trans_table)
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, "sc")
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
 
-    fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/ri_sc_simple_lc.csv')
-    baseline_verify(sc_simple, fpath_baseline)
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/ri_sc_simple_lc.csv')
+        baseline_verify(sc_simple, fpath_baseline)
 
 
 def test_substation_conns():
@@ -275,11 +311,12 @@ def test_substation_conns():
     trans_table = TRANS_TABLE.drop(labels=drop_lines)
 
     with pytest.raises(SupplyCurveInputError):
-        SupplyCurve.full(SC_POINTS, trans_table, fcr=0.1,
-                         sc_features=MULTIPLIERS,
-                         transmission_costs=tcosts,
-                         avail_cap_frac=avail_cap_frac,
-                         max_workers=4)
+        sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
+        with tempfile.TemporaryDirectory() as td:
+            out_fpath = os.path.join(td, "sc")
+            sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                   columns=SC_FULL_COLUMNS, avail_cap_frac=avail_cap_frac,
+                   max_workers=4)
 
 
 def test_multi_parallel_trans():
@@ -302,14 +339,14 @@ def test_multi_parallel_trans():
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100, 200, 400, 1000]]
-    sc_1 = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1,
-                              columns=columns)
+    sc = SupplyCurve(SC_POINTS, trans_tables)
+    sc_1 = sc.simple_sort(fcr=0.1, columns=columns)
 
     trans_tables = [os.path.join(TESTDATADIR, 'trans_tables',
                                  f'costs_RI_{cap}MW.csv')
                     for cap in [100]]
-    sc_2 = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1,
-                              columns=columns)
+    sc = SupplyCurve(SC_POINTS, trans_tables)
+    sc_2 = sc.simple_sort(fcr=0.1, columns=columns)
 
     assert not set(SC_POINTS['sc_gid']) - set(sc_1['sc_gid'])
     assert not set(SC_POINTS['sc_gid']) - set(sc_2['sc_gid'])
@@ -332,6 +369,7 @@ def test_multi_parallel_trans():
             assert lcot_2 > lcot_1
 
 
+# pylint: disable=no-member
 def test_least_cost_full_with_reinforcement():
     """
     Test full supply curve sorting with reinforcement costs in the
@@ -349,13 +387,12 @@ def test_least_cost_full_with_reinforcement():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
-                                   avail_cap_frac=0.1,
-                                   columns=('trans_gid', 'trans_capacity',
-                                            'trans_type',
-                                            'trans_cap_cost_per_mw',
-                                            'dist_km', 'lcot', 'total_lcoe',
-                                            'max_cap', 'n_parallel_trans'))
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
+                         columns=list(SC_FULL_COLUMNS) + ["max_cap"])
+        sc_full = pd.read_csv(sc_full)
 
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
         baseline_verify(sc_full, fpath_baseline)
@@ -372,19 +409,19 @@ def test_least_cost_full_with_reinforcement():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_full_r = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
-                                     avail_cap_frac=0.1,
-                                     columns=('trans_gid', 'trans_capacity',
-                                              'trans_type',
-                                              'trans_cap_cost_per_mw',
-                                              'dist_km', 'lcot', 'total_lcoe',
-                                              'max_cap', 'n_parallel_trans'))
+        out_fpath = os.path.join(td, "sc_r")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_full_r = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                           avail_cap_frac=0.1,
+                           columns=list(SC_FULL_COLUMNS) + ["max_cap"])
+        sc_full_r = pd.read_csv(sc_full_r)
         verify_trans_cap(sc_full, trans_tables)
 
         assert np.allclose(sc_full.trans_gid, sc_full_r.trans_gid)
         assert not np.allclose(sc_full.total_lcoe, sc_full_r.total_lcoe)
 
 
+# pylint: disable=no-member
 def test_least_cost_simple_with_reinforcement():
     """
     Test simple supply curve sorting with reinforcement costs in the
@@ -402,7 +439,11 @@ def test_least_cost_simple_with_reinforcement():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
+        sc_simple = pd.read_csv(sc_simple)
+
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_simple_lc.csv')
         baseline_verify(sc_simple, fpath_baseline)
         verify_trans_cap(sc_simple, trans_tables)
@@ -418,7 +459,11 @@ def test_least_cost_simple_with_reinforcement():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_simple_r = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        out_fpath = os.path.join(td, "sc_r")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple_r = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
+        sc_simple_r = pd.read_csv(sc_simple_r)
+
         verify_trans_cap(sc_simple_r, trans_tables)
 
         assert np.allclose(sc_simple.trans_gid, sc_simple_r.trans_gid)
@@ -445,13 +490,13 @@ def test_least_cost_full_pass_through():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_full = SupplyCurve.full(SC_POINTS, trans_tables, fcr=0.1,
-                                   avail_cap_frac=0.1,
-                                   columns=('trans_gid', 'trans_capacity',
-                                            'trans_type',
-                                            'trans_cap_cost_per_mw',
-                                            'dist_km', 'lcot', 'total_lcoe',
-                                            'max_cap', 'n_parallel_trans'))
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
+                         columns=list(SC_FULL_COLUMNS) + ["max_cap"])
+        sc_full = pd.read_csv(sc_full)
+
         for col in check_cols:
             assert col in sc_full
             assert np.allclose(sc_full[col], 0)
@@ -477,7 +522,11 @@ def test_least_cost_simple_pass_through():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
+        sc_simple = pd.read_csv(sc_simple)
+
         for col in check_cols:
             assert col in sc_simple
             assert np.allclose(sc_simple[col], 0)
@@ -501,7 +550,8 @@ def test_least_cost_simple_with_ac_capacity_column():
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
-        sc_simple = SupplyCurve.simple(SC_POINTS, trans_tables, fcr=0.1)
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.simple_sort(fcr=0.1)
         verify_trans_cap(sc_simple, trans_tables)
 
         trans_tables = []
@@ -518,8 +568,8 @@ def test_least_cost_simple_with_ac_capacity_column():
         sc = SC_POINTS.copy()
         sc["capacity_ac"] = sc["capacity"] / 1.02
 
-        sc_simple_ac_cap = SupplyCurve.simple(sc, trans_tables, fcr=0.1,
-                                              sc_capacity_col="capacity_ac")
+        sc = SupplyCurve(sc, trans_tables, sc_capacity_col="capacity_ac")
+        sc_simple_ac_cap = sc.simple_sort(fcr=0.1)
         verify_trans_cap(sc_simple_ac_cap, trans_tables, cap_col="capacity_ac")
 
         assert np.allclose(sc_simple["trans_cap_cost_per_mw"] * 1.02,

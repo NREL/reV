@@ -12,7 +12,8 @@ from warnings import warn
 from reV.utilities.exceptions import (HandlerWarning, HandlerKeyError,
                                       HandlerRuntimeError)
 
-from rex.utilities.utilities import parse_table, safe_json_load
+from rex.utilities.utilities import parse_table
+from gaps.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class TransmissionFeatures:
         Parameters
         ----------
         trans_table : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supply curve
+            Path to .csv or config file or DataFrame containing supply curve
             transmission mapping
         line_tie_in_cost : float, optional
             Cost of connecting to a transmission line in $/MW,
@@ -99,12 +100,12 @@ class TransmissionFeatures:
     @staticmethod
     def _parse_dictionary(features):
         """
-        Parse features dict from .json or json object
+        Parse features dict object or config file
 
         Parameters
         ----------
         features : dict | str
-            Dictionary of transmission features or path to .json containing
+            Dictionary of transmission features or path to config containing
             dictionary of transmission features
 
         Returns
@@ -117,12 +118,12 @@ class TransmissionFeatures:
         """
         if isinstance(features, str):
             if os.path.isfile(features):
-                features = safe_json_load(features)
+                features = load_config(features)
             else:
                 features = json.loads(features)
 
         elif not isinstance(features, dict):
-            msg = ("Transmission featurse must be a .json file, object, "
+            msg = ("Transmission features must be a config file, object, "
                    "or a dictionary")
             logger.error(msg)
             raise ValueError(msg)

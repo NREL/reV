@@ -17,7 +17,6 @@ from rex.utilities.exceptions import ResourceRuntimeError
 from rex.utilities.utilities import safe_json_load
 
 from reV.config.base_analysis_config import AnalysisConfig
-from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
@@ -32,15 +31,6 @@ def test_config_entries():
     config_path = os.path.join(TESTDATADIR, 'config/collection.json')
     with pytest.raises(ConfigError):
         AnalysisConfig(config_path)
-
-
-def test_overwrite():
-    """
-    Test config overwrite check
-    """
-    config_path = os.path.join(TESTDATADIR, 'config/overwrite.json')
-    with pytest.raises(ConfigError):
-        RepProfilesConfig(config_path)
 
 
 def test_clearsky():
@@ -152,9 +142,9 @@ def test_sam_config_kw_replace():
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     pp = ProjectPoints(fpp, sam_files, 'windpower')
-    pc = PointsControl(pp, sites_per_split=100)
 
-    gen = Gen(pc, res_file)
+    gen = Gen('windpower', pp, sam_files, resource_file=res_file,
+              sites_per_worker=100)
     config_on = gen.project_points.sam_inputs['onshore']
     config_of = gen.project_points.sam_inputs['offshore']
     assert 'turb_generic_loss' in config_on

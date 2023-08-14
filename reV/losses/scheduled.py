@@ -42,6 +42,7 @@ class Outage:
         specs : dict
             A dictionary containing specifications for this outage. This
             dictionary must contain the following keys:
+
                 - `count`
                     An integer value representing the total number of
                     times this outage should be scheduled. This number
@@ -61,8 +62,10 @@ class Outage:
                     months for the scheduled outages. Month names can be
                     unformatted and can be specified using 3-letter
                     month abbreviations.
+
             The input dictionary can also provide the following optional
             keys:
+
                 - `allow_outage_overlap` - by default, ``True``
                     A bool flag indicating whether or not this outage is
                     allowed to overlap with other outages, including
@@ -545,8 +548,10 @@ class ScheduledLossesMixin:
         factors via the ``hourly`` key, the effect is combined. For
         example, if the user inputs a 33% hourly adjustment factor and
         reV schedules an outage for 70% of the farm down for the same
-        hour, then the resulting adjustment factor is::
-            1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
+        hour, then the resulting adjustment factor is
+
+            .. math: 1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
+
         This means the generation will be reduced by ~80%, because the
         user requested 33% losses for the 30% the farm that remained
         operational during the scheduled outage (i.e. 20% remaining of

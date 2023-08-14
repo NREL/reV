@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rex.resource import NSRDB
+from rex.renewable_resource import NSRDB
 
 
 @pytest.fixture

@@ -27,20 +27,20 @@ SLURM:
 
 .. code-block:: bash
 
-    reV -c "../config_batch.json" batch --dry-run
+    reV batch -c "../config_batch.json" --dry-run
 
 Once you are happy with the dry-run, or if you are confident in your job setup,
 you can submit all batch jobs using the following CLI call:
 
 .. code-block:: bash
 
-    reV -c "../config_batch.json" batch
+    reV batch -c "../config_batch.json"
 
 If anything goes wrong, you can cancel all batch jobs using the command:
 
 .. code-block:: bash
 
-    reV -c "../config_batch.json" batch --cancel
+    reV batch -c "../config_batch.json" --cancel
 
 New sub directories will be created in the folder with the batch config file
 for each sub job. All job files in the same directory (and sub directories) as
@@ -59,7 +59,7 @@ config.
 
 .. code-block:: bash
 
-    reV -c "../config_batch.json" batch --monitor-background
+    reV batch -c "../config_batch.json" --monitor-background
 
 All of the batch jobs can be collected into a single file using the multi-year
 collection utility. This utility is not part of the batch pipeline and needs to
@@ -69,4 +69,4 @@ command:
 
 .. code-block:: bash
 
-    reV -c "../config_multi-year.json" multi-year
+    reV multi-year -c "../config_multi-year.json"

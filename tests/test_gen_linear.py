@@ -43,10 +43,10 @@ def test_gen_linear():
                       'annual_field_energy', 'annual_thermal_consumption',)
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('lineardirectsteam', points, sam_files, res_file,
-                      max_workers=1,
-                      output_request=output_request,
-                      sites_per_worker=1, out_fpath=None, scale_outputs=True)
+    gen = Gen('lineardirectsteam', points, sam_files, res_file,
+              output_request=output_request, sites_per_worker=1,
+              scale_outputs=True)
+    gen.run(max_workers=1)
 
     with Resource(BASELINE) as f:
         for dset in output_request:

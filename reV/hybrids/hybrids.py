@@ -3,7 +3,6 @@
 
 @author: ppinchuk
 """
-
 import logging
 import numpy as np
 import re
@@ -326,49 +325,53 @@ class MetaHybridizer:
         Parameters
         ----------
         data : `HybridsData`
-            Instance of `HybridsData` containing input data to hybridize.
+            Instance of `HybridsData` containing input data to
+            hybridize.
         allow_solar_only : bool, optional
-            Option to allow SC points with only solar capcity (no wind), by
-            default False.
+            Option to allow SC points with only solar capacity
+            (no wind). By default, ``False``.
         allow_wind_only : bool, optional
-            Option to allow SC points with only wind capcity (no solar), by
-            default False.
+            Option to allow SC points with only wind capacity
+            (no solar), By default, ``False``.
         fillna : dict, optional
-            Dictionary containing column_name, fill_value pairs reprenting any
-            fill values that should be applied after merging the wind and solar
-            meta. Note that column names will likely have to be prefixed
-            with "solar_" or "wind_". By default None.
+            Dictionary containing column_name, fill_value pairs
+            representing any fill values that should be applied after
+            merging the wind and solar meta. Note that column names will
+            likely have to be prefixed with ``solar`` or ``wind``.
+            By default, ``None``.
         limits : dict, optional
             Option to specify mapping (in the form of a dictionary) of
-            {colum_name: max_value} representing the upper limit (maximum
-            value) for the values of a column in the merged meta. For example,
-            `limits={'solar_capacity': 100}` would limit all the values of the
-            solar capacity in the merged meta to a maximum value of 100.
-            This limit is applied *BEFORE* ratio calculations. The names of
-            the columns should match the column names in the merged meta, so
-            they are likely prefixed with one of the prefixes defined at the
-            top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
-            None (no limits applied).
+            {colum_name: max_value} representing the upper limit
+            (maximum value) for the values of a column in the merged
+            meta. For example, `limits={'solar_capacity': 100}` would
+            limit all the values of the solar capacity in the merged
+            meta to a maximum value of 100. This limit is applied
+            *BEFORE* ratio calculations. The names of the columns should
+            match the column names in the merged meta, so they are
+            likely prefixed with ``solar`` or ``wind`. By default,
+            ``None`` (no limits applied).
         ratio_bounds : tuple, optional
-            Option to set ratio bounds (in two-tuple form) on the columns of
-            the `ratio` input. For example, `ratio_bounds=(0.5, 1.5)`
-            would adjust the values of both of the `ratio` columns
-            such that their ratio is always between half and double (e.g., no
-            value would be more than double the other). To specify a single
-            ratio value, use the same value as the upper and lower bound. For
-            example, `ratio_bounds=(1, 1)` would adjust the values of both of
-            the `ratio` columns such that their ratio is always equal.
-            By default, None (no limit on the ratio).
+            Option to set ratio bounds (in two-tuple form) on the
+            columns of the `ratio` input. For example,
+            `ratio_bounds=(0.5, 1.5)` would adjust the values of both of
+            the `ratio` columns such that their ratio is always between
+            half and double (e.g., no value would be more than double
+            the other). To specify a single ratio value, use the same
+            value as the upper and lower bound. For example,
+            `ratio_bounds=(1, 1)` would adjust the values of both of the
+            `ratio` columns such that their ratio is always equal.
+            By default, ``None`` (no limit on the ratio).
         ratio : str, optional
-            Option to specify the columns used to calculate the ratio that is
-            limited by the `ratio_bounds` input. This input is a string in the
-            form "numerator_column_name/denominator_column_name".
-            For example, `ratio='solar_capacity/wind_capacity'`
-            would limit the ratio of the solar to wind capacities as specified
-            by the `ratio_bounds` input. If `ratio_bounds` is None, this input
-            does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            By default 'solar_capacity/wind_capacity'.
+            Option to specify the columns used to calculate the ratio
+            that is limited by the `ratio_bounds` input. This input is a
+            string in the form
+            "numerator_column_name/denominator_column_name".
+            For example, `ratio='solar_capacity/wind_capacity'` would
+            limit the ratio of the solar to wind capacities as specified
+            by the `ratio_bounds` input. If `ratio_bounds` is ``None``,
+            this input does nothing. The names of the columns should be
+            prefixed with one of the prefixes defined as class
+            variables. By default ``'solar_capacity/wind_capacity'``.
         """
         self.data = data
         self._allow_solar_only = allow_solar_only
@@ -798,6 +801,7 @@ class MetaHybridizer:
     @property
     def solar_profile_indices_map(self):
         """Map hybrid to solar rep indices.
+
         Returns
         -------
         hybrid_indices : np.ndarray
@@ -805,7 +809,7 @@ class MetaHybridizer:
         solar_indices : np.ndarray
             Index values of the solar rep profiles corresponding
             to the hybrid rep profile indices.
-        # """
+        """
 
         if self._hybrid_meta is None:
             return np.array([]), np.array([])
@@ -818,6 +822,7 @@ class MetaHybridizer:
     @property
     def wind_profile_indices_map(self):
         """Map hybrid to wind rep indices.
+
         Returns
         -------
         hybrid_indices : np.ndarray
@@ -836,63 +841,72 @@ class MetaHybridizer:
 
 
 class Hybridization:
-    """Framework to handle hybridization of SC and corresponding profiles."""
+    """Hybridization"""
 
     def __init__(self, solar_fpath, wind_fpath, allow_solar_only=False,
-                 allow_wind_only=False, fillna=None,
-                 limits=None, ratio_bounds=None,
-                 ratio='solar_capacity/wind_capacity'):
-        """
+                 allow_wind_only=False, fillna=None, limits=None,
+                 ratio_bounds=None, ratio='solar_capacity/wind_capacity'):
+        """Framework to handle hybridization of SC and corresponding profiles.
+
+        ``reV`` hybrids computes a "hybrid" wind and solar supply curve,
+        where each supply curve point contains some wind and some solar
+        capacity. Various ratio limits on wind-to-solar farm properties
+        (e.g. wind-to-solar capacity) can be applied during the
+        hybridization process. Hybrid generation profiles are also
+        computed during this process.
+
         Parameters
         ----------
         solar_fpath : str
-            Filepath to rep profile output file to extract solar profiles and
-            summaries from.
+            Filepath to rep profile output file to extract solar
+            profiles and summaries from.
         wind_fpath : str
-            Filepath to rep profile output file to extract wind profiles and
-            summaries from.
+            Filepath to rep profile output file to extract wind profiles
+            and summaries from.
         allow_solar_only : bool, optional
-            Option to allow SC points with only solar capcity (no wind), by
-            default False.
+            Option to allow SC points with only solar capacity
+            (no wind). By default, ``False``.
         allow_wind_only : bool, optional
-            Option to allow SC points with only wind capcity (no solar), by
-            default False.
+            Option to allow SC points with only wind capacity
+            (no solar). By default, ``False``.
         fillna : dict, optional
-            Dictionary containing column_name, fill_value pairs reprenting any
-            fill values that should be applied after merging the wind and solar
-            meta. Note that column names will likely have to be prefixed
-            with "solar_" or "wind_". By default None.
+            Dictionary containing column_name, fill_value pairs
+            representing any fill values that should be applied after
+            merging the wind and solar meta. Note that column names will
+            likely have to be prefixed with ``solar`` or ``wind``.
+            By default ``None``.
         limits : dict, optional
             Option to specify mapping (in the form of a dictionary) of
-            {colum_name: max_value} representing the upper limit (maximum
-            value) for the values of a column in the merged meta. For example,
-            `limits={'solar_capacity': 100}` would limit all the values of the
-            solar capacity in the merged meta to a maximum value of 100.
-            This limit is applied *BEFORE* ratio calculations. The names of
-            the columns should match the column names in the merged meta, so
-            they are likely prefixed with one of the prefixes defined at the
-            top of this module (SOLAR_PREFIX or WIND_PREFIX). By default,
-            None (no limits applied).
+            {colum_name: max_value} representing the upper limit
+            (maximum value) for the values of a column in the merged
+            meta. For example, ``limits={'solar_capacity': 100}`` would
+            limit all the values of the solar capacity in the merged
+            meta to a maximum value of 100. This limit is applied
+            *BEFORE* ratio calculations. The names of the columns should
+            match the column names in the merged meta, so they are
+            likely prefixed with ``solar`` or ``wind``.
+            By default, ``None`` (no limits applied).
         ratio_bounds : tuple, optional
-            Option to set ratio bounds (in two-tuple form) on the columns of
-            the `ratio` input. For example, `ratio_bounds=(0.5, 1.5)`
-            would adjust the values of both of the `ratio` columns
-            such that their ratio is always between half and double (e.g., no
-            value would be more than double the other). To specify a single
-            ratio value, use the same value as the upper and lower bound. For
-            example, `ratio_bounds=(1, 1)` would adjust the values of both of
-            the `ratio` columns such that their ratio is always equal.
-            By default, None (no limit on the ratio).
+            Option to set ratio bounds (in two-tuple form) on the
+            columns of the ``ratio`` input. For example,
+            ``ratio_bounds=(0.5, 1.5)`` would adjust the values of both
+            of the ``ratio`` columns such that their ratio is always
+            between half and double (e.g., no value would be more than
+            double the other). To specify a single ratio value, use the
+            same value as the upper and lower bound. For example,
+            ``ratio_bounds=(1, 1)`` would adjust the values of both of
+            the ``ratio`` columns such that their ratio is always equal.
+            By default, ``None`` (no limit on the ratio).
         ratio : str, optional
-            Option to specify the columns used to calculate the ratio that is
-            limited by the `ratio_bounds` input. This input is a string in the
-            form "numerator_column_name/denominator_column_name".
-            For example, `ratio='solar_capacity/wind_capacity'`
-            would limit the ratio of the solar to wind capacities as specified
-            by the `ratio_bounds` input. If `ratio_bounds` is None, this input
-            does nothing. The names of the columns should be
-            prefixed with one of the prefixes defined as class variables.
-            By default 'solar_capacity/wind_capacity'.
+            Option to specify the columns used to calculate the ratio
+            that is limited by the `ratio_bounds` input. This input is a
+            string in the form "{numerator_column}/{denominator_column}".
+            For example, ``ratio='solar_capacity/wind_capacity'``
+            would limit the ratio of the solar to wind capacities as
+            specified by the ``ratio_bounds`` input. If ``ratio_bounds``
+            is None, this input does nothing. The names of the columns
+            should be prefixed with one of the prefixes defined as class
+            variables. By default ``'solar_capacity/wind_capacity'``.
         """
 
         logger.info('Running hybridization of rep profiles with solar_fpath: '
@@ -1004,22 +1018,22 @@ class Hybridization:
         """
         return self._profiles
 
-    def run_all(self, fout=None, save_hybrid_meta=True):
+    def run(self, fout=None, save_hybrid_meta=True):
         """Run hybridization of profiles and save to disc.
 
         Parameters
         ----------
         fout : str, optional
-            Filepath to output h5 file, by default None.
+            Filepath to output HDF5 file. If ``None``, output data are
+            not written to a file. By default, ``None``.
         save_hybrid_meta : bool, optional
-            Flag to save hybrid SC table to hybrid rep profile output,
-            by default True.
+            Flag to save hybrid SC table to hybrid rep profile output.
+            By default, ``True``.
 
         Returns
         -------
-        `Hybridization`
-            Instance of Hybridization object (itself) containing the
-            hybridized meta and profiles as attributes.
+        str
+            Filepath to output h5 file.
         """
 
         self.run_meta()
@@ -1029,7 +1043,7 @@ class Hybridization:
             self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta)
 
         logger.info('Hybridization of representative profiles complete!')
-        return self
+        return fout
 
     def run_meta(self):
         """Compute the hybridized profiles.

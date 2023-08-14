@@ -3,12 +3,14 @@
 The Renewable Energy Potential Model
 """
 from __future__ import print_function, division, absolute_import
+import logging
+if not logging.getLogger().handlers:
+    logging.getLogger().addHandler(logging.NullHandler())
 import os
 
 from reV.econ import Econ
 from reV.generation import Gen
 from reV.handlers import Outputs, ExclusionLayers
-from reV.pipeline import Pipeline, Status
 from reV.qa_qc import QaQc
 from reV.rep_profiles import RepProfiles
 from reV.supply_curve import (Aggregation, ExclusionMask,

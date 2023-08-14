@@ -195,7 +195,6 @@ class ProjectPoints:
 
     Examples
     --------
-
     >>> import os
     >>> from reV import TESTDATADIR
     >>> from reV.config.project_points import ProjectPoints
@@ -237,10 +236,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
         """
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
@@ -587,9 +588,12 @@ class ProjectPoints:
             raise ValueError('Cannot parse Project points data from {}'
                              .format(type(points)))
 
-        if ('gid' not in df.columns or 'config' not in df.columns):
-            raise KeyError('Project points data must contain "gid" and '
-                           '"config" column headers.')
+        if 'gid' not in df.columns:
+            raise KeyError('Project points data must contain "gid" column.')
+
+        # pylint: disable=no-member
+        if 'config' not in df.columns:
+            df = cls._parse_sites(points["gid"].values, res_file=res_file)
 
         gids = df['gid'].values
         if not np.array_equal(np.sort(gids), gids):
@@ -706,7 +710,7 @@ class ProjectPoints:
         df_configs = self.df['config'].unique()
         sam_configs = self.sam_inputs
 
-        # Checks to make sure that the same number of SAM config .json files
+        # Checks to make sure that the same number of SAM config files
         # as references in project_points DataFrame
         if len(df_configs) > len(sam_configs):
             msg = ('Points references {} configs while only '
@@ -877,10 +881,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------
@@ -963,10 +969,12 @@ class ProjectPoints:
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
+
                 - Explicit namespace of curtailment variables (dict)
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+
 
         Returns
         -------

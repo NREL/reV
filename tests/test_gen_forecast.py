@@ -58,23 +58,23 @@ def test_forecast():
 
         # test that this raises an error with missing timezone
         with pytest.raises(SAMExecutionError):
-            _ = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
-                            max_workers=1, sites_per_worker=3,
-                            out_fpath=None, output_request=output_request)
+            gen = Gen('pvwattsv7', points, sam_files, res_file,
+                      sites_per_worker=3, output_request=output_request)
+            gen.run(max_workers=1)
 
-        gen1 = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
-                           max_workers=1, sites_per_worker=3,
-                           site_data=site_data,
-                           out_fpath=None, output_request=output_request)
+        gen1 = Gen('pvwattsv7', points, sam_files, res_file,
+                   sites_per_worker=3, site_data=site_data,
+                   output_request=output_request)
+        gen1.run(max_workers=1)
 
         for i in range(5):
             assert np.allclose(gen1.out['ghi_mean'][i], mean_irrad(ghi[:, i]),
                                atol=0.0, rtol=0.001)
 
-        gen2 = Gen.reV_run('pvwattsv7', points, sam_files, res_file,
-                           max_workers=1, sites_per_worker=3,
-                           site_data=site_data, gid_map=gid_map,
-                           out_fpath=None, output_request=output_request)
+        gen2 = Gen('pvwattsv7', points, sam_files, res_file,
+                   sites_per_worker=3, site_data=site_data,
+                   gid_map=gid_map, output_request=output_request)
+        gen2.run(max_workers=1)
 
         for i in range(5):
             j = gid_map[i]

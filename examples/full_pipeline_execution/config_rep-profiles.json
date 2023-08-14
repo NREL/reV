@@ -9,7 +9,7 @@
   "err_method": "rmse",
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "max_workers": 36,
     "memory": 190,
     "nodes": 1,

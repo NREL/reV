@@ -35,6 +35,7 @@ def test_resource_tech_mapping():
     assert len(set(ind.flatten())) == 101, msg
 
 
+# pylint: disable=no-member
 def plot_tech_mapping(dist_margin=1.05):
     """Run the supply curve technology mapping and plot the resulting mapped
     points."""

@@ -430,18 +430,24 @@ class PowerCurveLossesInput:
         specs : dict
             A dictionary containing specifications for the power curve
             losses. This dictionary must contain the following keys:
-                - `target_losses_percent`
-                    An integer or float value representing the
-                    total percentage of annual energy production that
-                    should be lost due to the power curve
-                    transformation. This value must be in the range
-                    [0, 100].
+
+                - ``target_losses_percent``
+                   An integer or float value representing the
+                   total percentage of annual energy production that
+                   should be lost due to the power curve transformation.
+                   This value must be in the range [0, 100].
+
             The input dictionary can also provide the following optional
             keys:
-                - `transformation` - by default, ``horizontal_translation``
-                    A string representing the type of transformation to
-                    apply to the power curve. This sting must be one of
-                    the keys of :obj:`TRANSFORMATIONS`.
+
+                - ``transformation`` - by default, ``horizontal_translation``
+                  A string representing the type of transformation to
+                  apply to the power curve. This sting must be one of
+                  the keys of :obj:`TRANSFORMATIONS`. See the relevant
+                  transformation class documentation for detailed
+                  information on that type of power curve
+                  transformation.
+
 
         """
         self._specs = specs
@@ -506,11 +512,11 @@ class PowerCurveLossesInput:
 class PowerCurveLossesMixin:
     """Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.
 
-    Warning
-    -------
+    Warnings
+    --------
     Using this class for anything except as a mixin for
-    :class:`~reV.SAM.generation.AbstractSamWind` may result in unexpected
-    results and/or errors.
+    :class:`~reV.SAM.generation.AbstractSamWind` may result in
+    unexpected results and/or errors.
     """
 
     POWER_CURVE_CONFIG_KEY = 'reV_power_curve_losses'
@@ -625,9 +631,9 @@ class PowerCurveLossesMixin:
         """Extract scaled wind speeds at the site.
 
         Get the wind resource (wind speeds) for this site, accounting
-        for the scaling done in SAM based on air pressure. These wind
-        speeds can then be used to sample the power curve and obtain
-        generation values.
+        for the scaling done in SAM [1]_ based on air pressure [2]_.
+        These wind speeds can then be used to sample the power curve and
+        obtain generation values.
 
         Returns
         -------
@@ -636,11 +642,10 @@ class PowerCurveLossesMixin:
 
         References
         ----------
-        Scaling done in SAM:
-            https://tinyurl.com/2uzjawpe
-        SAM Wind Power Reference Manual for explanations on generation
-        and air density calculations (pp. 18):
-            https://tinyurl.com/2p8fjba6
+        .. [1] Scaling done in SAM: https://tinyurl.com/2uzjawpe
+        .. [2] SAM Wind Power Reference Manual for explanations on
+           generation and air density calculations (pp. 18):
+           https://tinyurl.com/2p8fjba6
 
         """
 

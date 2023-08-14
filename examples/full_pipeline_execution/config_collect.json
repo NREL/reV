@@ -8,7 +8,7 @@
   ],
   "execution_control": {
     "allocation": "rev",
-    "feature": "--qos=high",
+    "qos": "high",
     "memory": 90,
     "option": "eagle",
     "walltime": 2

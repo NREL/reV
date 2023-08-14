@@ -118,7 +118,7 @@ def _parse_regions(regions, region, region_col):
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, fpath, res_file, sam_file, verbose):
+def project_points(ctx, fpath, res_file, sam_file, verbose):
     """reV ProjectPoints generator"""
     ctx.ensure_object(dict)
     ctx.obj['FPATH'] = fpath
@@ -135,7 +135,7 @@ def main(ctx, fpath, res_file, sam_file, verbose):
     log_versions(logger)
 
 
-@main.command()
+@project_points.command()
 @click.option('--lat_lon_fpath', '-llf', type=click.Path(exists=True),
               default=None,
               help=('File path to .csv or .json containing latitude, '
@@ -153,7 +153,7 @@ def from_lat_lons(ctx, lat_lon_fpath, lat_lon_coords):
     pp.df.to_csv(ctx.obj['FPATH'])
 
 
-@main.command()
+@project_points.command()
 @click.option('--regions', '-regs', type=STR, default=None,
               help=('json string or file path to .json containing regions of '
                     'interest containing regions of interest'))
@@ -174,7 +174,7 @@ def from_regions(ctx, regions, region, region_col):
 
 if __name__ == '__main__':
     try:
-        main(obj={})
+        project_points(obj={})
     except Exception:
         logger.exception('Error running reV ProjecPoints CLI')
         raise

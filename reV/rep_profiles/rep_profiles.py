@@ -385,8 +385,10 @@ class RegionRepProfile:
                    'data: {}'.format(missing))
             assert not any(missing), msg
 
-            iloc = np.where(np.isin(source_res_gids, self._res_gids))[0]
-            self._source_profiles = res[self._cf_dset, :, iloc]
+            unique_res_gids, u_idxs = np.unique(self._res_gids,
+                                                return_inverse=True)
+            iloc = np.where(np.isin(source_res_gids, unique_res_gids))[0]
+            self._source_profiles = res[self._cf_dset, :, iloc[u_idxs]]
 
     @property
     def source_profiles(self):
@@ -613,7 +615,6 @@ class RepProfilesBase(ABC):
         self._cf_dset = cf_dset
         self._gen_fpath = gen_fpath
         self._reg_cols = reg_cols
-        self._regions = None
 
         self._rev_summary = self._parse_rev_summary(rev_summary)
 
@@ -623,10 +624,6 @@ class RepProfilesBase(ABC):
         self._check_req_cols(self._rev_summary, RegionRepProfile.GEN_GID_COL)
 
         self._check_rev_gen(gen_fpath, cf_dset, self._rev_summary)
-
-        if self._reg_cols is not None:
-            self._regions = {k: self._rev_summary[k].unique().tolist()
-                             for k in self._reg_cols}
         self._time_index = None
         self._meta = None
         self._profiles = None
@@ -884,41 +881,89 @@ class RepProfilesBase(ABC):
 
 
 class RepProfiles(RepProfilesBase):
-    """Framework for calculating the representative profiles based on an
-    error metric vs. a mean or median profile.
-    """
+    """RepProfiles"""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse', weight='gid_counts',
-                 n_profiles=1):
-        """
+                 n_profiles=1, aggregate_profiles=False):
+        """reV rep profiles class.
+
+        ``reV`` rep profiles compute representative generation profiles
+        for each supply curve point output by ``reV`` supply curve
+        aggregation. Representative profiles can either be a spatial
+        aggregation of generation profiles or actual generation profiles
+        that most closely resemble an aggregated profile (selected based
+        on an error metric).
+
         Parameters
         ----------
         gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
+            Filepath to ``reV`` generation output HDF5 file to extract
+            `cf_dset` dataset from. If executing ``reV`` from the
+            command line, this path can contain brackets ``{}`` that
+            will be filled in by the `analysis_years` input.
         rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-            Must include "res_gids", "gen_gids", and the "weight" column (if
-            weight is not None)
-        reg_cols : str | list | None
-            Label(s) for a categorical region column(s) to extract profiles
-            for. e.g. "state" will extract a rep profile for each unique entry
-            in the "state" column in rev_summary.
-        cf_dset : str
-            Dataset name to pull generation profiles from.
-        rep_method : str
-            Method identifier for calculation of the representative profile.
-        err_method : str | None
-            Method identifier for calculation of error from the representative
-            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
+            Aggregated ``reV`` supply curve summary file. Must include
+            the following columns:
+
+                - ``res_gids`` : string representation of python list
+                  containing the resource GID values corresponding to
+                  each supply curve point.
+                - ``gen_gids`` : string representation of python list
+                  containing the ``reV`` generation GID values
+                  corresponding to each supply curve point.
+                - weight column (name based on `weight` input) : string
+                  representation of python list containing the resource
+                  GID weights for each supply curve point.
+
+        reg_cols : str | list
+            Label(s) for a categorical region column(s) to extract
+            profiles for. For example, ``"state"`` will extract a rep
+            profile for each unique entry in the ``"state"`` column in
+            `rev_summary`. To get a profile for each supply curve point,
+            try setting `reg_cols` to a primary key such as
+            ``"sc_gid"``.
+        cf_dset : str, optional
+            Dataset name to pull generation profiles from. This dataset
+            must be present in the `gen_fpath` HDF5 file.
+            By default, ``"cf_profile"``
+        rep_method : {'mean', 'meanoid', 'median', 'medianoid'}, optional
+            Method identifier for calculation of the representative
+            profile. By default, ``'meanoid'``
+        err_method : {'mbe', 'mae', 'rmse'}, optional
+            Method identifier for calculation of error from the
+            representative profile. If this input is ``None``, the
             representative meanoid / medianoid profile will be returned
-            directly
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the res_gids in the same row.
-        n_profiles : int
-            Number of representative profiles to save to fout.
+            directly. By default, ``'rmse'``.
+        weight : str, optional
+            Column in `rev_summary` used to apply weights when computing
+            mean profiles. The supply curve table data in the weight
+            column should have weight values corresponding to the
+            `res_gids` in the same row (i.e. string representation of
+            python list containing weight values).
+
+            .. Important:: You'll often want to set this value to
+               something other than ``None`` (typically ``"gid_counts"``
+               if running on standard ``reV`` outputs). Otherwise, the
+               unique generation profiles within each supply curve point
+               are weighted equally. For example, if you have a 64x64
+               supply curve point, and one generation profile takes up
+               4095 (99.98%) 90m cells while a second generation profile
+               takes up only one 90m cell (0.02%), they will contribute
+               *equally* to the meanoid profile unless these weights are
+               specified.
+
+            By default, ``'gid_counts'``.
+        n_profiles : int, optional
+            Number of representative profiles to save to the output
+            file. By default, ``1``.
+        aggregate_profiles : bool, optional
+            Flag to calculate the aggregate (weighted meanoid) profile
+            for each supply curve point. This behavior is in lieu of
+            finding the single profile per region closest to the
+            meanoid. If you set this flag to ``True``, the `rep_method`,
+            `err_method`, and `n_profiles` inputs will be forcibly set
+            to the default values. By default, ``False``.
         """
 
         log_versions(logger)
@@ -936,6 +981,15 @@ class RepProfiles(RepProfilesBase):
         elif not isinstance(reg_cols, list):
             reg_cols = list(reg_cols)
 
+        self._aggregate_profiles = aggregate_profiles
+        if self._aggregate_profiles:
+            logger.info("Aggregate profiles input set to `True`. Setting "
+                        "'rep_method' to `'meanoid'`, 'err_method' to `None`, "
+                        "and 'n_profiles' to `1`")
+            rep_method = 'meanoid'
+            err_method = None
+            n_profiles = 1
+
         super().__init__(gen_fpath, rev_summary, reg_cols=reg_cols,
                          cf_dset=cf_dset,
                          rep_method=rep_method, err_method=err_method,
@@ -951,8 +1005,10 @@ class RepProfiles(RepProfilesBase):
             self._meta = self._rev_summary
         else:
             self._meta = self._rev_summary.groupby(self._reg_cols)
-            self._meta = \
-                self._meta['timezone'].apply(lambda x: stats.mode(x).mode[0])
+            self._meta = (
+                self._meta['timezone']
+                .apply(lambda x: stats.mode(x, keepdims=True).mode[0])
+            )
             self._meta = self._meta.reset_index()
 
         self._meta['rep_gen_gid'] = None
@@ -1095,100 +1151,41 @@ class RepProfiles(RepProfilesBase):
                         self._meta.at[i, 'rep_gen_gid'] = str(ggids)
                         self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
-    def _run(self, fout=None, save_rev_summary=True, scaled_precision=False,
-             max_workers=None):
+    def run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+            max_workers=None):
         """
         Run representative profiles in serial or parallel and save to disc
 
         Parameters
         ----------
         fout : str, optional
-            filepath to output h5 file, by default None
+            Filepath to output HDF5 file. If ``None``, output data are
+            not written to a file. By default, ``None``.
         save_rev_summary : bool, optional
-            Flag to save full reV SC table to rep profile output.,
-            by default True
+            Flag to save full ``reV`` supply curve table to rep profile
+            output. By default, ``True``.
         scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
+            Flag to scale `cf_profiles` by 1000 and save as uint16.
+            By default, ``False``.
         max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
+            Number of parallel rep profile workers. ``1`` will run
+            serial, while ``None`` will use all available.
+            By default, ``None``.
         """
+
         if max_workers == 1:
             self._run_serial()
         else:
             self._run_parallel(max_workers=max_workers)
 
         if fout is not None:
+            if self._aggregate_profiles:
+                logger.info("Aggregate profiles input set to `True`. Setting "
+                            "'save_rev_summary' input to `False`")
+                save_rev_summary = False
             self.save_profiles(fout, save_rev_summary=save_rev_summary,
                                scaled_precision=scaled_precision)
 
         logger.info('Representative profiles complete!')
 
-    @classmethod
-    def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
-            rep_method='meanoid', err_method='rmse', weight='gid_counts',
-            n_profiles=1, fout=None, save_rev_summary=True,
-            scaled_precision=False, max_workers=None):
-        """Run representative profiles by finding the closest single profile
-        to the weighted meanoid for each SC region.
-
-        Parameters
-        ----------
-        gen_fpath : str
-            Filepath to reV gen output file to extract "cf_profile" from.
-        rev_summary : str | pd.DataFrame
-            Aggregated rev supply curve summary file. Str filepath or full df.
-            Must include "res_gids", "gen_gids", and the "weight" column (if
-            weight is not None)
-        reg_cols : str | list | None
-            Label(s) for a categorical region column(s) to extract profiles
-            for. e.g. "state" will extract a rep profile for each unique entry
-            in the "state" column in rev_summary.
-        cf_dset : str
-            Dataset name to pull generation profiles from.
-        rep_method : str
-            Method identifier for calculation of the representative profile.
-        err_method : str | None
-            Method identifier for calculation of error from the representative
-            profile (e.g. "rmse", "mae", "mbe"). If this is None, the
-            representative meanoid / medianoid profile will be returned
-            directly
-        weight : str | None
-            Column in rev_summary used to apply weighted mean to profiles.
-            The supply curve table data in the weight column should have
-            weight values corresponding to the res_gids in the same row.
-        n_profiles : int
-            Number of representative profiles to save to fout.
-        fout : str, optional
-            filepath to output h5 file, by default None
-        save_rev_summary : bool, optional
-            Flag to save full reV SC table to rep profile output.,
-            by default True
-        scaled_precision : bool, optional
-            Flag to scale cf_profiles by 1000 and save as uint16.,
-            by default False
-        max_workers : int, optional
-            Number of parallel workers. 1 will run serial, None will use all
-            available., by default None
-
-        Returns
-        -------
-        profiles : dict
-            dict of n_profile-keyed arrays with shape (time, n) for the
-            representative profiles for each region.
-        meta : pd.DataFrame
-            Meta dataframes recording the regions and the selected rep profile
-            gid.
-        time_index : pd.DatatimeIndex
-            Datetime Index for represntative profiles
-        """
-
-        rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
-                 rep_method=rep_method, err_method=err_method,
-                 n_profiles=n_profiles, weight=weight)
-
-        rp._run(fout=fout, save_rev_summary=save_rev_summary,
-                scaled_precision=scaled_precision, max_workers=max_workers)
-
-        return rp._profiles, rp._meta, rp._time_index
+        return fout

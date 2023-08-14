@@ -6,7 +6,6 @@ Created on Fri Jun 21 13:24:31 2019
 @author: gbuster
 """
 from concurrent.futures import as_completed
-import h5py
 import logging
 import numpy as np
 import psutil
@@ -17,10 +16,11 @@ from warnings import warn
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          AbstractAggregation)
+                                          BaseAggregation, Aggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
+from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning)
@@ -220,130 +220,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         return self._friction_layer
 
 
-class SupplyCurveAggregation(AbstractAggregation):
-    """
-    Supply curve points aggregation framework.
+class SupplyCurveAggregation(BaseAggregation):
+    """SupplyCurveAggregation"""
 
-    Examples
-    --------
-    Standard outputs:
-
-    sc_gid : int
-        Unique supply curve gid. This is the enumerated supply curve points,
-        which can have overlapping geographic locations due to different
-        resource bins at the same geographic SC point.
-    res_gids : list
-        Stringified list of resource gids (e.g. original WTK or NSRDB resource
-        GIDs) corresponding to each SC point.
-    gen_gids : list
-        Stringified list of generation gids (e.g. GID in the reV generation
-        output, which corresponds to the reV project points and not
-        necessarily the resource GIDs).
-    gid_counts : list
-        Stringified list of the sum of inclusion scalar values corresponding
-        to each gen_gid and res_gid, where 1 is included, 0 is excluded, and
-        0.7 is included with 70 percent of available land. Each entry in this
-        list is associated with the corresponding entry in the gen_gids and
-        res_gids lists.
-    n_gids : int
-        Total number of included pixels. This is a boolean sum and considers
-        partial inclusions to be included (e.g. 1).
-    mean_cf : float
-        Mean capacity factor of each supply curve point (the arithmetic mean is
-        weighted by the inclusion layer) (unitless).
-    mean_lcoe : float
-        Mean LCOE of each supply curve point (the arithmetic mean is weighted
-        by the inclusion layer). Units match the reV econ output ($/MWh). By
-        default, the LCOE is re-calculated using the multi-year mean capacity
-        factor and annual energy production. This requires several datasets to
-        be aggregated in the h5_dsets input: fixed_charge_rate, capital_cost,
-        fixed_operating_cost, annual_energy_production, and
-        variable_operating_cost. This recalc behavior can be disabled by
-        setting recalc_lcoe=False.
-    mean_res : float
-        Mean resource, the resource dataset to average is provided by the user
-        in 'res_class_dset'. The arithmetic mean is weighted by the inclusion
-        layer.
-    capacity : float
-        Total capacity of each supply curve point (MW). Units are contingent on
-        the 'power_density' input units of MW/km2.
-    area_sq_km : float
-        Total included area for each supply curve point in km2. This is based
-        on the nominal area of each exclusion pixel which by default is
-        calculated from the exclusion profile attributes. The NREL reV default
-        is 0.0081 km2 pixels (90m x 90m). The area sum considers partial
-        inclusions.
-    latitude : float
-        Supply curve point centroid latitude coordinate, in degrees
-        (does not consider exclusions).
-    longitude : float
-        Supply curve point centroid longitude coordinate, in degrees
-        (does not consider exclusions).
-    country : str
-        Country of the supply curve point based on the most common country
-        of the associated resource meta data. Does not consider exclusions.
-    state : str
-        State of the supply curve point based on the most common state
-        of the associated resource meta data. Does not consider exclusions.
-    county : str
-        County of the supply curve point based on the most common county
-        of the associated resource meta data. Does not consider exclusions.
-    elevation : float
-        Mean elevation of the supply curve point based on the mean elevation
-        of the associated resource meta data. Does not consider exclusions.
-    timezone : int
-        UTC offset of local timezone based on the most common timezone of the
-        associated resource meta data. Does not consider exclusions.
-    sc_point_gid : int
-        Spatially deterministic supply curve point gid. Duplicate sc_point_gid
-        values can exist due to resource binning.
-    sc_row_ind : int
-        Row index of the supply curve point in the aggregated exclusion grid.
-    sc_col_ind : int
-        Column index of the supply curve point in the aggregated exclusion grid
-    res_class : int
-        Resource class for the supply curve gid. Each geographic supply curve
-        point (sc_point_gid) can have multiple resource classes associated with
-        it, resulting in multiple supply curve gids (sc_gid) associated with
-        the same spatially deterministic supply curve point.
-
-
-    Optional outputs:
-
-    mean_friction : float
-        Mean of the friction data provided in 'friction_fpath' and
-        'friction_dset'. The arithmetic mean is weighted by boolean
-        inclusions and considers partial inclusions to be included.
-    mean_lcoe_friction : float
-        Mean of the nominal LCOE multiplied by mean_friction value.
-    mean_{dset} : float
-        Mean input h5 dataset(s) provided by the user in 'h5_dsets'. These
-        mean calculations are weighted by the partial inclusion layer.
-    data_layers : float | int | str | dict
-        Requested data layer aggregations, each data layer must be the same
-        shape as the exclusion layers.
-        - mode: int | str
-            Most common value of a given data layer after applying the
-            boolean inclusion mask.
-        - mean : float
-            Arithmetic mean value of a given data layer weighted by the
-            scalar inclusion mask (considers partial inclusions).
-        - min : float | int
-            Minimum value of a given data layer after applying the
-            boolean inclusion mask.
-        - max : float | int
-            Maximum value of a given data layer after applying the
-            boolean inclusion mask.
-        - sum : float
-            Sum of a given data layer weighted by the scalar inclusion mask
-            (considers partial inclusions).
-        - category : dict
-            Dictionary mapping the unique values in the data_layer to the
-            sum of inclusion scalar values associated with all pixels with that
-            unique value.
-    """
-
-    def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
+    def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, gids=None,
                  pre_extract_inclusions=False, res_class_dset=None,
@@ -351,89 +231,351 @@ class SupplyCurveAggregation(AbstractAggregation):
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
                  cap_cost_scale=None, recalc_lcoe=True):
-        """
+        """reV supply curve points aggregation framework.
+
+        ``reV`` supply curve aggregation combines a high-resolution
+        (e.g. 90m) exclusion dataset with a (typically) lower resolution
+        (e.g. 2km) generation dataset by mapping all data onto the high-
+        resolution grid and aggregating it by a large factor (e.g. 64 or
+        128). The result is coarsely-gridded data that summarizes
+        capacity and generation potential as well as associated
+        economics under a particular land access scenario. This module
+        can also summarize extra data layers during the aggregation
+        process, allowing for complementary land characterization
+        analysis.
+
         Parameters
         ----------
         excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        gen_fpath : str
-            Filepath to .h5 reV generation output results.
+            Filepath to exclusions data HDF5 file. The exclusions HDF5
+            file should contain the layers specified in `excl_dict`
+            and `data_layers` (though data for the latter may be
+            stored in a separate file - see the `data_layers` input
+            documentation for more details). These data layers may
+            be spread out across multiple files, in which case this
+            input should be a list or tuple of filepaths to multiple
+            exclusion HDF5 files containing the layers. Note that each
+            data layer must be uniquely defined (i.e. only appear once
+            and in a single input file).
         tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        econ_fpath : str | None
-            Filepath to .h5 reV econ output results. This is optional and only
-            used if the lcoe_dset is not present in the gen_fpath file.
+            Dataset name in the `excl_fpath` file containing the
+            techmap (exclusions-to-resource mapping data). This dataset
+            uniquely couples the (typically high-resolution) exclusion
+            layers to the (typically lower-resolution) resource data,
+            and therefore should be unique for every new resource data
+            set that is paired with the exclusion data. If running
+            ``reV`` from the command line, you can specify a name that
+            is not in the exclusions HDF5 file, and ``reV`` will
+            calculate the techmap for you. Note however that computing
+            the techmap and writing it to the exclusion HDF5 file is a
+            blocking operation, so you may only run a single ``reV``
+            aggregation step at a time this way.
+        econ_fpath : str, optional
+            Filepath to HDF5 file with ``reV`` econ output results
+            containing an `lcoe_dset` dataset. If ``None``, `lcoe_dset`
+            should be a dataset in the `gen_fpath` HDF5 file that
+            aggregation is executed on. By default, ``None``.
         excl_dict : dict | None
-            Dictionary of exclusion keyword arugments of the format
-            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
-            dataset in the exclusion h5 file and kwarg is a keyword argument to
-            the reV.supply_curve.exclusions.LayerMask class.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        excl_area : float | None, optional
-            Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath, by default None
-        gids : list | None
-            List of supply curve point gids to get summary for (can use to
-            subset if running in parallel), or None for all gids in the SC
-            extent, by default None
+            Dictionary of exclusion keyword arguments of the format
+            ``{layer_dset_name: {kwarg: value}}``, where
+            ``layer_dset_name`` is a dataset in the exclusion h5 file
+            and the ``kwarg: value`` pair is a keyword argument to
+            the :class:`reV.supply_curve.exclusions.LayerMask` class.
+            If ``None`` or empty dictionary, no exclusions are applied.
+            By default, ``None``.
+        area_filter_kernel : {"queen", "rook"}, optional
+            Contiguous area filter method to use on final exclusions
+            mask. The filters are defined as::
+
+                # Queen:     # Rook:
+                [[1,1,1],    [[0,1,0],
+                 [1,1,1],     [1,1,1],
+                 [1,1,1]]     [0,1,0]]
+
+            These filters define how neighboring pixels are "connected".
+            Once pixels in the final exclusion layer are connected, the
+            area of each resulting cluster is computed and compared
+            against the `min_area` input. Any cluster with an area
+            less than `min_area` is excluded from the final mask.
+            This argument has no effect if `min_area` is ``None``.
+            By default, ``"queen"``.
+        min_area : float, optional
+            Minimum area (in km\ :sup:`2`) required to keep an isolated
+            cluster of (included) land within the resulting exclusions
+            mask. Any clusters of land with areas less than this value
+            will be marked as exclusions. See the documentation for
+            `area_filter_kernel` for an explanation of how the area of
+            each land cluster is computed. If ``None``, no area
+            filtering is performed. By default, ``None``.
+        resolution : int, optional
+            Supply Curve resolution. This value defines how many pixels
+            are in a single side of a supply curve cell. For example,
+            a value of ``64`` would generate a supply curve where the
+            side of each supply curve cell is ``64x64`` exclusion
+            pixels. By default, ``64``.
+        excl_area : float, optional
+            Area of a single exclusion mask pixel (in km\ :sup:`2`).
+            If ``None``, this value will be inferred from the profile
+            transform attribute in `excl_fpath`. By default, ``None``.
+        gids : list, optional
+            List of supply curve point gids to get summary for. If you
+            would like to obtain all available ``reV`` supply curve
+            points to run, you can use the
+            :class:`reV.supply_curve.extent.SupplyCurveExtent` class
+            like so::
+
+                import pandas as pd
+                from reV.supply_curve.extent import SupplyCurveExtent
+
+                excl_fpath = "..."
+                resolution = ...
+                with SupplyCurveExtent(excl_fpath, resolution) as sc:
+                    gids = sc.valid_sc_points(tm_dset).tolist()
+                ...
+
+            If ``None``, supply curve aggregation is computed for all
+            gids in the supply curve extent. By default, ``None``.
         pre_extract_inclusions : bool, optional
-            Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default False. Typically faster to compute
+            Optional flag to pre-extract/compute the inclusion mask from
+            the `excl_dict` input. It is typically faster to compute
             the inclusion mask on the fly with parallel workers.
-        res_class_dset : str | None
-            Dataset in the generation file dictating resource classes.
-            None if no resource classes.
-        res_class_bins : list | None
-            List of floats or ints (bin edges) to convert to list of two-entry
-            bin boundaries or list of two-entry bind boundaries in final format
-        cf_dset : str
-            Dataset name from f_gen containing capacity factor mean values.
-        lcoe_dset : str
-            Dataset name from f_gen containing LCOE mean values.
-        h5_dsets : list | None
-            Optional list of additional datasets from the source h5 gen/econ
-            files to aggregate.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-        power_density : float | str | None
-            Power density in MW/km2 or filepath to variable power
-            density file. None will attempt to infer a constant
-            power density from the generation meta data technology.
-            Variable power density csvs must have "gid" and "power_density"
-            columns where gid is the resource gid (typically wtk or nsrdb gid)
-            and the power_density column is in MW/km2.
-        friction_fpath : str | None
+            By default, ``False``.
+        res_class_dset : str, optional
+            Name of dataset in the ``reV`` generation HDF5 output file
+            containing resource data. If ``None``, no aggregated
+            resource classification is performed (i.e. no ``mean_res``
+            output), and the `res_class_bins` is ignored.
+            By default, ``None``.
+        res_class_bins : list, optional
+            Optional input to perform separate aggregations for various
+            resource data ranges. If ``None``, only a single aggregation
+            per supply curve point is performed. Otherwise, this input
+            should be a list of floats or ints representing the resource
+            bin boundaries. One aggregation per resource value range is
+            computed, and only pixels within the given resource range
+            are aggregated. By default, ``None``.
+        cf_dset : str, optional
+            Dataset name from the ``reV`` generation HDF5 output file
+            containing capacity factor mean values.
+            By default, ``"cf_mean-means"``.
+        lcoe_dset : str, optional
+            Dataset name from the ``reV`` generation HDF5 output file
+            containing LCOE mean values.
+            By default, ``"lcoe_fcr-means"``.
+        h5_dsets : list, optional
+            Optional list of additional datasets from the ``reV``
+            generation/econ HDF5 output file to aggregate. If ``None``,
+            no extra datasets are aggregated. By default, ``None``.
+        data_layers : dict, optional
+            Dictionary of aggregation data layers of the format::
+
+                data_layers = {
+                    "output_layer_name": {
+                        "dset": "layer_name",
+                        "method": "mean",
+                        "fpath": "/path/to/data.h5"
+                    },
+                    "another_output_layer_name": {
+                        "dset": "input_layer_name",
+                        "method": "mode",
+                        # optional "fpath" key omitted
+                    },
+                    ...
+                }
+
+            The ``"output_layer_name"`` is the column name under which
+            the aggregated data will appear in the output CSV file. The
+            ``"output_layer_name"`` does not have to match the ``dset``
+            input value. The latter should match the layer name in the
+            HDF5 from which the data to aggregate should be pulled. The
+            ``method`` should be one of
+            ``{"mode", "mean", "min", "max", "sum", "category"}``,
+            describing how the high-resolution data should be aggregated
+            for each supply curve point. ``fpath`` is an optional key
+            that can point to an HDF5 file containing the layer data. If
+            left out, the data is assumed to exist in `excl_fpath`. If
+            ``None``, no data layer aggregation is performed.
+            By default, ``None``.
+        power_density : float | str, optional
+            Power density value (in MW/km\ :sup:`2`) or filepath to
+            variable power density CSV file containing the following
+            columns:
+
+                - ``gid`` : resource gid (typically wtk or nsrdb gid)
+                - ``power_density`` : power density value (in
+                  MW/km\ :sup:`2`)
+
+            If ``None``, a constant power density is inferred from the
+            generation meta data technology. By default, ``None``.
+        friction_fpath : str, optional
             Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset. The friction data must be the
-            same shape as the exclusions. Friction input creates a new output
-            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
-            friction data.
-        friction_dset : str | None
-            Dataset name in friction_fpath for the friction surface data.
-            Must be paired with friction_fpath. Must be same shape as
-            exclusions.
-        cap_cost_scale : str | None
-            Optional LCOE scaling equation to implement "economies of scale".
-            Equations must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the names of the columns in the reV
-            supply curve aggregation table.
-        recalc_lcoe : bool
-            Flag to re-calculate the LCOE from the multi-year mean capacity
-            factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
-            fixed_charge_rate, capital_cost, fixed_operating_cost,
-            and variable_operating_cost.
+            Must be paired with the `friction_dset` input below. The
+            friction data must be the same shape as the exclusions.
+            Friction input creates a new output column
+            ``"mean_lcoe_friction"`` which is the nominal LCOE
+            multiplied by the friction data. If ``None``, no friction
+            data is aggregated. By default, ``None``.
+        friction_dset : str, optional
+            Dataset name in friction_fpath for the friction surface
+            data. Must be paired with the `friction_fpath` above. If
+            ``None``, no friction data is aggregated.
+            By default, ``None``.
+        cap_cost_scale : str, optional
+            Optional LCOE scaling equation to implement "economies of
+            scale". Equations must be in python string format and must
+            return a scalar value to multiply the capital cost by.
+            Independent variables in the equation should match the names
+            of the columns in the ``reV`` supply curve aggregation
+            output table (see the documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied. By default, ``None``.
+        recalc_lcoe : bool, optional
+            Flag to re-calculate the LCOE from the multi-year mean
+            capacity factor and annual energy production data. This
+            requires several datasets to be aggregated in the h5_dsets
+            input:
+
+                - ``system_capacity``
+                - ``fixed_charge_rate``
+                - ``capital_cost``
+                - ``fixed_operating_cost``
+                - ``variable_operating_cost``
+
+            By default, ``True``.
+
+        Examples
+        --------
+        Standard outputs:
+
+        sc_gid : int
+            Unique supply curve gid. This is the enumerated supply curve
+            points, which can have overlapping geographic locations due
+            to different resource bins at the same geographic SC point.
+        res_gids : list
+            Stringified list of resource gids (e.g. original WTK or
+            NSRDB resource GIDs) corresponding to each SC point.
+        gen_gids : list
+            Stringified list of generation gids (e.g. GID in the reV
+            generation output, which corresponds to the reV project
+            points and not necessarily the resource GIDs).
+        gid_counts : list
+            Stringified list of the sum of inclusion scalar values
+            corresponding to each `gen_gid` and `res_gid`, where 1 is
+            included, 0 is excluded, and 0.7 is included with 70 percent
+            of available land. Each entry in this list is associated
+            with the corresponding entry in the `gen_gids` and
+            `res_gids` lists.
+        n_gids : int
+            Total number of included pixels. This is a boolean sum and
+            considers partial inclusions to be included (e.g. 1).
+        mean_cf : float
+            Mean capacity factor of each supply curve point (the
+            arithmetic mean is weighted by the inclusion layer)
+            (unitless).
+        mean_lcoe : float
+            Mean LCOE of each supply curve point (the arithmetic mean is
+            weighted by the inclusion layer). Units match the reV econ
+            output ($/MWh). By default, the LCOE is re-calculated using
+            the multi-year mean capacity factor and annual energy
+            production. This requires several datasets to be aggregated
+            in the h5_dsets input: ``fixed_charge_rate``,
+            ``capital_cost``,
+            ``fixed_operating_cost``, ``annual_energy_production``, and
+            ``variable_operating_cost``. This recalc behavior can be
+            disabled by setting ``recalc_lcoe=False``.
+        mean_res : float
+            Mean resource, the resource dataset to average is provided
+            by the user in `res_class_dset`. The arithmetic mean is
+            weighted by the inclusion layer.
+        capacity : float
+            Total capacity of each supply curve point (MW). Units are
+            contingent on the `power_density` input units of MW/km2.
+        area_sq_km : float
+            Total included area for each supply curve point in km2. This
+            is based on the nominal area of each exclusion pixel which
+            by default is calculated from the exclusion profile
+            attributes. The NREL reV default is 0.0081 km2 pixels
+            (90m x 90m). The area sum considers partial inclusions.
+        latitude : float
+            Supply curve point centroid latitude coordinate, in degrees
+            (does not consider exclusions).
+        longitude : float
+            Supply curve point centroid longitude coordinate, in degrees
+            (does not consider exclusions).
+        country : str
+            Country of the supply curve point based on the most common
+            country of the associated resource meta data. Does not
+            consider exclusions.
+        state : str
+            State of the supply curve point based on the most common
+            state of the associated resource meta data. Does not
+            consider exclusions.
+        county : str
+            County of the supply curve point based on the most common
+            county of the associated resource meta data. Does not
+            consider exclusions.
+        elevation : float
+            Mean elevation of the supply curve point based on the mean
+            elevation of the associated resource meta data. Does not
+            consider exclusions.
+        timezone : int
+            UTC offset of local timezone based on the most common
+            timezone of the associated resource meta data. Does not
+            consider exclusions.
+        sc_point_gid : int
+            Spatially deterministic supply curve point gid. Duplicate
+            `sc_point_gid` values can exist due to resource binning.
+        sc_row_ind : int
+            Row index of the supply curve point in the aggregated
+            exclusion grid.
+        sc_col_ind : int
+            Column index of the supply curve point in the aggregated
+            exclusion grid
+        res_class : int
+            Resource class for the supply curve gid. Each geographic
+            supply curve point (`sc_point_gid`) can have multiple
+            resource classes associated with it, resulting in multiple
+            supply curve gids (`sc_gid`) associated with the same
+            spatially deterministic supply curve point.
+
+
+        Optional outputs:
+
+        mean_friction : float
+            Mean of the friction data provided in 'friction_fpath' and
+            'friction_dset'. The arithmetic mean is weighted by boolean
+            inclusions and considers partial inclusions to be included.
+        mean_lcoe_friction : float
+            Mean of the nominal LCOE multiplied by mean_friction value.
+        mean_{dset} : float
+            Mean input h5 dataset(s) provided by the user in 'h5_dsets'.
+            These mean calculations are weighted by the partial
+            inclusion layer.
+        data_layers : float | int | str | dict
+            Requested data layer aggregations, each data layer must be
+            the same shape as the exclusion layers.
+
+                - mode: int | str
+                    Most common value of a given data layer after
+                    applying the boolean inclusion mask.
+                - mean : float
+                    Arithmetic mean value of a given data layer weighted
+                    by the scalar inclusion mask (considers partial
+                    inclusions).
+                - min : float | int
+                    Minimum value of a given data layer after applying
+                    the boolean inclusion mask.
+                - max : float | int
+                    Maximum value of a given data layer after applying
+                    the boolean inclusion mask.
+                - sum : float
+                    Sum of a given data layer weighted by the scalar
+                    inclusion mask (considers partial inclusions).
+                - category : dict
+                    Dictionary mapping the unique values in the
+                    `data_layer` to the sum of inclusion scalar values
+                    associated with all pixels with that unique value.
         """
         log_versions(logger)
         logger.info('Initializing SupplyCurveAggregation...')
@@ -446,7 +588,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                          excl_area=excl_area, gids=gids,
                          pre_extract_inclusions=pre_extract_inclusions)
 
-        self._gen_fpath = gen_fpath
         self._econ_fpath = econ_fpath
         self._res_class_dset = res_class_dset
         self._res_class_bins = self._convert_bins(res_class_bins)
@@ -477,26 +618,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             warn(msg, InputWarning)
 
         self._check_data_layers()
-        self._gen_index = self._parse_gen_index(self._gen_fpath)
-
-    def _check_files(self):
-        """Do a preflight check on input files"""
-
-        check_exists = [self._excl_fpath, self._gen_fpath]
-        if self._econ_fpath is not None:
-            check_exists.append(self._econ_fpath)
-
-        for fpath in check_exists:
-            if not os.path.exists(fpath):
-                raise FileNotFoundError('Could not find input file: {}'
-                                        .format(fpath))
-
-        with h5py.File(self._excl_fpath, 'r') as f:
-            if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
 
     def _check_data_layers(self, methods=('mean', 'max', 'min',
                            'mode', 'sum', 'category')):
@@ -880,11 +1001,14 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, max_workers=None, sites_per_worker=100):
+    def run_parallel(self, gen_fpath, args=None, max_workers=None,
+                     sites_per_worker=100):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
         ----------
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -899,6 +1023,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary : list
             List of dictionaries, each being an SC point summary.
         """
+
+        gen_index = self._parse_gen_index(gen_fpath)
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
         chunks = np.array_split(self.gids, chunks)
 
@@ -933,8 +1059,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
                 futures.append(exe.submit(
                     self.run_serial,
-                    self._excl_fpath, self._gen_fpath,
-                    self._tm_dset, self._gen_index,
+                    self._excl_fpath, gen_fpath,
+                    self._tm_dset, gen_index,
                     econ_fpath=self._econ_fpath,
                     excl_dict=self._excl_dict,
                     inclusion_mask=chunk_incl_masks,
@@ -1029,12 +1155,43 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, max_workers=None, sites_per_worker=100):
+    def _validate_tech_mapping(self, res_fpath):
+        """Check that tech mapping exists and create it if it doesn't"""
+
+        with ExclusionLayers(self._excl_fpath) as f:
+            dsets = f.h5.dsets
+
+        excl_fp_is_str = isinstance(self._excl_fpath, str)
+        tm_in_excl = self._tm_dset in dsets
+        if tm_in_excl:
+            logger.info('Found techmap "{}".'.format(self._tm_dset))
+        elif not tm_in_excl and not excl_fp_is_str:
+            msg = ('Could not find techmap dataset "{}" and cannot run '
+                   'techmap with arbitrary multiple exclusion filepaths '
+                   'to write to: {}'.format(self._tm_dset, self._excl_fpath))
+            logger.error(msg)
+            raise RuntimeError(msg)
+        else:
+            logger.info('Could not find techmap "{}". Running techmap module.'
+                        .format(self._tm_dset))
+            try:
+                TechMapping.run(self._excl_fpath, res_fpath,
+                                dset=self._tm_dset)
+            except Exception as e:
+                msg = ('TechMapping process failed. Received the '
+                       'following error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg) from e
+
+    def summarize(self, gen_fpath, args=None, max_workers=None,
+                  sites_per_worker=100):
         """
         Get the supply curve points aggregation summary
 
         Parameters
         ----------
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -1053,9 +1210,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             max_workers = os.cpu_count()
 
         if max_workers == 1:
+            gen_index = self._parse_gen_index(gen_fpath)
             afk = self._area_filter_kernel
-            summary = self.run_serial(self._excl_fpath, self._gen_fpath,
-                                      self._tm_dset, self._gen_index,
+            summary = self.run_serial(self._excl_fpath, gen_fpath,
+                                      self._tm_dset, gen_index,
                                       econ_fpath=self._econ_fpath,
                                       excl_dict=self._excl_dict,
                                       inclusion_mask=self._inclusion_mask,
@@ -1076,7 +1234,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       cap_cost_scale=self._cap_cost_scale,
                                       recalc_lcoe=self._recalc_lcoe)
         else:
-            summary = self.run_parallel(args=args,
+            summary = self.run_parallel(gen_fpath=gen_fpath, args=args,
                                         max_workers=max_workers,
                                         sites_per_worker=sites_per_worker)
 
@@ -1090,138 +1248,61 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    @classmethod
-    def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
-                excl_dict=None, area_filter_kernel='queen', min_area=None,
-                resolution=64, gids=None, pre_extract_inclusions=False,
-                sites_per_worker=100, res_class_dset=None, res_class_bins=None,
-                cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                h5_dsets=None, data_layers=None, power_density=None,
-                friction_fpath=None, friction_dset=None,
-                args=None, excl_area=None, max_workers=None,
-                cap_cost_scale=None, recalc_lcoe=True):
-        """Get the supply curve points aggregation summary.
+    def run(self, out_fpath, gen_fpath=None, res_fpath=None, args=None,
+            max_workers=None, sites_per_worker=100):
+        """Run a supply curve aggregation.
 
         Parameters
         ----------
-        excl_fpath : str | list | tuple
-            Filepath to exclusions h5 with techmap dataset
-            (can be one or more filepaths).
-        gen_fpath : str
-            Filepath to .h5 reV generation output results.
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        econ_fpath : str | None
-            Filepath to .h5 reV econ output results. This is optional and only
-            used if the lcoe_dset is not present in the gen_fpath file.
-        excl_dict : dict | None
-            Dictionary of exclusion keyword arugments of the format
-            {layer_dset_name: {kwarg: value}} where layer_dset_name is a
-            dataset in the exclusion h5 file and kwarg is a keyword argument to
-            the reV.supply_curve.exclusions.LayerMask class.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
-            List of supply curve point gids to get summary for (can use to
-            subset if running in parallel), or None for all gids in the SC
-            extent, by default None
-        pre_extract_inclusions : bool, optional
-            Optional flag to pre-extract/compute the inclusion mask from the
-            provided excl_dict, by default False. Typically faster to compute
-            the inclusion mask on the fly with parallel workers.
-        sites_per_worker : int
-            Number of sc_points to summarize on each worker, by default 100
-        res_class_dset : str | None
-            Dataset in the generation file dictating resource classes.
-            None if no resource classes.
-        res_class_bins : list | None
-            List of floats or ints (bin edges) to convert to list of two-entry
-            bin boundaries or list of two-entry bind boundaries in final format
-        cf_dset : str
-            Dataset name from f_gen containing capacity factor mean values.
-        lcoe_dset : str
-            Dataset name from f_gen containing LCOE mean values.
-        h5_dsets : list | None
-            Optional list of additional datasets from the source h5 gen/econ
-            files to aggregate.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
-        power_density : float | str | None
-            Power density in MW/km2 or filepath to variable power
-            density file. None will attempt to infer a constant
-            power density from the generation meta data technology.
-            Variable power density csvs must have "gid" and "power_density"
-            columns where gid is the resource gid (typically wtk or nsrdb gid)
-            and the power_density column is in MW/km2.
-        friction_fpath : str | None
-            Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset. The friction data must be the
-            same shape as the exclusions. Friction input creates a new output
-            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
-            friction data.
-        friction_dset : str | None
-            Dataset name in friction_fpath for the friction surface data.
-            Must be paired with friction_fpath. Must be same shape as
-            exclusions.
-        args : tuple | list | None
-            List of summary arguments to include. None defaults to all
-            available args defined in the class attr.
-        excl_area : float | None
-            Area of an exclusion pixel in km2. None will try to infer the area
-            from the profile transform attribute in excl_fpath.
-        max_workers : int | None, optional
-            Number of cores to run summary on. None is all
-            available cpus, by default None
-        cap_cost_scale : str | None
-            Optional LCOE scaling equation to implement "economies of scale".
-            Equations must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the names of the columns in the reV
-            supply curve aggregation table.
-        recalc_lcoe : bool
-            Flag to re-calculate the LCOE from the multi-year mean capacity
-            factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
-            fixed_charge_rate, capital_cost, fixed_operating_cost,
-            and variable_operating_cost.
+        gen_fpath : str, optional
+            Filepath to HDF5 file with ``reV`` generation output
+            results. If ``None``, a simple aggregation without any
+            generation, resource, or cost data is performed.
+            By default, ``None``.
+        res_fpath : str, optional
+            Filepath to HDF5 resource file (e.g. WTK or NSRDB). This
+            input is required if techmap dset is to be created or if
+            ``gen_fpath is`` is ``None``. By default, ``None``.
+        args : tuple | list, optional
+            List of columns to include in summary output table. ``None``
+            defaults to all available args defined in the
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            documentation. By default, ``None``.
+        max_workers : int, optional
+            Number of cores to run summary on. ``None`` is all available
+            CPUs. By default, ``None``.
+        sites_per_worker : int, optional
+            Number of sc_points to summarize on each worker.
+            By default, ``100``.
 
         Returns
         -------
-        summary : DataFrame
-            Summary of the SC points.
+        str
+            Path to output CSV file containing supply curve aggregation.
         """
 
-        agg = cls(excl_fpath, gen_fpath, tm_dset,
-                  econ_fpath=econ_fpath,
-                  excl_dict=excl_dict,
-                  res_class_dset=res_class_dset,
-                  res_class_bins=res_class_bins,
-                  cf_dset=cf_dset,
-                  lcoe_dset=lcoe_dset,
-                  h5_dsets=h5_dsets,
-                  data_layers=data_layers,
-                  resolution=resolution,
-                  power_density=power_density,
-                  gids=gids,
-                  pre_extract_inclusions=pre_extract_inclusions,
-                  friction_fpath=friction_fpath,
-                  friction_dset=friction_dset,
-                  area_filter_kernel=area_filter_kernel,
-                  min_area=min_area,
-                  excl_area=excl_area,
-                  cap_cost_scale=cap_cost_scale,
-                  recalc_lcoe=recalc_lcoe)
+        self._validate_tech_mapping(res_fpath)
 
-        summary = agg.summarize(args=args,
-                                max_workers=max_workers,
-                                sites_per_worker=sites_per_worker)
+        if gen_fpath is None:
+            out = Aggregation.run(
+                self._excl_fpath, res_fpath, self._tm_dset,
+                excl_dict=self._excl_dict,
+                resolution=self._resolution,
+                excl_area=self._excl_area,
+                area_filter_kernel=self._area_filter_kernel,
+                min_area=self._min_area,
+                pre_extract_inclusions=self._pre_extract_inclusions,
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker)
+            summary = out['meta']
+        else:
+            summary = self.summarize(gen_fpath=gen_fpath, args=args,
+                                     max_workers=max_workers,
+                                     sites_per_worker=sites_per_worker)
 
-        return summary
+        if not out_fpath.endswith(".csv"):
+            out_fpath = '{}.csv'.format(out_fpath)
+
+        summary.to_csv(out_fpath)
+
+        return out_fpath

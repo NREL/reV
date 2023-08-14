@@ -71,15 +71,15 @@ def test_agg_friction(gid):
     warnings.filterwarnings('ignore')
 
     for gid in [100, 114, 130, 181]:
-        s = SupplyCurveAggregation.summary(EXCL_FPATH, GEN, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
-                                           data_layers=DATA_LAYERS,
-                                           resolution=RESOLUTION,
-                                           gids=[gid], max_workers=1,
-                                           friction_fpath=FRICTION_FPATH,
-                                           friction_dset=FRICTION_DSET)
+        sca = SupplyCurveAggregation(EXCL_FPATH, TM_DSET, excl_dict=EXCL_DICT,
+                                     res_class_dset=RES_CLASS_DSET,
+                                     res_class_bins=RES_CLASS_BINS,
+                                     data_layers=DATA_LAYERS,
+                                     resolution=RESOLUTION,
+                                     gids=[gid],
+                                     friction_fpath=FRICTION_FPATH,
+                                     friction_dset=FRICTION_DSET)
+        s = sca.summarize(GEN, max_workers=1)
 
         row_slice, col_slice = EXTENT.get_excl_slices(gid)
 
@@ -99,6 +99,7 @@ def test_agg_friction(gid):
                            s['mean_lcoe'] * mean_friction), m
 
 
+# pylint: disable=no-member
 def make_friction_file():
     """Script to make a test friction file"""
     import matplotlib.pyplot as plt

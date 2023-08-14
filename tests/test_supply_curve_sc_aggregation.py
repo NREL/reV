@@ -16,15 +16,13 @@ import shutil
 import h5py
 import json
 import shutil
-from click.testing import CliRunner
 import traceback
 
 from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
+from reV.utilities import ModuleName
 from reV import TESTDATADIR
-
 from rex import Outputs
 from rex.utilities.loggers import LOGGERS
 
@@ -57,12 +55,11 @@ def test_agg_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all resource gids were found"""
 
-    summary = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                             excl_dict=EXCL_DICT,
-                                             res_class_dset=None,
-                                             res_class_bins=None,
-                                             data_layers=DATA_LAYERS,
-                                             resolution=resolution)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=None, res_class_bins=None,
+                                 data_layers=DATA_LAYERS,
+                                 resolution=resolution)
+    summary = sca.summarize(GEN)
 
     all_res_gids = []
     for gids in summary['res_gids']:
@@ -79,20 +76,13 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                                    excl_dict=EXCL_DICT,
-                                                    res_class_dset=None,
-                                                    res_class_bins=None,
-                                                    resolution=resolution,
-                                                    gids=gids, max_workers=1)
-    summary_parallel = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                                      excl_dict=EXCL_DICT,
-                                                      res_class_dset=None,
-                                                      res_class_bins=None,
-                                                      resolution=resolution,
-                                                      gids=gids,
-                                                      max_workers=None,
-                                                      sites_per_worker=10)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=None, res_class_bins=None,
+                                 data_layers=DATA_LAYERS, gids=gids,
+                                 resolution=resolution)
+    summary_serial = sca.summarize(GEN, max_workers=1)
+    summary_parallel = sca.summarize(GEN, max_workers=None,
+                                     sites_per_worker=10)
 
     assert all(summary_serial == summary_parallel)
 
@@ -100,30 +90,29 @@ def test_parallel_agg(resolution=64):
 def test_agg_summary():
     """Test the aggregation summary method against a baseline file."""
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS,
-                                       max_workers=1)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS)
+    summary = sca.summarize(GEN, max_workers=1)
 
     if not os.path.exists(AGG_BASELINE):
-        s.to_csv(AGG_BASELINE)
+        summary.to_csv(AGG_BASELINE)
         raise Exception('Aggregation summary baseline file did not exist. '
                         'Created: {}'.format(AGG_BASELINE))
 
     else:
         for c in ['res_gids', 'gen_gids', 'gid_counts']:
-            s[c] = s[c].astype(str)
+            summary[c] = summary[c].astype(str)
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
-        s = s.fillna('None')
+        summary = summary.fillna('None')
         s_baseline = s_baseline.fillna('None')
 
-        assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
+        assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
 
-    assert "capacity_ac" not in s
+    assert "capacity_ac" not in summary
 
 
 @pytest.mark.parametrize("pd", [None, 45])
@@ -139,15 +128,15 @@ def test_agg_summary_solar_ac(pd):
         with Outputs(gen, "r") as out:
             assert "dc_ac_ratio" in out.datasets
 
-        s = SupplyCurveAggregation.summary(EXCL, gen, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=RES_CLASS_DSET,
-                                           res_class_bins=RES_CLASS_BINS,
-                                           data_layers=DATA_LAYERS,
-                                           max_workers=1,
-                                           power_density=pd)
-    assert "capacity_ac" in s
-    assert np.allclose(s["capacity"] / 1.3, s["capacity_ac"])
+        sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                     res_class_dset=RES_CLASS_DSET,
+                                     res_class_bins=RES_CLASS_BINS,
+                                     data_layers=DATA_LAYERS,
+                                     power_density=pd)
+        summary = sca.summarize(gen, max_workers=1)
+
+    assert "capacity_ac" in summary
+    assert np.allclose(summary["capacity"] / 1.3, summary["capacity_ac"])
 
 
 def test_multi_file_excl():
@@ -177,12 +166,11 @@ def test_multi_file_excl():
                 f[test_dset].attrs[k] = v
             del f['ri_srtm_slope']
 
-        summary = SupplyCurveAggregation.summary((excl_temp_1, excl_temp_2),
-                                                 GEN, TM_DSET,
-                                                 excl_dict=excl_dict,
-                                                 res_class_dset=RES_CLASS_DSET,
-                                                 res_class_bins=RES_CLASS_BINS,
-                                                 )
+        sca = SupplyCurveAggregation((excl_temp_1, excl_temp_2), TM_DSET,
+                                     excl_dict=excl_dict,
+                                     res_class_dset=RES_CLASS_DSET,
+                                     res_class_bins=RES_CLASS_BINS)
+        summary = sca.summarize(GEN)
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
@@ -196,73 +184,70 @@ def test_multi_file_excl():
 def test_pre_extract_inclusions(pre_extract):
     """Test the aggregation summary w/ and w/out pre-extracting inclusions"""
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS,
-                                       max_workers=1,
-                                       pre_extract_inclusions=pre_extract)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS,
+                                 pre_extract_inclusions=pre_extract)
+    summary = sca.summarize(GEN, max_workers=1)
 
     if not os.path.exists(AGG_BASELINE):
-        s.to_csv(AGG_BASELINE)
+        summary.to_csv(AGG_BASELINE)
         raise Exception('Aggregation summary baseline file did not exist. '
                         'Created: {}'.format(AGG_BASELINE))
 
     else:
         for c in ['res_gids', 'gen_gids', 'gid_counts']:
-            s[c] = s[c].astype(str)
+            summary[c] = summary[c].astype(str)
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
-        s = s.fillna('None')
+        summary = summary.fillna('None')
         s_baseline = s_baseline.fillna('None')
 
-        assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
+        assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
 
 
 def test_agg_gen_econ():
     """Test the aggregation summary method with separate gen and econ
     input files."""
 
-    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                        excl_dict=EXCL_DICT,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        max_workers=1)
-    s2 = SupplyCurveAggregation.summary(EXCL, ONLY_GEN, TM_DSET,
-                                        econ_fpath=ONLY_ECON,
-                                        excl_dict=EXCL_DICT,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        max_workers=1)
-    assert_frame_equal(s1, s2)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS)
+    summary_base = sca.summarize(GEN, max_workers=1)
+
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, econ_fpath=ONLY_ECON,
+                                 excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS)
+    summary_econ = sca.summarize(ONLY_GEN, max_workers=1)
+
+    assert_frame_equal(summary_base, summary_econ)
 
 
 def test_agg_extra_dsets():
     """Test aggregation with extra datasets to aggregate."""
     h5_dsets = ['lcoe_fcr-2012', 'lcoe_fcr-2013', 'lcoe_fcr-stdev']
-    s = SupplyCurveAggregation.summary(EXCL, ONLY_GEN, TM_DSET,
-                                       h5_dsets=h5_dsets,
-                                       econ_fpath=ONLY_ECON,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS,
-                                       max_workers=1)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, h5_dsets=h5_dsets,
+                                 econ_fpath=ONLY_ECON, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS)
+    summary = sca.summarize(ONLY_GEN, max_workers=1)
 
     for dset in h5_dsets:
-        assert 'mean_{}'.format(dset) in s.columns
+        assert 'mean_{}'.format(dset) in summary.columns
 
-    check = s['mean_lcoe_fcr-2012'] == s['mean_lcoe']
+    check = summary['mean_lcoe_fcr-2012'] == summary['mean_lcoe']
     assert not any(check)
-    check = s['mean_lcoe_fcr-2013'] == s['mean_lcoe']
+    check = summary['mean_lcoe_fcr-2013'] == summary['mean_lcoe']
     assert not any(check)
 
-    avg = (s['mean_lcoe_fcr-2012'] + s['mean_lcoe_fcr-2013']) / 2
-    assert np.allclose(avg.values, s['mean_lcoe'].values)
+    avg = (summary['mean_lcoe_fcr-2012'] + summary['mean_lcoe_fcr-2013']) / 2
+    assert np.allclose(avg.values, summary['mean_lcoe'].values)
 
 
 def test_agg_scalar_excl():
@@ -270,31 +255,31 @@ def test_agg_scalar_excl():
 
     gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
-    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                        excl_dict=excl_dict_1,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        max_workers=1, gids=gids_subset)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS, gids=gids_subset)
+    summary_base = sca.summarize(GEN, max_workers=1)
+
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
-    s2 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                        excl_dict=excl_dict_2,
-                                        res_class_dset=RES_CLASS_DSET,
-                                        res_class_bins=RES_CLASS_BINS,
-                                        data_layers=DATA_LAYERS,
-                                        max_workers=1, gids=gids_subset)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_2,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=DATA_LAYERS, gids=gids_subset)
+    summary_with_weights = sca.summarize(GEN, max_workers=1)
 
     dsets = ['area_sq_km', 'capacity']
     for dset in dsets:
-        diff = (s1[dset].values / s2[dset].values)
+        diff = (summary_base[dset].values / summary_with_weights[dset].values)
         msg = ('Fractional exclusions failed for {} which has values {} and {}'
-               .format(dset, s1[dset].values, s2[dset].values))
+               .format(dset, summary_base[dset].values,
+                       summary_with_weights[dset].values))
         assert all(diff == 2), msg
 
-    for i in s1.index:
-        counts_full = s1.loc[i, 'gid_counts']
-        counts_half = s2.loc[i, 'gid_counts']
+    for i in summary_base.index:
+        counts_full = summary_base.loc[i, 'gid_counts']
+        counts_half = summary_with_weights.loc[i, 'gid_counts']
 
         for j, counts in enumerate(counts_full):
             msg = ('GID counts for fractional exclusions failed for index {}!'
@@ -315,23 +300,22 @@ def test_data_layer_methods():
                    'padus': {'dset': 'ri_padus',
                              'method': 'category'}}
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
-                                       excl_dict=EXCL_DICT,
-                                       res_class_dset=RES_CLASS_DSET,
-                                       res_class_bins=RES_CLASS_BINS,
-                                       data_layers=data_layers,
-                                       max_workers=1)
+    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                 res_class_dset=RES_CLASS_DSET,
+                                 res_class_bins=RES_CLASS_BINS,
+                                 data_layers=data_layers)
+    summary = sca.summarize(GEN, max_workers=1)
 
-    for i in s.index.values:
+    for i in summary.index.values:
 
         # Check categorical data layers
-        counts = s.loc[i, 'gid_counts']
-        rr = s.loc[i, 'reeds_region']
+        counts = summary.loc[i, 'gid_counts']
+        rr = summary.loc[i, 'reeds_region']
         assert isinstance(rr, str)
         rr = json.loads(rr)
         assert isinstance(rr, dict)
         rr_sum = sum(list(rr.values()))
-        padus = s.loc[i, 'padus']
+        padus = summary.loc[i, 'padus']
         assert isinstance(padus, str)
         padus = json.loads(padus)
         assert isinstance(padus, dict)
@@ -341,14 +325,14 @@ def test_data_layer_methods():
             assert padus_sum >= rr_sum
         except AssertionError:
             e = ('Categorical data layer aggregation failed:\n{}'
-                 .format(s.loc[i]))
+                 .format(summary.loc[i]))
             raise RuntimeError(e)
 
         # Check min/mean/max of the same data layer
-        n = s.loc[i, 'n_gids']
-        slope_mean = s.loc[i, 'pct_slope_mean']
-        slope_max = s.loc[i, 'pct_slope_max']
-        slope_min = s.loc[i, 'pct_slope_min']
+        n = summary.loc[i, 'n_gids']
+        slope_mean = summary.loc[i, 'pct_slope_mean']
+        slope_max = summary.loc[i, 'pct_slope_max']
+        slope_min = summary.loc[i, 'pct_slope_min']
         if n > 3:  # sc points with <= 3 90m pixels can have min == mean == max
             assert slope_min < slope_mean < slope_max
         else:
@@ -404,28 +388,26 @@ def test_recalc_lcoe():
                     'fixed_charge_rate', 'variable_operating_cost',
                     'system_capacity')
 
-        base = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                              excl_dict=EXCL_DICT,
-                                              res_class_dset=None,
-                                              res_class_bins=None,
-                                              data_layers=DATA_LAYERS,
-                                              h5_dsets=h5_dsets,
-                                              gids=list(np.arange(10)),
-                                              max_workers=1, recalc_lcoe=False)
+        base = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                      res_class_dset=None, res_class_bins=None,
+                                      data_layers=DATA_LAYERS,
+                                      h5_dsets=h5_dsets,
+                                      gids=list(np.arange(10)),
+                                      recalc_lcoe=False)
+        summary_base = base.summarize(gen_temp, max_workers=1)
 
-        s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
-                                           excl_dict=EXCL_DICT,
-                                           res_class_dset=None,
-                                           res_class_bins=None,
-                                           data_layers=DATA_LAYERS,
-                                           h5_dsets=h5_dsets,
-                                           gids=list(np.arange(10)),
-                                           max_workers=1, recalc_lcoe=True)
+        sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                     res_class_dset=None, res_class_bins=None,
+                                     data_layers=DATA_LAYERS,
+                                     h5_dsets=h5_dsets,
+                                     gids=list(np.arange(10)),
+                                     recalc_lcoe=True)
+        summary = sca.summarize(gen_temp, max_workers=1)
 
-    assert not np.allclose(base['mean_lcoe'], s['mean_lcoe'])
+    assert not np.allclose(summary_base['mean_lcoe'], summary['mean_lcoe'])
 
 
-def test_cli_basic_agg():
+def test_cli_basic_agg(runner, clear_loggers):
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'excl.h5')
         shutil.copy(EXCL, excl_fp)
@@ -448,13 +430,9 @@ def test_cli_basic_agg():
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
-        runner = CliRunner()
-        result = runner.invoke(main, ['-c', config_path,
-                                      'supply-curve-aggregation'])
-
-        # windows doesnt release log file handler
-        # unless we clear log handlers from rex
-        LOGGERS.clear()
+        result = runner.invoke(main, [ModuleName.SUPPLY_CURVE_AGGREGATION,
+                                      '-c', config_path])
+        clear_loggers()
 
         if result.exit_code != 0:
             msg = ('Failed with error {}'
@@ -463,11 +441,9 @@ def test_cli_basic_agg():
 
         fn_list = os.listdir(td)
         dirname = os.path.basename(td)
-        status_fn = ('jobstatus_{}_{}.json'
-                     .format(dirname, SupplyCurveAggregationConfig.NAME))
         out_csv_fn = ('{}_{}.csv'
-                      .format(dirname, SupplyCurveAggregationConfig.NAME))
-        assert status_fn in fn_list
+                      .format(dirname, ModuleName.SUPPLY_CURVE_AGGREGATION)
+                      .replace("-", "_"))
         assert out_csv_fn in fn_list
 
 

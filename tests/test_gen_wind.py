@@ -90,9 +90,9 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'windpower', res_file=res_file)
-    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3,
-                      out_fpath=None)
+    gen = Gen('windpower', rev2_points, sam_files, res_file,
+              sites_per_worker=3)
+    gen.run(max_workers=max_workers)
     gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
@@ -140,19 +140,19 @@ def test_gid_map(gid_map):
     output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
                       'monthly_energy')
 
-    baseline = Gen.reV_run('windpower', points_base, sam_files, res_file,
-                           max_workers=max_workers, sites_per_worker=3,
-                           out_fpath=None, output_request=output_request)
+    baseline = Gen('windpower', points_base, sam_files, res_file,
+                   sites_per_worker=3, output_request=output_request)
+    baseline.run(max_workers=max_workers)
 
-    map_test = Gen.reV_run('windpower', points_test, sam_files, res_file,
-                           max_workers=max_workers, sites_per_worker=3,
-                           out_fpath=None, output_request=output_request,
-                           gid_map=gid_map)
+    map_test = Gen('windpower', points_test, sam_files, res_file,
+                   sites_per_worker=3, output_request=output_request,
+                   gid_map=gid_map)
+    map_test.run(max_workers=max_workers)
 
-    write_gid_test = Gen.reV_run('windpower', points_test, sam_files, res_file,
-                                 max_workers=max_workers, sites_per_worker=3,
-                                 out_fpath=None, output_request=output_request,
-                                 gid_map=gid_map, write_mapped_gids=True)
+    write_gid_test = Gen('windpower', points_test, sam_files, res_file,
+                         sites_per_worker=3, output_request=output_request,
+                         gid_map=gid_map, write_mapped_gids=True)
+    write_gid_test.run(max_workers=max_workers)
 
     for key in output_request:
         assert np.allclose(map_test.out[key], write_gid_test.out[key])
@@ -202,9 +202,9 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     output_request = ('cf_mean', 'cf_profile', 'monthly_energy')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3,
-                      out_fpath=None, output_request=output_request)
+    gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
+              output_request=output_request)
+    gen.run(max_workers=max_workers)
 
     assert gen.out['cf_mean'].shape == (10, )
     assert gen.out['cf_profile'].shape == (8760, 10)
@@ -226,9 +226,9 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
     output_requests = ('cf_mean', 'windspeed')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
-                      max_workers=max_workers, sites_per_worker=3,
-                      out_fpath=None, output_request=output_requests)
+    gen = Gen('windpower', rev2_points, sam_files, res_file,
+              sites_per_worker=3, output_request=output_requests)
+    gen.run(max_workers=max_workers)
     assert 'windspeed' in gen.out
     assert gen.out['windspeed'].shape == (8760, 10)
     assert gen._out['windspeed'].max() == 2597
@@ -242,9 +242,8 @@ def test_multi_file_5min_wtk():
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
     # run reV 2.0 generation
-    gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                      max_workers=max_workers,
-                      sites_per_worker=3, out_fpath=None)
+    gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3)
+    gen.run(max_workers=max_workers)
     gen_outs = list(gen._out['cf_mean'])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
@@ -257,16 +256,15 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
 
     output_request = ('cf_mean', 'turb_generic_loss')
 
-    baseline = Gen.reV_run('windpower', points, sam_files, res_file,
-                           max_workers=max_workers, sites_per_worker=3,
-                           out_fpath=None, output_request=output_request)
+    baseline = Gen('windpower', points, sam_files, res_file,
+                   sites_per_worker=3, output_request=output_request)
+    baseline.run(max_workers=max_workers)
 
     site_data = pd.DataFrame({'gid': np.arange(2),
                               'turb_generic_loss': np.zeros(2)})
-    test = Gen.reV_run('windpower', points, sam_files, res_file,
-                       max_workers=max_workers, sites_per_worker=3,
-                       out_fpath=None, output_request=output_request,
-                       site_data=site_data)
+    test = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
+               output_request=output_request, site_data=site_data)
+    test.run(max_workers=max_workers)
 
     assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
     assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
@@ -320,10 +318,10 @@ def test_multi_resolution_wtk():
                         del f[dset]
 
         # run reV 2.0 generation
-        gen = Gen.reV_run('windpower', points, sam_files, fp_hr,
-                          lr_res_file=fp_lr,
-                          max_workers=max_workers,
-                          sites_per_worker=3, out_fpath=None)
+        gen = Gen('windpower', points, sam_files, fp_hr,
+                  low_res_resource_file=fp_lr,
+                  sites_per_worker=3)
+        gen.run(max_workers=max_workers)
         gen_outs = list(gen._out['cf_mean'])
         assert len(gen_outs) == 2
         assert np.mean(gen_outs) > 0.55
@@ -337,25 +335,26 @@ def test_wind_bias_correct():
     # run reV 2.0 generation
     points = slice(0, 10)
     pp = ProjectPoints(points, sam_files, 'windpower', res_file=res_file)
-    gen_base = Gen.reV_run('windpower', points, sam_files, res_file,
-                           output_request=('cf_mean', 'cf_profile', 'ws_mean'),
-                           max_workers=1, sites_per_worker=3, out_fpath=None)
+    gen_base = Gen('windpower', points, sam_files, res_file,
+                   output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+                   sites_per_worker=3)
+    gen_base.run(max_workers=1)
     outs_base = np.array(list(gen_base.out['cf_mean']))
 
     bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 2})
-    gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                      output_request=('cf_mean', 'cf_profile', 'ws_mean'),
-                      max_workers=1, sites_per_worker=3, out_fpath=None,
-                      bias_correct=bc_df)
+    gen = Gen('windpower', points, sam_files, res_file,
+              output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+              sites_per_worker=3, bias_correct=bc_df)
+    gen.run(max_workers=1)
     outs_bc = np.array(list(gen.out['cf_mean']))
     assert all(outs_bc > outs_base)
     assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
 
     bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -100})
-    gen = Gen.reV_run('windpower', points, sam_files, res_file,
-                      output_request=('cf_mean', 'cf_profile', 'ws_mean'),
-                      max_workers=1, sites_per_worker=3, out_fpath=None,
-                      bias_correct=bc_df)
+    gen = Gen('windpower', points, sam_files, res_file,
+              output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+              sites_per_worker=3, bias_correct=bc_df)
+    gen.run(max_workers=1)
     for k, arr in gen.out.items():
         assert (np.array(arr) == 0).all()
 

@@ -102,8 +102,9 @@ coordinates:
                              'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
-    gen = Gen.reV_run('windpower', pp, sam_file, res_file, max_workers=1,
-                      out_fpath=None, output_request=('cf_mean', 'cf_profile'))
+    gen = Gen('windpower', pp, sam_file, res_file,
+              output_request=('cf_mean', 'cf_profile'))
+    gen.run(max_workers=1)
     print(gen.out['cf_profile'])
 
     [[0.319 0.538 0.287 ... 0.496 0.579 0.486]
@@ -137,9 +138,9 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
     sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
-    gen = Gen.reV_run('pvwattsv5', pp, sam_file, res_file,
-                      max_workers=1, out_fpath=None,
-                      output_request=('cf_mean', 'cf_profile'))
+    gen = Gen('pvwattsv5', pp, sam_file, res_file,
+              output_request=('cf_mean', 'cf_profile'))
+    gen.run(max_workers=1)
     print(gen.out['cf_mean'])
 
     [0.183 0.166 0.177 0.175 0.167 0.183 0.176 0.175 0.176 0.177]
@@ -151,38 +152,6 @@ Command Line Interface (CLI)
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
-windpower
-+++++++++
-
-Compute wind capacity factors for a given set of latitude and longitude
-coordinates:
-
-.. code-block:: bash
-
-    out_file='./project_points.csv'
-
-    TESTDATADIR=reV/tests/data
-    res_file=/nrel/wtk/conus/wtk_conus_2012.h5
-    sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
-
-    reV-gen direct --tech=windpower --res_file=${res_file} --sam_files=${sam_file} --lat_lon_coords 41.77 -71.74 local
-
-pvwatts
-+++++++
-
-NOTE: ``pvwattsv5`` and ``pvwattsv7`` are both available from reV.
-
-Compute pvcapacity factors for all resource gids in Rhode Island:
-
-.. code-block:: bash
-
-    out_file='./project_points.csv'
-
-    TESTDATADIR=../tests/data
-    res_file=/nrel/nsrdb/v3/nsrdb_2012.h5
-    sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
-
-    reV-gen direct --tech=pvwattsv5 --res_file=${res_file} --sam_files=${sam_file} --region="Rhode Island" --region_col=state local
 
 Setting up an HSDS Local Server on AWS EC2
 ------------------------------------------

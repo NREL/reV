@@ -22,7 +22,8 @@ following:
 
     "execution_control": {
         "allocation": "rev",
-        "feature": "--qos=high -p bigmem",
+        "feature": "-p bigmem",
+        "qos": "high",
         "nodes": 5,
         "option": "eagle",
         "walltime": 10.0
@@ -35,7 +36,7 @@ should look like the following:
 
     "execution_control": {
         "allocation": "rev",
-        "feature": "--qos=high",
+        "qos": "high",
         "memory": 192,
         "nodes": 5,
         "option": "eagle",

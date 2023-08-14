@@ -176,7 +176,7 @@ def test_rev_windbos_sales():
                        rtol=RTOL)
 
 
-def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
+def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
     with tempfile.TemporaryDirectory() as td:
@@ -184,22 +184,21 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         sam_files = os.path.join(TESTDATADIR, 'SAM/i_singleowner_windbos.json')
         res_file = os.path.join(TESTDATADIR,
                                 'wtk/ri_100_wtk_{}.h5'.format(year))
-        fn_gen = 'windbos_gen_{}.h5'.format(year)
+        fn_gen = 'windbos_generation_{}.h5'.format(year)
         cf_file = os.path.join(td, fn_gen)
 
         # run reV 2.0 generation
-        Gen.reV_run('windpower', points, sam_files, res_file,
-                    output_request=('cf_mean', 'cf_profile'),
-                    max_workers=max_workers, sites_per_worker=3,
-                    out_fpath=cf_file)
+        gen = Gen('windpower', points, sam_files, res_file,
+                  output_request=('cf_mean', 'cf_profile'),
+                  sites_per_worker=3)
+        gen.run(max_workers=max_workers, out_fpath=cf_file)
 
         econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
                      'project_return_aftertax_npv', 'total_installed_cost',
                      'turbine_cost', 'sales_tax_cost', 'bos_cost')
-        e = Econ.reV_run(points, sam_files, cf_file,
-                         year=year, site_data=None, output_request=econ_outs,
-                         max_workers=max_workers, sites_per_worker=3,
-                         out_fpath=None)
+        e = Econ(points, sam_files, cf_file, site_data=None,
+                 output_request=econ_outs, sites_per_worker=3)
+        e.run(max_workers=max_workers)
 
         for k in econ_outs:
             msg = 'Failed for {}'.format(k)
@@ -209,7 +208,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         return e
 
 
-def test_rev_run_bos(points=slice(0, 5), max_workers=1):
+def test_run_bos(points=slice(0, 5), max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
 
@@ -220,11 +219,9 @@ def test_rev_run_bos(points=slice(0, 5), max_workers=1):
 
     econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',
                  'bos_cost')
-    e = Econ.reV_run(points, sam_files, None,
-                     year=None, site_data=site_data,
-                     output_request=econ_outs,
-                     max_workers=max_workers, sites_per_worker=3,
-                     out_fpath=None)
+    e = Econ(points, sam_files, None, site_data=site_data,
+             output_request=econ_outs, sites_per_worker=3)
+    e.run(max_workers=max_workers)
 
     for k in econ_outs:
         check = np.allclose(e.out[k], BASELINE_SITE_BOS[k],
