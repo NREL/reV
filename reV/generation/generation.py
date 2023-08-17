@@ -85,12 +85,17 @@ class Gen(BaseGen):
         ``reV`` generation analysis runs SAM simulations by piping in
         renewable energy resource data (usually from the NSRDB or WTK),
         loading the SAM config, and then executing the PySAM compute
-        module for a given technology. If economic parameters are
-        supplied, you can bundle a "follow-on" econ calculation by
-        just adding the desired econ output keys to the `output_request`
-        input. You can request ``reV`` to run the analysis for one or
-        more "sites", which correspond to the meta indices in the
-        resource data (also commonly called the ``gid's``).
+        module for a given technology. See the documentation for the
+        ``reV`` SAM class (e.g. :class:`reV.SAM.generation.WindPower`,
+        :class:`reV.SAM.generation.PvWattsv8`,
+        :class:`reV.SAM.generation.Geothermal`, etc.) for info on the
+        allowed and/or required SAM config file inputs. If economic
+        parameters are supplied in the SAM config, then you can bundle a
+        "follow-on" econ calculation by just adding the desired econ
+        output keys to the `output_request`. You can request ``reV`` to '
+        run the analysis for one or more "sites", which correspond to
+        the meta indices in the resource data (also commonly called the
+        ``gid's``).
 
         Examples
         --------
@@ -188,8 +193,7 @@ class Gen(BaseGen):
             (e.g. :class:`reV.SAM.generation.WindPower`,
             :class:`reV.SAM.generation.PvWattsv8`,
             :class:`reV.SAM.generation.Geothermal`, etc.) for
-            documentation on the allowed and/or required SAM config file
-            inputs.
+            info on the allowed and/or required SAM config file inputs.
         resource_file : str
             Filepath to resource data. This input can be path to a
             single resource HDF5 file, a path to a directory containing

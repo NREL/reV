@@ -1227,6 +1227,12 @@ class BespokeWindPlants(BaseAggregation):
         optimization objective specified by the user. See the NREL
         publication on the bespoke methodology for more information.
 
+        See the documentation for the ``reV`` SAM class (e.g.
+        :class:`reV.SAM.generation.WindPower`,
+        :class:`reV.SAM.generation.PvWattsv8`,
+        :class:`reV.SAM.generation.Geothermal`, etc.) for info on the
+        allowed and/or required SAM config file inputs.
+
         Parameters
         ----------
         excl_fpath : str | list | tuple
@@ -1383,8 +1389,7 @@ class BespokeWindPlants(BaseAggregation):
             (e.g. :class:`reV.SAM.generation.WindPower`,
             :class:`reV.SAM.generation.PvWattsv8`,
             :class:`reV.SAM.generation.Geothermal`, etc.) for
-            documentation on the allowed and/or required SAM config file
-            inputs.
+            info on the allowed and/or required SAM config file inputs.
         min_spacing : float | int | str, optional
             Minimum spacing between turbines (in meters). This input can
             also be a string like "5x", which is interpreted as 5 times
