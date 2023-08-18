@@ -869,25 +869,26 @@ class BaseGen(ABC):
         if out_fpath is None:
             return
 
-        # ensure output file is an h5
-        if not out_fpath.endswith('.h5'):
-            out_fpath += '.h5'
+        project_dir, out_fn = os.path.split(out_fpath)
 
-        if module not in out_fpath:
+        # ensure output file is an h5
+        if not out_fn.endswith('.h5'):
+            out_fn += '.h5'
+
+        if module not in out_fn:
             extension_with_module = "_{}.h5".format(module)
-            out_fpath = out_fpath.replace(".h5", extension_with_module)
+            out_fn = out_fn.replace(".h5", extension_with_module)
 
         # ensure year is in out_fpath
-        if self.year is not None and str(self.year) not in out_fpath:
+        if self.year is not None and str(self.year) not in out_fn:
             module_with_year = "{}_{}".format(module, self.year)
-            out_fpath = out_fpath.replace(module, module_with_year)
+            out_fn = out_fn.replace(module, module_with_year)
 
         # create and use optional output dir
-        dirout = os.path.dirname(out_fpath)
-        if dirout and not os.path.exists(dirout):
-            os.makedirs(dirout)
+        if project_dir and not os.path.exists(project_dir):
+            os.makedirs(project_dir)
 
-        self._out_fpath = out_fpath
+        self._out_fpath = os.path.join(project_dir, out_fn)
         self._run_attrs['out_fpath'] = out_fpath
 
     def _init_h5(self, mode='w'):
