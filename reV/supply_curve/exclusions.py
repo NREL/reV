@@ -37,36 +37,70 @@ class LayerMask:
         Parameters
         ----------
         layer : str
-            Layer name
-        exclude_values : list
-            list of values to exclude
-            Note: User should only input exclusions OR inclusions
-        exclude_range : tuple
-            (min threshold, max threshold) for values to exclude
-        include_values : list
-            List of values to include
-        include_range : tuple
-            (min threshold, max threshold) for values to include
-        include_weights : dict
-            Include given values with given weights
-        force_include_values : list
-            Force the inclusion of the given values
-        force_include_range : list
+            Layer name.
+        exclude_values : int | float | list, optional
+            Single value or list of values to exclude.
+            By default, ``None``.
+
+            .. Important:: The keyword arguments `exclude_values`,
+              `exclude_range`, `include_values`, `include_range`,
+              `include_weights`, `force_include_values`, and
+              `force_include_range` are all mutually exclusive. Users
+              should supply value(s) for exactly one of these arguments.
+
+        exclude_range : list | tuple, optional
+            Two-item list of (min threshold, max threshold) for values
+            to exclude. Mutually exclusive with other inputs - see info
+            in the description of  `exclude_values`.
+            By default, ``None``.
+        include_values : int | float | list, optional
+            Single value or list of values to include. Mutually
+            exclusive with other inputs - see info in the description of
+            `exclude_values`. By default, ``None``.
+        include_range : list | tuple, optional
+            Two-item list of (min threshold, max threshold) for values
+            to include. Mutually exclusive with other inputs - see info
+            in the description of  `exclude_values`.
+            By default, ``None``.
+        include_weights : dict, optional
+            A dictionary of ``{value: weight}`` pairs, where the
+            ``value`` in the layer that should be included with the
+            given ``weight``. Mutually exclusive with other inputs - see
+            info in the description of  `exclude_values`.
+            By default, ``None``.
+        force_include_values : int | float | list, optional
+            Force the inclusion of the given value(s). Mutually
+            exclusive with other inputs - see info in the description of
+            `exclude_values`. By default, ``None``.
+        force_include_range : list | tuple, optional
             Force the inclusion of given values in the range
-            (min threshold, max threshold)
-        use_as_weights : bool
-            Use layer as final inclusion weights
-        weight : float
-            How much to weight the inclusion of each pixel, Default = 1
-        exclude_nodata : bool
-            Flag to exclude nodata values (nodata_value). If nodata_value=None
-            the nodata_value is infered by ExclusionMask
-        nodata_value : int | float | None
-            Nodata value for the layer. If None, it will be infered when
-            LayerMask is added to ExclusionMask
-        kwargs : dict
-            Optional inputs to maintain legacy kwargs of inclusion_* instead of
-            include_*
+            (min threshold, max threshold). Mutually exclusive with
+            other inputs - see info in the description of
+            `exclude_values`. By default, ``None``.
+        use_as_weights : bool, optional
+            Option to use layer as final inclusion weights. If ``True``,
+            all inclusion/exclusions specifications for the layer are
+            ignored and the raw values (scaled by the `weight` input)
+            are used as weights. By default, ``False``.
+        weight : float, optional
+            Weight applied to exclusion layer after it is calculated.
+            Can be used, for example, to turn a binary exclusion layer
+            (i.e. data with 0 or 1 values and ``exclude_values=1``
+            input) into partial exclusions by setting the weight to
+            a fraction (e.g. 0.5 for 50% exclusions). By default, ``1``.
+        exclude_nodata : bool, optional
+            Flag to exclude nodata values (`nodata_value`). If
+            ``nodata_value=None`` the `nodata_value` is inferred by
+            :class:`reV.supply_curve.exclusions.ExclusionMask`.
+            By default, ``False``.
+        nodata_value : int | float, optional
+            Nodata value for the layer. If ``None``, the value will be
+            inferred when LayerMask is added to
+            :class:`reV.supply_curve.exclusions.ExclusionMask`.
+            By default, ``None``.
+        **kwargs
+            Optional inputs to maintain legacy kwargs of ``inclusion_*``
+            instead of ``include_*``.
         """
 
         self._name = layer

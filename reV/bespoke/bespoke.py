@@ -1445,8 +1445,42 @@ class BespokeWindPlants(BaseAggregation):
             ``layer_dset_name`` is a dataset in the exclusion h5 file
             and the ``kwarg: value`` pair is a keyword argument to
             the :class:`reV.supply_curve.exclusions.LayerMask` class.
-            If ``None`` or empty dictionary, no exclusions are applied.
-            By default, ``None``.
+            For example::
+
+                excl_dict = {
+                    "typical_exclusion": {
+                        "exclude_values": 1,
+                    },
+                    "another_exclusion": {
+                        "exclude_values": [2, 3],
+                        "weight": 0.5
+                    },
+                    "exclusion_with_nodata": {
+                        "exclude_range": [10, 100],
+                        "exclude_nodata": True,
+                        "nodata_value": -1
+                    },
+                    "partial_setback": {
+                        "use_as_weights": 1
+                    },
+                    "height_limit": {
+                        "exclude_range": [0, 200]
+                    },
+                    "slope": {
+                        "include_range": [0, 20]
+                    },
+                    "developable_land": {
+                        "force_include_values": 1
+                    },
+                    "more_developable_land": {
+                        "force_include_range": [5, 10]
+                    },
+                    ...
+                }
+
+            Note that all the keys given in this dictionary should be
+            datasets of the `excl_fpath` file. If ``None`` or empty
+            dictionary, no exclusions are applied. By default, ``None``.
         area_filter_kernel : {"queen", "rook"}, optional
             Contiguous area filter method to use on final exclusions
             mask. The filters are defined as::
