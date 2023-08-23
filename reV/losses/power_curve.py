@@ -631,7 +631,7 @@ def adjust_power_curve(power_curve, resource_data, target_losses, site=None):
     if (resource_data.wind_speeds >= power_curve.cutoff_wind_speed).all():
         msg = ("All wind speeds for site {} are above the wind speed "
                "cutoff ({} m/s). No power curve adjustments made!"
-               .format(site,power_curve.cutoff_wind_speed))
+               .format(site, power_curve.cutoff_wind_speed))
         logger.warning(msg)
         warnings.warn(msg, reVLossesWarning)
         return power_curve
