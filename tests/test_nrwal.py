@@ -420,7 +420,6 @@ def test_nrwal_cli_csv(runner, clear_loggers):
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
 
-
         output_request = ['fixed_charge_rate', 'depth', 'total_losses',
                           'array', 'export', 'gcf_adjustment',
                           'lcoe_fcr', 'cf_mean', 'cf_profile']
