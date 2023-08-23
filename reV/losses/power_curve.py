@@ -213,7 +213,7 @@ class PowerCurveLosses:
         calculated power curves. The generation values are then compared
         in order to calculate the loss resulting from a transformed
         power curve.
-    weights :obj:`np.array`
+    weights : :obj:`np.array`
         An array of the same length as ``wind_resource`` containing
         weights to apply to each generation value calculated for the
         corresponding wind speed.
@@ -223,7 +223,7 @@ class PowerCurveLosses:
         """
         Parameters
         ----------
-        power_curve : PowerCurve
+        power_curve : :obj:`PowerCurve`
             A :obj:`PowerCurve` object representing the turbine
             power curve. This input is treated as the
             "original" power curve.
@@ -240,8 +240,9 @@ class PowerCurveLosses:
             An iterable of the same length as ``wind_resource``
             containing weights to apply to each generation value
             calculated for the corresponding wind speed.
-        site : int
-            Site number (gid) for debugging and logging
+        site : int | str, optional
+            Site number (gid) for debugging and logging.
+            By default, ``None``.
         """
 
         self.power_curve = power_curve
@@ -251,7 +252,7 @@ class PowerCurveLosses:
         else:
             self.weights = np.array(weights)
         self._power_gen = None
-        self.site = site
+        self.site = "[unknown]" if site is None else site
 
         _validate_arrays_not_empty(self,
                                    array_names=['wind_resource', 'weights'])
@@ -509,6 +510,149 @@ class PowerCurveLossesInput:
         return TRANSFORMATIONS[self._transformation_name]
 
 
+class PowerCurveWindResource:
+    """Wind resource data for calculating power curve shift."""
+
+    def __init__(self, temperature, pressure, wind_speed):
+        """Power Curve Wind Resource.
+
+        Parameters
+        ----------
+        temperature : iterable
+            An iterable representing the temperatures at a single site
+            (in C). Must be the same length as the `pressure` and
+            `wind_speed` inputs.
+        pressure : iterable
+            An iterable representing the pressures at a single site
+            (in ATM). Must be the same length as the `temperature` and
+            `wind_speed` inputs.
+        wind_speed : iterable
+            An iterable representing the wind speeds at a single site
+            (in m/s). Must be the same length as the `temperature` and
+            `pressure` inputs.
+        """
+        self._temperatures = np.array(temperature)
+        self._pressures = np.array(pressure)
+        self._wind_speeds = np.array(wind_speed)
+        self.wind_speed_weights = None
+
+    def wind_resource_for_site(self):
+        """Extract scaled wind speeds at the resource site.
+
+        Get the wind speeds for this site, accounting for the scaling
+        done in SAM [1]_ based on air pressure [2]_. These wind speeds
+        can then be used to sample the power curve and obtain generation
+        values.
+
+        Returns
+        -------
+        array-like
+            Array of scaled wind speeds.
+
+        References
+        ----------
+        .. [1] Scaling done in SAM: https://tinyurl.com/2uzjawpe
+        .. [2] SAM Wind Power Reference Manual for explanations on
+           generation and air density calculations (pp. 18):
+           https://tinyurl.com/2p8fjba6
+
+        """
+
+        pressures_pascal = self._pressures * 101325.027383  # originally in atm
+        temperatures_K = self._temperatures + 273.15  # originally in celsius
+        specific_gas_constant_dry_air = 287.058  # units: J / kg / K
+        sea_level_air_density = 1.225  # units: kg/m**3 at 15 degrees celsius
+
+        site_air_densities = pressures_pascal / (specific_gas_constant_dry_air
+                                                 * temperatures_K)
+        weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
+        return self._wind_speeds / weights
+
+    @property
+    def wind_speeds(self):
+        """:obj:`np.array`: Array of adjusted wind speeds. """
+        return self.wind_resource_for_site()
+
+
+class _PowerCurveWindDistribution:
+    """`PowerCurveWindResource` interface mocker for wind distributions. """
+
+    def __init__(self, speeds, weights):
+        """Power Curve Wind Resource for Wind Distributions.
+
+        Parameters
+        ----------
+        speeds : iterable
+            An iterable representing the wind speeds at a single site
+            (in m/s). Must be the same length as the `weights` input.
+        weights : iterable
+            An iterable representing the wind speed weights at a single
+            site. Must be the same length as the `speeds` input.
+        """
+        self.wind_speeds = np.array(speeds)
+        self.wind_speed_weights = np.array(weights)
+
+
+def adjust_power_curve(power_curve, resource_data, target_losses, site=None):
+    """Adjust power curve to account for losses.
+
+    This function computes a new power curve that accounts for the
+    loss percentage specified from the target loss.
+
+    Parameters
+    ----------
+    power_curve : :obj:`PowerCurve`
+        Power curve to be adjusted to match target losses.
+    resource_data : :obj:`PowerCurveWindResource`
+        Resource data for the site being investigated.
+    target_losses : :obj:`PowerCurveLossesInput`
+        Target loss and power curve shift info.
+    site : int | str, optional
+        Site number (gid) for debugging and logging.
+        By default, ``None``.
+
+    Returns
+    -------
+    :obj:`PowerCurve`
+        Power Curve shifted to meet the target losses. Power Curve is
+        not adjusted if all wind speeds are above the cutout or below
+        the cutin speed.
+
+    See Also
+    --------
+    :class:`PowerCurveLosses` : Power curve re-calculation.
+    """
+    site = "[unknown]" if site is None else site
+
+    if (resource_data.wind_speeds <= power_curve.cutin_wind_speed).all():
+        msg = ("All wind speeds for site {} are below the wind speed "
+               "cutin ({} m/s). No power curve adjustments made!"
+               .format(site, power_curve.cutin_wind_speed))
+        logger.warning(msg)
+        warnings.warn(msg, reVLossesWarning)
+        return power_curve
+
+    if (resource_data.wind_speeds >= power_curve.cutoff_wind_speed).all():
+        msg = ("All wind speeds for site {} are above the wind speed "
+               "cutoff ({} m/s). No power curve adjustments made!"
+               .format(site,power_curve.cutoff_wind_speed))
+        logger.warning(msg)
+        warnings.warn(msg, reVLossesWarning)
+        return power_curve
+
+    pc_losses = PowerCurveLosses(power_curve, resource_data.wind_speeds,
+                                 resource_data.wind_speed_weights, site=site)
+
+    logger.debug("Transforming power curve using the {} transformation to "
+                 "meet {}% loss target..."
+                 .format(target_losses.transformation, target_losses.target))
+
+    new_curve = pc_losses.fit(target_losses.target,
+                              target_losses.transformation)
+    logger.debug("Transformed power curve: {}".format(list(new_curve)))
+    return new_curve
+
+
 class PowerCurveLossesMixin:
     """Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.
 
@@ -534,43 +678,16 @@ class PowerCurveLossesMixin:
 
         See Also
         --------
-        :class:`PowerCurveLosses` : Power curve re-calculation.
-
+        :func:`adjust_power_curve` : Power curve shift calculation.
         """
         loss_input = self._user_power_curve_input()
         if not loss_input:
             return
 
-        wind_resource, weights = self.wind_resource_from_input()
-        power_curve = self.input_power_curve
-
-        if (wind_resource <= power_curve.cutin_wind_speed).all():
-            msg = ("All wind speeds for site {} are below the wind speed "
-                   "cutin ({} m/s). No power curve adjustments made!"
-                   .format(getattr(self, "_site", "[unknown]"),
-                           power_curve.cutin_wind_speed))
-            logger.warning(msg)
-            warnings.warn(msg, reVLossesWarning)
-            return
-
-        if (wind_resource >= power_curve.cutoff_wind_speed).all():
-            msg = ("All wind speeds for site {} are above the wind speed "
-                   "cutoff ({} m/s). No power curve adjustments made!"
-                   .format(getattr(self, "_site", "[unknown]"),
-                           power_curve.cutoff_wind_speed))
-            logger.warning(msg)
-            warnings.warn(msg, reVLossesWarning)
-            return
-
-        pc_losses = PowerCurveLosses(power_curve, wind_resource, weights,
-                                     site=getattr(self, 'site', None))
-
-        logger.debug("Transforming power curve using the {} transformation to "
-                     "meet {}% loss target..."
-                     .format(loss_input.transformation, loss_input.target))
-
-        new_curve = pc_losses.fit(loss_input.target, loss_input.transformation)
-        logger.debug("Transformed power curve: {}".format(list(new_curve)))
+        resource = self.wind_resource_from_input()
+        site = getattr(self, 'site', "[unknown]")
+        new_curve = adjust_power_curve(self.input_power_curve, resource,
+                                       loss_input, site=site)
         self.sam_sys_inputs['wind_turbine_powercurve_powerout'] = new_curve
 
     def _user_power_curve_input(self):
@@ -605,10 +722,8 @@ class PowerCurveLossesMixin:
 
         Returns
         -------
-        wind_speeds : array-like
-            Array of wind speeds.
-        weights : array-like | ``None``
-            Array of weights for corresponding wind speeds, or ``None``.
+        PowerCurveWindResource
+            Wind resource used to compute power curve shift.
 
         Raises
         ------
@@ -617,67 +732,19 @@ class PowerCurveLossesMixin:
             'wind_resource_model_choice'.
         """
         if self['wind_resource_model_choice'] == 0:
-            return self.wind_resource_for_site(), None
+            temperatures, pressures, wind_speeds, __, = map(
+                np.array, zip(*self['wind_resource_data']['data'])
+            )
+            return PowerCurveWindResource(temperatures, pressures, wind_speeds)
         elif self['wind_resource_model_choice'] == 2:
-            return self.wind_resource_from_distribution()
+            wrd = np.array(self['wind_resource_distribution'])
+            return _PowerCurveWindDistribution(wrd[:, 0], wrd[:, -1])
         else:
             msg = ("reV power curve losses cannot be used with "
                    "'wind_resource_model_choice' = {}"
                    .format(self['wind_resource_model_choice']))
             logger.error(msg)
             raise reVLossesValueError(msg)
-
-    def wind_resource_for_site(self):
-        """Extract scaled wind speeds at the site.
-
-        Get the wind resource (wind speeds) for this site, accounting
-        for the scaling done in SAM [1]_ based on air pressure [2]_.
-        These wind speeds can then be used to sample the power curve and
-        obtain generation values.
-
-        Returns
-        -------
-        array-like
-            Array of scaled wind speeds.
-
-        References
-        ----------
-        .. [1] Scaling done in SAM: https://tinyurl.com/2uzjawpe
-        .. [2] SAM Wind Power Reference Manual for explanations on
-           generation and air density calculations (pp. 18):
-           https://tinyurl.com/2p8fjba6
-
-        """
-
-        temperatures, pressures, wind_speeds, __, = map(
-            np.array, zip(*self['wind_resource_data']['data'])
-        )
-
-        pressures_pascal = pressures * 101325.0273830  # originally in atm
-        temperatures_K = temperatures + 273.15  # originally in celsius
-        specific_gas_constant_dry_air = 287.058  # units: J / kg / K
-        sea_level_air_density = 1.225  # units: kg/m**3 at 15 degrees celsius
-
-        site_air_densities = pressures_pascal / (specific_gas_constant_dry_air
-                                                 * temperatures_K)
-        weights = (sea_level_air_density / site_air_densities) ** (1 / 3)
-        return wind_speeds / weights
-
-    def wind_resource_from_distribution(self):
-        """Extract wind speeds and weights from resource distribution.
-
-        Returns
-        -------
-        wind_speeds : array-like
-            Array of wind speeds.
-        weights : array-like
-            Array of weights for corresponding wind speeds.
-        """
-
-        wrd = np.array(self['wind_resource_distribution'])
-        wind_speeds = wrd[:, 0]
-        weights = wrd[:, -1]
-        return wind_speeds, weights
 
 
 class AbstractPowerCurveTransformation(ABC):
