@@ -155,6 +155,7 @@ class RevNrwal:
         self._meta_out = None
         self._time_index = None
         self._save_raw = save_raw
+        self._nrwal_inputs = self._out = None
 
         self._nrwal_configs = {k: NrwalConfig(v) for k, v in
                                nrwal_configs.items()}
@@ -176,11 +177,6 @@ class RevNrwal:
         self._project_points = pc.project_points
 
         self._sam_sys_inputs = self._parse_sam_sys_inputs()
-        self._preflight_checks()
-        self.save_raw_dsets()
-        self._nrwal_inputs = self._get_input_data()
-        self._out = self._init_outputs()
-
         meta_gids = self.meta_source[self._meta_gid_col].values
         logger.info('Finished initializing NRWAL analysis module for "{}" '
                     '{} through {} with {} total generation points and '
@@ -638,6 +634,11 @@ class RevNrwal:
     def run_nrwal(self):
         """Run analysis via the NRWAL analysis library"""
 
+        self._preflight_checks()
+        self.save_raw_dsets()
+        self._nrwal_inputs = self._get_input_data()
+        self._out = self._init_outputs()
+
         for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
             output_mask = self._site_data['config'].values == cid
             logger.info('Running NRWAL config {} of {}: "{}" and applying '
@@ -697,7 +698,13 @@ class RevNrwal:
                                     attrs=f.attrs[dset])
 
     def write_to_gen_fpath(self):
-        """Save NRWAL outputs to input generation fpath file."""
+        """Save NRWAL outputs to input generation fpath file.
+
+        Returns
+        -------
+        str
+            Path to output file.
+        """
 
         logger.info('Writing NRWAL outputs to: {}'.format(self._gen_fpath))
         write_all = self.analysis_mask.all()
@@ -739,21 +746,99 @@ class RevNrwal:
 
         logger.info('Finished writing NRWAL outputs to: {}'
                     .format(self._gen_fpath))
+        return self._gen_fpath
 
-    def run(self):
-        """Run NRWAL analysis.
+    def write_meta_to_csv(self, out_fpath=None):
+        """Combine NRWAL outputs with meta and write to output csv.
+
+        Parameters
+        ----------
+        out_fpath : str, optional
+            Full path to output NRWAL CSV file. The file path does not
+            need to include file ending - it will be added automatically
+            if missing. If ``None``, the generation HDF5 filepath will
+            be converted to a CSV out path by replacing the ".h5" file
+            ending with ".csv". By default, ``None``.
 
         Returns
         -------
         str
             Path to output file.
         """
+        if out_fpath is None:
+            out_fpath = self._gen_fpath.replace(".h5", ".csv")
+        elif not out_fpath.endswith(".csv"):
+            out_fpath = "{}.csv".format(out_fpath)
+
+        logger.info('Writing NRWAL outputs to: {}'.format(out_fpath))
+        meta_out = self.meta_out[self.analysis_mask].copy()
+
+        for dset, arr in self._out.items():
+            if len(arr.shape) != 1 or arr.shape[0] != meta_out.shape[0]:
+                msg = ('Skipping output {!r}: shape {} cannot be combined '
+                       'with meta of shape {}!'
+                       .format(dset, arr.shape, meta_out.shape))
+                logger.warning(msg)
+                warn(msg)
+                continue
+            meta_out[dset] = arr
+
+        meta_out.to_csv(out_fpath, index=False)
+        logger.info('Finished writing NRWAL outputs to: {}'.format(out_fpath))
+        return out_fpath
+
+    def run(self, csv_output=False, out_fpath=None):
+        """Run NRWAL analysis.
+
+        Parameters
+        ----------
+        csv_output : bool, optional
+            Option to write H5 file meta + all requested outputs to
+            CSV file instead of storing in the HDF5 file directly. This
+            can be useful if the same HDF5 file is used for multiple
+            sets of NRWAL runs. Note that all requested output datasets
+            must be 1-dimensional in order to fir within the CSV output.
+            By default, ``False``.
+
+            .. Important:: This option is not compatible with
+              ``save_raw=True``. If you set ``csv_output=True``, then
+              the `save_raw` option is forced to be ``False``.
+              Therefore, make sure that you do not have any references
+              to "input_dataset_name_raw" in your NRWAL config. If you
+              need to manipulate an input dataset, save it to a
+              different output name in the NRWAL config or manually add
+              an "input_dataset_name_raw" dataset to your generation
+              HDF5 file before running NRWAL.
+
+        out_fpath : str, optional
+            This option has no effect if ``csv_output=False``.
+            Otherwise, this should be the full path to output NRWAL CSV
+            file. The file path does not need to include file ending -
+            it will be added automatically if missing. If ``None``, the
+            generation HDF5 filepath will be converted to a CSV out path
+            by replacing the ".h5" file ending with ".csv".
+            By default, ``None``.
+
+        Returns
+        -------
+        str
+            Path to output file.
+        """
+        if csv_output and self._save_raw:
+            msg = ("`save_raw` option not allowed with `csv_output`. Setting"
+                   "`save_raw=False`")
+            logger.warning(msg)
+            warn(msg)
+            self._save_raw = False
 
         if any(self.analysis_gids):
             self.run_nrwal()
             self.check_outputs()
-            self.write_to_gen_fpath()
+            if csv_output:
+                out_fp = self.write_meta_to_csv(out_fpath)
+            else:
+                out_fp = self.write_to_gen_fpath()
 
         logger.info('NRWAL module complete!')
 
-        return self._gen_fpath
+        return out_fp

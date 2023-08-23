@@ -15,6 +15,8 @@ import shutil
 import pytest
 import tempfile
 
+import pandas as pd
+
 from rex.utilities.utilities import pd_date_range
 
 from reV.cli import main
@@ -141,6 +143,66 @@ def test_nrwal():
         cf_net = gcf_adjustment[mask] * (1 - losses[mask]) * cf_mean_raw[mask]
         assert np.allclose(cf_mean_new[mask], cf_net, rtol=0.005)
         assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
+
+
+@pytest.mark.parametrize("out_fn", ["nrwal_meta.csv", None])
+def test_nrwal_csv(out_fn):
+    """Test the reV nrwal class with csv output. """
+    with tempfile.TemporaryDirectory() as td:
+        for fn in os.listdir(SOURCE_DIR):
+            shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
+
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config,
+                       'offshore': offshore_config}
+        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+
+        with Outputs(gen_fpath, 'a') as f:
+            f.time_index = pd_date_range('20100101', '20110101',
+                                         closed='right', freq='1h')
+            f._add_dset('cf_profile_raw', np.random.random(f.shape),
+                        np.uint32, attrs={'scale_factor': 1000},
+                        chunks=(None, 10))
+            f._add_dset('cf_mean_raw', np.random.random(f.shape[1]),
+                        np.uint32, attrs={'scale_factor': 1000},
+                        chunks=None)
+            f._add_dset('fixed_charge_rate',
+                        0.09 * np.ones(f.shape[1], dtype=np.float32),
+                        np.float32, attrs={'scale_factor': 1},
+                        chunks=None)
+
+        compatible = ['depth', 'total_losses', 'array', 'export',
+                      'gcf_adjustment', 'fixed_charge_rate', 'lcoe_fcr',
+                      'cf_mean']
+        incompatible = ['cf_profile']
+        output_request = compatible + incompatible
+
+        with pytest.warns(Warning) as record:
+            rev_nrwal = RevNrwal(gen_fpath, site_data, sam_configs,
+                                 nrwal_configs, output_request,
+                                 site_meta_cols=['depth'])
+            out_fpath = os.path.join(td, out_fn) if out_fn else None
+            out_fpath = rev_nrwal.run(csv_output=True, out_fpath=out_fpath)
+
+        expected_message_out = ["`save_raw` option not allowed with "
+                                "`csv_output`"]
+        for r, m in zip(record, expected_message_out):
+            warn_msg = r.message.args[0]
+            assert m in warn_msg
+
+        out_fn = out_fn or "gen_2010_node00.csv"
+        expected_out_fpath = os.path.join(td, out_fn)
+        assert expected_out_fpath == out_fpath
+        assert out_fn in os.listdir(td)
+
+        new_data = pd.read_csv(out_fpath)
+        for col in compatible:
+            assert col in new_data
+        for col in incompatible:
+            assert col not in new_data
 
 
 def test_nrwal_constant_eq_output_request():
@@ -324,6 +386,77 @@ def test_nrwal_cli(runner, clear_loggers):
         cf_net = gcf_adjustment[mask] * (1 - losses[mask]) * cf_mean_raw[mask]
         assert np.allclose(cf_mean_new[mask], cf_net, rtol=0.005)
         assert np.allclose(cf_mean_new[~mask], cf_mean_raw[~mask])
+
+        clear_loggers()
+
+
+def test_nrwal_cli_csv(runner, clear_loggers):
+    """Test the reV nrwal module, calculating offshore wind lcoe and losses
+    from reV generation outputs and using the NRWAL library and saving outputs
+    to CSV file"""
+    with tempfile.TemporaryDirectory() as td:
+        for fn in os.listdir(SOURCE_DIR):
+            shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
+
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config,
+                       'offshore': offshore_config}
+        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+
+        with Outputs(gen_fpath, 'a') as f:
+            f.time_index = pd_date_range('20100101', '20110101',
+                                         closed='right', freq='1h')
+            f._add_dset('cf_profile_raw', np.random.random(f.shape),
+                        np.uint32, attrs={'scale_factor': 1000},
+                        chunks=(None, 10))
+            f._add_dset('cf_mean_raw', np.random.random(f.shape[1]),
+                        np.uint32, attrs={'scale_factor': 1000},
+                        chunks=None)
+            f._add_dset('fixed_charge_rate',
+                        0.09 * np.ones(f.shape[1], dtype=np.float32),
+                        np.float32, attrs={'scale_factor': 1},
+                        chunks=None)
+
+
+        output_request = ['fixed_charge_rate', 'depth', 'total_losses',
+                          'array', 'export', 'gcf_adjustment',
+                          'lcoe_fcr', 'cf_mean', 'cf_profile']
+
+        config = {
+            "execution_control": {
+                "nodes": 1,
+                "option": "local",
+            },
+            "log_level": "INFO",
+            "log_directory": td,
+            "gen_fpath": gen_fpath,
+            "site_data": site_data,
+            "sam_files": sam_configs,
+            "nrwal_configs": nrwal_configs,
+            "output_request": output_request,
+            'site_meta_cols': ['depth'],
+            "csv_output": True
+        }
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, [str(ModuleName.NRWAL),
+                                      '-c', config_path])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        out_fn = "{}_{}.csv".format(os.path.basename(td), ModuleName.NRWAL)
+        assert out_fn in os.listdir(td)
+        new_data = pd.read_csv(os.path.join(td, out_fn))
+        for col in output_request[:-1]:
+            assert col in new_data
+        assert 'cf_profile' not in new_data
 
         clear_loggers()
 
