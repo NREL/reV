@@ -143,14 +143,16 @@ class Gen(BaseGen):
             should be lower-cased with spaces and underscores removed.
         project_points : int | list | tuple | str | dict | pd.DataFrame | slice
             Input specifying which sites to process. A single integer
-            representing the GID of a site may be specified to evaluate
-            reV at a single location. A list or tuple of integers
-            (or slice) representing the GIDs of multiple sites can be
-            specified to evaluate reV at multiple specific locations.
-            A string pointing to a project points CSV file may also be
-            specified. Typically, the CSV contains two columns:
+            representing the generation GID of a site may be specified
+            to evaluate reV at a single location. A list or tuple of
+            integers (or slice) representing the generation GIDs of
+            multiple sites can be specified to evaluate reV at multiple
+            specific locations. A string pointing to a project points
+            CSV file may also be specified. Typically, the CSV contains
+            two columns:
 
-                - ``gid``: Integer specifying the GID of each site.
+                - ``gid``: Integer specifying the generation GID of each
+                  site.
                 - ``config``: Key in the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
@@ -167,6 +169,13 @@ class Gen(BaseGen):
             guidelines as the CSV input (or a dictionary that can be
             used to initialize such a DataFrame) may be used for this
             input as well.
+
+            .. Note:: By default, the generation GID of each site is
+              assumed to match the resource GID to be evaluated for that
+              site. However, unique generation GID's can be mapped to
+              non-unique resource GID's via the `gid_map` input (see the
+              documentation for `gid_map` for more details).
+
         sam_files : dict | str
             A dictionary mapping SAM input configuration ID(s) to SAM
             configuration(s). Keys are the SAM config ID(s) which
