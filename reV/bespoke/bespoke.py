@@ -1264,11 +1264,20 @@ class BespokeWindPlants(BaseAggregation):
             consideration, and its shape must be a multiple of 8760.
         tm_dset : str
             Dataset name in the `excl_fpath` file containing the
-            techmap (exclusions-to-resource mapping data). This dataset
-            uniquely couples the (typically high-resolution) exclusion
-            layers to the (typically lower-resolution) resource data,
-            and therefore should be unique for every new resource data
-            set that is paired with the exclusion data.
+            techmap (exclusions-to-resource mapping data). This data
+            layer links the supply curve GID's to the generation GID's
+            that are used to evaluate the performance metrics of each
+            wind plant. By default, the generation GID's are assumed to
+            match the resource GID's, but this mapping can be customized
+            via the `gid_map` input (see the documentation for `gid_map`
+            for more details).
+
+            .. Important:: This dataset uniquely couples the (typically
+              high-resolution) exclusion layers to the (typically
+              lower-resolution) resource data. Therefore, a separate
+              techmap must be used for every unique combination of
+              resource/exclusion data.
+
         objective_function : str
             The objective function of the optimization written out as a
             string. This expression should compute the objective to be

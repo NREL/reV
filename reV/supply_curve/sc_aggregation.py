@@ -257,17 +257,23 @@ class SupplyCurveAggregation(BaseAggregation):
             input file).
         tm_dset : str
             Dataset name in the `excl_fpath` file containing the
-            techmap (exclusions-to-resource mapping data). This dataset
-            uniquely couples the (typically high-resolution) exclusion
-            layers to the (typically lower-resolution) resource data,
-            and therefore should be unique for every new resource data
-            set that is paired with the exclusion data. If running
-            ``reV`` from the command line, you can specify a name that
-            is not in the exclusions HDF5 file, and ``reV`` will
-            calculate the techmap for you. Note however that computing
-            the techmap and writing it to the exclusion HDF5 file is a
-            blocking operation, so you may only run a single ``reV``
-            aggregation step at a time this way.
+            techmap (exclusions-to-resource mapping data). This data
+            layer links the supply curve GID's to the generation GID's
+            that are used to evaluate performance metrics such as
+            ``mean_cf``.
+
+            .. Important:: This dataset uniquely couples the (typically
+              high-resolution) exclusion layers to the (typically
+              lower-resolution) resource data. Therefore, a separate
+              techmap must be used for every unique combination of
+              resource/exclusion data.
+
+            If running ``reV`` from the command line, you can specify a
+            name that is not in the exclusions HDF5 file, and ``reV``
+            will calculate the techmap for you. Note however that
+            computing the techmap and writing it to the exclusion HDF5
+            file is a blocking operation, so you may only run a single
+            ``reV`` aggregation step at a time this way.
         econ_fpath : str, optional
             Filepath to HDF5 file with ``reV`` econ output results
             containing an `lcoe_dset` dataset. If ``None``, `lcoe_dset`
