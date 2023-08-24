@@ -1238,14 +1238,12 @@ class BespokeWindPlants(BaseAggregation):
         excl_fpath : str | list | tuple
             Filepath to exclusions data HDF5 file. The exclusions HDF5
             file should contain the layers specified in `excl_dict`
-            and `data_layers` (though data for the latter may be
-            stored in a separate file - see the `data_layers` input
-            documentation for more details). These data layers may
-            be spread out across multiple files, in which case this
-            input should be a list or tuple of filepaths to multiple
-            exclusion HDF5 files containing the layers. Note that each
-            data layer must be uniquely defined (i.e.only appear once
-            and in a single input file).
+            and `data_layers`. These layers may also be spread out
+            across multiple HDF5 files, in which case this input should
+            be a list or tuple of filepaths pointing to the files
+            containing the layers. Note that each data layer must be
+            uniquely defined (i.e.only appear once and in a single
+            input file).
         res_fpath : str
             Filepath to wind resource data in NREL WTK format. This
             input can be path to a single resource HDF5 file or a path
@@ -1542,9 +1540,9 @@ class BespokeWindPlants(BaseAggregation):
             describing how the high-resolution data should be aggregated
             for each supply curve point. ``fpath`` is an optional key
             that can point to an HDF5 file containing the layer data. If
-            left out, the data is assumed to exist in `excl_fpath`. If
-            ``None``, no data layer aggregation is performed.
-            By default, ``None``.
+            left out, the data is assumed to exist in the file(s)
+            specified by the `excl_fpath` input. If ``None``, no data
+            layer aggregation is performed. By default, ``None``.
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from
             the `excl_dict` input. It is typically faster to compute
