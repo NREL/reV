@@ -33,13 +33,12 @@ creating a configuration file at ``~/.hscfg``:
     hs_password =
     hs_api_key = {YOUR_API_KEY_HERE}
 
-*The example API key here is for demonstration and is rate-limited per IP. To
-get your own API key, visit https://developer.nrel.gov/signup/*
+To get your own API key, visit https://developer.nrel.gov/signup/
 
-*Please note that our HSDS service is for demonstration purposes only, if you
-would like to use HSDS for production runs of reV please setup your own
-service: https://github.com/HDFGroup/hsds and point it to our public HSDS
-bucket: s3://nrel-pds-hsds*
+Please note that our HSDS service is for demonstration purposes only. The API in the example above is hosted on an NREL server and will have limits on the amount of data you can access via HSDS. It is common to get an error: ``OSError: Error retrieving data: None errors`` if you attempt to access too much data or if the server is busy. Here are two references for scaling reV using HSDS and AWS:
+
+#. `Setup your own HSDS server on your personal computer<https://nrel.github.io/rex/misc/examples.hsds.html#>`_
+#. `Run reV on the AWS Parallel Cluster Infrastructure<https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_
 
 Using HSDS with reV
 -------------------
@@ -151,12 +150,3 @@ Command Line Interface (CLI)
 `reV-gen <https://nrel.github.io/reV/_cli/reV-gen.html#rev-gen>`_
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
-
-
-Advanced HSDS Usage
--------------------
-
-The API in the example above is hosted on an NREL server and will have limits on the amount of data you can access via HSDS. It is common to get an error: ``OSError: Error retrieving data: None errors`` if you attempt to access too much data or if the server is busy. Here are two references for scaling reV using HSDS and AWS:
-
-#. `Setup your own HSDS server on your personal computer<https://nrel.github.io/rex/misc/examples.hsds.html#>`_
-#. `Run reV on the AWS Parallel Cluster Infrastructure<https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_
