@@ -95,7 +95,7 @@ class ExclusionLayers:
                 logger.error(msg)
                 raise MultiFileExclusionError(msg)
 
-        check_attrs = ('height', 'width', 'crs', 'transform')
+        check_attrs = ('height', 'width', 'transform')
         base_profile = {}
         for fp in self.h5_file:
             with ExclusionLayers(fp) as f:
@@ -106,22 +106,12 @@ class ExclusionLayers:
                         if attr not in base_profile or attr not in f.profile:
                             msg = ('Multi-file exclusion inputs from {} '
                                    'dont have profiles with height, width, '
-                                   'crs, and transform: {} and {}'
+                                   'or transform: {} and {}'
                                    .format(self.h5_file, base_profile,
                                            f.profile))
                             logger.error(msg)
                             raise MultiFileExclusionError(msg)
-
-                        base_attr = base_profile[attr]
-                        file_attr = f.profile[attr]
-                        attrs_are_str = (isinstance(base_attr, str)
-                                         and isinstance(file_attr, str))
-                        if attr == 'crs' and attrs_are_str:
-                            attrs_match = (set(base_attr.split(' '))
-                                           == set(file_attr.split(' ')))
-                        else:
-                            attrs_match = base_profile[attr] == f.profile[attr]
-
+                        attrs_match = base_profile[attr] == f.profile[attr]
                         if not attrs_match:
                             msg = ('Multi-file exclusion inputs from {} '
                                    'dont have matching "{}": {} and {}'
@@ -130,6 +120,34 @@ class ExclusionLayers:
                                            f.profile[attr]))
                             logger.error(msg)
                             raise MultiFileExclusionError(msg)
+
+        base_crs = None
+        for fp in self.h5_file:
+            with ExclusionLayers(fp) as f:
+                if "crs" not in f.profile:
+                    msg = (
+                        "Multi-file exclusion inputs from {} does't have "
+                        "a 'crs' attribute (coordinate reference system) in "
+                        "it's profile".format(fp)
+                    )
+                    logger.error(msg)
+                    raise MultiFileExclusionError(msg)
+                if not base_crs:
+                    base_crs = f.profile["crs"]
+                    base_fp = fp
+                else:
+                    crs = f.profile["crs"]
+                    crs_match = self.check_crs(base_crs, crs)
+                    if not crs_match:
+                        msg = (
+                            "Multi-file exclusion inputs don't have matching "
+                            "coordinate reference systems. "
+                            "{}: '{}', {}: '{}'".format(
+                                base_fp, base_crs, fp, crs
+                            )
+                        )
+                        logger.error(msg)
+                        raise MultiFileExclusionError(msg)
 
     def close(self):
         """
@@ -176,6 +194,41 @@ class ExclusionLayers:
         profile : dict
         """
         return json.loads(self.h5.global_attrs['profile'])
+
+    def check_crs(self, crs1, crs):
+        """Check if two coordinate reference systems match.
+
+        Parameters
+        ----------
+        crs1 : str
+            A string representation of a coordinate reference system. This
+            is typically in Proj4, WKT, or EPSG format.
+        crs2 : str
+            A string representation of a coordinate reference system. This
+            is typically in Proj4, WKT, or EPSG format.
+
+        Returns
+        -------
+        bool : A boolean indicating whether or not the two strings represent
+               the same coordinate reference system.
+        """
+        match = False
+        if "+" in crs1 and "+" in crs2:
+            diff = set(crs1.split()) - set(crs2.split())
+            if len(diff) == 0:
+                match = True
+            elif len(diff) == 1:
+                param = str(list(diff)[0])
+                if param.startswith("+towgs84"):
+                    transform_str = f"[{param[param.index('=') + 1:]}]"
+                    transform_params = json.loads(transform_str)
+                    if sum(transform_params) == 0:
+                        match = True
+        else:
+            if crs1 == crs2:
+                match = True
+
+        return match
 
     @property
     def crs(self):
