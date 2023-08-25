@@ -195,7 +195,7 @@ class ExclusionLayers:
         """
         return json.loads(self.h5.global_attrs['profile'])
 
-    def check_crs(self, crs1, crs):
+    def check_crs(self, crs1, crs2):
         """Check if two coordinate reference systems match.
 
         Parameters
