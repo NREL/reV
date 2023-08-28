@@ -1300,9 +1300,18 @@ class SupplyCurveAggregation(BaseAggregation):
                                      max_workers=max_workers,
                                      sites_per_worker=sites_per_worker)
 
-        if not out_fpath.endswith(".csv"):
-            out_fpath = '{}.csv'.format(out_fpath)
-
+        out_fpath = _format_sc_agg_out_fpath(out_fpath)
         summary.to_csv(out_fpath)
 
         return out_fpath
+
+
+def _format_sc_agg_out_fpath(out_fpath):
+    """Add CSV file ending and replace underscore, if necessary."""
+    if not out_fpath.endswith(".csv"):
+        out_fpath = '{}.csv'.format(out_fpath)
+
+    project_dir, out_fn = os.path.split(out_fpath)
+    out_fn = out_fn.replace("supply_curve_aggregation",
+                            "supply-curve-aggregation")
+    return os.path.join(project_dir, out_fn)
