@@ -559,7 +559,7 @@ class PowerCurveWindResource:
             pressures_pascal = self._pressures
         else:
             msg = ("Unable to determine pressure units: pressure values "
-                   "found in the range {:.2f} to {:.2f}}. Please make "
+                   "found in the range {:.2f} to {:.2f}. Please make "
                    "sure input pressures are in units of PA or ATM"
                    .format(self._pressures.min(), self._pressures.max()))
             logger.error(msg)
