@@ -886,7 +886,7 @@ class BaseGen(ABC):
 
         # create and use optional output dir
         if project_dir and not os.path.exists(project_dir):
-            os.makedirs(project_dir)
+            os.makedirs(project_dir, exist_ok=True)
 
         self._out_fpath = os.path.join(project_dir, out_fn)
         self._run_attrs['out_fpath'] = out_fpath
