@@ -553,9 +553,9 @@ class PowerCurveWindResource:
            https://tinyurl.com/2p8fjba6
 
         """
-        if self._pressures.max() < 2: # units are ATM
+        if self._pressures.max() < 2:  # units are ATM
             pressures_pascal = self._pressures * 101325.027383
-        elif self._pressures.min() > 1e4: # units are PA
+        elif self._pressures.min() > 1e4:  # units are PA
             pressures_pascal = self._pressures
         else:
             msg = ("Unable to determine pressure units: pressure values "
