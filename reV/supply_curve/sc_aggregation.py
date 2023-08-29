@@ -266,7 +266,7 @@ class SupplyCurveAggregation(BaseAggregation):
               high-resolution) exclusion layers to the (typically
               lower-resolution) resource data. Therefore, a separate
               techmap must be used for every unique combination of
-              resource/exclusion data.
+              resource and exclusion coordinates.
 
             If running ``reV`` from the command line, you can specify a
             name that is not in the exclusions HDF5 file, and ``reV``
@@ -289,7 +289,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
                 excl_dict = {
                     "typical_exclusion": {
-                        "exclude_values": 1,
+                        "exclude_values": 255,
                     },
                     "another_exclusion": {
                         "exclude_values": [2, 3],
@@ -301,7 +301,7 @@ class SupplyCurveAggregation(BaseAggregation):
                         "nodata_value": -1
                     },
                     "partial_setback": {
-                        "use_as_weights": 1
+                        "use_as_weights": True
                     },
                     "height_limit": {
                         "exclude_range": [0, 200]
@@ -310,7 +310,7 @@ class SupplyCurveAggregation(BaseAggregation):
                         "include_range": [0, 20]
                     },
                     "developable_land": {
-                        "force_include_values": 1
+                        "force_include_values": 42
                     },
                     "more_developable_land": {
                         "force_include_range": [5, 10]
