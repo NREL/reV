@@ -442,8 +442,7 @@ def test_cli_basic_agg(runner, clear_loggers):
         fn_list = os.listdir(td)
         dirname = os.path.basename(td)
         out_csv_fn = ('{}_{}.csv'
-                      .format(dirname, ModuleName.SUPPLY_CURVE_AGGREGATION)
-                      .replace("-", "_"))
+                      .format(dirname, ModuleName.SUPPLY_CURVE_AGGREGATION))
         assert out_csv_fn in fn_list
 
 
