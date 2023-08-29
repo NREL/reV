@@ -85,12 +85,17 @@ class Gen(BaseGen):
         ``reV`` generation analysis runs SAM simulations by piping in
         renewable energy resource data (usually from the NSRDB or WTK),
         loading the SAM config, and then executing the PySAM compute
-        module for a given technology. If economic parameters are
-        supplied, you can bundle a "follow-on" econ calculation by
-        just adding the desired econ output keys to the `output_request`
-        input. You can request ``reV`` to run the analysis for one or
-        more "sites", which correspond to the meta indices in the
-        resource data (also commonly called the ``gid's``).
+        module for a given technology. See the documentation for the
+        ``reV`` SAM class (e.g. :class:`reV.SAM.generation.WindPower`,
+        :class:`reV.SAM.generation.PvWattsv8`,
+        :class:`reV.SAM.generation.Geothermal`, etc.) for info on the
+        allowed and/or required SAM config file inputs. If economic
+        parameters are supplied in the SAM config, then you can bundle a
+        "follow-on" econ calculation by just adding the desired econ
+        output keys to the `output_request`. You can request ``reV`` to '
+        run the analysis for one or more "sites", which correspond to
+        the meta indices in the resource data (also commonly called the
+        ``gid's``).
 
         Examples
         --------
@@ -138,14 +143,16 @@ class Gen(BaseGen):
             should be lower-cased with spaces and underscores removed.
         project_points : int | list | tuple | str | dict | pd.DataFrame | slice
             Input specifying which sites to process. A single integer
-            representing the GID of a site may be specified to evaluate
-            reV at a single location. A list or tuple of integers
-            (or slice) representing the GIDs of multiple sites can be
-            specified to evaluate reV at multiple specific locations.
-            A string pointing to a project points CSV file may also be
-            specified. Typically, the CSV contains two columns:
+            representing the generation GID of a site may be specified
+            to evaluate reV at a single location. A list or tuple of
+            integers (or slice) representing the generation GIDs of
+            multiple sites can be specified to evaluate reV at multiple
+            specific locations. A string pointing to a project points
+            CSV file may also be specified. Typically, the CSV contains
+            two columns:
 
-                - ``gid``: Integer specifying the GID of each site.
+                - ``gid``: Integer specifying the generation GID of each
+                  site.
                 - ``config``: Key in the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
@@ -162,6 +169,13 @@ class Gen(BaseGen):
             guidelines as the CSV input (or a dictionary that can be
             used to initialize such a DataFrame) may be used for this
             input as well.
+
+            .. Note:: By default, the generation GID of each site is
+              assumed to match the resource GID to be evaluated for that
+              site. However, unique generation GID's can be mapped to
+              non-unique resource GID's via the `gid_map` input (see the
+              documentation for `gid_map` for more details).
+
         sam_files : dict | str
             A dictionary mapping SAM input configuration ID(s) to SAM
             configuration(s). Keys are the SAM config ID(s) which
@@ -188,8 +202,7 @@ class Gen(BaseGen):
             (e.g. :class:`reV.SAM.generation.WindPower`,
             :class:`reV.SAM.generation.PvWattsv8`,
             :class:`reV.SAM.generation.Geothermal`, etc.) for
-            documentation on the allowed and/or required SAM config file
-            inputs.
+            info on the allowed and/or required SAM config file inputs.
         resource_file : str
             Filepath to resource data. This input can be path to a
             single resource HDF5 file, a path to a directory containing

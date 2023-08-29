@@ -249,27 +249,31 @@ class SupplyCurveAggregation(BaseAggregation):
         excl_fpath : str | list | tuple
             Filepath to exclusions data HDF5 file. The exclusions HDF5
             file should contain the layers specified in `excl_dict`
-            and `data_layers` (though data for the latter may be
-            stored in a separate file - see the `data_layers` input
-            documentation for more details). These data layers may
-            be spread out across multiple files, in which case this
-            input should be a list or tuple of filepaths to multiple
-            exclusion HDF5 files containing the layers. Note that each
-            data layer must be uniquely defined (i.e. only appear once
-            and in a single input file).
+            and `data_layers`. These layers may also be spread out
+            across multiple HDF5 files, in which case this input should
+            be a list or tuple of filepaths pointing to the files
+            containing the layers. Note that each data layer must be
+            uniquely defined (i.e.only appear once and in a single
+            input file).
         tm_dset : str
             Dataset name in the `excl_fpath` file containing the
-            techmap (exclusions-to-resource mapping data). This dataset
-            uniquely couples the (typically high-resolution) exclusion
-            layers to the (typically lower-resolution) resource data,
-            and therefore should be unique for every new resource data
-            set that is paired with the exclusion data. If running
-            ``reV`` from the command line, you can specify a name that
-            is not in the exclusions HDF5 file, and ``reV`` will
-            calculate the techmap for you. Note however that computing
-            the techmap and writing it to the exclusion HDF5 file is a
-            blocking operation, so you may only run a single ``reV``
-            aggregation step at a time this way.
+            techmap (exclusions-to-resource mapping data). This data
+            layer links the supply curve GID's to the generation GID's
+            that are used to evaluate performance metrics such as
+            ``mean_cf``.
+
+            .. Important:: This dataset uniquely couples the (typically
+              high-resolution) exclusion layers to the (typically
+              lower-resolution) resource data. Therefore, a separate
+              techmap must be used for every unique combination of
+              resource and exclusion coordinates.
+
+            If running ``reV`` from the command line, you can specify a
+            name that is not in the exclusions HDF5 file, and ``reV``
+            will calculate the techmap for you. Note however that
+            computing the techmap and writing it to the exclusion HDF5
+            file is a blocking operation, so you may only run a single
+            ``reV`` aggregation step at a time this way.
         econ_fpath : str, optional
             Filepath to HDF5 file with ``reV`` econ output results
             containing an `lcoe_dset` dataset. If ``None``, `lcoe_dset`
@@ -281,8 +285,42 @@ class SupplyCurveAggregation(BaseAggregation):
             ``layer_dset_name`` is a dataset in the exclusion h5 file
             and the ``kwarg: value`` pair is a keyword argument to
             the :class:`reV.supply_curve.exclusions.LayerMask` class.
-            If ``None`` or empty dictionary, no exclusions are applied.
-            By default, ``None``.
+            For example::
+
+                excl_dict = {
+                    "typical_exclusion": {
+                        "exclude_values": 255,
+                    },
+                    "another_exclusion": {
+                        "exclude_values": [2, 3],
+                        "weight": 0.5
+                    },
+                    "exclusion_with_nodata": {
+                        "exclude_range": [10, 100],
+                        "exclude_nodata": True,
+                        "nodata_value": -1
+                    },
+                    "partial_setback": {
+                        "use_as_weights": True
+                    },
+                    "height_limit": {
+                        "exclude_range": [0, 200]
+                    },
+                    "slope": {
+                        "include_range": [0, 20]
+                    },
+                    "developable_land": {
+                        "force_include_values": 42
+                    },
+                    "more_developable_land": {
+                        "force_include_range": [5, 10]
+                    },
+                    ...
+                }
+
+            Note that all the keys given in this dictionary should be
+            datasets of the `excl_fpath` file. If ``None`` or empty
+            dictionary, no exclusions are applied. By default, ``None``.
         area_filter_kernel : {"queen", "rook"}, optional
             Contiguous area filter method to use on final exclusions
             mask. The filters are defined as::
@@ -393,9 +431,9 @@ class SupplyCurveAggregation(BaseAggregation):
             describing how the high-resolution data should be aggregated
             for each supply curve point. ``fpath`` is an optional key
             that can point to an HDF5 file containing the layer data. If
-            left out, the data is assumed to exist in `excl_fpath`. If
-            ``None``, no data layer aggregation is performed.
-            By default, ``None``.
+            left out, the data is assumed to exist in the file(s)
+            specified by the `excl_fpath` input. If ``None``, no data
+            layer aggregation is performed. By default, ``None``
         power_density : float | str, optional
             Power density value (in MW/km\ :sup:`2`) or filepath to
             variable power density CSV file containing the following

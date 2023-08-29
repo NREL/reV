@@ -1227,19 +1227,23 @@ class BespokeWindPlants(BaseAggregation):
         optimization objective specified by the user. See the NREL
         publication on the bespoke methodology for more information.
 
+        See the documentation for the ``reV`` SAM class (e.g.
+        :class:`reV.SAM.generation.WindPower`,
+        :class:`reV.SAM.generation.PvWattsv8`,
+        :class:`reV.SAM.generation.Geothermal`, etc.) for info on the
+        allowed and/or required SAM config file inputs.
+
         Parameters
         ----------
         excl_fpath : str | list | tuple
             Filepath to exclusions data HDF5 file. The exclusions HDF5
             file should contain the layers specified in `excl_dict`
-            and `data_layers` (though data for the latter may be
-            stored in a separate file - see the `data_layers` input
-            documentation for more details). These data layers may
-            be spread out across multiple files, in which case this
-            input should be a list or tuple of filepaths to multiple
-            exclusion HDF5 files containing the layers. Note that each
-            data layer must be uniquely defined (i.e.only appear once
-            and in a single input file).
+            and `data_layers`. These layers may also be spread out
+            across multiple HDF5 files, in which case this input should
+            be a list or tuple of filepaths pointing to the files
+            containing the layers. Note that each data layer must be
+            uniquely defined (i.e.only appear once and in a single
+            input file).
         res_fpath : str
             Filepath to wind resource data in NREL WTK format. This
             input can be path to a single resource HDF5 file or a path
@@ -1260,11 +1264,20 @@ class BespokeWindPlants(BaseAggregation):
             consideration, and its shape must be a multiple of 8760.
         tm_dset : str
             Dataset name in the `excl_fpath` file containing the
-            techmap (exclusions-to-resource mapping data). This dataset
-            uniquely couples the (typically high-resolution) exclusion
-            layers to the (typically lower-resolution) resource data,
-            and therefore should be unique for every new resource data
-            set that is paired with the exclusion data.
+            techmap (exclusions-to-resource mapping data). This data
+            layer links the supply curve GID's to the generation GID's
+            that are used to evaluate the performance metrics of each
+            wind plant. By default, the generation GID's are assumed to
+            match the resource GID's, but this mapping can be customized
+            via the `gid_map` input (see the documentation for `gid_map`
+            for more details).
+
+            .. Important:: This dataset uniquely couples the (typically
+              high-resolution) exclusion layers to the (typically
+              lower-resolution) resource data. Therefore, a separate
+              techmap must be used for every unique combination of
+              resource and exclusion coordinates.
+
         objective_function : str
             The objective function of the optimization written out as a
             string. This expression should compute the objective to be
@@ -1383,8 +1396,7 @@ class BespokeWindPlants(BaseAggregation):
             (e.g. :class:`reV.SAM.generation.WindPower`,
             :class:`reV.SAM.generation.PvWattsv8`,
             :class:`reV.SAM.generation.Geothermal`, etc.) for
-            documentation on the allowed and/or required SAM config file
-            inputs.
+            info on the allowed and/or required SAM config file inputs.
         min_spacing : float | int | str, optional
             Minimum spacing between turbines (in meters). This input can
             also be a string like "5x", which is interpreted as 5 times
@@ -1440,8 +1452,42 @@ class BespokeWindPlants(BaseAggregation):
             ``layer_dset_name`` is a dataset in the exclusion h5 file
             and the ``kwarg: value`` pair is a keyword argument to
             the :class:`reV.supply_curve.exclusions.LayerMask` class.
-            If ``None`` or empty dictionary, no exclusions are applied.
-            By default, ``None``.
+            For example::
+
+                excl_dict = {
+                    "typical_exclusion": {
+                        "exclude_values": 255,
+                    },
+                    "another_exclusion": {
+                        "exclude_values": [2, 3],
+                        "weight": 0.5
+                    },
+                    "exclusion_with_nodata": {
+                        "exclude_range": [10, 100],
+                        "exclude_nodata": True,
+                        "nodata_value": -1
+                    },
+                    "partial_setback": {
+                        "use_as_weights": True
+                    },
+                    "height_limit": {
+                        "exclude_range": [0, 200]
+                    },
+                    "slope": {
+                        "include_range": [0, 20]
+                    },
+                    "developable_land": {
+                        "force_include_values": 42
+                    },
+                    "more_developable_land": {
+                        "force_include_range": [5, 10]
+                    },
+                    ...
+                }
+
+            Note that all the keys given in this dictionary should be
+            datasets of the `excl_fpath` file. If ``None`` or empty
+            dictionary, no exclusions are applied. By default, ``None``.
         area_filter_kernel : {"queen", "rook"}, optional
             Contiguous area filter method to use on final exclusions
             mask. The filters are defined as::
@@ -1503,9 +1549,9 @@ class BespokeWindPlants(BaseAggregation):
             describing how the high-resolution data should be aggregated
             for each supply curve point. ``fpath`` is an optional key
             that can point to an HDF5 file containing the layer data. If
-            left out, the data is assumed to exist in `excl_fpath`. If
-            ``None``, no data layer aggregation is performed.
-            By default, ``None``.
+            left out, the data is assumed to exist in the file(s)
+            specified by the `excl_fpath` input. If ``None``, no data
+            layer aggregation is performed. By default, ``None``.
         pre_extract_inclusions : bool, optional
             Optional flag to pre-extract/compute the inclusion mask from
             the `excl_dict` input. It is typically faster to compute
