@@ -64,6 +64,62 @@ of the ``transformation``. We specify both of these options with the
      [0.688, 1.   , 1.   ],
      [0.628, 1.   , 1.   ]]
 
+
+Power Curve Losses for a single site
+------------------------------------
+The reV losses module can be used to compute the power curve shift required to meet
+a target loss value for a single input site. To do this, the user must specify the
+resource at the site as well as the input power curve and target loss info. An
+example of this process is given below
+
+.. code-block:: python
+
+    import os
+    import matplotlib.pyplot as plt
+    from rex import Resource
+
+    from reV.losses.power_curve import (
+        PowerCurve,
+        PowerCurveLossesInput,
+        PowerCurveWindResource,
+        adjust_power_curve,
+    )
+
+    site_ind = 100
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    with Resource(res_file) as res:
+        temperatures = res["temperature_100m"][:, site_ind]
+        pressures = res["pressure_100m"][:, site_ind]
+        wind_speeds = res["windspeed_100m"][:, site_ind]
+
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    with open(sam_file, 'w+', encoding='utf-8') as fh:
+        sam_config = json.load(fh)
+    pc_wind_speed = sam_config['wind_turbine_powercurve_windspeeds']
+    pc_generation = sam_config['wind_turbine_powercurve_powerout']
+
+    power_curve_loss_info = {
+        'target_losses_percent': 5,
+        'transformation': 'exponential_stretching'
+    }
+
+    power_curve = PowerCurve(pc_wind_speed, pc_generation)
+    resource_data = PowerCurveWindResource(temperatures, pressures, wind_speeds)
+    target_losses = PowerCurveLossesInput(power_curve_loss_info)
+
+    new_curve = adjust_power_curve(
+        power_curve, resource_data, target_losses
+    )
+
+    _ = plt.plot(power_curve.wind_speed, power_curve, label='Original')
+    _ = plt.plot(new_curve.wind_speed, new_curve, label='5% Losses')
+    _ = plt.legend(loc='upper left')
+    _ = plt.xlabel("Wind Speed (m/s)")
+    _ = plt.ylabel("Generated Power (kW)")
+    _ = plt.show()
+
+
+
 Outage Losses (Wind and Solar)
 ------------------------------
 
