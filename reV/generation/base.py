@@ -881,8 +881,8 @@ class BaseGen(ABC):
 
         # ensure year is in out_fpath
         if self.year is not None and str(self.year) not in out_fn:
-            module_with_year = "{}_{}".format(module, self.year)
-            out_fn = out_fn.replace(module, module_with_year)
+            extension_with_year = "_{}.h5".format(self.year)
+            out_fn = out_fn.replace(".h5", extension_with_year)
 
         # create and use optional output dir
         if project_dir and not os.path.exists(project_dir):
