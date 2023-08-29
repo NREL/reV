@@ -457,6 +457,34 @@ def test_power_curve_loss_input_class_missing_required_keys():
     assert "The following required keys are missing" in str(excinfo.value)
 
 
+def test_power_curve_loss_invalid_pressure_values():
+    """Test mixin class behavior when adding losses. """
+
+    with open(SAM_FILES[0], 'r') as fh:
+        sam_config = json.load(fh)
+
+    og_power_curve = np.array(sam_config["wind_turbine_powercurve_powerout"])
+
+    # patch required for 'wind_resource_data' access below
+    def get_item_patch(self, key):
+        return self.sam_sys_inputs.get(key)
+    PowerCurveLossesMixin.__getitem__ = get_item_patch
+
+    mixin = PowerCurveLossesMixin()
+    mixin.sam_sys_inputs = copy.deepcopy(sam_config)
+    mixin.sam_sys_inputs[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
+        'target_losses_percent': 10,
+        'transformation': 'horizontal_translation'
+    }
+    # order is [(temp_C, pressure_ATM, windspeed_m/s, windir)]
+    mixin.sam_sys_inputs['wind_resource_data'] = {
+        'data': [(20, 3, val, 0) for val in BASIC_WIND_RES]
+    }
+    with pytest.raises(reVLossesValueError) as excinfo:
+        mixin.add_power_curve_losses()
+    assert "Unable to determine pressure units" in str(excinfo.value)
+
+
 def test_power_curve_losses_class_power_gen_no_losses(simple_power_curve):
     """Test that power_gen_no_losses is calculated correctly. """
 
