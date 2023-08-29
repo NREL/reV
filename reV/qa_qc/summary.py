@@ -245,7 +245,7 @@ class SummarizeH5:
             by default None
         """
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
 
         if dsets is None:
             with Resource(h5_file, group=group) as f:
@@ -389,7 +389,7 @@ class SummarizeSupplyCurve:
             by default None
         """
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
 
         summary = cls(sc_table)
         out_path = os.path.basename(sc_table).replace('.csv', '_summary.csv')

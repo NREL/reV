@@ -1442,9 +1442,17 @@ class SupplyCurve:
             kwargs["line_limited"] = line_limited
             supply_curve = self.full_sort(**kwargs)
 
-        if not out_fpath.endswith(".csv"):
-            out_fpath = '{}.csv'.format(out_fpath)
-
+        out_fpath = _format_sc_out_fpath(out_fpath)
         supply_curve.to_csv(out_fpath, index=False)
 
         return out_fpath
+
+
+def _format_sc_out_fpath(out_fpath):
+    """Add CSV file ending and replace underscore, if necessary."""
+    if not out_fpath.endswith(".csv"):
+        out_fpath = '{}.csv'.format(out_fpath)
+
+    project_dir, out_fn = os.path.split(out_fpath)
+    out_fn = out_fn.replace("supply_curve", "supply-curve")
+    return os.path.join(project_dir, out_fn)

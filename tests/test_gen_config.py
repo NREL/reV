@@ -48,6 +48,9 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
     with tempfile.TemporaryDirectory() as td:
 
+        run_dir = os.path.join(td, 'generation')
+        os.mkdir(run_dir)
+
         if tech == 'pv':
             fconfig = 'local_pv.json'
             project_points = os.path.join(TESTDATADIR, 'config', '..',
@@ -72,9 +75,9 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
         config['project_points'] = project_points
         config['resource_file'] = resource_file
         config['sam_files'] = sam_files
-        config['log_directory'] = td
+        config['log_directory'] = run_dir
 
-        config_path = os.path.join(td, 'config.json')
+        config_path = os.path.join(run_dir, 'config.json')
         with open(config_path, 'w') as f:
             json.dump(config, f)
 
@@ -83,13 +86,15 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg
 
+        assert len(os.listdir(td)) == 1
+
         # get reV 2.0 generation profiles from disk
         rev2_profiles = None
-        flist = os.listdir(td)
+        flist = os.listdir(run_dir)
         print(flist)
         for fname in flist:
             if fname.endswith('.h5'):
-                path = os.path.join(td, fname)
+                path = os.path.join(run_dir, fname)
                 with Outputs(path, 'r') as cf:
 
                     msg = 'cf_profile not written to disk'

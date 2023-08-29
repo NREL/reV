@@ -33,7 +33,7 @@ class QaQc:
         log_versions(logger)
         logger.info('QA/QC results to be saved to: {}'.format(out_dir))
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
 
         self._out_dir = out_dir
 
@@ -71,7 +71,7 @@ class QaQc:
         out_dir = os.path.join(out_root,
                                os.path.basename(summary_csv).rstrip('.csv'))
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
 
         SummaryPlots.scatter_all(summary_csv, out_dir, plot_type=plot_type,
                                  cmap=cmap, **kwargs)

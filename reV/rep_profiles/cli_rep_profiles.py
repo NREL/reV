@@ -80,6 +80,7 @@ def _preprocessor(config, out_dir, job_name, analysis_years=None):
 def _set_split_keys(config, out_dir, job_name, analysis_years):
     """Set the gen_fpath, fout, and cf_dset keys"""
 
+    job_name = job_name.replace("rep_profiles", "rep-profiles")
     cf_dset = config.get("cf_dset")
     gen_fpath = config.get("gen_fpath")
     if analysis_years[0] is not None and '{}' in cf_dset:
