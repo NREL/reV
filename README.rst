@@ -2,6 +2,8 @@
 
     <p align="center">
         <img height="180" src="docs/source/_static/logo.png" />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <img height="170" src="docs/source/_static/RD100_2023_Winner_Logo.png" />
     </p>
 
 ---------
