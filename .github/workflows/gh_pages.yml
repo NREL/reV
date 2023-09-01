@@ -3,6 +3,7 @@ name: Documentation
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   make-pages:
