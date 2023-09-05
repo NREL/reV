@@ -25,7 +25,7 @@ class PowerCurve:
         An array containing the wind speeds corresponding to the values
         in the :attr:`generation` array.
     generation : :obj:`numpy.array`
-        An array containing the generated power at the corresponding
+        An array containing the generated power in kW at the corresponding
         wind speed in the :attr:`wind_speed` array. This input must have
         at least one positive value, and if a cutoff speed is detected
         (see `Warnings` section below), then all values above that wind
@@ -53,7 +53,7 @@ class PowerCurve:
             generated power values in ``generation`` input. The input
             values should all be non-zero.
         generation : array_like
-            An iterable containing the generated power at the
+            An iterable containing the generated power in kW at the
             corresponding wind speed in the ``wind_speed`` input. This
             input must have at least one positive value, and if a cutoff
             speed is detected (see `Warnings` section below), then all
@@ -63,6 +63,7 @@ class PowerCurve:
         self.generation = np.array(generation)
         self._cutoff_wind_speed = None
         self._cutin_wind_speed = None
+        self.i_cutoff = None
 
         _validate_arrays_not_empty(self,
                                    array_names=['wind_speed', 'generation'])
@@ -123,10 +124,23 @@ class PowerCurve:
             ind = np.argmax(self.generation[::-1])
             # pylint: disable=chained-comparison
             if ind > 0 and self.generation[-ind] <= 0:
+                self.i_cutoff = len(self.generation) - ind
                 self._cutoff_wind_speed = self.wind_speed[-ind]
             else:
                 self._cutoff_wind_speed = np.inf
         return self._cutoff_wind_speed
+
+    @property
+    def rated_power(self):
+        """Get the rated power (max power) of the turbine power curve. The
+        units are dependent on the input power curve but this is typically in
+        units of kW.
+
+        Returns
+        -------
+        float
+        """
+        return np.max(self.generation)
 
     def __eq__(self, other):
         return np.isclose(self.generation, other).all()
@@ -786,8 +800,8 @@ class AbstractPowerCurveTransformation(ABC):
         self.power_curve = power_curve
         self._transformed_generation = None
 
-    def _validate_shifted_power_curve(self, new_curve):
-        """Ensure new power curve has some non-zero generation. """
+    def _validate_non_zero_generation(self, new_curve):
+        """Ensure new power curve has some non-zero generation."""
         mask = (self.power_curve.wind_speed
                 <= self.power_curve.cutoff_wind_speed)
         min_expected_power_gen = self.power_curve[self.power_curve > 0].min()
@@ -797,6 +811,18 @@ class AbstractPowerCurveTransformation(ABC):
                    "loss percentage  may be too large! Please try again with "
                    "a lower target value."
                    .format(self.power_curve.cutoff_wind_speed))
+            logger.error(msg)
+            raise reVLossesValueError(msg)
+
+    def _validate_same_cutoff(self, new_curve):
+        """Validate that the new power curve has the same high-wind cutout as
+        the original curve."""
+        old_cut = self.power_curve.cutoff_wind_speed
+        new_cut = new_curve.cutoff_wind_speed
+        if old_cut != new_cut:
+            msg = ('Original power curve windspeed cutout is {}m/s and new '
+                   'curve cutout is {}m/s. Something went wrong!'
+                   .format(old_cut, new_cut))
             logger.error(msg)
             raise reVLossesValueError(msg)
 
@@ -849,13 +875,23 @@ class AbstractPowerCurveTransformation(ABC):
             logger.error(msg)
             raise NotImplementedError(msg)
 
-        mask = (self.power_curve.wind_speed
-                >= self.power_curve.cutoff_wind_speed)
-        self._transformed_generation[mask] = 0
+        if not np.isinf(self.power_curve.cutoff_wind_speed):
+            mask = (self.power_curve.wind_speed
+                    >= self.power_curve.cutoff_wind_speed)
+            self._transformed_generation[mask] = 0
+            new_curve = PowerCurve(self.power_curve.wind_speed,
+                                   self._transformed_generation)
+            self._validate_non_zero_generation(new_curve)
+
+            i_max = np.argmax(self._transformed_generation)
+            i_cutoff = self.power_curve.i_cutoff
+            rated_power = self.power_curve.rated_power
+            self._transformed_generation[i_max:i_cutoff] = rated_power
 
         new_curve = PowerCurve(self.power_curve.wind_speed,
                                self._transformed_generation)
-        self._validate_shifted_power_curve(new_curve)
+        self._validate_non_zero_generation(new_curve)
+        self._validate_same_cutoff(new_curve)
         return new_curve
 
     @property

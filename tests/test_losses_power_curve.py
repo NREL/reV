@@ -24,7 +24,7 @@ from reV.losses.power_curve import (PowerCurve, PowerCurveLosses,
                                     PowerCurveLossesInput,
                                     TRANSFORMATIONS,
                                     HorizontalTranslation,
-                                    AbstractPowerCurveTransformation
+                                    AbstractPowerCurveTransformation,
                                     )
 from reV.losses.scheduled import ScheduledLossesMixin
 
@@ -35,7 +35,7 @@ SAM_FILES = [
     TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json',
     TESTDATADIR + '/SAM/wind_gen_non_standard_0.json',
     TESTDATADIR + '/SAM/wind_gen_non_standard_1.json',
-    TESTDATADIR + '/SAM/wind_gen_non_standard_2.json'
+    TESTDATADIR + '/SAM/wind_gen_non_standard_2.json',
 ]
 BASIC_WIND_RES = [10, 20, 20]
 SINGLE_SITE_PC_LOSSES = {
@@ -341,11 +341,25 @@ def test_transformation_classes_apply(pc_transformation, real_power_curve):
 
     assert new_power_curve != real_power_curve
 
-    new_co_ws = real_power_curve.wind_speed[-10]
-    transformation.power_curve._cutoff_wind_speed = new_co_ws
+    # Try transformation with a high ws cutout
+    new_pc_gen = copy.deepcopy(real_power_curve.generation)
+    new_pc_gen[-10:] = 0
+    new_power_curve = PowerCurve(real_power_curve.wind_speed, new_pc_gen)
+    transformation = pc_transformation(new_power_curve)
     new_power_curve = transformation.apply(strength)
     mask = new_power_curve.wind_speed >= real_power_curve.wind_speed[-10]
     assert (new_power_curve[mask] == 0).all()
+
+
+@pytest.mark.parametrize('TransClass', TRANSFORMATIONS.values())
+@pytest.mark.parametrize('transform_var', [0.8, 1.1, 1.5, 2])
+def test_transform_cutoff(real_power_curve, TransClass, transform_var):
+    """Test that the power curve transformations dont manipulate the
+    high-windspeed cutout"""
+
+    transformation = TransClass(real_power_curve)
+    new_curve = transformation.apply(transform_var)
+    assert real_power_curve.cutoff_wind_speed == new_curve.cutoff_wind_speed
 
 
 def test_horizontal_transformation_class_apply(real_power_curve):
@@ -406,7 +420,7 @@ def test_transformation_invalid_result(real_power_curve):
 
     transformation = HorizontalTranslation(real_power_curve)
     with pytest.raises(reVLossesValueError) as excinfo:
-        transformation.apply(transformation.bounds[-1] + 0.2)
+        transformation.apply(transformation.bounds[-1] + 0.1)
 
     err_msg = str(excinfo.value)
     assert "Calculated power curve is invalid" in err_msg
@@ -462,8 +476,6 @@ def test_power_curve_loss_invalid_pressure_values():
 
     with open(SAM_FILES[0], 'r') as fh:
         sam_config = json.load(fh)
-
-    og_power_curve = np.array(sam_config["wind_turbine_powercurve_powerout"])
 
     # patch required for 'wind_resource_data' access below
     def get_item_patch(self, key):
