@@ -34,7 +34,7 @@ of the ``transformation``. We specify both of these options with the
     sam_file = os.path.join(TESTDATADIR,
                                 'SAM/wind_gen_standard_losses_0.json')
 
-    with open(sam_file, 'w+', encoding='utf-8') as fh:
+    with open(sam_file, 'r', encoding='utf-8') as fh:
         sam_config = json.load(fh)
 
 
@@ -93,7 +93,7 @@ example of this process is given below
         wind_speeds = res["windspeed_100m"][:, site_ind]
 
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
-    with open(sam_file, 'w+', encoding='utf-8') as fh:
+    with open(sam_file, 'r', encoding='utf-8') as fh:
         sam_config = json.load(fh)
     pc_wind_speed = sam_config['wind_turbine_powercurve_windspeeds']
     pc_generation = sam_config['wind_turbine_powercurve_powerout']
