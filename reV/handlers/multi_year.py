@@ -64,6 +64,16 @@ class MultiYearGroup:
             multi-year files (e.g. input datasets that don't vary from
             year to year) that should be copied to the output multi-year
             file once without a year suffix or means/stdev calculation.
+
+            .. WARNING:: Unlike the `dsets` input, datasets in
+               `pass_through_dsets` **will not** be overwritten if the
+               multi-year output file exists and contains the requested
+               dataset already. This means repeated calls to multi-year
+               may leave old data byproducts that don't match the newer
+               single-year files if the multi-year output file was not
+               removed between executions. For best results, always
+               remove the multi-year output between runs.
+
             By default, ``None``.
         """
         self._name = name
