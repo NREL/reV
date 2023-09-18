@@ -64,16 +64,6 @@ class MultiYearGroup:
             multi-year files (e.g. input datasets that don't vary from
             year to year) that should be copied to the output multi-year
             file once without a year suffix or means/stdev calculation.
-
-            .. WARNING:: Unlike the `dsets` input, datasets in
-               `pass_through_dsets` **will not** be overwritten if the
-               multi-year output file exists and contains the requested
-               dataset already. This means repeated calls to multi-year
-               may leave old data byproducts that don't match the newer
-               single-year files if the multi-year output file was not
-               removed between executions. For best results, always
-               remove the multi-year output between runs.
-
             By default, ``None``.
         """
         self._name = name
@@ -784,9 +774,23 @@ def my_collect_groups(out_fpath, groups):
         one group with the name ``"none"`` for a "no group" collection
         (this is typically what you want and all you need to specify).
 
+        .. Note:: If the multi-year output file already exists on disk
+           (i.e. ``<project_directory_name>_multi_year.h5``), it will
+           be purged before multi-year collection. Please make sure to
+           copy the file elsewhere before re-running if you need to save
+           the outputs of a previous multi-year collection step.
+
     """
     if not out_fpath.endswith(".h5"):
         out_fpath = '{}.h5'.format(out_fpath)
+
+    if os.path.exists(out_fpath):
+        msg = ('Found existing multi-year file: "{}". Removing...'
+               .format(str(out_fpath)))
+        logger.warning(msg)
+        warn(msg)
+        os.remove(out_fpath)
+
     out_dir = os.path.dirname(out_fpath)
     groups = MultiYearGroup._factory(out_dir, groups)
     group_params = {name: group._dict_rep()
