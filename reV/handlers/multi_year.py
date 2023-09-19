@@ -712,7 +712,7 @@ class MultiYear(Outputs):
             my.collect(source_files, dset, profiles=True)
 
 
-def my_collect_groups(out_fpath, groups):
+def my_collect_groups(out_fpath, groups, clobber=True):
     """Collect all groups into a single multi-year HDF5 file.
 
     ``reV`` multi-year combines ``reV`` generation data from multiple
@@ -773,10 +773,24 @@ def my_collect_groups(out_fpath, groups):
         which the collected data will be stored. You can have exactly
         one group with the name ``"none"`` for a "no group" collection
         (this is typically what you want and all you need to specify).
-
+    clobber : bool, optional
+        Flag to purge the multi-year output file prior to running the
+        multi-year collection step if the file already exists on disk.
+        This ensures the data is always freshly collected from the
+        single-year files. If ``False``, then datasets in the existing
+        file will **not** be overwritten with (potentially new/updated)
+        data from the single-year files. By default, ``True``.
     """
     if not out_fpath.endswith(".h5"):
         out_fpath = '{}.h5'.format(out_fpath)
+
+    if clobber and os.path.exists(out_fpath):
+        msg = ('Found existing multi-year file: "{}". Removing...'
+               .format(str(out_fpath)))
+        logger.warning(msg)
+        warn(msg)
+        os.remove(out_fpath)
+
     out_dir = os.path.dirname(out_fpath)
     groups = MultiYearGroup._factory(out_dir, groups)
     group_params = {name: group._dict_rep()

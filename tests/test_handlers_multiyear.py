@@ -162,13 +162,20 @@ def test_cli(runner, clear_loggers):
         for fp, fp_temp in zip(H5_FILES, temp_h5_files):
             shutil.copy(fp, fp_temp)
 
+        # mock existing MY file to make sure it's overwritten
+        shutil.copy(temp_h5_files[-1], my_out)
+
         pass_through_dsets = config['groups']['none']['pass_through_dsets']
-        for fp in temp_h5_files:
+        for file_ind, fp in enumerate(temp_h5_files):
             for i, dset in enumerate(pass_through_dsets):
                 with h5py.File(fp, 'a') as f:
                     shape = f['meta'].shape
                     arr = np.arange(shape[0]) * (i + 1)
                     f.create_dataset(dset, shape, data=arr)
+
+                if file_ind == 0:
+                    with h5py.File(my_out, 'a') as f:
+                        f.create_dataset(dset, shape, data=np.zeros_like(arr))
 
         fp_config = os.path.join(temp, 'config.json')
         with open(fp_config, 'w') as f:
@@ -179,6 +186,8 @@ def test_cli(runner, clear_loggers):
         msg = ('Failed with error {}'
                .format(traceback.print_exception(*result.exc_info)))
         assert result.exit_code == 0, msg
+        assert "WARNING" in result.output
+        assert "Found existing multi-year file" in result.output
 
         with Resource(my_out) as res:
             assert 'cf_mean-2012' in res.dsets
