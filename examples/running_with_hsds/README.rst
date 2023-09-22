@@ -37,8 +37,8 @@ To get your own API key, visit https://developer.nrel.gov/signup/
 
 Please note that our HSDS service is for demonstration purposes only. The API in the example above is hosted on an NREL server and will have limits on the amount of data you can access via HSDS. It is common to get an error: ``OSError: Error retrieving data: None errors`` if you attempt to access too much data or if the server is busy. Here are two references for scaling reV using HSDS and AWS:
 
-#. `Setup your own HSDS server on your personal computer<https://nrel.github.io/rex/misc/examples.hsds.html#>`_
-#. `Run reV on the AWS Parallel Cluster Infrastructure<https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_
+#. `Setup your own HSDS server on your personal computer <https://nrel.github.io/rex/misc/examples.hsds.html#>`_
+#. `Run reV on the AWS Parallel Cluster Infrastructure <https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_
 
 Using HSDS with reV
 -------------------
