@@ -33,7 +33,9 @@ main.add_command(project_points)
 # export GAPs commands to namespace for documentation
 batch = main.commands["batch"]
 pipeline = main.commands["pipeline"]
+script = main.commands["script"]
 status = main.commands["status"]
+reset_status = main.commands["reset-status"]
 template_configs = main.commands["template-configs"]
 
 
