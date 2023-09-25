@@ -11,6 +11,7 @@ import numpy as np
 import os
 import pandas as pd
 import pytest
+import tempfile
 
 from rex import Resource
 from rex.utilities.exceptions import ResourceRuntimeError
@@ -208,6 +209,28 @@ def test_coords(sites):
 
     lat_lons = meta.loc[gids, ['latitude', 'longitude']].values
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_files)
+
+    assert sorted(gids) == pp.sites
+
+
+def test_coords_from_file():
+    """Test ProjectPoint.lat_lon_coords read from file."""
+
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+
+    with Resource(res_file) as f:
+        meta = f.meta
+
+    gids = np.random.choice(meta.index.values, 10, replace=False).tolist()
+    if not isinstance(gids, list):
+        gids = [gids]
+
+    lat_lons = meta.loc[gids, ['latitude', 'longitude']]
+    with tempfile.TemporaryDirectory() as td:
+        coords_fp = os.path.join(td, "lat_lon.csv")
+        lat_lons.to_csv(coords_fp, index=False)
+        pp = ProjectPoints.lat_lon_coords(coords_fp, res_file, sam_files)
 
     assert sorted(gids) == pp.sites
 
