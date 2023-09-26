@@ -836,7 +836,8 @@ class ProjectPoints:
                'longitude coordinates!')
         if isinstance(lat_lons, str):
             lat_lons = parse_table(lat_lons)
-            cols = [c for c in lat_lons if c.lower.startswith(('lat', 'lon'))]
+            cols = [c for c in lat_lons
+                    if c.lower().startswith(('lat', 'lon'))]
             lat_lons = lat_lons[sorted(cols)].values
         elif isinstance(lat_lons, (list, tuple)):
             lat_lons = np.array(lat_lons)
