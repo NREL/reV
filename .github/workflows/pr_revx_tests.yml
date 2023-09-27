@@ -33,11 +33,9 @@ jobs:
       working-directory: ./reVX
       shell: bash -l {0}
       run: |
-        conda install rtree pytest
-        pip install geopandas
-        pip install --upgrade --force-reinstall shapely~=1.8
+        conda install rtree pip pytest
         pip install -e .
-        pip install HOPP
+        pip install HOPP==0.0.5
     - name: Run reVX pytest
       working-directory: ./reVX
       shell: bash -l {0}
