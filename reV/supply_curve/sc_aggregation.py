@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=anomalous-backslash-in-string
 """reV supply curve aggregation framework.
 
 Created on Fri Jun 21 13:24:31 2019
