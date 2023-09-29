@@ -901,7 +901,14 @@ class RepProfiles(RepProfilesBase):
             Filepath to ``reV`` generation output HDF5 file to extract
             `cf_dset` dataset from. If executing ``reV`` from the
             command line, this path can contain brackets ``{}`` that
-            will be filled in by the `analysis_years` input.
+            will be filled in by the `analysis_years` input. If running
+            ``reV`` from the command line, this input can be set to
+            ``"PIPELINE"``, which will parse this input from the
+            following pipeline steps: `multi-year`, `collect`,
+            `generation`, and `supply-curve-aggregation`. However, note
+            that duplicate executions of any of these commands within
+            the pipeline may invalidate this parsing, meaning the
+            `gen_fpath` input will have to be specified manually.
         rev_summary : str | pd.DataFrame
             Aggregated ``reV`` supply curve summary file. Must include
             the following columns:
@@ -916,6 +923,13 @@ class RepProfiles(RepProfilesBase):
                   representation of python list containing the resource
                   GID weights for each supply curve point.
 
+            If running ``reV`` from the command line, this input can be
+            set to ``"PIPELINE"``, which will parse this input from the
+            following pipeline steps: `supply-curve-aggregation` and
+            `supply-curve`. However, note that duplicate executions of
+            any of these commands within the pipeline may invalidate
+            this parsing, meaning the `rev_summary` input will have to
+            be specified manually.
         reg_cols : str | list
             Label(s) for a categorical region column(s) to extract
             profiles for. For example, ``"state"`` will extract a rep
