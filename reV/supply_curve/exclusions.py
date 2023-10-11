@@ -40,7 +40,6 @@ class LayerMask:
             Layer name.
         exclude_values : int | float | list, optional
             Single value or list of values to exclude.
-            By default, ``None``.
 
             .. Important:: The keyword arguments `exclude_values`,
               `exclude_range`, `include_values`, `include_range`,
@@ -48,6 +47,7 @@ class LayerMask:
               `force_include_range` are all mutually exclusive. Users
               should supply value(s) for exactly one of these arguments.
 
+            By default, ``None``.
         exclude_range : list | tuple, optional
             Two-item list of (min threshold, max threshold) for values
             to exclude. Mutually exclusive with other inputs - see info
