@@ -50,10 +50,16 @@ class RevNrwal:
         gen_fpath : str
             Full filepath to HDF5 file with ``reV`` generation or
             rep_profiles output. Anything in the `output_request` input
-            is added to and/or manipulated within this file. If running
-            ``reV`` from the command line, this input can also be
-            ``"PIPELINE"`` to parse the output of the previous step and
-            use it as input to this call.
+            is added to and/or manipulated within this file.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              input can also be ``"PIPELINE"`` to parse the output of
+              one of the previous step and use it as input to this call.
+              However, note that duplicate executions of ``reV``
+              commands prior to this one within the pipeline may
+              invalidate this parsing, meaning the `gen_fpath` input
+              will have to be specified manually.
+
         site_data : str | pd.DataFrame
             Site-specific input data for NRWAL calculation.If this input
             is a string, it should be a path that points to a CSV file.
@@ -798,7 +804,6 @@ class RevNrwal:
             can be useful if the same HDF5 file is used for multiple
             sets of NRWAL runs. Note that all requested output datasets
             must be 1-dimensional in order to fir within the CSV output.
-            By default, ``False``.
 
             .. Important:: This option is not compatible with
               ``save_raw=True``. If you set ``csv_output=True``, then
@@ -810,6 +815,7 @@ class RevNrwal:
               an "input_dataset_name_raw" dataset to your generation
               HDF5 file before running NRWAL.
 
+            By default, ``False``.
         out_fpath : str, optional
             This option has no effect if ``csv_output=False``.
             Otherwise, this should be the full path to output NRWAL CSV

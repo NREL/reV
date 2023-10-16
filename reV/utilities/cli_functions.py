@@ -103,8 +103,7 @@ def parse_from_pipeline(config, out_dir, config_key, target_modules):
                 target_key = "gen_fpath"
             else:
                 target_key = "out_file"
-            val = Status.parse_command_status(out_dir, target_module,
-                                              target_key)
+            val = Status.parse_step_status(out_dir, target_module, target_key)
             if len(val) == 1:
                 break
         else:

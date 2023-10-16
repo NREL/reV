@@ -284,8 +284,7 @@ class QaQcModule:
         if fpath == 'PIPELINE':
             target_modules = [self._name]
             for target_module in target_modules:
-                fpath = Status.parse_command_status(self._out_root,
-                                                    target_module)
+                fpath = Status.parse_step_status(self._out_root, target_module)
                 if fpath:
                     break
             else:
@@ -351,9 +350,9 @@ class QaQcModule:
 
         if excl_fpath == 'PIPELINE':
             target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
-            excl_fpath = Status.parse_command_status(self._out_root,
-                                                     target_module,
-                                                     key='excl_fpath')
+            excl_fpath = Status.parse_step_status(self._out_root,
+                                                  target_module,
+                                                  key='excl_fpath')
             if not excl_fpath:
                 excl_fpath = None
                 msg = ('Could not parse excl_fpath from previous '
@@ -375,9 +374,8 @@ class QaQcModule:
 
         if excl_dict == 'PIPELINE':
             target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
-            excl_dict = Status.parse_command_status(self._out_root,
-                                                    target_module,
-                                                    key='excl_dict')
+            excl_dict = Status.parse_step_status(self._out_root, target_module,
+                                                 key='excl_dict')
             if not excl_dict:
                 excl_dict = None
                 msg = ('Could not parse excl_dict from previous '
@@ -400,9 +398,9 @@ class QaQcModule:
         if area_filter_kernel == 'PIPELINE':
             target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
             key = 'area_filter_kernel'
-            area_filter_kernel = Status.parse_command_status(self._out_root,
-                                                             target_module,
-                                                             key=key)
+            area_filter_kernel = Status.parse_step_status(self._out_root,
+                                                          target_module,
+                                                          key=key)
             if not area_filter_kernel:
                 area_filter_kernel = self._default_area_filter_kernel
                 msg = ('Could not parse area_filter_kernel from previous '
@@ -425,9 +423,8 @@ class QaQcModule:
 
         if min_area == 'PIPELINE':
             target_module = ModuleName.SUPPLY_CURVE_AGGREGATION
-            min_area = Status.parse_command_status(self._out_root,
-                                                   target_module,
-                                                   key='min_area')
+            min_area = Status.parse_step_status(self._out_root, target_module,
+                                                key='min_area')
             if not min_area:
                 min_area = None
                 msg = ('Could not parse min_area from previous '

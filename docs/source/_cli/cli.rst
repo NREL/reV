@@ -21,4 +21,6 @@ Command Line Interfaces (CLIs)
    reV hybrids
    reV nrwal
    reV qa-qc
+   reV script
    reV status
+   reV reset-status

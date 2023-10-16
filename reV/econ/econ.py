@@ -126,11 +126,18 @@ class Econ(BaseGen):
             inputs.
         cf_file : str
             Path to reV output generation file containing a capacity
-            factor output. If executing ``reV`` from the command line,
-            this path can contain brackets ``{}`` that will be filled in
-            by the `analysis_years` input. Alternatively, this input can
-            be set to ``"PIPELINE"`` to parse the output of the previous
-            step (``reV`` generation) and use it as input to this call.
+            factor output.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              path can contain brackets ``{}`` that will be filled in
+              by the `analysis_years` input. Alternatively, this input
+              can be set to ``"PIPELINE"`` to parse the output of the
+              previous step (``reV`` generation) and use it as input to
+              this call. However, note that duplicate executions of
+              ``reV`` generation within the pipeline may invalidate this
+              parsing, meaning the `cf_file` input will have to be
+              specified manually.
+
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input
             is a string, it should be a path that points to a CSV file.

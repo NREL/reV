@@ -899,9 +899,19 @@ class RepProfiles(RepProfilesBase):
         ----------
         gen_fpath : str
             Filepath to ``reV`` generation output HDF5 file to extract
-            `cf_dset` dataset from. If executing ``reV`` from the
-            command line, this path can contain brackets ``{}`` that
-            will be filled in by the `analysis_years` input.
+            `cf_dset` dataset from.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              path can contain brackets ``{}`` that will be filled in by
+              the `analysis_years` input. Alternatively, this input can
+              be set to ``"PIPELINE"``, which will parse this input from
+              one of these preceding pipeline steps: ``multi-year``,
+              ``collect``, ``generation``, or
+              ``supply-curve-aggregation``. However, note that duplicate
+              executions of any of these commands within the pipeline
+              may invalidate this parsing, meaning the `gen_fpath` input
+              will have to be specified manually.
+
         rev_summary : str | pd.DataFrame
             Aggregated ``reV`` supply curve summary file. Must include
             the following columns:
@@ -916,6 +926,15 @@ class RepProfiles(RepProfilesBase):
                   representation of python list containing the resource
                   GID weights for each supply curve point.
 
+            .. Note:: If executing ``reV`` from the command line, this
+              input can be set to ``"PIPELINE"``, which will parse this
+              input from one of these preceding pipeline steps:
+              ``supply-curve-aggregation`` or ``supply-curve``.
+              However, note that duplicate executions of any of these
+              commands within the pipeline may invalidate this parsing,
+              meaning the `rev_summary` input will have to be specified
+              manually.
+
         reg_cols : str | list
             Label(s) for a categorical region column(s) to extract
             profiles for. For example, ``"state"`` will extract a rep
@@ -925,8 +944,13 @@ class RepProfiles(RepProfilesBase):
             ``"sc_gid"``.
         cf_dset : str, optional
             Dataset name to pull generation profiles from. This dataset
-            must be present in the `gen_fpath` HDF5 file.
-            By default, ``"cf_profile"``
+            must be present in the `gen_fpath` HDF5 file. By default,
+            ``"cf_profile"``
+
+            .. Note:: If executing ``reV`` from the command line, this
+              name can contain brackets ``{}`` that will be filled in by
+              the `analysis_years` input (e.g. ``"cf_profile-{}"``).
+
         rep_method : {'mean', 'meanoid', 'median', 'medianoid'}, optional
             Method identifier for calculation of the representative
             profile. By default, ``'meanoid'``

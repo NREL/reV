@@ -52,10 +52,16 @@ class SupplyCurve:
             Path to CSV or JSON or DataFrame containing supply curve
             point summary. Can also be a filepath to a ``reV`` bespoke
             HDF5 output file where the ``meta`` dataset has the same
-            format as the supply curve aggregation output. If running
-            ``reV`` from the command line, this input can also be
-            ``"PIPELINE"`` to parse the output of the previous step and
-            use it as input to this call.
+            format as the supply curve aggregation output.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              input can also be ``"PIPELINE"`` to parse the output of
+              the previous pipeline step and use it as input to this
+              call. However, note that duplicate executions of any
+              preceding commands within the pipeline may invalidate this
+              parsing, meaning the `sc_points` input will have to be
+              specified manually.
+
         trans_table : str | pandas.DataFrame | list
             Path to CSV or JSON or DataFrame containing supply curve
             transmission mapping. This can also be a list of

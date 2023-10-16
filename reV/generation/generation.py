@@ -220,9 +220,10 @@ class Gen(BaseGen):
             the dimensions of (``time_index``, ``meta``). The time index
             must start at 00:00 of January 1st of the year under
             consideration, and its shape must be a multiple of 8760.
-            If executing ``reV`` from the command line, this path can
-            contain brackets ``{}`` that will be filled in by the
-            `analysis_years` input.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              path can contain brackets ``{}`` that will be filled in by
+              the `analysis_years` input.
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:

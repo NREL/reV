@@ -168,7 +168,9 @@ reV command line tools
 - `reV hybrids <https://nrel.github.io/reV/_cli/reV%20hybrids.html>`_
 - `reV nrwal <https://nrel.github.io/reV/_cli/reV%20nrwal.html>`_
 - `reV qa-qc <https://nrel.github.io/reV/_cli/reV%20qa-qc.html>`_
+- `reV script <https://nrel.github.io/reV/_cli/reV%20script.html>`_
 - `reV status <https://nrel.github.io/reV/_cli/reV%20status.html>`_
+- `reV reset-status <https://nrel.github.io/reV/_cli/reV%20reset-status.html>`_
 
 
 Launching a run

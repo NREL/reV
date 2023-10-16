@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=anomalous-backslash-in-string
 """reV supply curve aggregation framework.
 
 Created on Fri Jun 21 13:24:31 2019
@@ -268,17 +269,29 @@ class SupplyCurveAggregation(BaseAggregation):
               techmap must be used for every unique combination of
               resource and exclusion coordinates.
 
-            If running ``reV`` from the command line, you can specify a
-            name that is not in the exclusions HDF5 file, and ``reV``
-            will calculate the techmap for you. Note however that
-            computing the techmap and writing it to the exclusion HDF5
-            file is a blocking operation, so you may only run a single
-            ``reV`` aggregation step at a time this way.
+            .. Note:: If executing ``reV`` from the command line, you
+              can specify a name that is not in the exclusions HDF5
+              file, and ``reV`` will calculate the techmap for you. Note
+              however that computing the techmap and writing it to the
+              exclusion HDF5 file is a blocking operation, so you may
+              only run a single ``reV`` aggregation step at a time this
+              way.
+
         econ_fpath : str, optional
             Filepath to HDF5 file with ``reV`` econ output results
             containing an `lcoe_dset` dataset. If ``None``, `lcoe_dset`
             should be a dataset in the `gen_fpath` HDF5 file that
-            aggregation is executed on. By default, ``None``.
+            aggregation is executed on.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              input can be set to ``"PIPELINE"`` to parse the output
+              from one of these preceding pipeline steps:
+              ``multi-year``, ``collect``, or ``generation``. However,
+              note that duplicate executions of any of these commands
+              within the pipeline may invalidate this parsing, meaning
+              the `econ_fpath` input will have to be specified manually.
+
+            By default, ``None``.
         excl_dict : dict | None
             Dictionary of exclusion keyword arguments of the format
             ``{layer_dset_name: {kwarg: value}}``, where
@@ -1296,6 +1309,15 @@ class SupplyCurveAggregation(BaseAggregation):
             Filepath to HDF5 file with ``reV`` generation output
             results. If ``None``, a simple aggregation without any
             generation, resource, or cost data is performed.
+
+            .. Note:: If executing ``reV`` from the command line, this
+              input can be set to ``"PIPELINE"`` to parse the output
+              from one of these preceding pipeline steps:
+              ``multi-year``, ``collect``, or ``econ``. However, note
+              that duplicate executions of any of these commands within
+              the pipeline may invalidate this parsing, meaning the
+              `econ_fpath` input will have to be specified manually.
+
             By default, ``None``.
         res_fpath : str, optional
             Filepath to HDF5 resource file (e.g. WTK or NSRDB). This
