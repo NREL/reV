@@ -1093,7 +1093,7 @@ class BaseGen(ABC):
 
             logger.debug('Flushed output successfully to disk.')
 
-    def _pre_split_pc(self, pool_size=os.cpu_count() * 2):
+    def _pre_split_pc(self, pool_size=None):
         """Pre-split project control iterator into sub chunks to further
         split the parallelization.
 
@@ -1101,7 +1101,8 @@ class BaseGen(ABC):
         ----------
         pool_size : int
             Number of futures to submit to a single process pool for
-            parallel futures.
+            parallel futures. If ``None``, the pool size is set to
+            ``os.cpu_count() * 2``. By default, ``None``.
 
         Returns
         -------
@@ -1113,6 +1114,8 @@ class BaseGen(ABC):
         N = 0
         pc_chunks = []
         i_chunk = []
+        if pool_size is None:
+            pool_size = os.cpu_count() * 2
 
         for i, split in enumerate(self.points_control):
             N += 1
@@ -1129,8 +1132,8 @@ class BaseGen(ABC):
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=os.cpu_count() * 2,
-                      timeout=1800, **kwargs):
+    def _parallel_run(self, max_workers=None, pool_size=None, timeout=1800,
+                      **kwargs):
         """Execute parallel compute.
 
         Parameters
@@ -1139,15 +1142,18 @@ class BaseGen(ABC):
             Number of workers. None will default to cpu count.
         pool_size : int
             Number of futures to submit to a single process pool for
-            parallel futures.
+            parallel futures. If ``None``, the pool size is set to
+            ``os.cpu_count() * 2``. By default, ``None``.
         timeout : int | float
             Number of seconds to wait for parallel run iteration to complete
             before returning zeros.
         kwargs : dict
             Keyword arguments to self._run_single_worker().
         """
-
-        max_workers = os.cpu_count() if max_workers is None else max_workers
+        if pool_size is None:
+            pool_size = os.cpu_count() * 2
+        if max_workers is None:
+            max_workers = os.cpu_count()
         logger.info('Running parallel execution with max_workers={}'
                     .format(max_workers))
         i = 0

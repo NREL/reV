@@ -456,7 +456,7 @@ class Econ(BaseGen):
         return data_shape
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800,
-            pool_size=os.cpu_count() * 2):
+            pool_size=None):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -476,7 +476,8 @@ class Econ(BaseGen):
             seconds.
         pool_size : int, optional
             Number of futures to submit to a single process pool for
-            parallel futures. By default, ``os.cpu_count() * 2``.
+            parallel futures. If ``None``, the pool size is set to
+            ``os.cpu_count() * 2``. By default, ``None``.
 
         Returns
         -------
@@ -484,6 +485,8 @@ class Econ(BaseGen):
             Path to output HDF5 file, or ``None`` if results were not
             written to disk.
         """
+        if pool_size is None:
+            pool_size = os.cpu_count() * 2
 
         # initialize output file or append econ data to gen file
         if self._append:
