@@ -100,7 +100,7 @@ A visual summary of this process is given below:
 To get up and running with reV, first head over to the `installation page <https://nrel.github.io/reV/misc/installation.html>`_,
 then check out some of the `Examples <https://nrel.github.io/reV/misc/examples.html>`_ or
 go straight to the `CLI Documentation <https://nrel.github.io/reV/_cli/cli.html>`_!
-
+You can also check out the `guide on running GAPs models <https://nrel.github.io/gaps/misc/examples.users.html>`_.
 
 .. inclusion-install
 

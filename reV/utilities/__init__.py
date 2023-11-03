@@ -37,6 +37,9 @@ class ModuleName(str, Enum):
     def __str__(self):
         return self.value
 
+    def __format__(self, format_spec):
+        return str.__format__(self.value, format_spec)
+
     @classmethod
     def all_names(cls):
         """All module names.

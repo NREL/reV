@@ -770,7 +770,7 @@ class Gen(BaseGen):
         return list(set(output_request))
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800,
-            pool_size=os.cpu_count() * 2):
+            pool_size=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -789,7 +789,8 @@ class Gen(BaseGen):
             seconds.
         pool_size : int, optional
             Number of futures to submit to a single process pool for
-            parallel futures. By default, ``os.cpu_count() * 2``.
+            parallel futures. If ``None``, the pool size is set to
+            ``os.cpu_count() * 2``. By default, ``None``.
 
         Returns
         -------
@@ -801,6 +802,8 @@ class Gen(BaseGen):
         self._init_fpath(out_fpath, module=ModuleName.GENERATION)
         self._init_h5()
         self._init_out_arrays()
+        if pool_size is None:
+            pool_size = os.cpu_count() * 2
 
         kwargs = {'tech': self.tech,
                   'res_file': self.res_file,
