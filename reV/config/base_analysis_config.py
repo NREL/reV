@@ -102,6 +102,7 @@ class AnalysisConfig(BaseConfig):
             ec_config_types = {'local': BaseExecutionConfig,
                                'slurm': SlurmConfig,
                                'eagle': SlurmConfig,
+                               'kestrel': SlurmConfig,
                                }
             if 'option' in ec:
                 try:
