@@ -157,13 +157,13 @@ class SlurmConfig(HPCConfig):
 
     def _preflight(self):
         """Run a preflight check on the config."""
-        if self.option == 'eagle':
+        if self.option in {'eagle', 'kestrel', 'slurm'}:
             if self.allocation is None:
-                msg = 'Eagle execution config must have an "allocation" input'
+                msg = 'HPC execution config must have an "allocation" input'
                 logger.error(msg)
                 raise ConfigError(msg)
             if self.walltime is None:
-                msg = 'Eagle execution config must have an "walltime" input'
+                msg = 'HPC execution config must have a "walltime" input'
                 logger.error(msg)
                 raise ConfigError(msg)
 
