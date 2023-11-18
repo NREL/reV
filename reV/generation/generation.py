@@ -518,7 +518,7 @@ class Gen(BaseGen):
             else:
                 lifetime_periods.append(1)
 
-        if any([ltp > 1 for ltp in lifetime_periods]):
+        if any(ltp > 1 for ltp in lifetime_periods):
             # Collect variables to check that this will work
             n_unique_periods = len(np.unique(lifetime_periods))
             array_vars = [
