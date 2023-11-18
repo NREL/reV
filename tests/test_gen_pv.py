@@ -352,7 +352,7 @@ def test_pvwatts_v8_lifetime():
 
 
 def test_pvwatts_v8_lifetime_invalid_request():
-    """Test reV pvwatts v8 generation/LCOE with system lifetime outputs."""
+    """Test pvwatts v8 generation error with invalid lifetime outputs."""
 
     year = 2012
     rev2_points = slice(0, 3)

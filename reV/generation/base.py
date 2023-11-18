@@ -440,10 +440,10 @@ class BaseGen(ABC):
         Parameters
         ----------
         ti : pandas.DatetimeIndex
-            Time-series datetime index with or without a leap days.
+            Time-series datetime index with or without leap days.
         drop_leap : bool
-            Option to drop leap day (if True) or drop the last day of the year
-            (if False).
+            Option to drop leap days (if True) or drop the last day of each
+            leap year (if False).
 
         Returns
         -------
