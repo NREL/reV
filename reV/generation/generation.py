@@ -12,18 +12,24 @@ import numpy as np
 import pandas as pd
 
 from reV.generation.base import BaseGen
-from reV.utilities.exceptions import (ProjectPointsValueError, InputError)
-from reV.SAM.generation import (Geothermal,
-                                PvWattsv5,
-                                PvWattsv7,
-                                PvWattsv8,
-                                PvSamv1,
-                                TcsMoltenSalt,
-                                WindPower,
-                                SolarWaterHeat,
-                                TroughPhysicalHeat,
-                                LinearDirectSteam,
-                                MhkWave)
+from reV.utilities.exceptions import (
+    ConfigError,
+    InputError,
+    ProjectPointsValueError,
+)
+from reV.SAM.generation import (
+    Geothermal,
+    PvWattsv5,
+    PvWattsv7,
+    PvWattsv8,
+    PvSamv1,
+    TcsMoltenSalt,
+    WindPower,
+    SolarWaterHeat,
+    TroughPhysicalHeat,
+    LinearDirectSteam,
+    MhkWave
+)
 from reV.utilities import ModuleName
 
 from rex.resource import Resource
@@ -51,18 +57,19 @@ class Gen(BaseGen):
     """Gen"""
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {'geothermal': Geothermal,
-               'pvwattsv5': PvWattsv5,
-               'pvwattsv7': PvWattsv7,
-               'pvwattsv8': PvWattsv8,
-               'pvsamv1': PvSamv1,
-               'tcsmoltensalt': TcsMoltenSalt,
-               'solarwaterheat': SolarWaterHeat,
-               'troughphysicalheat': TroughPhysicalHeat,
-               'lineardirectsteam': LinearDirectSteam,
-               'windpower': WindPower,
-               'mhkwave': MhkWave
-               }
+    OPTIONS = {
+        'geothermal': Geothermal,
+        'pvwattsv5': PvWattsv5,
+        'pvwattsv7': PvWattsv7,
+        'pvwattsv8': PvWattsv8,
+        'pvsamv1': PvSamv1,
+        'tcsmoltensalt': TcsMoltenSalt,
+        'solarwaterheat': SolarWaterHeat,
+        'troughphysicalheat': TroughPhysicalHeat,
+        'lineardirectsteam': LinearDirectSteam,
+        'windpower': WindPower,
+        'mhkwave': MhkWave
+    }
     """reV technology options."""
 
     # Mapping of reV generation outputs to scale factors and units.
@@ -482,10 +489,83 @@ class Gen(BaseGen):
             elif step is not None:
                 time_index = time_index[::step]
 
-            self._time_index = self.handle_leap_ti(time_index,
-                                                   drop_leap=self._drop_leap)
+            time_index = self.handle_lifetime_index(time_index)
+            time_index = self.handle_leap_ti(time_index,
+                                             drop_leap=self._drop_leap)
+
+            self._time_index = time_index
 
         return self._time_index
+
+    def handle_lifetime_index(self, ti):
+        """Adjust the time index if modeling full system lifetime.
+
+        Parameters
+        ----------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index with leap days.
+
+        Returns
+        -------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index.
+        """
+        lifetime_periods = []
+        for sam_meta in self.sam_metas.values():
+            if "system_use_lifetime_output" in sam_meta:
+                lifetime_period = sam_meta["analysis_period"]
+                lifetime_periods.append(lifetime_period)
+            else:
+                lifetime_periods.append(1)
+
+        if any([ltp > 1 for ltp in lifetime_periods]):
+            # Collect variables to check that this will work
+            n_unique_periods = len(np.unique(lifetime_periods))
+            array_vars = [
+                var for var, attrs in GEN_ATTRS.items()
+                if attrs['type'] == 'array'
+            ]
+            valid_vars = ['gen_profile', 'cf_profile', 'cf_profile_ac']
+            invalid_vars = set(array_vars) - set(valid_vars)
+            invalid_requests = [var for var in self.output_request
+                                if var in invalid_vars]
+
+            if n_unique_periods != 1:
+                # Only one time index, so lifetime outputs all need to match
+                msg = ('reV cannot handle multiple analysis_periods when '
+                       'modeling with `system_use_lifetime_output` set '
+                       'to 1. Found {} different analysis_periods in the SAM '
+                       'configs'.format(n_unique_periods))
+                logger.error(msg)
+                raise ConfigError(msg)
+
+            elif invalid_requests:
+                # SAM does not output full lifetime for all array variables
+                msg = (
+                    'reV can only handle the following output arrays '
+                    'when modeling with `system_use_lifetime_output` set '
+                    'to 1: {}. Try running without {}.'.format(
+                        ', '.join(valid_vars), ', '.join(invalid_requests)
+                    )
+                )
+                logger.error(msg)
+                raise ConfigError(msg)
+
+            else:
+                sam_meta = self.sam_metas[next(iter(self.sam_metas))]
+                analysis_period = sam_meta["analysis_period"]
+                logger.info('reV generation running with a full system '
+                            'life of {} years.'.format(analysis_period))
+
+                old_end = ti[-1]
+                new_end = old_end + pd.DateOffset(
+                    years=analysis_period - 1
+                )
+                step = old_end - ti[-2]
+                time_extension = pd.date_range(old_end, new_end, freq=step)
+                ti = time_extension.union(ti)
+
+        return ti
 
     @classmethod
     def _run_single_worker(cls, points_control, tech=None, res_file=None,
@@ -552,7 +632,8 @@ class Gen(BaseGen):
                 lr_res_file=lr_res_file,
                 output_request=output_request,
                 gid_map=gid_map, nn_map=nn_map,
-                bias_correct=bias_correct)
+                bias_correct=bias_correct
+            )
 
         except Exception as e:
             out = {}

@@ -17,7 +17,7 @@ import tempfile
 import shutil
 
 from rex.utilities.exceptions import ResourceRuntimeError
-from reV.utilities.exceptions import ExecutionError
+from reV.utilities.exceptions import ConfigError, ExecutionError
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
@@ -322,6 +322,54 @@ def test_pvwatts_v5_v7():
 
     msg = 'PVwatts v5 and v7 did not match within test tolerance'
     assert np.allclose(gen7.out['cf_mean'], gen5.out['cf_mean'], atol=3), msg
+
+
+def test_pvwatts_v8_lifetime():
+    """Test reV pvwatts v8 generation/LCOE with system lifetime outputs."""
+    baseline_cf_mean = np.array([0.1821, 0.1826, 0.189])
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv8_degradation.json'
+
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean')
+
+    # run reV 2.0 generation with valid output request
+    gen = Gen('pvwattsv8', rev2_points, sam_files, res_file,
+              sites_per_worker=1, output_request=output_request)
+    gen.run(max_workers=1)
+
+    msg = ('PVWATTSV8 cf_mean with system lifetime results {} did not match '
+           'baseline: {}'.format(gen.out['cf_mean'], baseline_cf_mean))
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=0.005, atol=0.0), msg
+
+    for req in output_request:
+        assert req in gen.out
+        assert (gen.out[req] != 0).sum() > 0
+
+
+def test_pvwatts_v8_lifetime_invalid_request():
+    """Test reV pvwatts v8 generation/LCOE with system lifetime outputs."""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv8_degradation.json'
+
+    output_request_invalid = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                              'ghi_mean', 'ac', 'dc')
+
+    # run reV 2.0 generation with invalid output request
+    with pytest.raises(ConfigError) as record:
+        gen = Gen('pvwattsv8', rev2_points, sam_files, res_file,
+                  sites_per_worker=1, output_request=output_request_invalid)
+        gen.run(max_workers=1)
+        msg_pattern = ('reV can only handle the following output arrays when '
+                       'modeling with `system_use_lifetime_output`')
+        assert msg_pattern in record[0].message
 
 
 def test_bifacial():
