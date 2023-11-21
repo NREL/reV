@@ -782,7 +782,10 @@ class Gen(BaseGen):
             module name and/or resource data year will get added to the
             output file name. By default, ``None``.
         max_workers : int, optional
-            Number of local workers to run on. By default, ``1``.
+            Number of local workers to run on. If ``None``, or if
+            running from the command line and omitting this argument
+            from your config file completely, this input is set to
+            ``os.cpu_count()``. Otherwise, the default is ``1``.
         timeout : int, optional
             Number of seconds to wait for parallel run iteration to
             complete before returning zeros. By default, ``1800``
