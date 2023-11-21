@@ -17,7 +17,6 @@ import traceback
 
 from reV.cli import main
 from reV.config.project_points import ProjectPoints
-from reV.generation.base import BaseGen
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
