@@ -43,6 +43,7 @@ def _preprocessor(config, job_name, log_directory, verbose,
         Updated config file.
     """
     init_cli_logging(job_name, log_directory, verbose)
+    config.get("execution_control", {}).setdefault("max_workers")
     analysis_years = format_analysis_years(analysis_years)
 
     config["resource_file"] = _parse_res_files(config["resource_file"],
