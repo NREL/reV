@@ -181,6 +181,49 @@ def test_sam_config(tech):
                            gen_dict.out['cf_profile']), msg
 
 
+@pytest.mark.parametrize('expected_log_message',
+                         ["Running serial generation for",
+                          "Running parallel generation for"])
+def test_gen_mw_config_input(runner, clear_loggers, expected_log_message):
+    """Test max_workers input from gen config"""
+    with tempfile.TemporaryDirectory() as td:
+
+        run_dir = os.path.join(td, 'generation')
+        os.mkdir(run_dir)
+        project_points = os.path.join(TESTDATADIR, 'config', '..',
+                                      'config', "wtk_pp_2012_10.csv")
+        resource_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
+        sam_files = {"wind0":
+                     os.path.join(TESTDATADIR,
+                                  "SAM/wind_gen_standard_losses_0.json")}
+
+        config = os.path.join(TESTDATADIR, 'config', 'local_wind.json')
+        config = safe_json_load(config)
+        if "parallel" in expected_log_message:
+            config["execution_control"].pop("max_workers")
+        else:
+            config["execution_control"]["max_workers"] = 1
+
+        config['project_points'] = project_points
+        config['resource_file'] = resource_file
+        config['sam_files'] = sam_files
+        config['log_directory'] = run_dir
+
+        config_path = os.path.join(run_dir, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['generation', '-c', config_path])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        log_file = os.path.join(run_dir, 'generation_generation.log')
+        with open(log_file, "r") as fh:
+            assert expected_log_message in fh.read()
+        clear_loggers()
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
