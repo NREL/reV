@@ -13,6 +13,7 @@ from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.points import AggregationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError, SupplyCurveInputError)
@@ -153,7 +154,7 @@ class BaseAggregation(ABC):
 
     def __init__(self, excl_fpath, tm_dset, excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None, gids=None,
+                 resolution=64, excl_area=None, res_fpath=None, gids=None,
                  pre_extract_inclusions=False):
         """
         Parameters
@@ -198,10 +199,13 @@ class BaseAggregation(ABC):
         self._resolution = resolution
         self._area_filter_kernel = area_filter_kernel
         self._min_area = min_area
+        self._res_fpath = res_fpath
         self._gids = gids
         self._pre_extract_inclusions = pre_extract_inclusions
         self._excl_area = self._get_excl_area(excl_fpath, excl_area=excl_area)
         self._shape = None
+
+        self._validate_tech_mapping()
 
         if pre_extract_inclusions:
             self._inclusion_mask = \
@@ -212,6 +216,34 @@ class BaseAggregation(ABC):
                     min_area=min_area)
         else:
             self._inclusion_mask = None
+
+    def _validate_tech_mapping(self):
+        """Check that tech mapping exists and create it if it doesn't"""
+
+        with ExclusionLayers(self._excl_fpath) as f:
+            dsets = f.h5.dsets
+
+        excl_fp_is_str = isinstance(self._excl_fpath, str)
+        tm_in_excl = self._tm_dset in dsets
+        if tm_in_excl:
+            logger.info('Found techmap "{}".'.format(self._tm_dset))
+        elif not tm_in_excl and not excl_fp_is_str:
+            msg = ('Could not find techmap dataset "{}" and cannot run '
+                   'techmap with arbitrary multiple exclusion filepaths '
+                   'to write to: {}'.format(self._tm_dset, self._excl_fpath))
+            logger.error(msg)
+            raise RuntimeError(msg)
+        else:
+            logger.info('Could not find techmap "{}". Running techmap module.'
+                        .format(self._tm_dset))
+            try:
+                TechMapping.run(self._excl_fpath, self._res_fpath,
+                                dset=self._tm_dset)
+            except Exception as e:
+                msg = ('TechMapping process failed. Received the '
+                       'following error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg) from e
 
     @property
     def gids(self):
