@@ -407,7 +407,9 @@ def test_recalc_lcoe():
     assert not np.allclose(summary_base['mean_lcoe'], summary['mean_lcoe'])
 
 
-def test_cli_basic_agg(runner, clear_loggers):
+@pytest.mark.parametrize('tm_dset', ("techmap_ri", "techmap_ri_new"))
+@pytest.mark.parametrize('pre_extract', (True, False))
+def test_cli_basic_agg(runner, clear_loggers, tm_dset, pre_extract):
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'excl.h5')
         shutil.copy(EXCL, excl_fp)
@@ -421,10 +423,11 @@ def test_cli_basic_agg(runner, clear_loggers):
             "excl_fpath": excl_fp,
             "gen_fpath": None,
             "econ_fpath": None,
-            "tm_dset": "techmap_ri",
+            "tm_dset": tm_dset,
             "res_fpath": RES,
             'excl_dict': EXCL_DICT,
-            'resolution': 32
+            'resolution': 32,
+            'pre_extract_inclusions': pre_extract
         }
         config_path = os.path.join(td, 'config.json')
         with open(config_path, 'w') as f:

@@ -21,7 +21,6 @@ from reV.supply_curve.aggregation import (AbstractAggFileHandler,
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning)
@@ -226,7 +225,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
     def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None, gids=None,
+                 resolution=64, excl_area=None, res_fpath=None, gids=None,
                  pre_extract_inclusions=False, res_class_dset=None,
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
@@ -368,6 +367,11 @@ class SupplyCurveAggregation(BaseAggregation):
             Area of a single exclusion mask pixel (in km\ :sup:`2`).
             If ``None``, this value will be inferred from the profile
             transform attribute in `excl_fpath`. By default, ``None``.
+        res_fpath : str, optional
+            Filepath to HDF5 resource file (e.g. WTK or NSRDB). This
+            input is required if techmap dset is to be created or if the
+            ``gen_fpath`` input to the ``summarize`` or ``run`` methods
+            is ``None``. By default, ``None``.
         gids : list, optional
             List of supply curve point gids to get summary for. If you
             would like to obtain all available ``reV`` supply curve
@@ -636,7 +640,7 @@ class SupplyCurveAggregation(BaseAggregation):
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
                          min_area=min_area, resolution=resolution,
-                         excl_area=excl_area, gids=gids,
+                         excl_area=excl_area, res_fpath=res_fpath, gids=gids,
                          pre_extract_inclusions=pre_extract_inclusions)
 
         self._econ_fpath = econ_fpath
@@ -1206,34 +1210,6 @@ class SupplyCurveAggregation(BaseAggregation):
 
         return summary
 
-    def _validate_tech_mapping(self, res_fpath):
-        """Check that tech mapping exists and create it if it doesn't"""
-
-        with ExclusionLayers(self._excl_fpath) as f:
-            dsets = f.h5.dsets
-
-        excl_fp_is_str = isinstance(self._excl_fpath, str)
-        tm_in_excl = self._tm_dset in dsets
-        if tm_in_excl:
-            logger.info('Found techmap "{}".'.format(self._tm_dset))
-        elif not tm_in_excl and not excl_fp_is_str:
-            msg = ('Could not find techmap dataset "{}" and cannot run '
-                   'techmap with arbitrary multiple exclusion filepaths '
-                   'to write to: {}'.format(self._tm_dset, self._excl_fpath))
-            logger.error(msg)
-            raise RuntimeError(msg)
-        else:
-            logger.info('Could not find techmap "{}". Running techmap module.'
-                        .format(self._tm_dset))
-            try:
-                TechMapping.run(self._excl_fpath, res_fpath,
-                                dset=self._tm_dset)
-            except Exception as e:
-                msg = ('TechMapping process failed. Received the '
-                       'following error:\n{}'.format(e))
-                logger.exception(msg)
-                raise RuntimeError(msg) from e
-
     def summarize(self, gen_fpath, args=None, max_workers=None,
                   sites_per_worker=100):
         """
@@ -1299,8 +1275,8 @@ class SupplyCurveAggregation(BaseAggregation):
 
         return summary
 
-    def run(self, out_fpath, gen_fpath=None, res_fpath=None, args=None,
-            max_workers=None, sites_per_worker=100):
+    def run(self, out_fpath, gen_fpath=None, args=None, max_workers=None,
+            sites_per_worker=100):
         """Run a supply curve aggregation.
 
         Parameters
@@ -1319,10 +1295,6 @@ class SupplyCurveAggregation(BaseAggregation):
               `econ_fpath` input will have to be specified manually.
 
             By default, ``None``.
-        res_fpath : str, optional
-            Filepath to HDF5 resource file (e.g. WTK or NSRDB). This
-            input is required if techmap dset is to be created or if
-            ``gen_fpath is`` is ``None``. By default, ``None``.
         args : tuple | list, optional
             List of columns to include in summary output table. ``None``
             defaults to all available args defined in the
@@ -1341,11 +1313,9 @@ class SupplyCurveAggregation(BaseAggregation):
             Path to output CSV file containing supply curve aggregation.
         """
 
-        self._validate_tech_mapping(res_fpath)
-
         if gen_fpath is None:
             out = Aggregation.run(
-                self._excl_fpath, res_fpath, self._tm_dset,
+                self._excl_fpath, self._res_fpath, self._tm_dset,
                 excl_dict=self._excl_dict,
                 resolution=self._resolution,
                 excl_area=self._excl_area,
