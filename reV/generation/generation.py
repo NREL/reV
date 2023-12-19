@@ -510,9 +510,10 @@ class Gen(BaseGen):
         ti : pandas.DatetimeIndex
             Time-series datetime index.
         """
+        life_var = "system_use_lifetime_output"
         lifetime_periods = []
         for sam_meta in self.sam_metas.values():
-            if "system_use_lifetime_output" in sam_meta:
+            if life_var in sam_meta and sam_meta[life_var] == 1:
                 lifetime_period = sam_meta["analysis_period"]
                 lifetime_periods.append(lifetime_period)
             else:
