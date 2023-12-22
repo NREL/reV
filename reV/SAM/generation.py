@@ -788,7 +788,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
               ``system_use_lifetime_output``=1.
             - ``dc_degradation`` : List of percentage values representing the
               annual DC degradation of capacity factors. Maybe a single value
-              that will be compound each year or a vector of yearly rates. 
+              that will be compound each year or a vector of yearly rates.
               Required if ``system_use_lifetime_output``=1.
 
         You may also include the following ``reV``-specific keys:
