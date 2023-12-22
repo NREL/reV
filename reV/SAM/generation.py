@@ -767,6 +767,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
     MODULE = None
     PYSAM = None
 
+    # pylint: disable=line-too-long
     def __init__(self, resource, meta, sam_sys_inputs, site_sys_inputs=None,
                  output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
@@ -1324,6 +1325,7 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
         return DefaultTroughPhysicalProcessHeat.default()
 
 
+# pylint: disable=line-too-long
 class Geothermal(AbstractSamGenerationFromWeatherFile):
     """reV-SAM geothermal generation.
 
@@ -1759,6 +1761,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
     """AbstractSamWind"""
 
+    # pylint: disable=line-too-long
     def __init__(self, *args, **kwargs):
         """Wind generation from SAM.
 
