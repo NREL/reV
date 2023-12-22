@@ -4,26 +4,29 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
-from abc import ABC, abstractmethod
 import copy
 import os
 import logging
-import numpy as np
-import pandas as pd
+
+from abc import ABC, abstractmethod
 from tempfile import TemporaryDirectory
 from warnings import warn
+
+import numpy as np
+import pandas as pd
 import PySAM.Geothermal as PySamGeothermal
+import PySAM.LinearFresnelDsgIph as PySamLds
+import PySAM.MhkWave as PySamMhkWave
+import PySAM.Pvsamv1 as PySamDetailedPv
 import PySAM.Pvwattsv5 as PySamPv5
 import PySAM.Pvwattsv7 as PySamPv7
 import PySAM.Pvwattsv8 as PySamPv8
-import PySAM.Pvsamv1 as PySamDetailedPv
-import PySAM.Windpower as PySamWindPower
-import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSwh
+import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.TroughPhysicalProcessHeat as PySamTpph
-import PySAM.LinearFresnelDsgIph as PySamLds
-import PySAM.MhkWave as PySamMhkWave
+import PySAM.Windpower as PySamWindPower
 
+from reV.losses import ScheduledLossesMixin, PowerCurveLossesMixin
 from reV.SAM.defaults import (DefaultGeothermal,
                               DefaultPvWattsv5,
                               DefaultPvWattsv8,
@@ -34,12 +37,11 @@ from reV.SAM.defaults import (DefaultGeothermal,
                               DefaultTroughPhysicalProcessHeat,
                               DefaultLinearFresnelDsgIph,
                               DefaultMhkWave)
+from reV.SAM.econ import LCOE, SingleOwner
+from reV.SAM.SAM import RevPySam
+from reV.utilities.curtailment import curtail
 from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
                                       InputError)
-from reV.utilities.curtailment import curtail
-from reV.SAM.SAM import RevPySam
-from reV.SAM.econ import LCOE, SingleOwner
-from reV.losses import ScheduledLossesMixin, PowerCurveLossesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -770,9 +772,26 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         """Initialize a SAM solar object.
 
         See the PySAM :py:class:`~PySAM.Pvwattsv8.Pvwattsv8` (or older
-        version model) documentation for the configuration keys required
-        in the `sam_sys_inputs` config. You may also include the
-        following ``reV``-specific keys:
+        version model) or :py:class:`~PySAM.Pvsamv1.Pvsamv1` documentation for
+        the configuration keys required in the `sam_sys_inputs` config for the
+        respective models. Some notable keys include the following to enable a
+        lifetime simulation (non-exhaustive):
+
+            - ``system_use_lifetime_output`` : Integer flag indicating whether
+              or not to run a full lifetime model (0 for off, 1 for on). If
+              running a lifetime model, the resource file will be repeated
+              for the number of years specified as the lifetime of the
+              plant and a performance degradation term will be used to
+              simulate reduced performance over time.
+            - ``analysis_period`` : Integer representing the number of years
+              to include in the lifetime of the model generator. Required if
+              ``system_use_lifetime_output``=1.
+            - ``dc_degradation`` : List of percentage values representing the
+              annual DC degradation of capacity factors. Maybe a single value
+              that will be compound each year or a vector of yearly rates. 
+              Required if ``system_use_lifetime_output``=1.
+
+        You may also include the following ``reV``-specific keys:
 
             - ``reV_outages`` : Specification for ``reV``-scheduled
               stochastic outage losses. For example::

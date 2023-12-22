@@ -2,42 +2,38 @@
 """
 reV generation module.
 """
-import os
 import copy
 import json
 import logging
-
+import os
 import pprint
+
 import numpy as np
 import pandas as pd
 
 from reV.generation.base import BaseGen
-from reV.utilities.exceptions import (
-    ConfigError,
-    InputError,
-    ProjectPointsValueError,
-)
-from reV.SAM.generation import (
-    Geothermal,
-    PvWattsv5,
-    PvWattsv7,
-    PvWattsv8,
-    PvSamv1,
-    TcsMoltenSalt,
-    WindPower,
-    SolarWaterHeat,
-    TroughPhysicalHeat,
-    LinearDirectSteam,
-    MhkWave
-)
+from reV.SAM.generation import (Geothermal,
+                                MhkWave,
+                                LinearDirectSteam,
+                                PvSamv1,
+                                PvWattsv5,
+                                PvWattsv7,
+                                PvWattsv8,
+                                SolarWaterHeat,
+                                TcsMoltenSalt,
+                                TroughPhysicalHeat,
+                                WindPower)
 from reV.utilities import ModuleName
-
-from rex.resource import Resource
+from reV.utilities.exceptions import (ConfigError,
+                                      InputError,
+                                      ProjectPointsValueError)
 from rex.multi_file_resource import MultiFileResource
 from rex.multi_res_resource import MultiResolutionResource
+from rex.resource import Resource
 from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
+
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
 ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
@@ -57,19 +53,18 @@ class Gen(BaseGen):
     """Gen"""
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {
-        'geothermal': Geothermal,
-        'pvwattsv5': PvWattsv5,
-        'pvwattsv7': PvWattsv7,
-        'pvwattsv8': PvWattsv8,
-        'pvsamv1': PvSamv1,
-        'tcsmoltensalt': TcsMoltenSalt,
-        'solarwaterheat': SolarWaterHeat,
-        'troughphysicalheat': TroughPhysicalHeat,
-        'lineardirectsteam': LinearDirectSteam,
-        'windpower': WindPower,
-        'mhkwave': MhkWave
-    }
+    OPTIONS = {'geothermal': Geothermal,
+               'lineardirectsteam': LinearDirectSteam,
+               'mhkwave': MhkWave,
+               'pvsamv1': PvSamv1,
+               'pvwattsv5': PvWattsv5,
+               'pvwattsv7': PvWattsv7,
+               'pvwattsv8': PvWattsv8,
+               'solarwaterheat': SolarWaterHeat,
+               'tcsmoltensalt': TcsMoltenSalt,
+               'troughphysicalheat': TroughPhysicalHeat,
+               'windpower': WindPower}
+
     """reV technology options."""
 
     # Mapping of reV generation outputs to scale factors and units.
@@ -519,52 +514,51 @@ class Gen(BaseGen):
             else:
                 lifetime_periods.append(1)
 
-        if any(ltp > 1 for ltp in lifetime_periods):
-            # Collect variables to check that this will work
-            n_unique_periods = len(np.unique(lifetime_periods))
-            array_vars = [
-                var for var, attrs in GEN_ATTRS.items()
-                if attrs['type'] == 'array'
-            ]
-            valid_vars = ['gen_profile', 'cf_profile', 'cf_profile_ac']
-            invalid_vars = set(array_vars) - set(valid_vars)
-            invalid_requests = [var for var in self.output_request
-                                if var in invalid_vars]
+        if not any(ltp > 1 for ltp in lifetime_periods):
+            return ti
 
-            if n_unique_periods != 1:
-                # Only one time index, so lifetime outputs all need to match
-                msg = ('reV cannot handle multiple analysis_periods when '
-                       'modeling with `system_use_lifetime_output` set '
-                       'to 1. Found {} different analysis_periods in the SAM '
-                       'configs'.format(n_unique_periods))
-                logger.error(msg)
-                raise ConfigError(msg)
+        # Only one time index may be passed, check that lifetime periods match
+        n_unique_periods = len(np.unique(lifetime_periods))
+        if n_unique_periods != 1:
+            msg = ('reV cannot handle multiple analysis_periods when '
+                   'modeling with `system_use_lifetime_output` set '
+                   'to 1. Found {} different analysis_periods in the SAM '
+                   'configs'.format(n_unique_periods))
+            logger.error(msg)
+            raise ConfigError(msg)
 
-            elif invalid_requests:
-                # SAM does not output full lifetime for all array variables
-                msg = (
-                    'reV can only handle the following output arrays '
-                    'when modeling with `system_use_lifetime_output` set '
-                    'to 1: {}. Try running without {}.'.format(
-                        ', '.join(valid_vars), ', '.join(invalid_requests)
-                    )
+        # Collect requested variables to check for lifetime compatibility
+        array_vars = [
+            var for var, attrs in GEN_ATTRS.items()
+            if attrs['type'] == 'array'
+        ]
+        valid_vars = ['gen_profile', 'cf_profile', 'cf_profile_ac']
+        invalid_vars = set(array_vars) - set(valid_vars)
+        invalid_requests = [var for var in self.output_request
+                            if var in invalid_vars]
+
+        if invalid_requests:
+            # SAM does not output full lifetime for all array variables
+            msg = (
+                'reV can only handle the following output arrays '
+                'when modeling with `system_use_lifetime_output` set '
+                'to 1: {}. Try running without {}.'.format(
+                    ', '.join(valid_vars), ', '.join(invalid_requests)
                 )
-                logger.error(msg)
-                raise ConfigError(msg)
+            )
+            logger.error(msg)
+            raise ConfigError(msg)
 
-            else:
-                sam_meta = self.sam_metas[next(iter(self.sam_metas))]
-                analysis_period = sam_meta["analysis_period"]
-                logger.info('reV generation running with a full system '
-                            'life of {} years.'.format(analysis_period))
+        sam_meta = self.sam_metas[next(iter(self.sam_metas))]
+        analysis_period = sam_meta["analysis_period"]
+        logger.info('reV generation running with a full system '
+                    'life of {} years.'.format(analysis_period))
 
-                old_end = ti[-1]
-                new_end = old_end + pd.DateOffset(
-                    years=analysis_period - 1
-                )
-                step = old_end - ti[-2]
-                time_extension = pd.date_range(old_end, new_end, freq=step)
-                ti = time_extension.union(ti)
+        old_end = ti[-1]
+        new_end = old_end + pd.DateOffset(years=analysis_period - 1)
+        step = old_end - ti[-2]
+        time_extension = pd.date_range(old_end, new_end, freq=step)
+        ti = time_extension.union(ti)
 
         return ti
 
