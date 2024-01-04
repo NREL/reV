@@ -911,7 +911,7 @@ def test_bespoke_aep_is_zero_if_no_turbines_placed():
     assert aep == 0
 
 
-def test_bespoke_w_prior_run():
+def test_bespoke_prior_run():
     """Test a follow-on bespoke timeseries generation run based on a prior
     plant layout optimization."""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
@@ -1064,7 +1064,7 @@ def test_gid_map():
             assert np.allclose(f1["ws_mean"], f2["ws_mean"])
 
 
-def test_bespoke_w_bias_correct():
+def test_bespoke_bias_correct():
     """Test bespoke run with bias correction on windspeed data."""
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
                       'extra_unused_data', 'ws_mean')
@@ -1085,6 +1085,7 @@ def test_bespoke_w_bias_correct():
         # intentionally leaving out WTK gid 13 which only has 5 included 90m
         # pixels in order to check that this is dynamically patched.
         bias_correct = pd.DataFrame({'gid': [3, 4, 12, 11, 10, 9]})
+        bias_correct['method'] = 'lin_ws'
         bias_correct['scalar'] = 0.5
         fp_bc = os.path.join(td, 'bc.csv')
         bias_correct.to_csv(fp_bc)

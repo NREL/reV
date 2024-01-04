@@ -2,8 +2,7 @@
 """
 reV bespoke wind plant analysis tools
 """
-# TODO update docstring
-# TODO check on outputs
+from inspect import signature
 import time
 import logging
 import copy
@@ -31,6 +30,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions, ModuleName
 
+from rex.utilities.bc_utils import _parse_bc_table
 from rex.joint_pd.joint_pd import JointPD
 from rex.renewable_resource import WindResource
 from rex.multi_year_resource import MultiYearWindResource
@@ -325,14 +325,24 @@ class BespokeSinglePlant:
             extract from the resource input). This is useful if you're running
             forecasted resource data (e.g., ECMWF) to complement historical
             meteorology (e.g., WTK).
-        bias_correct : str | pd.DataFrame | None
-            Optional DataFrame or csv filepath to a wind bias correction table.
-            This has columns: gid (can be index name), adder, scalar. If both
-            adder and scalar are present, the wind is corrected by
-            (res*scalar)+adder. If either is not present, scalar defaults to 1
-            and adder to 0. Only windspeed is corrected. Note that if gid_map
-            is provided, the bias_correct gid corresponds to the actual
-            resource data gid and not the techmap gid.
+        bias_correct : str | pd.DataFrame, optional
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
+
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
         pre_loaded_data : BespokeSinglePlantData, optional
             A pre-loaded :class:`BespokeSinglePlantData` object, or
             ``None``. Can be useful to speed up execution on file
@@ -530,9 +540,54 @@ class BespokeSinglePlant:
         handlers."""
         self.sc_point.close()
 
+    def bias_correct_ws(self, ws, dset, h5_gids):
+        """Bias correct windspeed data if the ``bias_correct`` input was
+        provided.
+
+        Parameters
+        ----------
+        ws : np.ndarray
+            Windspeed data in shape (time, space)
+        dset : str
+            Resource dataset name e.g., "windspeed_100m", "temperature_100m",
+            "pressure_100m", or something similar
+        h5_gids : list | np.ndarray
+            Array of integer gids (spatial indices) from the source h5 file.
+            This is used to get the correct bias correction parameters from
+            ``bias_correct`` table based on its ``gid`` column
+
+        Returns
+        -------
+        ws : np.ndarray
+            Bias corrected windspeed data in same shape as input
+        """
+
+        if self._bias_correct is not None and dset.startswith('windspeed_'):
+
+            out = _parse_bc_table(self._bias_correct, h5_gids)
+            bc_fun, bc_fun_kwargs, bool_bc = out
+
+            logger.debug('Bias correcting windspeed with function {} '
+                         'for h5 gids: {}'.format(bc_fun, h5_gids))
+
+            bc_fun_kwargs['ws'] = ws[:, bool_bc]
+            sig = signature(bc_fun)
+            bc_fun_kwargs = {k: v for k, v in bc_fun_kwargs.items()
+                             if k in sig.parameters}
+
+            ws[:, bool_bc] = bc_fun(**bc_fun_kwargs)
+
+        return ws
+
     def get_weighted_res_ts(self, dset):
         """Special method for calculating the exclusion-weighted mean resource
         timeseries data for the BespokeSinglePlant.
+
+        Parameters
+        ----------
+        dset : str
+            Resource dataset name e.g., "windspeed_100m", "temperature_100m",
+            "pressure_100m", or something similar
 
         Returns
         -------
@@ -550,16 +605,7 @@ class BespokeSinglePlant:
         else:
             data = self._pre_loaded_data[dset, :, h5_gids]
 
-        if self._bias_correct is not None and dset.startswith('windspeed_'):
-            missing = [g for g in h5_gids if g not in self._bias_correct.index]
-            for missing_gid in missing:
-                self._bias_correct.loc[missing_gid, 'scalar'] = 1
-                self._bias_correct.loc[missing_gid, 'adder'] = 0
-
-            scalar = self._bias_correct.loc[h5_gids, 'scalar'].values
-            adder = self._bias_correct.loc[h5_gids, 'adder'].values
-            data = data * scalar + adder
-            data = np.maximum(data, 0)
+        data = self.bias_correct_ws(data, dset, h5_gids)
 
         weights = np.zeros(len(gids))
         for i, gid in enumerate(gids):
@@ -1596,20 +1642,20 @@ class BespokeWindPlants(BaseAggregation):
             Optional DataFrame or CSV filepath to a wind or solar
             resource bias correction table. This has columns:
 
-                - ``gid``: GID of site (can be index name)
-                - ``adder``: Value to add to resource at each site
-                - ``scalar``: Value to scale resource at each site by
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
 
-            The ``gid`` field should match the true resource ``gid``
-            regardless of the optional ``gid_map`` input. If both
-            ``adder`` and ``scalar`` are present, the wind or solar
-            resource is corrected by :math:`(res*scalar)+adder`. If
-            *either* is missing, ``scalar`` defaults to 1 and ``adder``
-            to 0. Only `windspeed` **or** `GHI` + `DNI` are corrected,
-            depending on the technology (wind for the former, solar
-            for the latter). `GHI` and `DNI` are corrected with the
-            same correction factors. If ``None``, no corrections are
-            applied. By default, ``None``.
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
         pre_load_data : bool, optional
             Option to pre-load resource data. This step can be
             time-consuming up front, but it drastically reduces the

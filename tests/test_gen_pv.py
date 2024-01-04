@@ -592,7 +592,8 @@ def test_irrad_bias_correct():
                    sites_per_worker=1, output_request=output_request)
     gen_base.run(max_workers=1)
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 50})
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_irrad',
+                          'scalar': 1, 'adder': 50})
     gen = Gen('pvwattsv7', points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request,
               bias_correct=bc_df)
@@ -604,7 +605,8 @@ def test_irrad_bias_correct():
     mask = (gen_base.out['cf_profile'] <= gen.out['cf_profile'])
     assert (mask.sum() / mask.size) > 0.99
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -1500})
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_irrad',
+                          'scalar': 1, 'adder': -1500})
     gen = Gen('pvwattsv7', points, sam_files, res_file, sites_per_worker=1,
               output_request=output_request, bias_correct=bc_df)
     gen.run(max_workers=1)

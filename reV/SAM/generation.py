@@ -431,15 +431,23 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             res_file to lr_res_file spatial mapping. For details on this
             argument, see the rex.MultiResolutionResource docstring.
         bias_correct : None | pd.DataFrame
-            None if not provided or extracted DataFrame with wind or solar
-            resource bias correction table. This has columns: gid (can be index
-            name), adder, scalar. The gid field should match the true resource
-            gid regardless of the optional gid_map input. If both adder and
-            scalar are present, the wind or solar resource is corrected by
-            (res*scalar)+adder. If either adder or scalar is not present,
-            scalar defaults to 1 and adder to 0. Only windspeed or GHI+DNI are
-            corrected depending on the technology. GHI and DNI are corrected
-            with the same correction factors.
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
+
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
 
         Returns
         -------

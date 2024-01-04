@@ -334,14 +334,14 @@ def test_wind_bias_correct():
 
     # run reV 2.0 generation
     points = slice(0, 10)
-    pp = ProjectPoints(points, sam_files, 'windpower', res_file=res_file)
     gen_base = Gen('windpower', points, sam_files, res_file,
                    output_request=('cf_mean', 'cf_profile', 'ws_mean'),
                    sites_per_worker=3)
     gen_base.run(max_workers=1)
     outs_base = np.array(list(gen_base.out['cf_mean']))
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': 2})
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+                          'scalar': 1, 'adder': 2})
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
@@ -350,7 +350,8 @@ def test_wind_bias_correct():
     assert all(outs_bc > outs_base)
     assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'scalar': 1, 'adder': -100})
+    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+                          'scalar': 1, 'adder': -100})
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
