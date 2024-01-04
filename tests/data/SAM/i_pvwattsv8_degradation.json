@@ -1,0 +1,20 @@
+{
+	"azimuth": 180,
+	"tilt": 0,
+	"array_type": 2,
+	"module_type": 1,
+	"dc_ac_ratio": 1.3,
+	"gcr": 0.4,
+	"inv_eff": 98.0,
+	"losses": 14,
+	"bifaciality": 0.85,
+	"system_capacity": 1,
+	"capital_cost": 990, 
+	"fixed_charge_rate": 0.0449, 
+	"fixed_operating_cost": 21, 
+	"variable_operating_cost": 0,
+	"time_index_step":2,
+	"system_use_lifetime_output": 1,
+	"analysis_period": 30,
+	"dc_degradation": [0.7]
+ }

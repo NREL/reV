@@ -440,10 +440,10 @@ class BaseGen(ABC):
         Parameters
         ----------
         ti : pandas.DatetimeIndex
-            Time-series datetime index with or without a leap day.
+            Time-series datetime index with or without leap days.
         drop_leap : bool
-            Option to drop leap day (if True) or drop the last day of the year
-            (if False).
+            Option to drop leap days (if True) or drop the last day of each
+            leap year (if False).
 
         Returns
         -------
@@ -451,14 +451,15 @@ class BaseGen(ABC):
             Time-series datetime index with length a multiple of 365.
         """
 
-        # drop leap day or last day
+        # Drop leap day or last day
         leap_day = ((ti.month == 2) & (ti.day == 29))
-        last_day = ((ti.month == 12) & (ti.day == 31))
+        leap_year = ti.year % 4 == 0
+        last_day = ((ti.month == 12) & (ti.day == 31)) * leap_year
         if drop_leap:
-            # preference is to drop leap day if exists
+            # Preference is to drop leap day if exists
             ti = ti.drop(ti[leap_day])
         elif any(leap_day):
-            # leap day exists but preference is to drop last day of year
+            # Leap day exists but preference is to drop last day of year
             ti = ti.drop(ti[last_day])
 
         if len(ti) % 365 != 0:
@@ -978,6 +979,7 @@ class BaseGen(ABC):
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
 
             shape = self._get_data_shape(request, self._out_n_sites)
+
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
 
