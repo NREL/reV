@@ -567,15 +567,16 @@ class BespokeSinglePlant:
             out = _parse_bc_table(self._bias_correct, h5_gids)
             bc_fun, bc_fun_kwargs, bool_bc = out
 
-            logger.debug('Bias correcting windspeed with function {} '
-                         'for h5 gids: {}'.format(bc_fun, h5_gids))
+            if bool_bc.any():
+                logger.debug('Bias correcting windspeed with function {} '
+                             'for h5 gids: {}'.format(bc_fun, h5_gids))
 
-            bc_fun_kwargs['ws'] = ws[:, bool_bc]
-            sig = signature(bc_fun)
-            bc_fun_kwargs = {k: v for k, v in bc_fun_kwargs.items()
-                             if k in sig.parameters}
+                bc_fun_kwargs['ws'] = ws[:, bool_bc]
+                sig = signature(bc_fun)
+                bc_fun_kwargs = {k: v for k, v in bc_fun_kwargs.items()
+                                 if k in sig.parameters}
 
-            ws[:, bool_bc] = bc_fun(**bc_fun_kwargs)
+                ws[:, bool_bc] = bc_fun(**bc_fun_kwargs)
 
         return ws
 
@@ -1101,9 +1102,9 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if 'cf_mean-means' in self.outputs:
-            self._meta['mean_cf'] = self.outputs['cf_mean-means']
+            self._meta.loc[:, 'mean_cf'] = self.outputs['cf_mean-means']
         if 'lcoe_fcr-means' in self.outputs:
-            self._meta['mean_lcoe'] = self.outputs['lcoe_fcr-means']
+            self._meta.loc[:, 'mean_lcoe'] = self.outputs['lcoe_fcr-means']
             self.recalc_lcoe()
 
         logger.debug('Timeseries analysis complete!')
@@ -1908,8 +1909,16 @@ class BespokeWindPlants(BaseAggregation):
         out = self._bias_correct
 
         if self._bias_correct is not None:
-            with SupplyCurvePoint(gid, self._excl_fpath, self._tm_dset) as scp:
-                h5_gids = scp.h5_gid_set
+            h5_gids = []
+            try:
+                scp_kwargs = dict(gid=gid, excl=self._excl_fpath,
+                                  tm_dset=self._tm_dset,
+                                  resolution=self._resolution)
+                with SupplyCurvePoint(**scp_kwargs) as scp:
+                    h5_gids = scp.h5_gid_set
+            except EmptySupplyCurvePointError:
+                pass
+
             if self._gid_map is not None:
                 h5_gids = [self._gid_map[g] for g in h5_gids]
 

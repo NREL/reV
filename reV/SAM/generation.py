@@ -1911,7 +1911,7 @@ class WindPower(AbstractSamWind):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = self.ensure_res_len(resource['rh'].values, time_index)
-            n_roll = int(meta['timezone'] * self.time_interval)
+            n_roll = int(meta['timezone'].values * self.time_interval)
             rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
@@ -1919,21 +1919,21 @@ class WindPower(AbstractSamWind):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = self.ensure_res_len(resource[var_list].values, time_index)
-        n_roll = int(meta['timezone'] * self.time_interval)
+        n_roll = int(meta['timezone'].values * self.time_interval)
         temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
-        data_dict['lat'] = meta['latitude']
-        data_dict['lon'] = meta['longitude']
-        data_dict['tz'] = meta['timezone']
-        data_dict['elev'] = meta['elevation']
+        data_dict['lat'] = float(meta['latitude'].iloc[0])
+        data_dict['lon'] = float(meta['longitude'].iloc[0])
+        data_dict['tz'] = int(meta['timezone'].iloc[0])
+        data_dict['elev'] = float(meta['elevation'].iloc[0])
 
         time_index = self.ensure_res_len(time_index, time_index)
-        data_dict['minute'] = time_index.minute
-        data_dict['hour'] = time_index.hour
-        data_dict['year'] = time_index.year
-        data_dict['month'] = time_index.month
-        data_dict['day'] = time_index.day
+        data_dict['minute'] = time_index.minute.tolist()
+        data_dict['hour'] = time_index.hour.tolist()
+        data_dict['year'] = time_index.year.tolist()
+        data_dict['month'] = time_index.month.tolist()
+        data_dict['day'] = time_index.day.tolist()
 
         # add resource data to self.data and clear
         self['wind_resource_data'] = data_dict
@@ -2088,7 +2088,7 @@ class MhkWave(AbstractSamGeneration):
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
             arr = self.ensure_res_len(resource[var].values, time_index)
-            n_roll = int(meta['timezone'] * self.time_interval)
+            n_roll = int(meta['timezone'].values * self.time_interval)
             data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
         data_dict['lat'] = meta['latitude']
