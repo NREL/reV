@@ -867,6 +867,37 @@ class Gen(BaseGen):
 
         return list(set(output_request))
 
+    def _reduce_kwargs(self, pc, **kwargs):
+        """Reduce the global kwargs on a per-worker basis to reduce memory
+        footprint
+
+        Parameters
+        ----------
+        pc : PointsControl
+            PointsControl object for a single worker chunk
+        kwargs : dict
+            reV generation kwargs for all gids that needs to be reduced before
+            being sent to ``_run_single_worker()``
+
+        Returns
+        -------
+        kwargs : dict
+            Same as input but reduced just for the gids in pc
+        """
+
+        gids = pc.project_points.gids
+        gid_map = kwargs.get('gid_map', None)
+        bias_correct = kwargs.get('bias_correct', None)
+
+        if bias_correct is not None:
+            if gid_map is not None:
+                gids = [gid_map[gid] for gid in gids]
+
+            mask = bias_correct.index.isin(gids)
+            kwargs['bias_correct'] = bias_correct[mask]
+
+        return kwargs
+
     def run(self, out_fpath=None, max_workers=1, timeout=1800,
             pool_size=None):
         """Execute a parallel reV generation run with smart data flushing.

@@ -592,24 +592,28 @@ def test_irrad_bias_correct():
                    sites_per_worker=1, output_request=output_request)
     gen_base.run(max_workers=1)
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_irrad',
+    bc_df = pd.DataFrame({'gid': np.arange(1, 10), 'method': 'lin_irrad',
                           'scalar': 1, 'adder': 50})
     gen = Gen('pvwattsv7', points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request,
               bias_correct=bc_df)
     gen.run(max_workers=1)
 
-    assert (gen_base.out['cf_mean'] < gen.out['cf_mean']).all()
-    assert (gen_base.out['ghi_mean'] < gen.out['ghi_mean']).all()
+    assert (gen_base.out['cf_mean'][0] == gen.out['cf_mean'][0]).all()
+    assert (gen_base.out['ghi_mean'][0] == gen.out['ghi_mean'][0]).all()
+    assert np.allclose(gen_base.out['cf_profile'][:, 0],
+                       gen.out['cf_profile'][:, 0])
 
-    mask = (gen_base.out['cf_profile'] <= gen.out['cf_profile'])
+    assert (gen_base.out['cf_mean'][1:] < gen.out['cf_mean'][1:]).all()
+    assert (gen_base.out['ghi_mean'][1:] < gen.out['ghi_mean'][1:]).all()
+    mask = (gen_base.out['cf_profile'][:, 1:] <= gen.out['cf_profile'][:, 1:])
     assert (mask.sum() / mask.size) > 0.99
 
     bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_irrad',
                           'scalar': 1, 'adder': -1500})
     gen = Gen('pvwattsv7', points, sam_files, res_file, sites_per_worker=1,
               output_request=output_request, bias_correct=bc_df)
-    gen.run(max_workers=1)
+    gen.run(max_workers=2)
     for arr in gen.out.values():
         assert (arr == 0).all()
 

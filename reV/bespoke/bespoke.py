@@ -1888,6 +1888,36 @@ class BespokeWindPlants(BaseAggregation):
 
         return self._pre_loaded_data.get_preloaded_data_for_gid(sc_gid)
 
+    def _get_bc_for_gid(self, gid):
+        """Get the bias correction table trimmed down just for the resource
+        pixels corresponding to a single supply curve GID. This can help
+        prevent excess memory usage when doing complex bias correction
+        distributed to parallel workers.
+
+        Parameters
+        ----------
+        gid : int
+            SC point gid for site to pull bias correction data for
+
+        Returns
+        -------
+        out : pd.DataFrame | None
+            If bias_correct was input, this is just the rows from the larger
+            bias correction table that correspond to the SC point gid
+        """
+        out = self._bias_correct
+
+        if self._bias_correct is not None:
+            with SupplyCurvePoint(gid, self._excl_fpath, self._tm_dset) as scp:
+                h5_gids = scp.h5_gid_set
+            if self._gid_map is not None:
+                h5_gids = [self._gid_map[g] for g in h5_gids]
+
+            mask = self._bias_correct.index.isin(h5_gids)
+            out = self._bias_correct[mask]
+
+        return out
+
     @property
     def outputs(self):
         """Saved outputs for the multi wind plant bespoke optimization. Keys
@@ -2262,7 +2292,7 @@ class BespokeWindPlants(BaseAggregation):
                     slice_lookup=copy.deepcopy(self.slice_lookup),
                     prior_meta=self._get_prior_meta(gid),
                     gid_map=self._gid_map,
-                    bias_correct=self._bias_correct,
+                    bias_correct=self._get_bc_for_gid(gid),
                     pre_loaded_data=self._pre_loaded_data_for_sc_gid(gid)))
 
             # gather results
@@ -2318,6 +2348,8 @@ class BespokeWindPlants(BaseAggregation):
                 pre_loaded_data = self._pre_loaded_data_for_sc_gid(gid)
                 afk = self._area_filter_kernel
                 wlm = self._wake_loss_multiplier
+                i_bc = self._get_bc_for_gid(gid)
+
                 si = self.run_serial(self._excl_fpath,
                                      self._res_fpath,
                                      self._tm_dset,
@@ -2342,7 +2374,7 @@ class BespokeWindPlants(BaseAggregation):
                                      slice_lookup=slice_lookup,
                                      prior_meta=prior_meta,
                                      gid_map=self._gid_map,
-                                     bias_correct=self._bias_correct,
+                                     bias_correct=i_bc,
                                      gids=gid,
                                      pre_loaded_data=pre_loaded_data)
                 self._outputs.update(si)

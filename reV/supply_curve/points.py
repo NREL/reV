@@ -50,6 +50,25 @@ class AbstractSupplyCurvePoint(ABC):
         self._rows, self._cols = self._parse_slices(
             gid, resolution, exclusion_shape)
 
+    @staticmethod
+    def _ordered_unique(seq):
+        """Get a list of unique values in the same order as the input sequence.
+
+        Parameters
+        ----------
+        seq : list | tuple
+            Sequence of values.
+
+        Returns
+        -------
+        seq : list
+            List of unique values in seq input with original order.
+        """
+
+        seen = set()
+
+        return [x for x in seq if not (x in seen or seen.add(x))]
+
     def _parse_slices(self, gid, resolution, exclusion_shape):
         """Parse inputs for the definition of this SC point.
 
@@ -220,6 +239,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         super().__init__(gid, exclusion_shape, resolution=resolution)
 
         self._gids = self._parse_techmap(tm_dset)
+        self._h5_gids = self._gids
+        self._h5_gid_set = None
 
         self._incl_mask = inclusion_mask
         self._incl_mask_flat = None
@@ -457,6 +478,22 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         placeholder for h5 Resource handler object
         """
+
+    @property
+    def h5_gid_set(self):
+        """Get list of unique h5 gids corresponding to this sc point.
+
+        Returns
+        -------
+        h5_gids : list
+            List of h5 gids.
+        """
+        if self._h5_gid_set is None:
+            self._h5_gid_set = self._ordered_unique(self._h5_gids)
+            if -1 in self._h5_gid_set:
+                self._h5_gid_set.remove(-1)
+
+        return self._h5_gid_set
 
     @property
     def summary(self):
@@ -884,7 +921,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                          exclusion_shape=exclusion_shape,
                          close=close)
 
-        self._h5_gid_set = None
         self._h5_fpath, self._h5 = self._parse_h5_file(agg_h5)
 
         if gen_index is not None:
@@ -987,25 +1023,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         res_gids[(gen_gids == -1)] = -1
 
         return gen_gids, res_gids
-
-    @staticmethod
-    def _ordered_unique(seq):
-        """Get a list of unique values in the same order as the input sequence.
-
-        Parameters
-        ----------
-        seq : list | tuple
-            Sequence of values.
-
-        Returns
-        -------
-        seq : list
-            List of unique values in seq input with original order.
-        """
-
-        seen = set()
-
-        return [x for x in seq if not (x in seen or seen.add(x))]
 
     @property
     def h5(self):
@@ -1111,22 +1128,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             offshore = offshore.values[0]
 
         return offshore
-
-    @property
-    def h5_gid_set(self):
-        """Get list of unique h5 gids corresponding to this sc point.
-
-        Returns
-        -------
-        h5_gids : list
-            List of h5 gids.
-        """
-        if self._h5_gid_set is None:
-            self._h5_gid_set = self._ordered_unique(self._h5_gids)
-            if -1 in self._h5_gid_set:
-                self._h5_gid_set.remove(-1)
-
-        return self._h5_gid_set
 
     @property
     def gid_counts(self):
