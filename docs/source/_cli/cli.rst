@@ -14,7 +14,7 @@ Command Line Interfaces (CLIs)
    reV generation
    reV econ
    reV collect
-   reV multiyear
+   reV multi-year
    reV supply-curve-aggregation
    reV supply-curve
    reV rep-profiles
