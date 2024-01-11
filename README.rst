@@ -183,13 +183,13 @@ Tips
 
 .. code-block:: bash
 
-    reV -c "/scratch/user/rev/config_pipeline.json" pipeline
+    reV-c "/scratch/user/rev/config_pipeline.json"
 
 - Running simply generation or econ can just be done from the console:
 
 .. code-block:: bash
 
-    reV -c "/scratch/user/rev/config_gen.json" generation
+    reV generation -c "/scratch/user/rev/config_gen.json"
 
 General Run times and Node configuration on Eagle
 -------------------------------------------------
