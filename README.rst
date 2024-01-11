@@ -183,7 +183,7 @@ Tips
 
 .. code-block:: bash
 
-    reV-c "/scratch/user/rev/config_pipeline.json"
+    reV pipeline -c "/scratch/user/rev/config_pipeline.json"
 
 - Running simply generation or econ can just be done from the console:
 
