@@ -30,7 +30,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
 from reV.utilities import log_versions, ModuleName
 
-from rex.utilities.bc_utils import _parse_bc_table
+from rex.utilities.bc_parse_table import parse_bc_table
 from rex.joint_pd.joint_pd import JointPD
 from rex.renewable_resource import WindResource
 from rex.multi_year_resource import MultiYearWindResource
@@ -564,7 +564,7 @@ class BespokeSinglePlant:
 
         if self._bias_correct is not None and dset.startswith('windspeed_'):
 
-            out = _parse_bc_table(self._bias_correct, h5_gids)
+            out = parse_bc_table(self._bias_correct, h5_gids)
             bc_fun, bc_fun_kwargs, bool_bc = out
 
             if bool_bc.any():
