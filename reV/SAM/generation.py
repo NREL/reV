@@ -548,6 +548,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
             location. Should include values for latitude, longitude,
             elevation, and timezone.
         """
+        meta = self._parse_meta(meta)
         self.time_interval = self.get_time_interval(resource.index.values)
         pysam_w_fname = self._create_pysam_wfile(resource, meta)
         self[self.PYSAM_WEATHER_TAG] = pysam_w_fname
@@ -2066,6 +2067,8 @@ class MhkWave(AbstractSamGeneration):
             and timezone.
         """
 
+        meta = self._parse_meta(meta)
+
         # map resource data names to SAM required data names
         var_map = {'significantwaveheight': 'significant_wave_height',
                    'waveheight': 'significant_wave_height',
@@ -2091,7 +2094,7 @@ class MhkWave(AbstractSamGeneration):
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
             arr = self.ensure_res_len(resource[var].values, time_index)
-            n_roll = int(meta['timezone'].values * self.time_interval)
+            n_roll = int(meta['timezone'] * self.time_interval)
             data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
         data_dict['lat'] = meta['latitude']
