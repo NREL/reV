@@ -697,6 +697,7 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             and timezone.
         """
 
+        meta = self._parse_meta(meta)
         time_index = resource.index
         self.time_interval = self.get_time_interval(resource.index.values)
 
@@ -1883,6 +1884,8 @@ class WindPower(AbstractSamWind):
             and timezone.
         """
 
+        meta = self._parse_meta(meta)
+
         # map resource data names to SAM required data names
         var_map = {'speed': 'windspeed',
                    'direction': 'winddirection',
@@ -1911,7 +1914,7 @@ class WindPower(AbstractSamWind):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = self.ensure_res_len(resource['rh'].values, time_index)
-            n_roll = int(meta['timezone'].values * self.time_interval)
+            n_roll = int(meta['timezone'] * self.time_interval)
             rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
@@ -1919,14 +1922,14 @@ class WindPower(AbstractSamWind):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = self.ensure_res_len(resource[var_list].values, time_index)
-        n_roll = int(meta['timezone'].values * self.time_interval)
+        n_roll = int(meta['timezone'] * self.time_interval)
         temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
-        data_dict['lat'] = float(meta['latitude'].iloc[0])
-        data_dict['lon'] = float(meta['longitude'].iloc[0])
-        data_dict['tz'] = int(meta['timezone'].iloc[0])
-        data_dict['elev'] = float(meta['elevation'].iloc[0])
+        data_dict['lat'] = float(meta['latitude'])
+        data_dict['lon'] = float(meta['longitude'])
+        data_dict['tz'] = int(meta['timezone'])
+        data_dict['elev'] = float(meta['elevation'])
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute.tolist()
