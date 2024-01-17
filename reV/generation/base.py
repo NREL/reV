@@ -1134,6 +1134,25 @@ class BaseGen(ABC):
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
+    def _reduce_kwargs(self, pc, **kwargs):
+        """Placeholder for functions that need to reduce the global kwargs that
+        they send to workers to reduce memory footprint
+
+        Parameters
+        ----------
+        pc : PointsControl
+            PointsControl object for a single worker chunk
+        kwargs : dict
+            Kwargs for all gids that needs to be reduced before being sent to
+            ``_run_single_worker()``
+
+        Returns
+        -------
+        kwargs : dict
+            Same as input but reduced just for the gids in pc
+        """
+        return kwargs
+
     def _parallel_run(self, max_workers=None, pool_size=None, timeout=1800,
                       **kwargs):
         """Execute parallel compute.
@@ -1152,6 +1171,7 @@ class BaseGen(ABC):
         kwargs : dict
             Keyword arguments to self._run_single_worker().
         """
+
         if pool_size is None:
             pool_size = os.cpu_count() * 2
         if max_workers is None:
@@ -1172,7 +1192,9 @@ class BaseGen(ABC):
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for pc in pc_chunk:
-                    future = exe.submit(self._run_single_worker, pc, **kwargs)
+                    pc_kwargs = self._reduce_kwargs(pc, **kwargs)
+                    future = exe.submit(self._run_single_worker, pc,
+                                        **pc_kwargs)
                     futures.append(future)
                     chunks[future] = pc
 

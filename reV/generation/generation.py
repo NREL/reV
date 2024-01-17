@@ -336,20 +336,20 @@ class Gen(BaseGen):
             Optional DataFrame or CSV filepath to a wind or solar
             resource bias correction table. This has columns:
 
-                - ``gid``: GID of site (can be index name)
-                - ``adder``: Value to add to resource at each site
-                - ``scalar``: Value to scale resource at each site by
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
 
-            The ``gid`` field should match the true resource ``gid``
-            regardless of the optional ``gid_map`` input. If both
-            ``adder`` and ``scalar`` are present, the wind or solar
-            resource is corrected by :math:`(res*scalar)+adder`. If
-            *either* is missing, ``scalar`` defaults to 1 and
-            ``adder`` to 0. Only `windspeed` **or** `GHI` + `DNI` are
-            corrected, depending on the technology (wind for the former,
-            solar for the latter). `GHI` and `DNI` are corrected with
-            the same correction factors. If ``None``, no corrections are
-            applied. By default, ``None``.
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
         """
         pc = self.get_pc(points=project_points, points_range=None,
                          sam_configs=sam_files, tech=technology,
@@ -600,14 +600,23 @@ class Gen(BaseGen):
             res_file to lr_res_file spatial mapping. For details on this
             argument, see the rex.MultiResolutionResource docstring.
         bias_correct : None | pd.DataFrame
-            None if not provided or extracted DataFrame with wind or solar
-            resource bias correction table. This has columns: gid (can be index
-            name), adder, scalar. If both adder and scalar are present, the
-            wind or solar resource is corrected by (res*scalar)+adder. If
-            either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed or GHI+DNI are corrected depending on
-            the technology. GHI and DNI are corrected with the same correction
-            factors.
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
+
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
 
         Returns
         -------
@@ -766,26 +775,45 @@ class Gen(BaseGen):
 
         Parameters
         ----------
-        bias_correct : str | pd.DataFrame | None
-            Optional DataFrame or csv filepath to a wind or solar resource bias
-            correction table. This has columns: gid (can be index name), adder,
-            scalar. If both adder and scalar are present, the wind or solar
-            resource is corrected by (res*scalar)+adder. If either is not
-            present, scalar defaults to 1 and adder to 0. Only windspeed or
-            GHI+DNI are corrected depending on the technology. GHI and DNI are
-            corrected with the same correction factors.
+        bias_correct : str | pd.DataFrame, optional
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
+
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
 
         Returns
         -------
         bias_correct : None | pd.DataFrame
-            None if not provided or extracted DataFrame with wind or solar
-            resource bias correction table. This has columns: gid (can be index
-            name), adder, scalar. If both adder and scalar are present, the
-            wind or solar resource is corrected by (res*scalar)+adder. If
-            either adder or scalar is not present, scalar defaults to 1 and
-            adder to 0. Only windspeed or GHI+DNI are corrected depending on
-            the technology. GHI and DNI are corrected with the same correction
-            factors.
+            Optional DataFrame or CSV filepath to a wind or solar
+            resource bias correction table. This has columns:
+
+                - ``gid``: GID of site (can be index name of dataframe)
+                - ``method``: function name from ``rex.bias_correction`` module
+
+            The ``gid`` field should match the true resource ``gid`` regardless
+            of the optional ``gid_map`` input. Only ``windspeed`` **or**
+            ``GHI`` + ``DNI`` + ``DHI`` are corrected, depending on the
+            technology (wind for the former, PV or CSP for the latter). See the
+            functions in the ``rex.bias_correction`` module for available
+            inputs for ``method``. Any additional kwargs required for the
+            requested ``method`` can be input as additional columns in the
+            ``bias_correct`` table e.g., for linear bias correction functions
+            you can include ``scalar`` and ``adder`` inputs as columns in the
+            ``bias_correct`` table on a site-by-site basis. If ``None``, no
+            corrections are applied. By default, ``None``.
         """
 
         if isinstance(bias_correct, type(None)):
@@ -798,22 +826,16 @@ class Gen(BaseGen):
                'but received: {}'.format(type(bias_correct)))
         assert isinstance(bias_correct, pd.DataFrame), msg
 
-        if 'adder' not in bias_correct:
-            logger.info('Bias correction table provided, but "adder" not '
-                        'found, defaulting to 0.')
-            bias_correct['adder'] = 0
-
-        if 'scalar' not in bias_correct:
-            logger.info('Bias correction table provided, but "scalar" not '
-                        'found, defaulting to 1.')
-            bias_correct['scalar'] = 1
-
         msg = ('Bias correction table must have "gid" column but only found: '
                '{}'.format(list(bias_correct.columns)))
         assert 'gid' in bias_correct or bias_correct.index.name == 'gid', msg
 
         if bias_correct.index.name != 'gid':
             bias_correct = bias_correct.set_index('gid')
+
+        msg = ('Bias correction table must have "method" column but only '
+               'found: {}'.format(list(bias_correct.columns)))
+        assert 'method' in bias_correct, msg
 
         return bias_correct
 
@@ -844,6 +866,37 @@ class Gen(BaseGen):
                 logger.debug(msg)
 
         return list(set(output_request))
+
+    def _reduce_kwargs(self, pc, **kwargs):
+        """Reduce the global kwargs on a per-worker basis to reduce memory
+        footprint
+
+        Parameters
+        ----------
+        pc : PointsControl
+            PointsControl object for a single worker chunk
+        kwargs : dict
+            reV generation kwargs for all gids that needs to be reduced before
+            being sent to ``_run_single_worker()``
+
+        Returns
+        -------
+        kwargs : dict
+            Same as input but reduced just for the gids in pc
+        """
+
+        gids = pc.project_points.gids
+        gid_map = kwargs.get('gid_map', None)
+        bias_correct = kwargs.get('bias_correct', None)
+
+        if bias_correct is not None:
+            if gid_map is not None:
+                gids = [gid_map[gid] for gid in gids]
+
+            mask = bias_correct.index.isin(gids)
+            kwargs['bias_correct'] = bias_correct[mask]
+
+        return kwargs
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800,
             pool_size=None):
