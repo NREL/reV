@@ -384,6 +384,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
                 excl_fpath = "..."
                 resolution = ...
+                tm_dset = "..."
                 with SupplyCurveExtent(excl_fpath, resolution) as sc:
                     gids = sc.valid_sc_points(tm_dset).tolist()
                 ...
