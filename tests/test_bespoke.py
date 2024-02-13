@@ -58,6 +58,7 @@ with open(SAM, 'r') as f:
 
 SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
 SAM_SYS_INPUTS['wind_farm_losses_percent'] = 0
+SAM_SYS_INPUTS['fixed_charge_rate'] = 0.096
 del SAM_SYS_INPUTS['wind_resource_filename']
 TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
@@ -919,7 +920,7 @@ def test_bespoke_prior_run():
     single vertical level (e.g., with Sup3rCC data)
     """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data')
+                      'extra_unused_data', 'lcoe_fcr')
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
         out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
