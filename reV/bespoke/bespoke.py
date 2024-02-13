@@ -803,6 +803,11 @@ class BespokeSinglePlant:
                                          'pressure': pres,
                                          'windspeed': ws,
                                          'winddirection': wd}, index=ti)
+
+            if 'time_index_step' in self.original_sam_sys_inputs:
+                ti_step = self.original_sam_sys_inputs['time_index_step']
+                self._res_df = self._res_df.iloc[::ti_step]
+
         return self._res_df
 
     @property
