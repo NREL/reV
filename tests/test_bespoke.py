@@ -58,7 +58,6 @@ with open(SAM, 'r') as f:
 
 SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
 SAM_SYS_INPUTS['wind_farm_losses_percent'] = 0
-SAM_SYS_INPUTS['fixed_charge_rate'] = 0.096
 del SAM_SYS_INPUTS['wind_resource_filename']
 TURB_RATING = np.max(SAM_SYS_INPUTS['wind_turbine_powercurve_powerout'])
 SAM_CONFIGS = {'default': SAM_SYS_INPUTS}
@@ -919,6 +918,9 @@ def test_bespoke_prior_run():
     Also added another minor test with extrapolation of t/p datasets from a
     single vertical level (e.g., with Sup3rCC data)
     """
+    sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+    sam_sys_inputs['fixed_charge_rate'] = 0.096
+    sam_configs = {'default': sam_sys_inputs}
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
                       'extra_unused_data', 'lcoe_fcr')
     with tempfile.TemporaryDirectory() as td:
@@ -951,7 +953,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_all, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
@@ -961,7 +963,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request,
                                 prior_run=out_fpath1)
