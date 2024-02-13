@@ -2,6 +2,7 @@
 """
 reV bespoke wind plant analysis tools
 """
+# pylint: disable=anomalous-backslash-in-string
 from inspect import signature
 import time
 import logging
