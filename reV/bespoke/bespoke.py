@@ -2,6 +2,7 @@
 """
 reV bespoke wind plant analysis tools
 """
+# pylint: disable=anomalous-backslash-in-string
 from inspect import signature
 import time
 import logging
@@ -803,6 +804,11 @@ class BespokeSinglePlant:
                                          'pressure': pres,
                                          'windspeed': ws,
                                          'winddirection': wd}, index=ti)
+
+            if 'time_index_step' in self.original_sam_sys_inputs:
+                ti_step = self.original_sam_sys_inputs['time_index_step']
+                self._res_df = self._res_df.iloc[::ti_step]
+
         return self._res_df
 
     @property
@@ -969,26 +975,35 @@ class BespokeSinglePlant:
             updated based on the bespoke optimized system_capacity, includes
             fixed_charge_rate, system_capacity (kW), capital_cost ($),
             fixed_operating_cos ($), variable_operating_cost ($/kWh)
+            Data source priority: outputs, plant_optimizer,
+            original_sam_sys_inputs, meta
         """
 
-        if 'system_capacity' not in self.outputs:
-            msg = ('Could not find system_capacity in the outputs, need to '
-                   'run_plant_optimization() to get the optimized '
-                   'system_capacity before calculating LCOE!')
-            logger.error(msg)
-            raise RuntimeError(msg)
+        kwargs_list = ['fixed_charge_rate', 'system_capacity', 'capital_cost',
+                       'fixed_operating_cost', 'variable_operating_cost']
+        lcoe_kwargs = {}
 
-        lcoe_kwargs = {
-            'fixed_charge_rate':
-                self.original_sam_sys_inputs['fixed_charge_rate'],
-            'system_capacity': self.plant_optimizer.capacity,
-            'capital_cost': self.plant_optimizer.capital_cost,
-            'fixed_operating_cost': self.plant_optimizer.fixed_operating_cost,
-            'variable_operating_cost':
-                self.plant_optimizer.variable_operating_cost}
+        for kwarg in kwargs_list:
+            if kwarg in self.outputs:
+                lcoe_kwargs[kwarg] = self.outputs[kwarg]
+            elif getattr(self.plant_optimizer, kwarg, None) is not None:
+                lcoe_kwargs[kwarg] = getattr(self.plant_optimizer, kwarg)
+            elif kwarg in self.original_sam_sys_inputs:
+                lcoe_kwargs[kwarg] = self.original_sam_sys_inputs[kwarg]
+            elif kwarg in self.meta:
+                value = float(self.meta[kwarg].values[0])
+                lcoe_kwargs[kwarg] = value
 
         for k, v in lcoe_kwargs.items():
             self._meta[k] = v
+
+        missing = [k for k in kwargs_list if k not in lcoe_kwargs]
+        if any(missing):
+            msg = ('Could not find these LCOE kwargs in outputs, '
+                   'plant_optimizer, original_sam_sys_inputs, or meta: {}'
+                   .format(missing))
+            logger.error(msg)
+            raise KeyError(msg)
 
         return lcoe_kwargs
 

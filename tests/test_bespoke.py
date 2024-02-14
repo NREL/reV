@@ -918,8 +918,11 @@ def test_bespoke_prior_run():
     Also added another minor test with extrapolation of t/p datasets from a
     single vertical level (e.g., with Sup3rCC data)
     """
+    sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+    sam_sys_inputs['fixed_charge_rate'] = 0.096
+    sam_configs = {'default': sam_sys_inputs}
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data')
+                      'extra_unused_data', 'lcoe_fcr')
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
         out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
@@ -950,7 +953,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_all, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
@@ -960,7 +963,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request,
                                 prior_run=out_fpath1)
@@ -1236,3 +1239,43 @@ def test_cli(runner, clear_loggers):
                 assert f[dset].any()  # not all zeros
 
         clear_loggers()
+
+
+def test_bespoke_5min_sample():
+    """Sample a 5min resource dataset for 60min outputs in bespoke"""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data', 'winddirection', 'windspeed',
+                      'ws_mean')
+    tm_dset = 'test_wtk_5min'
+
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, 'wind_bespoke.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        res_fp = os.path.join(TESTDATADIR, 'wtk/wtk_2010_*m.h5')
+
+        points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
+                               'extra_unused_data': [0, 42]})
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['time_index_step'] = 12
+        sam_configs = {'default': sam_sys_inputs}
+
+        # hack techmap because 5min data only has 10 wind resource pixels
+        with h5py.File(excl_fp, 'a') as excl_file:
+            arr = np.random.choice(10, size=excl_file['latitude'].shape)
+            excl_file.create_dataset(name=tm_dset, data=arr)
+
+        bsp = BespokeWindPlants(excl_fp, res_fp, tm_dset, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, points,
+                                sam_configs, ga_kwargs={'max_time': 5},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        _ = bsp.run(max_workers=1, out_fpath=out_fpath)
+
+        with Resource(out_fpath) as f:
+            assert len(f.meta) == 2
+            assert len(f) == 8760
+            assert len(f['cf_profile-2010']) == 8760
+            assert len(f['time_index-2010']) == 8760
+            assert len(f['windspeed-2010']) == 8760
+            assert len(f['winddirection-2010']) == 8760

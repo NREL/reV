@@ -343,13 +343,13 @@ def test_warning_for_improper_data_output_from_hybrid_method():
         return [0]
     HYBRID_METHODS['scaled_elevation'] = some_new_hybrid_func
 
-    with pytest.warns(OutputWarning) as record:
+    with pytest.warns(OutputWarning) as records:
         h = Hybridization(SOLAR_FPATH, WIND_FPATH)
         h.run()
 
-    warn_msg = record[0].message.args[0]
-    assert "Unable to add" in warn_msg
-    assert "column to hybrid meta" in warn_msg
+    messages = [r.message.args[0] for r in records]
+    assert any("Unable to add" in msg for msg in messages)
+    assert any("column to hybrid meta" in msg for msg in messages)
 
     HYBRID_METHODS.pop('scaled_elevation')
 
