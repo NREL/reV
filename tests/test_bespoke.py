@@ -17,6 +17,7 @@ from gaps.collection import Collector
 from reV import TESTDATADIR
 from reV.cli import main
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
+from reV.bespoke.place_turbines import PlaceTurbines
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.supply_curve import SupplyCurve
@@ -188,6 +189,49 @@ def test_zero_area(gid=33):
         assert optimizer.objective == eval(VOC_FUN)
         assert optimizer.capital_cost == 0
         assert optimizer.fixed_operating_cost == 0
+
+        bsp.close()
+
+
+def test_correct_turb_location(gid=33):
+    """Test turbine location is reported correctly. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ (aep + 1E-6) + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        include_mask = np.zeros_like(bsp.include_mask)
+        include_mask[1, -2] = 1
+        pt = PlaceTurbines(bsp.wind_plant_pd, bsp.objective_function,
+                           bsp.capital_cost_function,
+                           bsp.fixed_operating_cost_function,
+                           bsp.variable_operating_cost_function,
+                           include_mask, pixel_side_length=90,
+                           min_spacing=45)
+
+        pt.define_exclusions()
+        pt.initialize_packing()
+
+        assert pt.x_locations[0] == 62 * 90
+        assert pt.y_locations[0] == 62 * 90
 
         bsp.close()
 
