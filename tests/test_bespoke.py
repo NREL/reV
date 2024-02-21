@@ -17,6 +17,7 @@ from gaps.collection import Collector
 from reV import TESTDATADIR
 from reV.cli import main
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
+from reV.bespoke.place_turbines import PlaceTurbines
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.supply_curve import SupplyCurve
@@ -188,6 +189,49 @@ def test_zero_area(gid=33):
         assert optimizer.objective == eval(VOC_FUN)
         assert optimizer.capital_cost == 0
         assert optimizer.fixed_operating_cost == 0
+
+        bsp.close()
+
+
+def test_correct_turb_location(gid=33):
+    """Test turbine location is reported correctly. """
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+
+    objective_function = (
+        '(0.0975 * capital_cost + fixed_operating_cost) '
+        '/ (aep + 1E-6) + variable_operating_cost')
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format('*')
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        include_mask = np.zeros_like(bsp.include_mask)
+        include_mask[1, -2] = 1
+        pt = PlaceTurbines(bsp.wind_plant_pd, bsp.objective_function,
+                           bsp.capital_cost_function,
+                           bsp.fixed_operating_cost_function,
+                           bsp.variable_operating_cost_function,
+                           include_mask, pixel_side_length=90,
+                           min_spacing=45)
+
+        pt.define_exclusions()
+        pt.initialize_packing()
+
+        assert pt.x_locations[0] == 62 * 90
+        assert pt.y_locations[0] == 62 * 90
 
         bsp.close()
 
@@ -918,8 +962,11 @@ def test_bespoke_prior_run():
     Also added another minor test with extrapolation of t/p datasets from a
     single vertical level (e.g., with Sup3rCC data)
     """
+    sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+    sam_sys_inputs['fixed_charge_rate'] = 0.096
+    sam_configs = {'default': sam_sys_inputs}
     output_request = ('system_capacity', 'cf_mean', 'cf_profile',
-                      'extra_unused_data')
+                      'extra_unused_data', 'lcoe_fcr')
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, 'bespoke_out2.h5')
         out_fpath2 = os.path.join(td, 'bespoke_out1.h5')
@@ -950,7 +997,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_all, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
@@ -960,7 +1007,7 @@ def test_bespoke_prior_run():
 
         bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
-                                FOC_FUN, VOC_FUN, points, SAM_CONFIGS,
+                                FOC_FUN, VOC_FUN, points, sam_configs,
                                 ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
                                 output_request=output_request,
                                 prior_run=out_fpath1)
@@ -1236,3 +1283,43 @@ def test_cli(runner, clear_loggers):
                 assert f[dset].any()  # not all zeros
 
         clear_loggers()
+
+
+def test_bespoke_5min_sample():
+    """Sample a 5min resource dataset for 60min outputs in bespoke"""
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile',
+                      'extra_unused_data', 'winddirection', 'windspeed',
+                      'ws_mean')
+    tm_dset = 'test_wtk_5min'
+
+    with tempfile.TemporaryDirectory() as td:
+        out_fpath = os.path.join(td, 'wind_bespoke.h5')
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(EXCL, excl_fp)
+        res_fp = os.path.join(TESTDATADIR, 'wtk/wtk_2010_*m.h5')
+
+        points = pd.DataFrame({'gid': [33, 35], 'config': ['default'] * 2,
+                               'extra_unused_data': [0, 42]})
+        sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_sys_inputs['time_index_step'] = 12
+        sam_configs = {'default': sam_sys_inputs}
+
+        # hack techmap because 5min data only has 10 wind resource pixels
+        with h5py.File(excl_fp, 'a') as excl_file:
+            arr = np.random.choice(10, size=excl_file['latitude'].shape)
+            excl_file.create_dataset(name=tm_dset, data=arr)
+
+        bsp = BespokeWindPlants(excl_fp, res_fp, tm_dset, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, points,
+                                sam_configs, ga_kwargs={'max_time': 5},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request)
+        _ = bsp.run(max_workers=1, out_fpath=out_fpath)
+
+        with Resource(out_fpath) as f:
+            assert len(f.meta) == 2
+            assert len(f) == 8760
+            assert len(f['cf_profile-2010']) == 8760
+            assert len(f['time_index-2010']) == 8760
+            assert len(f['windspeed-2010']) == 8760
+            assert len(f['winddirection-2010']) == 8760

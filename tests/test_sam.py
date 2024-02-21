@@ -119,16 +119,16 @@ def test_time_interval(dt):
 
 
 def test_pysam_version_checker_pv():
-    """Test that the pysam version checker passes through PV config untouched.
+    """Test that the pysam version checker passes through PV config untouched
+    without warning.
     """
     pv_config = {'gcr': 0.4, 'system_capacity': 1}
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         sam_sys_inputs = PySamVersionChecker.run('pvwattsv5', pv_config)
-
-    assert not any(record)
-    assert 'gcr' in sam_sys_inputs
-    assert 'system_capacity' in sam_sys_inputs
+        assert 'gcr' in sam_sys_inputs
+        assert 'system_capacity' in sam_sys_inputs
 
 
 def test_pysam_version_checker_wind():

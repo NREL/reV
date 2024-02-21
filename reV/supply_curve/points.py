@@ -357,13 +357,11 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         centroid : tuple
             SC point centroid (lat, lon).
         """
-        decimals = 3
 
         if self._centroid is None:
             lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
             lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
-            self._centroid = (np.round(lats.mean(), decimals=decimals),
-                              np.round(lons.mean(), decimals=decimals))
+            self._centroid = (lats.mean(), lons.mean())
 
         return self._centroid
 
