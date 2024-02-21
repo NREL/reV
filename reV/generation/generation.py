@@ -289,7 +289,17 @@ class Gen(BaseGen):
             site-specific values. Note that some or all site-specific
             inputs can be specified via the `project_points` input
             table instead. If ``None``, no site-specific data is
-            considered. By default, ``None``.
+            considered.
+
+            .. Note:: This input is often used to provide site-based
+               regional capital cost multipliers. ``reV`` does not
+               ingest multipliers directly; instead, this file is
+               expected to have a ``capital_cost`` column that gives the
+               multiplier-adjusted capital cost value for each location.
+               Therefore, you *must* re-create this input file every
+               time you change your base capital cost assumption.
+
+            By default, ``None``.
         curtailment : dict | str, optional
             Inputs for curtailment parameters, which can be:
 

@@ -412,11 +412,17 @@ class SupplyCurveAggregation(BaseAggregation):
             are aggregated. By default, ``None``.
         cf_dset : str, optional
             Dataset name from the ``reV`` generation HDF5 output file
-            containing capacity factor mean values.
-            By default, ``"cf_mean-means"``.
+            containing a 1D dataset of mean capacity factor values. This
+            dataset will be mapped onto the high-resolution grid and
+            used to compute the mean capacity factor for non-excluded
+            area. By default, ``"cf_mean-means"``.
         lcoe_dset : str, optional
             Dataset name from the ``reV`` generation HDF5 output file
-            containing LCOE mean values.
+            containing a 1D dataset of mean LCOE values. This
+            dataset will be mapped onto the high-resolution grid and
+            used to compute the mean LCOE for non-excluded area, but
+            only if the LCOE is not re-computed during processing (see
+            the `recalc_lcoe` input for more info).
             By default, ``"lcoe_fcr-means"``.
         h5_dsets : list, optional
             Optional list of additional datasets from the ``reV``
@@ -498,7 +504,10 @@ class SupplyCurveAggregation(BaseAggregation):
                 - ``fixed_operating_cost``
                 - ``variable_operating_cost``
 
-            By default, ``True``.
+            If any of these datasets are missing from the ``reV``
+            generation HDF5 output, or if `recalc_lcoe` is set to
+            ``False``, the mean LCOE will be computed from the data
+            stored under the `lcoe_dset` instead. By default, ``True``.
 
         Examples
         --------
