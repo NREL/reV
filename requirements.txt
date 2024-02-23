@@ -1,4 +1,4 @@
-NREL-gaps>=0.6.9
+NREL-gaps>=0.6.10
 NREL-NRWAL>=0.0.7
 NREL-PySAM~=4.1.0
 NREL-rex>=0.2.85
