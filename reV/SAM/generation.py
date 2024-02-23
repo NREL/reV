@@ -1424,9 +1424,22 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
           plant type. Either Binary (0) or Flash (1). Only values of 0
           or 1 allowed.
         - ``design_temp`` : EGS plant design temperature (in C). Only
-          affects EGS runs. If this value is set lower than the
-          resource temperature input, ``reV`` will adjust it to match
-          the latter in order to avoid SAM errors.
+          affects EGS runs. This value may be adjusted internally by
+          ``reV under the following conditions:
+
+              - The design temperature is larger than the resource
+                temperature
+              - The design temperature is lower than the resource
+                temperature by a factor of ``MAX_RT_TO_EGS_RATIO``
+
+          If either of these conditions are true, the ``design_temp`` is  a
+          adjusted to match the resource temperature input in order to
+          avoid SAM errors.
+        - ``set_EGS_PDT_to_RT`` : Boolean flag to set EGS design
+          temperature to match the resource temperature input. If this
+          is ``True``, the ``design_temp`` input is ignored. This helps
+          avoid SAM/GETEM errors when the plant design temperature is
+          too high/low compared to the resource temperature.
         - ``geotherm.cost.inj_prod_well_ratio`` : Fraction representing
           the injection to production well ratio (0-1). SAM GUI defaults
           to 0.5 for this value, but it is recommended to set this to
@@ -1495,7 +1508,10 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
           ``time_index_step=2`` yields hourly output, and so forth).
 
     """
-
+    # Per Matt Prilliman on 2/22/24, it's unclear where this ratio originates,
+    # but SAM errors out if it's exceeded.
+    MAX_RT_TO_EGS_RATIO = 1.134324
+    """Max value of ``resource_temperature``/``EGS_plan_design_temperature``"""
     MODULE = 'geothermal'
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
@@ -1591,13 +1607,34 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         if self.sam_sys_inputs.get("resource_type") != 1:
             return  # Not EGS run
 
+        set_egs_pdt_to_rt = self.sam_sys_inputs.get("set_EGS_PDT_to_RT", False)
         egs_plant_design_temp = self.sam_sys_inputs.get("design_temp", 0)
         resource_temp = self.sam_sys_inputs["resource_temp"]
+
+        if set_egs_pdt_to_rt:
+            msg = ('Setting EGS plant design temperature ({}C) to match '
+                   'resource temperature ({}C)'
+                   .format(egs_plant_design_temp, resource_temp))
+            logger.info(msg)
+            self.sam_sys_inputs["design_temp"] = resource_temp
+            return
+
         if egs_plant_design_temp > resource_temp:
             msg = ('EGS plant design temperature ({}C) exceeds resource '
                    'temperature ({}C). Lowering EGS plant design temperature '
                    'to match resource temperature'
                    .format(egs_plant_design_temp, resource_temp))
+            logger.warning(msg)
+            warn(msg)
+            self.sam_sys_inputs["design_temp"] = resource_temp
+            return
+
+        if resource_temp / egs_plant_design_temp > self.MAX_RT_TO_EGS_RATIO:
+            msg = ('EGS plant design temperature ({}C) is lower than resource '
+                   'temperature ({}C) by more than a factor of {}. Increasing '
+                   'EGS plant design temperature to match resource temperature'
+                   .format(egs_plant_design_temp, resource_temp,
+                           self.MAX_RT_TO_EGS_RATIO))
             logger.warning(msg)
             warn(msg)
             self.sam_sys_inputs["design_temp"] = resource_temp
