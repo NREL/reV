@@ -63,16 +63,16 @@ def test_gen_geothermal(depth, sample_resource_data):
         json.dump(geo_config, fh)
 
     output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                        'gen_profile', 'lcoe_fcr', 'nameplate')
+                      'gen_profile', 'lcoe_fcr', 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+               output_request=output_request, sites_per_worker=1,
+               scale_outputs=True)
     gen.run(max_workers=1)
 
     truth_vals = {"annual_energy": 1.74e+09, "cf_mean": 0.993,
-                    "cf_profile": 0.993, "gen_profile": 198653.64,
-                    "lcoe_fcr": 12.52, "nameplate": 200_000,
-                    "resource_temp": 150}
+                  "cf_profile": 0.993, "gen_profile": 198653.64,
+                  "lcoe_fcr": 12.52, "nameplate": 200_000,
+                  "resource_temp": 150}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
@@ -80,8 +80,8 @@ def test_gen_geothermal(depth, sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -94,15 +94,15 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
     shutil.copy(DEFAULT_GEO_SAM_FILE, geo_sam_file)
 
     output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                        'gen_profile', 'lcoe_fcr', 'nameplate')
+                      'gen_profile', 'lcoe_fcr', 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+               output_request=output_request, sites_per_worker=1,
+               scale_outputs=True)
     gen.run(max_workers=1)
 
     truth_vals = {"annual_energy": 0, "cf_mean": 0, "cf_profile": 0,
-                    "gen_profile": 0, "lcoe_fcr": 0, "nameplate": 0,
-                    "resource_temp": 60}
+                  "gen_profile": 0, "lcoe_fcr": 0, "nameplate": 0,
+                  "resource_temp": 60}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
@@ -110,8 +110,8 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -133,7 +133,6 @@ def test_per_kw_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-
     output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                 output_request=output_request, sites_per_worker=1,
@@ -141,14 +140,14 @@ def test_per_kw_cost_inputs(sample_resource_data):
     gen.run(max_workers=1)
 
     truth_vals = {"capital_cost": 383_086_656,
-                    "fixed_operating_cost": 25539104,
-                    "lcoe_fcr": 72.5092}
+                  "fixed_operating_cost": 25539104,
+                  "lcoe_fcr": 72.5092}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=1e-6, atol=ATOL), msg
 
 
@@ -173,19 +172,19 @@ def test_drill_cost_inputs(sample_resource_data):
 
     output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+               output_request=output_request, sites_per_worker=1,
+               scale_outputs=True)
     gen.run(max_workers=1)
 
     truth_vals = {"capital_cost": 466_134_733,
-                    "fixed_operating_cost": 25539104,
-                    "lcoe_fcr": 81.8643}
+                  "fixed_operating_cost": 25539104,
+                  "lcoe_fcr": 81.8643}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=1e-6, atol=ATOL), msg
 
 
@@ -205,16 +204,16 @@ def test_gen_with_nameplate_input(sample_resource_data):
         json.dump(geo_config, fh)
 
     output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                        'gen_profile', 'lcoe_fcr', 'nameplate')
+                      'gen_profile', 'lcoe_fcr', 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                 output_request=output_request, sites_per_worker=1,
                 scale_outputs=True)
     gen.run(max_workers=1)
 
     truth_vals = {"annual_energy": 3.47992e+08, "cf_mean": 0.993,
-                    "cf_profile": 0.993, "gen_profile": 39725.117,
-                    "lcoe_fcr": 62.613, "nameplate": 40_000,
-                    "resource_temp": 150}
+                  "cf_profile": 0.993, "gen_profile": 39725.117,
+                  "lcoe_fcr": 62.613, "nameplate": 40_000,
+                  "resource_temp": 150}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
@@ -222,8 +221,8 @@ def test_gen_with_nameplate_input(sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -246,8 +245,8 @@ def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
     output_request = ('design_temp',)
     with pytest.warns(UserWarning):
         gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
         gen.run(max_workers=1)
 
     truth_vals = {"design_temp": 150}
@@ -258,8 +257,8 @@ def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -284,8 +283,8 @@ def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
     output_request = ('design_temp',)
     with pytest.warns(UserWarning):
         gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
         gen.run(max_workers=1)
 
     truth_vals = {"design_temp": high_temp}
@@ -296,8 +295,8 @@ def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -323,8 +322,8 @@ def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
     output_request = ('design_temp',)
     with pytest.warns(UserWarning):
         gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+                  output_request=output_request, sites_per_worker=1,
+                  scale_outputs=True)
         gen.run(max_workers=1)
 
     truth_vals = {"design_temp": not_too_high_temp}
@@ -335,8 +334,8 @@ def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
             test = np.mean(test, axis=0)
 
         msg = ('{} outputs do not match baseline value! Values differ '
-                'at most by: {}'
-                .format(dset, np.max(np.abs(truth - test))))
+               'at most by: {}'
+               .format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
 
@@ -355,10 +354,10 @@ def test_gen_with_time_index_step_input(sample_resource_data):
         json.dump(geo_config, fh)
 
     output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                        'gen_profile', 'lcoe_fcr', 'nameplate')
+                      'gen_profile', 'lcoe_fcr', 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
-                output_request=output_request, sites_per_worker=1,
-                scale_outputs=True)
+              output_request=output_request, sites_per_worker=1,
+              scale_outputs=True)
     gen.run(max_workers=1)
 
     assert gen.out["cf_profile"].shape[0] == 8760 // 2
