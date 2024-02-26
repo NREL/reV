@@ -231,7 +231,7 @@ def test_agg_gen_econ():
 
 def test_agg_extra_dsets():
     """Test aggregation with extra datasets to aggregate."""
-    h5_dsets = ['cf_profile']
+    h5_dsets = ['lcoe_fcr-2012', 'lcoe_fcr-2013', 'lcoe_fcr-stdev']
     sca = SupplyCurveAggregation(EXCL, TM_DSET, h5_dsets=h5_dsets,
                                  econ_fpath=ONLY_ECON, excl_dict=EXCL_DICT,
                                  res_class_dset=RES_CLASS_DSET,
