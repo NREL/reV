@@ -427,7 +427,14 @@ class SupplyCurveAggregation(BaseAggregation):
         h5_dsets : list, optional
             Optional list of additional datasets from the ``reV``
             generation/econ HDF5 output file to aggregate. If ``None``,
-            no extra datasets are aggregated. By default, ``None``.
+            no extra datasets are aggregated.
+
+            .. WARNING:: This input is meant for passing through 1D
+               datasets. If you specify a 2D or higher-dimensional
+               dataset, you may run into memory errors. If you wish to
+               aggregate 2D datasets, see the rep-profiles module.
+
+            By default, ``None``.
         data_layers : dict, optional
             Dictionary of aggregation data layers of the format::
 
