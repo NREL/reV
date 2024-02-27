@@ -427,7 +427,14 @@ class SupplyCurveAggregation(BaseAggregation):
         h5_dsets : list, optional
             Optional list of additional datasets from the ``reV``
             generation/econ HDF5 output file to aggregate. If ``None``,
-            no extra datasets are aggregated. By default, ``None``.
+            no extra datasets are aggregated.
+
+            .. WARNING:: This input is meant for passing through 1D
+               datasets. If you specify a 2D or higher-dimensional
+               dataset, you may run into memory errors. If you wish to
+               aggregate 2D datasets, see the rep-profiles module.
+
+            By default, ``None``.
         data_layers : dict, optional
             Dictionary of aggregation data layers of the format::
 
@@ -777,6 +784,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
         for i, dset in enumerate(dset_list):
             if dset in gen_dsets:
+                _warn_about_large_datasets(gen, dset)
                 temp[i] = gen[dset]
             elif dset not in gen_dsets and dset is not None:
                 w = ('Could not find "{}" input as "{}" in source files: {}. '
@@ -1355,3 +1363,15 @@ def _format_sc_agg_out_fpath(out_fpath):
     out_fn = out_fn.replace("supply_curve_aggregation",
                             "supply-curve-aggregation")
     return os.path.join(project_dir, out_fn)
+
+
+def _warn_about_large_datasets(gen, dset):
+    """Warn user about multi-dimensional datasets in passthrough datasets"""
+    dset_shape = gen.shapes.get(dset, (1,))
+    if len(dset_shape) > 1:
+        msg = ("Generation dataset {!r} is not 1-dimensional (shape: {})."
+               "You may run into memory errors during aggregation - use "
+               "rep-profiles for aggregating higher-order datasets instead!"
+               .format(dset, dset_shape))
+        logger.warning(msg)
+        warn(msg, UserWarning)

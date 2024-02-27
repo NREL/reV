@@ -20,10 +20,11 @@ import traceback
 
 from reV.cli import main
 from reV.econ.utilities import lcoe_fcr
-from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.supply_curve.sc_aggregation import (SupplyCurveAggregation,
+                                             _warn_about_large_datasets)
 from reV.utilities import ModuleName
 from reV import TESTDATADIR
-from rex import Outputs
+from rex import Resource, Outputs
 from rex.utilities.loggers import LOGGERS
 
 
@@ -248,6 +249,22 @@ def test_agg_extra_dsets():
 
     avg = (summary['mean_lcoe_fcr-2012'] + summary['mean_lcoe_fcr-2013']) / 2
     assert np.allclose(avg.values, summary['mean_lcoe'].values)
+
+
+def test_agg_extra_2D_dsets():
+    """Test that warning is thrown for 2D datasets."""
+    dset = "cf_profile"
+    fp = os.path.join(TESTDATADIR, 'gen_out/pv_gen_2018_node00.h5')
+    with pytest.warns(UserWarning) as records:
+        with Resource(fp) as res:
+            _warn_about_large_datasets(res, dset)
+
+    messages = [r.message.args[0] for r in records]
+    assert any("Generation dataset {!r} is not 1-dimensional (shape: {})"
+               .format(dset, (17520, 50))
+               in msg for msg in messages)
+    assert any("You may run into memory errors during aggregation"
+               in msg for msg in messages)
 
 
 def test_agg_scalar_excl():
