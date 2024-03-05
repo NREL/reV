@@ -1980,6 +1980,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary['raw_lcoe'] = eos.raw_lcoe
         summary['mean_lcoe'] = eos.scaled_lcoe
         summary['capital_cost_scalar'] = eos.capital_cost_scalar
+        summary['scaled_capital_cost'] = eos.scaled_capital_cost
 
         return summary
 
