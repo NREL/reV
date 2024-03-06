@@ -1802,14 +1802,16 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         This method scales the capital cost based on the included-area
         capacity. The calculation requires 'capital_cost' and
-        'system_capacity' in the generation file, otherwise it returns
-        `None`.
+        'system_capacity' in the generation file and passed through as
+        `h5_dsets`, otherwise it returns `None`.
 
         Returns
         -------
         sc_point_capital_cost : float | None
             Total supply curve point capital cost ($).
         """
+        if self.mean_h5_dsets_data is None:
+            return None
 
         required = ('capital_cost', 'system_capacity')
         if not all(k in self.mean_h5_dsets_data for k in required):
@@ -1826,13 +1828,16 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         This method scales the fixed operating cost based on the
         included-area capacity. The calculation requires
         'fixed_operating_cost' and 'system_capacity' in the generation
-        file, otherwise it returns `None`.
+        file and passed through as `h5_dsets`, otherwise it returns
+        `None`.
 
         Returns
         -------
         sc_point_fixed_operating_cost : float | None
             Total supply curve point fixed operating cost ($).
         """
+        if self.mean_h5_dsets_data is None:
+            return None
 
         required = ('fixed_operating_cost', 'system_capacity')
         if not all(k in self.mean_h5_dsets_data for k in required):
