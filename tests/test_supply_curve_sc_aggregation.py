@@ -356,7 +356,9 @@ def test_data_layer_methods():
             assert slope_min <= slope_mean <= slope_max
 
 
-def test_recalc_lcoe():
+@pytest.mark.parametrize("cap_cost_scale",
+                         ['1', '2 * np.multiply(1000, capacity) ** -0.3'])
+def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
@@ -401,16 +403,17 @@ def test_recalc_lcoe():
             res.create_dataset('lcoe_fcr-means',
                                res['meta'].shape, data=lcoe_arr)
 
-        h5_dsets = ('capital_cost', 'fixed_operating_cost',
+        h5_dsets = ['capital_cost', 'fixed_operating_cost',
                     'fixed_charge_rate', 'variable_operating_cost',
-                    'system_capacity')
+                    'system_capacity']
 
         base = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
                                       res_class_dset=None, res_class_bins=None,
                                       data_layers=DATA_LAYERS,
                                       h5_dsets=h5_dsets,
                                       gids=list(np.arange(10)),
-                                      recalc_lcoe=False)
+                                      recalc_lcoe=False,
+                                      cap_cost_scale=cap_cost_scale)
         summary_base = base.summarize(gen_temp, max_workers=1)
 
         sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
@@ -418,10 +421,21 @@ def test_recalc_lcoe():
                                      data_layers=DATA_LAYERS,
                                      h5_dsets=h5_dsets,
                                      gids=list(np.arange(10)),
-                                     recalc_lcoe=True)
+                                     recalc_lcoe=True,
+                                     cap_cost_scale=cap_cost_scale)
         summary = sca.summarize(gen_temp, max_workers=1)
 
     assert not np.allclose(summary_base['mean_lcoe'], summary['mean_lcoe'])
+
+    if cap_cost_scale == '1':
+        cc_dset = 'sc_point_capital_cost'
+    else:
+        cc_dset = 'scaled_sc_point_capital_cost'
+    lcoe = lcoe_fcr(summary['mean_fixed_charge_rate'], summary[cc_dset],
+                    summary['sc_point_fixed_operating_cost'],
+                    summary['sc_point_annual_energy'],
+                    summary['mean_variable_operating_cost'])
+    assert np.allclose(lcoe, summary['mean_lcoe'])
 
 
 @pytest.mark.parametrize('tm_dset', ("techmap_ri", "techmap_ri_new"))

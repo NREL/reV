@@ -1797,6 +1797,89 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.area * self.power_density_ac
 
     @property
+    def sc_point_capital_cost(self):
+        """Get the capital cost for the entire SC point.
+
+        This method scales the capital cost based on the included-area
+        capacity. The calculation requires 'capital_cost' and
+        'system_capacity' in the generation file, otherwise it returns
+        `None`.
+
+        Returns
+        -------
+        sc_point_capital_cost : float | None
+            Total supply curve point capital cost ($).
+        """
+
+        required = ('capital_cost', 'system_capacity')
+        if not all(k in self.mean_h5_dsets_data for k in required):
+            return None
+
+        cap_cost_per_mw = (self.mean_h5_dsets_data['capital_cost']
+                           / self.mean_h5_dsets_data['system_capacity'])
+        return cap_cost_per_mw * self.capacity
+
+    @property
+    def sc_point_fixed_operating_cost(self):
+        """Get the fixed operating cost for the entire SC point.
+
+        This method scales the fixed operating cost based on the
+        included-area capacity. The calculation requires
+        'fixed_operating_cost' and 'system_capacity' in the generation
+        file, otherwise it returns `None`.
+
+        Returns
+        -------
+        sc_point_fixed_operating_cost : float | None
+            Total supply curve point fixed operating cost ($).
+        """
+
+        required = ('fixed_operating_cost', 'system_capacity')
+        if not all(k in self.mean_h5_dsets_data for k in required):
+            return None
+
+        fixed_cost_per_mw = (self.mean_h5_dsets_data['fixed_operating_cost']
+                             / self.mean_h5_dsets_data['system_capacity'])
+        return fixed_cost_per_mw * self.capacity
+
+    @property
+    def sc_point_annual_energy(self):
+        """Get the total annual energy (MWh) for the entire SC point.
+
+        This value is computed using the capacity of the supply curve
+        point as well as the mean capacity factor. If the mean capacity
+        factor is `None`, this value will also be `None`.
+
+        Returns
+        -------
+        sc_point_annual_energy : float | None
+            Total annual energy (MWh) for the entire SC point.
+        """
+        if self.mean_cf is None:
+            return None
+
+        return self.mean_cf * self.capacity * 8760
+
+    @property
+    def sc_point_annual_energy_ac(self):
+        """Get the total AC annual energy (MWh) for the entire SC point.
+
+        This value is computed using the AC capacity of the supply curve
+        point as well as the mean capacity factor. If either the mean
+        capacity factor or the AC capacity value is `None`, this value
+        will also be `None`.
+
+        Returns
+        -------
+        sc_point_annual_energy_ac : float | None
+            Total AC annual energy (MWh) for the entire SC point.
+        """
+        if self.mean_cf is None or self.capacity_ac is None:
+            return None
+
+        return self.mean_cf * self.capacity_ac * 8760
+
+    @property
     def h5_dsets_data(self):
         """Get any additional/supplemental h5 dataset data to summarize.
 
@@ -1928,11 +2011,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 'timezone': self.timezone,
                 }
 
-        if self.capacity_ac is not None:
-            ARGS['capacity_ac'] = self.capacity_ac
-
-        if self.offshore is not None:
-            ARGS['offshore'] = self.offshore
+        extra_atts = ['capacity_ac', 'offshore', 'sc_point_capital_cost',
+                      'sc_point_fixed_operating_cost',
+                      'sc_point_annual_energy', 'sc_point_annual_energy_ac']
+        for attr in extra_atts:
+            value = getattr(self, attr)
+            if value is not None:
+                ARGS[attr] = value
 
         if self._friction_layer is not None:
             ARGS['mean_friction'] = self.mean_friction
@@ -1981,6 +2066,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary['mean_lcoe'] = eos.scaled_lcoe
         summary['capital_cost_scalar'] = eos.capital_cost_scalar
         summary['scaled_capital_cost'] = eos.scaled_capital_cost
+        if "sc_point_capital_cost" in summary:
+            scaled_costs = (summary["sc_point_capital_cost"]
+                            * eos.capital_cost_scalar)
+            summary['scaled_sc_point_capital_cost'] = scaled_costs
 
         return summary
 
