@@ -1,0 +1,41 @@
+reV.econ.economies\_of\_scale.EconomiesOfScale
+==============================================
+
+.. currentmodule:: reV.econ.economies_of_scale
+
+.. autoclass:: EconomiesOfScale
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EconomiesOfScale.is_method
+      ~EconomiesOfScale.is_num
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EconomiesOfScale.aep
+      ~EconomiesOfScale.capital_cost_scalar
+      ~EconomiesOfScale.fcr
+      ~EconomiesOfScale.foc
+      ~EconomiesOfScale.raw_capital_cost
+      ~EconomiesOfScale.raw_lcoe
+      ~EconomiesOfScale.scaled_capital_cost
+      ~EconomiesOfScale.scaled_lcoe
+      ~EconomiesOfScale.system_capacity
+      ~EconomiesOfScale.vars
+      ~EconomiesOfScale.voc
+   
+   

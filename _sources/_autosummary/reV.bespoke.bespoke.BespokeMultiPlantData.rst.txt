@@ -1,0 +1,24 @@
+reV.bespoke.bespoke.BespokeMultiPlantData
+=========================================
+
+.. currentmodule:: reV.bespoke.bespoke
+
+.. autoclass:: BespokeMultiPlantData
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BespokeMultiPlantData.get_preloaded_data_for_gid
+   
+   
+
+   
+   
+   

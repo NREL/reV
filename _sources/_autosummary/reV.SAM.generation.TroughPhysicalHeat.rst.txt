@@ -1,0 +1,65 @@
+reV.SAM.generation.TroughPhysicalHeat
+=====================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: TroughPhysicalHeat
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TroughPhysicalHeat.add_scheduled_losses
+      ~TroughPhysicalHeat.annual_energy
+      ~TroughPhysicalHeat.assign_inputs
+      ~TroughPhysicalHeat.cf_mean
+      ~TroughPhysicalHeat.cf_profile
+      ~TroughPhysicalHeat.check_resource_data
+      ~TroughPhysicalHeat.collect_outputs
+      ~TroughPhysicalHeat.default
+      ~TroughPhysicalHeat.drop_leap
+      ~TroughPhysicalHeat.energy_yield
+      ~TroughPhysicalHeat.ensure_res_len
+      ~TroughPhysicalHeat.execute
+      ~TroughPhysicalHeat.gen_profile
+      ~TroughPhysicalHeat.get_sam_res
+      ~TroughPhysicalHeat.get_time_interval
+      ~TroughPhysicalHeat.make_datetime
+      ~TroughPhysicalHeat.outputs_to_utc_arr
+      ~TroughPhysicalHeat.reV_run
+      ~TroughPhysicalHeat.run
+      ~TroughPhysicalHeat.run_gen_and_econ
+      ~TroughPhysicalHeat.set_resource_data
+      ~TroughPhysicalHeat.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TroughPhysicalHeat.DIR
+      ~TroughPhysicalHeat.IGNORE_ATTRS
+      ~TroughPhysicalHeat.MODULE
+      ~TroughPhysicalHeat.OUTAGE_CONFIG_KEY
+      ~TroughPhysicalHeat.OUTAGE_SEED_CONFIG_KEY
+      ~TroughPhysicalHeat.PYSAM_WEATHER_TAG
+      ~TroughPhysicalHeat.WF_META_DROP_COLS
+      ~TroughPhysicalHeat.attr_dict
+      ~TroughPhysicalHeat.has_timezone
+      ~TroughPhysicalHeat.input_list
+      ~TroughPhysicalHeat.meta
+      ~TroughPhysicalHeat.module
+      ~TroughPhysicalHeat.outage_seed
+      ~TroughPhysicalHeat.pysam
+      ~TroughPhysicalHeat.site
+   
+   

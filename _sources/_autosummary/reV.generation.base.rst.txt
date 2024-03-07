@@ -1,0 +1,31 @@
+reV.generation.base
+===================
+
+.. automodule:: reV.generation.base
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      BaseGen
+   
+   
+
+   
+   
+   
+
+
+

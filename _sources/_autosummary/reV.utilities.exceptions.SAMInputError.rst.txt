@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SAMInputError
+======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SAMInputError

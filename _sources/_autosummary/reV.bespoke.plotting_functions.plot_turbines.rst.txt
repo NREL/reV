@@ -1,0 +1,6 @@
+reV.bespoke.plotting\_functions.plot\_turbines
+==============================================
+
+.. currentmodule:: reV.bespoke.plotting_functions
+
+.. autofunction:: plot_turbines

@@ -1,0 +1,32 @@
+reV.qa\_qc.summary.SummarizeH5
+==============================
+
+.. currentmodule:: reV.qa_qc.summary
+
+.. autoclass:: SummarizeH5
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SummarizeH5.run
+      ~SummarizeH5.summarize_dset
+      ~SummarizeH5.summarize_means
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SummarizeH5.h5_file
+   
+   

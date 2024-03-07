@@ -1,0 +1,6 @@
+reV.utilities.exceptions.OffshoreWindInputWarning
+=================================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: OffshoreWindInputWarning
