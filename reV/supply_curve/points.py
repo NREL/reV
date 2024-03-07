@@ -1585,6 +1585,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 if all(k in self.mean_h5_dsets_data for k in required):
                     aep = (self.mean_h5_dsets_data['system_capacity']
                            * self.mean_cf * 8760)
+                    # Note the AEP computation uses the SAM config
+                    # `system_capacity`, so no need to scale `capital_cost`
+                    # or `fixed_operating_cost` by anything
                     mean_lcoe = lcoe_fcr(
                         self.mean_h5_dsets_data['fixed_charge_rate'],
                         self.mean_h5_dsets_data['capital_cost'],
