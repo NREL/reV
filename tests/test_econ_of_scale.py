@@ -162,6 +162,8 @@ def test_econ_of_scale_baseline():
         sc_df = pd.read_csv(out_fp_sc + ".csv")
         assert np.allclose(base_df['mean_lcoe'], sc_df['mean_lcoe'])
         assert (sc_df['capital_cost_scalar'] == 1).all()
+        assert np.allclose(sc_df['mean_capital_cost'],
+                           sc_df['scaled_capital_cost'])
 
 
 def test_sc_agg_econ_scale():
@@ -225,6 +227,8 @@ def test_sc_agg_econ_scale():
                             / aep + data['variable_operating_cost'])
 
         assert np.allclose(scalars, sc_df['capital_cost_scalar'])
+        assert np.allclose(scalars * sc_df['mean_capital_cost'],
+                           sc_df['scaled_capital_cost'])
 
         assert np.allclose(true_scaled_lcoe, sc_df['mean_lcoe'])
         assert np.allclose(true_raw_lcoe, sc_df['raw_lcoe'])
