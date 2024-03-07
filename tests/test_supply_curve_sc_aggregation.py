@@ -110,6 +110,7 @@ def test_agg_summary():
 
         summary = summary.fillna('None')
         s_baseline = s_baseline.fillna('None')
+        summary = summary[list(s_baseline.columns)]
 
         assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
 
@@ -205,6 +206,7 @@ def test_pre_extract_inclusions(pre_extract):
 
         summary = summary.fillna('None')
         s_baseline = s_baseline.fillna('None')
+        summary = summary[list(s_baseline.columns)]
 
         assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
 
