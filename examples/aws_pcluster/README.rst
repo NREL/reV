@@ -29,7 +29,7 @@ Setting up an AWS Parallel Cluster
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
     #. ``source ~/.bashrc``
 
-#. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See instructions below for details.
+#. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See `the HSDS instructions below <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster>`_ for details.
 #. Install reV
 
     #. You need to clone the reV repo to get the ``aws_pcluster`` `example files <https://github.com/NREL/reV/tree/main/examples/aws_pcluster>`_. reV example files do not ship with the pypi package.
@@ -61,6 +61,8 @@ Setting up HSDS Local Servers on your Compute Cluster
 -----------------------------------------------------
 
 The current recommended approach for setting up an HSDS service for reV is to start local HSDS servers on your AWS parallel cluster compute nodes. These instructions set up a shell script that each reV compute job will run on its respective compute node. The shell script checks that an HSDS local server is running, and will start one if not. These instructions are generally copied from the `HSDS AWS README <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ with a few modifications.
+
+Note that these instructions were originally developed and tested in February 2022 and have not been maintained. The latest instructions for setting up HSDS local servers can be found in the rex docs page: `HSDS local server instructions <https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server>`_. The best way to run reV on an AWS PCluster with HSDS local servers may be a combination of the instructions below and the latest instructions from the rex docs page. 
 
 #. Make sure you have installed Miniconda but have not yet installed reV/rex.
 #. Clone the `HSDS Repository <https://github.com/HDFGroup/hsds>`_. into your home directory in the pcluster login node: ``git clone git@github.com:HDFGroup/hsds.git`` (you may have to set up your ssh keys first).
