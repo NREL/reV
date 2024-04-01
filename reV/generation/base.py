@@ -1135,6 +1135,7 @@ class BaseGen(ABC):
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
+    # pylint: disable=unused-argument
     def _reduce_kwargs(self, pc, **kwargs):
         """Placeholder for functions that need to reduce the global kwargs that
         they send to workers to reduce memory footprint
