@@ -78,10 +78,12 @@ class LayerMask:
             other inputs - see info in the description of
             `exclude_values`. By default, ``None``.
         use_as_weights : bool, optional
-            Option to use layer as final inclusion weights. If ``True``,
-            all inclusion/exclusions specifications for the layer are
-            ignored and the raw values (scaled by the `weight` input)
-            are used as weights. By default, ``False``.
+            Option to use layer as final inclusion weights (i.e.
+            1 = fully included, 0.75 = 75% included, 0.5 = 50% included,
+            etc.). If ``True``, all inclusion/exclusions specifications
+            for the layer are ignored and the raw values (scaled by the
+            `weight` input) are used as inclusion weights.
+            By default, ``False``.
         weight : float, optional
             Weight applied to exclusion layer after it is calculated.
             Can be used, for example, to turn a binary exclusion layer
