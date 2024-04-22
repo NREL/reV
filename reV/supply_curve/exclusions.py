@@ -902,34 +902,34 @@ class ExclusionMask:
 
         return mask
 
-    def _force_include(self, mask, layers, ds_slice):
-        """
-        Apply force inclusion layers
+    def _add_layer_to_mask(self, mask, layer, ds_slice, check_layers,
+                           combine_func):
+        """Add layer mask to full mask. """
+        layer_mask = self._compute_layer_mask(layer, ds_slice, check_layers)
+        if mask is None:
+            return layer_mask
 
-        Parameters
-        ----------
-        mask : ndarray | None
-            Mask to apply force inclusion layers to
-        layers : list
-            List of force inclusion layers
-        ds_slice : int | slice | list | ndarray
-            What to extract from ds, each arg is for a sequential axis.
-            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
-            exclusions mask.
-        """
-        for layer in layers:
-            layer_slice = (layer.name, ) + ds_slice
-            layer_mask = layer[self.excl_h5[layer_slice]]
-            logger.debug('Computing forced inclusions for {}. Layer has '
-                         'average value of {:.2f}'
-                         .format(layer, layer_mask.mean()))
-            log_mem(logger, log_level='DEBUG')
-            if mask is None:
-                mask = layer_mask
-            else:
-                mask = np.maximum(mask, layer_mask, dtype='float32')
+        return combine_func(mask, layer_mask, dtype='float32')
 
-        return mask
+    def _compute_layer_mask(self, layer, ds_slice, check_layers=False):
+        """Compute mask for single layer, including extent. """
+        layer_mask = self._masked_layer_data(layer, ds_slice)
+
+        logger.debug('Computed exclusions {} for {}. Layer has average value '
+                     'of {:.2f}.'
+                     .format(layer, ds_slice, layer_mask.mean()))
+        log_mem(logger, log_level='DEBUG')
+
+        if check_layers and not layer_mask.any():
+            msg = "Layer {} is fully excluded!".format(layer.name)
+            logger.error(msg)
+            raise ExclusionLayerError(msg)
+
+        return layer_mask
+
+    def _masked_layer_data(self, layer, ds_slice):
+        """Extract masked data for layer. """
+        return layer[self.excl_h5[(layer.name, ) + ds_slice]]
 
     def _generate_mask(self, *ds_slice, check_layers=False):
         """
@@ -964,27 +964,13 @@ class ExclusionMask:
                 if layer.force_include:
                     force_include.append(layer)
                 else:
-                    layer_slice = (layer.name, ) + ds_slice
-                    layer_mask = layer[self.excl_h5[layer_slice]]
-
-                    logger.debug('Computed exclusions {} for {}. '
-                                 'Layer has average value of {:.2f}.'
-                                 .format(layer, ds_slice, layer_mask.mean()))
-                    log_mem(logger, log_level='DEBUG')
-
-                    if check_layers and not layer_mask.any():
-                        msg = ("Layer {} is fully excluded!"
-                               .format(layer.name))
-                        logger.error(msg)
-                        raise ExclusionLayerError(msg)
-
-                    if mask is None:
-                        mask = layer_mask
-                    else:
-                        mask = np.minimum(mask, layer_mask, dtype='float32')
-
-            if force_include:
-                mask = self._force_include(mask, force_include, ds_slice)
+                    mask = self._add_layer_to_mask(mask, layer, ds_slice,
+                                                   check_layers,
+                                                   combine_func=np.minimum)
+            for layer in force_include:
+                mask = self._add_layer_to_mask(mask, layer, ds_slice,
+                                               check_layers,
+                                               combine_func=np.maximum)
 
             if self._min_area is not None:
                 mask = self._area_filter(mask, self._min_area,
