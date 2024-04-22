@@ -171,7 +171,6 @@ def test_layer_mask(layer_name, inclusion_range, exclude_values,
     assert np.allclose(truth, dict_test)
 
 
-
 @pytest.mark.parametrize(('layer_name', 'inclusion_range', 'exclude_values',
                           'include_values', 'weight', 'exclude_nodata'), [
     ('ri_padus', (None, None), [1, ], None, 1, False),
