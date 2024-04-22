@@ -359,7 +359,7 @@ class LayerMask:
                         logger.error(msg)
                         raise ExclusionLayerError(msg)
 
-        if mask is None:
+        if mask is None and not self._as_weights:
             msg = ('Exactly one approach must be specified to create the '
                    'inclusion mask for layer {!r}! Please specify one of: '
                    '`exclude_values`, `exclude_range`, `include_values`, '

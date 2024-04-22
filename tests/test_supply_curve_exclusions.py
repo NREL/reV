@@ -104,6 +104,8 @@ def test_error_for_empty_exclusions():
     )
     assert expected_msg in str(error)
 
+    __ = LayerMask("test", use_as_weights=True)  # no error
+
 
 @pytest.mark.parametrize(('layer_name', 'inclusion_range', 'exclude_values',
                           'include_values', 'weight', 'exclude_nodata'), [
