@@ -323,6 +323,71 @@ def test_layer_mask_with_bad_extent():
         assert "Extent layer must be boolean" in str(error)
 
 
+def test_layer_mask_with_extent_as_weights():
+    """
+    Test creation of layer masks with bad extent
+
+    Parameters
+    ----------
+    layer_name : str
+        Layer name
+    inclusion_range : tuple
+        (min threshold, max threshold) for values to include
+    exclude_values : list
+        list of values to exclude
+        Note: Only supply exclusions OR inclusions
+    include_values : list
+        List of values to include
+        Note: Only supply inclusions OR exclusions
+    """
+    layer_name = 'ri_padus'
+    inclusion_range = (None, None)
+    exclude_values = [1, ]
+    include_values = None
+    weight = 1
+    exclude_nodata = False
+
+    excl_h5_og = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(excl_h5_og, excl_fp)
+
+        with ExclusionLayers(excl_fp) as f:
+            data = f[layer_name]
+            nodata_value = f.get_nodata_value(layer_name)
+
+        with h5py.File(excl_fp, mode="a") as fh:
+            halfway_x = data.shape[1] // 2
+            regions_bool = np.zeros(data.shape, dtype=np.float32)
+            regions_bool[:, halfway_x:] = 1
+            fh.create_dataset('testing_regions', data=regions_bool)
+
+        data[:, halfway_x:] = 1
+
+        layer = LayerMask(layer_name, include_range=inclusion_range,
+                          exclude_values=exclude_values,
+                          include_values=include_values, weight=weight,
+                          exclude_nodata=exclude_nodata,
+                          nodata_value=nodata_value,
+                          use_as_weights=True,
+                          extent={"layer": "testing_regions",
+                                  "include_values": 0})
+
+        mask_test = ExclusionMask.run(excl_fp, layers=layer)
+        assert np.allclose(data, mask_test)
+
+        layer_dict = {layer_name: {"include_range": inclusion_range,
+                                   "exclude_values": exclude_values,
+                                   "include_values": include_values,
+                                   "weight": weight,
+                                   "exclude_nodata": exclude_nodata,
+                                   "use_as_weights": True,
+                                   "extent": {"layer": "testing_regions",
+                                              "include_values": 0}}}
+        dict_test = ExclusionMaskFromDict.run(excl_fp, layers_dict=layer_dict)
+        assert np.allclose(data, dict_test)
+
+
 @pytest.mark.parametrize(('scenario'),
                          ['urban_pv', 'rural_pv', 'wind', 'weighted'])
 def test_inclusion_mask(scenario):
