@@ -69,14 +69,16 @@ class LayerMask:
             info in the description of  `exclude_values`.
             By default, ``None``.
         force_include_values : int | float | list, optional
-            Force the inclusion of the given value(s). Mutually
-            exclusive with other inputs - see info in the description of
-            `exclude_values`. By default, ``None``.
+            Force the inclusion of the given value(s). This input
+            completely replaces anything provided as `include_values`
+            and is mutually exclusive with other inputs - see info in
+            the description of `exclude_values`. By default, ``None``.
         force_include_range : list | tuple, optional
             Force the inclusion of given values in the range
-            (min threshold, max threshold). Mutually exclusive with
-            other inputs - see info in the description of
-            `exclude_values`. By default, ``None``.
+            (min threshold, max threshold). This input completely
+            replaces anything provided as `include_range`
+            and is mutually exclusive with other inputs - see info in
+            the description of `exclude_values`. By default, ``None``.
         use_as_weights : bool, optional
             Option to use layer as final inclusion weights (i.e.
             1 = fully included, 0.75 = 75% included, 0.5 = 50% included,
