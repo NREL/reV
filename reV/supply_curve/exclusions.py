@@ -32,6 +32,7 @@ class LayerMask:
                  weight=1.0,
                  exclude_nodata=False,
                  nodata_value=None,
+                 extent=None,
                  **kwargs):
         """
         Parameters
@@ -49,36 +50,37 @@ class LayerMask:
 
             By default, ``None``.
         exclude_range : list | tuple, optional
-            Two-item list of (min threshold, max threshold) for values
-            to exclude. Mutually exclusive with other inputs - see info
-            in the description of  `exclude_values`.
-            By default, ``None``.
+            Two-item list of [min threshold, max threshold] (ends are
+            inclusive) for values to exclude. Mutually exclusive
+            with other inputs (see info in the description of
+            `exclude_values`). By default, ``None``.
         include_values : int | float | list, optional
             Single value or list of values to include. Mutually
-            exclusive with other inputs - see info in the description of
-            `exclude_values`. By default, ``None``.
+            exclusive with other inputs (see info in the description of
+            `exclude_values`). By default, ``None``.
         include_range : list | tuple, optional
-            Two-item list of (min threshold, max threshold) for values
-            to include. Mutually exclusive with other inputs - see info
-            in the description of  `exclude_values`.
-            By default, ``None``.
+            Two-item list of [min threshold, max threshold] (ends are
+            inclusive) for values to include. Mutually exclusive with
+            other inputs (see info in the description of
+            `exclude_values`). By default, ``None``.
         include_weights : dict, optional
             A dictionary of ``{value: weight}`` pairs, where the
             ``value`` in the layer that should be included with the
-            given ``weight``. Mutually exclusive with other inputs - see
-            info in the description of  `exclude_values`.
+            given ``weight``. Mutually exclusive with other inputs (see
+            info in the description of  `exclude_values`).
             By default, ``None``.
         force_include_values : int | float | list, optional
             Force the inclusion of the given value(s). This input
             completely replaces anything provided as `include_values`
-            and is mutually exclusive with other inputs - see info in
-            the description of `exclude_values`. By default, ``None``.
+            and is mutually exclusive with other inputs (eee info in
+            the description of `exclude_values`). By default, ``None``.
         force_include_range : list | tuple, optional
             Force the inclusion of given values in the range
-            (min threshold, max threshold). This input completely
-            replaces anything provided as `include_range`
-            and is mutually exclusive with other inputs - see info in
-            the description of `exclude_values`. By default, ``None``.
+            [min threshold, max threshold] (ends are inclusive). This
+            input completely replaces anything provided as
+            `include_range` and is mutually exclusive with other inputs
+            (see info in the description of `exclude_values`).
+            By default, ``None``.
         use_as_weights : bool, optional
             Option to use layer as final inclusion weights (i.e.
             1 = fully included, 0.75 = 75% included, 0.5 = 50% included,
@@ -102,6 +104,37 @@ class LayerMask:
             inferred when LayerMask is added to
             :class:`reV.supply_curve.exclusions.ExclusionMask`.
             By default, ``None``.
+        extent : dict, optional
+            Optional dictionary with values that can be used to
+            initialize this class (i.e. `layer`, `exclude_values`,
+            `include_range`, etc.). This dictionary should contain the
+            specifications to create a boolean mask that defines the
+            extent to which the original mask should be applied.
+            For example, suppose you specify the input the following
+            way:
+
+                input_dict = {
+                    "viewsheds": {
+                        "exclude_values": 1,
+                        "extent": {
+                            "layer": "federal_parks",
+                            "include_range": [1, 5]
+                        }
+                    }
+                }
+
+                for layer_name, kwargs in input_dict.items():
+                    layer = LayerMask(layer_name, **kwargs)
+                    ...
+
+            This would mean that you are masking out all viewshed layer
+            values equal to 1, **but only where the "federal_parks"
+            layer is equal to 1, 2, 3, 4, or 5**. Outside of this
+            region (i.e. outside of federal park regions), the viewshed
+            exclusion is **NOT** applied. If the mask created by these
+            options is not boolean, an error is thrown (i.e. do not
+            specify `weight` or `use_as_weights`). By default ``None``,
+            which applies the original layer mask to the full extent.
         **kwargs
             Optional inputs to maintain legacy kwargs of ``inclusion_*``
             instead of ``include_*``.
@@ -129,13 +162,14 @@ class LayerMask:
         self.nodata_value = nodata_value
 
         if weight > 1 or weight < 0:
-            msg = ('Invalide weight ({}) provided for layer {}:'
+            msg = ('Invalid weight ({}) provided for layer {}:'
                    '\nWeight must fall between 0 and 1!'.format(weight, layer))
             logger.error(msg)
             raise ValueError(msg)
 
         self._weight = weight
         self._mask_type = self._check_mask_type()
+        self.extent = LayerMask(**extent) if extent is not None else None
 
     def __repr__(self):
         msg = ('{} for "{}" exclusion, of type "{}"'
@@ -914,6 +948,7 @@ class ExclusionMask:
     def _compute_layer_mask(self, layer, ds_slice, check_layers=False):
         """Compute mask for single layer, including extent. """
         layer_mask = self._masked_layer_data(layer, ds_slice)
+        layer_mask = self._apply_layer_mask_extent(layer, layer_mask, ds_slice)
 
         logger.debug('Computed exclusions {} for {}. Layer has average value '
                      'of {:.2f}.'
@@ -925,6 +960,25 @@ class ExclusionMask:
             logger.error(msg)
             raise ExclusionLayerError(msg)
 
+        return layer_mask
+
+    def _apply_layer_mask_extent(self, layer, layer_mask, ds_slice):
+        """Apply extent to layer mask, if any. """
+        if layer.extent is None:
+            return layer_mask
+
+        layer_extent = self._masked_layer_data(layer.extent, ds_slice)
+        if not np.array_equal(layer_extent, layer_extent.astype(bool)):
+            msg = ("Extent layer must be boolean (i.e. 0 and 1 values "
+                   "only)! Please check your extent definition for layer "
+                   "{} to ensure you are producing a boolean layer!"
+                   .format(layer.name))
+            logger.error(msg)
+            raise ExclusionLayerError(msg)
+
+        logger.debug("Filtering mask for layer %s down to specified extent",
+                     layer.name)
+        layer_mask = np.where(layer_extent, layer_mask, 1)
         return layer_mask
 
     def _masked_layer_data(self, layer, ds_slice):
@@ -959,6 +1013,7 @@ class ExclusionMask:
         ds_slice, sub_slice = self._parse_ds_slice(ds_slice)
 
         if self.layers:
+            print("Generating mask from layers")
             force_include = []
             for layer in self.layers:
                 if layer.force_include:
