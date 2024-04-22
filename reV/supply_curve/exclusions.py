@@ -129,12 +129,13 @@ class LayerMask:
 
             This would mean that you are masking out all viewshed layer
             values equal to 1, **but only where the "federal_parks"
-            layer is equal to 1, 2, 3, 4, or 5**. Outside of this
-            region (i.e. outside of federal park regions), the viewshed
-            exclusion is **NOT** applied. If the mask created by these
-            options is not boolean, an error is thrown (i.e. do not
-            specify `weight` or `use_as_weights`). By default ``None``,
-            which applies the original layer mask to the full extent.
+            layer is equal to 1, 2, 3, 4, or 5**. Outside of these
+            regions (i.e. outside of federal park regions), the viewshed
+            exclusion is **NOT** applied. If the extent mask created by
+            these options is not boolean, an error is thrown (i.e. do
+            not specify `weight` or `use_as_weights`).
+            By default ``None``, which applies the original layer mask
+            to the full extent.
         **kwargs
             Optional inputs to maintain legacy kwargs of ``inclusion_*``
             instead of ``include_*``.

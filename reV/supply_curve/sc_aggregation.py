@@ -327,6 +327,13 @@ class SupplyCurveAggregation(BaseAggregation):
                     "more_developable_land": {
                         "force_include_range": [5, 10]
                     },
+                    "viewsheds": {
+                        "exclude_values": 1,
+                        "extent": {
+                            "layer": "federal_parks",
+                            "include_range": [1, 5]
+                        }
+                    }
                     ...
                 }
 
