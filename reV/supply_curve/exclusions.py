@@ -394,15 +394,15 @@ class LayerMask:
                         logger.error(msg)
                         raise ExclusionLayerError(msg)
 
-        if mask is None and not self._as_weights:
-            msg = ('Exactly one approach must be specified to create the '
-                   'inclusion mask for layer {!r}! Please specify one of: '
-                   '`exclude_values`, `exclude_range`, `include_values`, '
-                   '`include_range`, `include_weights`, '
-                   '`force_include_values`, or `force_include_range`.'
-                   .format(self.name))
-            logger.error(msg)
-            raise ExclusionLayerError(msg)
+            if mask is None:
+                msg = ('Exactly one approach must be specified to create the '
+                    'inclusion mask for layer {!r}! Please specify one of: '
+                    '`exclude_values`, `exclude_range`, `include_values`, '
+                    '`include_range`, `include_weights`, '
+                    '`force_include_values`, or `force_include_range`.'
+                    .format(self.name))
+                logger.error(msg)
+                raise ExclusionLayerError(msg)
 
         if mask == 'include_weights' and self._weight < 1:
             msg = ("Values are individually weighted when using "
