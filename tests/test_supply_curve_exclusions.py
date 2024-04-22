@@ -92,6 +92,19 @@ def mask_data(data, inclusion_range, exclude_values, include_values,
     return mask
 
 
+def test_error_for_empty_exclusions():
+    """Test error is thrown for empty layer specification. """
+
+    with pytest.raises(ExclusionLayerError) as error:
+        LayerMask("test")
+
+    expected_msg = (
+        "Exactly one approach must be specified to create the inclusion "
+        "mask for layer 'test'!"
+    )
+    assert expected_msg in str(error)
+
+
 @pytest.mark.parametrize(('layer_name', 'inclusion_range', 'exclude_values',
                           'include_values', 'weight', 'exclude_nodata'), [
     ('ri_padus', (None, None), [1, ], None, 1, False),
