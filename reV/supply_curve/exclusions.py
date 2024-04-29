@@ -396,11 +396,11 @@ class LayerMask:
 
             if mask is None:
                 msg = ('Exactly one approach must be specified to create the '
-                    'inclusion mask for layer {!r}! Please specify one of: '
-                    '`exclude_values`, `exclude_range`, `include_values`, '
-                    '`include_range`, `include_weights`, '
-                    '`force_include_values`, or `force_include_range`.'
-                    .format(self.name))
+                       'inclusion mask for layer {!r}! Please specify one of: '
+                       '`exclude_values`, `exclude_range`, `include_values`, '
+                       '`include_range`, `include_weights`, '
+                       '`force_include_values`, or `force_include_range`.'
+                       .format(self.name))
                 logger.error(msg)
                 raise ExclusionLayerError(msg)
 
@@ -1014,7 +1014,6 @@ class ExclusionMask:
         ds_slice, sub_slice = self._parse_ds_slice(ds_slice)
 
         if self.layers:
-            print("Generating mask from layers")
             force_include = []
             for layer in self.layers:
                 if layer.force_include:
