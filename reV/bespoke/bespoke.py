@@ -197,6 +197,7 @@ class BespokeSinglePlant:
                  objective_function, capital_cost_function,
                  fixed_operating_cost_function,
                  variable_operating_cost_function,
+                 balance_of_system_cost_function,
                  min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
                  output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
@@ -225,19 +226,29 @@ class BespokeSinglePlant:
             return the objective to be minimized during layout optimization.
             Variables available are:
 
-                - n_turbines: the number of turbines
-                - system_capacity: wind plant capacity
-                - aep: annual energy production
-                - fixed_charge_rate: user input fixed_charge_rate if included
-                  as part of the sam system config.
-                - self.wind_plant: the SAM wind plant object, through which
-                  all SAM variables can be accessed
-                - capital_cost: plant capital cost as evaluated
+                - ``n_turbines``: the number of turbines
+                - ``system_capacity``: wind plant capacity
+                - ``aep``: annual energy production
+                - ``avg_sl_dist_to_center_m``: Average straight-line
+                  distance to the supply curve point center from all
+                  turbine locations (in m). Useful for computing plant
+                  BOS costs.
+                - ``avg_sl_dist_to_medoid_m``: Average straight-line
+                  distance to the medoid of all turbine locations
+                  (in m). Useful for computing plant BOS costs.
+                - ``fixed_charge_rate``: user input fixed_charge_rate if
+                  included as part of the sam system config.
+                - ``capital_cost``: plant capital cost as evaluated
                   by `capital_cost_function`
-                - fixed_operating_cost: plant fixed annual operating cost as
-                  evaluated by `fixed_operating_cost_function`
-                - variable_operating_cost: plant variable annual operating cost
-                  as evaluated by `variable_operating_cost_function`
+                - ``fixed_operating_cost``: plant fixed annual operating
+                  cost as evaluated by `fixed_operating_cost_function`
+                - ``variable_operating_cost``: plant variable annual
+                  operating cost as evaluated by
+                  `variable_operating_cost_function`
+                - ``balance_of_system_cost``: plant balance of system
+                  cost as evaluated by `balance_of_system_cost_function`
+                - ``self.wind_plant``: the SAM wind plant object,
+                  through which all SAM variables can be accessed
 
         capital_cost_function : str
             The plant capital cost function as a string, must return the total
@@ -250,6 +261,16 @@ class BespokeSinglePlant:
         variable_operating_cost_function : str
             The plant annual variable operating cost function as a string, must
             return the variable operating cost in $/kWh. Has access to the same
+            variables as the objective_function. You can set this to "0"
+            to effectively ignore variable operating costs.
+        balance_of_system_cost_function : str
+            The plant balance-of-system cost function as a string, must
+            return the variable operating cost in $. Has access to the
+            same variables as the objective_function. You can set this
+            to "0" to effectively ignore balance-of-system costs.
+        balance_of_system_cost_function : str
+            The plant balance-of-system cost function as a string, must
+            return the variable operating cost in $. Has access to the same
             variables as the objective_function.
         min_spacing : float | int | str
             Minimum spacing between turbines in meters. Can also be a string
@@ -384,6 +405,7 @@ class BespokeSinglePlant:
         self.fixed_operating_cost_function = fixed_operating_cost_function
         self.variable_operating_cost_function = \
             variable_operating_cost_function
+        self.balance_of_system_cost_function = balance_of_system_cost_function
         self.min_spacing = min_spacing
         self.wake_loss_multiplier = wake_loss_multiplier
         self.ga_kwargs = ga_kwargs or {}
@@ -935,6 +957,7 @@ class BespokeSinglePlant:
                 self.capital_cost_function,
                 self.fixed_operating_cost_function,
                 self.variable_operating_cost_function,
+                self.balance_of_system_cost_function,
                 self.include_mask,
                 self.pixel_side_length,
                 self.min_spacing,
@@ -953,10 +976,12 @@ class BespokeSinglePlant:
                          'multi-year mean AEP.')
 
             fcr = lcoe_kwargs['fixed_charge_rate']
-            cap_cost = lcoe_kwargs['capital_cost']
+            cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
             voc = lcoe_kwargs['variable_operating_cost']
+            bos = lcoe_kwargs['balance_of_system_cost']
             aep = self.outputs['annual_energy-means']
+            cap_cost = cc + bos
 
             my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
@@ -974,13 +999,14 @@ class BespokeSinglePlant:
             sam_sys_inputs, normalized to the original system_capacity, and
             updated based on the bespoke optimized system_capacity, includes
             fixed_charge_rate, system_capacity (kW), capital_cost ($),
-            fixed_operating_cos ($), variable_operating_cost ($/kWh)
-            Data source priority: outputs, plant_optimizer,
-            original_sam_sys_inputs, meta
+            fixed_operating_cos ($), variable_operating_cost ($/kWh),
+            balance_of_system_cost ($). Data source priority: outputs,
+            plant_optimizer, original_sam_sys_inputs, meta
         """
 
         kwargs_list = ['fixed_charge_rate', 'system_capacity', 'capital_cost',
-                       'fixed_operating_cost', 'variable_operating_cost']
+                       'fixed_operating_cost', 'variable_operating_cost',
+                       'balance_of_system_cost']
         lcoe_kwargs = {}
 
         for kwarg in kwargs_list:
@@ -1056,7 +1082,8 @@ class BespokeSinglePlant:
                                   'hourly',
                                   'capital_cost',
                                   'fixed_operating_cost',
-                                  'variable_operating_cost')):
+                                  'variable_operating_cost',
+                                  'balance_of_system_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
@@ -1173,7 +1200,13 @@ class BespokeSinglePlant:
         self._outputs["system_capacity"] = self.plant_optimizer.capacity
 
         self._meta["n_turbines"] = self.plant_optimizer.nturbs
+        self._meta["avg_sl_dist_to_center_m"] = \
+            self.plant_optimizer.avg_sl_dist_to_center_m
+        self._meta["avg_sl_dist_to_medoid_m"] = \
+            self.plant_optimizer.avg_sl_dist_to_medoid_m
         self._meta["bespoke_aep"] = self.plant_optimizer.aep
+        self._meta["bespoke_avg_sl_dist_to_center_m"] = \
+            self.plant_optimizer.avg_sl_dist_to_center_m
         self._meta["bespoke_objective"] = self.plant_optimizer.objective
         self._meta["bespoke_capital_cost"] = \
             self.plant_optimizer.capital_cost
@@ -1181,6 +1214,8 @@ class BespokeSinglePlant:
             self.plant_optimizer.fixed_operating_cost
         self._meta["bespoke_variable_operating_cost"] = \
             self.plant_optimizer.variable_operating_cost
+        self._meta["bespoke_balance_of_system_cost"] = \
+            self.plant_optimizer.balance_of_system_cost
         self._meta["included_area"] = self.plant_optimizer.area
         self._meta["included_area_capacity_density"] = \
             self.plant_optimizer.capacity_density
@@ -1269,7 +1304,8 @@ class BespokeWindPlants(BaseAggregation):
 
     def __init__(self, excl_fpath, res_fpath, tm_dset, objective_function,
                  capital_cost_function, fixed_operating_cost_function,
-                 variable_operating_cost_function, project_points,
+                 variable_operating_cost_function,
+                 balance_of_system_cost_function, project_points,
                  sam_files, min_spacing='5x', wake_loss_multiplier=1,
                  ga_kwargs=None, output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
@@ -1349,17 +1385,26 @@ class BespokeWindPlants(BaseAggregation):
                 - ``n_turbines``: the number of turbines
                 - ``system_capacity``: wind plant capacity
                 - ``aep``: annual energy production
+                - ``avg_sl_dist_to_center_m``: Average straight-line
+                  distance to the supply curve point center from all
+                  turbine locations (in m). Useful for computing plant
+                  BOS costs.
+                - ``avg_sl_dist_to_medoid_m``: Average straight-line
+                  distance to the medoid of all turbine locations
+                  (in m). Useful for computing plant BOS costs.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
-                - ``self.wind_plant``: the SAM wind plant object,
-                  through which all SAM variables can be accessed
                 - ``capital_cost``: plant capital cost as evaluated
                   by `capital_cost_function`
                 - ``fixed_operating_cost``: plant fixed annual operating
                   cost as evaluated by `fixed_operating_cost_function`
                 - ``variable_operating_cost``: plant variable annual
-                  operating cost, as evaluated by
+                  operating cost as evaluated by
                   `variable_operating_cost_function`
+                - ``balance_of_system_cost``: plant balance of system
+                  cost as evaluated by `balance_of_system_cost_function`
+                - ``self.wind_plant``: the SAM wind plant object,
+                  through which all SAM variables can be accessed
 
         capital_cost_function : str
             The plant capital cost function written out as a string.
@@ -1376,6 +1421,13 @@ class BespokeWindPlants(BaseAggregation):
             out as a string. This expression must return the variable
             operating cost in $/kWh. This expression has access to the
             same variables as the `objective_function` argument above.
+            You can set this to "0" to effectively ignore variable
+            operating costs.
+        balance_of_system_cost_function : str
+            The plant balance-of-system cost function as a string, must
+            return the variable operating cost in $. Has access to the
+            same variables as the objective_function. You can set this
+            to "0" to effectively ignore balance-of-system costs.
         project_points : int | list | tuple | str | dict | pd.DataFrame | slice
             Input specifying which sites to process. A single integer
             representing the supply curve GID of a site may be specified
@@ -1406,11 +1458,13 @@ class BespokeWindPlants(BaseAggregation):
                 - ``capital_cost_multiplier``
                 - ``fixed_operating_cost_multiplier``
                 - ``variable_operating_cost_multiplier``
+                - ``balance_of_system_cost_multiplier``
 
             These particular inputs are treated as multipliers to be
             applied to the respective cost curves
             (`capital_cost_function`, `fixed_operating_cost_function`,
-            and `variable_operating_cost_function`) both during and
+            `variable_operating_cost_function`, and
+            `balance_of_system_cost_function`) both during and
             after the optimization. A DataFrame following the same
             guidelines as the CSV input (or a dictionary that can be
             used to initialize such a DataFrame) may be used for this
@@ -1697,6 +1751,8 @@ class BespokeWindPlants(BaseAggregation):
                     .format(fixed_operating_cost_function))
         logger.info('Bespoke variable operating cost function: {}'
                     .format(variable_operating_cost_function))
+        logger.info('Bespoke balance of system cost function: {}'
+                    .format(balance_of_system_cost_function))
         logger.info('Bespoke wake loss multiplier: {}'
                     .format(wake_loss_multiplier))
         logger.info('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
@@ -1724,6 +1780,7 @@ class BespokeWindPlants(BaseAggregation):
         self._cap_cost_fun = capital_cost_function
         self._foc_fun = fixed_operating_cost_function
         self._voc_fun = variable_operating_cost_function
+        self._bos_fun = balance_of_system_cost_function
         self._min_spacing = min_spacing
         self._wake_loss_multiplier = wake_loss_multiplier
         self._ga_kwargs = ga_kwargs or {}
@@ -2158,6 +2215,7 @@ class BespokeWindPlants(BaseAggregation):
                    capital_cost_function,
                    fixed_operating_cost_function,
                    variable_operating_cost_function,
+                   balance_of_system_cost_function,
                    min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
                    output_request=('system_capacity', 'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
@@ -2218,6 +2276,7 @@ class BespokeWindPlants(BaseAggregation):
                         capital_cost_function,
                         fixed_operating_cost_function,
                         variable_operating_cost_function,
+                        balance_of_system_cost_function,
                         min_spacing=min_spacing,
                         wake_loss_multiplier=wake_loss_multiplier,
                         ga_kwargs=ga_kwargs,
@@ -2298,6 +2357,7 @@ class BespokeWindPlants(BaseAggregation):
                     self._cap_cost_fun,
                     self._foc_fun,
                     self._voc_fun,
+                    self._bos_fun,
                     self._min_spacing,
                     wake_loss_multiplier=self._wake_loss_multiplier,
                     ga_kwargs=self._ga_kwargs,
@@ -2382,6 +2442,7 @@ class BespokeWindPlants(BaseAggregation):
                                      self._cap_cost_fun,
                                      self._foc_fun,
                                      self._voc_fun,
+                                     self._bos_fun,
                                      min_spacing=self._min_spacing,
                                      wake_loss_multiplier=wlm,
                                      ga_kwargs=self._ga_kwargs,

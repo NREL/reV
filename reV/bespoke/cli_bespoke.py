@@ -54,6 +54,8 @@ def _log_bespoke_cli_inputs(config):
                 .format(config.get("fixed_operating_cost_function")))
     logger.info('Bespoke variable operating cost function: "{}"'
                 .format(config.get("variable_operating_cost_function")))
+    logger.info('Bespoke balance of system cost function: "{}"'
+                .format(config.get("balance_of_system_cost_function")))
     logger.info('Bespoke wake loss multiplier: "{}"'
                 .format(config.get("wake_loss_multiplier", 1)))
     logger.info('The following project points were specified: "{}"'
