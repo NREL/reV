@@ -432,6 +432,12 @@ class PlaceTurbines:
 
     @property
     @none_until_optimized
+    def avg_sl_dist_to_medoid_m(self):
+        """This is the final avg straight line distance to turb medoid (m)"""
+        return self._avg_sl_dist_to_med(self.turbine_x, self.turbine_y)
+
+    @property
+    @none_until_optimized
     def nturbs(self):
         """This is the final optimized number of turbines"""
         return np.sum(self.optimized_design_variables)
@@ -529,6 +535,7 @@ class PlaceTurbines:
         system_capacity = self.capacity
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
+        avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
         mult = self.wind_plant.sam_sys_inputs.get(
             'capital_cost_multiplier', 1)
         return eval(self.capital_cost_function, globals(), locals()) * mult
@@ -544,6 +551,7 @@ class PlaceTurbines:
         system_capacity = self.capacity
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
+        avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
         mult = self.wind_plant.sam_sys_inputs.get(
             'fixed_operating_cost_multiplier', 1)
         return eval(self.fixed_operating_cost_function,
@@ -560,6 +568,7 @@ class PlaceTurbines:
         system_capacity = self.capacity
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
+        avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
         mult = self.wind_plant.sam_sys_inputs.get(
             'variable_operating_cost_multiplier', 1)
         return eval(self.variable_operating_cost_function,
@@ -574,6 +583,7 @@ class PlaceTurbines:
         system_capacity = self.capacity
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
+        avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
         mult = self.wind_plant.sam_sys_inputs.get(
             'balance_of_system_cost_multiplier', 1)
         return eval(self.balance_of_system_cost_function,
@@ -593,6 +603,7 @@ class PlaceTurbines:
         variable_operating_cost = self.variable_operating_cost
         balance_of_system_cost = self.balance_of_system_cost
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
+        avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
         return eval(self.objective_function, globals(), locals())
 
 
