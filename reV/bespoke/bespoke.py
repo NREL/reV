@@ -1205,8 +1205,6 @@ class BespokeSinglePlant:
         self._meta["avg_sl_dist_to_medoid_m"] = \
             self.plant_optimizer.avg_sl_dist_to_medoid_m
         self._meta["bespoke_aep"] = self.plant_optimizer.aep
-        self._meta["bespoke_avg_sl_dist_to_center_m"] = \
-            self.plant_optimizer.avg_sl_dist_to_center_m
         self._meta["bespoke_objective"] = self.plant_optimizer.objective
         self._meta["bespoke_capital_cost"] = \
             self.plant_optimizer.capital_cost
