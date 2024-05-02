@@ -3,41 +3,40 @@
 reV bespoke wind plant analysis tools
 """
 # pylint: disable=anomalous-backslash-in-string
-from inspect import signature
-import time
-import logging
 import copy
-import pandas as pd
-import numpy as np
-import os
 import json
-import psutil
-from importlib import import_module
-from numbers import Number
+import logging
+import os
+import time
 from concurrent.futures import as_completed
+from importlib import import_module
+from inspect import signature
+from numbers import Number
 from warnings import warn
 
+import numpy as np
+import pandas as pd
+import psutil
+from rex.joint_pd.joint_pd import JointPD
+from rex.multi_year_resource import MultiYearWindResource
+from rex.renewable_resource import WindResource
+from rex.utilities.bc_parse_table import parse_bc_table
+from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.loggers import create_dirs, log_mem
+from rex.utilities.utilities import parse_year
+
 from reV.config.output_request import SAMOutputRequest
-from reV.generation.generation import Gen
-from reV.SAM.generation import WindPower, WindPowerPD
 from reV.econ.utilities import lcoe_fcr
-from reV.handlers.outputs import Outputs
+from reV.generation.generation import Gen
 from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.outputs import Outputs
+from reV.SAM.generation import WindPower, WindPowerPD
+from reV.supply_curve.aggregation import AggFileHandler, BaseAggregation
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.supply_curve.aggregation import BaseAggregation, AggFileHandler
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      FileInputError)
-from reV.utilities import log_versions, ModuleName
-
-from rex.utilities.bc_parse_table import parse_bc_table
-from rex.joint_pd.joint_pd import JointPD
-from rex.renewable_resource import WindResource
-from rex.multi_year_resource import MultiYearWindResource
-from rex.utilities.loggers import log_mem, create_dirs
-from rex.utilities.utilities import parse_year
-from rex.utilities.execution import SpawnProcessPool
+from reV.utilities import ModuleName, log_versions
+from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ class BespokeMultiPlantData:
         self._pre_load_data()
 
     def _pre_load_data(self):
-        """Pre-load the resource data. """
+        """Pre-load the resource data."""
 
         for sc_gid, gids in self.sc_gid_to_res_gid.items():
             hh = self.sc_gid_to_hh[sc_gid]
@@ -186,7 +185,7 @@ class BespokeSinglePlantData:
 
 
 class BespokeSinglePlant:
-    """Framework for analyzing and optimized a wind plant layout specific to
+    """Framework for analyzing and optimizing a wind plant layout specific to
     the local wind resource and exclusions for a single reV supply curve point.
     """
 
@@ -530,7 +529,7 @@ class BespokeSinglePlant:
                            for i in gid_map['gid'].keys()}
 
             elif gid_map.endswith('.json'):
-                with open(gid_map, 'r') as f:
+                with open(gid_map) as f:
                     gid_map = json.load(f)
 
         return gid_map
@@ -892,7 +891,7 @@ class BespokeSinglePlant:
 
     @property
     def wind_plant_pd(self):
-        """reV WindPowerPD compute object for plant layout optimization based
+        """ReV WindPowerPD compute object for plant layout optimization based
         on wind joint probability distribution
 
         Returns
@@ -909,7 +908,7 @@ class BespokeSinglePlant:
 
     @property
     def wind_plant_ts(self):
-        """reV WindPower compute object(s) based on wind resource timeseries
+        """ReV WindPower compute object(s) based on wind resource timeseries
         data keyed by year
 
         Returns
@@ -1066,9 +1065,7 @@ class BespokeSinglePlant:
         """
         bad = []
         for k, v in plant1.sam_sys_inputs.items():
-            if k not in plant2.sam_sys_inputs:
-                bad.append(k)
-            elif str(v) != str(plant2.sam_sys_inputs[k]):
+            if k not in plant2.sam_sys_inputs or str(v) != str(plant2.sam_sys_inputs[k]):
                 bad.append(k)
         bad = [b for b in bad if b not in ignore]
         if any(bad):
@@ -1277,7 +1274,7 @@ class BespokeWindPlants(BaseAggregation):
                  resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False, prior_run=None, gid_map=None,
                  bias_correct=None, pre_load_data=False):
-        """reV bespoke analysis class.
+        r"""ReV bespoke analysis class.
 
         Much like generation, ``reV`` bespoke analysis runs SAM
         simulations by piping in renewable energy resource data (usually
@@ -1861,7 +1858,7 @@ class BespokeWindPlants(BaseAggregation):
             assert any(f.dsets)
 
     def _pre_load_data(self, pre_load_data):
-        """Pre-load resource data, if requested. """
+        """Pre-load resource data, if requested."""
         if not pre_load_data:
             return
 
@@ -1898,7 +1895,7 @@ class BespokeWindPlants(BaseAggregation):
         return int(config["wind_turbine_hub_ht"])
 
     def _pre_loaded_data_for_sc_gid(self, sc_gid):
-        """Pre-load data for a given SC GID, if requested. """
+        """Pre-load data for a given SC GID, if requested."""
         if self._pre_loaded_data is None:
             return None
 
@@ -1981,7 +1978,7 @@ class BespokeWindPlants(BaseAggregation):
 
     @property
     def slice_lookup(self):
-        """dict | None: Lookup mapping sc_point_gid to exclusion slice. """
+        """Dict | None: Lookup mapping sc_point_gid to exclusion slice."""
         if self._slice_lookup is None and self._inclusion_mask is not None:
             with SupplyCurveExtent(self._excl_fpath,
                                    resolution=self._resolution) as sc:
@@ -2146,7 +2143,7 @@ class BespokeWindPlants(BaseAggregation):
                     except Exception as e:
                         msg = 'Failed to write "{}" to disk.'.format(dset)
                         logger.exception(msg)
-                        raise IOError(msg) from e
+                        raise OSError(msg) from e
 
         logger.info('Saved output data to: {}'.format(out_fpath))
         return out_fpath

@@ -3,9 +3,47 @@
 reV utilities.
 """
 from enum import Enum
+
 import PySAM
 from rex.utilities.loggers import log_versions as rex_log_versions
+
 from reV.version import __version__
+
+
+class SupplyCurvePointSummaryKey(str, Enum):
+    """An enumerated map to Supply Curve Point summary keys.
+
+    Each output name should match the name of a key in
+    meth:`AggregationSupplyCurvePoint.summary` or
+    meth:`GenerationSupplyCurvePoint.point_summary`
+    """
+
+    SC_POINT_GID = 'sc_point_gid'
+    SOURCE_GIDS = 'source_gids'
+    GID_COUNTS = 'gid_counts'
+    GID = 'gid'
+    N_GIDS = 'n_gids'
+    RES_GIDS = 'res_gids'
+    GEN_GIDS = 'gen_gids'
+    AREA_SQ_KM = 'area_sq_km'
+    LATITUDE = 'latitude'
+    LONGITUDE = 'longitude'
+    COUNTRY = 'country'
+    STATE = 'state'
+    COUNTY = 'county'
+    COUNTRY = 'country',
+    ELEVATION = 'elevation'
+    TIMEZONE = 'timezone'
+    MEAN_CF = 'mean_cf'
+    MEAN_LCOE = 'mean_lcoe'
+    MEAN_RES = 'mean_res'
+    CAPACITY = 'capacity'
+
+    def __str__(self):
+        return self.value
+
+    def __format__(self, format_spec):
+        return str.__format__(self.value, format_spec)
 
 
 class ModuleName(str, Enum):
