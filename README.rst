@@ -8,28 +8,30 @@
 
 ---------
 
-.. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
+|Docs| |Tests| |Linter| |PythonV| |Pypi| |Codecov| |Zenodo| |Binder|
+
+.. |Docs| image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
 
-.. image:: https://github.com/NREL/reV/workflows/Pytests/badge.svg
+.. |Tests| image:: https://github.com/NREL/reV/workflows/Pytests/badge.svg
     :target: https://github.com/NREL/reV/actions?query=workflow%3A%22Pytests%22
 
-.. image:: https://github.com/NREL/reV/workflows/Lint%20Code%20Base/badge.svg
+.. |Linter| image:: https://github.com/NREL/reV/workflows/Lint%20Code%20Base/badge.svg
     :target: https://github.com/NREL/reV/actions?query=workflow%3A%22Lint+Code+Base%22
 
-.. image:: https://img.shields.io/pypi/pyversions/NREL-reV.svg
+.. |PythonV| image:: https://img.shields.io/pypi/pyversions/NREL-reV.svg
     :target: https://pypi.org/project/NREL-reV/
 
-.. image:: https://badge.fury.io/py/NREL-reV.svg
+.. |Pypi| image:: https://badge.fury.io/py/NREL-reV.svg
     :target: https://badge.fury.io/py/NREL-reV
 
-.. image:: https://codecov.io/gh/nrel/reV/branch/main/graph/badge.svg?token=U4ZU9F0K0Z
+.. |Codecov| image:: https://codecov.io/gh/nrel/reV/branch/main/graph/badge.svg?token=U4ZU9F0K0Z
     :target: https://codecov.io/gh/nrel/reV
 
-.. image:: https://zenodo.org/badge/201343076.svg
+.. |Zenodo| image:: https://zenodo.org/badge/201343076.svg
    :target: https://zenodo.org/badge/latestdoi/201343076
 
-.. image:: https://mybinder.org/badge_logo.svg
+.. |Binder| image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/nrel/reV/HEAD
 
 |
