@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
-"""
-reV aggregation framework.
-"""
-from abc import ABC, abstractmethod
-import h5py
+"""reV aggregation framework."""
+
+import contextlib
 import logging
-import numpy as np
 import os
+from abc import ABC, abstractmethod
+
+import h5py
+import numpy as np
 import pandas as pd
-
-from reV.handlers.outputs import Outputs
-from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.supply_curve.tech_mapping import TechMapping
-from reV.supply_curve.points import AggregationSupplyCurvePoint
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      FileInputError, SupplyCurveInputError)
-from reV.utilities import log_versions
-
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
+
+from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.exclusions import ExclusionMaskFromDict
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.points import AggregationSupplyCurvePoint
+from reV.supply_curve.tech_mapping import TechMapping
+from reV.utilities import MetaKeyName, log_versions
+from reV.utilities.exceptions import (
+    EmptySupplyCurvePointError,
+    FileInputError,
+    SupplyCurveInputError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +32,13 @@ logger = logging.getLogger(__name__)
 class AbstractAggFileHandler(ABC):
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, excl_fpath, excl_dict=None, area_filter_kernel='queen',
-                 min_area=None):
+    def __init__(
+        self,
+        excl_fpath,
+        excl_dict=None,
+        area_filter_kernel="queen",
+        min_area=None,
+    ):
         """
         Parameters
         ----------
@@ -51,9 +59,12 @@ class AbstractAggFileHandler(ABC):
             by default None
         """
         self._excl_fpath = excl_fpath
-        self._excl = ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
-                                           min_area=min_area,
-                                           kernel=area_filter_kernel)
+        self._excl = ExclusionMaskFromDict(
+            excl_fpath,
+            layers_dict=excl_dict,
+            min_area=min_area,
+            kernel=area_filter_kernel,
+        )
 
     def __enter__(self):
         return self
@@ -95,9 +106,15 @@ class AggFileHandler(AbstractAggFileHandler):
 
     DEFAULT_H5_HANDLER = Resource
 
-    def __init__(self, excl_fpath, h5_fpath, excl_dict=None,
-                 area_filter_kernel='queen', min_area=None,
-                 h5_handler=None):
+    def __init__(
+        self,
+        excl_fpath,
+        h5_fpath,
+        excl_dict=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        h5_handler=None,
+    ):
         """
         Parameters
         ----------
@@ -121,9 +138,12 @@ class AggFileHandler(AbstractAggFileHandler):
             Optional special handler similar to the rex.Resource handler which
             is default.
         """
-        super().__init__(excl_fpath, excl_dict=excl_dict,
-                         area_filter_kernel=area_filter_kernel,
-                         min_area=min_area)
+        super().__init__(
+            excl_fpath,
+            excl_dict=excl_dict,
+            area_filter_kernel=area_filter_kernel,
+            min_area=min_area,
+        )
 
         if h5_handler is None:
             self._h5 = Resource(h5_fpath)
@@ -152,10 +172,19 @@ class BaseAggregation(ABC):
     """Abstract supply curve points aggregation framework based on only an
     exclusion file and techmap."""
 
-    def __init__(self, excl_fpath, tm_dset, excl_dict=None,
-                 area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None, res_fpath=None, gids=None,
-                 pre_extract_inclusions=False):
+    def __init__(
+        self,
+        excl_fpath,
+        tm_dset,
+        excl_dict=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        resolution=64,
+        excl_area=None,
+        res_fpath=None,
+        gids=None,
+        pre_extract_inclusions=False,
+    ):
         """
         Parameters
         ----------
@@ -208,12 +237,15 @@ class BaseAggregation(ABC):
         self._validate_tech_mapping()
 
         if pre_extract_inclusions:
-            self._inclusion_mask = \
+            self._inclusion_mask = (
                 ExclusionMaskFromDict.extract_inclusion_mask(
-                    excl_fpath, tm_dset,
+                    excl_fpath,
+                    tm_dset,
                     excl_dict=excl_dict,
                     area_filter_kernel=area_filter_kernel,
-                    min_area=min_area)
+                    min_area=min_area,
+                )
+            )
         else:
             self._inclusion_mask = None
 
@@ -228,20 +260,28 @@ class BaseAggregation(ABC):
         if tm_in_excl:
             logger.info('Found techmap "{}".'.format(self._tm_dset))
         elif not tm_in_excl and not excl_fp_is_str:
-            msg = ('Could not find techmap dataset "{}" and cannot run '
-                   'techmap with arbitrary multiple exclusion filepaths '
-                   'to write to: {}'.format(self._tm_dset, self._excl_fpath))
+            msg = (
+                'Could not find techmap dataset "{}" and cannot run '
+                "techmap with arbitrary multiple exclusion filepaths "
+                "to write to: {}".format(self._tm_dset, self._excl_fpath)
+            )
             logger.error(msg)
             raise RuntimeError(msg)
         else:
-            logger.info('Could not find techmap "{}". Running techmap module.'
-                        .format(self._tm_dset))
+            logger.info(
+                'Could not find techmap "{}". Running techmap module.'.format(
+                    self._tm_dset
+                )
+            )
             try:
-                TechMapping.run(self._excl_fpath, self._res_fpath,
-                                dset=self._tm_dset)
+                TechMapping.run(
+                    self._excl_fpath, self._res_fpath, dset=self._tm_dset
+                )
             except Exception as e:
-                msg = ('TechMapping process failed. Received the '
-                       'following error:\n{}'.format(e))
+                msg = (
+                    "TechMapping process failed. Received the "
+                    "following error:\n{}".format(e)
+                )
                 logger.exception(msg)
                 raise RuntimeError(msg) from e
 
@@ -255,8 +295,9 @@ class BaseAggregation(ABC):
         ndarray
         """
         if self._gids is None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
+            with SupplyCurveExtent(
+                self._excl_fpath, resolution=self._resolution
+            ) as sc:
                 self._gids = sc.valid_sc_points(self._tm_dset)
         elif np.issubdtype(type(self._gids), np.number):
             self._gids = np.array([self._gids])
@@ -274,8 +315,9 @@ class BaseAggregation(ABC):
         tuple
         """
         if self._shape is None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
+            with SupplyCurveExtent(
+                self._excl_fpath, resolution=self._resolution
+            ) as sc:
                 self._shape = sc.exclusions.shape
 
         return self._shape
@@ -301,14 +343,18 @@ class BaseAggregation(ABC):
             Area of an exclusion pixel in km2
         """
         if excl_area is None:
-            logger.debug('Setting the exclusion area from the area of a pixel '
-                         'in {}'.format(excl_fpath))
+            logger.debug(
+                "Setting the exclusion area from the area of a pixel "
+                "in {}".format(excl_fpath)
+            )
             with ExclusionLayers(excl_fpath) as excl:
                 excl_area = excl.pixel_area
 
         if excl_area is None:
-            e = ('No exclusion pixel area was input and could not parse '
-                 'area from the exclusion file attributes!')
+            e = (
+                "No exclusion pixel area was input and could not parse "
+                "area from the exclusion file attributes!"
+            )
             logger.error(e)
             raise SupplyCurveInputError(e)
 
@@ -337,14 +383,17 @@ class BaseAggregation(ABC):
         elif isinstance(inclusion_mask, np.ndarray):
             assert inclusion_mask.shape == excl_shape
         elif inclusion_mask is not None:
-            msg = ('Expected inclusion_mask to be dict or array but received '
-                   '{}'.format(type(inclusion_mask)))
+            msg = (
+                "Expected inclusion_mask to be dict or array but received "
+                "{}".format(type(inclusion_mask))
+            )
             logger.error(msg)
             raise SupplyCurveInputError(msg)
 
     @staticmethod
-    def _get_gid_inclusion_mask(inclusion_mask, gid, slice_lookup,
-                                resolution=64):
+    def _get_gid_inclusion_mask(
+        inclusion_mask, gid, slice_lookup, resolution=64
+    ):
         """
         Get inclusion mask for desired gid
 
@@ -381,8 +430,10 @@ class BaseAggregation(ABC):
             row_slice, col_slice = slice_lookup[gid]
             gid_inclusions = inclusion_mask[row_slice, col_slice]
         elif inclusion_mask is not None:
-            msg = ('Expected inclusion_mask to be dict or array but received '
-                   '{}'.format(type(inclusion_mask)))
+            msg = (
+                "Expected inclusion_mask to be dict or array but received "
+                "{}".format(type(inclusion_mask))
+            )
             logger.error(msg)
             raise SupplyCurveInputError(msg)
 
@@ -407,26 +458,32 @@ class BaseAggregation(ABC):
             generation run.
         """
 
-        if gen_fpath.endswith('.h5'):
+        if gen_fpath.endswith(".h5"):
             with Resource(gen_fpath) as f:
                 gen_index = f.meta
-        elif gen_fpath.endswith('.csv'):
+        elif gen_fpath.endswith(".csv"):
             gen_index = pd.read_csv(gen_fpath)
         else:
-            msg = ('Could not recognize gen_fpath input, needs to be reV gen '
-                   'output h5 or project points csv but received: {}'
-                   .format(gen_fpath))
+            msg = (
+                "Could not recognize gen_fpath input, needs to be reV gen "
+                "output h5 or project points csv but received: {}".format(
+                    gen_fpath
+                )
+            )
             logger.error(msg)
             raise FileInputError(msg)
 
-        if 'gid' in gen_index:
-            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
-            gen_index['gen_gids'] = gen_index.index
-            gen_index = gen_index[['res_gids', 'gen_gids']]
-            gen_index = gen_index.set_index(keys='res_gids')
-            gen_index = \
-                gen_index.reindex(range(int(gen_index.index.max() + 1)))
-            gen_index = gen_index['gen_gids'].values
+        if MetaKeyName.GID in gen_index:
+            gen_index = gen_index.rename(
+                columns={MetaKeyName.GID: MetaKeyName.RES_GIDS}
+            )
+            gen_index[MetaKeyName.GEN_GIDS] = gen_index.index
+            gen_index = gen_index[[MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS]]
+            gen_index = gen_index.set_index(keys=MetaKeyName.RES_GIDS)
+            gen_index = gen_index.reindex(
+                range(int(gen_index.index.max() + 1))
+            )
+            gen_index = gen_index[MetaKeyName.GEN_GIDS].values
             gen_index[np.isnan(gen_index)] = -1
             gen_index = gen_index.astype(np.int32)
         else:
@@ -439,10 +496,19 @@ class Aggregation(BaseAggregation):
     """Concrete but generalized aggregation framework to aggregate ANY reV h5
     file to a supply curve grid (based on an aggregated exclusion grid)."""
 
-    def __init__(self, excl_fpath, tm_dset, *agg_dset,
-                 excl_dict=None, area_filter_kernel='queen', min_area=None,
-                 resolution=64, excl_area=None, gids=None,
-                 pre_extract_inclusions=False):
+    def __init__(
+        self,
+        excl_fpath,
+        tm_dset,
+        *agg_dset,
+        excl_dict=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        resolution=64,
+        excl_area=None,
+        gids=None,
+        pre_extract_inclusions=False,
+    ):
         """
         Parameters
         ----------
@@ -486,18 +552,24 @@ class Aggregation(BaseAggregation):
             the inclusion mask on the fly with parallel workers.
         """
         log_versions(logger)
-        logger.info('Initializing Aggregation...')
-        logger.debug('Exclusion filepath: {}'.format(excl_fpath))
-        logger.debug('Exclusion dict: {}'.format(excl_dict))
+        logger.info("Initializing Aggregation...")
+        logger.debug("Exclusion filepath: {}".format(excl_fpath))
+        logger.debug("Exclusion dict: {}".format(excl_dict))
 
-        super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
-                         area_filter_kernel=area_filter_kernel,
-                         min_area=min_area, resolution=resolution,
-                         excl_area=excl_area, gids=gids,
-                         pre_extract_inclusions=pre_extract_inclusions)
+        super().__init__(
+            excl_fpath,
+            tm_dset,
+            excl_dict=excl_dict,
+            area_filter_kernel=area_filter_kernel,
+            min_area=min_area,
+            resolution=resolution,
+            excl_area=excl_area,
+            gids=gids,
+            pre_extract_inclusions=pre_extract_inclusions,
+        )
 
         if isinstance(agg_dset, str):
-            agg_dset = (agg_dset, )
+            agg_dset = (agg_dset,)
 
         self._agg_dsets = agg_dset
 
@@ -505,33 +577,51 @@ class Aggregation(BaseAggregation):
         """Do a preflight check on input files"""
 
         if not os.path.exists(self._excl_fpath):
-            raise FileNotFoundError('Could not find required exclusions file: '
-                                    '{}'.format(self._excl_fpath))
+            raise FileNotFoundError(
+                "Could not find required exclusions file: " "{}".format(
+                    self._excl_fpath
+                )
+            )
 
         if not os.path.exists(h5_fpath):
-            raise FileNotFoundError('Could not find required h5 file: '
-                                    '{}'.format(h5_fpath))
+            raise FileNotFoundError(
+                "Could not find required h5 file: " "{}".format(h5_fpath)
+            )
 
-        with h5py.File(self._excl_fpath, 'r') as f:
+        with h5py.File(self._excl_fpath, "r") as f:
             if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
+                raise FileInputError(
+                    'Could not find techmap dataset "{}" '
+                    "in exclusions file: {}".format(
+                        self._tm_dset, self._excl_fpath
+                    )
+                )
 
         with Resource(h5_fpath) as f:
             for dset in self._agg_dsets:
                 if dset not in f:
-                    raise FileInputError('Could not find provided dataset "{}"'
-                                         ' in h5 file: {}'
-                                         .format(dset, h5_fpath))
+                    raise FileInputError(
+                        'Could not find provided dataset "{}"'
+                        " in h5 file: {}".format(dset, h5_fpath)
+                    )
 
     @classmethod
-    def run_serial(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
-                   agg_method='mean', excl_dict=None, inclusion_mask=None,
-                   area_filter_kernel='queen', min_area=None,
-                   resolution=64, excl_area=0.0081, gids=None,
-                   gen_index=None):
+    def run_serial(
+        cls,
+        excl_fpath,
+        h5_fpath,
+        tm_dset,
+        *agg_dset,
+        agg_method="mean",
+        excl_dict=None,
+        inclusion_mask=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        resolution=64,
+        excl_area=0.0081,
+        gids=None,
+        gen_index=None,
+    ):
         """
         Standalone method to aggregate - can be parallelized.
 
@@ -602,17 +692,19 @@ class Aggregation(BaseAggregation):
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'excl_dict': excl_dict,
-                       'area_filter_kernel': area_filter_kernel,
-                       'min_area': min_area}
-        dsets = agg_dset + ('meta', )
+        file_kwargs = {
+            "excl_dict": excl_dict,
+            "area_filter_kernel": area_filter_kernel,
+            "min_area": min_area,
+        }
+        dsets = (*agg_dset, "meta",)
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, gid, slice_lookup,
-                    resolution=resolution)
+                    inclusion_mask, gid, slice_lookup, resolution=resolution
+                )
                 try:
                     gid_out = AggregationSupplyCurvePoint.run(
                         gid,
@@ -627,28 +719,40 @@ class Aggregation(BaseAggregation):
                         excl_area=excl_area,
                         exclusion_shape=exclusion_shape,
                         close=False,
-                        gen_index=gen_index)
+                        gen_index=gen_index,
+                    )
 
                 except EmptySupplyCurvePointError:
-                    logger.debug('SC gid {} is fully excluded or does not '
-                                 'have any valid source data!'.format(gid))
+                    logger.debug(
+                        "SC gid {} is fully excluded or does not "
+                        "have any valid source data!".format(gid)
+                    )
                 except Exception as e:
-                    msg = 'SC gid {} failed!'.format(gid)
+                    msg = "SC gid {} failed!".format(gid)
                     logger.exception(msg)
                     raise RuntimeError(msg) from e
                 else:
                     n_finished += 1
-                    logger.debug('Serial aggregation: '
-                                 '{} out of {} points complete'
-                                 .format(n_finished, len(gids)))
+                    logger.debug(
+                        "Serial aggregation: "
+                        "{} out of {} points complete".format(
+                            n_finished, len(gids)
+                        )
+                    )
                     log_mem(logger)
                     for k, v in gid_out.items():
                         agg_out[k].append(v)
 
         return agg_out
 
-    def run_parallel(self, h5_fpath, agg_method='mean', excl_area=None,
-                     max_workers=None, sites_per_worker=100):
+    def run_parallel(
+        self,
+        h5_fpath,
+        agg_method="mean",
+        excl_area=None,
+        max_workers=None,
+        sites_per_worker=100,
+    ):
         """
         Aggregate in parallel
 
@@ -681,22 +785,29 @@ class Aggregation(BaseAggregation):
         chunks = np.array_split(self.gids, chunks)
 
         if self._inclusion_mask is not None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
+            with SupplyCurveExtent(
+                self._excl_fpath, resolution=self._resolution
+            ) as sc:
                 assert sc.exclusions.shape == self._inclusion_mask.shape
                 slice_lookup = sc.get_slice_lookup(self.gids)
 
-        logger.info('Running supply curve point aggregation for '
-                    'points {} through {} at a resolution of {} '
-                    'on {} cores in {} chunks.'
-                    .format(self.gids[0], self.gids[-1], self._resolution,
-                            max_workers, len(chunks)))
+        logger.info(
+            "Running supply curve point aggregation for "
+            "points {} through {} at a resolution of {} "
+            "on {} cores in {} chunks.".format(
+                self.gids[0],
+                self.gids[-1],
+                self._resolution,
+                max_workers,
+                len(chunks),
+            )
+        )
 
         n_finished = 0
         futures = []
-        dsets = self._agg_dsets + ('meta', )
+        dsets = self._agg_dsets + ("meta",)
         agg_out = {ds: [] for ds in dsets}
-        loggers = [__name__, 'reV.supply_curve.points', 'reV']
+        loggers = [__name__, "reV.supply_curve.points", "reV"]
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
@@ -709,36 +820,45 @@ class Aggregation(BaseAggregation):
                         chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
 
                 # submit executions and append to futures list
-                futures.append(exe.submit(
-                    self.run_serial,
-                    self._excl_fpath,
-                    h5_fpath,
-                    self._tm_dset,
-                    *self._agg_dsets,
-                    agg_method=agg_method,
-                    excl_dict=self._excl_dict,
-                    inclusion_mask=chunk_incl_masks,
-                    area_filter_kernel=self._area_filter_kernel,
-                    min_area=self._min_area,
-                    resolution=self._resolution,
-                    excl_area=excl_area,
-                    gids=gid_set,
-                    gen_index=gen_index))
+                futures.append(
+                    exe.submit(
+                        self.run_serial,
+                        self._excl_fpath,
+                        h5_fpath,
+                        self._tm_dset,
+                        *self._agg_dsets,
+                        agg_method=agg_method,
+                        excl_dict=self._excl_dict,
+                        inclusion_mask=chunk_incl_masks,
+                        area_filter_kernel=self._area_filter_kernel,
+                        min_area=self._min_area,
+                        resolution=self._resolution,
+                        excl_area=excl_area,
+                        gids=gid_set,
+                        gen_index=gen_index,
+                    )
+                )
 
             # gather results
             for future in futures:
                 n_finished += 1
-                logger.info('Parallel aggregation futures collected: '
-                            '{} out of {}'
-                            .format(n_finished, len(chunks)))
+                logger.info(
+                    "Parallel aggregation futures collected: "
+                    "{} out of {}".format(n_finished, len(chunks))
+                )
                 for k, v in future.result().items():
                     if v:
                         agg_out[k].extend(v)
 
         return agg_out
 
-    def aggregate(self, h5_fpath, agg_method='mean', max_workers=None,
-                  sites_per_worker=100):
+    def aggregate(
+        self,
+        h5_fpath,
+        agg_method="mean",
+        max_workers=None,
+        sites_per_worker=100,
+    ):
         """
         Aggregate with given agg_method
 
@@ -766,38 +886,44 @@ class Aggregation(BaseAggregation):
         if max_workers == 1:
             self._check_files(h5_fpath)
             gen_index = self._parse_gen_index(h5_fpath)
-            agg = self.run_serial(self._excl_fpath,
-                                  h5_fpath,
-                                  self._tm_dset,
-                                  *self._agg_dsets,
-                                  agg_method=agg_method,
-                                  excl_dict=self._excl_dict,
-                                  gids=self.gids,
-                                  inclusion_mask=self._inclusion_mask,
-                                  area_filter_kernel=self._area_filter_kernel,
-                                  min_area=self._min_area,
-                                  resolution=self._resolution,
-                                  excl_area=self._excl_area,
-                                  gen_index=gen_index)
+            agg = self.run_serial(
+                self._excl_fpath,
+                h5_fpath,
+                self._tm_dset,
+                *self._agg_dsets,
+                agg_method=agg_method,
+                excl_dict=self._excl_dict,
+                gids=self.gids,
+                inclusion_mask=self._inclusion_mask,
+                area_filter_kernel=self._area_filter_kernel,
+                min_area=self._min_area,
+                resolution=self._resolution,
+                excl_area=self._excl_area,
+                gen_index=gen_index,
+            )
         else:
-            agg = self.run_parallel(h5_fpath=h5_fpath,
-                                    agg_method=agg_method,
-                                    excl_area=self._excl_area,
-                                    max_workers=max_workers,
-                                    sites_per_worker=sites_per_worker)
+            agg = self.run_parallel(
+                h5_fpath=h5_fpath,
+                agg_method=agg_method,
+                excl_area=self._excl_area,
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker,
+            )
 
-        if not agg['meta']:
-            e = ('Supply curve aggregation found no non-excluded SC points. '
-                 'Please check your exclusions or subset SC GID selection.')
+        if not agg["meta"]:
+            e = (
+                "Supply curve aggregation found no non-excluded SC points. "
+                "Please check your exclusions or subset SC GID selection."
+            )
             logger.error(e)
             raise EmptySupplyCurvePointError(e)
 
         for k, v in agg.items():
-            if k == 'meta':
+            if k == "meta":
                 v = pd.concat(v, axis=1).T
-                v = v.sort_values('sc_point_gid')
+                v = v.sort_values(MetaKeyName.SC_POINT_GID)
                 v = v.reset_index(drop=True)
-                v.index.name = 'sc_gid'
+                v.index.name = MetaKeyName.SC_GID
                 agg[k] = v
             else:
                 v = np.dstack(v)[0]
@@ -821,12 +947,10 @@ class Aggregation(BaseAggregation):
             Aggregated values for each aggregation dataset
         """
         agg_out = aggregation.copy()
-        meta = agg_out.pop('meta').reset_index()
-        for c in meta.columns:
-            try:
+        meta = agg_out.pop("meta").reset_index()
+        with contextlib.suppress(ValueError, TypeError):
+            for c in meta.columns:
                 meta[c] = pd.to_numeric(meta[c])
-            except (ValueError, TypeError):
-                pass
 
         dsets = []
         shapes = {}
@@ -840,7 +964,7 @@ class Aggregation(BaseAggregation):
                 shape = data.shape
                 shapes[dset] = shape
                 if len(data.shape) == 2:
-                    if ('time_index' in f) and (shape[0] == f.shape[0]):
+                    if ("time_index" in f) and (shape[0] == f.shape[0]):
                         if time_index is None:
                             time_index = f.time_index
 
@@ -849,19 +973,40 @@ class Aggregation(BaseAggregation):
                 chunks[dset] = chunk
                 dtypes[dset] = dtype
 
-        Outputs.init_h5(out_fpath, dsets, shapes, attrs, chunks, dtypes,
-                        meta, time_index=time_index)
+        Outputs.init_h5(
+            out_fpath,
+            dsets,
+            shapes,
+            attrs,
+            chunks,
+            dtypes,
+            meta,
+            time_index=time_index,
+        )
 
-        with Outputs(out_fpath, mode='a') as out:
+        with Outputs(out_fpath, mode="a") as out:
             for dset, data in agg_out.items():
                 out[dset] = data
 
     @classmethod
-    def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
-            excl_dict=None, area_filter_kernel='queen', min_area=None,
-            resolution=64, excl_area=None, gids=None,
-            pre_extract_inclusions=False, agg_method='mean', max_workers=None,
-            sites_per_worker=100, out_fpath=None):
+    def run(
+        cls,
+        excl_fpath,
+        h5_fpath,
+        tm_dset,
+        *agg_dset,
+        excl_dict=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        resolution=64,
+        excl_area=None,
+        gids=None,
+        pre_extract_inclusions=False,
+        agg_method="mean",
+        max_workers=None,
+        sites_per_worker=100,
+        out_fpath=None,
+    ):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -923,15 +1068,25 @@ class Aggregation(BaseAggregation):
             Aggregated values for each aggregation dataset
         """
 
-        agg = cls(excl_fpath, tm_dset, *agg_dset,
-                  excl_dict=excl_dict, area_filter_kernel=area_filter_kernel,
-                  min_area=min_area, resolution=resolution,
-                  excl_area=excl_area, gids=gids,
-                  pre_extract_inclusions=pre_extract_inclusions)
+        agg = cls(
+            excl_fpath,
+            tm_dset,
+            *agg_dset,
+            excl_dict=excl_dict,
+            area_filter_kernel=area_filter_kernel,
+            min_area=min_area,
+            resolution=resolution,
+            excl_area=excl_area,
+            gids=gids,
+            pre_extract_inclusions=pre_extract_inclusions,
+        )
 
-        aggregation = agg.aggregate(h5_fpath=h5_fpath, agg_method=agg_method,
-                                    max_workers=max_workers,
-                                    sites_per_worker=sites_per_worker)
+        aggregation = agg.aggregate(
+            h5_fpath=h5_fpath,
+            agg_method=agg_method,
+            max_workers=max_workers,
+            sites_per_worker=sites_per_worker,
+        )
 
         if out_fpath is not None:
             agg.save_agg_to_h5(h5_fpath, out_fpath, aggregation)

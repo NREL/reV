@@ -5,16 +5,18 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
-import h5py
-import numpy as np
-import pytest
 import os
 import warnings
 
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
-from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+import h5py
+import numpy as np
+import pytest
+
 from reV import TESTDATADIR
+from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.utilities import MetaKeyName
 
 EXCL_FPATH = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 FRICTION_FPATH = os.path.join(TESTDATADIR, 'ri_exclusions/ri_friction.h5')
@@ -63,7 +65,7 @@ def test_friction_mask():
     assert diff < 0.0001, m
 
 
-@pytest.mark.parametrize('gid', [100, 114, 130, 181])
+@pytest.mark.parametrize(MetaKeyName.GID, [100, 114, 130, 181])
 def test_agg_friction(gid):
     """Test SC Aggregation with friction by checking friction factors and LCOE
     against a hand calc."""
@@ -92,18 +94,20 @@ def test_agg_friction(gid):
 
         m = ('SC point gid {} does not match mean friction hand calc'
              .format(gid))
-        assert np.isclose(s['mean_friction'].values[0], mean_friction), m
+        assert np.isclose(s[MetaKeyName.MEAN_FRICTION].values[0],
+                          mean_friction), m
         m = ('SC point gid {} does not match mean LCOE with friction hand calc'
              .format(gid))
-        assert np.allclose(s['mean_lcoe_friction'],
-                           s['mean_lcoe'] * mean_friction), m
+        assert np.allclose(s[MetaKeyName.MEAN_LCOE_FRICTION],
+                           s[MetaKeyName.MEAN_LCOE] * mean_friction), m
 
 
 # pylint: disable=no-member
 def make_friction_file():
     """Script to make a test friction file"""
-    import matplotlib.pyplot as plt
     import shutil
+
+    import matplotlib.pyplot as plt
     shutil.copy(EXCL, FRICTION_FPATH)
     with h5py.File(FRICTION_FPATH, 'a') as f:
         f[FRICTION_DSET] = f['ri_srtm_slope']
@@ -121,7 +125,8 @@ def make_friction_file():
 
         f[FRICTION_DSET][...] = data
         for d in f:
-            if d not in [FRICTION_DSET, 'latitude', 'longitude']:
+            if d not in [FRICTION_DSET, MetaKeyName.LATITUDE,
+                         MetaKeyName.LONGITUDE]:
                 del f[d]
 
     with h5py.File(FRICTION_FPATH, 'r') as f:

@@ -3,19 +3,20 @@
 """
 PyTest file for geothermal generation.
 """
-import os
 import json
+import os
 import shutil
 from tempfile import TemporaryDirectory
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
+from rex import Outputs
 
+from reV import TESTDATADIR
 from reV.generation.generation import Gen
 from reV.SAM.generation import Geothermal
-from reV import TESTDATADIR
-from rex import Outputs
+from reV.utilities import MetaKeyName
 
 DEFAULT_GEO_SAM_FILE = TESTDATADIR + '/SAM/geothermal_default.json'
 RTOL = 0.1
@@ -55,15 +56,18 @@ def test_gen_geothermal(depth, sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = depth
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                      'gen_profile', 'lcoe_fcr', 'nameplate')
+    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
+                      MetaKeyName.CF_PROFILE,
+                      MetaKeyName.GEN_PROFILE,
+                      MetaKeyName.LCOE_FCR,
+                      'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                output_request=output_request, sites_per_worker=1,
                scale_outputs=True)
@@ -93,8 +97,10 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
     geo_sam_file, geo_res_file = sample_resource_data
     shutil.copy(DEFAULT_GEO_SAM_FILE, geo_sam_file)
 
-    output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                      'gen_profile', 'lcoe_fcr', 'nameplate')
+    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
+                      MetaKeyName.CF_PROFILE,
+                      MetaKeyName.GEN_PROFILE,
+                      MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                output_request=output_request, sites_per_worker=1,
                scale_outputs=True)
@@ -122,7 +128,7 @@ def test_per_kw_cost_inputs(sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -133,7 +139,9 @@ def test_per_kw_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
+    output_request = (MetaKeyName.CAPITAL_COST,
+                      MetaKeyName.FIXED_OPERATING_COST,
+                      MetaKeyName.LCOE_FCR)
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                 output_request=output_request, sites_per_worker=1,
                 scale_outputs=True)
@@ -158,7 +166,7 @@ def test_drill_cost_inputs(sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -170,7 +178,9 @@ def test_drill_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('capital_cost', 'fixed_operating_cost', 'lcoe_fcr')
+    output_request = (MetaKeyName.CAPITAL_COST,
+                      MetaKeyName.FIXED_OPERATING_COST,
+                      MetaKeyName.LCOE_FCR)
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                output_request=output_request, sites_per_worker=1,
                scale_outputs=True)
@@ -195,7 +205,7 @@ def test_gen_with_nameplate_input(sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -203,8 +213,10 @@ def test_gen_with_nameplate_input(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                      'gen_profile', 'lcoe_fcr', 'nameplate')
+    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
+                      MetaKeyName.CF_PROFILE,
+                      MetaKeyName.GEN_PROFILE,
+                      MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                 output_request=output_request, sites_per_worker=1,
                 scale_outputs=True)
@@ -233,7 +245,7 @@ def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -271,7 +283,7 @@ def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
     geo_sam_file, geo_res_file = sample_resource_data
     high_temp = 200 * Geothermal.MAX_RT_TO_EGS_RATIO + 10
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -309,7 +321,7 @@ def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
     geo_sam_file, geo_res_file = sample_resource_data
     not_too_high_temp = 200 * Geothermal.MAX_RT_TO_EGS_RATIO - 1
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["resource_depth"] = 2000
@@ -346,15 +358,17 @@ def test_gen_with_time_index_step_input(sample_resource_data):
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
 
-    with open(DEFAULT_GEO_SAM_FILE, "r") as fh:
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
 
     geo_config["time_index_step"] = 2
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', 'cf_mean', 'cf_profile',
-                      'gen_profile', 'lcoe_fcr', 'nameplate')
+    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
+                      MetaKeyName.CF_PROFILE,
+                      MetaKeyName.GEN_PROFILE,
+                      MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
               output_request=output_request, sites_per_worker=1,
               scale_outputs=True)

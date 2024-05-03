@@ -7,21 +7,21 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-import numpy as np
 import os
-import pandas as pd
-import pytest
 import tempfile
 
+import numpy as np
+import pandas as pd
+import pytest
 from rex import Resource
 from rex.utilities.exceptions import ResourceRuntimeError
 from rex.utilities.utilities import safe_json_load
 
+from reV import TESTDATADIR
 from reV.config.base_analysis_config import AnalysisConfig
-from reV.config.project_points import ProjectPoints, PointsControl
+from reV.config.project_points import PointsControl, ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
-from reV import TESTDATADIR
 from reV.utilities.exceptions import ConfigError
 
 
@@ -121,7 +121,7 @@ def test_config_mapping():
     fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
     sam_files = {'onshore': os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
-                 'offshore': os.path.join(
+                 MetaKeyName.OFFSHORE: os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
     df = pd.read_csv(fpp, index_col=0)
     pp = ProjectPoints(fpp, sam_files, 'windpower')
@@ -139,7 +139,7 @@ def test_sam_config_kw_replace():
     fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
     sam_files = {'onshore': os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
-                 'offshore': os.path.join(
+                 MetaKeyName.OFFSHORE: os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     pp = ProjectPoints(fpp, sam_files, 'windpower')
@@ -147,19 +147,19 @@ def test_sam_config_kw_replace():
     gen = Gen('windpower', pp, sam_files, resource_file=res_file,
               sites_per_worker=100)
     config_on = gen.project_points.sam_inputs['onshore']
-    config_of = gen.project_points.sam_inputs['offshore']
+    config_of = gen.project_points.sam_inputs[MetaKeyName.OFFSHORE]
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pp_split = ProjectPoints.split(0, 10000, gen.project_points)
     config_on = pp_split.sam_inputs['onshore']
-    config_of = pp_split.sam_inputs['offshore']
+    config_of = pp_split.sam_inputs[MetaKeyName.OFFSHORE]
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
     pc_split = PointsControl.split(0, 10000, gen.project_points)
     config_on = pc_split.project_points.sam_inputs['onshore']
-    config_of = pc_split.project_points.sam_inputs['offshore']
+    config_of = pc_split.project_points.sam_inputs[MetaKeyName.OFFSHORE]
     assert 'turb_generic_loss' in config_on
     assert 'turb_generic_loss' in config_of
 
@@ -168,8 +168,8 @@ def test_sam_config_kw_replace():
             config = ipc.project_points.sam_inputs['onshore']
             assert 'turb_generic_loss' in config
 
-        if 'offshore' in ipc.project_points.sam_inputs:
-            config = ipc.project_points.sam_inputs['offshore']
+        if MetaKeyName.OFFSHORE in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs[MetaKeyName.OFFSHORE]
             assert 'turb_generic_loss' in config
 
 
@@ -207,7 +207,7 @@ def test_coords(sites):
     if not isinstance(gids, list):
         gids = [gids]
 
-    lat_lons = meta.loc[gids, ['latitude', 'longitude']].values
+    lat_lons = meta.loc[gids, [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]].values
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_files)
 
     assert sorted(gids) == pp.sites
@@ -226,7 +226,7 @@ def test_coords_from_file():
     if not isinstance(gids, list):
         gids = [gids]
 
-    lat_lons = meta.loc[gids, ['latitude', 'longitude']]
+    lat_lons = meta.loc[gids, [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]]
     with tempfile.TemporaryDirectory() as td:
         coords_fp = os.path.join(td, "lat_lon.csv")
         lat_lons.to_csv(coords_fp, index=False)
@@ -245,7 +245,7 @@ def test_duplicate_coords():
     with Resource(res_file) as f:
         meta = f.meta
 
-    duplicates = meta.loc[[2, 3, 3, 4], ['latitude', 'longitude']].values
+    duplicates = meta.loc[[2, 3, 3, 4], [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]].values
 
     with pytest.raises(RuntimeError):
         ProjectPoints.lat_lon_coords(duplicates, res_file, sam_files)
@@ -262,7 +262,7 @@ def test_sam_configs():
     fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
     sam_files = {'onshore': os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
-                 'offshore': os.path.join(
+                 MetaKeyName.OFFSHORE: os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
     pp_json = ProjectPoints(fpp, sam_files, 'windpower')
 

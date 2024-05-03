@@ -3,9 +3,11 @@
 Competitive Wind Farms exclusion handler
 """
 import logging
-import numpy as np
 
+import numpy as np
 from rex.utilities.utilities import parse_table
+
+from reV.utilities import MetaKeyName
 
 logger = logging.getLogger(__name__)
 
@@ -76,23 +78,23 @@ class CompetitiveWindFarms:
         """
         if not isinstance(keys, tuple):
             msg = ("{} must be a tuple of form (source, gid) where source is: "
-                   "'sc_gid', 'sc_point_gid',  or 'upwind', 'downwind'"
-                   .format(keys))
+                   "MetaKeyName.SC_GID, '{}',  or 'upwind', 'downwind'"
+                   .format(keys, MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
         source, gid = keys
-        if source == 'sc_point_gid':
+        if source == MetaKeyName.SC_POINT_GID:
             out = self.map_sc_gid_to_sc_point_gid(gid)
-        elif source == 'sc_gid':
+        elif source == MetaKeyName.SC_GID:
             out = self.map_sc_point_gid_to_sc_gid(gid)
         elif source == 'upwind':
             out = self.map_upwind(gid)
         elif source == 'downwind':
             out = self.map_downwind(gid)
         else:
-            msg = ("{} must be: 'sc_gid', 'sc_point_gid',  or 'upwind', "
-                   "'downwind'".format(source))
+            msg = ("{} must be: MetaKeyName.SC_GID, {},  or 'upwind', "
+                   "'downwind'".format(source, MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -182,7 +184,7 @@ class CompetitiveWindFarms:
         """
         wind_dirs = cls._parse_table(wind_dirs)
 
-        wind_dirs = wind_dirs.set_index('sc_point_gid')
+        wind_dirs = wind_dirs.set_index(MetaKeyName.SC_POINT_GID)
         columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
         wind_dirs = wind_dirs[columns]
 
@@ -212,21 +214,22 @@ class CompetitiveWindFarms:
             Mask array to mask excluded sc_point_gids
         """
         sc_points = cls._parse_table(sc_points)
-        if 'offshore' in sc_points and not offshore:
+        if MetaKeyName.OFFSHORE in sc_points and not offshore:
             logger.debug('Not including offshore supply curve points in '
                          'CompetitiveWindFarm')
-            mask = sc_points['offshore'] == 0
+            mask = sc_points[MetaKeyName.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
-        mask = np.ones(int(1 + sc_points['sc_point_gid'].max()), dtype=bool)
+        mask = np.ones(int(1 + sc_points[MetaKeyName.SC_POINT_GID].max()),
+                       dtype=bool)
 
-        sc_points = sc_points[['sc_gid', 'sc_point_gid']]
-        sc_gids = sc_points.set_index('sc_gid')
+        sc_points = sc_points[[MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID]]
+        sc_gids = sc_points.set_index(MetaKeyName.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
         sc_point_gids = \
-            sc_points.groupby('sc_point_gid')['sc_gid'].unique().to_frame()
-        sc_point_gids = {int(k): v['sc_gid']
+            sc_points.groupby(MetaKeyName.SC_POINT_GID)[MetaKeyName.SC_GID].unique().to_frame()
+        sc_point_gids = {int(k): v[MetaKeyName.SC_GID]
                          for k, v in sc_point_gids.iterrows()}
 
         return sc_gids, sc_point_gids, mask
@@ -338,6 +341,7 @@ class CompetitiveWindFarms:
         ----------
         sc_point_gid : int
             Supply point curve gid to get upwind neighbors
+
         Returns
         -------
         int | list
@@ -353,6 +357,7 @@ class CompetitiveWindFarms:
         ----------
         sc_point_gid : int
             Supply point curve gid to get downwind neighbors
+
         Returns
         -------
         int | list
@@ -407,13 +412,13 @@ class CompetitiveWindFarms:
             wind farms
         """
         sc_points = self._parse_table(sc_points)
-        if 'offshore' in sc_points and not self._offshore:
-            mask = sc_points['offshore'] == 0
+        if MetaKeyName.OFFSHORE in sc_points and not self._offshore:
+            mask = sc_points[MetaKeyName.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
         sc_points = sc_points.sort_values(sort_on)
 
-        sc_point_gids = sc_points['sc_point_gid'].values.astype(int)
+        sc_point_gids = sc_points[MetaKeyName.SC_POINT_GID].values.astype(int)
 
         for i in range(len(sc_points)):
             gid = sc_point_gids[i]
@@ -428,7 +433,7 @@ class CompetitiveWindFarms:
                         self.exclude_sc_point_gid(n)
 
         sc_gids = self.sc_gids
-        mask = sc_points['sc_gid'].isin(sc_gids)
+        mask = sc_points[MetaKeyName.SC_GID].isin(sc_gids)
 
         return sc_points.loc[mask].reset_index(drop=True)
 

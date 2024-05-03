@@ -12,17 +12,17 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import h5py
-import pytest
-import numpy as np
 import time
 
-from reV import TESTDATADIR
-from reV.handlers.outputs import Outputs
+import h5py
+import numpy as np
+import pytest
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger
-from reV.generation.cli_gen import get_node_cmd
 
+from reV import TESTDATADIR
+from reV.generation.cli_gen import get_node_cmd
+from reV.handlers.outputs import Outputs
 
 RTOL = 0.0
 ATOL = 0.04
@@ -54,7 +54,7 @@ class pv_results:
     def get_cf_mean(self, site, year):
         """Get a cf mean based on site and year"""
         iy = self.years.index(year)
-        out = self._h5['pv']['cf_mean'][iy, site]
+        out = self._h5['pv'][MetaKeyName.CF_MEAN][iy, site]
         return out
 
 
@@ -70,10 +70,10 @@ def is_num(n):
 def to_list(gen_out):
     """Generation output handler that converts to the rev 1.0 format."""
     if isinstance(gen_out, list) and len(gen_out) == 1:
-        out = [c['cf_mean'] for c in gen_out[0].values()]
+        out = [c[MetaKeyName.CF_MEAN] for c in gen_out[0].values()]
 
     if isinstance(gen_out, dict):
-        out = [c['cf_mean'] for c in gen_out.values()]
+        out = [c[MetaKeyName.CF_MEAN] for c in gen_out.values()]
 
     return out
 
@@ -104,7 +104,7 @@ def test_eagle(year):
                        sam_files=sam_files, res_file=res_file,
                        sites_per_worker=None, max_workers=None,
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
-                       output_request=('cf_profile', 'cf_mean'),
+                       output_request=(, MetaKeyName.CF_MEAN),
                        verbose=verbose)
 
     # create and submit the SLURM job
@@ -125,7 +125,7 @@ def test_eagle(year):
             if rev2_out.strip('.h5') in fname:
                 full_f = os.path.join(rev2_out_dir, fname)
                 with Outputs(full_f, 'r') as cf:
-                    rev2_profiles = cf['cf_profile']
+                    rev2_profiles = cf[]
                 break
 
     # get reV 1.0 generation profiles
@@ -147,7 +147,7 @@ def get_r1_profiles(year=2012):
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
     with Outputs(rev1) as cf:
-        data = cf['cf_profile'][...] / 10000
+        data = cf[][...] / 10000
     return data
 
 

@@ -8,12 +8,12 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 
-from reV.generation.generation import Gen
 from reV import TESTDATADIR
-
+from reV.generation.generation import Gen
 
 YEAR = 2012
 REV2_POINTS = slice(0, 5)
@@ -58,7 +58,7 @@ def test_wind_generic_losses(loss):
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
     gen.run(max_workers=1)
-    gen_outs = list(gen.out['cf_mean'])
+    gen_outs = list(gen.out[MetaKeyName.CF_MEAN])
 
     assert np.allclose(gen_outs, LOSS_BASELINE[loss], rtol=RTOL, atol=ATOL)
 
@@ -77,7 +77,7 @@ def test_wind_icing_losses(i):
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
     gen.run(max_workers=1)
-    gen_outs = list(gen.out['cf_mean'])
+    gen_outs = list(gen.out[MetaKeyName.CF_MEAN])
 
     assert np.allclose(gen_outs, ICING_BASELINE[i]['output'],
                        rtol=RTOL, atol=ATOL)
@@ -95,7 +95,7 @@ def test_wind_low_temp_cutoff(i):
 
     gen = Gen('windpower', pc, SAM_FILE, RES_FILE, sites_per_worker=3)
     gen.run(max_workers=1)
-    gen_outs = list(gen.out['cf_mean'])
+    gen_outs = list(gen.out[MetaKeyName.CF_MEAN])
 
     assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'],
                        rtol=RTOL, atol=ATOL)

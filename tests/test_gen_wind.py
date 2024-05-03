@@ -10,17 +10,18 @@ Created on Thu Nov 29 09:54:51 2018
 
 import os
 import shutil
-import h5py
-import pytest
-import pandas as pd
-import numpy as np
 import tempfile
 
-from reV.generation.generation import Gen
-from reV.config.project_points import ProjectPoints
-from reV import TESTDATADIR
+import h5py
+import numpy as np
+import pandas as pd
+import pytest
+from rex import Outputs, Resource, WindResource
 
-from rex import Resource, WindResource, Outputs
+from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.generation.generation import Gen
+from reV.utilities import MetaKeyName
 
 RTOL = 0
 ATOL = 0.001
@@ -52,7 +53,7 @@ class wind_results:
     def get_cf_mean(self, site, year):
         """Get a cf mean based on site and year"""
         iy = self.years.index(year)
-        out = self._h5['wind']['cf_mean'][iy, site]
+        out = self._h5['wind'][MetaKeyName.CF_MEAN][iy, site]
         return out
 
 
@@ -68,10 +69,10 @@ def is_num(n):
 def to_list(gen_out):
     """Generation output handler that converts to the rev 1.0 format."""
     if isinstance(gen_out, list) and len(gen_out) == 1:
-        out = [c['cf_mean'] for c in gen_out[0].values()]
+        out = [c[MetaKeyName.CF_MEAN] for c in gen_out[0].values()]
 
     if isinstance(gen_out, dict):
-        out = [c['cf_mean'] for c in gen_out.values()]
+        out = [c[MetaKeyName.CF_MEAN] for c in gen_out.values()]
 
     return out
 
@@ -93,7 +94,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     gen = Gen('windpower', rev2_points, sam_files, res_file,
               sites_per_worker=3)
     gen.run(max_workers=max_workers)
-    gen_outs = list(gen.out['cf_mean'])
+    gen_outs = list(gen.out[MetaKeyName.CF_MEAN])
 
     # initialize the rev1 output hander
     with wind_results(rev1_outs) as wind:
@@ -104,17 +105,17 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     msg = 'Wind cf_means results did not match reV 1.0 results!'
     assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL), msg
     assert np.allclose(pp.sites, gen.meta.index.values), 'bad gen meta!'
-    assert np.allclose(pp.sites, gen.meta['gid'].values), 'bad gen meta!'
+    assert np.allclose(pp.sites, gen.meta[MetaKeyName.GID].values), 'bad gen meta!'
 
-    labels = ['latitude', 'longitude']
+    labels = [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
     with Resource(res_file) as res:
         for i, (gen_gid, site_meta) in enumerate(gen.meta.iterrows()):
-            res_gid = site_meta['gid']
+            res_gid = site_meta[MetaKeyName.GID]
             assert gen_gid == res_gid
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
 
 @pytest.mark.parametrize('gid_map',
@@ -137,7 +138,7 @@ def test_gid_map(gid_map):
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
 
-    output_request = ('cf_mean', 'cf_profile', 'ws_mean', 'windspeed',
+    output_request = (MetaKeyName.CF_MEAN, , 'ws_mean', 'windspeed',
                       'monthly_energy')
 
     baseline = Gen('windpower', points_base, sam_files, res_file,
@@ -157,13 +158,13 @@ def test_gid_map(gid_map):
     for key in output_request:
         assert np.allclose(map_test.out[key], write_gid_test.out[key])
 
-    for map_test_gid, write_test_gid in zip(map_test.meta['gid'],
-                                            write_gid_test.meta['gid']):
+    for map_test_gid, write_test_gid in zip(map_test.meta[MetaKeyName.GID],
+                                            write_gid_test.meta[MetaKeyName.GID]):
         assert map_test_gid == gid_map[write_test_gid]
 
-    if len(baseline.out['cf_mean']) == len(map_test.out['cf_mean']):
-        assert not np.allclose(baseline.out['cf_mean'],
-                               map_test.out['cf_mean'])
+    if len(baseline.out[MetaKeyName.CF_MEAN]) == len(map_test.out[MetaKeyName.CF_MEAN]):
+        assert not np.allclose(baseline.out[MetaKeyName.CF_MEAN],
+                               map_test.out[MetaKeyName.CF_MEAN])
 
     for gen_gid_test, res_gid in gid_map.items():
         gen_gid_test = points_test.index(gen_gid_test)
@@ -176,21 +177,21 @@ def test_gid_map(gid_map):
                 assert np.allclose(baseline.out[key][gen_gid_base],
                                    map_test.out[key][gen_gid_test])
 
-    labels = ['latitude', 'longitude']
+    labels = [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
     with Resource(res_file) as res:
         for i, (gen_gid, site_meta) in enumerate(baseline.meta.iterrows()):
-            res_gid = site_meta['gid']
+            res_gid = site_meta[MetaKeyName.GID]
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
         for i, (gen_gid, site_meta) in enumerate(map_test.meta.iterrows()):
             res_gid = gid_map[gen_gid]
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
@@ -199,19 +200,19 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
 
-    output_request = ('cf_mean', 'cf_profile', 'monthly_energy')
+    output_request = (MetaKeyName.CF_MEAN, , 'monthly_energy')
 
     # run reV 2.0 generation
     gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
               output_request=output_request)
     gen.run(max_workers=max_workers)
 
-    assert gen.out['cf_mean'].shape == (10, )
-    assert gen.out['cf_profile'].shape == (8760, 10)
+    assert gen.out[MetaKeyName.CF_MEAN].shape == (10, )
+    assert gen.out[].shape == (8760, 10)
     assert gen.out['monthly_energy'].shape == (12, 10)
 
-    assert gen._out['cf_mean'].dtype == np.float32
-    assert gen._out['cf_profile'].dtype == np.uint16
+    assert gen._out[MetaKeyName.CF_MEAN].dtype == np.float32
+    assert gen._out[].dtype == np.uint16
     assert gen._out['monthly_energy'].dtype == np.float32
 
 
@@ -223,7 +224,7 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
 
-    output_requests = ('cf_mean', 'windspeed')
+    output_requests = (MetaKeyName.CF_MEAN, 'windspeed')
 
     # run reV 2.0 generation
     gen = Gen('windpower', rev2_points, sam_files, res_file,
@@ -244,7 +245,7 @@ def test_multi_file_5min_wtk():
     # run reV 2.0 generation
     gen = Gen('windpower', points, sam_files, res_file, sites_per_worker=3)
     gen.run(max_workers=max_workers)
-    gen_outs = list(gen._out['cf_mean'])
+    gen_outs = list(gen._out[MetaKeyName.CF_MEAN])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
 
@@ -254,20 +255,20 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
 
-    output_request = ('cf_mean', 'turb_generic_loss')
+    output_request = (MetaKeyName.CF_MEAN, 'turb_generic_loss')
 
     baseline = Gen('windpower', points, sam_files, res_file,
                    sites_per_worker=3, output_request=output_request)
     baseline.run(max_workers=max_workers)
 
-    site_data = pd.DataFrame({'gid': np.arange(2),
+    site_data = pd.DataFrame({MetaKeyName.GID: np.arange(2),
                               'turb_generic_loss': np.zeros(2)})
     test = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
                output_request=output_request, site_data=site_data)
     test.run(max_workers=max_workers)
 
-    assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
-    assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
+    assert all(test.out[MetaKeyName.CF_MEAN][0:2] > baseline.out[MetaKeyName.CF_MEAN][0:2])
+    assert np.allclose(test.out[MetaKeyName.CF_MEAN][2:], baseline.out[MetaKeyName.CF_MEAN][2:])
     assert np.allclose(test.out['turb_generic_loss'][0:2], np.zeros(2))
     assert np.allclose(test.out['turb_generic_loss'][2:], 16.7 * np.ones(3))
 
@@ -322,7 +323,7 @@ def test_multi_resolution_wtk():
                   low_res_resource_file=fp_lr,
                   sites_per_worker=3)
         gen.run(max_workers=max_workers)
-        gen_outs = list(gen._out['cf_mean'])
+        gen_outs = list(gen._out[MetaKeyName.CF_MEAN])
         assert len(gen_outs) == 2
         assert np.mean(gen_outs) > 0.55
 
@@ -335,25 +336,25 @@ def test_wind_bias_correct():
     # run reV 2.0 generation
     points = slice(0, 10)
     gen_base = Gen('windpower', points, sam_files, res_file,
-                   output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+                   output_request=(MetaKeyName.CF_MEAN, , 'ws_mean'),
                    sites_per_worker=3)
     gen_base.run(max_workers=1)
-    outs_base = np.array(list(gen_base.out['cf_mean']))
+    outs_base = np.array(list(gen_base.out[MetaKeyName.CF_MEAN]))
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100), 'method': 'lin_ws',
                           'scalar': 1, 'adder': 2})
     gen = Gen('windpower', points, sam_files, res_file,
-              output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+              output_request=(MetaKeyName.CF_MEAN, , 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
     gen.run(max_workers=1)
-    outs_bc = np.array(list(gen.out['cf_mean']))
+    outs_bc = np.array(list(gen.out[MetaKeyName.CF_MEAN]))
     assert all(outs_bc > outs_base)
     assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100), 'method': 'lin_ws',
                           'scalar': 1, 'adder': -100})
     gen = Gen('windpower', points, sam_files, res_file,
-              output_request=('cf_mean', 'cf_profile', 'ws_mean'),
+              output_request=(MetaKeyName.CF_MEAN, , 'ws_mean'),
               sites_per_worker=3, bias_correct=bc_df)
     gen.run(max_workers=1)
     for k, arr in gen.out.items():

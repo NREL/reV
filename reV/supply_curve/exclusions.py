@@ -3,14 +3,15 @@
 Generate reV inclusion mask from exclusion layers
 """
 import logging
-import numpy as np
-from scipy import ndimage
 from warnings import warn
 
+import numpy as np
 from rex.utilities.loggers import log_mem
+from scipy import ndimage
+
 from reV.handlers.exclusions import ExclusionLayers
-from reV.utilities.exceptions import ExclusionLayerError
-from reV.utilities.exceptions import SupplyCurveInputError
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import ExclusionLayerError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
 
@@ -331,7 +332,7 @@ class LayerMask:
         contradictory
 
         Returns
-        ------
+        -------
         mask : str
             Mask type
         """
@@ -640,7 +641,7 @@ class ExclusionMask:
         Returns
         -------
         _excl_h5 : ExclusionLayers
-         """
+        """
         return self._excl_h5
 
     @property
@@ -665,7 +666,7 @@ class ExclusionMask:
         Returns
         -------
         list
-         """
+        """
         return self._layers.keys()
 
     @property
@@ -676,7 +677,7 @@ class ExclusionMask:
         Returns
         -------
          list
-         """
+        """
         return self._layers.values()
 
     @property
@@ -700,7 +701,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5['latitude']
+        return self.excl_h5[MetaKeyName.LATITUDE]
 
     @property
     def longitude(self):
@@ -711,7 +712,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5['longitude']
+        return self.excl_h5[MetaKeyName.LONGITUDE]
 
     def add_layer(self, layer, replace=False):
         """

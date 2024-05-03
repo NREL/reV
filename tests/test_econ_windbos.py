@@ -8,15 +8,16 @@ Created on Thu Nov 29 09:54:51 2018
 """
 import json
 import os
-import pytest
-import numpy as np
-import pandas as pd
 import tempfile
 
-from reV.generation.generation import Gen
-from reV.econ.econ import Econ
-from reV.SAM.windbos import WindBos
+import numpy as np
+import pandas as pd
+import pytest
+
 from reV import TESTDATADIR
+from reV.econ.econ import Econ
+from reV.generation.generation import Gen
+from reV.SAM.windbos import WindBos
 
 RTOL = 0.000001
 ATOL = 0.001
@@ -113,7 +114,7 @@ def test_sam_windbos():
 def test_rev_windbos():
     """Test baseline windbos calc with single owner defaults"""
     fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     wb = WindBos(inputs)
     assert np.allclose(wb.turbine_cost, 52512000.00, atol=ATOL, rtol=RTOL)
@@ -125,11 +126,11 @@ def test_rev_windbos():
 def test_standalone_json():
     """Test baseline windbos calc with standalone json file"""
     fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     wb1 = WindBos(inputs)
     fpath = TESTDATADIR + '/SAM/i_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     wb2 = WindBos(inputs)
 
@@ -140,7 +141,7 @@ def test_standalone_json():
 def test_rev_windbos_perf_bond():
     """Test windbos calc with performance bonds"""
     fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     inputs['performance_bond'] = 10.0
     wb = WindBos(inputs)
@@ -153,7 +154,7 @@ def test_rev_windbos_perf_bond():
 def test_rev_windbos_transport():
     """Test windbos calc with turbine transport costs"""
     fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     inputs['turbine_transportation'] = 100.0
     wb = WindBos(inputs)
@@ -166,7 +167,7 @@ def test_rev_windbos_transport():
 def test_rev_windbos_sales():
     """Test windbos calc with turbine transport costs"""
     fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    with open(fpath, 'r') as f:
+    with open(fpath) as f:
         inputs = json.load(f)
     inputs['sales_tax_basis'] = 5.0
     wb = WindBos(inputs)
@@ -189,7 +190,7 @@ def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
 
         # run reV 2.0 generation
         gen = Gen('windpower', points, sam_files, res_file,
-                  output_request=('cf_mean', 'cf_profile'),
+                  output_request=(MetaKeyName.CF_MEAN, ),
                   sites_per_worker=3)
         gen.run(max_workers=max_workers, out_fpath=cf_file)
 
@@ -214,7 +215,7 @@ def test_run_bos(points=slice(0, 5), max_workers=1):
 
     # get full file paths.
     sam_files = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    site_data = pd.DataFrame({'gid': range(5),
+    site_data = pd.DataFrame({MetaKeyName.GID: range(5),
                               'sales_tax_basis': range(5)})
 
     econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',

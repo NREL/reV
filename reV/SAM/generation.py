@@ -5,9 +5,8 @@ Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
 import copy
-import os
 import logging
-
+import os
 from abc import ABC, abstractmethod
 from tempfile import TemporaryDirectory
 from warnings import warn
@@ -26,22 +25,28 @@ import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.Windpower as PySamWindPower
 
-from reV.losses import ScheduledLossesMixin, PowerCurveLossesMixin
-from reV.SAM.defaults import (DefaultGeothermal,
-                              DefaultPvWattsv5,
-                              DefaultPvWattsv8,
-                              DefaultPvSamv1,
-                              DefaultWindPower,
-                              DefaultTcsMoltenSalt,
-                              DefaultSwh,
-                              DefaultTroughPhysicalProcessHeat,
-                              DefaultLinearFresnelDsgIph,
-                              DefaultMhkWave)
+from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
+from reV.SAM.defaults import (
+    DefaultGeothermal,
+    DefaultLinearFresnelDsgIph,
+    DefaultMhkWave,
+    DefaultPvSamv1,
+    DefaultPvWattsv5,
+    DefaultPvWattsv8,
+    DefaultSwh,
+    DefaultTcsMoltenSalt,
+    DefaultTroughPhysicalProcessHeat,
+    DefaultWindPower,
+)
 from reV.SAM.econ import LCOE, SingleOwner
 from reV.SAM.SAM import RevPySam
+from reV.utilities import MetaKeyName
 from reV.utilities.curtailment import curtail
-from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
-                                      InputError)
+from reV.utilities.exceptions import (
+    InputError,
+    SAMExecutionError,
+    SAMInputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -240,19 +245,23 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
         if meta is not None:
             if sam_sys_inputs is not None:
-                if 'elevation' in sam_sys_inputs:
-                    meta['elevation'] = sam_sys_inputs['elevation']
-                if 'timezone' in sam_sys_inputs:
-                    meta['timezone'] = int(sam_sys_inputs['timezone'])
+                if MetaKeyName.ELEVATION in sam_sys_inputs:
+                    meta[MetaKeyName.ELEVATION] = \
+                        sam_sys_inputs[MetaKeyName.ELEVATION]
+                if MetaKeyName.TIMEZONE in sam_sys_inputs:
+                    meta[MetaKeyName.TIMEZONE] = \
+                        int(sam_sys_inputs[MetaKeyName.TIMEZONE])
 
             # site-specific inputs take priority over generic system inputs
             if site_sys_inputs is not None:
-                if 'elevation' in site_sys_inputs:
-                    meta['elevation'] = site_sys_inputs['elevation']
-                if 'timezone' in site_sys_inputs:
-                    meta['timezone'] = int(site_sys_inputs['timezone'])
+                if MetaKeyName.ELEVATION in site_sys_inputs:
+                    meta[MetaKeyName.ELEVATION] = \
+                        site_sys_inputs[MetaKeyName.ELEVATION]
+                if MetaKeyName.TIMEZONE in site_sys_inputs:
+                    meta[MetaKeyName.TIMEZONE] = \
+                        int(site_sys_inputs[MetaKeyName.TIMEZONE])
 
-            if 'timezone' not in meta:
+            if MetaKeyName.TIMEZONE not in meta:
                 msg = ('Need timezone input to run SAM gen. Not found in '
                        'resource meta or technology json input config.')
                 raise SAMExecutionError(msg)
@@ -261,10 +270,9 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
     @property
     def has_timezone(self):
-        """ Returns true if instance has a timezone set """
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                return True
+        """Returns true if instance has a timezone set"""
+        if self._meta is not None and MetaKeyName.TIMEZONE in self.meta:
+            return True
 
         return False
 
@@ -288,7 +296,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+        return (self.gen_profile() /
+                self.sam_sys_inputs['system_capacity'])
 
     def annual_energy(self):
         """Get annual energy generation value in kWh from SAM.
@@ -349,8 +358,10 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
         lcoe_out_reqs = None
         so_out_reqs = None
-        lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate', 'capital_cost',
-                     'fixed_operating_cost', 'variable_operating_cost')
+        lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate',
+                     'capital_cost',
+                     'fixed_operating_cost',
+                     'variable_operating_cost')
         so_vars = ('ppa_price', 'lcoe_real', 'lcoe_nom',
                    'project_return_aftertax_npv', 'flip_actual_irr',
                    'gross_revenue')
@@ -514,10 +525,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
 
 class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
-    """Base class for running sam generation with a weather file on disk. """
-    WF_META_DROP_COLS = {'elevation', 'timezone', 'country', 'state', 'county',
-                         'urban', 'population', 'landcover', 'latitude',
-                         'longitude'}
+    """Base class for running sam generation with a weather file on disk."""
+
+    WF_META_DROP_COLS = {MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE,
+                         MetaKeyName.COUNTRY, MetaKeyName.STATE,
+                         MetaKeyName.COUNTY, 'urban', 'population',
+                         'landcover', MetaKeyName.LATITUDE,
+                         MetaKeyName.LONGITUDE}
 
     @property
     @abstractmethod
@@ -587,16 +601,18 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
 
         # ------- Process metadata
         m = pd.DataFrame(meta).T
-        timezone = m['timezone']
+        timezone = m[MetaKeyName.TIMEZONE]
         m['Source'] = 'NSRDB'
         m['Location ID'] = meta.name
         m['City'] = '-'
-        m['State'] = m['state'].apply(lambda x: '-' if x == 'None' else x)
-        m['Country'] = m['country'].apply(lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m['latitude']
-        m['Longitude'] = m['longitude']
+        m['State'] = m[MetaKeyName.STATE].apply(
+            lambda x: '-' if x == 'None' else x)
+        m['Country'] = m[MetaKeyName.COUNTRY].apply(
+            lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m[MetaKeyName.LATITUDE]
+        m['Longitude'] = m[MetaKeyName.LONGITUDE]
         m['Time Zone'] = timezone
-        m['Elevation'] = m['elevation']
+        m['Elevation'] = m[MetaKeyName.ELEVATION]
         m['Local Time Zone'] = timezone
         m['Dew Point Units'] = 'c'
         m['DHI Units'] = 'w/m2'
@@ -734,24 +750,24 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
                 # ensure that resource array length is multiple of 8760
                 arr = self.ensure_res_len(arr, time_index)
-                n_roll = int(self._meta['timezone'] * self.time_interval)
+                n_roll = int(self._meta[MetaKeyName.TIMEZONE] *
+                             self.time_interval)
                 arr = np.roll(arr, n_roll)
 
-                if var in irrad_vars:
-                    if np.min(arr) < 0:
-                        warn('Solar irradiance variable "{}" has a minimum '
-                             'value of {}. Truncating to zero.'
-                             .format(var, np.min(arr)), SAMInputWarning)
-                        arr = np.where(arr < 0, 0, arr)
+                if var in irrad_vars and np.min(arr) < 0:
+                    warn('Solar irradiance variable "{}" has a minimum '
+                         'value of {}. Truncating to zero.'
+                         .format(var, np.min(arr)), SAMInputWarning)
+                    arr = np.where(arr < 0, 0, arr)
 
                 resource[var] = arr.tolist()
 
-        resource['lat'] = meta['latitude']
-        resource['lon'] = meta['longitude']
-        resource['tz'] = meta['timezone']
+        resource['lat'] = meta[MetaKeyName.LATITUDE]
+        resource['lon'] = meta[MetaKeyName.LONGITUDE]
+        resource['tz'] = meta[MetaKeyName.TIMEZONE]
 
-        if 'elevation' in meta:
-            resource['elev'] = meta['elevation']
+        if MetaKeyName.ELEVATION in meta:
+            resource['elev'] = meta[MetaKeyName.ELEVATION]
         else:
             resource['elev'] = 0.0
 
@@ -905,10 +921,10 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                      respectively.
 
         """
-        bad_location_input = ((meta['latitude'] < -90)
-                              | (meta['latitude'] > 90)
-                              | (meta['longitude'] < -180)
-                              | (meta['longitude'] > 180))
+        bad_location_input = ((meta[MetaKeyName.LATITUDE] < -90)
+                              | (meta[MetaKeyName.LATITUDE] > 90)
+                              | (meta[MetaKeyName.LONGITUDE] < -180)
+                              | (meta[MetaKeyName.LONGITUDE] > 180))
         if bad_location_input.any():
             raise ValueError("Detected latitude/longitude values outside of "
                              "the range -90 to 90 and -180 to 180, "
@@ -945,15 +961,14 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                 warn('No tilt specified, setting at latitude.',
                      SAMInputWarning)
                 set_tilt = True
-            else:
-                if (sam_sys_inputs['tilt'] == 'lat'
-                        or sam_sys_inputs['tilt'] == 'latitude'):
-                    set_tilt = True
+            elif (sam_sys_inputs['tilt'] == 'lat'
+                    or sam_sys_inputs['tilt'] == MetaKeyName.LATITUDE):
+                set_tilt = True
 
         if set_tilt:
             # set tilt to abs(latitude)
-            sam_sys_inputs['tilt'] = np.abs(meta['latitude'])
-            if meta['latitude'] > 0:
+            sam_sys_inputs['tilt'] = np.abs(meta[MetaKeyName.LATITUDE])
+            if meta[MetaKeyName.LATITUDE] > 0:
                 # above the equator, az = 180
                 sam_sys_inputs['azimuth'] = 180
             else:
@@ -1018,7 +1033,8 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             Datatype is float32 and array length is 8760*time_interval.
             PV CF is calculated as AC power / DC nameplate.
         """
-        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+        return (self.gen_profile() /
+                self.sam_sys_inputs['system_capacity'])
 
     def cf_profile_ac(self):
         """Get hourly AC capacity factor (frac) profile in local timezone.
@@ -1127,6 +1143,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 class PvWattsv5(AbstractSamPv):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
+
     MODULE = 'pvwattsv5'
     PYSAM = PySamPv5
 
@@ -1144,6 +1161,7 @@ class PvWattsv5(AbstractSamPv):
 class PvWattsv7(AbstractSamPv):
     """Photovoltaic (PV) generation with pvwattsv7.
     """
+
     MODULE = 'pvwattsv7'
     PYSAM = PySamPv7
 
@@ -1161,6 +1179,7 @@ class PvWattsv7(AbstractSamPv):
 class PvWattsv8(AbstractSamPv):
     """Photovoltaic (PV) generation with pvwattsv8.
     """
+
     MODULE = 'pvwattsv8'
     PYSAM = PySamPv8
 
@@ -1220,6 +1239,7 @@ class PvSamv1(AbstractSamPv):
 class TcsMoltenSalt(AbstractSamSolar):
     """Concentrated Solar Power (CSP) generation with tower molten salt
     """
+
     MODULE = 'tcsmolten_salt'
     PYSAM = PySamCSP
 
@@ -1234,7 +1254,8 @@ class TcsMoltenSalt(AbstractSamSolar):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        x = np.abs(self.gen_profile() / self.sam_sys_inputs['system_capacity'])
+        x = np.abs(self.gen_profile() /
+                   self.sam_sys_inputs['system_capacity'])
         return x
 
     @staticmethod
@@ -1252,6 +1273,7 @@ class SolarWaterHeat(AbstractSamGenerationFromWeatherFile):
     """
     Solar Water Heater generation
     """
+
     MODULE = 'solarwaterheat'
     PYSAM = PySamSwh
     PYSAM_WEATHER_TAG = 'solar_resource_file'
@@ -1271,6 +1293,7 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
     """
     Process heat linear Fresnel direct steam generation
     """
+
     MODULE = 'lineardirectsteam'
     PYSAM = PySamLds
     PYSAM_WEATHER_TAG = 'file_name'
@@ -1305,6 +1328,7 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
     """
     Trough Physical Process Heat generation
     """
+
     MODULE = 'troughphysicalheat'
     PYSAM = PySamTpph
     PYSAM_WEATHER_TAG = 'file_name'
@@ -1508,6 +1532,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
           ``time_index_step=2`` yields hourly output, and so forth).
 
     """
+
     # Per Matt Prilliman on 2/22/24, it's unclear where this ratio originates,
     # but SAM errors out if it's exceeded.
     MAX_RT_TO_EGS_RATIO = 1.134324
@@ -1580,7 +1605,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self._set_costs()
 
     def _set_resource_temperature(self, resource):
-        """Set resource temp from data if user did not specify it. """
+        """Set resource temp from data if user did not specify it."""
 
         if "resource_temp" in self.sam_sys_inputs:
             logger.debug("Found 'resource_temp' value in SAM config: {:.2f}"
@@ -1640,7 +1665,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             self.sam_sys_inputs["design_temp"] = resource_temp
 
     def _set_nameplate_to_match_resource_potential(self, resource):
-        """Set the nameplate capacity to match the resource potential. """
+        """Set the nameplate capacity to match the resource potential."""
 
         if "nameplate" in self.sam_sys_inputs:
             msg = ('Found "nameplate" input in config! Resource potential '
@@ -1679,7 +1704,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             self.sam_sys_inputs["resource_potential"] = -1
             return
 
-        gross_gen = (getattr(self.pysam.Outputs, "gross_output")
+        gross_gen = (self.pysam.Outputs.gross_output
                      * self._RESOURCE_POTENTIAL_MULT)
         if "resource_potential" in self.sam_sys_inputs:
             msg = ('Setting "resource_potential" is not allowed! Updating '
@@ -1696,9 +1721,9 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         ncw = self.sam_sys_inputs.pop("num_confirmation_wells",
                                       self._DEFAULT_NUM_CONFIRMATION_WELLS)
         self.sam_sys_inputs["prod_and_inj_wells_to_drill"] = (
-            getattr(self.pysam.Outputs, "num_wells_getem_output")
+            self.pysam.Outputs.num_wells_getem_output
             - ncw
-            + getattr(self.pysam.Outputs, "num_wells_getem_inj"))
+            + self.pysam.Outputs.num_wells_getem_inj)
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
@@ -1900,8 +1925,8 @@ class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
 
 
 class WindPower(AbstractSamWind):
-    """Class for Wind generation from SAM
-    """
+    """Class for Wind generation from SAM"""
+
     MODULE = 'windpower'
     PYSAM = PySamWindPower
 
@@ -1952,7 +1977,7 @@ class WindPower(AbstractSamWind):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = self.ensure_res_len(resource['rh'].values, time_index)
-            n_roll = int(meta['timezone'] * self.time_interval)
+            n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
             rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
@@ -1960,14 +1985,14 @@ class WindPower(AbstractSamWind):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = self.ensure_res_len(resource[var_list].values, time_index)
-        n_roll = int(meta['timezone'] * self.time_interval)
+        n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
         temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
-        data_dict['lat'] = float(meta['latitude'])
-        data_dict['lon'] = float(meta['longitude'])
-        data_dict['tz'] = int(meta['timezone'])
-        data_dict['elev'] = float(meta['elevation'])
+        data_dict['lat'] = float(meta[MetaKeyName.LATITUDE])
+        data_dict['lon'] = float(meta[MetaKeyName.LONGITUDE])
+        data_dict['tz'] = int(meta[MetaKeyName.TIMEZONE])
+        data_dict['elev'] = float(meta[MetaKeyName.ELEVATION])
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute.tolist()
@@ -2086,6 +2111,7 @@ class WindPowerPD(AbstractSamGeneration, PowerCurveLossesMixin):
 class MhkWave(AbstractSamGeneration):
     """Class for Wave generation from SAM
     """
+
     MODULE = 'mhkwave'
     PYSAM = PySamMhkWave
 
@@ -2131,12 +2157,12 @@ class MhkWave(AbstractSamGeneration):
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
             arr = self.ensure_res_len(resource[var].values, time_index)
-            n_roll = int(meta['timezone'] * self.time_interval)
+            n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
             data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
-        data_dict['lat'] = meta['latitude']
-        data_dict['lon'] = meta['longitude']
-        data_dict['tz'] = meta['timezone']
+        data_dict['lat'] = meta[MetaKeyName.LATITUDE]
+        data_dict['lon'] = meta[MetaKeyName.LONGITUDE]
+        data_dict['tz'] = meta[MetaKeyName.TIMEZONE]
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute

@@ -4,14 +4,15 @@
 Test resource up and down scaling
 """
 
-import os
 import json
-import h5py
-import pytest
-import numpy as np
+import os
 
-from reV.generation.generation import Gen
+import h5py
+import numpy as np
+import pytest
+
 from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 
 def test_time_index_step():
@@ -31,17 +32,17 @@ def test_time_index_step():
 
     # run reV 2.0 generation
     gen = Gen('pvwattsv5', slice(0, None), sam_input, res_file,
-              output_request=('cf_mean', 'cf_profile'),
+              output_request=(MetaKeyName.CF_MEAN, ),
               sites_per_worker=100)
     gen.run(max_workers=1)
-    gen_outs = gen.out['cf_profile'].astype(np.int32)
+    gen_outs = gen.out[].astype(np.int32)
 
     if not os.path.exists(baseline):
         with h5py.File(baseline, 'w') as f:
-            f.create_dataset('cf_profile', data=gen_outs, dtype=gen_outs.dtype)
+            f.create_dataset(, data=gen_outs, dtype=gen_outs.dtype)
     else:
         with h5py.File(baseline, 'r') as f:
-            baseline = f['cf_profile'][...].astype(np.int32)
+            baseline = f[][...].astype(np.int32)
 
         assert np.allclose(gen_outs, baseline)
 

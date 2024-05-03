@@ -3,22 +3,25 @@
 Classes to collect reV outputs from multiple annual files.
 """
 import glob
-import time
 import logging
-import numpy as np
 import os
-import pandas as pd
+import time
 from warnings import warn
 
-from rex import Resource
-from rex.utilities.utilities import (get_class_properties, parse_year,
-                                     get_lat_lon_cols)
+import numpy as np
+import pandas as pd
 from gaps.pipeline import parse_previous_status
+from rex import Resource
+from rex.utilities.utilities import (
+    get_class_properties,
+    get_lat_lon_cols,
+    parse_year,
+)
 
-from reV.handlers.outputs import Outputs
 from reV.config.output_request import SAMOutputRequest
-from reV.utilities.exceptions import HandlerRuntimeError, ConfigError
-from reV.utilities import log_versions, ModuleName
+from reV.handlers.outputs import Outputs
+from reV.utilities import ModuleName, log_versions
+from reV.utilities.exceptions import ConfigError, HandlerRuntimeError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,7 @@ class MultiYearGroup:
     def __init__(self, name, out_dir, source_files=None,
                  source_dir=None, source_prefix=None,
                  source_pattern=None,
-                 dsets=('cf_mean',), pass_through_dsets=None):
+                 dsets=(MetaKeyName.CF_MEAN,), pass_through_dsets=None):
         """
         Parameters
         ----------
@@ -58,7 +61,7 @@ class MultiYearGroup:
             `source_prefix` but is not used if `source_files` are
             specified explicitly. By default, ``None``.
         dsets : list | tuple, optional
-            List of datasets to collect. By default, ``('cf_mean',)``.
+            List of datasets to collect. By default, ``(MetaKeyName.CF_MEAN,)``.
         pass_through_dsets : list | tuple, optional
             Optional list of datasets that are identical in the
             multi-year files (e.g. input datasets that don't vary from

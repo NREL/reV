@@ -7,14 +7,14 @@ This is intended to be run with PySAM 1.2.1
 Created on 2/6/2020
 @author: Mike Bannister
 """
-import numpy as np
 import os
-import pytest
-import json
 
-from reV.generation.generation import Gen
-from reV import TESTDATADIR
+import numpy as np
+import pytest
 from rex import Resource
+
+from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 RTOL = 0.01
 ATOL = 0
@@ -29,7 +29,7 @@ def test_gen_swh_non_leap_year():
 
     output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
                       'beam', 'diffuse', 'I_incident', 'I_transmitted',
-                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction',
+                      'annual_Q_deliv', 'Q_deliv', MetaKeyName.CF_MEAN, 'solar_fraction',
                       'gen_profile')
 
     # run reV 2.0 generation
@@ -61,7 +61,7 @@ def test_gen_swh_leap_year():
 
     output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
                       'beam', 'diffuse', 'I_incident', 'I_transmitted',
-                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
+                      'annual_Q_deliv', 'Q_deliv', MetaKeyName.CF_MEAN, 'solar_fraction')
 
     # run reV 2.0 generation
     gen = Gen('solarwaterheat', points, sam_files, res_file,

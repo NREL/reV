@@ -6,22 +6,34 @@ Wraps the NREL-PySAM library with additional reV features.
 import copy
 import json
 import logging
-import numpy as np
 import os
-import pandas as pd
 from warnings import warn
+
+import numpy as np
+import pandas as pd
 import PySAM.GenericSystem as generic
-
-from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
-                                      SAMExecutionError, ResourceError)
-
-from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
-                                     MultiFileWTK)
-from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
-                                    WaveResource, GeothermalResource)
+from rex.multi_file_resource import (
+    MultiFileNSRDB,
+    MultiFileResource,
+    MultiFileWTK,
+)
 from rex.multi_res_resource import MultiResolutionResource
+from rex.renewable_resource import (
+    NSRDB,
+    GeothermalResource,
+    SolarResource,
+    WaveResource,
+    WindResource,
+)
 from rex.utilities.utilities import check_res_file
 
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import (
+    ResourceError,
+    SAMExecutionError,
+    SAMInputError,
+    SAMInputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -169,10 +181,10 @@ class SamResourceRetriever:
         elif res_handler == WindResource:
             args += (project_points.h, )
             kwargs['icing'] = project_points.sam_config_obj.icing
-            if project_points.curtailment is not None:
-                if project_points.curtailment.precipitation:
-                    # make precip rate available for curtailment analysis
-                    kwargs['precip_rate'] = True
+            if (project_points.curtailment is not None and
+                    project_points.curtailment.precipitation):
+                # make precip rate available for curtailment analysis
+                kwargs['precip_rate'] = True
 
         elif res_handler == GeothermalResource:
             args += (project_points.d, )
@@ -567,7 +579,7 @@ class RevPySam(Sam):
             Site-agnostic SAM system model inputs arguments.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            , 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         site_sys_inputs : dict
             Optional set of site-specific SAM system inputs to complement the

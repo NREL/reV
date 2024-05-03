@@ -4,32 +4,36 @@
 @author: ppinchuk
 """
 import logging
-import numpy as np
 import re
-import pandas as pd
+from collections import namedtuple
 from string import ascii_letters
 from warnings import warn
-from collections import namedtuple
 
-from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (FileInputError, InputError,
-                                      InputWarning, OutputWarning)
-from reV.hybrids.hybrid_methods import HYBRID_METHODS
-
+import numpy as np
+import pandas as pd
 from rex.resource import Resource
 from rex.utilities.utilities import to_records_array
 
+from reV.handlers.outputs import Outputs
+from reV.hybrids.hybrid_methods import HYBRID_METHODS
+from reV.utilities.exceptions import (
+    FileInputError,
+    InputError,
+    InputWarning,
+    OutputWarning,
+)
+
 logger = logging.getLogger(__name__)
 
-MERGE_COLUMN = 'sc_point_gid'
+MERGE_COLUMN = MetaKeyName.SC_POINT_GID
 PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
 SOLAR_PREFIX = 'solar_'
 WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
-    'latitude', 'longitude', 'country', 'state', 'county', 'elevation',
-    'timezone', 'sc_point_gid', 'sc_row_ind', 'sc_col_ind'
+    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE, MetaKeyName.COUNTRY, 'state', 'county', 'elevation',
+    MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID, MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
 }
-DROPPED_COLUMNS = ['gid']
+DROPPED_COLUMNS = [MetaKeyName.GID]
 DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
                        'solar_mean_cf': 0, 'wind_mean_cf': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
@@ -40,7 +44,8 @@ RatioColumns = namedtuple('RatioColumns', ['num', 'denom', 'fixed'],
 
 
 class ColNameFormatter:
-    """Column name formatting helper class. """
+    """Column name formatting helper class."""
+
     ALLOWED = set(ascii_letters)
 
     @classmethod
@@ -65,7 +70,7 @@ class ColNameFormatter:
 
 
 class HybridsData:
-    """Hybrids input data container. """
+    """Hybrids input data container."""
 
     def __init__(self, solar_fpath, wind_fpath):
         """
@@ -431,7 +436,7 @@ class MetaHybridizer:
 
     @staticmethod
     def __validate_col_prefix(col, prefixes, input_name):
-        """Validate the the col starts with the correct prefix. """
+        """Validate the the col starts with the correct prefix."""
 
         missing = [not col.startswith(p) for p in prefixes]
         if all(missing):
@@ -585,7 +590,7 @@ class MetaHybridizer:
 
     @property
     def _ratio_cols(self):
-        """Get the ratio columns from the ratio input. """
+        """Get the ratio columns from the ratio input."""
         if self._ratio is None:
             return []
         return self._ratio.strip().split('/')
@@ -603,7 +608,7 @@ class MetaHybridizer:
         self._sort_hybrid_meta_cols()
 
     def _format_meta_pre_merge(self):
-        """Prepare solar and wind meta for merging. """
+        """Prepare solar and wind meta for merging."""
         self.__col_name_map = {
             ColNameFormatter.fmt(c): c
             for c in self.data.solar_meta.columns.values
@@ -616,7 +621,7 @@ class MetaHybridizer:
 
     @staticmethod
     def _rename_cols(df, prefix):
-        """Replace column names with the ColNameFormatter.fmt is needed. """
+        """Replace column names with the ColNameFormatter.fmt is needed."""
         df.columns = [
             ColNameFormatter.fmt(col_name)
             if col_name in NON_DUPLICATE_COLS
@@ -625,13 +630,13 @@ class MetaHybridizer:
         ]
 
     def _save_rep_prof_index_internally(self):
-        """Save rep profiles index in hybrid meta for access later. """
+        """Save rep profiles index in hybrid meta for access later."""
 
         self.data.solar_meta[self.__solar_rpi_n] = self.data.solar_meta.index
         self.data.wind_meta[self.__wind_rpi_n] = self.data.wind_meta.index
 
     def _merge_solar_wind_meta(self):
-        """Merge the wind and solar meta DataFrames. """
+        """Merge the wind and solar meta DataFrames."""
         self._hybrid_meta = self.data.solar_meta.merge(
             self.data.wind_meta,
             on=ColNameFormatter.fmt(MERGE_COLUMN),
@@ -639,7 +644,7 @@ class MetaHybridizer:
         )
 
     def _merge_type(self):
-        """Determine the type of merge to use for meta based on user input. """
+        """Determine the type of merge to use for meta based on user input."""
         if self._allow_solar_only and self._allow_wind_only:
             return 'outer'
         elif self._allow_solar_only and not self._allow_wind_only:
@@ -649,16 +654,16 @@ class MetaHybridizer:
         return 'inner'
 
     def _format_meta_post_merge(self):
-        """Format hybrid meta after merging. """
+        """Format hybrid meta after merging."""
 
         duplicate_cols = [n for n in self._hybrid_meta.columns if "_x" in n]
         self._propagate_duplicate_cols(duplicate_cols)
         self._drop_cols(duplicate_cols)
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
-        self._hybrid_meta.index.name = 'gid'
+        self._hybrid_meta.index.name = MetaKeyName.GID
 
     def _propagate_duplicate_cols(self, duplicate_cols):
-        """Fill missing column values from outer merge. """
+        """Fill missing column values from outer merge."""
         for duplicate in duplicate_cols:
             no_suffix = "_".join(duplicate.split("_")[:-1])
             null_idx = self._hybrid_meta[no_suffix].isnull()
@@ -666,14 +671,14 @@ class MetaHybridizer:
             self._hybrid_meta.loc[null_idx, no_suffix] = non_null_vals
 
     def _drop_cols(self, duplicate_cols):
-        """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns. """
+        """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns."""
         self._hybrid_meta.drop(
             duplicate_cols + DROPPED_COLUMNS,
             axis=1, inplace=True, errors='ignore'
         )
 
     def _sort_hybrid_meta_cols(self):
-        """Sort the columns of the hybrid meta. """
+        """Sort the columns of the hybrid meta."""
         self.__hybrid_meta_cols = sorted(
             [c for c in self._hybrid_meta.columns
              if not c.startswith(self._INTERNAL_COL_PREFIX)],
@@ -681,7 +686,7 @@ class MetaHybridizer:
         )
 
     def _column_sorting_key(self, c):
-        """Helper function to sort hybrid meta columns. """
+        """Helper function to sort hybrid meta columns."""
         first_index = 0
         if c.startswith('hybrid'):
             first_index = 1
@@ -695,8 +700,8 @@ class MetaHybridizer:
 
     def _verify_lat_long_match_post_merge(self):
         """Verify that all the lat/lon values match post merge."""
-        lat = self._verify_col_match_post_merge(col_name='latitude')
-        lon = self._verify_col_match_post_merge(col_name='longitude')
+        lat = self._verify_col_match_post_merge(col_name=MetaKeyName.LATITUDE)
+        lon = self._verify_col_match_post_merge(col_name=MetaKeyName.LONGITUDE)
         if not lat or not lon:
             msg = ("Detected mismatched coordinate values (latitude or "
                    "longitude) post merge. Please ensure that all matching "
@@ -708,7 +713,7 @@ class MetaHybridizer:
             raise FileInputError(e)
 
     def _verify_col_match_post_merge(self, col_name):
-        """Verify that all (non-null) values in a column match post merge. """
+        """Verify that all (non-null) values in a column match post merge."""
         c1, c2 = col_name, '{}_x'.format(col_name)
         if c1 in self._hybrid_meta.columns and c2 in self._hybrid_meta.columns:
             compare_df = self._hybrid_meta[
@@ -720,7 +725,7 @@ class MetaHybridizer:
             return True
 
     def _fillna_meta_cols(self):
-        """Fill N/A values as specified by user (and internals). """
+        """Fill N/A values as specified by user (and internals)."""
         for col_name, fill_value in self._fillna.items():
             if col_name in self._hybrid_meta.columns:
                 self._hybrid_meta[col_name].fillna(fill_value, inplace=True)
@@ -732,7 +737,7 @@ class MetaHybridizer:
 
     @staticmethod
     def __warn_missing_col(col_name, action):
-        """Warn that a column the user request an action for is missing. """
+        """Warn that a column the user request an action for is missing."""
         msg = ("Skipping {} values for {!r}: Unable to find column "
                "in hybrid meta. Did you forget to prefix with "
                "{!r} or {!r}? ")
@@ -741,7 +746,7 @@ class MetaHybridizer:
         warn(w, InputWarning)
 
     def _apply_limits(self):
-        """Clip column values as specified by user. """
+        """Clip column values as specified by user."""
         for col_name, max_value in self._limits.items():
             if col_name in self._hybrid_meta.columns:
                 self._hybrid_meta[col_name].clip(upper=max_value, inplace=True)
@@ -749,7 +754,7 @@ class MetaHybridizer:
                 self.__warn_missing_col(col_name, action='limit')
 
     def _limit_by_ratio(self):
-        """ Limit the given pair of ratio columns based on input ratio. """
+        """Limit the given pair of ratio columns based on input ratio."""
 
         if self._ratio_bounds is None:
             return
@@ -784,7 +789,7 @@ class MetaHybridizer:
         self._hybrid_meta[h_denom_name] = denominator_vals.values
 
     def _add_hybrid_cols(self):
-        """Add new hybrid columns using registered hybrid methods. """
+        """Add new hybrid columns using registered hybrid methods."""
         for new_col_name, method in HYBRID_METHODS.items():
             out = method(self)
             if out is not None:
@@ -936,7 +941,7 @@ class Hybridization:
         self._validate_input()
 
     def _validate_input(self):
-        """Validate the user input and input files. """
+        """Validate the user input and input files."""
         self.data.validate()
         self.meta_hybridizer.validate_input()
 
@@ -1085,7 +1090,7 @@ class Hybridization:
             for k in OUTPUT_PROFILE_NAMES}
 
     def _compute_hybridized_profile_components(self):
-        """Compute the resource components of the hybridized profiles. """
+        """Compute the resource components of the hybridized profiles."""
 
         for params in self.__rep_profile_hybridization_params:
             col, (hybrid_idxs, solar_idxs), fpath, p_name, dset_name = params
@@ -1099,7 +1104,7 @@ class Hybridization:
 
     @property
     def __rep_profile_hybridization_params(self):
-        """Zip the rep profile hybridization parameters. """
+        """Zip the rep profile hybridization parameters."""
 
         cap_col_names = ['hybrid_solar_capacity', 'hybrid_wind_capacity']
         idx_maps = [self.meta_hybridizer.solar_profile_indices_map,
@@ -1110,7 +1115,7 @@ class Hybridization:
         return zipped
 
     def _compute_hybridized_profiles_from_components(self):
-        """Compute the hybridized profiles from the resource components. """
+        """Compute the hybridized profiles from the resource components."""
 
         hp_name, sp_name, wp_name = OUTPUT_PROFILE_NAMES
         self._profiles[hp_name] = (self._profiles[sp_name]

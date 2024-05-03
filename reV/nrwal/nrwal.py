@@ -11,18 +11,20 @@ Everything in this module operates on the spatiotemporal resolution of the reV
 generation output file. This is usually the wind or solar resource resolution
 but could be the supply curve resolution after representative profiles is run.
 """
-import numpy as np
-import pandas as pd
 import logging
 from warnings import warn
 
+import numpy as np
+import pandas as pd
+
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (DataShapeError,
-                                      OffshoreWindInputWarning,
-                                      OffshoreWindInputError)
 from reV.utilities import log_versions
-
+from reV.utilities.exceptions import (
+    DataShapeError,
+    OffshoreWindInputError,
+    OffshoreWindInputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,7 @@ class RevNrwal:
     """Columns from the `site_data` table to join to the output meta data"""
 
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
-                 output_request, save_raw=True, meta_gid_col='gid',
+                 output_request, save_raw=True, meta_gid_col=MetaKeyName.GID,
                  site_meta_cols=None):
         """Framework to handle reV-NRWAL analysis.
 
@@ -178,7 +180,7 @@ class RevNrwal:
         self._meta_source = self._parse_gen_data()
         self._analysis_gids, self._site_data = self._parse_analysis_gids()
 
-        pc = Gen.get_pc(self._site_data[['gid', 'config']], points_range=None,
+        pc = Gen.get_pc(self._site_data[[MetaKeyName.GID, 'config']], points_range=None,
                         sam_configs=sam_files, tech='windpower')
         self._project_points = pc.project_points
 
@@ -191,7 +193,7 @@ class RevNrwal:
                             meta_gids.max(), len(self.meta_source),
                             len(self.analysis_gids)))
 
-    def _parse_site_data(self, required_columns=('gid', 'config')):
+    def _parse_site_data(self, required_columns=(MetaKeyName.GID, 'config')):
         """Parse the site-specific spatial input data file
 
         Parameters
@@ -227,7 +229,7 @@ class RevNrwal:
                 logger.error(msg)
                 raise KeyError(msg)
 
-        self._site_data = self._site_data.sort_values('gid')
+        self._site_data = self._site_data.sort_values(MetaKeyName.GID)
 
         return self._site_data
 
@@ -272,7 +274,7 @@ class RevNrwal:
 
         meta_gids = self.meta_source[self._meta_gid_col].values
 
-        missing = ~np.isin(meta_gids, self._site_data['gid'])
+        missing = ~np.isin(meta_gids, self._site_data[MetaKeyName.GID])
         if any(missing):
             msg = ('{} sites from the generation meta data input were '
                    'missing from the "site_data" input and will not be '
@@ -280,19 +282,19 @@ class RevNrwal:
                    .format(missing.sum(), meta_gids[missing]))
             logger.info(msg)
 
-        missing = ~np.isin(self._site_data['gid'], meta_gids)
+        missing = ~np.isin(self._site_data[MetaKeyName.GID], meta_gids)
         if any(missing):
-            missing = self._site_data['gid'].values[missing]
+            missing = self._site_data[MetaKeyName.GID].values[missing]
             msg = ('{} sites from the "site_data" input were missing from the '
                    'generation meta data and will not be run through NRWAL: {}'
                    .format(len(missing), missing))
             logger.info(msg)
 
-        analysis_gids = set(meta_gids) & set(self._site_data['gid'])
+        analysis_gids = set(meta_gids) & set(self._site_data[MetaKeyName.GID])
         analysis_gids = np.array(sorted(list(analysis_gids)))
 
         # reduce the site data table to only those sites being analyzed
-        mask = np.isin(self._site_data['gid'], meta_gids)
+        mask = np.isin(self._site_data[MetaKeyName.GID], meta_gids)
         self._site_data = self._site_data[mask]
 
         return analysis_gids, self._site_data
@@ -315,9 +317,9 @@ class RevNrwal:
 
         system_inputs = pd.DataFrame(system_inputs).T
         system_inputs = system_inputs.sort_index()
-        system_inputs['gid'] = system_inputs.index.values
-        system_inputs.index.name = 'gid'
-        mask = system_inputs['gid'].isin(self.analysis_gids)
+        system_inputs[MetaKeyName.GID] = system_inputs.index.values
+        system_inputs.index.name = MetaKeyName.GID
+        mask = system_inputs[MetaKeyName.GID].isin(self.analysis_gids)
         system_inputs = system_inputs[mask]
 
         return system_inputs
@@ -390,8 +392,8 @@ class RevNrwal:
             logger.error(msg)
             raise OffshoreWindInputError(msg)
 
-        check_gid_order = (self._site_data['gid'].values
-                           == self._sam_sys_inputs['gid'].values)
+        check_gid_order = (self._site_data[MetaKeyName.GID].values
+                           == self._sam_sys_inputs[MetaKeyName.GID].values)
         msg = 'NRWAL site_data and system input dataframe had bad order'
         assert (check_gid_order).all(), msg
 

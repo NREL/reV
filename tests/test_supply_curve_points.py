@@ -6,15 +6,19 @@ Created on Wed Jun 19 15:37:05 2019
 """
 # pylint: disable=no-member
 import os
+
 import numpy as np
 import pytest
 
-from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.supply_curve.points import (SupplyCurvePoint,
-                                     GenerationSupplyCurvePoint)
-from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.points import (
+    GenerationSupplyCurvePoint,
+    SupplyCurvePoint,
+)
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.utilities import MetaKeyName
 
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
@@ -58,7 +62,7 @@ def test_slicer(gids, resolution):
             assert col_slice0 == col_slice1, msg
 
 
-@pytest.mark.parametrize(('gid', 'resolution', 'excl_dict', 'time_series'),
+@pytest.mark.parametrize((MetaKeyName.GID, 'resolution', 'excl_dict', 'time_series'),
                          [(37, 64, None, None),
                           (37, 64, EXCL_DICT, None),
                           (37, 64, None, 100),
@@ -96,7 +100,7 @@ def test_weighted_means(gid, resolution, excl_dict, time_series):
         assert np.allclose(test, means, rtol=RTOL)
 
 
-@pytest.mark.parametrize(('gid', 'resolution', 'excl_dict', 'time_series'),
+@pytest.mark.parametrize((MetaKeyName.GID, 'resolution', 'excl_dict', 'time_series'),
                          [(37, 64, None, None),
                           (37, 64, EXCL_DICT, None),
                           (37, 64, None, 100),
@@ -145,11 +149,11 @@ def plot_all_sc_points(resolution=64):
         colors *= len(sc)
         for gid in range(len(sc)):
             excl_meta = sc.get_excl_points('meta', gid)
-            axs.scatter(excl_meta['longitude'], excl_meta['latitude'],
+            axs.scatter(excl_meta[MetaKeyName.LONGITUDE], excl_meta[MetaKeyName.LATITUDE],
                         c=colors[gid], s=0.01)
 
     with Outputs(F_GEN) as f:
-        axs.scatter(f.meta['longitude'], f.meta['latitude'], c='k', s=25)
+        axs.scatter(f.meta[MetaKeyName.LONGITUDE], f.meta[MetaKeyName.LATITUDE], c='k', s=25)
 
     axs.axis('equal')
     plt.show()
@@ -175,12 +179,12 @@ def plot_single_gen_sc_point(gid=2, resolution=64):
         for i, gen_gid in enumerate(all_gen_gids):
             if gen_gid != -1:
                 mask = (sc._gen_gids == gen_gid)
-                axs.scatter(excl_meta.loc[mask, 'longitude'],
-                            excl_meta.loc[mask, 'latitude'],
+                axs.scatter(excl_meta.loc[mask, MetaKeyName.LONGITUDE],
+                            excl_meta.loc[mask, MetaKeyName.LATITUDE],
                             marker='s', c=colors[i], s=1)
 
-                axs.scatter(sc.gen.meta.loc[gen_gid, 'longitude'],
-                            sc.gen.meta.loc[gen_gid, 'latitude'],
+                axs.scatter(sc.gen.meta.loc[gen_gid, MetaKeyName.LONGITUDE],
+                            sc.gen.meta.loc[gen_gid, MetaKeyName.LATITUDE],
                             c='k', s=100)
 
         axs.scatter(sc.centroid[1], sc.centroid[0], marker='x', c='k', s=200)

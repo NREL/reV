@@ -3,21 +3,22 @@
 """
 Aggregation tests
 """
-import numpy as np
 import os
-from pandas.testing import assert_frame_equal
+
+import numpy as np
 import pytest
-
-from reV.supply_curve.aggregation import Aggregation
-from reV import TESTDATADIR
-
+from pandas.testing import assert_frame_equal
 from rex.resource import Resource
+
+from reV import TESTDATADIR
+from reV.supply_curve.aggregation import Aggregation
+from reV.utilities import MetaKeyName
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
 TM_DSET = 'techmap_wtk'
-AGG_DSET = ('cf_mean', 'cf_profile')
+AGG_DSET = ('cf_mean', )
 
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
                                'exclude_nodata': True},
@@ -46,7 +47,7 @@ def check_agg(agg_out, baseline_h5):
             truth = f[dset]
             if dset == 'meta':
                 truth = truth.set_index('sc_gid')
-                for c in ['source_gids', 'gid_counts']:
+                for c in [MetaKeyName.SOURCE_GIDS, MetaKeyName.GID_COUNTS]:
                     test[c] = test[c].astype(str)
 
                 truth = truth.fillna('none')
@@ -74,9 +75,7 @@ def test_aggregation_serial(excl_dict, baseline_name):
                          [(None, 'baseline_agg.h5'),
                           (EXCL_DICT, 'baseline_agg_excl.h5')])
 def test_aggregation_parallel(excl_dict, baseline_name):
-    """
-    test aggregation run in parallel
-    """
+    """Test aggregation run in parallel"""
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=None,
@@ -86,9 +85,7 @@ def test_aggregation_parallel(excl_dict, baseline_name):
 
 @pytest.mark.parametrize('pre_extract_inclusions', (True, False))
 def test_pre_extract_inclusions(pre_extract_inclusions):
-    """
-    test aggregation w/ and w/out pre-extracting inclusions
-    """
+    """Test aggregation w/ and w/out pre-extracting inclusions"""
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=EXCL_DICT,
@@ -98,16 +95,14 @@ def test_pre_extract_inclusions(pre_extract_inclusions):
 
 @pytest.mark.parametrize('excl_dict', [None, EXCL_DICT])
 def test_gid_counts(excl_dict):
-    """
-    test counting of exclusion gids during aggregation
-    """
+    """Test counting of exclusion gids during aggregation"""
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=1)
 
     for i, row in agg_out['meta'].iterrows():
-        n_gids = row['n_gids']
-        gid_counts = np.sum(row['gid_counts'])
-        area = row['area_sq_km']
+        n_gids = row[MetaKeyName.N_GIDS]
+        gid_counts = np.sum(row[MetaKeyName.GID_COUNTS])
+        area = row[MetaKeyName.AREA_SQ_KM]
 
         msg = ('For sc_gid {}: the sum of gid_counts ({}), does not match '
                'n_gids ({})'.format(i, n_gids, gid_counts))
@@ -116,9 +111,8 @@ def test_gid_counts(excl_dict):
 
 
 def compute_mean_wind_dirs(res_path, dset, gids, fracs):
-    """
-    Compute mean wind directions for given dset and gids
-    """
+    """Compute mean wind directions for given dset and gids"""
+
     with Resource(res_path) as f:
         wind_dirs = np.radians(f[dset, :, gids])
 
@@ -148,8 +142,8 @@ def test_mean_wind_dirs(excl_dict):
     for i, row in out_meta.iterrows():
         test = mean_wind_dirs[:, i]
 
-        gids = row['source_gids']
-        fracs = row['gid_counts'] / row['n_gids']
+        gids = row[MetaKeyName.SOURCE_GIDS]
+        fracs = row[MetaKeyName.GID_COUNTS] / row[MetaKeyName.N_GIDS]
 
         truth = compute_mean_wind_dirs(RES, DSET, gids, fracs)
 

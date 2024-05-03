@@ -3,14 +3,15 @@
 reV module for calculating economies of scale where larger power plants will
 have reduced capital cost.
 """
-import logging
 import copy
+import logging
 import re
-import numpy as np  # pylint: disable=unused-import
+
 import pandas as pd
+from rex.utilities.utilities import check_eval_str
 
 from reV.econ.utilities import lcoe_fcr
-from rex.utilities.utilities import check_eval_str
+from reV.utilities import MetaKeyName
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +67,7 @@ class EconomiesOfScale:
             logger.error(e)
             raise TypeError(e)
 
-        missing = []
-        for name in self.vars:
-            if name not in self._data:
-                missing.append(name)
+        missing = [name for name in self.vars if name not in self._data]
 
         if any(missing):
             e = ('Cannot evaluate EconomiesOfScale, missing data for variables'
@@ -110,10 +108,9 @@ class EconomiesOfScale:
             regex_pattern = '|'.join(map(re.escape, delimiters))
             var_names = []
             for sub in re.split(regex_pattern, str(self._eqn)):
-                if sub:
-                    if not self.is_num(sub) and not self.is_method(sub):
-                        var_names.append(sub)
-            var_names = sorted(list(set(var_names)))
+                if sub and not self.is_num(sub) and not self.is_method(sub):
+                    var_names.append(sub)
+            var_names = sorted(set(var_names))
 
         return var_names
 
@@ -231,7 +228,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = ['fixed_charge_rate', 'mean_fixed_charge_rate',
+        key_list = ['fixed_charge_rate',
+                    'mean_fixed_charge_rate',
                     'fcr', 'mean_fcr']
         return self._get_prioritized_keys(self._data, key_list)
 
@@ -244,7 +242,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = ['fixed_operating_cost', 'mean_fixed_operating_cost',
+        key_list = ['fixed_operating_cost',
+                    'mean_fixed_operating_cost',
                     'foc', 'mean_foc']
         return self._get_prioritized_keys(self._data, key_list)
 
@@ -257,7 +256,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = ['variable_operating_cost', 'mean_variable_operating_cost',
+        key_list = ['variable_operating_cost',
+                    'mean_variable_operating_cost',
                     'voc', 'mean_voc']
         return self._get_prioritized_keys(self._data, key_list)
 
@@ -284,7 +284,7 @@ class EconomiesOfScale:
         -------
         lcoe : float | np.ndarray
         """
-        key_list = ['raw_lcoe', 'mean_lcoe']
+        key_list = [MetaKeyName.RAW_LCOE, MetaKeyName.MEAN_LCOE]
         return copy.deepcopy(self._get_prioritized_keys(self._data, key_list))
 
     @property

@@ -10,42 +10,46 @@ import pprint
 
 import numpy as np
 import pandas as pd
-
-from reV.generation.base import BaseGen
-from reV.SAM.generation import (Geothermal,
-                                MhkWave,
-                                LinearDirectSteam,
-                                PvSamv1,
-                                PvWattsv5,
-                                PvWattsv7,
-                                PvWattsv8,
-                                SolarWaterHeat,
-                                TcsMoltenSalt,
-                                TroughPhysicalHeat,
-                                WindPower)
-from reV.utilities import ModuleName
-from reV.utilities.exceptions import (ConfigError,
-                                      InputError,
-                                      ProjectPointsValueError)
 from rex.multi_file_resource import MultiFileResource
 from rex.multi_res_resource import MultiResolutionResource
 from rex.resource import Resource
 from rex.utilities.utilities import check_res_file
+
+from reV.generation.base import BaseGen
+from reV.SAM.generation import (
+    Geothermal,
+    LinearDirectSteam,
+    MhkWave,
+    PvSamv1,
+    PvWattsv5,
+    PvWattsv7,
+    PvWattsv8,
+    SolarWaterHeat,
+    TcsMoltenSalt,
+    TroughPhysicalHeat,
+    WindPower,
+)
+from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities.exceptions import (
+    ConfigError,
+    InputError,
+    ProjectPointsValueError,
+)
 
 logger = logging.getLogger(__name__)
 
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
 ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
-with open(os.path.join(ATTR_DIR, 'other.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'other.json')) as f:
     OTHER_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'generation.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'generation.json')) as f:
     GEN_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'linear_fresnel.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'linear_fresnel.json')) as f:
     LIN_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'solar_water_heat.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'solar_water_heat.json')) as f:
     SWH_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'trough_heat.json')) as f:
     TPPH_ATTRS = json.load(f)
 
 
@@ -77,12 +81,13 @@ class Gen(BaseGen):
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
     def __init__(self, technology, project_points, sam_files, resource_file,
-                 low_res_resource_file=None, output_request=('cf_mean',),
+                 low_res_resource_file=None,
+                 output_request=(MetaKeyName.CF_MEAN,),
                  site_data=None, curtailment=None, gid_map=None,
                  drop_leap=False, sites_per_worker=None,
                  memory_utilization_limit=0.4, scale_outputs=True,
                  write_mapped_gids=False, bias_correct=None):
-        """reV generation analysis class.
+        """ReV generation analysis class.
 
         ``reV`` generation analysis runs SAM simulations by piping in
         renewable energy resource data (usually from the NSRDB or WTK),
@@ -118,17 +123,17 @@ class Gen(BaseGen):
         >>> gen.run()
         >>>
         >>> gen.out
-        {'cf_mean': array([0.16966143], dtype=float32)}
+        {MetaKeyName.CF_MEAN: array([0.16966143], dtype=float32)}
         >>>
         >>> sites = [3, 4, 7, 9]
-        >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
+        >>> req = (MetaKeyName.CF_MEAN, , MetaKeyName.LCOE_FCR)
         >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
         >>> gen.run()
         >>>
         >>> gen.out
         {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-        'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-        'cf_profile': array([[0., 0., 0., 0.],
+         'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
+        : array([[0., 0., 0., 0.],
                 [0., 0., 0., 0.],
                 [0., 0., 0., 0.],
                 ...,
@@ -278,7 +283,7 @@ class Gen(BaseGen):
               aggregation/supply curve step if the ``"dc_ac_ratio"``
               dataset is detected in the generation file.
 
-            By default, ``('cf_mean',)``.
+            By default, ``(MetaKeyName.CF_MEAN,)``.
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input
             is a string, it should be a path that points to a CSV file.
@@ -451,11 +456,11 @@ class Gen(BaseGen):
 
                 self._meta = res['meta', res_gids]
 
-            self._meta.loc[:, 'gid'] = res_gids
+            self._meta.loc[:, MetaKeyName.GID] = res_gids
             if self.write_mapped_gids:
-                self._meta.loc[:, 'gid'] = self.project_points.sites
+                self._meta.loc[:, MetaKeyName.GID] = self.project_points.sites
             self._meta.index = self.project_points.sites
-            self._meta.index.name = 'gid'
+            self._meta.index.name = MetaKeyName.GID
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
@@ -542,7 +547,8 @@ class Gen(BaseGen):
             var for var, attrs in GEN_ATTRS.items()
             if attrs['type'] == 'array'
         ]
-        valid_vars = ['gen_profile', 'cf_profile', 'cf_profile_ac']
+        valid_vars = [MetaKeyName.GEN_PROFILE, MetaKeyName.CF_PROFILE,
+                      'cf_profile_ac']
         invalid_vars = set(array_vars) - set(valid_vars)
         invalid_requests = [var for var in self.output_request
                             if var in invalid_vars]
@@ -637,7 +643,7 @@ class Gen(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = points_control.project_points.df
-        site_df = site_df.set_index('gid', drop=True)
+        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
 
         # run generation method for specified technology
         try:
@@ -703,13 +709,14 @@ class Gen(BaseGen):
         if isinstance(gid_map, str):
             if gid_map.endswith('.csv'):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                msg = f'Need "{MetaKeyName.GID}" in gid_map column'
+                assert MetaKeyName.GID in gid_map, msg
                 assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
-                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
-                           for i in gid_map['gid'].keys()}
+                gid_map = {gid_map[MetaKeyName.GID][i]: gid_map['gid_map'][i]
+                           for i in gid_map[MetaKeyName.GID].keys()}
 
             elif gid_map.endswith('.json'):
-                with open(gid_map, 'r') as f:
+                with open(gid_map) as f:
                     gid_map = json.load(f)
 
         if isinstance(gid_map, dict):
@@ -763,14 +770,14 @@ class Gen(BaseGen):
             if '*' in self.res_file or '*' in self.lr_res_file:
                 handler_class = MultiFileResource
 
-            with handler_class(self.res_file) as hr_res:
-                with handler_class(self.lr_res_file) as lr_res:
-                    logger.info('Making nearest neighbor map for multi '
-                                'resolution resource data...')
-                    nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
-                                                                       lr_res)
-                    logger.info('Done making nearest neighbor map for multi '
-                                'resolution resource data!')
+            with (handler_class(self.res_file) as hr_res,
+                    handler_class(self.lr_res_file) as lr_res):
+                logger.info('Making nearest neighbor map for multi '
+                            'resolution resource data...')
+                nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
+                                                                   lr_res)
+                logger.info('Done making nearest neighbor map for multi '
+                            'resolution resource data!')
 
             logger.info('Made nearest neighbor mapping between nominal-'
                         'resolution and low-resolution resource files. '
@@ -838,10 +845,11 @@ class Gen(BaseGen):
 
         msg = ('Bias correction table must have "gid" column but only found: '
                '{}'.format(list(bias_correct.columns)))
-        assert 'gid' in bias_correct or bias_correct.index.name == 'gid', msg
+        assert (MetaKeyName.GID in bias_correct or bias_correct.index.name ==
+                MetaKeyName.GID), msg
 
-        if bias_correct.index.name != 'gid':
-            bias_correct = bias_correct.set_index('gid')
+        if bias_correct.index.name != MetaKeyName.GID:
+            bias_correct = bias_correct.set_index(MetaKeyName.GID)
 
         msg = ('Bias correction table must have "method" column but only '
                'found: {}'.format(list(bias_correct.columns)))
@@ -866,8 +874,8 @@ class Gen(BaseGen):
         output_request = self._output_request_type_check(req)
 
         # ensure that cf_mean is requested from output
-        if 'cf_mean' not in output_request:
-            output_request.append('cf_mean')
+        if MetaKeyName.CF_MEAN not in output_request:
+            output_request.append(MetaKeyName.CF_MEAN)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:

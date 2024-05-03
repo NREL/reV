@@ -35,7 +35,7 @@ from reV.supply_curve.aggregation import AggFileHandler, BaseAggregation
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.utilities import ModuleName, log_versions
+from reV.utilities import MetaKeyName, ModuleName, log_versions
 from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -197,7 +197,8 @@ class BespokeSinglePlant:
                  fixed_operating_cost_function,
                  variable_operating_cost_function,
                  min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
-                 output_request=('system_capacity', 'cf_mean'),
+                 output_request=('system_capacity',
+                                 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
@@ -469,8 +470,9 @@ class BespokeSinglePlant:
                 dset = req.replace('_mean', '')
                 self._outputs[req] = self.res_df[dset].mean()
 
-        if ('lcoe_fcr' in self._out_req
-                and 'fixed_charge_rate' not in self.original_sam_sys_inputs):
+        if ('lcoe_fcr' in self._out_req and
+                ('fixed_charge_rate' not in
+                 self.original_sam_sys_inputs)):
             msg = ('User requested "lcoe_fcr" but did not input '
                    '"fixed_charge_rate" in the SAM system config.')
             logger.error(msg)
@@ -481,9 +483,10 @@ class BespokeSinglePlant:
         sure the SAM system inputs are set accordingly."""
 
         # {meta_column: sam_sys_input_key}
-        required = {'capacity': 'system_capacity',
-                    'turbine_x_coords': 'wind_farm_xCoordinates',
-                    'turbine_y_coords': 'wind_farm_yCoordinates'}
+        required = {
+            MetaKeyName.CAPACITY: 'system_capacity'
+            MetaKeyName.TURBINE_X_COORDS: 'wind_farrm_xCoordinates',
+            MetaKeyName.TURBINE_Y_COORDS: 'wind_farrm_yCoordinates'}
 
         if self._prior_meta:
             missing = [k for k in required if k not in self.meta]
@@ -496,7 +499,7 @@ class BespokeSinglePlant:
                 self._sam_sys_inputs[sam_sys_key] = prior_value
 
             # convert reV supply curve cap in MW to SAM capacity in kW
-            self._sam_sys_inputs['system_capacity'] *= 1e3
+            self._sam_sys_inputs['system_capacity'
 
     @staticmethod
     def _parse_gid_map(gid_map):
@@ -523,10 +526,10 @@ class BespokeSinglePlant:
         if isinstance(gid_map, str):
             if gid_map.endswith('.csv'):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                assert MetaKeyName.GID in gid_map, 'Need "gid" in gid_map column'
                 assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
-                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
-                           for i in gid_map['gid'].keys()}
+                gid_map = {gid_map[MetaKeyName.GID][i]: gid_map['gid_map'][i]
+                           for i in gid_map[MetaKeyName.GID].keys()}
 
             elif gid_map.endswith('.json'):
                 with open(gid_map) as f:
@@ -743,22 +746,22 @@ class BespokeSinglePlant:
                 row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
 
             self._meta = pd.DataFrame(
-                {'sc_point_gid': self.sc_point.gid,
-                 'sc_row_ind': row_ind,
-                 'sc_col_ind': col_ind,
-                 'gid': self.sc_point.gid,
-                 'latitude': self.sc_point.latitude,
-                 'longitude': self.sc_point.longitude,
-                 'timezone': self.sc_point.timezone,
-                 'country': self.sc_point.country,
-                 'state': self.sc_point.state,
-                 'county': self.sc_point.county,
-                 'elevation': self.sc_point.elevation,
-                 'offshore': self.sc_point.offshore,
-                 'res_gids': res_gids,
-                 'gid_counts': gid_counts,
-                 'n_gids': self.sc_point.n_gids,
-                 'area_sq_km': self.sc_point.area,
+                {MetaKeyName.SC_POINT_GID: self.sc_point.gid,
+                 MetaKeyName.SC_ROW_IND: row_ind,
+                 MetaKeyName.SC_COL_IND: col_ind,
+                 MetaKeyName.GID: self.sc_point.gid,
+                 MetaKeyName.LATITUDE: self.sc_point.latitude,
+                 MetaKeyName.LONGITUDE: self.sc_point.longitude,
+                 MetaKeyName.TIMEZONE: self.sc_point.timezone,
+                 MetaKeyName.COUNTRY: self.sc_point.country,
+                 MetaKeyName.STATE: self.sc_point.state,
+                 MetaKeyName.COUNTY: self.sc_point.county,
+                 MetaKeyName.ELEVATION: self.sc_point.elevation,
+                 MetaKeyName.OFFSHORE: self.sc_point.offshore,
+                 MetaKeyName.RES_GIDS: res_gids,
+                 MetaKeyName.GID_COUNTS: gid_counts,
+                 MetaKeyName.N_GIDS: self.sc_point.n_gids,
+                 MetaKeyName.AREA_SQ_KM: self.sc_point.area,
                  }, index=[self.sc_point.gid])
 
         return self._meta
@@ -960,7 +963,7 @@ class BespokeSinglePlant:
             my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
             self._outputs['lcoe_fcr-means'] = my_mean_lcoe
-            self._meta['mean_lcoe'] = my_mean_lcoe
+            self._meta[MetaKeyName.MEAN_LCOE] = my_mean_lcoe
 
     def get_lcoe_kwargs(self):
         """Get a namespace of arguments for calculating LCOE based on the
@@ -1065,7 +1068,8 @@ class BespokeSinglePlant:
         """
         bad = []
         for k, v in plant1.sam_sys_inputs.items():
-            if k not in plant2.sam_sys_inputs or str(v) != str(plant2.sam_sys_inputs[k]):
+            if (k not in plant2.sam_sys_inputs or
+                    str(v) != str(plant2.sam_sys_inputs[k])):
                 bad.append(k)
         bad = [b for b in bad if b not in ignore]
         if any(bad):
@@ -1114,9 +1118,9 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if 'cf_mean-means' in self.outputs:
-            self._meta.loc[:, 'mean_cf'] = self.outputs['cf_mean-means']
+            self._meta.loc[:, MetaKeyName.MEAN_CF] = self.outputs['cf_mean-means']
         if 'lcoe_fcr-means' in self.outputs:
-            self._meta.loc[:, 'mean_lcoe'] = self.outputs['lcoe_fcr-means']
+            self._meta.loc[:, MetaKeyName.MEAN_LCOE] = self.outputs['lcoe_fcr-means']
             self.recalc_lcoe()
 
         logger.debug('Timeseries analysis complete!')
@@ -1192,7 +1196,7 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta['capacity'] = self.outputs['system_capacity'] / 1e3
+        self._meta[MetaKeyName.CAPACITY] = self.outputs['system_capacity'] / 1e3
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
@@ -1752,7 +1756,7 @@ class BespokeWindPlants(BaseAggregation):
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
-            'gid' and 'config' column, the config maps to the sam_configs dict
+            MetaKeyName.GID and 'config' column, the config maps to the sam_configs dict
             keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
@@ -1827,7 +1831,7 @@ class BespokeWindPlants(BaseAggregation):
         meta = None
 
         if self._prior_meta is not None:
-            mask = self._prior_meta['gid'] == gid
+            mask = self._prior_meta[MetaKeyName.GID] == gid
             if any(mask):
                 meta = self._prior_meta[mask]
 
@@ -2156,7 +2160,8 @@ class BespokeWindPlants(BaseAggregation):
                    fixed_operating_cost_function,
                    variable_operating_cost_function,
                    min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
-                   output_request=('system_capacity', 'cf_mean'),
+                   output_request=('system_capacity',
+                                   'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
                    area_filter_kernel='queen', min_area=None,

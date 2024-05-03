@@ -3,19 +3,22 @@
 QA/QC tests
 """
 import os
+
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
 from reV.qa_qc.summary import SummarizeH5, SummarizeSupplyCurve
+from reV.utilities import MetaKeyName
 
 H5_FILE = os.path.join(TESTDATADIR, 'gen_out', 'ri_wind_gen_profiles_2010.h5')
 SC_TABLE = os.path.join(TESTDATADIR, 'sc_out', 'sc_full_out_1.csv')
 SUMMARY_DIR = os.path.join(TESTDATADIR, 'qa_qc')
 
 
-@pytest.mark.parametrize('dataset', ['cf_mean', 'cf_profile', None])
+@pytest.mark.parametrize('dataset',
+                         [MetaKeyName.CF_MEAN, MetaKeyName.CF_PROFILE, None])
 def test_summarize(dataset):
     """Run QA/QC Summarize and compare with baseline"""
 
@@ -26,7 +29,7 @@ def test_summarize(dataset):
                                 'ri_wind_gen_profiles_2010_summary.csv')
         baseline = pd.read_csv(baseline)
         test = summary.summarize_means()
-    elif dataset == 'cf_mean':
+    elif dataset == MetaKeyName.CF_MEAN:
         baseline = os.path.join(SUMMARY_DIR, 'cf_mean_summary.csv')
         baseline = pd.read_csv(baseline, index_col=0)
         test = summary.summarize_dset(

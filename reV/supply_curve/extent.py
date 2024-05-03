@@ -3,13 +3,14 @@
 reV supply curve extent
 """
 import logging
+
 import numpy as np
 import pandas as pd
+from rex.utilities.utilities import get_chunk_ranges
 
 from reV.handlers.exclusions import ExclusionLayers
+from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
-
-from rex.utilities.utilities import get_chunk_ranges
 
 logger = logging.getLogger(__name__)
 
@@ -287,8 +288,8 @@ class SupplyCurveExtent:
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
                 r = self.excl_row_slices[r]
                 c = self.excl_col_slices[c]
-                lats.append(self.exclusions['latitude', r, c].mean())
-                lons.append(self.exclusions['longitude', r, c].mean())
+                lats.append(self.exclusions[MetaKeyName.LATITUDE, r, c].mean())
+                lons.append(self.exclusions[MetaKeyName.LONGITUDE, r, c].mean())
 
             self._latitude = np.array(lats, dtype='float32')
             self._longitude = np.array(lons, dtype='float32')
@@ -313,8 +314,8 @@ class SupplyCurveExtent:
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
                 r = self.excl_row_slices[r]
                 c = self.excl_col_slices[c]
-                lats.append(self.exclusions['latitude', r, c].mean())
-                lons.append(self.exclusions['longitude', r, c].mean())
+                lats.append(self.exclusions[MetaKeyName.LATITUDE, r, c].mean())
+                lons.append(self.exclusions[MetaKeyName.LONGITUDE, r, c].mean())
 
             self._latitude = np.array(lats, dtype='float32')
             self._longitude = np.array(lons, dtype='float32')
@@ -370,7 +371,7 @@ class SupplyCurveExtent:
             self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
                                          'col_ind': self.col_indices.copy()})
 
-            self._points.index.name = 'gid'  # sc_point_gid
+            self._points.index.name = MetaKeyName.GID  # sc_point_gid
 
         return self._points
 

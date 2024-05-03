@@ -3,12 +3,14 @@
 Supply Curve computation integrated tests
 """
 import os
+
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import CompetitiveWindFarms, SupplyCurve
+from reV.utilities import MetaKeyName
 
 TRANS_COSTS = {'line_tie_in_cost': 200, 'line_cost': 1000,
                'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
@@ -28,7 +30,8 @@ def test_competitive_wind_dirs(downwind):
     """Run CompetitiveWindFarms and verify results against baseline file."""
 
     sc_points = CompetitiveWindFarms.run(WIND_DIRS, SC_POINTS,
-                                         n_dirs=2, sort_on='mean_lcoe',
+                                         n_dirs=2,
+                                         sort_on=MetaKeyName.MEAN_LCOE,
                                          downwind=downwind)
 
     if downwind:
@@ -105,11 +108,11 @@ def test_upwind_exclusion():
                           'sc_full_upwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
-    sc_point_gids = sc_out['sc_point_gid'].values.tolist()
+    sc_point_gids = sc_out[MetaKeyName.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
-        sc_gid = row['sc_gid']
-        sc_point_gids.remove(row['sc_point_gid'])
-        sc_point_gid = cwf['sc_point_gid', sc_gid]
+        sc_gid = row[MetaKeyName.SC_GID]
+        sc_point_gids.remove(row[MetaKeyName.SC_POINT_GID])
+        sc_point_gid = cwf[MetaKeyName.SC_POINT_GID, sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)
             assert gid not in sc_point_gids, msg
@@ -125,11 +128,11 @@ def test_upwind_downwind_exclusion():
                           'sc_full_downwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
-    sc_point_gids = sc_out['sc_point_gid'].values.tolist()
+    sc_point_gids = sc_out[MetaKeyName.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
-        sc_gid = row['sc_gid']
-        sc_point_gids.remove(row['sc_point_gid'])
-        sc_point_gid = cwf['sc_point_gid', sc_gid]
+        sc_gid = row[MetaKeyName.SC_GID]
+        sc_point_gids.remove(row[MetaKeyName.SC_POINT_GID])
+        sc_point_gid = cwf[MetaKeyName.SC_POINT_GID, sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)
             assert gid not in sc_point_gids, msg

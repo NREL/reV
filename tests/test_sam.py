@@ -3,23 +3,26 @@
 """reV SAM unit test module
 """
 import os
-from pkg_resources import get_distribution
-from packaging import version
-import pytest
-import numpy as np
 import warnings
 
-from reV.SAM.defaults import (DefaultPvWattsv5, DefaultPvWattsv8,
-                              DefaultWindPower)
-from reV.SAM.generation import PvWattsv5, PvWattsv7, PvWattsv8
-from reV import TESTDATADIR
-from reV.config.project_points import ProjectPoints
-from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities.exceptions import PySAMVersionWarning
-from reV.utilities.exceptions import InputError
-
+import numpy as np
+import pytest
+from packaging import version
+from pkg_resources import get_distribution
 from rex.renewable_resource import NSRDB
 from rex.utilities.utilities import pd_date_range
+
+from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.SAM.defaults import (
+    DefaultPvWattsv5,
+    DefaultPvWattsv8,
+    DefaultWindPower,
+)
+from reV.SAM.generation import PvWattsv5, PvWattsv7, PvWattsv8
+from reV.SAM.version_checker import PySamVersionChecker
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import InputError, PySAMVersionWarning
 
 
 @pytest.fixture
@@ -94,18 +97,18 @@ def test_PV_lat_tilt(res, site_index):
             # get SAM inputs from project_points based on the current site
             site = res_df.name
             config, inputs = pp[site]
-            inputs['tilt'] = 'latitude'
+            inputs['tilt'] = MetaKeyName.LATITUDE
             # iterate through requested sites.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 sim = PvWattsv5(resource=res_df, meta=meta,
                                 sam_sys_inputs=inputs,
-                                output_request=('cf_mean',))
+                                output_request=(MetaKeyName.CF_MEAN,))
             break
         else:
             pass
 
-    assert sim.sam_sys_inputs['tilt'] == meta['latitude']
+    assert sim.sam_sys_inputs['tilt'] == meta[MetaKeyName.LATITUDE]
 
 
 @pytest.mark.parametrize('dt', ('1h', '30min', '5min'))
