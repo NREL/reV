@@ -676,72 +676,6 @@ def test_bespoke_supply_curve():
     assert np.allclose(sc_baseline['total_lcoe'], sc_full['total_lcoe'])
 
 
-@pytest.mark.parametrize('wlm', [2, 100])
-def test_wake_loss_multiplier(wlm):
-    """Test wake loss multiplier. """
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
-    with tempfile.TemporaryDirectory() as td:
-        res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
-        excl_fp = os.path.join(td, 'ri_exclusions.h5')
-        shutil.copy(EXCL, excl_fp)
-        shutil.copy(RES.format(2012), res_fp.format(2012))
-        shutil.copy(RES.format(2013), res_fp.format(2013))
-        res_fp = res_fp.format('*')
-
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
-                                 OBJECTIVE_FUNCTION,
-                                 CAP_COST_FUN,
-                                 FOC_FUN,
-                                 VOC_FUN,
-                                 excl_dict=EXCL_DICT,
-                                 output_request=output_request,
-                                 )
-
-        optimizer = bsp.plant_optimizer
-        optimizer.define_exclusions()
-        optimizer.initialize_packing()
-
-        optimizer.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
-        optimizer.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
-
-        system_capacity = (len(optimizer.x_locations)
-                           * optimizer.turbine_capacity)
-        optimizer.wind_plant["system_capacity"] = system_capacity
-
-        optimizer.wind_plant.assign_inputs()
-        optimizer.wind_plant.execute()
-        aep = optimizer._aep_after_scaled_wake_losses()
-        bsp.close()
-
-        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
-                                 OBJECTIVE_FUNCTION,
-                                 CAP_COST_FUN,
-                                 FOC_FUN,
-                                 VOC_FUN,
-                                 excl_dict=EXCL_DICT,
-                                 output_request=output_request,
-                                 wake_loss_multiplier=wlm)
-
-        optimizer2 = bsp.plant_optimizer
-        optimizer2.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
-        optimizer2.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
-
-        system_capacity = (len(optimizer.x_locations)
-                           * optimizer.turbine_capacity)
-        optimizer2.wind_plant["system_capacity"] = system_capacity
-
-        optimizer2.wind_plant.assign_inputs()
-        optimizer2.wind_plant.execute()
-        aep_wlm = optimizer2._aep_after_scaled_wake_losses()
-        bsp.close()
-
-    assert aep > aep_wlm
-    assert aep_wlm >= 0
-
-
 def test_bespoke_wind_plant_with_power_curve_losses():
     """Test bespoke ``wind_plant`` with power curve losses. """
     output_request = ('system_capacity', 'cf_mean', 'cf_profile')
@@ -772,7 +706,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer.wind_plant.assign_inputs()
         optimizer.wind_plant.execute()
-        aep = optimizer._aep_after_scaled_wake_losses()
+        aep = optimizer.wind_plant["annual_energy"]
         bsp.close()
 
         sam_inputs = copy.deepcopy(SAM_SYS_INPUTS)
@@ -797,7 +731,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer2.wind_plant.assign_inputs()
         optimizer2.wind_plant.execute()
-        aep_losses = optimizer2._aep_after_scaled_wake_losses()
+        aep_losses = optimizer2.wind_plant["annual_energy"]
         bsp.close()
 
     assert aep > aep_losses, f"{aep}, {aep_losses}"
@@ -1223,7 +1157,6 @@ def test_cli(runner, clear_loggers):
             "project_points": [33, 35],
             "sam_files": SAM_CONFIGS,
             "min_spacing": '5x',
-            "wake_loss_multiplier": 1,
             "ga_kwargs": {'max_time': 5},
             "output_request": output_request,
             "ws_bins": (0, 20, 5),
