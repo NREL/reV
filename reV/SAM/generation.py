@@ -528,8 +528,8 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
     """Base class for running sam generation with a weather file on disk."""
 
     WF_META_DROP_COLS = {MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE,
-                         MetaKeyName.COUNTRY, MetaKeyName.STATE,
-                         MetaKeyName.COUNTY, 'urban', 'population',
+                         'country', 'state',
+                         'county', 'urban', 'population',
                          'landcover', MetaKeyName.LATITUDE,
                          MetaKeyName.LONGITUDE}
 
@@ -605,9 +605,9 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         m['Source'] = 'NSRDB'
         m['Location ID'] = meta.name
         m['City'] = '-'
-        m['State'] = m[MetaKeyName.STATE].apply(
+        m['State'] = m['state'].apply(
             lambda x: '-' if x == 'None' else x)
-        m['Country'] = m[MetaKeyName.COUNTRY].apply(
+        m['Country'] = m['country'].apply(
             lambda x: '-' if x == 'None' else x)
         m['Latitude'] = m[MetaKeyName.LATITUDE]
         m['Longitude'] = m[MetaKeyName.LONGITUDE]

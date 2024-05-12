@@ -28,10 +28,6 @@ class MetaKeyName(str, Enum):
     AREA_SQ_KM = 'area_sq_km'
     LATITUDE = 'latitude'
     LONGITUDE = 'longitude'
-    COUNTRY = 'country'
-    STATE = 'state'
-    COUNTY = 'county'
-    COUNTRY = 'country',
     ELEVATION = 'elevation'
     TIMEZONE = 'timezone'
     MEAN_CF = 'mean_cf'

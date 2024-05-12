@@ -16,6 +16,7 @@ from rex.utilities.utilities import to_records_array
 
 from reV.handlers.outputs import Outputs
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
+from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import (
     FileInputError,
     InputError,
@@ -30,8 +31,10 @@ PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
 SOLAR_PREFIX = 'solar_'
 WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
-    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE, MetaKeyName.COUNTRY, 'state', 'county', 'elevation',
-    MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID, MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
+    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE,
+    'country', 'state', 'county', MetaKeyName.ELEVATION,
+    MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
+    MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
 }
 DROPPED_COLUMNS = [MetaKeyName.GID]
 DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
@@ -235,7 +238,7 @@ class HybridsData:
                     e = msg.format(PROFILE_DSET_REGEX, fp)
                     logger.error(e)
                     raise FileInputError(e)
-                elif len(profile_dset_names) > 1:
+                if len(profile_dset_names) > 1:
                     msg = ("Found more than one profile in {!r}: {}. "
                            "This module is not intended for hybridization of "
                            "multiple representative profiles. Please re-run "
@@ -243,8 +246,7 @@ class HybridsData:
                     e = msg.format(fp, profile_dset_names)
                     logger.error(e)
                     raise FileInputError(e)
-                else:
-                    self.profile_dset_names += profile_dset_names
+                self.profile_dset_names += profile_dset_names
 
     def _validate_merge_col_exists(self):
         """Validate the existence of the merge column.
@@ -403,8 +405,7 @@ class MetaHybridizer:
         """
         if self._hybrid_meta is None or self.__hybrid_meta_cols is None:
             return self._hybrid_meta
-        else:
-            return self._hybrid_meta[self.__hybrid_meta_cols]
+        return self._hybrid_meta[self.__hybrid_meta_cols]
 
     def validate_input(self):
         """Validate the input parameters.
@@ -647,9 +648,9 @@ class MetaHybridizer:
         """Determine the type of merge to use for meta based on user input."""
         if self._allow_solar_only and self._allow_wind_only:
             return 'outer'
-        elif self._allow_solar_only and not self._allow_wind_only:
+        if self._allow_solar_only and not self._allow_wind_only:
             return 'left'
-        elif not self._allow_solar_only and self._allow_wind_only:
+        if not self._allow_solar_only and self._allow_wind_only:
             return 'right'
         return 'inner'
 
@@ -721,8 +722,7 @@ class MetaHybridizer:
                 & (self._hybrid_meta[c2].notnull())
             ]
             return np.allclose(compare_df[c1], compare_df[c2])
-        else:
-            return True
+        return True
 
     def _fillna_meta_cols(self):
         """Fill N/A values as specified by user (and internals)."""

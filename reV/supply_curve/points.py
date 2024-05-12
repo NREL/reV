@@ -1047,18 +1047,18 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def country(self):
         """Get the SC point country based on the resource meta data."""
         country = None
-        if MetaKeyName.COUNTRY in self.h5.meta and self.county is not None:
+        if 'country' in self.h5.meta and self.county is not None:
             # make sure country and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
-                                        MetaKeyName.COUNTY].values
+                                        'county'].values
             iloc = np.where(counties == self.county)[0][0]
             country = self.h5.meta.loc[self.h5_gid_set,
-                                       MetaKeyName.COUNTRY].values
+                                       'country'].values
             country = country[iloc]
 
-        elif MetaKeyName.COUNTRY in self.h5.meta:
+        elif 'country' in self.h5.meta:
             country = self.h5.meta.loc[self.h5_gid_set,
-                                       MetaKeyName.COUNTRY].mode()
+                                       'country'].mode()
             country = country.values[0]
 
         return country
@@ -1067,16 +1067,16 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def state(self):
         """Get the SC point state based on the resource meta data."""
         state = None
-        if MetaKeyName.STATE in self.h5.meta and self.county is not None:
+        if 'state' in self.h5.meta and self.county is not None:
             # make sure state and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
-                                        MetaKeyName.COUNTY].values
+                                        'county'].values
             iloc = np.where(counties == self.county)[0][0]
-            state = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.STATE].values
+            state = self.h5.meta.loc[self.h5_gid_set, 'state'].values
             state = state[iloc]
 
-        elif MetaKeyName.STATE in self.h5.meta:
-            state = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.STATE].mode()
+        elif 'state' in self.h5.meta:
+            state = self.h5.meta.loc[self.h5_gid_set, 'state'].mode()
             state = state.values[0]
 
         return state
@@ -1085,9 +1085,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def county(self):
         """Get the SC point county based on the resource meta data."""
         county = None
-        if MetaKeyName.COUNTY in self.h5.meta:
+        if 'county' in self.h5.meta:
             county = self.h5.meta.loc[self.h5_gid_set,
-                                      MetaKeyName.COUNTY].mode()
+                                      'county'].mode()
             county = county.values[0]
 
         return county
@@ -1109,7 +1109,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if MetaKeyName.TIMEZONE in self.h5.meta and self.county is not None:
             # make sure timezone flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
-                                        MetaKeyName.COUNTY].values
+                                        'county'].values
             iloc = np.where(counties == self.county)[0][0]
             timezone = self.h5.meta.loc[self.h5_gid_set,
                                         MetaKeyName.TIMEZONE].values
@@ -1130,7 +1130,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         if MetaKeyName.OFFSHORE in self.h5.meta and self.county is not None:
             # make sure offshore flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
-                                        MetaKeyName.COUNTY].values
+                                        'county'].values
             iloc = np.where(counties == self.county)[0][0]
             offshore = self.h5.meta.loc[self.h5_gid_set,
                                         MetaKeyName.OFFSHORE].values
@@ -1176,9 +1176,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                 MetaKeyName.AREA_SQ_KM: self.area,
                 MetaKeyName.LATITUDE: self.latitude,
                 MetaKeyName.LONGITUDE: self.longitude,
-                MetaKeyName.COUNTRY: self.country,
-                MetaKeyName.STATE: self.state,
-                MetaKeyName.COUNTY: self.county,
+                'country': self.country,
+                'state': self.state,
+                'county': self.county,
                 MetaKeyName.ELEVATION: self.elevation,
                 MetaKeyName.TIMEZONE: self.timezone,
                 }
@@ -2023,9 +2023,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             MetaKeyName.LATITUDE: self.latitude,
             MetaKeyName.LONGITUDE: self.longitude,
             MetaKeyName.TIMEZONE: self.timezone,
-            MetaKeyName.COUNTRY: self.country,
-            MetaKeyName.STATE: self.state,
-            MetaKeyName.COUNTY: self.county,
+            'country': self.country,
+            'state': self.state,
+            'county': self.county,
             MetaKeyName.ELEVATION: self.elevation,
             MetaKeyName.RES_GIDS: self.res_gid_set,
             MetaKeyName.GEN_GIDS: self.gen_gid_set,
