@@ -3,9 +3,62 @@
 reV utilities.
 """
 from enum import Enum
+
 import PySAM
 from rex.utilities.loggers import log_versions as rex_log_versions
+
 from reV.version import __version__
+
+
+class MetaKeyName(str, Enum):
+    """An enumerated map to summary/meta keys.
+
+    Each output name should match the name of a key in
+    meth:`AggregationSupplyCurvePoint.summary` or
+    meth:`GenerationSupplyCurvePoint.point_summary` or
+    meth:`BespokeSinglePlant.meta`
+    """
+
+    SC_POINT_GID = 'sc_point_gid'
+    SOURCE_GIDS = 'source_gids'
+    SC_GID = 'sc_gid'
+    GID_COUNTS = 'gid_counts'
+    GID = 'gid'
+    N_GIDS = 'n_gids'
+    RES_GIDS = 'res_gids'
+    GEN_GIDS = 'gen_gids'
+    AREA_SQ_KM = 'area_sq_km'
+    LATITUDE = 'latitude'
+    LONGITUDE = 'longitude'
+    ELEVATION = 'elevation'
+    TIMEZONE = 'timezone'
+    MEAN_CF = 'mean_cf'
+    MEAN_LCOE = 'mean_lcoe'
+    MEAN_RES = 'mean_res'
+    CAPACITY = 'capacity'
+    OFFSHORE = 'offshore'
+    SC_ROW_IND = 'sc_row_ind'
+    SC_COL_IND = 'sc_col_ind'
+    CAPACITY_AC = 'capacity_ac'
+    SC_POINT_CAPITAL_COST = 'sc_point_capital_cost'
+    SC_POINT_FIXED_OPERATING_COST = 'sc_point_fixed_operating_cost'
+    SC_POINT_ANNUAL_ENERGY = 'sc_point_annual_energy'
+    SC_POINT_ANNUAL_ENERGY_AC = 'sc_point_annual_energy_ac'
+    MEAN_FRICTION = 'mean_friction'
+    MEAN_LCOE_FRICTION = 'mean_lcoe_friction'
+    TOTAL_LCOE_FRICTION = 'total_lcoe_friction'
+    RAW_LCOE = 'raw_lcoe'
+    CAPITAL_COST_SCALAR = 'capital_cost_scalar'
+    SCALED_CAPITAL_COST = 'scaled_capital_cost'
+    SCALED_SC_POINT_CAPITAL_COST = 'scaled_sc_point_capital_cost'
+    TURBINE_X_COORDS = 'turbine_x_coords'
+    TURBINE_Y_COORDS = 'turbine_y_coords'
+
+    def __str__(self):
+        return self.value
+
+    def __format__(self, format_spec):
+        return str.__format__(self.value, format_spec)
 
 
 class ModuleName(str, Enum):
