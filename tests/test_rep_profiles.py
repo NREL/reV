@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 """reVX representative profile tests.
 """
-import os
-import pytest
-import pandas as pd
-import numpy as np
 import json
+import os
 import tempfile
+
+import numpy as np
+import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
-
-from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
-                                           RepresentativeMethods)
-from reV import TESTDATADIR
-
 from rex.resource import Resource
 
+from reV import TESTDATADIR
+from reV.rep_profiles.rep_profiles import (
+    RegionRepProfile,
+    RepProfiles,
+    RepresentativeMethods,
+)
+from reV.utilities import MetaKeyName
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 
@@ -22,8 +25,8 @@ GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 def test_rep_region_interval():
     """Test the rep profile with a weird interval of gids"""
     sites = np.arange(40) * 2
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
     assert r.i_reps[0] == 14
 
@@ -31,8 +34,8 @@ def test_rep_region_interval():
 def test_rep_methods():
     """Test integrated rep methods against baseline rep profile result"""
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites})
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
                          err_method='rmse', weight=None)
@@ -58,8 +61,8 @@ def test_rep_methods():
 def test_meanoid():
     """Test the simple meanoid method"""
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles)
@@ -74,18 +77,18 @@ def test_weighted_meanoid():
     """Test a meanoid weighted by gid_counts vs. a non-weighted meanoid."""
 
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
-                                'gid_counts': [1] * 50 + [0] * 50})
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites,
+                                MetaKeyName.GID_COUNTS: [1] * 50 + [0] * 50})
     r = RegionRepProfile(GEN_FPATH, rev_summary)
-    weights = r._get_region_attr(r._rev_summary, 'gid_counts')
+    weights = r._get_region_attr(r._rev_summary, MetaKeyName.GID_COUNTS)
 
     w_meanoid = RepresentativeMethods.meanoid(r.source_profiles,
                                               weights=weights)
 
     sites = np.arange(50)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles, weights=None)
@@ -101,12 +104,12 @@ def test_integrated():
     zeros = np.zeros((100,))
     regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'weight': ones,
                                 'region': regions,
-                                'timezone': timezone})
+                                MetaKeyName.TIMEZONE: timezone})
     rp = RepProfiles(GEN_FPATH, rev_summary, 'region', weight='weight')
     rp.run(max_workers=1)
     p1, m1 = rp.profiles, rp.meta
@@ -125,12 +128,12 @@ def test_sc_points():
     """Test rep profiles for each SC point."""
     sites = np.arange(10)
     timezone = np.random.choice([-4, -5, -6, -7], 10)
-    rev_summary = pd.DataFrame({'sc_gid': sites,
-                                'gen_gids': sites,
-                                'res_gids': sites,
-                                'timezone': timezone})
+    rev_summary = pd.DataFrame({MetaKeyName.SC_GID: sites,
+                                MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites,
+                                MetaKeyName.TIMEZONE: timezone})
 
-    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', weight=None)
+    rp = RepProfiles(GEN_FPATH, rev_summary, MetaKeyName.SC_GID, weight=None)
     rp.run(max_workers=1)
 
     with Resource(GEN_FPATH) as res:
@@ -149,27 +152,27 @@ def test_agg_profile():
     res_gids = [json.dumps(x) for x in res_gids]
     gid_counts = [json.dumps(x) for x in gid_counts]
     timezone = np.random.choice([-4, -5, -6, -7], 4)
-    rev_summary = pd.DataFrame({'sc_gid': np.arange(4),
-                                'gen_gids': gen_gids,
-                                'res_gids': res_gids,
-                                'gid_counts': gid_counts,
-                                'timezone': timezone})
+    rev_summary = pd.DataFrame({MetaKeyName.SC_GID: np.arange(4),
+                                MetaKeyName.GEN_GIDS: gen_gids,
+                                MetaKeyName.RES_GIDS: res_gids,
+                                MetaKeyName.GID_COUNTS: gid_counts,
+                                MetaKeyName.TIMEZONE: timezone})
 
-    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', cf_dset='cf_profile',
+    rp = RepProfiles(GEN_FPATH, rev_summary, MetaKeyName.SC_GID, cf_dset='cf_profile',
                      err_method=None)
     rp.run(scaled_precision=False, max_workers=1)
 
     for index in rev_summary.index:
-        gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
-        res_gids = json.loads(rev_summary.loc[index, 'res_gids'])
-        weights = np.array(json.loads(rev_summary.loc[index, 'gid_counts']))
+        gen_gids = json.loads(rev_summary.loc[index, MetaKeyName.GEN_GIDS])
+        res_gids = json.loads(rev_summary.loc[index, MetaKeyName.RES_GIDS])
+        weights = np.array(json.loads(rev_summary.loc[index, MetaKeyName.GID_COUNTS]))
 
         with Resource(GEN_FPATH) as res:
             meta = res.meta
 
             raw_profiles = []
             for gid in res_gids:
-                iloc = np.where(meta['gid'] == gid)[0][0]
+                iloc = np.where(meta[MetaKeyName.GID] == gid)[0][0]
                 prof = np.expand_dims(res['cf_profile', :, iloc], 1)
                 raw_profiles.append(prof)
 
@@ -186,7 +189,7 @@ def test_agg_profile():
 
         assert np.allclose(rp.profiles[0][:, index], truth)
 
-    passthrough_cols = ['gen_gids', 'res_gids', 'gid_counts']
+    passthrough_cols = [MetaKeyName.GEN_GIDS, MetaKeyName.RES_GIDS, MetaKeyName.GID_COUNTS]
     for col in passthrough_cols:
         assert col in rp.meta
 
@@ -204,13 +207,13 @@ def test_many_regions(use_weights):
     region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
     region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'region1': region1,
                                 'region2': region2,
                                 'weight': sites + 1,
-                                'timezone': timezone})
+                                MetaKeyName.TIMEZONE: timezone})
     reg_cols = ['region1', 'region2']
     if use_weights:
         rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight="weight")
@@ -239,13 +242,13 @@ def test_many_regions_with_list_weights():
     region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
     region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                MetaKeyName.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'region1': region1,
                                 'region2': region2,
                                 'weights': weights,
-                                'timezone': timezone})
+                                MetaKeyName.TIMEZONE: timezone})
     reg_cols = ['region1', 'region2']
     rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight='weights')
     rp.run()
@@ -267,11 +270,11 @@ def test_write_to_file():
         zeros = np.zeros((100,))
         regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
         timezone = np.random.choice([-4, -5, -6, -7], 100)
-        rev_summary = pd.DataFrame({'gen_gids': sites,
-                                    'res_gids': sites,
+        rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                    MetaKeyName.RES_GIDS: sites,
                                     'res_class': zeros,
                                     'region': regions,
-                                    'timezone': timezone})
+                                    MetaKeyName.TIMEZONE: timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
         rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
                          weight=None)
@@ -300,11 +303,11 @@ def test_file_options():
         zeros = np.zeros((100,))
         regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
         timezone = np.random.choice([-4, -5, -6, -7], 100)
-        rev_summary = pd.DataFrame({'gen_gids': sites,
-                                    'res_gids': sites,
+        rev_summary = pd.DataFrame({MetaKeyName.GEN_GIDS: sites,
+                                    MetaKeyName.RES_GIDS: sites,
                                     'res_class': zeros,
                                     'region': regions,
-                                    'timezone': timezone})
+                                    MetaKeyName.TIMEZONE: timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
         rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
                          weight=None)

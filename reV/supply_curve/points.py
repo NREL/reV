@@ -2,26 +2,29 @@
 """
 reV supply curve points frameworks.
 """
-from abc import ABC
 import logging
+from abc import ABC
+from warnings import warn
+
 import numpy as np
 import pandas as pd
-from warnings import warn
+from rex.multi_time_resource import MultiTimeResource
+from rex.resource import BaseResource, Resource
+from rex.utilities.utilities import jsonify_dict
 
 from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.econ.utilities import lcoe_fcr
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
-from reV.utilities.exceptions import (SupplyCurveInputError,
-                                      EmptySupplyCurvePointError,
-                                      InputWarning,
-                                      FileInputError,
-                                      DataShapeError,
-                                      OutputWarning)
-
-from rex.resource import Resource, BaseResource
-from rex.multi_time_resource import MultiTimeResource
-from rex.utilities.utilities import jsonify_dict
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import (
+    DataShapeError,
+    EmptySupplyCurvePointError,
+    FileInputError,
+    InputWarning,
+    OutputWarning,
+    SupplyCurveInputError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +101,7 @@ class AbstractSupplyCurvePoint(ABC):
 
     @property
     def gid(self):
-        """supply curve point gid"""
+        """Supply curve point gid"""
         return self._gid
 
     @property
@@ -359,8 +362,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         if self._centroid is None:
-            lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
-            lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
+            lats = self.exclusions.excl_h5[MetaKeyName.LATITUDE, self.rows, self.cols]
+            lons = self.exclusions.excl_h5[MetaKeyName.LONGITUDE, self.rows, self.cols]
             self._centroid = (lats.mean(), lons.mean())
 
         return self._centroid
@@ -541,7 +544,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
             if np.isnan(x).all():
                 return np.nan
-            elif drop_nan and np.isnan(x).any():
+            if drop_nan and np.isnan(x).any():
                 nan_mask = np.isnan(x)
                 x = x[~nan_mask]
                 incl = incl[~nan_mask]
@@ -718,9 +721,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         if not data.size:
             return None
-        else:
-            # pd series is more flexible with non-numeric than stats mode
-            return pd.Series(data).mode().values[0]
+        # pd series is more flexible with non-numeric than stats mode
+        return pd.Series(data).mode().values[0]
 
     @staticmethod
     def _categorize(data, incl_mult):
@@ -1087,8 +1089,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def elevation(self):
         """Get the SC point elevation based on the resource meta data."""
         elevation = None
-        if 'elevation' in self.h5.meta:
-            elevation = self.h5.meta.loc[self.h5_gid_set, 'elevation'].mean()
+        if MetaKeyName.ELEVATION in self.h5.meta:
+            elevation = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.ELEVATION].mean()
 
         return elevation
 
@@ -1096,15 +1098,15 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def timezone(self):
         """Get the SC point timezone based on the resource meta data."""
         timezone = None
-        if 'timezone' in self.h5.meta and self.county is not None:
+        if MetaKeyName.TIMEZONE in self.h5.meta and self.county is not None:
             # make sure timezone flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
             iloc = np.where(counties == self.county)[0][0]
-            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].values
+            timezone = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.TIMEZONE].values
             timezone = timezone[iloc]
 
-        elif 'timezone' in self.h5.meta:
-            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].mode()
+        elif MetaKeyName.TIMEZONE in self.h5.meta:
+            timezone = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.TIMEZONE].mode()
             timezone = timezone.values[0]
 
         return timezone
@@ -1114,15 +1116,15 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point offshore flag based on the resource meta data
         (if offshore column is present)."""
         offshore = None
-        if 'offshore' in self.h5.meta and self.county is not None:
+        if MetaKeyName.OFFSHORE in self.h5.meta and self.county is not None:
             # make sure offshore flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
             iloc = np.where(counties == self.county)[0][0]
-            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].values
+            offshore = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.OFFSHORE].values
             offshore = offshore[iloc]
 
-        elif 'offshore' in self.h5.meta:
-            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].mode()
+        elif MetaKeyName.OFFSHORE in self.h5.meta:
+            offshore = self.h5.meta.loc[self.h5_gid_set, MetaKeyName.OFFSHORE].mode()
             offshore = offshore.values[0]
 
         return offshore
@@ -1153,18 +1155,18 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         pandas.Series
             List of supply curve point's meta data
         """
-        meta = {'sc_point_gid': self.sc_point_gid,
-                'source_gids': self.h5_gid_set,
-                'gid_counts': self.gid_counts,
-                'n_gids': self.n_gids,
-                'area_sq_km': self.area,
-                'latitude': self.latitude,
-                'longitude': self.longitude,
+        meta = {MetaKeyName.SC_POINT_GID: self.sc_point_gid,
+                MetaKeyName.SOURCE_GIDS: self.h5_gid_set,
+                MetaKeyName.GID_COUNTS: self.gid_counts,
+                MetaKeyName.N_GIDS: self.n_gids,
+                MetaKeyName.AREA_SQ_KM: self.area,
+                MetaKeyName.LATITUDE: self.latitude,
+                MetaKeyName.LONGITUDE: self.longitude,
                 'country': self.country,
                 'state': self.state,
                 'county': self.county,
-                'elevation': self.elevation,
-                'timezone': self.timezone,
+                MetaKeyName.ELEVATION: self.elevation,
+                MetaKeyName.TIMEZONE: self.timezone,
                 }
         meta = pd.Series(meta)
 
@@ -1495,10 +1497,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._res_class_dset, np.ndarray):
             return self._res_class_dset
 
-        else:
-            if self._res_data is None:
-                if self._res_class_dset in self.gen.datasets:
-                    self._res_data = self.gen[self._res_class_dset]
+        if self._res_data is None:
+            if self._res_class_dset in self.gen.datasets:
+                self._res_data = self.gen[self._res_class_dset]
 
         return self._res_data
 
@@ -1516,10 +1517,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._cf_dset, np.ndarray):
             return self._cf_dset
 
-        else:
-            if self._gen_data is None:
-                if self._cf_dset in self.gen.datasets:
-                    self._gen_data = self.gen[self._cf_dset]
+        if self._gen_data is None:
+            if self._cf_dset in self.gen.datasets:
+                self._gen_data = self.gen[self._cf_dset]
 
         return self._gen_data
 
@@ -1537,10 +1537,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._lcoe_dset, np.ndarray):
             return self._lcoe_dset
 
-        else:
-            if self._lcoe_data is None:
-                if self._lcoe_dset in self.gen.datasets:
-                    self._lcoe_data = self.gen[self._lcoe_dset]
+        if self._lcoe_data is None:
+            if self._lcoe_dset in self.gen.datasets:
+                self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data
 
@@ -2001,35 +2000,35 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        ARGS = {'res_gids': self.res_gid_set,
-                'gen_gids': self.gen_gid_set,
-                'gid_counts': self.gid_counts,
-                'n_gids': self.n_gids,
-                'mean_cf': self.mean_cf,
-                'mean_lcoe': self.mean_lcoe,
-                'mean_res': self.mean_res,
-                'capacity': self.capacity,
-                'area_sq_km': self.area,
-                'latitude': self.latitude,
-                'longitude': self.longitude,
+        ARGS = {MetaKeyName.RES_GIDS: self.res_gid_set,
+                MetaKeyName.GEN_GIDS: self.gen_gid_set,
+                MetaKeyName.GID_COUNTS: self.gid_counts,
+                MetaKeyName.N_GIDS: self.n_gids,
+                MetaKeyName.MEAN_CF: self.mean_cf,
+                MetaKeyName.MEAN_LCOE: self.mean_lcoe,
+                MetaKeyName.MEAN_RES: self.mean_res,
+                MetaKeyName.CAPACITY: self.capacity,
+                MetaKeyName.AREA_SQ_KM: self.area,
+                MetaKeyName.LATITUDE: self.latitude,
+                MetaKeyName.LONGITUDE: self.longitude,
                 'country': self.country,
                 'state': self.state,
                 'county': self.county,
-                'elevation': self.elevation,
-                'timezone': self.timezone,
+                MetaKeyName.ELEVATION: self.elevation,
+                MetaKeyName.TIMEZONE: self.timezone,
                 }
 
-        extra_atts = ['capacity_ac', 'offshore', 'sc_point_capital_cost',
-                      'sc_point_fixed_operating_cost',
-                      'sc_point_annual_energy', 'sc_point_annual_energy_ac']
+        extra_atts = [MetaKeyName.CAPACITY_AC, MetaKeyName.OFFSHORE, MetaKeyName.SC_POINT_CAPITAL_COST,
+                      MetaKeyName.SC_POINT_FIXED_OPERATING_COST,
+                      MetaKeyName.SC_POINT_ANNUAL_ENERGY, MetaKeyName.SC_POINT_ANNUAL_ENERGY_AC]
         for attr in extra_atts:
             value = getattr(self, attr)
             if value is not None:
                 ARGS[attr] = value
 
         if self._friction_layer is not None:
-            ARGS['mean_friction'] = self.mean_friction
-            ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
+            ARGS[MetaKeyName.MEAN_FRICTION] = self.mean_friction
+            ARGS[MetaKeyName.MEAN_LCOE_FRICTION] = self.mean_lcoe_friction
 
         if self._h5_dsets is not None:
             for dset, data in self.mean_h5_dsets_data.items():
@@ -2070,14 +2069,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         eos = EconomiesOfScale(cap_cost_scale, summary)
-        summary['raw_lcoe'] = eos.raw_lcoe
-        summary['mean_lcoe'] = eos.scaled_lcoe
-        summary['capital_cost_scalar'] = eos.capital_cost_scalar
-        summary['scaled_capital_cost'] = eos.scaled_capital_cost
+        summary[MetaKeyName.RAW_LCOE] = eos.raw_lcoe
+        summary[MetaKeyName.MEAN_LCOE] = eos.scaled_lcoe
+        summary[MetaKeyName.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
+        summary[MetaKeyName.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
         if "sc_point_capital_cost" in summary:
             scaled_costs = (summary["sc_point_capital_cost"]
                             * eos.capital_cost_scalar)
-            summary['scaled_sc_point_capital_cost'] = scaled_costs
+            summary[MetaKeyName.SCALED_SC_POINT_CAPITAL_COST] = scaled_costs
 
         return summary
 

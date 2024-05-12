@@ -2,26 +2,29 @@
 """
 reV aggregation framework.
 """
-from abc import ABC, abstractmethod
-import h5py
 import logging
-import numpy as np
 import os
+from abc import ABC, abstractmethod
+
+import h5py
+import numpy as np
 import pandas as pd
-
-from reV.handlers.outputs import Outputs
-from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.supply_curve.tech_mapping import TechMapping
-from reV.supply_curve.points import AggregationSupplyCurvePoint
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      FileInputError, SupplyCurveInputError)
-from reV.utilities import log_versions
-
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
+
+from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.exclusions import ExclusionMaskFromDict
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.supply_curve.points import AggregationSupplyCurvePoint
+from reV.supply_curve.tech_mapping import TechMapping
+from reV.utilities import log_versions
+from reV.utilities.exceptions import (
+    EmptySupplyCurvePointError,
+    FileInputError,
+    SupplyCurveInputError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -419,14 +422,14 @@ class BaseAggregation(ABC):
             logger.error(msg)
             raise FileInputError(msg)
 
-        if 'gid' in gen_index:
-            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
-            gen_index['gen_gids'] = gen_index.index
-            gen_index = gen_index[['res_gids', 'gen_gids']]
-            gen_index = gen_index.set_index(keys='res_gids')
+        if MetaKeyName.GID in gen_index:
+            gen_index = gen_index.rename(columns={MetaKeyName.GID: MetaKeyName.RES_GIDS})
+            gen_index[MetaKeyName.GEN_GIDS] = gen_index.index
+            gen_index = gen_index[[MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS]]
+            gen_index = gen_index.set_index(keys=MetaKeyName.RES_GIDS)
             gen_index = \
                 gen_index.reindex(range(int(gen_index.index.max() + 1)))
-            gen_index = gen_index['gen_gids'].values
+            gen_index = gen_index[MetaKeyName.GEN_GIDS].values
             gen_index[np.isnan(gen_index)] = -1
             gen_index = gen_index.astype(np.int32)
         else:
@@ -795,9 +798,9 @@ class Aggregation(BaseAggregation):
         for k, v in agg.items():
             if k == 'meta':
                 v = pd.concat(v, axis=1).T
-                v = v.sort_values('sc_point_gid')
+                v = v.sort_values(MetaKeyName.SC_POINT_GID)
                 v = v.reset_index(drop=True)
-                v.index.name = 'sc_gid'
+                v.index.name = MetaKeyName.SC_GID
                 agg[k] = v
             else:
                 v = np.dstack(v)[0]

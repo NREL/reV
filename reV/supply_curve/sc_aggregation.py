@@ -6,29 +6,35 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-from concurrent.futures import as_completed
 import logging
-import numpy as np
-import psutil
 import os
-import pandas as pd
+from concurrent.futures import as_completed
 from warnings import warn
+
+import numpy as np
+import pandas as pd
+import psutil
+from rex.multi_file_resource import MultiFileResource
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
 
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          BaseAggregation, Aggregation)
+from reV.supply_curve.aggregation import (
+    AbstractAggFileHandler,
+    Aggregation,
+    BaseAggregation,
+)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning, FileInputError,
-                                      InputWarning)
-from reV.utilities import log_versions
-
-from rex.resource import Resource
-from rex.multi_file_resource import MultiFileResource
-from rex.utilities.execution import SpawnProcessPool
+from reV.utilities import MetaKeyName, log_versions
+from reV.utilities.exceptions import (
+    EmptySupplyCurvePointError,
+    FileInputError,
+    InputWarning,
+    OutputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -151,9 +157,9 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
             if self._pdf.endswith('.csv'):
                 self._power_density = pd.read_csv(self._pdf)
-                if ('gid' in self._power_density
+                if (MetaKeyName.GID in self._power_density
                         and 'power_density' in self._power_density):
-                    self._power_density = self._power_density.set_index('gid')
+                    self._power_density = self._power_density.set_index(MetaKeyName.GID)
                 else:
                     msg = ('Variable power density file must include "gid" '
                            'and "power_density" columns, but received: {}'
@@ -231,7 +237,7 @@ class SupplyCurveAggregation(BaseAggregation):
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
                  cap_cost_scale=None, recalc_lcoe=True):
-        """reV supply curve points aggregation framework.
+        r"""ReV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
         (e.g. 90m) exclusion dataset with a (typically) lower resolution
@@ -721,7 +727,7 @@ class SupplyCurveAggregation(BaseAggregation):
                 if 'method' not in v:
                     raise KeyError('Data aggregation "method" data layer "{}" '
                                    'must be specified.'.format(k))
-                elif v['method'].lower() not in methods:
+                if v['method'].lower() not in methods:
                     raise ValueError('Cannot recognize data layer agg method: '
                                      '"{}". Can only do: {}.'
                                      .format(v['method'], methods))
@@ -1067,9 +1073,9 @@ class SupplyCurveAggregation(BaseAggregation):
                     except EmptySupplyCurvePointError:
                         logger.debug('SC point {} is empty'.format(gid))
                     else:
-                        pointsum['sc_point_gid'] = gid
-                        pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']
-                        pointsum['sc_col_ind'] = points.loc[gid, 'col_ind']
+                        pointsum[MetaKeyName.SC_POINT_GID] = gid
+                        pointsum[MetaKeyName.SC_ROW_IND] = points.loc[gid, 'row_ind']
+                        pointsum[MetaKeyName.SC_COL_IND] = points.loc[gid, 'col_ind']
                         pointsum['res_class'] = ri
 
                         summary.append(pointsum)
@@ -1201,17 +1207,16 @@ class SupplyCurveAggregation(BaseAggregation):
         if all(type_check):
             return bins
 
-        elif any(type_check):
+        if any(type_check):
             raise TypeError('Resource class bins has inconsistent '
                             'entry type: {}'.format(bins))
 
-        else:
-            bbins = []
-            for i, b in enumerate(sorted(bins)):
-                if i < len(bins) - 1:
-                    bbins.append([b, bins[i + 1]])
+        bbins = []
+        for i, b in enumerate(sorted(bins)):
+            if i < len(bins) - 1:
+                bbins.append([b, bins[i + 1]])
 
-            return bbins
+        return bbins
 
     @staticmethod
     def _summary_to_df(summary):
@@ -1228,10 +1233,10 @@ class SupplyCurveAggregation(BaseAggregation):
             Summary of the SC points.
         """
         summary = pd.DataFrame(summary)
-        sort_by = [x for x in ('sc_point_gid', 'res_class') if x in summary]
+        sort_by = [x for x in (MetaKeyName.SC_POINT_GID, 'res_class') if x in summary]
         summary = summary.sort_values(sort_by)
         summary = summary.reset_index(drop=True)
-        summary.index.name = 'sc_gid'
+        summary.index.name = MetaKeyName.SC_GID
 
         return summary
 

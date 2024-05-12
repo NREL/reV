@@ -214,7 +214,7 @@ def test_run_bos(points=slice(0, 5), max_workers=1):
 
     # get full file paths.
     sam_files = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    site_data = pd.DataFrame({'gid': range(5),
+    site_data = pd.DataFrame({MetaKeyName.GID: range(5),
                               'sales_tax_basis': range(5)})
 
     econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',

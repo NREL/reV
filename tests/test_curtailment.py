@@ -5,19 +5,21 @@ Created on Fri Mar  1 15:24:13 2019
 
 @author: gbuster
 """
-from copy import deepcopy
 import os
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 import pytest
-from reV.SAM.SAM import RevPySam
-from reV.config.project_points import ProjectPoints
-from reV import TESTDATADIR
-from reV.utilities.curtailment import curtail
-from reV.generation.generation import Gen
-
-from rex.utilities.solar_position import SolarPosition
 from rex.utilities import safe_json_load
+from rex.utilities.solar_position import SolarPosition
+
+from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.generation.generation import Gen
+from reV.SAM.SAM import RevPySam
+from reV.utilities import MetaKeyName
+from reV.utilities.curtailment import curtail
 
 
 def get_curtailment(year, curt_fn='curtailment.json'):
@@ -168,7 +170,7 @@ def test_res_curtailment(year, site):
 
     sza = SolarPosition(
         non_curtailed_res.time_index,
-        non_curtailed_res.meta[['latitude', 'longitude']].values).zenith
+        non_curtailed_res.meta[[MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]].values).zenith
 
     ti = non_curtailed_res.time_index
 

@@ -3,14 +3,15 @@
 reV module for calculating economies of scale where larger power plants will
 have reduced capital cost.
 """
-import logging
 import copy
+import logging
 import re
-import numpy as np  # pylint: disable=unused-import
+
 import pandas as pd
+from rex.utilities.utilities import check_eval_str
 
 from reV.econ.utilities import lcoe_fcr
-from rex.utilities.utilities import check_eval_str
+from reV.utilities import MetaKeyName
 
 logger = logging.getLogger(__name__)
 
@@ -284,7 +285,7 @@ class EconomiesOfScale:
         -------
         lcoe : float | np.ndarray
         """
-        key_list = ['raw_lcoe', 'mean_lcoe']
+        key_list = [MetaKeyName.RAW_LCOE, MetaKeyName.MEAN_LCOE]
         return copy.deepcopy(self._get_prioritized_keys(self._data, key_list))
 
     @property

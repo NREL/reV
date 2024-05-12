@@ -8,21 +8,22 @@ Created on Fri Jun 21 16:05:47 2019
 
 @author: gbuster
 """
-from concurrent.futures import as_completed
-import h5py
 import logging
-from math import ceil
-import numpy as np
 import os
-from scipy.spatial import cKDTree
+from concurrent.futures import as_completed
+from math import ceil
 from warnings import warn
 
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.utilities.exceptions import FileInputWarning, FileInputError
-
+import h5py
+import numpy as np
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.utilities import res_dist_threshold
+from scipy.spatial import cKDTree
+
+from reV.supply_curve.extent import SupplyCurveExtent
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import FileInputError, FileInputWarning
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,7 @@ class TechMapping:
     @classmethod
     def _get_excl_coords(cls, excl_fpath, gids, sc_row_indices, sc_col_indices,
                          excl_row_slices, excl_col_slices,
-                         coord_labels=('latitude', 'longitude')):
+                         coord_labels=(MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE)):
         """
         Extract the exclusion coordinates for teh desired gids for TechMapping.
 
@@ -339,7 +340,7 @@ class TechMapping:
     def _check_fout(self):
         """Check the TechMapping output file for cached data."""
         with h5py.File(self._excl_fpath, 'r') as f:
-            if 'latitude' not in f or 'longitude' not in f:
+            if MetaKeyName.LATITUDE not in f or MetaKeyName.LONGITUDE not in f:
                 emsg = ('Datasets "latitude" and/or "longitude" not in '
                         'pre-existing Exclusions TechMapping file "{}". '
                         'Cannot proceed.'

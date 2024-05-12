@@ -2,15 +2,16 @@
 """
 Classes to handle reV h5 output files.
 """
+import json
 import logging
+import sys
+
 import NRWAL
 import PySAM
 import rex
-import sys
-import json
+from rex.outputs import Outputs as rexOutputs
 
 from reV.version import __version__
-from rex.outputs import Outputs as rexOutputs
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class Outputs(rexOutputs):
     >>> import pandas as pd
     >>> import numpy as np
     >>>
-    >>> meta = pd.DataFrame({'latitude': np.ones(100),
-    >>>                      'longitude': np.ones(100)})
+    >>> meta = pd.DataFrame({MetaKeyName.LATITUDE: np.ones(100),
+    >>>                      MetaKeyName.LONGITUDE: np.ones(100)})
     >>>
     >>> time_index = pd.date_range('20210101', '20220101', freq='1h',
     >>>                            closed='right')

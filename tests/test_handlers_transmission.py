@@ -3,11 +3,13 @@
 Transmission Feature Tests
 """
 import os
+
 import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.transmission import TransmissionFeatures as TF
+from reV.utilities import MetaKeyName
 
 TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
                  'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
@@ -45,7 +47,7 @@ def trans_table():
     return trans_table
 
 
-@pytest.mark.parametrize(('i', 'trans_costs', 'distance', 'gid'),
+@pytest.mark.parametrize(('i', 'trans_costs', 'distance', MetaKeyName.GID),
                          ((1, TRANS_COSTS_1, 0, 43300),
                           (2, TRANS_COSTS_2, 0, 43300),
                           (1, TRANS_COSTS_1, 100, 43300),
@@ -75,7 +77,7 @@ def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     assert true_cost == trans_cost
 
 
-@pytest.mark.parametrize(('trans_costs', 'capacity', 'gid'),
+@pytest.mark.parametrize(('trans_costs', MetaKeyName.CAPACITY, MetaKeyName.GID),
                          ((TRANS_COSTS_1, 350, 43300),
                           (TRANS_COSTS_2, 350, 43300),
                           (TRANS_COSTS_1, 100, 43300),

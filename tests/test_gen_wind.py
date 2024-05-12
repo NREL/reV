@@ -10,17 +10,18 @@ Created on Thu Nov 29 09:54:51 2018
 
 import os
 import shutil
-import h5py
-import pytest
-import pandas as pd
-import numpy as np
 import tempfile
 
-from reV.generation.generation import Gen
-from reV.config.project_points import ProjectPoints
-from reV import TESTDATADIR
+import h5py
+import numpy as np
+import pandas as pd
+import pytest
+from rex import Outputs, Resource, WindResource
 
-from rex import Resource, WindResource, Outputs
+from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.generation.generation import Gen
+from reV.utilities import MetaKeyName
 
 RTOL = 0
 ATOL = 0.001
@@ -104,17 +105,17 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     msg = 'Wind cf_means results did not match reV 1.0 results!'
     assert np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL), msg
     assert np.allclose(pp.sites, gen.meta.index.values), 'bad gen meta!'
-    assert np.allclose(pp.sites, gen.meta['gid'].values), 'bad gen meta!'
+    assert np.allclose(pp.sites, gen.meta[MetaKeyName.GID].values), 'bad gen meta!'
 
-    labels = ['latitude', 'longitude']
+    labels = [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
     with Resource(res_file) as res:
         for i, (gen_gid, site_meta) in enumerate(gen.meta.iterrows()):
-            res_gid = site_meta['gid']
+            res_gid = site_meta[MetaKeyName.GID]
             assert gen_gid == res_gid
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
 
 @pytest.mark.parametrize('gid_map',
@@ -157,8 +158,8 @@ def test_gid_map(gid_map):
     for key in output_request:
         assert np.allclose(map_test.out[key], write_gid_test.out[key])
 
-    for map_test_gid, write_test_gid in zip(map_test.meta['gid'],
-                                            write_gid_test.meta['gid']):
+    for map_test_gid, write_test_gid in zip(map_test.meta[MetaKeyName.GID],
+                                            write_gid_test.meta[MetaKeyName.GID]):
         assert map_test_gid == gid_map[write_test_gid]
 
     if len(baseline.out['cf_mean']) == len(map_test.out['cf_mean']):
@@ -176,21 +177,21 @@ def test_gid_map(gid_map):
                 assert np.allclose(baseline.out[key][gen_gid_base],
                                    map_test.out[key][gen_gid_test])
 
-    labels = ['latitude', 'longitude']
+    labels = [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
     with Resource(res_file) as res:
         for i, (gen_gid, site_meta) in enumerate(baseline.meta.iterrows()):
-            res_gid = site_meta['gid']
+            res_gid = site_meta[MetaKeyName.GID]
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
         for i, (gen_gid, site_meta) in enumerate(map_test.meta.iterrows()):
             res_gid = gid_map[gen_gid]
             test_coords = site_meta[labels].values.astype(float)
             true_coords = res.meta.loc[res_gid, labels].values.astype(float)
             assert np.allclose(test_coords, true_coords)
-            assert site_meta['gid'] == res_gid
+            assert site_meta[MetaKeyName.GID] == res_gid
 
 
 def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
@@ -260,7 +261,7 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
                    sites_per_worker=3, output_request=output_request)
     baseline.run(max_workers=max_workers)
 
-    site_data = pd.DataFrame({'gid': np.arange(2),
+    site_data = pd.DataFrame({MetaKeyName.GID: np.arange(2),
                               'turb_generic_loss': np.zeros(2)})
     test = Gen('windpower', points, sam_files, res_file, sites_per_worker=3,
                output_request=output_request, site_data=site_data)
@@ -340,7 +341,7 @@ def test_wind_bias_correct():
     gen_base.run(max_workers=1)
     outs_base = np.array(list(gen_base.out['cf_mean']))
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100), 'method': 'lin_ws',
                           'scalar': 1, 'adder': 2})
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),
@@ -350,7 +351,7 @@ def test_wind_bias_correct():
     assert all(outs_bc > outs_base)
     assert np.allclose(gen_base.out['ws_mean'] + 2, gen.out['ws_mean'])
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_ws',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100), 'method': 'lin_ws',
                           'scalar': 1, 'adder': -100})
     gen = Gen('windpower', points, sam_files, res_file,
               output_request=('cf_mean', 'cf_profile', 'ws_mean'),

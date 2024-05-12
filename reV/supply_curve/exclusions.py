@@ -3,14 +3,15 @@
 Generate reV inclusion mask from exclusion layers
 """
 import logging
-import numpy as np
-from scipy import ndimage
 from warnings import warn
 
+import numpy as np
 from rex.utilities.loggers import log_mem
+from scipy import ndimage
+
 from reV.handlers.exclusions import ExclusionLayers
-from reV.utilities.exceptions import ExclusionLayerError
-from reV.utilities.exceptions import SupplyCurveInputError
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import ExclusionLayerError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
 
@@ -246,8 +247,7 @@ class LayerMask:
 
         if all(isinstance(x, (int, float)) for x in range_var):
             return min(range_var)
-        else:
-            return range_var[0]
+        return range_var[0]
 
     @property
     def max_value(self):
@@ -265,8 +265,7 @@ class LayerMask:
 
         if all(isinstance(x, (int, float)) for x in range_var):
             return max(range_var)
-        else:
-            return range_var[1]
+        return range_var[1]
 
     @property
     def exclude_values(self):
@@ -370,7 +369,7 @@ class LayerMask:
         contradictory
 
         Returns
-        ------
+        -------
         mask : str
             Mask type
         """
@@ -689,7 +688,7 @@ class ExclusionMask:
         Returns
         -------
         _excl_h5 : ExclusionLayers
-         """
+        """
         return self._excl_h5
 
     @property
@@ -714,7 +713,7 @@ class ExclusionMask:
         Returns
         -------
         list
-         """
+        """
         return self._layers.keys()
 
     @property
@@ -725,7 +724,7 @@ class ExclusionMask:
         Returns
         -------
          list
-         """
+        """
         return self._layers.values()
 
     @property
@@ -749,7 +748,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5['latitude']
+        return self.excl_h5[MetaKeyName.LATITUDE]
 
     @property
     def longitude(self):
@@ -760,7 +759,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5['longitude']
+        return self.excl_h5[MetaKeyName.LONGITUDE]
 
     def add_layer(self, layer, replace=False):
         """
@@ -939,7 +938,7 @@ class ExclusionMask:
 
     def _add_layer_to_mask(self, mask, layer, ds_slice, check_layers,
                            combine_func):
-        """Add layer mask to full mask. """
+        """Add layer mask to full mask."""
         layer_mask = self._compute_layer_mask(layer, ds_slice, check_layers)
         if mask is None:
             return layer_mask
@@ -947,7 +946,7 @@ class ExclusionMask:
         return combine_func(mask, layer_mask, dtype='float32')
 
     def _compute_layer_mask(self, layer, ds_slice, check_layers=False):
-        """Compute mask for single layer, including extent. """
+        """Compute mask for single layer, including extent."""
         layer_mask = self._masked_layer_data(layer, ds_slice)
         layer_mask = self._apply_layer_mask_extent(layer, layer_mask, ds_slice)
 
@@ -964,7 +963,7 @@ class ExclusionMask:
         return layer_mask
 
     def _apply_layer_mask_extent(self, layer, layer_mask, ds_slice):
-        """Apply extent to layer mask, if any. """
+        """Apply extent to layer mask, if any."""
         if layer.extent is None:
             return layer_mask
 
@@ -983,7 +982,7 @@ class ExclusionMask:
         return layer_mask
 
     def _masked_layer_data(self, layer, ds_slice):
-        """Extract masked data for layer. """
+        """Extract masked data for layer."""
         return layer[self.excl_h5[(layer.name, ) + ds_slice]]
 
     def _generate_mask(self, *ds_slice, check_layers=False):

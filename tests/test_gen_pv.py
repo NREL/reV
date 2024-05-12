@@ -9,19 +9,20 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import h5py
-import pytest
-import pandas as pd
-import numpy as np
-import tempfile
 import shutil
+import tempfile
 
+import h5py
+import numpy as np
+import pandas as pd
+import pytest
 from rex.utilities.exceptions import ResourceRuntimeError
-from reV.utilities.exceptions import ConfigError, ExecutionError
-from reV.generation.generation import Gen
-from reV.config.project_points import ProjectPoints
+
 from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
+from reV.utilities.exceptions import ConfigError, ExecutionError
 
 RTOL = 0.0
 ATOL = 0.04
@@ -410,7 +411,7 @@ def test_gen_input_mods():
     gen.run(max_workers=1)
     for i in range(5):
         inputs = gen.project_points[i][1]
-        assert inputs['tilt'] == 'latitude'
+        assert inputs['tilt'] == MetaKeyName.LATITUDE
 
 
 def test_gen_input_pass_through():
@@ -447,7 +448,7 @@ def test_gen_pv_site_data():
                    sites_per_worker=1, output_request=output_request)
     baseline.run(max_workers=1)
 
-    site_data = pd.DataFrame({'gid': np.arange(2),
+    site_data = pd.DataFrame({MetaKeyName.GID: np.arange(2),
                               'losses': np.ones(2)})
     test = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                sites_per_worker=1, output_request=output_request,
@@ -540,7 +541,7 @@ def test_detailed_pv_bifacial():
 
 
 def test_pv_clearsky():
-    """test basic clearsky functionality"""
+    """Test basic clearsky functionality"""
     year = 2012
     rev2_points = slice(0, 3)
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
@@ -592,7 +593,7 @@ def test_irrad_bias_correct():
                    sites_per_worker=1, output_request=output_request)
     gen_base.run(max_workers=1)
 
-    bc_df = pd.DataFrame({'gid': np.arange(1, 10), 'method': 'lin_irrad',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(1, 10), 'method': 'lin_irrad',
                           'scalar': 1, 'adder': 50})
     gen = Gen('pvwattsv7', points, sam_files, res_file,
               sites_per_worker=1, output_request=output_request,
@@ -609,7 +610,7 @@ def test_irrad_bias_correct():
     mask = (gen_base.out['cf_profile'][:, 1:] <= gen.out['cf_profile'][:, 1:])
     assert (mask.sum() / mask.size) > 0.99
 
-    bc_df = pd.DataFrame({'gid': np.arange(100), 'method': 'lin_irrad',
+    bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100), 'method': 'lin_irrad',
                           'scalar': 1, 'adder': -1500})
     gen = Gen('pvwattsv7', points, sam_files, res_file, sites_per_worker=1,
               output_request=output_request, bias_correct=bc_df)

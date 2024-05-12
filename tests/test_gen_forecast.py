@@ -8,20 +8,21 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import pytest
-import pandas as pd
-import numpy as np
 import shutil
 import tempfile
 
-from reV.handlers.outputs import Outputs
-from reV.generation.generation import Gen
-from reV.config.project_points import ProjectPoints
-from reV import TESTDATADIR
-from reV.utilities.exceptions import SAMExecutionError
-
+import numpy as np
+import pandas as pd
+import pytest
 from rex import Resource
 from rex.utilities.utilities import mean_irrad
+
+from reV import TESTDATADIR
+from reV.config.project_points import ProjectPoints
+from reV.generation.generation import Gen
+from reV.handlers.outputs import Outputs
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import SAMExecutionError
 
 
 def test_forecast():
@@ -37,14 +38,14 @@ def test_forecast():
 
         with Outputs(res_file, mode='a') as f:
             meta = f.meta
-            meta = meta.drop(['timezone', 'elevation'], axis=1)
+            meta = meta.drop([MetaKeyName.TIMEZONE, MetaKeyName.ELEVATION], axis=1)
             del f._h5['meta']
             f._meta = None
             f.meta = meta
 
         with Outputs(res_file, mode='r') as f:
-            assert 'timezone' not in f.meta
-            assert 'elevation' not in f.meta
+            assert MetaKeyName.TIMEZONE not in f.meta
+            assert MetaKeyName.ELEVATION not in f.meta
 
         with Resource(res_file) as res:
             ghi = res['ghi']
@@ -52,8 +53,8 @@ def test_forecast():
         points = ProjectPoints(slice(0, 5), sam_files, 'pvwattsv7',
                                res_file=res_file)
         output_request = ('cf_mean', 'ghi_mean')
-        site_data = pd.DataFrame({'gid': np.arange(5), 'timezone': -5,
-                                  'elevation': 0})
+        site_data = pd.DataFrame({MetaKeyName.GID: np.arange(5), MetaKeyName.TIMEZONE: -5,
+                                  MetaKeyName.ELEVATION: 0})
         gid_map = {0: 20, 1: 20, 2: 50, 3: 51, 4: 51}
 
         # test that this raises an error with missing timezone

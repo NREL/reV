@@ -424,7 +424,7 @@ class Gen(BaseGen):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a 'gid' column is added.
+            non-sequential or do not start from 0, so a MetaKeyName.GID column is added.
         """
         if self._meta is None:
             res_cls = Resource
@@ -451,11 +451,11 @@ class Gen(BaseGen):
 
                 self._meta = res['meta', res_gids]
 
-            self._meta.loc[:, 'gid'] = res_gids
+            self._meta.loc[:, MetaKeyName.GID] = res_gids
             if self.write_mapped_gids:
-                self._meta.loc[:, 'gid'] = self.project_points.sites
+                self._meta.loc[:, MetaKeyName.GID] = self.project_points.sites
             self._meta.index = self.project_points.sites
-            self._meta.index.name = 'gid'
+            self._meta.index.name = MetaKeyName.GID
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
@@ -637,7 +637,7 @@ class Gen(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = points_control.project_points.df
-        site_df = site_df.set_index('gid', drop=True)
+        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
 
         # run generation method for specified technology
         try:
@@ -703,10 +703,10 @@ class Gen(BaseGen):
         if isinstance(gid_map, str):
             if gid_map.endswith('.csv'):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                assert 'gid' in gid_map, 'Need "gid" in gid_map column'
+                assert MetaKeyName.GID in gid_map, 'Need "gid" in gid_map column'
                 assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
-                gid_map = {gid_map['gid'][i]: gid_map['gid_map'][i]
-                           for i in gid_map['gid'].keys()}
+                gid_map = {gid_map[MetaKeyName.GID][i]: gid_map['gid_map'][i]
+                           for i in gid_map[MetaKeyName.GID].keys()}
 
             elif gid_map.endswith('.json'):
                 with open(gid_map, 'r') as f:
@@ -838,10 +838,10 @@ class Gen(BaseGen):
 
         msg = ('Bias correction table must have "gid" column but only found: '
                '{}'.format(list(bias_correct.columns)))
-        assert 'gid' in bias_correct or bias_correct.index.name == 'gid', msg
+        assert MetaKeyName.GID in bias_correct or bias_correct.index.name == MetaKeyName.GID, msg
 
-        if bias_correct.index.name != 'gid':
-            bias_correct = bias_correct.set_index('gid')
+        if bias_correct.index.name != MetaKeyName.GID:
+            bias_correct = bias_correct.set_index(MetaKeyName.GID)
 
         msg = ('Bias correction table must have "method" column but only '
                'found: {}'.format(list(bias_correct.columns)))

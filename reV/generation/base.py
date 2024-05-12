@@ -2,44 +2,47 @@
 """
 reV base gen and econ module.
 """
-from abc import ABC, abstractmethod
 import copy
-from concurrent.futures import TimeoutError
-import logging
-import pandas as pd
-import numpy as np
-import os
-import psutil
 import json
+import logging
+import os
 import sys
+from abc import ABC, abstractmethod
+from concurrent.futures import TimeoutError
 from warnings import warn
 
-from reV.config.output_request import SAMOutputRequest
-from reV.config.project_points import ProjectPoints, PointsControl
-from reV.handlers.outputs import Outputs
-from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities.exceptions import (OutputWarning, ExecutionError,
-                                      ParallelExecutionWarning,
-                                      OffshoreWindInputWarning)
-from reV.utilities import log_versions, ModuleName
-
+import numpy as np
+import pandas as pd
+import psutil
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
+
+from reV.config.output_request import SAMOutputRequest
+from reV.config.project_points import PointsControl, ProjectPoints
+from reV.handlers.outputs import Outputs
+from reV.SAM.version_checker import PySamVersionChecker
+from reV.utilities import MetaKeyName, ModuleName, log_versions
+from reV.utilities.exceptions import (
+    ExecutionError,
+    OffshoreWindInputWarning,
+    OutputWarning,
+    ParallelExecutionWarning,
+)
 
 logger = logging.getLogger(__name__)
 
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
 ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
-with open(os.path.join(ATTR_DIR, 'other.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'other.json')) as f:
     OTHER_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json')) as f:
     LCOE_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'single_owner.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'single_owner.json')) as f:
     SO_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'windbos.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
     BOS_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json'), 'r') as f:
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
 
@@ -284,7 +287,7 @@ class BaseGen(ABC):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a 'gid' column is added.
+            non-sequential or do not start from 0, so a MetaKeyName.GID column is added.
         """
         return self._meta
 
@@ -735,7 +738,7 @@ class BaseGen(ABC):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = 'gid'
+            site_data.index.name = MetaKeyName.GID
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -748,18 +751,18 @@ class BaseGen(ABC):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
-            if 'gid' not in site_data and site_data.index.name != 'gid':
+            if MetaKeyName.GID not in site_data and site_data.index.name != MetaKeyName.GID:
                 # require gid as column label or index
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
 
             # pylint: disable=no-member
-            if site_data.index.name != 'gid':
+            if site_data.index.name != MetaKeyName.GID:
                 # make gid the dataframe index if not already
-                site_data = site_data.set_index('gid', drop=True)
+                site_data = site_data.set_index(MetaKeyName.GID, drop=True)
 
-        if 'offshore' in site_data:
-            if site_data['offshore'].sum() > 1:
+        if MetaKeyName.OFFSHORE in site_data:
+            if site_data[MetaKeyName.OFFSHORE].sum() > 1:
                 w = ('Found offshore sites in econ site data input. '
                      'This functionality has been deprecated. '
                      'Please run the reV offshore module to '
@@ -829,7 +832,7 @@ class BaseGen(ABC):
         return (n_sites,)
 
     def _get_data_shape_from_sam_config(self, dset, n_sites):
-        """Get data shape from SAM input config """
+        """Get data shape from SAM input config"""
         data = list(self.project_points.sam_inputs.values())[0][dset]
         if isinstance(data, (list, tuple, np.ndarray)):
             return (*np.array(data).shape, n_sites)
@@ -1249,8 +1252,8 @@ class BaseGen(ABC):
         logger.warning(w)
         warn(w, OutputWarning)
 
-        site_out = {k: 0 for k in self.output_request}
-        result = {site: site_out for site in sites}
+        site_out = dict.fromkeys(self.output_request, 0)
+        result = dict.fromkeys(sites, site_out)
 
         try:
             cancelled = future.cancel()

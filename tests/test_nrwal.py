@@ -7,24 +7,22 @@ Created on Dec 16 2019
 @author: gbuster
 """
 
-import os
 import json
-import traceback
-import numpy as np
+import os
 import shutil
-import pytest
 import tempfile
+import traceback
 
+import numpy as np
 import pandas as pd
-
+import pytest
 from rex.utilities.utilities import pd_date_range
 
+from reV import TESTDATADIR
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.nrwal.nrwal import RevNrwal
-from reV.utilities import ModuleName
-from reV import TESTDATADIR
-
+from reV.utilities import MetaKeyName, ModuleName
 
 SOURCE_DIR = os.path.join(TESTDATADIR, 'nrwal/')
 
@@ -41,8 +39,8 @@ def test_nrwal():
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       'offshore': offshore_config}
-        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+                       MetaKeyName.OFFSHORE: offshore_config}
+        nrwal_configs = {MetaKeyName.OFFSHORE: os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -147,7 +145,7 @@ def test_nrwal():
 
 @pytest.mark.parametrize("out_fn", ["nrwal_meta.csv", None])
 def test_nrwal_csv(out_fn):
-    """Test the reV nrwal class with csv output. """
+    """Test the reV nrwal class with csv output."""
     with tempfile.TemporaryDirectory() as td:
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
@@ -157,8 +155,8 @@ def test_nrwal_csv(out_fn):
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       'offshore': offshore_config}
-        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+                       MetaKeyName.OFFSHORE: offshore_config}
+        nrwal_configs = {MetaKeyName.OFFSHORE: os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -217,8 +215,8 @@ def test_nrwal_constant_eq_output_request():
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       'offshore': offshore_config}
-        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+                       MetaKeyName.OFFSHORE: offshore_config}
+        nrwal_configs = {MetaKeyName.OFFSHORE: os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -260,8 +258,8 @@ def test_nrwal_cli(runner, clear_loggers):
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       'offshore': offshore_config}
-        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+                       MetaKeyName.OFFSHORE: offshore_config}
+        nrwal_configs = {MetaKeyName.OFFSHORE: os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -403,8 +401,8 @@ def test_nrwal_cli_csv(runner, clear_loggers):
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       'offshore': offshore_config}
-        nrwal_configs = {'offshore': os.path.join(td, 'nrwal_offshore.yaml')}
+                       MetaKeyName.OFFSHORE: offshore_config}
+        nrwal_configs = {MetaKeyName.OFFSHORE: os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',

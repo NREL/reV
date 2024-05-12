@@ -3,15 +3,15 @@
 """
 Aggregation tests
 """
-import numpy as np
 import os
-from pandas.testing import assert_frame_equal
+
+import numpy as np
 import pytest
-
-from reV.supply_curve.aggregation import Aggregation
-from reV import TESTDATADIR
-
+from pandas.testing import assert_frame_equal
 from rex.resource import Resource
+
+from reV import TESTDATADIR
+from reV.supply_curve.aggregation import Aggregation
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -45,8 +45,8 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
-                truth = truth.set_index('sc_gid')
-                for c in ['source_gids', 'gid_counts']:
+                truth = truth.set_index(MetaKeyName.SC_GID)
+                for c in [MetaKeyName.SOURCE_GIDS, MetaKeyName.GID_COUNTS]:
                     test[c] = test[c].astype(str)
 
                 truth = truth.fillna('none')
@@ -105,9 +105,9 @@ def test_gid_counts(excl_dict):
                               excl_dict=excl_dict, max_workers=1)
 
     for i, row in agg_out['meta'].iterrows():
-        n_gids = row['n_gids']
-        gid_counts = np.sum(row['gid_counts'])
-        area = row['area_sq_km']
+        n_gids = row[MetaKeyName.N_GIDS]
+        gid_counts = np.sum(row[MetaKeyName.GID_COUNTS])
+        area = row[MetaKeyName.AREA_SQ_KM]
 
         msg = ('For sc_gid {}: the sum of gid_counts ({}), does not match '
                'n_gids ({})'.format(i, n_gids, gid_counts))
@@ -148,8 +148,8 @@ def test_mean_wind_dirs(excl_dict):
     for i, row in out_meta.iterrows():
         test = mean_wind_dirs[:, i]
 
-        gids = row['source_gids']
-        fracs = row['gid_counts'] / row['n_gids']
+        gids = row[MetaKeyName.SOURCE_GIDS]
+        fracs = row[MetaKeyName.GID_COUNTS] / row[MetaKeyName.N_GIDS]
 
         truth = compute_mean_wind_dirs(RES, DSET, gids, fracs)
 

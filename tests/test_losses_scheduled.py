@@ -7,29 +7,32 @@ Created on Mon Apr 18 12:52:16 2021
 @author: ppinchuk
 """
 
-import os
-import pytest
-import tempfile
-import json
-import random
 import copy
 import glob
+import json
+import os
+import random
+import tempfile
 import traceback
 
 import numpy as np
 import pandas as pd
-
-from reV import TESTDATADIR
-from reV.generation.generation import Gen
-from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
-from reV.losses.utils import hourly_indices_for_months
-from reV.losses.scheduled import (Outage, OutageScheduler,
-                                  SingleOutageScheduler, ScheduledLossesMixin)
-from reV.cli import main
-from reV.handlers.outputs import Outputs
-
+import pytest
 from rex.utilities.utilities import safe_json_load
 
+from reV import TESTDATADIR
+from reV.cli import main
+from reV.generation.generation import Gen
+from reV.handlers.outputs import Outputs
+from reV.losses.scheduled import (
+    Outage,
+    OutageScheduler,
+    ScheduledLossesMixin,
+    SingleOutageScheduler,
+)
+from reV.losses.utils import hourly_indices_for_months
+from reV.utilities import MetaKeyName
+from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
 
 REV_POINTS = list(range(3))
 RTOL = 0
@@ -130,7 +133,7 @@ def so_scheduler(basic_outage_dict):
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
 def test_scheduled_losses(generic_losses, outages, haf, files):
-    """Test full gen run with scheduled losses. """
+    """Test full gen run with scheduled losses."""
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
         generic_losses, outages, None, haf, files
@@ -235,7 +238,7 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
 def test_scheduled_losses_site_specific(generic_losses, haf, files):
-    """Test full gen run with scheduled losses. """
+    """Test full gen run with scheduled losses."""
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
         generic_losses, NOMINAL_OUTAGES[0], SINGLE_SITE_OUTAGE, haf, files
@@ -316,9 +319,9 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
 def _run_gen_with_and_without_losses(
     generic_losses, outages, site_outages, haf, files
 ):
-    """Run generation with and without losses for testing. """
+    """Run generation with and without losses for testing."""
     sam_file, res_file, tech = files
-    with open(sam_file, 'r') as fh:
+    with open(sam_file) as fh:
         sam_config = json.load(fh)
 
     with tempfile.TemporaryDirectory() as td:
@@ -347,7 +350,7 @@ def _run_gen_with_and_without_losses(
     gen_profiles_with_losses = gen_profiles_with_losses[::time_steps_in_hour]
     # undo UTC array rolling
     for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
+        time_shift = row[MetaKeyName.TIMEZONE]
         gen_profiles_with_losses[:, ind] = np.roll(
             gen_profiles_with_losses[:, ind], time_shift
         )
@@ -372,18 +375,18 @@ def _run_gen_with_and_without_losses(
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
     for ind, row in gen.meta.iterrows():
-        time_shift = row['timezone']
+        time_shift = row[MetaKeyName.TIMEZONE]
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
     return gen_profiles, gen_profiles_with_losses
 
 
 def _make_site_data_df(site_data):
-    """Make site data DataFrame for a specific outage input. """
+    """Make site data DataFrame for a specific outage input."""
     if site_data is not None:
         site_specific_outages = [json.dumps(site_data)] * len(REV_POINTS)
         site_data_dict = {
-            'gid': REV_POINTS,
+            MetaKeyName.GID: REV_POINTS,
             ScheduledLossesMixin.OUTAGE_CONFIG_KEY: site_specific_outages
         }
         site_data = pd.DataFrame(site_data_dict)
@@ -401,9 +404,9 @@ def _make_site_data_df(site_data):
 def test_scheduled_losses_repeatability(
     generic_losses, outages, site_outages, files
 ):
-    """Test that losses are reproducible between runs. """
+    """Test that losses are reproducible between runs."""
     sam_file, res_file, tech = files
-    with open(sam_file, 'r') as fh:
+    with open(sam_file) as fh:
         sam_config = json.load(fh)
 
     with tempfile.TemporaryDirectory() as td:
@@ -447,10 +450,10 @@ def test_scheduled_losses_repeatability(
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
 def test_scheduled_losses_repeatability_with_seed(files):
-    """Test that losses are reproducible between runs. """
+    """Test that losses are reproducible between runs."""
     sam_file, res_file, tech = files
     outages = copy.deepcopy(NOMINAL_OUTAGES[0])
-    with open(sam_file, 'r') as fh:
+    with open(sam_file) as fh:
         sam_config = json.load(fh)
 
     with tempfile.TemporaryDirectory() as td:
@@ -506,7 +509,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
 
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
 def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
-    """Test mixin class behavior when adding losses. """
+    """Test mixin class behavior when adding losses."""
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
@@ -518,7 +521,7 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():
-    """Test mixin class behavior when adding losses. """
+    """Test mixin class behavior when adding losses."""
 
     mixin = ScheduledLossesMixin()
     mixin.sam_sys_inputs = {}
@@ -533,7 +536,7 @@ def test_scheduled_losses_mixin_class_no_losses_input():
 def test_single_outage_scheduler_normal_run(
     allow_outage_overlap, so_scheduler
 ):
-    """Test that single outage is scheduled correctly. """
+    """Test that single outage is scheduled correctly."""
 
     so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
     outage = so_scheduler.outage
@@ -562,7 +565,7 @@ def test_single_outage_scheduler_normal_run(
 def test_single_outage_scheduler_update_when_can_schedule_from_months(
     so_scheduler
 ):
-    """Test that single outage is scheduled correctly. """
+    """Test that single outage is scheduled correctly."""
 
     so_scheduler.update_when_can_schedule_from_months()
 
@@ -571,7 +574,7 @@ def test_single_outage_scheduler_update_when_can_schedule_from_months(
 
 
 def test_single_outage_scheduler_update_when_can_schedule(so_scheduler):
-    """Test that single outage is scheduled correctly. """
+    """Test that single outage is scheduled correctly."""
 
     so_scheduler.update_when_can_schedule_from_months()
 
@@ -585,7 +588,7 @@ def test_single_outage_scheduler_update_when_can_schedule(so_scheduler):
 
 
 def test_single_outage_scheduler_find_random_outage_slice(so_scheduler):
-    """Test single outage class method. """
+    """Test single outage class method."""
 
     so_scheduler.update_when_can_schedule_from_months()
     random_slice = so_scheduler.find_random_outage_slice()
@@ -600,7 +603,7 @@ def test_single_outage_scheduler_find_random_outage_slice(so_scheduler):
 def test_single_outage_scheduler_schedule_losses(
     allow_outage_overlap, so_scheduler
 ):
-    """Test single outage class method. """
+    """Test single outage class method."""
 
     so_scheduler.outage._specs['allow_outage_overlap'] = allow_outage_overlap
     so_scheduler.update_when_can_schedule_from_months()
@@ -615,7 +618,7 @@ def test_single_outage_scheduler_schedule_losses(
 
 @pytest.mark.parametrize('outages_info', NOMINAL_OUTAGES)
 def test_outage_scheduler_normal_run(outages_info):
-    """Test hourly outage losses for a reasonable outage info input. """
+    """Test hourly outage losses for a reasonable outage info input."""
 
     outages = [Outage(spec) for spec in outages_info]
     losses = OutageScheduler(outages).calculate()
@@ -641,7 +644,7 @@ def test_outage_scheduler_normal_run(outages_info):
 
 
 def test_outage_scheduler_no_outages():
-    """Test hourly outage losses for no outage input. """
+    """Test hourly outage losses for no outage input."""
 
     losses = OutageScheduler([]).calculate()
 
@@ -650,7 +653,7 @@ def test_outage_scheduler_no_outages():
 
 
 def test_outage_scheduler_cannot_schedule_any_more():
-    """Test scheduler when little or no outages are allowed. """
+    """Test scheduler when little or no outages are allowed."""
 
     outage_info = {
         'count': 5,
@@ -675,7 +678,7 @@ def test_outage_scheduler_cannot_schedule_any_more():
 
 
 def test_outage_class_missing_keys(basic_outage_dict):
-    """Test Outage class behavior for inputs with missing keys. """
+    """Test Outage class behavior for inputs with missing keys."""
 
     for key in basic_outage_dict:
         bad_input = basic_outage_dict.copy()
@@ -686,7 +689,7 @@ def test_outage_class_missing_keys(basic_outage_dict):
 
 
 def test_outage_class_count(basic_outage_dict):
-    """Test Outage class behavior for different count inputs. """
+    """Test Outage class behavior for different count inputs."""
 
     basic_outage_dict['count'] = 0
     with pytest.raises(reVLossesValueError) as excinfo:
@@ -700,7 +703,7 @@ def test_outage_class_count(basic_outage_dict):
 
 
 def test_outage_class_allowed_months(basic_outage_dict):
-    """Test Outage class behavior for different allowed_month inputs. """
+    """Test Outage class behavior for different allowed_month inputs."""
 
     basic_outage_dict['allowed_months'] = []
     with pytest.raises(reVLossesValueError) as excinfo:
@@ -731,7 +734,7 @@ def test_outage_class_allowed_months(basic_outage_dict):
 
 
 def test_outage_class_duration(basic_outage_dict):
-    """Test Outage class behavior for different duration inputs. """
+    """Test Outage class behavior for different duration inputs."""
 
     err_msg = "Duration of outage must be between 1 and the total available"
 
@@ -755,7 +758,7 @@ def test_outage_class_duration(basic_outage_dict):
 
 
 def test_outage_class_percentage(basic_outage_dict):
-    """Test Outage class behavior for different percentage inputs. """
+    """Test Outage class behavior for different percentage inputs."""
 
     err_msg = "Percentage of farm down during outage must be in the range"
 
@@ -791,9 +794,9 @@ def test_outage_class_allow_outage_overlap(basic_outage_dict):
     (PV_SAM_FILE, TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5', 'pvwattsv7')
 ])
 def test_scheduled_outages_multi_year(runner, files, clear_loggers):
-    """Test that scheduled outages are different year to year. """
+    """Test that scheduled outages are different year to year."""
     sam_file, res_file, tech = files
-    with open(sam_file, 'r') as fh:
+    with open(sam_file) as fh:
         sam_config = json.load(fh)
 
     outages = NOMINAL_OUTAGES[0]
