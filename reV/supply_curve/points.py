@@ -1836,8 +1836,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         cap_cost_per_mw = (
-            self.mean_h5_dsets_data['capital_cost'] /
-            self.mean_h5_dsets_data['system_capacity'])
+            self.mean_h5_dsets_data['capital_cost']
+            / self.mean_h5_dsets_data['system_capacity'])
         return cap_cost_per_mw * self.capacity
 
     @property
@@ -1864,8 +1864,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         fixed_cost_per_mw = (
-            self.mean_h5_dsets_data['fixed_operating_cost'] /
-            self.mean_h5_dsets_data['system_capacity'])
+            self.mean_h5_dsets_data['fixed_operating_cost']
+            / self.mean_h5_dsets_data['system_capacity'])
         return fixed_cost_per_mw * self.capacity
 
     @property

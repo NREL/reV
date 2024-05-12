@@ -713,7 +713,7 @@ class RevPySam(Sam):
 
                 freq = pd.infer_freq(time_index[:s])
                 msg = "frequencies do not match before and after 2/29"
-                assert freq == pd.infer_freq(time_index[s + 1 :]), msg
+                assert freq == pd.infer_freq(time_index[s + 1:]), msg
             else:
                 freq = pd.infer_freq(time_index)
         else:
@@ -798,8 +798,9 @@ class RevPySam(Sam):
         """
 
         if isinstance(meta, pd.DataFrame):
-            msg = "Meta data must only be for a single site but received: {}".format(
-                meta
+            msg = (
+                "Meta data must only be for a single site but received: {}"
+                .format(meta)
             )
             assert len(meta) == 1, msg
             meta = meta.iloc[0]
@@ -888,9 +889,8 @@ class RevPySam(Sam):
                     bad_requests.append(req)
 
         if any(bad_requests):
-            msg = 'Could not retrieve outputs "{}" from PySAM object "{}".'.format(
-                bad_requests, self.pysam
-            )
+            msg = ('Could not retrieve outputs "{}" from PySAM object "{}".'
+                   .format(bad_requests, self.pysam))
             logger.error(msg)
             raise SAMExecutionError(msg)
 
