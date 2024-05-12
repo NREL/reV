@@ -15,7 +15,6 @@ from rex import Resource
 
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
-from reV.utilities import MetaKeyName
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_csp_2012.h5')
 RTOL = 0.1
@@ -30,7 +29,7 @@ def test_gen_csp():
 
     # run reV 2.0 generation
     output_request = ('cf_mean', 'cf_profile',
-                      MetaKeyName.GEN_PROFILE)
+                      'gen_profile')
     gen = Gen('tcsmoltensalt', points, sam_files, res_file,
               output_request=output_request, sites_per_worker=1,
               scale_outputs=True)

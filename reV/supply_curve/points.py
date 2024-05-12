@@ -2020,22 +2020,22 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         ARGS = {
-            MetaKeyName.LATITUDE: self.sc_point.latitude,
-            MetaKeyName.LONGITUDE: self.sc_point.longitude,
-            MetaKeyName.TIMEZONE: self.sc_point.timezone,
-            MetaKeyName.COUNTRY: self.sc_point.country,
-            MetaKeyName.STATE: self.sc_point.state,
-            MetaKeyName.COUNTY: self.sc_point.county,
-            MetaKeyName.ELEVATION: self.sc_point.elevation,
+            MetaKeyName.LATITUDE: self.latitude,
+            MetaKeyName.LONGITUDE: self.longitude,
+            MetaKeyName.TIMEZONE: self.timezone,
+            MetaKeyName.COUNTRY: self.country,
+            MetaKeyName.STATE: self.state,
+            MetaKeyName.COUNTY: self.county,
+            MetaKeyName.ELEVATION: self.elevation,
             MetaKeyName.RES_GIDS: self.res_gid_set,
             MetaKeyName.GEN_GIDS: self.gen_gid_set,
             MetaKeyName.GID_COUNTS: self.gid_counts,
-            MetaKeyName.N_GIDS: self.sc_point.n_gids,
+            MetaKeyName.N_GIDS: self.n_gids,
             MetaKeyName.MEAN_CF: self.mean_cf,
             MetaKeyName.MEAN_LCOE: self.mean_lcoe,
             MetaKeyName.MEAN_RES: self.mean_res,
             MetaKeyName.CAPACITY: self.capacity,
-            MetaKeyName.AREA_SQ_KM: self.sc_point.area}
+            MetaKeyName.AREA_SQ_KM: self.area}
 
         extra_atts = [MetaKeyName.CAPACITY_AC,
                       MetaKeyName.OFFSHORE,

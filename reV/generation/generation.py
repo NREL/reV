@@ -547,7 +547,7 @@ class Gen(BaseGen):
             var for var, attrs in GEN_ATTRS.items()
             if attrs['type'] == 'array'
         ]
-        valid_vars = [MetaKeyName.GEN_PROFILE, 'cf_profile',
+        valid_vars = ['gen_profile', 'cf_profile',
                       'cf_profile_ac']
         invalid_vars = set(array_vars) - set(valid_vars)
         invalid_requests = [var for var in self.output_request

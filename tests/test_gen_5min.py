@@ -28,16 +28,16 @@ def test_gen_downscaling():
 
     # run reV 2.0 generation
     gen = Gen('pvwattsv5', slice(0, None), sam_files, res_file,
-              output_request=('cf_mean', ), sites_per_worker=100)
+              output_request=('cf_mean', 'cf_profile'), sites_per_worker=100)
     gen.run(max_workers=1)
-    gen_outs = gen.out[].astype(np.int32)
+    gen_outs = gen.out['cf_profile'].astype(np.int32)
 
     if not os.path.exists(baseline):
         with h5py.File(baseline, 'w') as f:
-            f.create_dataset(, data=gen_outs, dtype=gen_outs.dtype)
+            f.create_dataset('cf_profile', data=gen_outs, dtype=gen_outs.dtype)
     else:
         with h5py.File(baseline, 'r') as f:
-            baseline = f[][...].astype(np.int32)
+            baseline = f['cf_profile'][...].astype(np.int32)
 
         x = mae_perc(gen_outs, baseline)
         msg = 'Mean absolute error is {}% from the baseline data'.format(x)

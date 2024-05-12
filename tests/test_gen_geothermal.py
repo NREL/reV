@@ -65,7 +65,7 @@ def test_gen_geothermal(depth, sample_resource_data):
 
     output_request = ('annual_energy', 'cf_mean',
                       'cf_profile',
-                      MetaKeyName.GEN_PROFILE,
+                      'gen_profile',
                       MetaKeyName.LCOE_FCR,
                       'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
@@ -99,7 +99,7 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
 
     output_request = ('annual_energy', 'cf_mean',
                       'cf_profile',
-                      MetaKeyName.GEN_PROFILE,
+                      'gen_profile',
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                output_request=output_request, sites_per_worker=1,
@@ -215,7 +215,7 @@ def test_gen_with_nameplate_input(sample_resource_data):
 
     output_request = ('annual_energy', 'cf_mean',
                       'cf_profile',
-                      MetaKeyName.GEN_PROFILE,
+                      'gen_profile',
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
                 output_request=output_request, sites_per_worker=1,
@@ -367,7 +367,7 @@ def test_gen_with_time_index_step_input(sample_resource_data):
 
     output_request = ('annual_energy', 'cf_mean',
                       'cf_profile',
-                      MetaKeyName.GEN_PROFILE,
+                      'gen_profile',
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
               output_request=output_request, sites_per_worker=1,
