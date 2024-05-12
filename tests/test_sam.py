@@ -103,10 +103,9 @@ def test_PV_lat_tilt(res, site_index):
                 warnings.simplefilter("ignore")
                 sim = PvWattsv5(resource=res_df, meta=meta,
                                 sam_sys_inputs=inputs,
-                                output_request=(MetaKeyName.CF_MEAN,))
+                                output_request=('cf_mean',))
             break
-        else:
-            pass
+        pass
 
     assert sim.sam_sys_inputs['tilt'] == meta[MetaKeyName.LATITUDE]
 

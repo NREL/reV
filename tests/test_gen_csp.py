@@ -29,7 +29,7 @@ def test_gen_csp():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
 
     # run reV 2.0 generation
-    output_request = (MetaKeyName.CF_MEAN, MetaKeyName.CF_PROFILE,
+    output_request = ('cf_mean', 'cf_profile',
                       MetaKeyName.GEN_PROFILE)
     gen = Gen('tcsmoltensalt', points, sam_files, res_file,
               output_request=output_request, sites_per_worker=1,

@@ -82,7 +82,7 @@ class Gen(BaseGen):
 
     def __init__(self, technology, project_points, sam_files, resource_file,
                  low_res_resource_file=None,
-                 output_request=(MetaKeyName.CF_MEAN,),
+                 output_request=('cf_mean',),
                  site_data=None, curtailment=None, gid_map=None,
                  drop_leap=False, sites_per_worker=None,
                  memory_utilization_limit=0.4, scale_outputs=True,
@@ -123,10 +123,10 @@ class Gen(BaseGen):
         >>> gen.run()
         >>>
         >>> gen.out
-        {MetaKeyName.CF_MEAN: array([0.16966143], dtype=float32)}
+        {'cf_mean': array([0.16966143], dtype=float32)}
         >>>
         >>> sites = [3, 4, 7, 9]
-        >>> req = (MetaKeyName.CF_MEAN, , MetaKeyName.LCOE_FCR)
+        >>> req = ('cf_mean', , MetaKeyName.LCOE_FCR)
         >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
         >>> gen.run()
         >>>
@@ -283,7 +283,7 @@ class Gen(BaseGen):
               aggregation/supply curve step if the ``"dc_ac_ratio"``
               dataset is detected in the generation file.
 
-            By default, ``(MetaKeyName.CF_MEAN,)``.
+            By default, ``('cf_mean',)``.
         site_data : str | pd.DataFrame, optional
             Site-specific input data for SAM calculation. If this input
             is a string, it should be a path that points to a CSV file.
@@ -547,7 +547,7 @@ class Gen(BaseGen):
             var for var, attrs in GEN_ATTRS.items()
             if attrs['type'] == 'array'
         ]
-        valid_vars = [MetaKeyName.GEN_PROFILE, MetaKeyName.CF_PROFILE,
+        valid_vars = [MetaKeyName.GEN_PROFILE, 'cf_profile',
                       'cf_profile_ac']
         invalid_vars = set(array_vars) - set(valid_vars)
         invalid_requests = [var for var in self.output_request
@@ -836,7 +836,7 @@ class Gen(BaseGen):
         if isinstance(bias_correct, type(None)):
             return bias_correct
 
-        elif isinstance(bias_correct, str):
+        if isinstance(bias_correct, str):
             bias_correct = pd.read_csv(bias_correct)
 
         msg = ('Bias correction data must be a filepath to csv or a dataframe '
@@ -874,8 +874,8 @@ class Gen(BaseGen):
         output_request = self._output_request_type_check(req)
 
         # ensure that cf_mean is requested from output
-        if MetaKeyName.CF_MEAN not in output_request:
-            output_request.append(MetaKeyName.CF_MEAN)
+        if 'cf_mean' not in output_request:
+            output_request.append('cf_mean')
 
         for request in output_request:
             if request not in self.OUT_ATTRS:

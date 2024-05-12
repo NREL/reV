@@ -546,7 +546,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
             if np.isnan(x).all():
                 return np.nan
-            elif drop_nan and np.isnan(x).any():
+            if drop_nan and np.isnan(x).any():
                 nan_mask = np.isnan(x)
                 x = x[~nan_mask]
                 incl = incl[~nan_mask]
@@ -723,9 +723,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         if not data.size:
             return None
-        else:
-            # pd series is more flexible with non-numeric than stats mode
-            return pd.Series(data).mode().values[0]
+        # pd series is more flexible with non-numeric than stats mode
+        return pd.Series(data).mode().values[0]
 
     @staticmethod
     def _categorize(data, incl_mult):
@@ -1512,7 +1511,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._res_class_dset, np.ndarray):
             return self._res_class_dset
 
-        elif self._res_data is None:
+        if self._res_data is None:
             if self._res_class_dset in self.gen.datasets:
                 self._res_data = self.gen[self._res_class_dset]
 
@@ -1532,7 +1531,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._cf_dset, np.ndarray):
             return self._cf_dset
 
-        elif self._gen_data is None:
+        if self._gen_data is None:
             if self._cf_dset in self.gen.datasets:
                 self._gen_data = self.gen[self._cf_dset]
 
@@ -1552,7 +1551,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._lcoe_dset, np.ndarray):
             return self._lcoe_dset
 
-        elif self._lcoe_data is None:
+        if self._lcoe_data is None:
             if self._lcoe_dset in self.gen.datasets:
                 self._lcoe_data = self.gen[self._lcoe_dset]
 
@@ -1597,8 +1596,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                         'fixed_operating_cost',
                         'variable_operating_cost',
                         'system_capacity')
-            if (self.mean_h5_dsets_data is not None and
-                    all(k in self.mean_h5_dsets_data for k in required)):
+            if (self.mean_h5_dsets_data is not None
+                    and all(k in self.mean_h5_dsets_data for k in required)):
                 aep = (self.mean_h5_dsets_data['system_capacity']
                        * self.mean_cf * 8760)
                 # Note the AEP computation uses the SAM config
@@ -2021,22 +2020,22 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         ARGS = {
-                MetaKeyName.LATITUDE: self.sc_point.latitude,
-                MetaKeyName.LONGITUDE: self.sc_point.longitude,
-                MetaKeyName.TIMEZONE: self.sc_point.timezone,
-                MetaKeyName.COUNTRY: self.sc_point.country,
-                MetaKeyName.STATE: self.sc_point.state,
-                MetaKeyName.COUNTY: self.sc_point.county,
-                MetaKeyName.ELEVATION: self.sc_point.elevation,
-                MetaKeyName.RES_GIDS: self.res_gid_set,
-                MetaKeyName.GEN_GIDS: self.gen_gid_set,
-                MetaKeyName.GID_COUNTS: self.gid_counts,
-                MetaKeyName.N_GIDS: self.sc_point.n_gids,
-                MetaKeyName.MEAN_CF: self.mean_cf,
-                MetaKeyName.MEAN_LCOE: self.mean_lcoe,
-                MetaKeyName.MEAN_RES: self.mean_res,
-                MetaKeyName.CAPACITY: self.capacity,
-                MetaKeyName.AREA_SQ_KM: self.sc_point.area}
+            MetaKeyName.LATITUDE: self.sc_point.latitude,
+            MetaKeyName.LONGITUDE: self.sc_point.longitude,
+            MetaKeyName.TIMEZONE: self.sc_point.timezone,
+            MetaKeyName.COUNTRY: self.sc_point.country,
+            MetaKeyName.STATE: self.sc_point.state,
+            MetaKeyName.COUNTY: self.sc_point.county,
+            MetaKeyName.ELEVATION: self.sc_point.elevation,
+            MetaKeyName.RES_GIDS: self.res_gid_set,
+            MetaKeyName.GEN_GIDS: self.gen_gid_set,
+            MetaKeyName.GID_COUNTS: self.gid_counts,
+            MetaKeyName.N_GIDS: self.sc_point.n_gids,
+            MetaKeyName.MEAN_CF: self.mean_cf,
+            MetaKeyName.MEAN_LCOE: self.mean_lcoe,
+            MetaKeyName.MEAN_RES: self.mean_res,
+            MetaKeyName.CAPACITY: self.capacity,
+            MetaKeyName.AREA_SQ_KM: self.sc_point.area}
 
         extra_atts = [MetaKeyName.CAPACITY_AC,
                       MetaKeyName.OFFSHORE,

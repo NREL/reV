@@ -63,8 +63,8 @@ def test_gen_geothermal(depth, sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
-                      MetaKeyName.CF_PROFILE,
+    output_request = ('annual_energy', 'cf_mean',
+                      'cf_profile',
                       MetaKeyName.GEN_PROFILE,
                       MetaKeyName.LCOE_FCR,
                       'nameplate')
@@ -97,8 +97,8 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
     geo_sam_file, geo_res_file = sample_resource_data
     shutil.copy(DEFAULT_GEO_SAM_FILE, geo_sam_file)
 
-    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
-                      MetaKeyName.CF_PROFILE,
+    output_request = ('annual_energy', 'cf_mean',
+                      'cf_profile',
                       MetaKeyName.GEN_PROFILE,
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
@@ -213,8 +213,8 @@ def test_gen_with_nameplate_input(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
-                      MetaKeyName.CF_PROFILE,
+    output_request = ('annual_energy', 'cf_mean',
+                      'cf_profile',
                       MetaKeyName.GEN_PROFILE,
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,
@@ -365,8 +365,8 @@ def test_gen_with_time_index_step_input(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ('annual_energy', MetaKeyName.CF_MEAN,
-                      MetaKeyName.CF_PROFILE,
+    output_request = ('annual_energy', 'cf_mean',
+                      'cf_profile',
                       MetaKeyName.GEN_PROFILE,
                       MetaKeyName.LCOE_FCR, 'nameplate')
     gen = Gen('geothermal', points, geo_sam_file, geo_res_file,

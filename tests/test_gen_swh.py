@@ -29,7 +29,7 @@ def test_gen_swh_non_leap_year():
 
     output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
                       'beam', 'diffuse', 'I_incident', 'I_transmitted',
-                      'annual_Q_deliv', 'Q_deliv', MetaKeyName.CF_MEAN, 'solar_fraction',
+                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction',
                       'gen_profile')
 
     # run reV 2.0 generation
@@ -61,7 +61,7 @@ def test_gen_swh_leap_year():
 
     output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
                       'beam', 'diffuse', 'I_incident', 'I_transmitted',
-                      'annual_Q_deliv', 'Q_deliv', MetaKeyName.CF_MEAN, 'solar_fraction')
+                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
 
     # run reV 2.0 generation
     gen = Gen('solarwaterheat', points, sam_files, res_file,

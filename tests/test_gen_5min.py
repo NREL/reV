@@ -28,7 +28,7 @@ def test_gen_downscaling():
 
     # run reV 2.0 generation
     gen = Gen('pvwattsv5', slice(0, None), sam_files, res_file,
-              output_request=(MetaKeyName.CF_MEAN, ), sites_per_worker=100)
+              output_request=('cf_mean', ), sites_per_worker=100)
     gen.run(max_workers=1)
     gen_outs = gen.out[].astype(np.int32)
 

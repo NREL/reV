@@ -39,7 +39,7 @@ def test_gen_tph():
                       'm_dot_field_delivered', 'm_dot_field_recirc',
                       'q_dot_htf_sf_out', 'q_dot_to_heat_sink',
                       'q_dot_rec_inc', 'qinc_costh', 'dni_costh', 'beam',
-                      MetaKeyName.CF_MEAN, 'annual_gross_energy',
+                      'cf_mean', 'annual_gross_energy',
                       'annual_thermal_consumption', 'annual_energy')
 
     # run reV 2.0 generation

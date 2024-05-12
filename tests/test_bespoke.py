@@ -74,8 +74,7 @@ OBJECTIVE_FUNCTION = ('(0.0975 * capital_cost + fixed_operating_cost) '
 
 def test_turbine_placement(gid=33):
     """Test turbine placement with zero available area."""
-    output_request = ('system_capacity'ame.CF_MEAN,
-                      'cf_profile')
+    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, 'ri_100_wtk_{}.h5')
         excl_fp = os.path.join(td, 'ri_exclusions.h5')

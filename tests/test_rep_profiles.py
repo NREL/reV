@@ -159,7 +159,7 @@ def test_agg_profile():
                                 MetaKeyName.TIMEZONE: timezone})
 
     rp = RepProfiles(GEN_FPATH, rev_summary, MetaKeyName.SC_GID,
-                     cf_dset=MetaKeyName.CF_PROFILE, err_method=None)
+                     cf_dset='cf_profile', err_method=None)
     rp.run(scaled_precision=False, max_workers=1)
 
     for index in rev_summary.index:
@@ -174,7 +174,7 @@ def test_agg_profile():
             raw_profiles = []
             for gid in res_gids:
                 iloc = np.where(meta[MetaKeyName.GID] == gid)[0][0]
-                prof = np.expand_dims(res[MetaKeyName.CF_PROFILE, :, iloc], 1)
+                prof = np.expand_dims(res['cf_profile', :, iloc], 1)
                 raw_profiles.append(prof)
 
             last = raw_profiles[-1].flatten()

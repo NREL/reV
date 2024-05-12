@@ -63,15 +63,15 @@ def test_cf_curtailment(year, site):
 
     # run reV 2.0 generation
     gen = Gen('windpower', points, sam_files, res_file,
-              output_request=(MetaKeyName.CF_PROFILE,),
+              output_request=('cf_profile',),
               curtailment=curtailment,
               sites_per_worker=50, scale_outputs=True)
     gen.run(max_workers=1)
     results, check_curtailment = test_res_curtailment(year, site=site)
-    results[MetaKeyName.CF_PROFILE] = gen.out[MetaKeyName.CF_PROFILE].flatten()
+    results['cf_profile'] = gen.out['cf_profile'].flatten()
 
     # was capacity factor NOT curtailed?
-    check_cf = (gen.out[MetaKeyName.CF_PROFILE].flatten() != 0)
+    check_cf = (gen.out['cf_profile'].flatten() != 0)
 
     # Were all thresholds met and windspeed NOT curtailed?
     check = check_curtailment & check_cf
@@ -98,7 +98,7 @@ def test_curtailment_res_mean(year):
 
     curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
     points = slice(0, 100)
-    output_request = (MetaKeyName.CF_MEAN, 'ws_mean')
+    output_request = ('cf_mean', 'ws_mean')
     pc = Gen.get_pc(points, None, sam_files, 'windpower',
                     sites_per_worker=50, res_file=res_file,
                     curtailment=curtailment)
@@ -146,11 +146,11 @@ def test_random(year, site):
 
         # run reV 2.0 generation and write to disk
         gen = Gen('windpower', points, sam_files, res_file,
-                  output_request=(MetaKeyName.CF_PROFILE,), curtailment=c,
+                  output_request=('cf_profile',), curtailment=c,
                   sites_per_worker=50, scale_outputs=True)
         gen.run(max_workers=1)
 
-        results.append(gen.out[MetaKeyName.CF_MEAN])
+        results.append(gen.out['cf_mean'])
 
     assert results[0] > results[1], 'Curtailment did not decrease cf_mean!'
 

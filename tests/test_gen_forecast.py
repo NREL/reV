@@ -52,7 +52,7 @@ def test_forecast():
 
         points = ProjectPoints(slice(0, 5), sam_files, 'pvwattsv7',
                                res_file=res_file)
-        output_request = (MetaKeyName.CF_MEAN, 'ghi_mean')
+        output_request = ('cf_mean', 'ghi_mean')
         site_data = pd.DataFrame({MetaKeyName.GID: np.arange(5),
                                   MetaKeyName.TIMEZONE: -5,
                                   'elevation': 0})

@@ -40,7 +40,7 @@ def test_gen_linear():
     #     sequence: Receiver mass flow rate [kg/s]
     output_request = ('q_dot_to_heat_sink', 'gen', 'm_dot_field',
                       'q_dot_sf_out', 'W_dot_heat_sink_pump', 'm_dot_loop',
-                      'q_dot_rec_inc', MetaKeyName.CF_MEAN, 'gen_profile',
+                      'q_dot_rec_inc', 'cf_mean', 'gen_profile',
                       'annual_field_energy', 'annual_thermal_consumption',)
 
     # run reV 2.0 generation

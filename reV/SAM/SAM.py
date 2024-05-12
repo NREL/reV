@@ -27,7 +27,6 @@ from rex.renewable_resource import (
 )
 from rex.utilities.utilities import check_res_file
 
-from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import (
     ResourceError,
     SAMExecutionError,
@@ -376,19 +375,18 @@ class Sam:
                    .format(key, self.pysam))
             logger.exception(msg)
             raise SAMInputError(msg)
-        else:
-            self.sam_sys_inputs[key] = value
-            group = self._get_group(key, outputs=False)
-            try:
-                setattr(getattr(self.pysam, group), key, value)
-            except Exception as e:
-                msg = ('Could not set input key "{}" to '
-                       'group "{}" in "{}".\n'
-                       'Data is: {} ({})\n'
-                       'Received the following error: "{}"'
-                       .format(key, group, self.pysam, value, type(value), e))
-                logger.exception(msg)
-                raise SAMInputError(msg) from e
+        self.sam_sys_inputs[key] = value
+        group = self._get_group(key, outputs=False)
+        try:
+            setattr(getattr(self.pysam, group), key, value)
+        except Exception as e:
+            msg = ('Could not set input key "{}" to '
+                   'group "{}" in "{}".\n'
+                   'Data is: {} ({})\n'
+                   'Received the following error: "{}"'
+                   .format(key, group, self.pysam, value, type(value), e))
+            logger.exception(msg)
+            raise SAMInputError(msg) from e
 
     @property
     def pysam(self):
@@ -739,7 +737,7 @@ class RevPySam(Sam):
             if t == 1.0:
                 time_interval += 1
                 break
-            elif t == 0.0:
+            if t == 0.0:
                 time_interval += 1
 
         return int(time_interval)
@@ -797,22 +795,20 @@ class RevPySam(Sam):
         """Returns true if SAM data is array-like. False if scalar."""
         if isinstance(val, (int, float, str)):
             return False
+        try:
+            len(val)
+        except TypeError:
+            return False
         else:
-            try:
-                len(val)
-            except TypeError:
-                return False
-            else:
-                return True
+            return True
 
     @classmethod
     def _is_hourly(cls, val):
         """Returns true if SAM data is hourly or sub-hourly. False otherise."""
         if not cls._is_arr_like(val):
             return False
-        else:
-            L = len(val)
-            return L >= 8760
+        L = len(val)
+        return L >= 8760
 
     def outputs_to_utc_arr(self):
         """Convert array-like SAM outputs to UTC np.ndarrays"""

@@ -15,6 +15,7 @@ from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
+from reV.utilities import MetaKeyName
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')

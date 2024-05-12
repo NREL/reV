@@ -22,6 +22,7 @@ from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
+from reV.utililities import MetaKeyName
 from reV.utilities.exceptions import ConfigError, ExecutionError
 
 RTOL = 0.0
@@ -169,11 +170,11 @@ def test_pv_gen_profiles(year):
 
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
-                  output_request=(,), sites_per_worker=50)
+                  output_request=('cf_profile',), sites_per_worker=50)
         gen.run(max_workers=2, out_fpath=rev2_out)
 
         with Outputs(rev2_out, 'r') as cf:
-            rev2_profiles = cf[]
+            rev2_profiles = cf['cf_profile']
 
         # get reV 1.0 generation profiles
         rev1_profiles = get_r1_profiles(year=year)
@@ -195,11 +196,11 @@ def test_smart(year):
 
         # run reV 2.0 generation and write to disk
         gen = Gen('pvwattsv5', points, sam_files, res_file,
-                  output_request=(,), sites_per_worker=50)
+                  output_request=('cf_profile',), sites_per_worker=50)
         gen.run(max_workers=2, out_fpath=rev2_out)
 
         with Outputs(rev2_out, 'r') as cf:
-            rev2_profiles = cf[]
+            rev2_profiles = cf['cf_profile']
 
         # get reV 1.0 generation profiles
         rev1_profiles = get_r1_profiles(year=year)
@@ -225,7 +226,7 @@ def test_multi_file_nsrdb_2018(model):
     assert len(means_outs) == 10
     assert np.mean(means_outs) > 0.14
 
-    profiles_out = gen.out[]
+    profiles_out = gen.out['cf_profile']
     assert profiles_out.shape == (105120, 10)
     assert np.mean(profiles_out) > 0.14
 
@@ -235,7 +236,7 @@ def get_r1_profiles(year=2012):
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
     with Outputs(rev1) as cf:
-        data = cf[][...] / 10000
+        data = cf['cf_profile'][...] / 10000
 
     return data
 
@@ -261,7 +262,7 @@ def test_southern_hemisphere():
     rev2_points = slice(0, 1)
     res_file = TESTDATADIR + '/nsrdb/brazil_solar.h5'
     sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc', 'azimuth')
 
     gen = Gen('pvwattsv7', rev2_points, sam_files, res_file,
@@ -286,7 +287,7 @@ def test_pvwattsv7_baseline():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc')
 
     # run reV 2.0 generation
@@ -335,7 +336,7 @@ def test_pvwatts_v8_lifetime():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv8_degradation.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean')
 
     # run reV 2.0 generation with valid output request
@@ -362,7 +363,7 @@ def test_pvwatts_v8_lifetime_invalid_request():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv8_degradation.json'
 
-    output_request_invalid = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request_invalid = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                               'ghi_mean', 'ac', 'dc')
 
     # run reV 2.0 generation with invalid output request
@@ -388,7 +389,7 @@ def test_bifacial():
 
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
     # run reV 2.0 generation
-    output_request = ('cf_mean', , 'surface_albedo')
+    output_request = ('cf_mean', 'cf_profile', 'surface_albedo')
     gen_bi = Gen('pvwattsv7', rev2_points, sam_files, res_file,
                  sites_per_worker=1, output_request=output_request)
     gen_bi.run(max_workers=1)
@@ -499,7 +500,7 @@ def test_detailed_pv_baseline():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvsamv1.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc')
 
     # run reV 2.0 generation
@@ -526,7 +527,7 @@ def test_detailed_pv_bifacial():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvsamv1_bifacial.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc', 'surface_albedo')
 
     # run reV 2.0 generation
@@ -552,9 +553,9 @@ def test_pv_clearsky():
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     sam_files_cs = TESTDATADIR + '/SAM/naris_pv_1axis_inv13_cs.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc')
-    output_request_cs = ('cf_mean', , 'clearsky_dni_mean',
+    output_request_cs = ('cf_mean', 'cf_profile', 'clearsky_dni_mean',
                          'clearsky_dhi_mean', 'clearsky_ghi_mean', 'ac', 'dc')
 
     with tempfile.TemporaryDirectory() as td:
@@ -590,7 +591,7 @@ def test_irrad_bias_correct():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
 
-    output_request = ('cf_mean', , 'dni_mean', 'dhi_mean',
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
                       'ghi_mean', 'ac', 'dc')
 
     gen_base = Gen('pvwattsv7', points, sam_files, res_file,
@@ -607,13 +608,13 @@ def test_irrad_bias_correct():
     assert (gen_base.out['cf_mean'][0] ==
             gen.out['cf_mean'][0]).all()
     assert (gen_base.out['ghi_mean'][0] == gen.out['ghi_mean'][0]).all()
-    assert np.allclose(gen_base.out[][:, 0],
-                       gen.out[][:, 0])
+    assert np.allclose(gen_base.out['cf_profile'][:, 0],
+                       gen.out['cf_profile'][:, 0])
 
     assert (gen_base.out['cf_mean'][1:] <
             gen.out['cf_mean'][1:]).all()
     assert (gen_base.out['ghi_mean'][1:] < gen.out['ghi_mean'][1:]).all()
-    mask = (gen_base.out[][:, 1:] <= gen.out[][:, 1:])
+    mask = (gen_base.out['cf_profile'][:, 1:] <= gen.out['cf_profile'][:, 1:])
     assert (mask.sum() / mask.size) > 0.99
 
     bc_df = pd.DataFrame({MetaKeyName.GID: np.arange(100),
@@ -635,7 +636,7 @@ def test_ac_outputs():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv8.json'
 
-    output_request = ('cf_mean', 'cf_mean_ac', , 'cf_profile_ac',
+    output_request = ('cf_mean', 'cf_mean_ac', 'cf_profile', 'cf_profile_ac',
                       'system_capacity', 'system_capacity_ac', 'ac', 'dc',
                       'dc_ac_ratio')
 
@@ -659,7 +660,7 @@ def test_ac_outputs():
     assert np.allclose(gen.out['system_capacity'] / gen.out['dc_ac_ratio'],
                        gen.out['system_capacity_ac'])
 
-    assert not np.isclose(gen.out[], 1).any()
+    assert not np.isclose(gen.out['cf_profile'], 1).any()
     assert np.isclose(gen.out['cf_profile_ac'], 1).any()
 
 
@@ -681,7 +682,7 @@ def test_bad_loc_inputs(bad_input):
             f.meta = meta
 
         gen = Gen('pvwattsv8', slice(0, 3), sam_files, res_file_bad,
-                  output_request=(,), sites_per_worker=50)
+                  output_request=('cf_profile',), sites_per_worker=50)
         with pytest.raises(ValueError):
             gen.run(max_workers=1)
 

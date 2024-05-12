@@ -54,7 +54,7 @@ class pv_results:
     def get_cf_mean(self, site, year):
         """Get a cf mean based on site and year"""
         iy = self.years.index(year)
-        out = self._h5['pv'][MetaKeyName.CF_MEAN][iy, site]
+        out = self._h5['pv']['cf_mean'][iy, site]
         return out
 
 
@@ -70,10 +70,10 @@ def is_num(n):
 def to_list(gen_out):
     """Generation output handler that converts to the rev 1.0 format."""
     if isinstance(gen_out, list) and len(gen_out) == 1:
-        out = [c[MetaKeyName.CF_MEAN] for c in gen_out[0].values()]
+        out = [c['cf_mean'] for c in gen_out[0].values()]
 
     if isinstance(gen_out, dict):
-        out = [c[MetaKeyName.CF_MEAN] for c in gen_out.values()]
+        out = [c['cf_mean'] for c in gen_out.values()]
 
     return out
 
@@ -104,7 +104,7 @@ def test_eagle(year):
                        sam_files=sam_files, res_file=res_file,
                        sites_per_worker=None, max_workers=None,
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
-                       output_request=(, MetaKeyName.CF_MEAN),
+                       output_request=('cf_profile', 'cf_mean'),
                        verbose=verbose)
 
     # create and submit the SLURM job
@@ -115,8 +115,7 @@ def test_eagle(year):
         status = slurm.check_status(name, var='name')
         if status == 'CG':
             break
-        else:
-            time.sleep(5)
+        time.sleep(5)
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
@@ -125,7 +124,7 @@ def test_eagle(year):
             if rev2_out.strip('.h5') in fname:
                 full_f = os.path.join(rev2_out_dir, fname)
                 with Outputs(full_f, 'r') as cf:
-                    rev2_profiles = cf[]
+                    rev2_profiles = cf['cf_profile']
                 break
 
     # get reV 1.0 generation profiles
@@ -147,7 +146,7 @@ def get_r1_profiles(year=2012):
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
     with Outputs(rev1) as cf:
-        data = cf[][...] / 10000
+        data = cf['cf_profile'][...] / 10000
     return data
 
 

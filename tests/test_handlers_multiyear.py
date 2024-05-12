@@ -18,7 +18,7 @@ from reV import TESTDATADIR
 from reV.cli import main
 from reV.handlers.multi_year import MultiYear
 from reV.handlers.outputs import Outputs
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName
 
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
@@ -96,14 +96,14 @@ def compare_arrays(my_arr, test_arr, desc):
 
 
 @pytest.mark.parametrize(('source', 'dset', 'group'), [
-    (H5_FILES, , None),
-    (H5_FILES, MetaKeyName.CF_MEAN, None),
-    (H5_FILES, , 'pytest'),
-    (H5_FILES, MetaKeyName.CF_MEAN, 'pytest'),
-    (H5_PATTERN, , None),
-    (H5_PATTERN, MetaKeyName.CF_MEAN, None),
-    (H5_PATTERN, , 'pytest'),
-    (H5_PATTERN, MetaKeyName.CF_MEAN, 'pytest'),
+    (H5_FILES, 'cf_profile', None),
+    (H5_FILES, 'cf_mean', None),
+    (H5_FILES, 'cf_profile', 'pytest'),
+    (H5_FILES, 'cf_mean', 'pytest'),
+    (H5_PATTERN, 'cf_profile', None),
+    (H5_PATTERN, 'cf_mean', None),
+    (H5_PATTERN, 'cf_profile', 'pytest'),
+    (H5_PATTERN, 'cf_mean', 'pytest'),
 ])
 def test_my_collection(source, dset, group):
     """
@@ -207,8 +207,8 @@ def test_cli(runner, clear_loggers):
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
-    (MetaKeyName.CF_MEAN, None),
-    (MetaKeyName.CF_MEAN, 'pytest')])
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
 def test_my_means(dset, group):
     """
     Test computation of multi-year means
@@ -237,8 +237,8 @@ def test_my_means(dset, group):
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
-    (MetaKeyName.CF_MEAN, None),
-    (MetaKeyName.CF_MEAN, 'pytest')])
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
 def test_update(dset, group):
     """
     Test computation of multi-year means
@@ -278,8 +278,8 @@ def test_update(dset, group):
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
-    (MetaKeyName.CF_MEAN, None),
-    (MetaKeyName.CF_MEAN, 'pytest')])
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
 def test_my_stdev(dset, group):
     """
     Test computation of multi-year means

@@ -38,16 +38,16 @@ def test_mhkwave():
     sam_files = TESTDATADIR + '/SAM/mhkwave_default.json'
     res_file = TESTDATADIR + '/wave/ri_wave_2010.h5'
     points = slice(0, 100)
-    output_request = (MetaKeyName.CF_MEAN, )
+    output_request = ('cf_mean', )
 
     test = Gen('mhkwave', points, sam_files, res_file,
                sites_per_worker=3, output_request=output_request)
     test.run(max_workers=1)
 
     with Resource(BASELINE) as f:
-        assert np.allclose(test.out[MetaKeyName.CF_MEAN], f[MetaKeyName.CF_MEAN],
+        assert np.allclose(test.out['cf_mean'], f['cf_mean'],
                            atol=0.01, rtol=0.01)
-        assert np.allclose(test.out[], f[],
+        assert np.allclose(test.out['cf_profile'], f['cf_profile'],
                            atol=0.01, rtol=0.01)
 
 

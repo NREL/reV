@@ -47,7 +47,7 @@ def test_pass_through_lcoe_args():
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5'.format(year))
     sam_files = os.path.join(TESTDATADIR, 'SAM/i_windpower_lcoe.json')
 
-    output_request = (MetaKeyName.CF_MEAN,
+    output_request = ('cf_mean',
                       MetaKeyName.LCOE_FCR,
                       'system_capacity',
                       'capital_cost',
@@ -63,7 +63,7 @@ def test_pass_through_lcoe_args():
     checks = [x in gen.out for x in Gen.LCOE_ARGS]
     assert all(checks)
     assert MetaKeyName.LCOE_FCR in gen.out
-    assert MetaKeyName.CF_MEAN in gen.out
+    assert 'cf_mean' in gen.out
 
 
 def test_lcoe_calc_simple():

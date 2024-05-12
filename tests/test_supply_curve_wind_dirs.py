@@ -80,7 +80,7 @@ def test_sc_full_wind_dirs(downwind):
 def test_sc_simple_wind_dirs(downwind):
     """Run the simple SC test and verify results against baseline file."""
     sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
-    sc_out = sc.simple_sort(fcr=0.1,transmission_costs=TRANS_COSTS,
+    sc_out = sc.simple_sort(fcr=0.1, transmission_costs=TRANS_COSTS,
                             wind_dirs=WIND_DIRS, downwind=downwind)
 
     if downwind:

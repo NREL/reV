@@ -18,13 +18,12 @@ from reV.bespoke.plotting_functions import (
     plot_windrose,
 )
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities import MetaKeyName
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
-AGG_DSET = (MetaKeyName.CF_MEAN, MetaKeyName.CF_PROFILE)
+AGG_DSET = ('cf_mean', 'cf_profile')
 
 # note that this differs from the
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
@@ -61,8 +60,8 @@ if __name__ == "__main__":
         1E5 * 0.1 + (1 - 0.1))"""
     objective_function = "cost / aep"
 
-    output_request = ('system_capacity', MetaKeyName.CF_MEAN,
-                      MetaKeyName.CF_PROFILE)
+    output_request = ('system_capacity', 'cf_mean',
+                      'cf_profile')
     gid = 33
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')

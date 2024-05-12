@@ -260,7 +260,7 @@ def test_least_cost_full():
         out_fpath = os.path.join(td, "sc")
         sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
                          avail_cap_frac=0.1,
-                         columns=[*list(SC_FULL_COLUMNS), "max_cap"]
+                         columns=[*list(SC_FULL_COLUMNS), "max_cap"])
 
         fpath_baseline = os.path.join(TESTDATADIR, 'sc_out/sc_full_lc.csv')
         baseline_verify(sc_full, fpath_baseline)

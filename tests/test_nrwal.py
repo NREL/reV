@@ -45,7 +45,7 @@ def test_nrwal():
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
                                          closed='right', freq='1h')
-            f._add_dset(MetaKeyName.CF_PROFILE, np.random.random(f.shape),
+            f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
             f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
@@ -58,14 +58,14 @@ def test_nrwal():
                               if d not in ('meta', 'time_index')]
             meta_raw = f.meta
             lcoe_raw = f[MetaKeyName.LCOE_FCR]
-            cf_mean_raw = f[MetaKeyName.CF_MEAN]
-            cf_profile_raw = f[MetaKeyName.CF_PROFILE]
+            cf_mean_raw = f['cf_mean']
+            cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
         output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
                           'total_losses',
                           'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, MetaKeyName.CF_MEAN, ]
+                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
 
         obj = RevNrwal(gen_fpath, site_data, sam_configs, nrwal_configs,
                        output_request, site_meta_cols=['depth'])
@@ -78,8 +78,8 @@ def test_nrwal():
             gcf_adjustment = f['gcf_adjustment']
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
-            cf_mean_new = f[MetaKeyName.CF_MEAN]
-            cf_profile_new = f[MetaKeyName.CF_PROFILE]
+            cf_mean_new = f['cf_mean']
+            cf_profile_new = f['cf_profile']
             fcr = f[MetaKeyName.FIXED_CHARGE_RATE]
             depth = f['depth']
 
@@ -105,8 +105,8 @@ def test_nrwal():
         # make sure the second offshore compute gives same results as first
         with Outputs(gen_fpath, 'r') as f:
             assert np.allclose(lcoe_new, f[MetaKeyName.LCOE_FCR])
-            assert np.allclose(cf_mean_new, f[MetaKeyName.CF_MEAN])
-            assert np.allclose(cf_profile_new, f[MetaKeyName.CF_PROFILE])
+            assert np.allclose(cf_mean_new, f['cf_mean'])
+            assert np.allclose(cf_profile_new, f['cf_profile'])
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
 
@@ -176,7 +176,7 @@ def test_nrwal_csv(out_fn):
 
         compatible = ['depth', 'total_losses', 'array', 'export',
                       'gcf_adjustment', MetaKeyName.FIXED_CHARGE_RATE,
-                      MetaKeyName.LCOE_FCR, MetaKeyName.CF_MEAN]
+                      MetaKeyName.LCOE_FCR, 'cf_mean']
         incompatible = []
         output_request = compatible + incompatible
 
@@ -224,7 +224,7 @@ def test_nrwal_constant_eq_output_request():
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
                                          closed='right', freq='1h')
-            f._add_dset(MetaKeyName.CF_PROFILE, np.random.random(f.shape),
+            f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
             f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
@@ -236,7 +236,7 @@ def test_nrwal_constant_eq_output_request():
             meta_raw = f.meta
             mask = meta_raw.offshore == 1
 
-        output_request = [MetaKeyName.CF_MEAN, MetaKeyName.CF_PROFILE,
+        output_request = ['cf_mean', 'cf_profile',
                           'lease_price', 'lease_price_mil']
 
         RevNrwal(gen_fpath, site_data, sam_configs, nrwal_configs,
@@ -268,7 +268,7 @@ def test_nrwal_cli(runner, clear_loggers):
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
                                          closed='right', freq='1h')
-            f._add_dset(MetaKeyName.CF_PROFILE, np.random.random(f.shape),
+            f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
             f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
@@ -281,14 +281,14 @@ def test_nrwal_cli(runner, clear_loggers):
                               if d not in ('meta', 'time_index')]
             meta_raw = f.meta
             lcoe_raw = f[MetaKeyName.LCOE_FCR]
-            cf_mean_raw = f[MetaKeyName.CF_MEAN]
-            cf_profile_raw = f[MetaKeyName.CF_PROFILE]
+            cf_mean_raw = f['cf_mean']
+            cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
         output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
                           'total_losses',
                           'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, MetaKeyName.CF_MEAN, ]
+                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
 
         config = {
             "execution_control": {
@@ -322,8 +322,8 @@ def test_nrwal_cli(runner, clear_loggers):
             gcf_adjustment = f['gcf_adjustment']
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
-            cf_mean_new = f[MetaKeyName.CF_MEAN]
-            cf_profile_new = f[MetaKeyName.CF_PROFILE]
+            cf_mean_new = f['cf_mean']
+            cf_profile_new = f['cf_profile']
             fcr = f[MetaKeyName.FIXED_CHARGE_RATE]
             depth = f['depth']
 
@@ -353,8 +353,8 @@ def test_nrwal_cli(runner, clear_loggers):
         # make sure the second offshore compute gives same results as first
         with Outputs(gen_fpath, 'r') as f:
             assert np.allclose(lcoe_new, f[MetaKeyName.LCOE_FCR])
-            assert np.allclose(cf_mean_new, f[MetaKeyName.CF_MEAN])
-            assert np.allclose(cf_profile_new, f[MetaKeyName.CF_PROFILE])
+            assert np.allclose(cf_mean_new, f['cf_mean'])
+            assert np.allclose(cf_profile_new, f['cf_profile'])
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
 
@@ -426,7 +426,7 @@ def test_nrwal_cli_csv(runner, clear_loggers):
 
         output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
                           'total_losses', 'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, MetaKeyName.CF_MEAN, ]
+                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
 
         config = {
             "execution_control": {
@@ -459,7 +459,7 @@ def test_nrwal_cli_csv(runner, clear_loggers):
         new_data = pd.read_csv(os.path.join(td, out_fn))
         for col in output_request[:-1]:
             assert col in new_data
-        assert MetaKeyName.CF_PROFILE not in new_data
+        assert 'cf_profile' not in new_data
 
         clear_loggers()
 

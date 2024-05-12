@@ -302,7 +302,7 @@ class RegionRepProfile:
     RES_GID_COL = MetaKeyName.RES_GIDS
     GEN_GID_COL = MetaKeyName.GEN_GIDS
 
-    def __init__(self, gen_fpath, rev_summary, cf_dset=MetaKeyName.CF_PROFILE,
+    def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse',
                  weight=MetaKeyName.GID_COUNTS,
                  n_profiles=1):
@@ -442,7 +442,7 @@ class RegionRepProfile:
         if any(data):
             if isinstance(data[0], str):
                 # pylint: disable=simplifiable-condition
-                if ('[' and ']' in data[0]) or ('(' and ')' in data[0
+                if ('[' and ']' in data[0]) or ('(' and ')' in data[0]):
                     data = [json.loads(s) for s in data]
 
             if isinstance(data[0], (list, tuple)):
@@ -474,7 +474,7 @@ class RegionRepProfile:
             rep_method=self._rep_method, err_method=self._err_method,
             n_profiles=self._n_profiles)
 
-    @property
+    @ property
     def rep_profiles(self):
         """Get the representative profiles of this region."""
         if self._profiles is None:
@@ -482,7 +482,7 @@ class RegionRepProfile:
 
         return self._profiles
 
-    @property
+    @ property
     def i_reps(self):
         """Get the representative profile index(es) of this region."""
         if self._i_reps is None:
@@ -490,7 +490,7 @@ class RegionRepProfile:
 
         return self._i_reps
 
-    @property
+    @ property
     def rep_gen_gids(self):
         """Get the representative profile gen gids of this region."""
         gids = self._gen_gids
@@ -501,7 +501,7 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @property
+    @ property
     def rep_res_gids(self):
         """Get the representative profile resource gids of this region."""
         gids = self._res_gids
@@ -512,9 +512,9 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @classmethod
+    @ classmethod
     def get_region_rep_profile(cls, gen_fpath, rev_summary,
-                               cf_dset=MetaKeyName.CF_PROFILE,
+                               cf_dset='cf_profile',
                                rep_method='meanoid',
                                err_method='rmse',
                                weight=MetaKeyName.GID_COUNTS,
@@ -568,7 +568,7 @@ class RepProfilesBase(ABC):
     """Abstract utility framework for representative profile run classes."""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols=None,
-                 cf_dset=MetaKeyName.CF_PROFILE, rep_method='meanoid',
+                 cf_dset='cf_profile', rep_method='meanoid',
                  err_method='rmse', weight=MetaKeyName.GID_COUNTS,
                  n_profiles=1):
         """
@@ -634,7 +634,7 @@ class RepProfilesBase(ABC):
         self._rep_method = rep_method
         self._err_method = err_method
 
-    @staticmethod
+    @ staticmethod
     def _parse_rev_summary(rev_summary):
         """Extract, parse, and check the rev summary table.
 
@@ -670,7 +670,7 @@ class RepProfilesBase(ABC):
 
         return rev_summary
 
-    @staticmethod
+    @ staticmethod
     def _check_req_cols(df, cols):
         """Check a dataframe for required columns.
 
@@ -693,7 +693,7 @@ class RepProfilesBase(ABC):
                 logger.error(e)
                 raise KeyError(e)
 
-    @staticmethod
+    @ staticmethod
     def _check_rev_gen(gen_fpath, cf_dset, rev_summary):
         """Check rev gen file for requisite datasets.
 
@@ -736,7 +736,7 @@ class RepProfilesBase(ABC):
                                       dtype=np.float32)
                           for k in range(self._n_profiles)}
 
-    @property
+    @ property
     def time_index(self):
         """Get the time index for the rep profiles.
 
@@ -756,7 +756,7 @@ class RepProfilesBase(ABC):
 
         return self._time_index
 
-    @property
+    @ property
     def meta(self):
         """Meta data for the representative profiles.
 
@@ -768,7 +768,7 @@ class RepProfilesBase(ABC):
         """
         return self._meta
 
-    @property
+    @ property
     def profiles(self):
         """Get the arrays of representative CF profiles corresponding to meta.
 
@@ -866,15 +866,15 @@ class RepProfilesBase(ABC):
                           scaled_precision=scaled_precision)
         self._write_h5_out(fout, save_rev_summary=save_rev_summary)
 
-    @abstractmethod
+    @ abstractmethod
     def _run_serial(self):
         """Abstract method for serial run method."""
 
-    @abstractmethod
+    @ abstractmethod
     def _run_parallel(self):
         """Abstract method for parallel run method."""
 
-    @abstractmethod
+    @ abstractmethod
     def run(self):
         """Abstract method for generic run method."""
 
@@ -883,7 +883,7 @@ class RepProfiles(RepProfilesBase):
     """RepProfiles"""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols,
-                 cf_dset=MetaKeyName.CF_PROFILE,
+                 cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse',
                  weight=MetaKeyName.GID_COUNTS,
                  n_profiles=1, aggregate_profiles=False):
@@ -1001,7 +1001,7 @@ class RepProfiles(RepProfilesBase):
                  'key such as "sc_gid".')
             logger.error(e)
             raise ValueError(e)
-        elif isinstance(reg_cols, str):
+        if isinstance(reg_cols, str):
             reg_cols = [reg_cols]
         elif not isinstance(reg_cols, list):
             reg_cols = list(reg_cols)
