@@ -666,9 +666,9 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         m["State"] = m["state"].apply(lambda x: "-" if x == "None" else x)
         m["Country"] = m["country"].apply(lambda x: "-" if x == "None" else x)
         m["Latitude"] = m[MetaKeyName.LATITUDE]
-        m[MetaKeyName.LONGITUDE] = m[MetaKeyName.LONGITUDE]
+        m["Longitude"] = m[MetaKeyName.LONGITUDE]
         m["Time Zone"] = timezone
-        m[MetaKeyName.ELEVATION] = m[MetaKeyName.ELEVATION]
+        m["Elevation"] = m[MetaKeyName.ELEVATION]
         m["Local Time Zone"] = timezone
         m["Dew Point Units"] = "c"
         m["DHI Units"] = "w/m2"
