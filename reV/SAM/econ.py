@@ -4,17 +4,19 @@
 Wraps the NREL-PySAM lcoefcr and singleowner modules with
 additional reV features.
 """
-from copy import deepcopy
 import logging
-import numpy as np
+from copy import deepcopy
 from warnings import warn
+
+import numpy as np
 import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
 
-from reV.SAM.defaults import DefaultSingleOwner, DefaultLCOE
 from reV.handlers.outputs import Outputs
-from reV.SAM.windbos import WindBos
+from reV.SAM.defaults import DefaultLCOE, DefaultSingleOwner
 from reV.SAM.SAM import RevPySam
+from reV.SAM.windbos import WindBos
+from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import SAMExecutionError
 
 logger = logging.getLogger(__name__)
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class Economic(RevPySam):
     """Base class for SAM economic models."""
+
     MODULE = None
 
     def __init__(self, sam_sys_inputs, site_sys_inputs=None,
@@ -335,6 +338,7 @@ class Economic(RevPySam):
 class LCOE(Economic):
     """SAM LCOE model.
     """
+
     MODULE = 'lcoefcr'
     PYSAM = PySamLCOE
 
@@ -463,6 +467,7 @@ class LCOE(Economic):
 class SingleOwner(Economic):
     """SAM single owner economic model.
     """
+
     MODULE = 'singleowner'
     PYSAM = PySamSingleOwner
 

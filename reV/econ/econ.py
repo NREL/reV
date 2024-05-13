@@ -2,6 +2,7 @@
 """
 reV econ module (lcoe-fcr, single owner, etc...)
 """
+
 import logging
 import os
 import pprint
@@ -29,31 +30,40 @@ class Econ(BaseGen):
     """Econ"""
 
     # Mapping of reV econ output strings to SAM econ modules
-    OPTIONS = {'lcoe_fcr': SAM_LCOE,
-               'ppa_price': SingleOwner,
-               'project_return_aftertax_npv': SingleOwner,
-               'lcoe_real': SingleOwner,
-               'lcoe_nom': SingleOwner,
-               'flip_actual_irr': SingleOwner,
-               'gross_revenue': SingleOwner,
-               'total_installed_cost': WindBos,
-               'turbine_cost': WindBos,
-               'sales_tax_cost': WindBos,
-               'bos_cost': WindBos,
-               'fixed_charge_rate': SAM_LCOE,
-               'capital_cost': SAM_LCOE,
-               'fixed_operating_cost': SAM_LCOE,
-               'variable_operating_cost': SAM_LCOE,
-               }
+    OPTIONS = {
+        "lcoe_fcr": SAM_LCOE,
+        "ppa_price": SingleOwner,
+        "project_return_aftertax_npv": SingleOwner,
+        "lcoe_real": SingleOwner,
+        "lcoe_nom": SingleOwner,
+        "flip_actual_irr": SingleOwner,
+        "gross_revenue": SingleOwner,
+        "total_installed_cost": WindBos,
+        "turbine_cost": WindBos,
+        "sales_tax_cost": WindBos,
+        "bos_cost": WindBos,
+        "fixed_charge_rate": SAM_LCOE,
+        "capital_cost": SAM_LCOE,
+        "fixed_operating_cost": SAM_LCOE,
+        "variable_operating_cost": SAM_LCOE,
+    }
     """Available ``reV`` econ `output_request` options"""
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
-    def __init__(self, project_points, sam_files, cf_file, site_data=None,
-                 output_request=('lcoe_fcr',), sites_per_worker=100,
-                 memory_utilization_limit=0.4, append=False):
+    def __init__(
+        self,
+        project_points,
+        sam_files,
+        cf_file,
+        site_data=None,
+        output_request=("lcoe_fcr",),
+        sites_per_worker=100,
+        memory_utilization_limit=0.4,
+        append=False,
+    ):
         """ReV econ analysis class.
 
         ``reV`` econ analysis runs SAM econ calculations, typically to
@@ -176,17 +186,26 @@ class Econ(BaseGen):
         """
 
         # get a points control instance
-        pc = self.get_pc(points=project_points, points_range=None,
-                         sam_configs=sam_files, cf_file=cf_file,
-                         sites_per_worker=sites_per_worker, append=append)
+        pc = self.get_pc(
+            points=project_points,
+            points_range=None,
+            sam_configs=sam_files,
+            cf_file=cf_file,
+            sites_per_worker=sites_per_worker,
+            append=append,
+        )
 
-        super().__init__(pc, output_request, site_data=site_data,
-                         memory_utilization_limit=memory_utilization_limit)
+        super().__init__(
+            pc,
+            output_request,
+            site_data=site_data,
+            memory_utilization_limit=memory_utilization_limit,
+        )
 
         self._cf_file = cf_file
         self._append = append
-        self._run_attrs['cf_file'] = cf_file
-        self._run_attrs['sam_module'] = self._sam_module.MODULE
+        self._run_attrs["cf_file"] = cf_file
+        self._run_attrs["sam_module"] = self._sam_module.MODULE
 
     @property
     def cf_file(self):
@@ -212,19 +231,24 @@ class Econ(BaseGen):
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
-                    cfh.meta[MetaKeyName.GID].isin(self.points_control.sites)]
+                    cfh.meta[MetaKeyName.GID].isin(self.points_control.sites)
+                ]
 
             if MetaKeyName.OFFSHORE in self._meta:
                 if self._meta[MetaKeyName.OFFSHORE].sum() > 1:
-                    w = ('Found offshore sites in econ meta data. '
-                         'This functionality has been deprecated. '
-                         'Please run the reV offshore module to '
-                         'calculate offshore wind lcoe.')
+                    w = (
+                        "Found offshore sites in econ meta data. "
+                        "This functionality has been deprecated. "
+                        "Please run the reV offshore module to "
+                        "calculate offshore wind lcoe."
+                    )
                     warn(w, OffshoreWindInputWarning)
                     logger.warning(w)
 
         elif self._meta is None and self.cf_file is None:
-            self._meta = pd.DataFrame({MetaKeyName.GID: self.points_control.sites})
+            self._meta = pd.DataFrame(
+                {MetaKeyName.GID: self.points_control.sites}
+            )
 
         return self._meta
 
@@ -233,7 +257,7 @@ class Econ(BaseGen):
         """Get the generation resource time index data."""
         if self._time_index is None and self.cf_file is not None:
             with Outputs(self.cf_file) as cfh:
-                if 'time_index' in cfh.datasets:
+                if "time_index" in cfh.datasets:
                     self._time_index = cfh.time_index
 
         return self._time_index
@@ -264,7 +288,7 @@ class Econ(BaseGen):
             res_kwargs = {}
         else:
             res_cls = Resource
-            res_kwargs = {'hsds': hsds}
+            res_kwargs = {"hsds": hsds}
 
         with res_cls(cf_file, **res_kwargs) as f:
             gid0 = f.meta[MetaKeyName.GID].values[0]
@@ -277,8 +301,15 @@ class Econ(BaseGen):
         return pc
 
     @classmethod
-    def get_pc(cls, points, points_range, sam_configs, cf_file,
-               sites_per_worker=None, append=False):
+    def get_pc(
+        cls,
+        points,
+        points_range,
+        sam_configs,
+        cf_file,
+        sites_per_worker=None,
+        append=False,
+    ):
         """
         Get a PointsControl instance.
 
@@ -311,13 +342,19 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = super().get_pc(points, points_range, sam_configs, ModuleName.ECON,
-                            sites_per_worker=sites_per_worker,
-                            res_file=cf_file)
+        pc = super().get_pc(
+            points,
+            points_range,
+            sam_configs,
+            ModuleName.ECON,
+            sites_per_worker=sites_per_worker,
+            res_file=cf_file,
+        )
 
         if append:
-            pc = cls._econ_append_pc(pc.project_points, cf_file,
-                                     sites_per_worker=sites_per_worker)
+            pc = cls._econ_append_pc(
+                pc.project_points, cf_file, sites_per_worker=sites_per_worker
+            )
 
         return pc
 
@@ -330,9 +367,10 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
             Must have project_points with df property with all relevant
-            site-specific inputs and a MetaKeyName.GID column. By passing site-specific
-            inputs in this dataframe, which was split using points_control,
-            only the data relevant to the current sites is passed.
+            site-specific inputs and a `MetaKeyName.GID` column. By passing
+            site-specific inputs in this dataframe, which was split using
+            points_control, only the data relevant to the current sites is
+            passed.
         econ_fun : method
             reV_run() method from one of the econ modules (SingleOwner,
             SAM_LCOE, WindBos).
@@ -358,11 +396,12 @@ class Econ(BaseGen):
 
         # SAM execute econ analysis based on output request
         try:
-            out = econ_fun(pc, site_df, output_request=output_request,
-                           **kwargs)
+            out = econ_fun(
+                pc, site_df, output_request=output_request, **kwargs
+            )
         except Exception as e:
             out = {}
-            logger.exception('Worker failed for PC: {}'.format(pc))
+            logger.exception("Worker failed for PC: {}".format(pc))
             raise e
 
         return out
@@ -385,8 +424,10 @@ class Econ(BaseGen):
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
-                msg = ('User output request "{}" not recognized. '
-                       'Will attempt to extract from PySAM.'.format(request))
+                msg = (
+                    'User output request "{}" not recognized. '
+                    "Will attempt to extract from PySAM.".format(request)
+                )
                 logger.debug(msg)
 
         modules = []
@@ -395,10 +436,13 @@ class Econ(BaseGen):
                 modules.append(self.OPTIONS[request])
 
         if not any(modules):
-            msg = ('None of the user output requests were recognized. '
-                   'Cannot run reV econ. '
-                   'At least one of the following must be requested: {}'
-                   .format(list(self.OPTIONS.keys())))
+            msg = (
+                "None of the user output requests were recognized. "
+                "Cannot run reV econ. "
+                "At least one of the following must be requested: {}".format(
+                    list(self.OPTIONS.keys())
+                )
+            )
             logger.exception(msg)
             raise ExecutionError(msg)
 
@@ -413,9 +457,11 @@ class Econ(BaseGen):
             self._sam_module = SingleOwner
             self._fun = SingleOwner.reV_run
         else:
-            msg = ('Econ outputs requested from different SAM modules not '
-                   'currently supported. Output request variables require '
-                   'SAM methods: {}'.format(modules))
+            msg = (
+                "Econ outputs requested from different SAM modules not "
+                "currently supported. Output request variables require "
+                "SAM methods: {}".format(modules)
+            )
             raise ValueError(msg)
 
         return list(set(output_request))
@@ -441,12 +487,14 @@ class Econ(BaseGen):
         """
 
         if dset in self.site_data:
-            data_shape = (n_sites, )
+            data_shape = (n_sites,)
             data = self.site_data[dset].values[0]
 
             if isinstance(data, (list, tuple, np.ndarray, str)):
-                msg = ('Cannot pass through non-scalar site_data '
-                       'input key "{}" as an output_request!'.format(dset))
+                msg = (
+                    "Cannot pass through non-scalar site_data "
+                    'input key "{}" as an output_request!'.format(dset)
+                )
                 logger.error(msg)
                 raise ExecutionError(msg)
 
@@ -455,8 +503,7 @@ class Econ(BaseGen):
 
         return data_shape
 
-    def run(self, out_fpath=None, max_workers=1, timeout=1800,
-            pool_size=None):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800, pool_size=None):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -494,52 +541,76 @@ class Econ(BaseGen):
         else:
             self._init_fpath(out_fpath, ModuleName.ECON)
 
-        self._init_h5(mode='a' if self._append else 'w')
+        self._init_h5(mode="a" if self._append else "w")
         self._init_out_arrays()
 
-        diff = list(set(self.points_control.sites)
-                    - set(self.meta[MetaKeyName.GID].values))
+        diff = list(
+            set(self.points_control.sites)
+            - set(self.meta[MetaKeyName.GID].values)
+        )
         if diff:
-            raise Exception('The following analysis sites were requested '
-                            'through project points for econ but are not '
-                            'found in the CF file ("{}"): {}'
-                            .format(self.cf_file, diff))
+            raise Exception(
+                "The following analysis sites were requested "
+                "through project points for econ but are not "
+                'found in the CF file ("{}"): {}'.format(self.cf_file, diff)
+            )
 
         # make a kwarg dict
-        kwargs = {'output_request': self.output_request,
-                  'cf_file': self.cf_file,
-                  'year': self.year}
+        kwargs = {
+            "output_request": self.output_request,
+            "cf_file": self.cf_file,
+            "year": self.year,
+        }
 
-        logger.info('Running econ with smart data flushing '
-                    'for: {}'.format(self.points_control))
-        logger.debug('The following project points were specified: "{}"'
-                     .format(self.project_points))
-        logger.debug('The following SAM configs are available to this run:\n{}'
-                     .format(pprint.pformat(self.sam_configs, indent=4)))
-        logger.debug('The SAM output variables have been requested:\n{}'
-                     .format(self.output_request))
+        logger.info(
+            "Running econ with smart data flushing " "for: {}".format(
+                self.points_control
+            )
+        )
+        logger.debug(
+            'The following project points were specified: "{}"'.format(
+                self.project_points
+            )
+        )
+        logger.debug(
+            "The following SAM configs are available to this run:\n{}".format(
+                pprint.pformat(self.sam_configs, indent=4)
+            )
+        )
+        logger.debug(
+            "The SAM output variables have been requested:\n{}".format(
+                self.output_request
+            )
+        )
 
         try:
-            kwargs['econ_fun'] = self._fun
+            kwargs["econ_fun"] = self._fun
             if max_workers == 1:
-                logger.debug('Running serial econ for: {}'
-                             .format(self.points_control))
+                logger.debug(
+                    "Running serial econ for: {}".format(self.points_control)
+                )
                 for i, pc_sub in enumerate(self.points_control):
                     self.out = self._run_single_worker(pc_sub, **kwargs)
-                    logger.info('Finished reV econ serial compute for: {} '
-                                '(iteration {} out of {})'
-                                .format(pc_sub, i + 1,
-                                        len(self.points_control)))
+                    logger.info(
+                        "Finished reV econ serial compute for: {} "
+                        "(iteration {} out of {})".format(
+                            pc_sub, i + 1, len(self.points_control)
+                        )
+                    )
                 self.flush()
             else:
-                logger.debug('Running parallel econ for: {}'
-                             .format(self.points_control))
-                self._parallel_run(max_workers=max_workers,
-                                   pool_size=pool_size, timeout=timeout,
-                                   **kwargs)
+                logger.debug(
+                    "Running parallel econ for: {}".format(self.points_control)
+                )
+                self._parallel_run(
+                    max_workers=max_workers,
+                    pool_size=pool_size,
+                    timeout=timeout,
+                    **kwargs,
+                )
 
         except Exception as e:
-            logger.exception('SmartParallelJob.execute() failed for econ.')
+            logger.exception("SmartParallelJob.execute() failed for econ.")
             raise e
 
         return self._out_fpath

@@ -7,20 +7,21 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-import h5py
 import json
-import numpy as np
 import os
-import pandas as pd
 import shutil
-from pandas.testing import assert_frame_equal
-import pytest
 import tempfile
 import traceback
 
+import h5py
+import numpy as np
+import pandas as pd
+import pytest
+from pandas.testing import assert_frame_equal
+
+from reV import TESTDATADIR
 from reV.cli import main
 from reV.econ.econ import Econ
-from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName
 

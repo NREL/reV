@@ -2,6 +2,7 @@
 """
 Competitive Wind Farms exclusion handler
 """
+
 import logging
 
 import numpy as np
@@ -35,30 +36,36 @@ class CompetitiveWindFarms:
         """
         self._wind_dirs = self._parse_wind_dirs(wind_dirs)
 
-        self._sc_gids, self._sc_point_gids, self._mask = \
-            self._parse_sc_points(sc_points, offshore=offshore)
+        self._sc_gids, self._sc_point_gids, self._mask = self._parse_sc_points(
+            sc_points, offshore=offshore
+        )
 
         self._offshore = offshore
 
         valid = np.isin(self.sc_point_gids, self._wind_dirs.index)
         if not np.all(valid):
-            msg = ("'sc_points contains sc_point_gid values that do not "
-                   "correspond to valid 'wind_dirs' sc_point_gids:\n{}"
-                   .format(self.sc_point_gids[~valid]))
+            msg = (
+                "'sc_points contains sc_point_gid values that do not "
+                "correspond to valid 'wind_dirs' sc_point_gids:\n{}".format(
+                    self.sc_point_gids[~valid]
+                )
+            )
             logger.error(msg)
             raise RuntimeError(msg)
 
         mask = self._wind_dirs.index.isin(self._sc_point_gids.keys())
         self._wind_dirs = self._wind_dirs.loc[mask]
-        self._upwind, self._downwind = self._get_neighbors(self._wind_dirs,
-                                                           n_dirs=n_dirs)
+        self._upwind, self._downwind = self._get_neighbors(
+            self._wind_dirs, n_dirs=n_dirs
+        )
 
     def __repr__(self):
         gids = len(self._upwind)
         # pylint: disable=unsubscriptable-object
         neighbors = len(self._upwind.values[0])
-        msg = ("{} with {} sc_point_gids and {} prominent directions"
-               .format(self.__class__.__name__, gids, neighbors))
+        msg = "{} with {} sc_point_gids and {} prominent directions".format(
+            self.__class__.__name__, gids, neighbors
+        )
 
         return msg
 
@@ -77,9 +84,13 @@ class CompetitiveWindFarms:
             Mapped gid(s) for given mapping
         """
         if not isinstance(keys, tuple):
-            msg = ("{} must be a tuple of form (source, gid) where source is: "
-                   "MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  or 'upwind', 'downwind'"
-                   .format(keys))
+            msg = (
+                "{} must be a tuple of form (source, gid) where source is: "
+                "MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  or 'upwind', "
+                "'downwind'".format(
+                    keys
+                )
+            )
             logger.error(msg)
             raise ValueError(msg)
 
@@ -88,13 +99,15 @@ class CompetitiveWindFarms:
             out = self.map_sc_gid_to_sc_point_gid(gid)
         elif source == MetaKeyName.SC_GID:
             out = self.map_sc_point_gid_to_sc_gid(gid)
-        elif source == 'upwind':
+        elif source == "upwind":
             out = self.map_upwind(gid)
-        elif source == 'downwind':
+        elif source == "downwind":
             out = self.map_downwind(gid)
         else:
-            msg = ("{} must be: MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  or 'upwind', "
-                   "'downwind'".format(source))
+            msg = (
+                "{} must be: MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  "
+                "or 'upwind', 'downwind'".format(source)
+            )
             logger.error(msg)
             raise ValueError(msg)
 
@@ -135,9 +148,9 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        sc_gids = \
-            np.concatenate([self._sc_point_gids[gid]
-                            for gid in self.sc_point_gids])
+        sc_gids = np.concatenate(
+            [self._sc_point_gids[gid] for gid in self.sc_point_gids]
+        )
 
         return sc_gids
 
@@ -185,7 +198,7 @@ class CompetitiveWindFarms:
         wind_dirs = cls._parse_table(wind_dirs)
 
         wind_dirs = wind_dirs.set_index(MetaKeyName.SC_POINT_GID)
-        columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
+        columns = [c for c in wind_dirs if c.endswith(("_gid", "_pr"))]
         wind_dirs = wind_dirs[columns]
 
         return wind_dirs
@@ -215,21 +228,29 @@ class CompetitiveWindFarms:
         """
         sc_points = cls._parse_table(sc_points)
         if MetaKeyName.OFFSHORE in sc_points and not offshore:
-            logger.debug('Not including offshore supply curve points in '
-                         'CompetitiveWindFarm')
+            logger.debug(
+                "Not including offshore supply curve points in "
+                "CompetitiveWindFarm"
+            )
             mask = sc_points[MetaKeyName.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
-        mask = np.ones(int(1 + sc_points[MetaKeyName.SC_POINT_GID].max()), dtype=bool)
+        mask = np.ones(
+            int(1 + sc_points[MetaKeyName.SC_POINT_GID].max()), dtype=bool
+        )
 
         sc_points = sc_points[[MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID]]
         sc_gids = sc_points.set_index(MetaKeyName.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
-        sc_point_gids = \
-            sc_points.groupby(MetaKeyName.SC_POINT_GID)[MetaKeyName.SC_GID].unique().to_frame()
-        sc_point_gids = {int(k): v[MetaKeyName.SC_GID]
-                         for k, v in sc_point_gids.iterrows()}
+        sc_point_gids = (
+            sc_points.groupby(MetaKeyName.SC_POINT_GID)[MetaKeyName.SC_GID]
+            .unique()
+            .to_frame()
+        )
+        sc_point_gids = {
+            int(k): v[MetaKeyName.SC_GID] for k, v in sc_point_gids.iterrows()
+        }
 
         return sc_gids, sc_point_gids, mask
 
@@ -253,19 +274,30 @@ class CompetitiveWindFarms:
         downwind : pandas.DataFrame
             Downwind neighbor gids for n prominent wind directions
         """
-        cols = [c for c in wind_dirs
-                if (c.endswith('_gid') and not c.startswith('sc'))]
-        directions = [c.split('_')[0] for c in cols]
+        cols = [
+            c
+            for c in wind_dirs
+            if (c.endswith("_gid") and not c.startswith("sc"))
+        ]
+        directions = [c.split("_")[0] for c in cols]
         upwind_gids = wind_dirs[cols].values
 
-        cols = ['{}_pr'.format(d) for d in directions]
+        cols = ["{}_pr".format(d) for d in directions]
         neighbor_pr = wind_dirs[cols].values
 
         neighbors = np.argsort(neighbor_pr)[:, :n_dirs]
         upwind_gids = np.take_along_axis(upwind_gids, neighbors, axis=1)
 
-        downwind_map = {'N': 'S', 'NE': 'SW', 'E': 'W', 'SE': 'NW', 'S': 'N',
-                        'SW': 'NE', 'W': 'E', 'NW': 'SE'}
+        downwind_map = {
+            "N": "S",
+            "NE": "SW",
+            "E": "W",
+            "SE": "NW",
+            "S": "N",
+            "SW": "NE",
+            "W": "E",
+            "NW": "SE",
+        }
         cols = ["{}_gid".format(downwind_map[d]) for d in directions]
         downwind_gids = wind_dirs[cols].values
         downwind_gids = np.take_along_axis(downwind_gids, neighbors, axis=1)
@@ -387,8 +419,9 @@ class CompetitiveWindFarms:
 
         return out
 
-    def remove_noncompetitive_farm(self, sc_points, sort_on='total_lcoe',
-                                   downwind=False):
+    def remove_noncompetitive_farm(
+        self, sc_points, sort_on="total_lcoe", downwind=False
+    ):
         """
         Remove neighboring sc points for given number of prominent wind
         directions
@@ -422,12 +455,12 @@ class CompetitiveWindFarms:
         for i in range(len(sc_points)):
             gid = sc_point_gids[i]
             if self.mask[gid]:
-                upwind_gids = self['upwind', gid]
+                upwind_gids = self["upwind", gid]
                 for n in upwind_gids:
                     self.exclude_sc_point_gid(n)
 
                 if downwind:
-                    downwind_gids = self['downwind', gid]
+                    downwind_gids = self["downwind", gid]
                     for n in downwind_gids:
                         self.exclude_sc_point_gid(n)
 
@@ -437,8 +470,16 @@ class CompetitiveWindFarms:
         return sc_points.loc[mask].reset_index(drop=True)
 
     @classmethod
-    def run(cls, wind_dirs, sc_points, n_dirs=2, offshore=False,
-            sort_on='total_lcoe', downwind=False, out_fpath=None):
+    def run(
+        cls,
+        wind_dirs,
+        sc_points,
+        n_dirs=2,
+        offshore=False,
+        sort_on="total_lcoe",
+        downwind=False,
+        out_fpath=None,
+    ):
         """
         Exclude given number of neighboring Supply Point gids based on most
         prominent wind directions
@@ -473,8 +514,9 @@ class CompetitiveWindFarms:
             wind farms
         """
         cwf = cls(wind_dirs, sc_points, n_dirs=n_dirs, offshore=offshore)
-        sc_points = cwf.remove_noncompetitive_farm(sc_points, sort_on=sort_on,
-                                                   downwind=downwind)
+        sc_points = cwf.remove_noncompetitive_farm(
+            sc_points, sort_on=sort_on, downwind=downwind
+        )
 
         if out_fpath is not None:
             sc_points.to_csv(out_fpath, index=False)

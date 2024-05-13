@@ -2,6 +2,7 @@
 """
 reV base gen and econ module.
 """
+
 import copy
 import json
 import logging
@@ -33,16 +34,16 @@ logger = logging.getLogger(__name__)
 
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
-ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
-with open(os.path.join(ATTR_DIR, 'other.json')) as f:
+ATTR_DIR = os.path.join(ATTR_DIR, "output_attributes")
+with open(os.path.join(ATTR_DIR, "other.json")) as f:
     OTHER_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json')) as f:
+with open(os.path.join(ATTR_DIR, "lcoe_fcr.json")) as f:
     LCOE_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'single_owner.json')) as f:
+with open(os.path.join(ATTR_DIR, "single_owner.json")) as f:
     SO_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
+with open(os.path.join(ATTR_DIR, "windbos.json")) as f:
     BOS_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
+with open(os.path.join(ATTR_DIR, "lcoe_fcr_inputs.json")) as f:
     LCOE_IN_ATTRS = json.load(f)
 
 
@@ -68,12 +69,22 @@ class BaseGen(ABC):
     # SAM argument names used to calculate LCOE
     # Note that system_capacity is not included here because it is never used
     # downstream and could be confused with the supply_curve point capacity
-    LCOE_ARGS = ('fixed_charge_rate', 'capital_cost', 'fixed_operating_cost',
-                 'variable_operating_cost')
+    LCOE_ARGS = (
+        "fixed_charge_rate",
+        "capital_cost",
+        "fixed_operating_cost",
+        "variable_operating_cost",
+    )
 
-    def __init__(self, points_control, output_request, site_data=None,
-                 drop_leap=False, memory_utilization_limit=0.4,
-                 scale_outputs=True):
+    def __init__(
+        self,
+        points_control,
+        output_request,
+        site_data=None,
+        drop_leap=False,
+        memory_utilization_limit=0.4,
+        scale_outputs=True,
+    ):
         """
         Parameters
         ----------
@@ -109,11 +120,13 @@ class BaseGen(ABC):
         self.mem_util_lim = memory_utilization_limit
         self.scale_outputs = scale_outputs
 
-        self._run_attrs = {'points_control': str(points_control),
-                           'output_request': output_request,
-                           'site_data': str(site_data),
-                           'drop_leap': str(drop_leap),
-                           'memory_utilization_limit': self.mem_util_lim}
+        self._run_attrs = {
+            "points_control": str(points_control),
+            "output_request": output_request,
+            "site_data": str(site_data),
+            "drop_leap": str(drop_leap),
+            "memory_utilization_limit": self.mem_util_lim,
+        }
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)
@@ -177,11 +190,16 @@ class BaseGen(ABC):
             tot_mem = psutil.virtual_memory().total / 1e6
             avail_mem = self.mem_util_lim * tot_mem
             self._site_limit = int(np.floor(avail_mem / self.site_mem))
-            logger.info('Limited to storing {0} sites in memory '
-                        '({1:.1f} GB total hardware, {2:.1f} GB available '
-                        'with {3:.1f}% utilization).'
-                        .format(self._site_limit, tot_mem / 1e3,
-                                avail_mem / 1e3, self.mem_util_lim * 100))
+            logger.info(
+                "Limited to storing {0} sites in memory "
+                "({1:.1f} GB total hardware, {2:.1f} GB available "
+                "with {3:.1f}% utilization).".format(
+                    self._site_limit,
+                    tot_mem / 1e3,
+                    avail_mem / 1e3,
+                    self.mem_util_lim * 100,
+                )
+            )
 
         return self._site_limit
 
@@ -202,17 +220,18 @@ class BaseGen(ABC):
             n = 100
             self._site_mem = 0
             for request in self.output_request:
-                dtype = 'float32'
+                dtype = "float32"
                 if request in self.OUT_ATTRS:
-                    dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+                    dtype = self.OUT_ATTRS[request].get("dtype", "float32")
 
                 shape = self._get_data_shape(request, n)
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
 
             self._site_mem = self._site_mem / 1e6 / n
-            logger.info('Output results from a single site are calculated to '
-                        'use {0:.1f} KB of memory.'
-                        .format(self._site_mem / 1000))
+            logger.info(
+                "Output results from a single site are calculated to "
+                "use {0:.1f} KB of memory.".format(self._site_mem / 1000)
+            )
 
         return self._site_mem
 
@@ -262,7 +281,7 @@ class BaseGen(ABC):
         """
         sam_metas = self.sam_configs.copy()
         for v in sam_metas.values():
-            v.update({'module': self._sam_module.MODULE})
+            v.update({"module": self._sam_module.MODULE})
 
         return sam_metas
 
@@ -287,7 +306,8 @@ class BaseGen(ABC):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a MetaKeyName.GID column is added.
+            non-sequential or do not start from 0, so a `MetaKeyName.GID`
+            column is added.
         """
         return self._meta
 
@@ -354,12 +374,12 @@ class BaseGen(ABC):
         out = {}
         for k, v in self._out.items():
             if k in self.OUT_ATTRS:
-                scale_factor = self.OUT_ATTRS[k].get('scale_factor', 1)
+                scale_factor = self.OUT_ATTRS[k].get("scale_factor", 1)
             else:
                 scale_factor = 1
 
             if scale_factor != 1 and self.scale_outputs:
-                v = v.astype('float32')
+                v = v.astype("float32")
                 v /= scale_factor
 
             out[k] = v
@@ -384,16 +404,14 @@ class BaseGen(ABC):
             result = self.unpack_futures(result)
 
         if isinstance(result, dict):
-
             # iterate through dict where sites are keys and values are
             # corresponding results
             for site_gid, site_output in result.items():
-
                 # check that the sites are stored sequentially then add to
                 # the finished site list
                 if self._finished_sites:
                     if int(site_gid) < np.max(self._finished_sites):
-                        raise Exception('Site results are non sequential!')
+                        raise Exception("Site results are non sequential!")
 
                 # unpack site output object
                 self.unpack_output(site_gid, site_output)
@@ -405,9 +423,11 @@ class BaseGen(ABC):
             self._out.clear()
             self._finished_sites.clear()
         else:
-            raise TypeError('Did not recognize the type of output. '
-                            'Tried to set output type "{}", but requires '
-                            'list, dict or None.'.format(type(result)))
+            raise TypeError(
+                "Did not recognize the type of output. "
+                'Tried to set output type "{}", but requires '
+                "list, dict or None.".format(type(result))
+            )
 
     @staticmethod
     def _output_request_type_check(req):
@@ -431,8 +451,10 @@ class BaseGen(ABC):
         elif isinstance(req, str):
             output_request = [req]
         else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
+            raise TypeError(
+                "Output request must be str, list, or tuple but "
+                "received: {}".format(type(req))
+            )
 
         return output_request
 
@@ -455,7 +477,7 @@ class BaseGen(ABC):
         """
 
         # Drop leap day or last day
-        leap_day = ((ti.month == 2) & (ti.day == 29))
+        leap_day = (ti.month == 2) & (ti.day == 29)
         leap_year = ti.year % 4 == 0
         last_day = ((ti.month == 12) & (ti.day == 31)) * leap_year
         if drop_leap:
@@ -466,14 +488,23 @@ class BaseGen(ABC):
             ti = ti.drop(ti[last_day])
 
         if len(ti) % 365 != 0:
-            raise ValueError('Bad time index with length not a multiple of '
-                             '365: {}'.format(ti))
+            raise ValueError(
+                "Bad time index with length not a multiple of "
+                "365: {}".format(ti)
+            )
 
         return ti
 
     @staticmethod
-    def _pp_to_pc(points, points_range, sam_configs, tech,
-                  sites_per_worker=None, res_file=None, curtailment=None):
+    def _pp_to_pc(
+        points,
+        points_range,
+        sam_configs,
+        tech,
+        sites_per_worker=None,
+        res_file=None,
+        curtailment=None,
+    ):
         """
         Create ProjectControl from ProjectPoints
 
@@ -522,16 +553,25 @@ class BaseGen(ABC):
         if hasattr(points, "df"):
             points = points.df
 
-        pp = ProjectPoints(points, sam_configs, tech=tech, res_file=res_file,
-                           curtailment=curtailment)
+        pp = ProjectPoints(
+            points,
+            sam_configs,
+            tech=tech,
+            res_file=res_file,
+            curtailment=curtailment,
+        )
 
         #  make Points Control instance
         if points_range is not None:
             # PointsControl is for just a subset of the project points...
             # this is the case if generation is being initialized on one
             # of many HPC nodes in a large project
-            pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                     sites_per_split=sites_per_worker)
+            pc = PointsControl.split(
+                points_range[0],
+                points_range[1],
+                pp,
+                sites_per_split=sites_per_worker,
+            )
         else:
             # PointsControl is for all of the project points
             pc = PointsControl(pp, sites_per_split=sites_per_worker)
@@ -539,8 +579,16 @@ class BaseGen(ABC):
         return pc
 
     @classmethod
-    def get_pc(cls, points, points_range, sam_configs, tech,
-               sites_per_worker=None, res_file=None, curtailment=None):
+    def get_pc(
+        cls,
+        points,
+        points_range,
+        sam_configs,
+        tech,
+        sites_per_worker=None,
+        res_file=None,
+        curtailment=None,
+    ):
         """Get a PointsControl instance.
 
         Parameters
@@ -588,9 +636,12 @@ class BaseGen(ABC):
         """
 
         if tech not in cls.OPTIONS and tech.lower() != ModuleName.ECON:
-            msg = ('Did not recognize reV-SAM technology string "{}". '
-                   'Technology string options are: {}'
-                   .format(tech, list(cls.OPTIONS.keys())))
+            msg = (
+                'Did not recognize reV-SAM technology string "{}". '
+                "Technology string options are: {}".format(
+                    tech, list(cls.OPTIONS.keys())
+                )
+            )
             logger.error(msg)
             raise KeyError(msg)
 
@@ -598,16 +649,25 @@ class BaseGen(ABC):
             # get the optimal sites per split based on res file chunk size
             sites_per_worker = cls.get_sites_per_worker(res_file)
 
-        logger.debug('Sites per worker being set to {} for '
-                     'PointsControl.'.format(sites_per_worker))
+        logger.debug(
+            "Sites per worker being set to {} for " "PointsControl.".format(
+                sites_per_worker
+            )
+        )
 
         if isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol
             pc = points
         else:
-            pc = cls._pp_to_pc(points, points_range, sam_configs, tech,
-                               sites_per_worker=sites_per_worker,
-                               res_file=res_file, curtailment=curtailment)
+            pc = cls._pp_to_pc(
+                points,
+                points_range,
+                sam_configs,
+                tech,
+                sites_per_worker=sites_per_worker,
+                res_file=res_file,
+                curtailment=curtailment,
+            )
 
         return pc
 
@@ -640,31 +700,37 @@ class BaseGen(ABC):
             return default
 
         with Resource(res_file) as res:
-            if 'wtk' in res_file.lower():
+            if "wtk" in res_file.lower():
                 for dset in res.datasets:
-                    if 'speed' in dset:
+                    if "speed" in dset:
                         # take nominal WTK chunks from windspeed
                         _, _, chunks = res.get_dset_properties(dset)
                         break
-            elif 'nsrdb' in res_file.lower():
+            elif "nsrdb" in res_file.lower():
                 # take nominal NSRDB chunks from dni
-                _, _, chunks = res.get_dset_properties('dni')
+                _, _, chunks = res.get_dset_properties("dni")
             else:
-                warn('Could not infer dataset chunk size as the resource type '
-                     'could not be determined from the filename: {}'
-                     .format(res_file))
+                warn(
+                    "Could not infer dataset chunk size as the resource type "
+                    "could not be determined from the filename: {}".format(
+                        res_file
+                    )
+                )
                 chunks = None
 
         if chunks is None:
             # if chunks not set, go to default
             sites_per_worker = default
-            logger.debug('Sites per worker being set to {} (default) based on '
-                         'no set chunk size in {}.'
-                         .format(sites_per_worker, res_file))
+            logger.debug(
+                "Sites per worker being set to {} (default) based on "
+                "no set chunk size in {}.".format(sites_per_worker, res_file)
+            )
         else:
             sites_per_worker = chunks[1]
-            logger.debug('Sites per worker being set to {} based on chunk '
-                         'size of {}.'.format(sites_per_worker, res_file))
+            logger.debug(
+                "Sites per worker being set to {} based on chunk "
+                "size of {}.".format(sites_per_worker, res_file)
+            )
 
         return sites_per_worker
 
@@ -691,8 +757,13 @@ class BaseGen(ABC):
 
     @staticmethod
     @abstractmethod
-    def _run_single_worker(points_control, tech=None, res_file=None,
-                           output_request=None, scale_outputs=True):
+    def _run_single_worker(
+        points_control,
+        tech=None,
+        res_file=None,
+        output_request=None,
+        scale_outputs=True,
+    ):
         """Run a reV-SAM analysis based on the points_control iterator.
 
         Parameters
@@ -742,19 +813,26 @@ class BaseGen(ABC):
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
-                if inp.endswith('.csv'):
+                if inp.endswith(".csv"):
                     site_data = pd.read_csv(inp)
             elif isinstance(inp, pd.DataFrame):
                 site_data = inp
             else:
                 # site data was not able to be set. Raise error.
-                raise Exception('Site data input must be .csv or '
-                                'dataframe, but received: {}'.format(inp))
+                raise Exception(
+                    "Site data input must be .csv or "
+                    "dataframe, but received: {}".format(inp)
+                )
 
-            if MetaKeyName.GID not in site_data and site_data.index.name != MetaKeyName.GID:
+            if (
+                MetaKeyName.GID not in site_data
+                and site_data.index.name != MetaKeyName.GID
+            ):
                 # require gid as column label or index
-                raise KeyError('Site data input must have "gid" column '
-                               'to match reV site gid.')
+                raise KeyError(
+                    'Site data input must have "gid" column '
+                    "to match reV site gid."
+                )
 
             # pylint: disable=no-member
             if site_data.index.name != MetaKeyName.GID:
@@ -763,10 +841,12 @@ class BaseGen(ABC):
 
         if MetaKeyName.OFFSHORE in site_data:
             if site_data[MetaKeyName.OFFSHORE].sum() > 1:
-                w = ('Found offshore sites in econ site data input. '
-                     'This functionality has been deprecated. '
-                     'Please run the reV offshore module to '
-                     'calculate offshore wind lcoe.')
+                w = (
+                    "Found offshore sites in econ site data input. "
+                    "This functionality has been deprecated. "
+                    "Please run the reV offshore module to "
+                    "calculate offshore wind lcoe."
+                )
                 warn(w, OffshoreWindInputWarning)
                 logger.warning(w)
 
@@ -827,7 +907,7 @@ class BaseGen(ABC):
 
     def _get_data_shape_from_out_attrs(self, dset, n_sites):
         """Get data shape from ``OUT_ATTRS`` variable"""
-        if self.OUT_ATTRS[dset]['type'] == 'array':
+        if self.OUT_ATTRS[dset]["type"] == "array":
             return (len(self.time_index), n_sites)
         return (n_sites,)
 
@@ -838,12 +918,14 @@ class BaseGen(ABC):
             return (*np.array(data).shape, n_sites)
 
         if isinstance(data, str):
-            msg = ('Cannot pass through non-scalar SAM input key "{}" '
-                   'as an output_request!'.format(dset))
+            msg = (
+                'Cannot pass through non-scalar SAM input key "{}" '
+                "as an output_request!".format(dset)
+            )
             logger.error(msg)
             raise ExecutionError(msg)
 
-        return (n_sites, )
+        return (n_sites,)
 
     def _get_data_shape_from_pysam(self, dset, n_sites):
         """Get data shape from PySAM output object"""
@@ -853,10 +935,13 @@ class BaseGen(ABC):
         try:
             out_data = getattr(self._sam_obj_default.Outputs, dset)
         except AttributeError as e:
-            msg = ('Could not get data shape for dset "{}" '
-                   'from object "{}". '
-                   'Received the following error: "{}"'
-                   .format(dset, self._sam_obj_default, e))
+            msg = (
+                'Could not get data shape for dset "{}" '
+                'from object "{}". '
+                'Received the following error: "{}"'.format(
+                    dset, self._sam_obj_default, e
+                )
+            )
             logger.error(msg)
             raise ExecutionError(msg) from e
 
@@ -876,8 +961,8 @@ class BaseGen(ABC):
         project_dir, out_fn = os.path.split(out_fpath)
 
         # ensure output file is an h5
-        if not out_fn.endswith('.h5'):
-            out_fn += '.h5'
+        if not out_fn.endswith(".h5"):
+            out_fn += ".h5"
 
         if module not in out_fn:
             extension_with_module = "_{}.h5".format(module)
@@ -894,9 +979,9 @@ class BaseGen(ABC):
             os.makedirs(project_dir, exist_ok=True)
 
         self._out_fpath = os.path.join(project_dir, out_fn)
-        self._run_attrs['out_fpath'] = out_fpath
+        self._run_attrs["out_fpath"] = out_fpath
 
-    def _init_h5(self, mode='w'):
+    def _init_h5(self, mode="w"):
         """Initialize the single h5 output file with all output requests.
 
         Parameters
@@ -908,12 +993,18 @@ class BaseGen(ABC):
         if self._out_fpath is None:
             return
 
-        if 'w' in mode:
-            logger.info('Initializing full output file: "{}" with mode: {}'
-                        .format(self._out_fpath, mode))
-        elif 'a' in mode:
-            logger.info('Appending data to output file: "{}" with mode: {}'
-                        .format(self._out_fpath, mode))
+        if "w" in mode:
+            logger.info(
+                'Initializing full output file: "{}" with mode: {}'.format(
+                    self._out_fpath, mode
+                )
+            )
+        elif "a" in mode:
+            logger.info(
+                'Appending data to output file: "{}" with mode: {}'.format(
+                    self._out_fpath, mode
+                )
+            )
 
         attrs = {d: {} for d in self.output_request}
         chunks = {}
@@ -924,17 +1015,16 @@ class BaseGen(ABC):
         write_ti = False
 
         for dset in self.output_request:
-
-            tmp = 'other'
+            tmp = "other"
             if dset in self.OUT_ATTRS:
                 tmp = dset
 
-            attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
-                                                           'unknown')
-            attrs[dset]['scale_factor'] = \
-                self.OUT_ATTRS[tmp].get('scale_factor', 1)
-            chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
-            dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
+            attrs[dset]["units"] = self.OUT_ATTRS[tmp].get("units", "unknown")
+            attrs[dset]["scale_factor"] = self.OUT_ATTRS[tmp].get(
+                "scale_factor", 1
+            )
+            chunks[dset] = self.OUT_ATTRS[tmp].get("chunks", None)
+            dtypes[dset] = self.OUT_ATTRS[tmp].get("dtype", "float32")
             shapes[dset] = self._get_data_shape(dset, len(self.meta))
             if len(shapes[dset]) > 1:
                 write_ti = True
@@ -945,10 +1035,19 @@ class BaseGen(ABC):
         else:
             ti = None
 
-        Outputs.init_h5(self._out_fpath, self.output_request, shapes,
-                        attrs, chunks, dtypes, self.meta, time_index=ti,
-                        configs=self.sam_metas, run_attrs=self.run_attrs,
-                        mode=mode)
+        Outputs.init_h5(
+            self._out_fpath,
+            self.output_request,
+            shapes,
+            attrs,
+            chunks,
+            dtypes,
+            self.meta,
+            time_index=ti,
+            configs=self.sam_metas,
+            run_attrs=self.run_attrs,
+            mode=mode,
+        )
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
@@ -966,21 +1065,27 @@ class BaseGen(ABC):
         self._finished_sites = []
 
         # Output chunk is the index range (inclusive) of this set of site outs
-        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
-                                            len(self.project_points) - 1)))
+        self._out_chunk = (
+            index_0,
+            np.min((index_0 + self.site_limit, len(self.project_points) - 1)),
+        )
         self._out_n_sites = int(self.out_chunk[1] - self.out_chunk[0]) + 1
 
-        logger.info('Initializing in-memory outputs for {} sites with gids '
-                    '{} through {} inclusive (site list index {} through {})'
-                    .format(self._out_n_sites,
-                            self.project_points.sites[self.out_chunk[0]],
-                            self.project_points.sites[self.out_chunk[1]],
-                            self.out_chunk[0], self.out_chunk[1]))
+        logger.info(
+            "Initializing in-memory outputs for {} sites with gids "
+            "{} through {} inclusive (site list index {} through {})".format(
+                self._out_n_sites,
+                self.project_points.sites[self.out_chunk[0]],
+                self.project_points.sites[self.out_chunk[1]],
+                self.out_chunk[0],
+                self.out_chunk[1],
+            )
+        )
 
         for request in self.output_request:
-            dtype = 'float32'
+            dtype = "float32"
             if request in self.OUT_ATTRS and self.scale_outputs:
-                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+                dtype = self.OUT_ATTRS[request].get("dtype", "float32")
 
             shape = self._get_data_shape(request, self._out_n_sites)
 
@@ -1008,9 +1113,11 @@ class BaseGen(ABC):
         # iterate through the site results
         for var, value in site_output.items():
             if var not in self._out:
-                raise KeyError('Tried to collect output variable "{}", but it '
-                               'was not yet initialized in the output '
-                               'dictionary.')
+                raise KeyError(
+                    'Tried to collect output variable "{}", but it '
+                    "was not yet initialized in the output "
+                    "dictionary."
+                )
 
             # get the index in the output array for the current site
             i = self.site_index(site_gid, out_index=True)
@@ -1059,12 +1166,14 @@ class BaseGen(ABC):
         else:
             output_index = global_site_index - self.out_chunk[0]
             if output_index < 0:
-                raise ValueError('Attempting to set output data for site with '
-                                 'gid {} to global site index {}, which was '
-                                 'already set based on the current output '
-                                 'index chunk of {}'
-                                 .format(site_gid, global_site_index,
-                                         self.out_chunk))
+                raise ValueError(
+                    "Attempting to set output data for site with "
+                    "gid {} to global site index {}, which was "
+                    "already set based on the current output "
+                    "index chunk of {}".format(
+                        site_gid, global_site_index, self.out_chunk
+                    )
+                )
 
         return output_index
 
@@ -1079,15 +1188,17 @@ class BaseGen(ABC):
 
         # handle output file request if file is specified and .out is not empty
         if isinstance(self._out_fpath, str) and self._out:
-            logger.info('Flushing outputs to disk, target file: "{}"'
-                        .format(self._out_fpath))
+            logger.info(
+                'Flushing outputs to disk, target file: "{}"'.format(
+                    self._out_fpath
+                )
+            )
 
             # get the slice of indices to write outputs to
             islice = slice(self.out_chunk[0], self.out_chunk[1] + 1)
 
             # open output file in append mode to add output results to
-            with Outputs(self._out_fpath, mode='a') as f:
-
+            with Outputs(self._out_fpath, mode="a") as f:
                 # iterate through all output requests writing each as a dataset
                 for dset, arr in self._out.items():
                     if len(arr.shape) == 1:
@@ -1097,7 +1208,7 @@ class BaseGen(ABC):
                         # write 2D array of profiles
                         f[dset, :, islice] = arr
 
-            logger.debug('Flushed output successfully to disk.')
+            logger.debug("Flushed output successfully to disk.")
 
     def _pre_split_pc(self, pool_size=None):
         """Pre-split project control iterator into sub chunks to further
@@ -1133,9 +1244,12 @@ class BaseGen(ABC):
         if i_chunk:
             pc_chunks.append(i_chunk)
 
-        logger.debug('Pre-splitting points control into {} chunks with the '
-                     'following chunk sizes: {}'
-                     .format(len(pc_chunks), [len(x) for x in pc_chunks]))
+        logger.debug(
+            "Pre-splitting points control into {} chunks with the "
+            "following chunk sizes: {}".format(
+                len(pc_chunks), [len(x) for x in pc_chunks]
+            )
+        )
         return N, pc_chunks
 
     # pylint: disable=unused-argument
@@ -1158,8 +1272,9 @@ class BaseGen(ABC):
         """
         return kwargs
 
-    def _parallel_run(self, max_workers=None, pool_size=None, timeout=1800,
-                      **kwargs):
+    def _parallel_run(
+        self, max_workers=None, pool_size=None, timeout=1800, **kwargs
+    ):
         """Execute parallel compute.
 
         Parameters
@@ -1181,25 +1296,31 @@ class BaseGen(ABC):
             pool_size = os.cpu_count() * 2
         if max_workers is None:
             max_workers = os.cpu_count()
-        logger.info('Running parallel execution with max_workers={}'
-                    .format(max_workers))
+        logger.info(
+            "Running parallel execution with max_workers={}".format(
+                max_workers
+            )
+        )
         i = 0
         N, pc_chunks = self._pre_split_pc(pool_size=pool_size)
         for j, pc_chunk in enumerate(pc_chunks):
-            logger.debug('Starting process pool for points control '
-                         'iteration {} out of {}'
-                         .format(j + 1, len(pc_chunks)))
+            logger.debug(
+                "Starting process pool for points control "
+                "iteration {} out of {}".format(j + 1, len(pc_chunks))
+            )
 
             failed_futures = False
             chunks = {}
             futures = []
-            loggers = [__name__, 'reV.gen', 'reV.econ', 'reV']
-            with SpawnProcessPool(max_workers=max_workers,
-                                  loggers=loggers) as exe:
+            loggers = [__name__, "reV.gen", "reV.econ", "reV"]
+            with SpawnProcessPool(
+                max_workers=max_workers, loggers=loggers
+            ) as exe:
                 for pc in pc_chunk:
                     pc_kwargs = self._reduce_kwargs(pc, **kwargs)
-                    future = exe.submit(self._run_single_worker, pc,
-                                        **pc_kwargs)
+                    future = exe.submit(
+                        self._run_single_worker, pc, **pc_kwargs
+                    )
                     futures.append(future)
                     chunks[future] = pc
 
@@ -1210,24 +1331,32 @@ class BaseGen(ABC):
                     except TimeoutError:
                         failed_futures = True
                         sites = chunks[future].project_points.sites
-                        result = self._handle_failed_future(future, i, sites,
-                                                            timeout)
+                        result = self._handle_failed_future(
+                            future, i, sites, timeout
+                        )
 
                     self.out = result
 
                     mem = psutil.virtual_memory()
-                    m = ('Parallel run at iteration {0} out of {1}. '
-                         'Memory utilization is {2:.3f} GB out of {3:.3f} GB '
-                         'total ({4:.1f}% used, intended limit of {5:.1f}%)'
-                         .format(i, N, mem.used / 1e9, mem.total / 1e9,
-                                 100 * mem.used / mem.total,
-                                 100 * self.mem_util_lim))
+                    m = (
+                        "Parallel run at iteration {0} out of {1}. "
+                        "Memory utilization is {2:.3f} GB out of {3:.3f} GB "
+                        "total ({4:.1f}% used, intended limit of {5:.1f}%)"
+                        .format(
+                            i,
+                            N,
+                            mem.used / 1e9,
+                            mem.total / 1e9,
+                            100 * mem.used / mem.total,
+                            100 * self.mem_util_lim,
+                        )
+                    )
                     logger.info(m)
 
                 if failed_futures:
-                    logger.info('Forcing pool shutdown after failed futures.')
+                    logger.info("Forcing pool shutdown after failed futures.")
                     exe.shutdown(wait=False)
-                    logger.info('Forced pool shutdown complete.')
+                    logger.info("Forced pool shutdown complete.")
 
         self.flush()
 
@@ -1247,8 +1376,8 @@ class BaseGen(ABC):
             before returning zeros.
         """
 
-        w = ('Iteration {} hit the timeout limit of {} seconds! Passing zeros.'
-             .format(i, timeout))
+        w = ("Iteration {} hit the timeout limit of {} seconds! "
+             "Passing zeros.".format(i, timeout))
         logger.warning(w)
         warn(w, OutputWarning)
 
@@ -1258,12 +1387,12 @@ class BaseGen(ABC):
         try:
             cancelled = future.cancel()
         except Exception as e:
-            w = 'Could not cancel future! Received exception: {}'.format(e)
+            w = "Could not cancel future! Received exception: {}".format(e)
             logger.warning(w)
             warn(w, ParallelExecutionWarning)
 
         if not cancelled:
-            w = 'Could not cancel future!'
+            w = "Could not cancel future!"
             logger.warning(w)
             warn(w, ParallelExecutionWarning)
 

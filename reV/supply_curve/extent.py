@@ -2,6 +2,7 @@
 """
 reV supply curve extent
 """
+
 import logging
 
 import numpy as np
@@ -32,13 +33,17 @@ class SupplyCurveExtent:
             SC point.
         """
 
-        logger.debug('Initializing SupplyCurveExtent with res {} from: {}'
-                     .format(resolution, f_excl))
+        logger.debug(
+            "Initializing SupplyCurveExtent with res {} from: {}".format(
+                resolution, f_excl
+            )
+        )
 
         if not isinstance(resolution, int):
-            raise SupplyCurveInputError('Supply Curve resolution needs to be '
-                                        'an integer but received: {}'
-                                        .format(type(resolution)))
+            raise SupplyCurveInputError(
+                "Supply Curve resolution needs to be "
+                "an integer but received: {}".format(type(resolution))
+            )
 
         if isinstance(f_excl, (str, list, tuple)):
             self._excl_fpath = f_excl
@@ -47,11 +52,12 @@ class SupplyCurveExtent:
             self._excl_fpath = f_excl.h5_file
             self._excls = f_excl
         else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs an '
-                                        'exclusions file path, or '
-                                        'ExclusionLayers handler but '
-                                        'received: {}'
-                                        .format(type(f_excl)))
+            raise SupplyCurveInputError(
+                "SupplyCurvePoints needs an "
+                "exclusions file path, or "
+                "ExclusionLayers handler but "
+                "received: {}".format(type(f_excl))
+            )
 
         self._excl_shape = self.exclusions.shape
         # limit the resolution to the exclusion shape.
@@ -68,13 +74,15 @@ class SupplyCurveExtent:
         self._points = None
 
         self._sc_col_ind, self._sc_row_ind = np.meshgrid(
-            np.arange(self.n_cols), np.arange(self.n_rows))
+            np.arange(self.n_cols), np.arange(self.n_rows)
+        )
         self._sc_col_ind = self._sc_col_ind.flatten()
         self._sc_row_ind = self._sc_row_ind.flatten()
 
-        logger.debug('Initialized SupplyCurveExtent with shape {} from '
-                     'exclusions with shape {}'
-                     .format(self.shape, self.excl_shape))
+        logger.debug(
+            "Initialized SupplyCurveExtent with shape {} from "
+            "exclusions with shape {}".format(self.shape, self.excl_shape)
+        )
 
     def __len__(self):
         """Total number of supply curve points."""
@@ -91,8 +99,10 @@ class SupplyCurveExtent:
     def __getitem__(self, gid):
         """Get SC extent meta data corresponding to an SC point gid."""
         if gid >= len(self):
-            raise KeyError('SC extent with {} points does not contain SC '
-                           'point gid {}.'.format(len(self), gid))
+            raise KeyError(
+                "SC extent with {} points does not contain SC "
+                "point gid {}.".format(len(self), gid)
+            )
 
         return self.points.loc[gid]
 
@@ -181,8 +191,9 @@ class SupplyCurveExtent:
             point.
         """
         if self._rows_of_excl is None:
-            self._rows_of_excl = self._chunk_excl(self.excl_rows,
-                                                  self.resolution)
+            self._rows_of_excl = self._chunk_excl(
+                self.excl_rows, self.resolution
+            )
 
         return self._rows_of_excl
 
@@ -199,8 +210,9 @@ class SupplyCurveExtent:
             point.
         """
         if self._cols_of_excl is None:
-            self._cols_of_excl = self._chunk_excl(self.excl_cols,
-                                                  self.resolution)
+            self._cols_of_excl = self._chunk_excl(
+                self.excl_cols, self.resolution
+            )
 
         return self._cols_of_excl
 
@@ -218,8 +230,9 @@ class SupplyCurveExtent:
             point.
         """
         if self._excl_row_slices is None:
-            self._excl_row_slices = self._excl_slices(self.excl_rows,
-                                                      self.resolution)
+            self._excl_row_slices = self._excl_slices(
+                self.excl_rows, self.resolution
+            )
 
         return self._excl_row_slices
 
@@ -237,8 +250,9 @@ class SupplyCurveExtent:
             point.
         """
         if self._excl_col_slices is None:
-            self._excl_col_slices = self._excl_slices(self.excl_cols,
-                                                      self.resolution)
+            self._excl_col_slices = self._excl_slices(
+                self.excl_cols, self.resolution
+            )
 
         return self._excl_col_slices
 
@@ -283,16 +297,19 @@ class SupplyCurveExtent:
             lats = []
             lons = []
 
-            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
-                                           np.arange(self.n_rows))
+            sc_cols, sc_rows = np.meshgrid(
+                np.arange(self.n_cols), np.arange(self.n_rows)
+            )
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
                 r = self.excl_row_slices[r]
                 c = self.excl_col_slices[c]
                 lats.append(self.exclusions[MetaKeyName.LATITUDE, r, c].mean())
-                lons.append(self.exclusions[MetaKeyName.LONGITUDE, r, c].mean())
+                lons.append(
+                    self.exclusions[MetaKeyName.LONGITUDE, r, c].mean()
+                )
 
-            self._latitude = np.array(lats, dtype='float32')
-            self._longitude = np.array(lons, dtype='float32')
+            self._latitude = np.array(lats, dtype="float32")
+            self._longitude = np.array(lons, dtype="float32")
 
         return self._latitude
 
@@ -309,16 +326,19 @@ class SupplyCurveExtent:
             lats = []
             lons = []
 
-            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
-                                           np.arange(self.n_rows))
+            sc_cols, sc_rows = np.meshgrid(
+                np.arange(self.n_cols), np.arange(self.n_rows)
+            )
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
                 r = self.excl_row_slices[r]
                 c = self.excl_col_slices[c]
                 lats.append(self.exclusions[MetaKeyName.LATITUDE, r, c].mean())
-                lons.append(self.exclusions[MetaKeyName.LONGITUDE, r, c].mean())
+                lons.append(
+                    self.exclusions[MetaKeyName.LONGITUDE, r, c].mean()
+                )
 
-            self._latitude = np.array(lats, dtype='float32')
-            self._longitude = np.array(lons, dtype='float32')
+            self._latitude = np.array(lats, dtype="float32")
+            self._longitude = np.array(lons, dtype="float32")
 
         return self._longitude
 
@@ -368,8 +388,12 @@ class SupplyCurveExtent:
         """
 
         if self._points is None:
-            self._points = pd.DataFrame({'row_ind': self.row_indices.copy(),
-                                         'col_ind': self.col_indices.copy()})
+            self._points = pd.DataFrame(
+                {
+                    "row_ind": self.row_indices.copy(),
+                    "col_ind": self.col_indices.copy(),
+                }
+            )
 
             self._points.index.name = MetaKeyName.GID  # sc_point_gid
 
@@ -437,8 +461,8 @@ class SupplyCurveExtent:
         col_ind : int
             Column index that the gid is located at in the sc grid.
         """
-        row_ind = self.points.loc[gid, 'row_ind']
-        col_ind = self.points.loc[gid, 'col_ind']
+        row_ind = self.points.loc[gid, "row_ind"]
+        col_ind = self.points.loc[gid, "col_ind"]
         return row_ind, col_ind
 
     def get_excl_slices(self, gid):
@@ -459,9 +483,10 @@ class SupplyCurveExtent:
         """
 
         if gid >= len(self):
-            raise SupplyCurveError('Requested gid "{}" is out of bounds for '
-                                   'supply curve points with length "{}".'
-                                   .format(gid, len(self)))
+            raise SupplyCurveError(
+                'Requested gid "{}" is out of bounds for '
+                'supply curve points with length "{}".'.format(gid, len(self))
+            )
 
         row_slice = self.excl_row_slices[self.row_indices[gid]]
         col_slice = self.excl_col_slices[self.col_indices[gid]]
@@ -560,9 +585,12 @@ class SupplyCurveExtent:
 
         valid_gids = np.where(valid_bool == 1)[0].astype(np.uint32)
 
-        logger.info('Found {} valid SC points out of {} total possible '
-                    '(valid SC points that map to valid resource gids)'
-                    .format(len(valid_gids), len(valid_bool)))
+        logger.info(
+            "Found {} valid SC points out of {} total possible "
+            "(valid SC points that map to valid resource gids)".format(
+                len(valid_gids), len(valid_bool)
+            )
+        )
 
         return valid_gids
 

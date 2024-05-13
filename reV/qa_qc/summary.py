@@ -2,6 +2,7 @@
 """
 Compute and plot summary data
 """
+
 import logging
 import os
 
@@ -31,7 +32,7 @@ class SummarizeH5:
         group : str, optional
             Group within h5_file to summarize datasets for, by default None
         """
-        logger.info('QAQC Summarize initializing on: {}'.format(h5_file))
+        logger.info("QAQC Summarize initializing on: {}".format(h5_file))
         self._h5_file = h5_file
         self._group = group
 
@@ -76,12 +77,12 @@ class SummarizeH5:
             sites = slice(None)
 
         with Resource(h5_file, group=group) as f:
-            sites_meta = f['meta', sites]
+            sites_meta = f["meta", sites]
             sites_data = f[ds_name, :, sites]
 
         sites_summary = pd.DataFrame(sites_data, columns=sites_meta.index)
-        sites_summary = sites_summary.describe().T.drop(columns=['count'])
-        sites_summary['sum'] = sites_data.sum(axis=0)
+        sites_summary = sites_summary.describe().T.drop(columns=["count"])
+        sites_summary["sum"] = sites_data.sum(axis=0)
 
         return sites_summary
 
@@ -108,13 +109,14 @@ class SummarizeH5:
             ds_data = f[ds_name, :]
 
         ds_summary = pd.DataFrame(ds_data, columns=[ds_name])
-        ds_summary = ds_summary.describe().drop(['count'])
-        ds_summary.at['sum', ds_name] = ds_data.sum()
+        ds_summary = ds_summary.describe().drop(["count"])
+        ds_summary.at["sum", ds_name] = ds_data.sum()
 
         return ds_summary
 
-    def summarize_dset(self, ds_name, process_size=None, max_workers=None,
-                       out_path=None):
+    def summarize_dset(
+        self, ds_name, process_size=None, max_workers=None, out_path=None
+    ):
         """
         Compute dataset summary. If dataset is 2D compute temporal statistics
         for each site
@@ -147,45 +149,56 @@ class SummarizeH5:
                 if process_size is None:
                     process_size = ds_shape[-1]
 
-                sites = \
-                    np.array_split(sites,
-                                   int(np.ceil(len(sites) / process_size)))
-                loggers = [__name__, 'reV']
-                with SpawnProcessPool(max_workers=max_workers,
-                                      loggers=loggers) as ex:
+                sites = np.array_split(
+                    sites, int(np.ceil(len(sites) / process_size))
+                )
+                loggers = [__name__, "reV"]
+                with SpawnProcessPool(
+                    max_workers=max_workers, loggers=loggers
+                ) as ex:
                     futures = []
                     for site_slice in sites:
-                        futures.append(ex.submit(
-                            self._compute_sites_summary,
-                            self.h5_file, ds_name, sites=site_slice,
-                            group=self._group))
+                        futures.append(
+                            ex.submit(
+                                self._compute_sites_summary,
+                                self.h5_file,
+                                ds_name,
+                                sites=site_slice,
+                                group=self._group,
+                            )
+                        )
 
                     summary = [future.result() for future in futures]
 
                 summary = pd.concat(summary)
             elif process_size is None:
-                summary = self._compute_sites_summary(self.h5_file,
-                                                      ds_name,
-                                                      sites=sites,
-                                                      group=self._group)
+                summary = self._compute_sites_summary(
+                    self.h5_file, ds_name, sites=sites, group=self._group
+                )
             else:
                 sites = np.array_split(
-                    sites, int(np.ceil(len(sites) / process_size)))
+                    sites, int(np.ceil(len(sites) / process_size))
+                )
 
                 summary = []
                 for site_slice in sites:
-                    summary.append(self._compute_sites_summary(
-                        self.h5_file, ds_name,
-                        sites=site_slice,
-                        group=self._group))
+                    summary.append(
+                        self._compute_sites_summary(
+                            self.h5_file,
+                            ds_name,
+                            sites=site_slice,
+                            group=self._group,
+                        )
+                    )
 
                 summary = pd.concat(summary)
 
             summary.index.name = MetaKeyName.GID
 
         else:
-            summary = self._compute_ds_summary(self.h5_file, ds_name,
-                                               group=self._group)
+            summary = self._compute_ds_summary(
+                self.h5_file, ds_name, group=self._group
+            )
 
         if out_path is not None:
             summary.to_csv(out_path)
@@ -225,8 +238,15 @@ class SummarizeH5:
         return meta
 
     @classmethod
-    def run(cls, h5_file, out_dir, group=None, dsets=None,
-            process_size=None, max_workers=None):
+    def run(
+        cls,
+        h5_file,
+        out_dir,
+        group=None,
+        dsets=None,
+        process_size=None,
+        max_workers=None,
+    ):
         """
         Summarize all datasets in h5_file and dump to out_dir
 
@@ -251,19 +271,25 @@ class SummarizeH5:
 
         if dsets is None:
             with Resource(h5_file, group=group) as f:
-                dsets = [dset for dset in f.datasets
-                         if dset not in ['meta', 'time_index']]
+                dsets = [
+                    dset
+                    for dset in f.datasets
+                    if dset not in ["meta", "time_index"]
+                ]
         elif isinstance(dsets, str):
             dsets = [dsets]
 
         summary = cls(h5_file)
         for ds_name in dsets:
-            out_path = os.path.join(out_dir,
-                                    "{}_summary.csv".format(ds_name))
-            summary.summarize_dset(ds_name, process_size=process_size,
-                                   max_workers=max_workers, out_path=out_path)
+            out_path = os.path.join(out_dir, "{}_summary.csv".format(ds_name))
+            summary.summarize_dset(
+                ds_name,
+                process_size=process_size,
+                max_workers=max_workers,
+                out_path=out_path,
+            )
 
-        out_path = os.path.basename(h5_file).replace('.h5', '_summary.csv')
+        out_path = os.path.basename(h5_file).replace(".h5", "_summary.csv")
         out_path = os.path.join(out_dir, out_path)
         summary.summarize_means(out_path=out_path)
 
@@ -346,27 +372,27 @@ class SummarizeSupplyCurve:
 
         sc_summary = []
         sc_stat = sc_table.mean(axis=0)
-        sc_stat.name = 'mean'
+        sc_stat.name = "mean"
         sc_summary.append(sc_stat)
 
         sc_stat = sc_table.std(axis=0)
-        sc_stat.name = 'stdev'
+        sc_stat.name = "stdev"
         sc_summary.append(sc_stat)
 
         sc_stat = sc_table.median(axis=0)
-        sc_stat.name = 'median'
+        sc_stat.name = "median"
         sc_summary.append(sc_stat)
 
         sc_stat = sc_table.min(axis=0)
-        sc_stat.name = 'min'
+        sc_stat.name = "min"
         sc_summary.append(sc_stat)
 
         sc_stat = sc_table.max(axis=0)
-        sc_stat.name = 'max'
+        sc_stat.name = "max"
         sc_summary.append(sc_stat)
 
         sc_stat = sc_table.sum(axis=0)
-        sc_stat.name = 'sum'
+        sc_stat.name = "sum"
         sc_summary.append(sc_stat)
 
         sc_summary = pd.concat(sc_summary, axis=1).T
@@ -395,7 +421,7 @@ class SummarizeSupplyCurve:
             os.makedirs(out_dir, exist_ok=True)
 
         summary = cls(sc_table)
-        out_path = os.path.basename(sc_table).replace('.csv', '_summary.csv')
+        out_path = os.path.basename(sc_table).replace(".csv", "_summary.csv")
         out_path = os.path.join(out_dir, out_path)
         summary.supply_curve_summary(columns=columns, out_path=out_path)
 
@@ -442,7 +468,7 @@ class PlotBase:
         out_path : str
             File path to save plot to, can be a .html or static image
         """
-        if out_path.endswith('.html'):
+        if out_path.endswith(".html"):
             fig.write_html(out_path)
         else:
             fig.write_image(out_path)
@@ -469,8 +495,9 @@ class PlotBase:
 
         for value in values:
             if value not in df:
-                msg = ("{} is not a valid column in summary table:\n{}"
-                       .format(value, df))
+                msg = "{} is not a valid column in summary table:\n{}".format(
+                    value, df
+                )
                 logger.error(msg)
                 raise ValueError(msg)
 
@@ -511,7 +538,7 @@ class SummaryPlots(PlotBase):
         """
         return list(self.summary.columns)
 
-    def scatter_plot(self, value, cmap='viridis', out_path=None, **kwargs):
+    def scatter_plot(self, value, cmap="viridis", out_path=None, **kwargs):
         """
         Plot scatter plot of value versus longitude and latitude using
         pandas.plot.scatter
@@ -528,10 +555,17 @@ class SummaryPlots(PlotBase):
             Additional kwargs for plotting.dataframes.df_scatter
         """
         self._check_value(self.summary, value)
-        mplt.df_scatter(self.summary, x=MetaKeyName.LONGITUDE, y=MetaKeyName.LATITUDE, c=value,
-                        colormap=cmap, filename=out_path, **kwargs)
+        mplt.df_scatter(
+            self.summary,
+            x=MetaKeyName.LONGITUDE,
+            y=MetaKeyName.LATITUDE,
+            c=value,
+            colormap=cmap,
+            filename=out_path,
+            **kwargs,
+        )
 
-    def scatter_plotly(self, value, cmap='Viridis', out_path=None, **kwargs):
+    def scatter_plotly(self, value, cmap="Viridis", out_path=None, **kwargs):
         """
         Plot scatter plot of value versus longitude and latitude using
         plotly
@@ -549,8 +583,14 @@ class SummaryPlots(PlotBase):
             Additional kwargs for plotly.express.scatter
         """
         self._check_value(self.summary, value)
-        fig = px.scatter(self.summary, x=MetaKeyName.LONGITUDE, y=MetaKeyName.LATITUDE,
-                         color=value, color_continuous_scale=cmap, **kwargs)
+        fig = px.scatter(
+            self.summary,
+            x=MetaKeyName.LONGITUDE,
+            y=MetaKeyName.LATITUDE,
+            color=value,
+            color_continuous_scale=cmap,
+            **kwargs,
+        )
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -565,7 +605,8 @@ class SummaryPlots(PlotBase):
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to use for supply curve, by default MetaKeyName.MEAN_LCOE
+            LCOE value to use for supply curve, by default
+            MetaKeyName.MEAN_LCOE
 
         Returns
         -------
@@ -575,7 +616,7 @@ class SummaryPlots(PlotBase):
         values = [MetaKeyName.CAPACITY, lcoe]
         self._check_value(self.summary, values, scatter=False)
         sc_df = self.summary[values].sort_values(lcoe)
-        sc_df['cumulative_capacity'] = sc_df[MetaKeyName.CAPACITY].cumsum()
+        sc_df["cumulative_capacity"] = sc_df[MetaKeyName.CAPACITY].cumsum()
 
         return sc_df
 
@@ -619,8 +660,15 @@ class SummaryPlots(PlotBase):
         fig.show()
 
     @classmethod
-    def scatter(cls, summary_csv, out_dir, value, plot_type='plotly',
-                cmap='viridis', **kwargs):
+    def scatter(
+        cls,
+        summary_csv,
+        out_dir,
+        value,
+        plot_type="plotly",
+        cmap="viridis",
+        **kwargs,
+    ):
         """
         Create scatter plot for given value in summary table and save to
         out_dir
@@ -641,25 +689,31 @@ class SummaryPlots(PlotBase):
             Additional plotting kwargs
         """
         splt = cls(summary_csv)
-        if plot_type == 'plot':
-            out_path = os.path.basename(summary_csv).replace('.csv', '.png')
+        if plot_type == "plot":
+            out_path = os.path.basename(summary_csv).replace(".csv", ".png")
             out_path = os.path.join(out_dir, out_path)
-            splt.scatter_plot(value, cmap=cmap.lower(), out_path=out_path,
-                              **kwargs)
-        elif plot_type == 'plotly':
-            out_path = os.path.basename(summary_csv).replace('.csv', '.html')
+            splt.scatter_plot(
+                value, cmap=cmap.lower(), out_path=out_path, **kwargs
+            )
+        elif plot_type == "plotly":
+            out_path = os.path.basename(summary_csv).replace(".csv", ".html")
             out_path = os.path.join(out_dir, out_path)
-            splt.scatter_plotly(value, cmap=cmap.capitalize(),
-                                out_path=out_path, **kwargs)
+            splt.scatter_plotly(
+                value, cmap=cmap.capitalize(), out_path=out_path, **kwargs
+            )
         else:
-            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
-                   .format(plot_type))
+            msg = (
+                "plot_type must be 'plot' or 'plotly' but {} was given".format(
+                    plot_type
+                )
+            )
             logger.error(msg)
             raise ValueError(msg)
 
     @classmethod
-    def scatter_all(cls, summary_csv, out_dir, plot_type='plotly',
-                    cmap='viridis', **kwargs):
+    def scatter_all(
+        cls, summary_csv, out_dir, plot_type="plotly", cmap="viridis", **kwargs
+    ):
         """
         Create scatter plot for all summary stats in summary table and save to
         out_dir
@@ -679,24 +733,29 @@ class SummaryPlots(PlotBase):
         """
         splt = cls(summary_csv)
         splt._data = splt.summary.select_dtypes(include=np.number)
-        datasets = [c for c in splt.summary.columns
-                    if not c.startswith(('lat', 'lon'))]
+        datasets = [
+            c for c in splt.summary.columns if not c.startswith(("lat", "lon"))
+        ]
 
         for value in datasets:
-            if plot_type == 'plot':
-                out_path = '_{}.png'.format(value)
-                out_path = \
-                    os.path.basename(summary_csv).replace('.csv', out_path)
+            if plot_type == "plot":
+                out_path = "_{}.png".format(value)
+                out_path = os.path.basename(summary_csv).replace(
+                    ".csv", out_path
+                )
                 out_path = os.path.join(out_dir, out_path)
-                splt.scatter_plot(value, cmap=cmap.lower(), out_path=out_path,
-                                  **kwargs)
-            elif plot_type == 'plotly':
-                out_path = '_{}.html'.format(value)
-                out_path = \
-                    os.path.basename(summary_csv).replace('.csv', out_path)
+                splt.scatter_plot(
+                    value, cmap=cmap.lower(), out_path=out_path, **kwargs
+                )
+            elif plot_type == "plotly":
+                out_path = "_{}.html".format(value)
+                out_path = os.path.basename(summary_csv).replace(
+                    ".csv", out_path
+                )
                 out_path = os.path.join(out_dir, out_path)
-                splt.scatter_plotly(value, cmap=cmap.capitalize(),
-                                    out_path=out_path, **kwargs)
+                splt.scatter_plotly(
+                    value, cmap=cmap.capitalize(), out_path=out_path, **kwargs
+                )
             else:
                 msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
                        .format(plot_type))
@@ -747,7 +806,8 @@ class SupplyCurvePlot(PlotBase):
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to use for supply curve, by default MetaKeyName.MEAN_LCOE
+            LCOE value to use for supply curve, by default
+            `MetaKeyName.MEAN_LCOE`
 
         Returns
         -------
@@ -757,11 +817,13 @@ class SupplyCurvePlot(PlotBase):
         values = [MetaKeyName.CAPACITY, lcoe]
         self._check_value(self.sc_table, values, scatter=False)
         sc_df = self.sc_table[values].sort_values(lcoe)
-        sc_df['cumulative_capacity'] = sc_df[MetaKeyName.CAPACITY].cumsum()
+        sc_df["cumulative_capacity"] = sc_df[MetaKeyName.CAPACITY].cumsum()
 
         return sc_df
 
-    def supply_curve_plot(self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs):
+    def supply_curve_plot(
+        self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs
+    ):
         """
         Plot supply curve (cumulative capacity vs lcoe) using seaborn.scatter
 
@@ -775,10 +837,13 @@ class SupplyCurvePlot(PlotBase):
             Additional kwargs for plotting.dataframes.df_scatter
         """
         sc_df = self._extract_sc_data(lcoe=lcoe)
-        mplt.df_scatter(sc_df, x='cumulative_capacity', y=lcoe,
-                        filename=out_path, **kwargs)
+        mplt.df_scatter(
+            sc_df, x="cumulative_capacity", y=lcoe, filename=out_path, **kwargs
+        )
 
-    def supply_curve_plotly(self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs):
+    def supply_curve_plotly(
+        self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs
+    ):
         """
         Plot supply curve (cumulative capacity vs lcoe) using plotly
 
@@ -793,7 +858,7 @@ class SupplyCurvePlot(PlotBase):
             Additional kwargs for plotly.express.scatter
         """
         sc_df = self._extract_sc_data(lcoe=lcoe)
-        fig = px.scatter(sc_df, x='cumulative_capacity', y=lcoe, **kwargs)
+        fig = px.scatter(sc_df, x="cumulative_capacity", y=lcoe, **kwargs)
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -802,8 +867,14 @@ class SupplyCurvePlot(PlotBase):
         fig.show()
 
     @classmethod
-    def plot(cls, sc_table, out_dir, plot_type='plotly', lcoe=MetaKeyName.MEAN_LCOE,
-             **kwargs):
+    def plot(
+        cls,
+        sc_table,
+        out_dir,
+        plot_type="plotly",
+        lcoe=MetaKeyName.MEAN_LCOE,
+        **kwargs,
+    ):
         """
         Create supply curve plot from supply curve table using lcoe value
         and save to out_dir
@@ -822,17 +893,20 @@ class SupplyCurvePlot(PlotBase):
             Additional plotting kwargs
         """
         splt = cls(sc_table)
-        if plot_type == 'plot':
-            out_path = os.path.basename(sc_table).replace('.csv', '.png')
+        if plot_type == "plot":
+            out_path = os.path.basename(sc_table).replace(".csv", ".png")
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plot(lcoe=lcoe, out_path=out_path, **kwargs)
-        elif plot_type == 'plotly':
-            out_path = os.path.basename(sc_table).replace('.csv', '.html')
+        elif plot_type == "plotly":
+            out_path = os.path.basename(sc_table).replace(".csv", ".html")
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plotly(lcoe=lcoe, out_path=out_path, **kwargs)
         else:
-            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
-                   .format(plot_type))
+            msg = (
+                "plot_type must be 'plot' or 'plotly' but {} was given".format(
+                    plot_type
+                )
+            )
             logger.error(msg)
             raise ValueError(msg)
 
@@ -884,8 +958,9 @@ class ExclusionsMask(PlotBase):
 
         return excl_mask
 
-    def exclusions_plot(self, cmap='Viridis', plot_step=100, out_path=None,
-                        **kwargs):
+    def exclusions_plot(
+        self, cmap="Viridis", plot_step=100, out_path=None, **kwargs
+    ):
         """
         Plot exclusions mask as a seaborn heatmap
 
@@ -901,11 +976,16 @@ class ExclusionsMask(PlotBase):
         kwargs : dict
             Additional kwargs for plotting.colormaps.heatmap_plot
         """
-        mplt.heatmap_plot(self.mask[::plot_step, ::plot_step], cmap=cmap,
-                          filename=out_path, **kwargs)
+        mplt.heatmap_plot(
+            self.mask[::plot_step, ::plot_step],
+            cmap=cmap,
+            filename=out_path,
+            **kwargs,
+        )
 
-    def exclusions_plotly(self, cmap='Viridis', plot_step=100, out_path=None,
-                          **kwargs):
+    def exclusions_plotly(
+        self, cmap="Viridis", plot_step=100, out_path=None, **kwargs
+    ):
         """
         Plot exclusions mask as a plotly heatmap
 
@@ -921,8 +1001,11 @@ class ExclusionsMask(PlotBase):
         kwargs : dict
             Additional kwargs for plotly.express.imshow
         """
-        fig = px.imshow(self.mask[::plot_step, ::plot_step],
-                        color_continuous_scale=cmap, **kwargs)
+        fig = px.imshow(
+            self.mask[::plot_step, ::plot_step],
+            color_continuous_scale=cmap,
+            **kwargs,
+        )
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -931,8 +1014,15 @@ class ExclusionsMask(PlotBase):
         fig.show()
 
     @classmethod
-    def plot(cls, mask, out_dir, plot_type='plotly', cmap='Viridis',
-             plot_step=100, **kwargs):
+    def plot(
+        cls,
+        mask,
+        out_dir,
+        plot_type="plotly",
+        cmap="Viridis",
+        plot_step=100,
+        **kwargs,
+    ):
         """
         Plot exclusions mask and save to out_dir
 
@@ -952,22 +1042,29 @@ class ExclusionsMask(PlotBase):
             Additional plotting kwargs
         """
         excl_mask = cls(mask)
-        if plot_type == 'plot':
-            out_path = 'exclusions_mask.png'
+        if plot_type == "plot":
+            out_path = "exclusions_mask.png"
             out_path = os.path.join(out_dir, out_path)
-            excl_mask.exclusions_plot(cmap=cmap.lower(),
-                                      plot_step=plot_step,
-                                      out_path=out_path,
-                                      **kwargs)
-        elif plot_type == 'plotly':
-            out_path = 'exclusions_mask.html'
+            excl_mask.exclusions_plot(
+                cmap=cmap.lower(),
+                plot_step=plot_step,
+                out_path=out_path,
+                **kwargs,
+            )
+        elif plot_type == "plotly":
+            out_path = "exclusions_mask.html"
             out_path = os.path.join(out_dir, out_path)
-            excl_mask.exclusions_plotly(cmap=cmap.capitalize(),
-                                        plot_step=plot_step,
-                                        out_path=out_path,
-                                        **kwargs)
+            excl_mask.exclusions_plotly(
+                cmap=cmap.capitalize(),
+                plot_step=plot_step,
+                out_path=out_path,
+                **kwargs,
+            )
         else:
-            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
-                   .format(plot_type))
+            msg = (
+                "plot_type must be 'plot' or 'plotly' but {} was given".format(
+                    plot_type
+                )
+            )
             logger.error(msg)
             raise ValueError(msg)
