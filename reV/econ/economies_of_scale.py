@@ -7,7 +7,7 @@ import copy
 import logging
 import re
 
-import numpy as np  # noqa: F401
+import numpy as np  # pylint: disable=unused-import # noqa: F401
 import pandas as pd
 from rex.utilities.utilities import check_eval_str
 
