@@ -21,6 +21,7 @@ from reV.SAM.defaults import (
 )
 from reV.SAM.generation import PvWattsv5, PvWattsv7, PvWattsv8
 from reV.SAM.version_checker import PySamVersionChecker
+from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import InputError, PySAMVersionWarning
 
 

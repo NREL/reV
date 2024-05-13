@@ -8,6 +8,8 @@ import pandas as pd
 from packaging import version
 from rex.outputs import Outputs as RexOutputs
 
+from reV.utilities import MetaKeyName
+
 
 def pd_date_range(*args, **kwargs):
     """A simple wrapper on the pd.date_range() method that handles the closed

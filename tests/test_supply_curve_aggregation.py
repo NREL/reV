@@ -12,6 +12,7 @@ from rex.resource import Resource
 
 from reV import TESTDATADIR
 from reV.supply_curve.aggregation import Aggregation
+from reV.utilities import MetaKeyName
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')

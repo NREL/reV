@@ -248,7 +248,7 @@ def test_nrwal_csv(out_fn):
             out_fpath = rev_nrwal.run(csv_output=True, out_fpath=out_fpath)
 
         expected_message_out = [
-            "`save_raw` option not allowed with " "`csv_output`"
+            "`save_raw` option not allowed with `csv_output`"
         ]
         for r, m in zip(record, expected_message_out):
             warn_msg = r.message.args[0]

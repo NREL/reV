@@ -380,7 +380,7 @@ class QaQcModule:
                     break
             else:
                 raise PipelineError(
-                    "Could not parse fpath from previous " "pipeline jobs."
+                    "Could not parse fpath from previous pipeline jobs."
                 )
             fpath = fpath[0]
             logger.info(

@@ -362,7 +362,7 @@ def test_agg_scalar_excl():
         diff = summary_base[dset].values / summary_with_weights[dset].values
         msg = ("Fractional exclusions failed for {} which has values {} and {}"
                .format(dset, summary_base[dset].values,
-                    summary_with_weights[dset].values))
+                       summary_with_weights[dset].values))
         assert all(diff == 2), msg
 
     for i in summary_base.index:

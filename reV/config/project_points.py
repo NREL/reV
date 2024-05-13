@@ -2,6 +2,7 @@
 """
 reV Project Points Configuration
 """
+
 import copy
 import logging
 import os
@@ -50,9 +51,12 @@ class PointsControl:
         last_site = 0
         ilim = len(self.project_points)
 
-        logger.debug('PointsControl iterator initializing with sites '
-                     '{} through {}'.format(self.project_points.sites[0],
-                                            self.project_points.sites[-1]))
+        logger.debug(
+            "PointsControl iterator initializing with sites "
+            "{} through {}".format(
+                self.project_points.sites[0], self.project_points.sites[-1]
+            )
+        )
 
         # pre-initialize all iter objects
         while True:
@@ -63,14 +67,19 @@ class PointsControl:
 
             last_site = i1
 
-            new = self.split(i0, i1, self.project_points,
-                             sites_per_split=self.sites_per_split)
+            new = self.split(
+                i0,
+                i1,
+                self.project_points,
+                sites_per_split=self.sites_per_split,
+            )
             new._split_range = [i0, i1]
             self._iter_list.append(new)
 
-        logger.debug('PointsControl stopped iteration at attempted '
-                     'index of {}. Length of iterator is: {}'
-                     .format(i1, len(self)))
+        logger.debug(
+            "PointsControl stopped iteration at attempted "
+            "index of {}. Length of iterator is: {}".format(i1, len(self))
+        )
         return self
 
     def __next__(self):
@@ -89,17 +98,22 @@ class PointsControl:
             # No more points controllers left in initialized list
             raise StopIteration
 
-        logger.debug('PointsControl passing site project points '
-                     'with indices {} to {} on iteration #{} '
-                     .format(next_pc.split_range[0],
-                             next_pc.split_range[1], self._i))
+        logger.debug(
+            "PointsControl passing site project points "
+            "with indices {} to {} on iteration #{} ".format(
+                next_pc.split_range[0], next_pc.split_range[1], self._i
+            )
+        )
         self._i += 1
         return next_pc
 
     def __repr__(self):
-        msg = ("{} with {} sites from gid {} through {}"
-               .format(self.__class__.__name__, len(self.project_points),
-                       self.sites[0], self.sites[-1]))
+        msg = "{} with {} sites from gid {} through {}".format(
+            self.__class__.__name__,
+            len(self.project_points),
+            self.sites[0],
+            self.sites[-1],
+        )
         return msg
 
     def __len__(self):
@@ -214,8 +228,9 @@ class ProjectPoints:
     >>> h_list = pp.h
     """
 
-    def __init__(self, points, sam_configs, tech=None, res_file=None,
-                 curtailment=None):
+    def __init__(
+        self, points, sam_configs, tech=None, res_file=None, curtailment=None
+    ):
         """
         Parameters
         ----------
@@ -273,22 +288,25 @@ class ProjectPoints:
             names (keys) and values.
         """
 
-        site_bool = (self.df[MetaKeyName.GID] == site)
+        site_bool = self.df[MetaKeyName.GID] == site
         try:
-            config_id = self.df.loc[site_bool, 'config'].values[0]
+            config_id = self.df.loc[site_bool, "config"].values[0]
         except (KeyError, IndexError) as ex:
-            msg = ('Site {} not found in this instance of '
-                   'ProjectPoints. Available sites include: {}'
-                   .format(site, self.sites))
+            msg = (
+                "Site {} not found in this instance of "
+                "ProjectPoints. Available sites include: {}".format(
+                    site, self.sites
+                )
+            )
             logger.exception(msg)
             raise KeyError(msg) from ex
 
         return config_id, copy.deepcopy(self.sam_inputs[config_id])
 
     def __repr__(self):
-        msg = ("{} with {} sites from gid {} through {}"
-               .format(self.__class__.__name__, len(self),
-                       self.sites[0], self.sites[-1]))
+        msg = "{} with {} sites from gid {} through {}".format(
+            self.__class__.__name__, len(self), self.sites[0], self.sites[-1]
+        )
         return msg
 
     def __len__(self):
@@ -429,7 +447,7 @@ class ProjectPoints:
             solarwaterheat, troughphysicalheat, lineardirectsteam)
             The string should be lower-cased with spaces and _ removed.
         """
-        return 'windpower' if 'wind' in self._tech.lower() else self._tech
+        return "windpower" if "wind" in self._tech.lower() else self._tech
 
     @property
     def h(self):
@@ -441,9 +459,9 @@ class ProjectPoints:
             Hub heights corresponding to each site, taken from the sam config
             for each site. This is None if the technology is not wind.
         """
-        h_var = 'wind_turbine_hub_ht'
+        h_var = "wind_turbine_hub_ht"
         if self._h is None:
-            if 'wind' in self.tech:
+            if "wind" in self.tech:
                 # wind technology, get a list of h values
                 self._h = [self[site][1][h_var] for site in self.sites]
 
@@ -460,9 +478,9 @@ class ProjectPoints:
             the sam config for each site. This is None if the technology
             is not geothermal.
         """
-        d_var = 'resource_depth'
+        d_var = "resource_depth"
         if self._d is None:
-            if 'geothermal' in self.tech:
+            if "geothermal" in self.tech:
                 if d_var in self.df:
                     self._d = list(self.df[d_var])
                 else:
@@ -489,8 +507,8 @@ class ProjectPoints:
         Parameters
         ----------
         fname : str
-            Project points .csv file (with path). Must have MetaKeyName.GID and 'config'
-            column names.
+            Project points .csv file (with path). Must have `MetaKeyName.GID`
+            and 'config' column names.
 
         Returns
         -------
@@ -498,12 +516,13 @@ class ProjectPoints:
             DataFrame mapping sites (gids) to SAM technology (config)
         """
         fname = fname.strip()
-        if fname.endswith('.csv'):
+        if fname.endswith(".csv"):
             df = pd.read_csv(fname)
         else:
-            raise ValueError('Config project points file must be '
-                             '.csv, but received: {}'
-                             .format(fname))
+            raise ValueError(
+                "Config project points file must be "
+                ".csv, but received: {}".format(fname)
+            )
 
         return df
 
@@ -526,7 +545,7 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
-        df = pd.DataFrame(columns=[MetaKeyName.GID, 'config'])
+        df = pd.DataFrame(columns=[MetaKeyName.GID, "config"])
         if isinstance(points, int):
             points = [points]
         if isinstance(points, (list, tuple, np.ndarray)):
@@ -541,9 +560,11 @@ class ProjectPoints:
             stop = points.stop
             if stop is None:
                 if res_file is None:
-                    raise ValueError('Must supply a resource file if '
-                                     'points is a slice of type '
-                                     ' slice(*, None, *)')
+                    raise ValueError(
+                        "Must supply a resource file if "
+                        "points is a slice of type "
+                        " slice(*, None, *)"
+                    )
 
                 multi_h5_res, _ = check_res_file(res_file)
                 if multi_h5_res:
@@ -553,11 +574,12 @@ class ProjectPoints:
 
             df[MetaKeyName.GID] = list(range(*points.indices(stop)))
         else:
-            raise TypeError('Project Points sites needs to be set as a list, '
-                            'tuple, or slice, but was set as: {}'
-                            .format(type(points)))
+            raise TypeError(
+                "Project Points sites needs to be set as a list, "
+                "tuple, or slice, but was set as: {}".format(type(points))
+            )
 
-        df['config'] = None
+        df["config"] = None
 
         return df
 
@@ -589,24 +611,27 @@ class ProjectPoints:
         elif isinstance(points, pd.DataFrame):
             df = points
         else:
-            raise ValueError('Cannot parse Project points data from {}'
-                             .format(type(points)))
+            raise ValueError(
+                "Cannot parse Project points data from {}".format(type(points))
+            )
 
         if MetaKeyName.GID not in df.columns:
             raise KeyError('Project points data must contain "gid" column.')
 
         # pylint: disable=no-member
-        if 'config' not in df.columns:
+        if "config" not in df.columns:
             df = cls._parse_sites(points["gid"].values, res_file=res_file)
 
         gids = df[MetaKeyName.GID].values
         if not np.array_equal(np.sort(gids), gids):
-            msg = ('WARNING: points are not in sequential order and will be '
-                   'sorted! The original order is being preserved under '
-                   'column "points_order"')
+            msg = (
+                "WARNING: points are not in sequential order and will be "
+                "sorted! The original order is being preserved under "
+                'column "points_order"'
+            )
             logger.warning(msg)
             warn(msg)
-            df['points_order'] = df.index.values
+            df["points_order"] = df.index.values
             df = df.sort_values(MetaKeyName.GID).reset_index(drop=True)
 
         return df
@@ -637,8 +662,9 @@ class ProjectPoints:
         elif isinstance(sam_config, str):
             config_dict = {sam_config: sam_config}
         else:
-            raise ValueError('Cannot parse SAM configs from {}'
-                             .format(type(sam_config)))
+            raise ValueError(
+                "Cannot parse SAM configs from {}".format(type(sam_config))
+            )
 
         return SAMConfig(config_dict)
 
@@ -673,10 +699,12 @@ class ProjectPoints:
 
         else:
             curtailment = None
-            warn('Curtailment inputs not recognized. Received curtailment '
-                 'input of type: "{}". Expected None, dict, str, or '
-                 'Curtailment object. Defaulting to no curtailment.',
-                 ConfigWarning)
+            warn(
+                "Curtailment inputs not recognized. Received curtailment "
+                'input of type: "{}". Expected None, dict, str, or '
+                "Curtailment object. Defaulting to no curtailment.",
+                ConfigWarning,
+            )
 
         return curtailment
 
@@ -695,8 +723,10 @@ class ProjectPoints:
             Row index of gid in the project points dataframe.
         """
         if gid not in self._df[MetaKeyName.GID].values:
-            e = ('Requested resource gid {} is not present in the project '
-                 'points dataframe. Cannot return row index.'.format(gid))
+            e = (
+                "Requested resource gid {} is not present in the project "
+                "points dataframe. Cannot return row index.".format(gid)
+            )
             logger.error(e)
             raise ConfigError(e)
 
@@ -710,21 +740,24 @@ class ProjectPoints:
         (sam_config_obj) are compatible. Update as necessary or break
         """
         # Extract unique config refences from project_points DataFrame
-        df_configs = self.df['config'].unique()
+        df_configs = self.df["config"].unique()
         sam_configs = self.sam_inputs
 
         # Checks to make sure that the same number of SAM config files
         # as references in project_points DataFrame
         if len(df_configs) > len(sam_configs):
-            msg = ('Points references {} configs while only '
-                   '{} SAM configs were provided!'
-                   .format(len(df_configs), len(sam_configs)))
+            msg = (
+                "Points references {} configs while only "
+                "{} SAM configs were provided!".format(
+                    len(df_configs), len(sam_configs)
+                )
+            )
             logger.error(msg)
             raise ConfigError(msg)
 
         if len(df_configs) == 1 and df_configs[0] is None:
-            self._df['config'] = list(sam_configs)[0]
-            df_configs = self.df['config'].unique()
+            self._df["config"] = list(sam_configs)[0]
+            df_configs = self.df["config"].unique()
 
         # Check to see if config references in project_points DataFrame
         # are valid file paths, if compare with SAM configs
@@ -736,17 +769,21 @@ class ProjectPoints:
             elif config in sam_configs:
                 configs[config] = sam_configs[config]
             else:
-                msg = ('{} does not map to a valid configuration file'
-                       .format(config))
+                msg = "{} does not map to a valid configuration file".format(
+                    config
+                )
                 logger.error(msg)
                 raise ConfigError(msg)
 
         # If configs has any keys that are not in sam_configs then
         # something really weird happened so raise an error.
         if any(set(configs) - set(sam_configs)):
-            msg = ('A wild config has appeared! Requested config keys for '
-                   'ProjectPoints are {} and previous config keys are {}'
-                   .format(list(configs), list(sam_configs)))
+            msg = (
+                "A wild config has appeared! Requested config keys for "
+                "ProjectPoints are {} and previous config keys are {}".format(
+                    list(configs), list(sam_configs)
+                )
+            )
             logger.error(msg)
             raise ConfigError(msg)
 
@@ -770,8 +807,15 @@ class ProjectPoints:
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]
-        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on=MetaKeyName.GID,
-                            right_on=key, copy=False, validate='1:1')
+        self._df = pd.merge(
+            self._df,
+            df2[df2_cols],
+            how="left",
+            left_on=MetaKeyName.GID,
+            right_on=key,
+            copy=False,
+            validate="1:1",
+        )
 
     def get_sites_from_config(self, config):
         """Get a site list that corresponds to a config key.
@@ -787,7 +831,9 @@ class ProjectPoints:
             List of sites associated with the requested configuration ID. If
             the configuration ID is not recognized, an empty list is returned.
         """
-        sites = self.df.loc[(self.df['config'] == config), MetaKeyName.GID].values
+        sites = self.df.loc[
+            (self.df["config"] == config), MetaKeyName.GID
+        ].values
 
         return list(sites)
 
@@ -820,32 +866,39 @@ class ProjectPoints:
         # Extract DF subset with only index values between i0 and i1
         n = len(project_points)
         if i0 > n or i1 > n:
-            raise ValueError('{} and {} must be within the range of '
-                             'project_points (0 - {})'.format(i0, i1, n - 1))
+            raise ValueError(
+                "{} and {} must be within the range of "
+                "project_points (0 - {})".format(i0, i1, n - 1)
+            )
 
         points_df = project_points.df.iloc[i0:i1]
 
         # make a new instance of ProjectPoints with subset DF
-        sub = cls(points_df,
-                  project_points.sam_config_obj,
-                  project_points.tech,
-                  curtailment=project_points.curtailment)
+        sub = cls(
+            points_df,
+            project_points.sam_config_obj,
+            project_points.tech,
+            curtailment=project_points.curtailment,
+        )
 
         return sub
 
     @staticmethod
     def _parse_lat_lons(lat_lons):
-        msg = ('Expecting a pair or multiple pairs of latitude and '
-               'longitude coordinates!')
+        msg = (
+            "Expecting a pair or multiple pairs of latitude and "
+            "longitude coordinates!"
+        )
         if isinstance(lat_lons, str):
             lat_lons = parse_table(lat_lons)
-            cols = [c for c in lat_lons
-                    if c.lower().startswith(('lat', 'lon'))]
+            cols = [
+                c for c in lat_lons if c.lower().startswith(("lat", "lon"))
+            ]
             lat_lons = lat_lons[sorted(cols)].values
         elif isinstance(lat_lons, (list, tuple)):
             lat_lons = np.array(lat_lons)
         elif isinstance(lat_lons, (int, float)):
-            msg += ' Recieved a single coordinate value!'
+            msg += " Recieved a single coordinate value!"
             logger.error(msg)
             raise ValueError(msg)
 
@@ -853,15 +906,16 @@ class ProjectPoints:
             lat_lons = np.expand_dims(lat_lons, axis=0)
 
         if lat_lons.shape[1] != 2:
-            msg += ' Received {} coordinate values!'.format(lat_lons.shape[1])
+            msg += " Received {} coordinate values!".format(lat_lons.shape[1])
             logger.error(msg)
             raise ValueError(msg)
 
         return lat_lons
 
     @classmethod
-    def lat_lon_coords(cls, lat_lons, res_file, sam_configs, tech=None,
-                       curtailment=None):
+    def lat_lon_coords(
+        cls, lat_lons, res_file, sam_configs, tech=None, curtailment=None
+    ):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
 
@@ -906,11 +960,13 @@ class ProjectPoints:
             res_kwargs = {}
         else:
             res_cls = ResourceX
-            res_kwargs = {'hsds': hsds}
+            res_kwargs = {"hsds": hsds}
 
-        logger.info('Converting latitude longitude coordinates into nearest '
-                    'ProjectPoints')
-        logger.debug('- (lat, lon) pairs:\n{}'.format(lat_lons))
+        logger.info(
+            "Converting latitude longitude coordinates into nearest "
+            "ProjectPoints"
+        )
+        logger.debug("- (lat, lon) pairs:\n{}".format(lat_lons))
         with res_cls(res_file, **res_kwargs) as f:
             gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
 
@@ -918,28 +974,36 @@ class ProjectPoints:
             gids = [gids]
         else:
             if len(gids) != len(np.unique(gids)):
-                uniques, pos, counts = np.unique(gids, return_counts=True,
-                                                 return_inverse=True)
+                uniques, pos, counts = np.unique(
+                    gids, return_counts=True, return_inverse=True
+                )
                 duplicates = {}
                 for idx in np.where(counts > 1)[0]:
                     duplicate_lat_lons = lat_lons[np.where(pos == idx)[0]]
                     duplicates[uniques[idx]] = duplicate_lat_lons
 
-                msg = ('reV Cannot currently handle duplicate Resource gids! '
-                       'The given latitude and longitudes map to the same '
-                       'gids:\n{}'.format(duplicates))
+                msg = (
+                    "reV Cannot currently handle duplicate Resource gids! "
+                    "The given latitude and longitudes map to the same "
+                    "gids:\n{}".format(duplicates)
+                )
                 logger.error(msg)
                 raise RuntimeError(msg)
 
             gids = gids.tolist()
 
-        logger.debug('- Resource gids:\n{}'.format(gids))
+        logger.debug("- Resource gids:\n{}".format(gids))
 
-        pp = cls(gids, sam_configs, tech=tech, res_file=res_file,
-                 curtailment=curtailment)
+        pp = cls(
+            gids,
+            sam_configs,
+            tech=tech,
+            res_file=res_file,
+            curtailment=curtailment,
+        )
 
-        if 'points_order' in pp.df:
-            lat_lons = lat_lons[pp.df['points_order'].values]
+        if "points_order" in pp.df:
+            lat_lons = lat_lons[pp.df["points_order"].values]
 
         pp._df[MetaKeyName.LATITUDE] = lat_lons[:, 0]
         pp._df[MetaKeyName.LONGITUDE] = lat_lons[:, 1]
@@ -947,8 +1011,9 @@ class ProjectPoints:
         return pp
 
     @classmethod
-    def regions(cls, regions, res_file, sam_configs, tech=None,
-                curtailment=None):
+    def regions(
+        cls, regions, res_file, sam_configs, tech=None, curtailment=None
+    ):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
 
@@ -992,28 +1057,35 @@ class ProjectPoints:
         else:
             res_cls = ResourceX
 
-        logger.info('Extracting ProjectPoints for desired regions')
+        logger.info("Extracting ProjectPoints for desired regions")
         points = []
         with res_cls(res_file, hsds=hsds) as f:
             meta = f.meta
             for region, region_col in regions.items():
-                logger.debug('- {}: {}'.format(region_col, region))
+                logger.debug("- {}: {}".format(region_col, region))
                 # pylint: disable=no-member
                 gids = f.region_gids(region, region_col=region_col)
-                logger.debug('- Resource gids:\n{}'.format(gids))
+                logger.debug("- Resource gids:\n{}".format(gids))
                 if points:
                     duplicates = np.intersect1d(gids, points).tolist()
                     if duplicates:
-                        msg = ('reV Cannot currently handle duplicate '
-                               'Resource gids! The given regions containg the '
-                               'same gids:\n{}'.format(duplicates))
+                        msg = (
+                            "reV Cannot currently handle duplicate "
+                            "Resource gids! The given regions containg the "
+                            "same gids:\n{}".format(duplicates)
+                        )
                         logger.error(msg)
                         raise RuntimeError(msg)
 
                 points.extend(gids.tolist())
 
-        pp = cls(points, sam_configs, tech=tech, res_file=res_file,
-                 curtailment=curtailment)
+        pp = cls(
+            points,
+            sam_configs,
+            tech=tech,
+            res_file=res_file,
+            curtailment=curtailment,
+        )
 
         meta = meta.loc[pp.sites]
         cols = list(set(regions.values()))

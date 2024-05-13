@@ -3,6 +3,7 @@ Make small test project points for aws pcluster example.
 """
 from rex import Resource
 
+from reV.utilities import MetaKeyName
 
 if __name__ == '__main__':
     fp = '/nrel/nsrdb/v3/nsrdb_2019.h5'
