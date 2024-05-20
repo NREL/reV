@@ -18,7 +18,7 @@ from reV.qa_qc.summary import (
     SupplyCurvePlot,
 )
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.utilities import ModuleName, log_versions
+from reV.utilities import ModuleName, MetaKeyName, log_versions
 from reV.utilities.exceptions import PipelineError
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,9 @@ class QaQc:
             if file.endswith('.csv'):
                 summary_csv = os.path.join(self.out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                if (MetaKeyName.GID in summary and MetaKeyName.LATITUDE in summary
-                        and MetaKeyName.LONGITUDE in summary):
+                if (MetaKeyName.GID in summary
+                    and MetaKeyName.LATITUDE in summary
+                    and MetaKeyName.LONGITUDE in summary):
                     self._scatter_plot(summary_csv, self.out_dir,
                                        plot_type=plot_type, cmap=cmap,
                                        **kwargs)
@@ -151,8 +152,9 @@ class QaQc:
                         .format(os.path.basename(h5_file), out_dir))
 
     @classmethod
-    def supply_curve(cls, sc_table, out_dir, columns=None, lcoe=MetaKeyName.MEAN_LCOE,
-                     plot_type='plotly', cmap='viridis', sc_plot_kwargs=None,
+    def supply_curve(cls, sc_table, out_dir, columns=None,
+                     lcoe=MetaKeyName.MEAN_LCOE, plot_type='plotly',
+                     cmap='viridis', sc_plot_kwargs=None,
                      scatter_plot_kwargs=None):
         """
         Plot supply curve
@@ -167,7 +169,7 @@ class QaQc:
             Column(s) to summarize, if None summarize all numeric columns,
             by default None
         lcoe : str, optional
-            LCOE value to plot, by default MetaKeyName.MEAN_LCOE
+            LCOE value to plot, by default :obj:`MetaKeyName.MEAN_LCOE`
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional

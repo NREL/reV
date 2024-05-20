@@ -978,7 +978,7 @@ class RepProfiles(RepProfilesBase):
                *equally* to the meanoid profile unless these weights are
                specified.
 
-            By default, ``MetaKeyName.GID_COUNTS``.
+            By default, :obj:`MetaKeyName.GID_COUNTS`.
         n_profiles : int, optional
             Number of representative profiles to save to the output
             file. By default, ``1``.

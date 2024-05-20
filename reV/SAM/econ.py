@@ -16,7 +16,6 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.defaults import DefaultLCOE, DefaultSingleOwner
 from reV.SAM.SAM import RevPySam
 from reV.SAM.windbos import WindBos
-from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import SAMExecutionError
 
 logger = logging.getLogger(__name__)
@@ -175,7 +174,7 @@ class Economic(RevPySam):
         with Outputs(cf_file) as cfh:
 
             # get the index location of the site in question
-            site_gids = list(cfh.get_meta_arr(MetaKeyName.GID))
+            site_gids = list(cfh.get_meta_arr("gid"))
             isites = [site_gids.index(s) for s in sites]
 
             # look for the cf_profile dataset
@@ -379,7 +378,7 @@ class LCOE(Economic):
 
         # get the cf_file meta data gid's to use as indexing tools
         with Outputs(cf_file) as cfh:
-            site_gids = list(cfh.meta[MetaKeyName.GID])
+            site_gids = list(cfh.meta["gid"])
 
         calc_aey = False
         if 'annual_energy' not in site_df:
