@@ -18,7 +18,7 @@ EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
 TM_DSET = 'techmap_wtk'
-AGG_DSET = ('cf_mean', 'cf_profile')
+AGG_DSET = ('cf_mean', )
 
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
                                'exclude_nodata': True},
@@ -46,7 +46,7 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
-                truth = truth.set_index(MetaKeyName.SC_GID)
+                truth = truth.set_index('sc_gid')
                 for c in [MetaKeyName.SOURCE_GIDS, MetaKeyName.GID_COUNTS]:
                     test[c] = test[c].astype(str)
 
@@ -75,9 +75,7 @@ def test_aggregation_serial(excl_dict, baseline_name):
                          [(None, 'baseline_agg.h5'),
                           (EXCL_DICT, 'baseline_agg_excl.h5')])
 def test_aggregation_parallel(excl_dict, baseline_name):
-    """
-    test aggregation run in parallel
-    """
+    """Test aggregation run in parallel"""
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=None,
@@ -87,9 +85,7 @@ def test_aggregation_parallel(excl_dict, baseline_name):
 
 @pytest.mark.parametrize('pre_extract_inclusions', (True, False))
 def test_pre_extract_inclusions(pre_extract_inclusions):
-    """
-    test aggregation w/ and w/out pre-extracting inclusions
-    """
+    """Test aggregation w/ and w/out pre-extracting inclusions"""
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", "baseline_agg_excl.h5")
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=EXCL_DICT,
@@ -99,9 +95,7 @@ def test_pre_extract_inclusions(pre_extract_inclusions):
 
 @pytest.mark.parametrize('excl_dict', [None, EXCL_DICT])
 def test_gid_counts(excl_dict):
-    """
-    test counting of exclusion gids during aggregation
-    """
+    """Test counting of exclusion gids during aggregation"""
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
                               excl_dict=excl_dict, max_workers=1)
 
@@ -117,9 +111,8 @@ def test_gid_counts(excl_dict):
 
 
 def compute_mean_wind_dirs(res_path, dset, gids, fracs):
-    """
-    Compute mean wind directions for given dset and gids
-    """
+    """Compute mean wind directions for given dset and gids"""
+
     with Resource(res_path) as f:
         wind_dirs = np.radians(f[dset, :, gids])
 

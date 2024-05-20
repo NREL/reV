@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""reV hybrids tests."""
-
+"""reV hybrids tests.
+"""
 import json
 import os
 import tempfile
@@ -13,7 +13,7 @@ from reV import TESTDATADIR, Outputs
 from reV.cli import main
 from reV.hybrids import HYBRID_METHODS, Hybridization
 from reV.hybrids.hybrids import MERGE_COLUMN, OUTPUT_PROFILE_NAMES, HybridsData
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName, MetaKeyName
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 
 SOLAR_FPATH = os.path.join(
@@ -45,7 +45,7 @@ def test_hybridization_profile_output_single_resource():
         )[0][0]
 
         solar_cap = res.meta.loc[solar_idx, MetaKeyName.CAPACITY]
-        solar_test_profile = res["rep_profiles_0", :, solar_idx]
+        solar_test_profile = res['rep_profiles_0', :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
 
@@ -76,7 +76,7 @@ def test_hybridization_profile_output_with_ratio_none():
         )[0][0]
 
         solar_cap = res.meta.loc[solar_idx, MetaKeyName.CAPACITY]
-        solar_test_profile = res["rep_profiles_0", :, solar_idx]
+        solar_test_profile = res['rep_profiles_0', :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
 
@@ -111,14 +111,14 @@ def test_hybridization_profile_output():
             res.meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
         solar_cap = res.meta.loc[solar_idx, MetaKeyName.CAPACITY]
-        solar_test_profile = res["rep_profiles_0", :, solar_idx]
+        solar_test_profile = res['rep_profiles_0', :, solar_idx]
 
     with Resource(WIND_FPATH) as res:
         wind_idx = np.where(
             res.meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
         wind_cap = res.meta.loc[wind_idx, MetaKeyName.CAPACITY]
-        wind_test_profile = res["rep_profiles_0", :, wind_idx]
+        wind_test_profile = res['rep_profiles_0', :, wind_idx]
 
     weighted_solar = solar_cap * solar_test_profile
     weighted_wind = wind_cap * wind_test_profile
@@ -131,9 +131,9 @@ def test_hybridization_profile_output():
         hwp,
     ) = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(h_meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid)[
-        0
-    ][0]
+    h_idx = np.where(
+        h_meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid
+    )[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar + weighted_wind)
     assert np.allclose(hsp[:, h_idx], weighted_solar)
@@ -271,7 +271,7 @@ def test_ratios_input(ratio_cols, ratio_bounds, bounds):
     )
 
     if MetaKeyName.CAPACITY in ratio:
-        max_solar_capacities = h.hybrid_meta["hybrid_solar_capacity"]
+        max_solar_capacities = h.hybrid_meta['hybrid_solar_capacity']
         max_solar_capacities = max_solar_capacities.values.reshape(1, -1)
         assert np.all(
             h.profiles["hybrid_solar_profile"] <= max_solar_capacities
@@ -820,13 +820,11 @@ def make_test_file(
             half_n_rows = n_rows // 2
             meta.iloc[-half_n_rows:] = meta.iloc[:half_n_rows].values
         if duplicate_coord_values:
-            meta.loc[0, MetaKeyName.LATITUDE] = meta[
-                MetaKeyName.LATITUDE
-            ].iloc[-1]
-            meta.loc[0, MetaKeyName.LATITUDE] = meta[
-                MetaKeyName.LATITUDE
-            ].iloc[-1]
-        shapes["meta"] = len(meta)
+            lat = meta[MetaKeyName.LATITUDE].iloc[-1]
+            meta.loc[0, MetaKeyName.LATITUDE] = lat
+            lon = meta[MetaKeyName.LATITUDE].iloc[-1]
+            meta.loc[0, MetaKeyName.LATITUDE] = lon
+        shapes['meta'] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))
 

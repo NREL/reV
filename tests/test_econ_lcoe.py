@@ -74,7 +74,8 @@ def test_fout(year):
         fout = 'lcoe_out_econ_{}.h5'.format(year)
         fpath = os.path.join(dirout, fout)
         points = slice(0, 100)
-        econ = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
+        econ = Econ(points, sam_files, cf_file,
+                    output_request='lcoe_fcr',
                     sites_per_worker=25)
         econ.run(max_workers=1, out_fpath=fpath)
         with Outputs(fpath) as f:
@@ -104,7 +105,8 @@ def test_append_data(year):
         r1f = os.path.join(TESTDATADIR,
                            'ri_pv/scalar_outputs/project_outputs.h5')
         points = slice(0, 100)
-        econ = Econ(points, sam_files, cf_file, output_request='lcoe_fcr',
+        econ = Econ(points, sam_files, cf_file,
+                    output_request='lcoe_fcr',
                     sites_per_worker=25, append=True)
         econ.run(max_workers=1)
 
@@ -144,7 +146,6 @@ def test_append_multi_node(node):
         shutil.copy(original_file, cf_file)
         sam_files = {'default': os.path.join(
             TESTDATADIR, 'SAM/pv_tracking_atb2020.json')}
-        year = 1998
         points = os.path.join(
             TESTDATADIR,
             'config/nsrdb_projpoints_atb2020_capcostmults_subset.csv')
@@ -152,7 +153,8 @@ def test_append_multi_node(node):
             TESTDATADIR,
             'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
         econ = Econ(points, sam_files, cf_file,
-                    output_request=('lcoe_fcr', 'capital_cost'),
+                    output_request=('lcoe_fcr',
+                    'capital_cost'),
                     sites_per_worker=25, append=True, site_data=site_data)
         econ.run(max_workers=1)
 
@@ -166,8 +168,8 @@ def test_append_multi_node(node):
         assert np.allclose(data_baseline, data_test)
 
         site_data = pd.read_csv(site_data)
-        sd_cap_cost = \
-            site_data.loc[site_data.gid.isin(meta.gid), 'capital_cost']
+        sd_cap_cost = site_data.loc[site_data.gid.isin(meta.gid),
+                                    'capital_cost']
         assert np.allclose(test_cap_cost, sd_cap_cost)
         assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
 

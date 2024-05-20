@@ -28,14 +28,14 @@ from reV.supply_curve.sc_aggregation import (
 )
 from reV.utilities import MetaKeyName, ModuleName
 
-EXCL = os.path.join(TESTDATADIR, "ri_exclusions/ri_exclusions.h5")
-RES = os.path.join(TESTDATADIR, "nsrdb/ri_100_nsrdb_2012.h5")
-GEN = os.path.join(TESTDATADIR, "gen_out/ri_my_pv_gen.h5")
-ONLY_GEN = os.path.join(TESTDATADIR, "gen_out/ri_my_pv_only_gen.h5")
-ONLY_ECON = os.path.join(TESTDATADIR, "gen_out/ri_my_pv_only_econ.h5")
-AGG_BASELINE = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary.csv")
-TM_DSET = "techmap_nsrdb"
-RES_CLASS_DSET = "ghi_mean-means"
+EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
+GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
+ONLY_GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_gen.h5')
+ONLY_ECON = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_econ.h5')
+AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+TM_DSET = 'techmap_nsrdb'
+RES_CLASS_DSET = 'ghi_mean-means'
 RES_CLASS_BINS = [0, 4, 100]
 DATA_LAYERS = {
     "pct_slope": {"dset": "ri_srtm_slope", "method": "mean"},
@@ -119,12 +119,10 @@ def test_agg_summary():
             "Created: {}".format(AGG_BASELINE)
         )
 
-    for c in [
-        MetaKeyName.RES_GIDS,
-        MetaKeyName.GEN_GIDS,
-        MetaKeyName.GID_COUNTS,
-    ]:
-        summary[c] = summary[c].astype(str)
+    else:
+        for c in [MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS,
+                  MetaKeyName.GID_COUNTS]:
+            summary[c] = summary[c].astype(str)
 
     s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
@@ -184,9 +182,9 @@ def test_multi_file_excl():
         shutil.copy(EXCL, excl_temp_1)
         shutil.copy(EXCL, excl_temp_2)
 
-        with h5py.File(excl_temp_1, "a") as f:
+        with h5py.File(excl_temp_1, 'a') as f:
             shape = f[MetaKeyName.LATITUDE].shape
-            attrs = dict(f["ri_srtm_slope"].attrs)
+            attrs = dict(f['ri_srtm_slope'].attrs)
             data = np.ones(shape)
             test_dset = "excl_test"
             f.create_dataset(test_dset, shape, data=data)
@@ -208,10 +206,8 @@ def test_multi_file_excl():
         summary = summary.fillna("None")
         s_baseline = s_baseline.fillna("None")
 
-        assert np.allclose(
-            summary[MetaKeyName.AREA_SQ_KM] * 2,
-            s_baseline[MetaKeyName.AREA_SQ_KM],
-        )
+        assert np.allclose(summary[MetaKeyName.AREA_SQ_KM] * 2,
+                           s_baseline[MetaKeyName.AREA_SQ_KM])
 
 
 @pytest.mark.parametrize("pre_extract", (True, False))
@@ -236,12 +232,10 @@ def test_pre_extract_inclusions(pre_extract):
             "Created: {}".format(AGG_BASELINE)
         )
 
-    for c in [
-        MetaKeyName.RES_GIDS,
-        MetaKeyName.GEN_GIDS,
-        MetaKeyName.GID_COUNTS,
-    ]:
-        summary[c] = summary[c].astype(str)
+    else:
+        for c in [MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS,
+                  MetaKeyName.GID_COUNTS]:
+            summary[c] = summary[c].astype(str)
 
     s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
@@ -298,12 +292,12 @@ def test_agg_extra_dsets():
     for dset in h5_dsets:
         assert "mean_{}".format(dset) in summary.columns
 
-    check = summary["mean_lcoe_fcr-2012"] == summary[MetaKeyName.MEAN_LCOE]
+    check = summary['mean_lcoe_fcr-2012'] == summary[MetaKeyName.MEAN_LCOE]
     assert not any(check)
-    check = summary["mean_lcoe_fcr-2013"] == summary[MetaKeyName.MEAN_LCOE]
+    check = summary['mean_lcoe_fcr-2013'] == summary[MetaKeyName.MEAN_LCOE]
     assert not any(check)
 
-    avg = (summary["mean_lcoe_fcr-2012"] + summary["mean_lcoe_fcr-2013"]) / 2
+    avg = (summary['mean_lcoe_fcr-2012'] + summary['mean_lcoe_fcr-2013']) / 2
     assert np.allclose(avg.values, summary[MetaKeyName.MEAN_LCOE].values)
 
 
@@ -398,7 +392,7 @@ def test_data_layer_methods():
     for i in summary.index.values:
         # Check categorical data layers
         counts = summary.loc[i, MetaKeyName.GID_COUNTS]
-        rr = summary.loc[i, "reeds_region"]
+        rr = summary.loc[i, 'reeds_region']
         assert isinstance(rr, str)
         rr = json.loads(rr)
         assert isinstance(rr, dict)
@@ -419,9 +413,9 @@ def test_data_layer_methods():
 
         # Check min/mean/max of the same data layer
         n = summary.loc[i, MetaKeyName.N_GIDS]
-        slope_mean = summary.loc[i, "pct_slope_mean"]
-        slope_max = summary.loc[i, "pct_slope_max"]
-        slope_min = summary.loc[i, "pct_slope_min"]
+        slope_mean = summary.loc[i, 'pct_slope_mean']
+        slope_max = summary.loc[i, 'pct_slope_max']
+        slope_min = summary.loc[i, 'pct_slope_min']
         if n > 3:  # sc points with <= 3 90m pixels can have min == mean == max
             assert slope_min < slope_mean < slope_max
         else:
@@ -435,13 +429,11 @@ def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
-    data = {
-        "capital_cost": 34900000,
-        "fixed_operating_cost": 280000,
-        "fixed_charge_rate": 0.09606382995843887,
-        "variable_operating_cost": 0,
-        "system_capacity": 20000,
-    }
+    data = {MetaKeyName.CAPITAL_COST: 34900000,
+            MetaKeyName.FIXED_OPERATING_COST: 280000,
+            MetaKeyName.FIXED_CHARGE_RATE: 0.09606382995843887,
+            MetaKeyName.VARIABLE_OPERATING_COST: 0,
+            'system_capacity': 20000}
     annual_cf = [0.24, 0.26, 0.37, 0.15]
     annual_lcoe = []
     years = list(range(2012, 2016))
@@ -457,15 +449,13 @@ def test_recalc_lcoe(cap_cost_scale):
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
             for year, cf in zip(years, annual_cf):
-                lcoe = lcoe_fcr(
-                    data["fixed_charge_rate"],
-                    data["capital_cost"],
-                    data["fixed_operating_cost"],
-                    data["system_capacity"] * cf * 8760,
-                    data["variable_operating_cost"],
-                )
-                cf_arr = np.full(res["meta"].shape, cf)
-                lcoe_arr = np.full(res["meta"].shape, lcoe)
+                lcoe = lcoe_fcr(data[MetaKeyName.FIXED_CHARGE_RATE],
+                                data[MetaKeyName.CAPITAL_COST],
+                                data[MetaKeyName.FIXED_OPERATING_COST],
+                                data['system_capacity'] * cf * 8760,
+                                data[MetaKeyName.VARIABLE_OPERATING_COST])
+                cf_arr = np.full(res['meta'].shape, cf)
+                lcoe_arr = np.full(res['meta'].shape, lcoe)
                 annual_lcoe.append(lcoe)
 
                 res.create_dataset(
@@ -484,13 +474,11 @@ def test_recalc_lcoe(cap_cost_scale):
                 "lcoe_fcr-means", res["meta"].shape, data=lcoe_arr
             )
 
-        h5_dsets = [
-            "capital_cost",
-            "fixed_operating_cost",
-            "fixed_charge_rate",
-            "variable_operating_cost",
-            "system_capacity",
-        ]
+        h5_dsets = [MetaKeyName.CAPITAL_COST,
+                    MetaKeyName.FIXED_OPERATING_COST,
+                    MetaKeyName.FIXED_CHARGE_RATE,
+                    MetaKeyName.VARIABLE_OPERATING_COST,
+                    'system_capacity']
 
         base = SupplyCurveAggregation(
             EXCL,
@@ -520,21 +508,18 @@ def test_recalc_lcoe(cap_cost_scale):
         )
         summary = sca.summarize(gen_temp, max_workers=1)
 
-    assert not np.allclose(
-        summary_base[MetaKeyName.MEAN_LCOE], summary[MetaKeyName.MEAN_LCOE]
-    )
+    assert not np.allclose(summary_base[MetaKeyName.MEAN_LCOE],
+                           summary[MetaKeyName.MEAN_LCOE])
 
-    if cap_cost_scale == "1":
+    if cap_cost_scale == '1':
         cc_dset = MetaKeyName.SC_POINT_CAPITAL_COST
     else:
         cc_dset = MetaKeyName.SCALED_SC_POINT_CAPITAL_COST
-    lcoe = lcoe_fcr(
-        summary["mean_fixed_charge_rate"],
-        summary[cc_dset],
-        summary[MetaKeyName.SC_POINT_FIXED_OPERATING_COST],
-        summary[MetaKeyName.SC_POINT_ANNUAL_ENERGY],
-        summary["mean_variable_operating_cost"],
-    )
+    lcoe = lcoe_fcr(summary[MetaKeyName.MEAN_FIXED_CHARGE_RATE],
+                    summary[cc_dset],
+                    summary[MetaKeyName.SC_POINT_FIXED_OPERATING_COST],
+                    summary[MetaKeyName.SC_POINT_ANNUAL_ENERGY],
+                    summary[MetaKeyName.MEAN_VARIABLE_OPERATING_COST])
     assert np.allclose(lcoe, summary[MetaKeyName.MEAN_LCOE])
 
 

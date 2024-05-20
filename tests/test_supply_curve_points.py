@@ -81,9 +81,7 @@ def test_slicer(gids, resolution):
     ],
 )
 def test_weighted_means(gid, resolution, excl_dict, time_series):
-    """
-    Test Supply Curve Point exclusions weighted mean calculation
-    """
+    """Test Supply Curve Point exclusions weighted mean calculation"""
     with SupplyCurvePoint(
         gid, F_EXCL, TM_DSET, excl_dict=excl_dict, resolution=resolution
     ) as point:

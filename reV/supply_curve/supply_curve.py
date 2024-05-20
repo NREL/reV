@@ -4,7 +4,6 @@ reV supply curve module
 - Calculation of LCOT
 - Supply Curve creation
 """
-
 import json
 import logging
 import os
@@ -28,13 +27,8 @@ logger = logging.getLogger(__name__)
 class SupplyCurve:
     """SupplyCurve"""
 
-    def __init__(
-        self,
-        sc_points,
-        trans_table,
-        sc_features=None,
-        sc_capacity_col=MetaKeyName.CAPACITY,
-    ):
+    def __init__(self, sc_points, trans_table, sc_features=None,
+                 sc_capacity_col=MetaKeyName.CAPACITY):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
@@ -294,7 +288,7 @@ class SupplyCurve:
             trans_table = trans_table.rename(columns={"dist_mi": "dist_km"})
             trans_table["dist_km"] *= 1.60934
 
-        drop_cols = [MetaKeyName.SC_GID, "cap_left", MetaKeyName.SC_POINT_GID]
+        drop_cols = [MetaKeyName.SC_GID, 'cap_left', MetaKeyName.SC_POINT_GID]
         drop_cols = [c for c in drop_cols if c in trans_table]
         if drop_cols:
             trans_table = trans_table.drop(columns=drop_cols)
@@ -302,9 +296,8 @@ class SupplyCurve:
         return trans_table
 
     @staticmethod
-    def _map_trans_capacity(
-        trans_sc_table, sc_capacity_col=MetaKeyName.CAPACITY
-    ):
+    def _map_trans_capacity(trans_sc_table,
+                            sc_capacity_col=MetaKeyName.CAPACITY):
         """
         Map SC gids to transmission features based on capacity. For any SC
         gids with capacity > the maximum transmission feature capacity, map
@@ -512,18 +505,12 @@ class SupplyCurve:
         )
 
     @classmethod
-    def _merge_sc_trans_tables(
-        cls,
-        sc_points,
-        trans_table,
-        sc_cols=(
-            MetaKeyName.SC_GID,
-            MetaKeyName.CAPACITY,
-            MetaKeyName.MEAN_CF,
-            MetaKeyName.MEAN_LCOE,
-        ),
-        sc_capacity_col=MetaKeyName.CAPACITY,
-    ):
+    def _merge_sc_trans_tables(cls, sc_points, trans_table,
+                               sc_cols=(MetaKeyName.SC_GID,
+                                        MetaKeyName.CAPACITY,
+                                        MetaKeyName.MEAN_CF,
+                                        MetaKeyName.MEAN_LCOE),
+                               sc_capacity_col=MetaKeyName.CAPACITY):
         """
         Merge the supply curve table with the transmission features table.
 
@@ -538,8 +525,7 @@ class SupplyCurve:
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             If the `sc_capacity_col` is not included, it will get added.
-            by default (MetaKeyName.SC_GID, MetaKeyName.CAPACITY,
-            MetaKeyName.MEAN_CF, MetaKeyName.MEAN_LCOE)
+            by default (MetaKeyName.SC_GID, 'capacity', 'mean_cf', 'mean_lcoe')
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
             this column determine the size of transmission lines built.
@@ -605,18 +591,10 @@ class SupplyCurve:
         return trans_sc_table
 
     @classmethod
-    def _map_tables(
-        cls,
-        sc_points,
-        trans_table,
-        sc_cols=(
-            MetaKeyName.SC_GID,
-            MetaKeyName.CAPACITY,
-            MetaKeyName.MEAN_CF,
-            MetaKeyName.MEAN_LCOE,
-        ),
-        sc_capacity_col=MetaKeyName.CAPACITY,
-    ):
+    def _map_tables(cls, sc_points, trans_table,
+                    sc_cols=(MetaKeyName.SC_GID, MetaKeyName.CAPACITY,
+                             MetaKeyName.MEAN_CF, MetaKeyName.MEAN_LCOE),
+                    sc_capacity_col=MetaKeyName.CAPACITY):
         """
         Map supply curve points to transmission features
 
@@ -659,9 +637,9 @@ class SupplyCurve:
                 trans_sc_table, sc_capacity_col=scc
             )
 
-        trans_sc_table = trans_sc_table.sort_values(
-            [MetaKeyName.SC_GID, "trans_gid"]
-        ).reset_index(drop=True)
+        trans_sc_table = \
+            trans_sc_table.sort_values(
+                [MetaKeyName.SC_GID, 'trans_gid']).reset_index(drop=True)
 
         cls._check_sc_trans_table(sc_points, trans_sc_table)
 
@@ -730,12 +708,8 @@ class SupplyCurve:
         return sc_gids, mask
 
     @staticmethod
-    def _get_capacity(
-        sc_gid,
-        sc_table,
-        connectable=True,
-        sc_capacity_col=MetaKeyName.CAPACITY,
-    ):
+    def _get_capacity(sc_gid, sc_table, connectable=True,
+                      sc_capacity_col=MetaKeyName.CAPACITY):
         """
         Get capacity of supply curve point
 
@@ -781,16 +755,10 @@ class SupplyCurve:
         return capacity
 
     @classmethod
-    def _compute_trans_cap_cost(
-        cls,
-        trans_table,
-        trans_costs=None,
-        avail_cap_frac=1,
-        max_workers=None,
-        connectable=True,
-        line_limited=False,
-        sc_capacity_col=MetaKeyName.CAPACITY,
-    ):
+    def _compute_trans_cap_cost(cls, trans_table, trans_costs=None,
+                                avail_cap_frac=1, max_workers=None,
+                                connectable=True, line_limited=False,
+                                sc_capacity_col=MetaKeyName.CAPACITY):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -853,7 +821,7 @@ class SupplyCurve:
         if max_workers is None:
             max_workers = os.cpu_count()
 
-        logger.info("Computing LCOT costs for all possible connections...")
+        logger.info('Computing LCOT costs for all possible connections...')
         groups = trans_table.groupby(MetaKeyName.SC_GID)
         if max_workers > 1:
             loggers = [__name__, "reV.handlers.transmission", "reV"]
@@ -962,34 +930,29 @@ class SupplyCurve:
         cost *= self._trans_table[self._sc_capacity_col]
         cost /= self._trans_table[MetaKeyName.CAPACITY]  # align with "mean_cf"
 
-        if "reinforcement_cost_per_mw" in self._trans_table:
-            logger.info(
-                "'reinforcement_cost_per_mw' column found in "
-                "transmission table. Adding reinforcement costs "
-                "to total LCOE."
-            )
+        if 'reinforcement_cost_per_mw' in self._trans_table:
+            logger.info("'reinforcement_cost_per_mw' column found in "
+                        "transmission table. Adding reinforcement costs "
+                        "to total LCOE.")
             cf_mean_arr = self._trans_table[MetaKeyName.MEAN_CF].values
             lcot = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe = lcot + self._trans_table[MetaKeyName.MEAN_LCOE]
-            self._trans_table["lcot_no_reinforcement"] = lcot
-            self._trans_table["lcoe_no_reinforcement"] = lcoe
-            r_cost = self._trans_table[
-                "reinforcement_cost_per_mw"
-            ].values.copy()
+            self._trans_table['lcot_no_reinforcement'] = lcot
+            self._trans_table['lcoe_no_reinforcement'] = lcoe
+            r_cost = (self._trans_table['reinforcement_cost_per_mw']
+                      .values.copy())
             r_cost *= self._trans_table[self._sc_capacity_col]
-            r_cost /= self._trans_table[
-                MetaKeyName.CAPACITY
-            ]  # align with "mean_cf"
+            # align with "mean_cf"
+            r_cost /= self._trans_table[MetaKeyName.CAPACITY]
             cost += r_cost  # $/MW
 
         cf_mean_arr = self._trans_table[MetaKeyName.MEAN_CF].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
-        self._trans_table["lcot"] = lcot
-        self._trans_table["total_lcoe"] = (
-            self._trans_table["lcot"]
-            + self._trans_table[MetaKeyName.MEAN_LCOE]
-        )
+        self._trans_table['lcot'] = lcot
+        self._trans_table['total_lcoe'] = (
+            self._trans_table['lcot']
+            + self._trans_table[MetaKeyName.MEAN_LCOE])
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
@@ -1000,14 +963,11 @@ class SupplyCurve:
 
         if MetaKeyName.MEAN_LCOE_FRICTION in self._trans_table:
             lcoe_friction = (
-                self._trans_table["lcot"]
-                + self._trans_table[MetaKeyName.MEAN_LCOE_FRICTION]
-            )
+                self._trans_table['lcot']
+                + self._trans_table[MetaKeyName.MEAN_LCOE_FRICTION])
             self._trans_table[MetaKeyName.TOTAL_LCOE_FRICTION] = lcoe_friction
-            logger.info(
-                "Found mean LCOE with friction. Adding key "
-                '"total_lcoe_friction" to trans table.'
-            )
+            logger.info('Found mean LCOE with friction. Adding key '
+                        '"total_lcoe_friction" to trans table.')
 
     def _exclude_noncompetitive_wind_farms(
         self, comp_wind_dirs, sc_gid, downwind=False
@@ -1226,11 +1186,8 @@ class SupplyCurve:
 
         sc_gids = self._sc_points[MetaKeyName.SC_GID].values
         connected = connections[MetaKeyName.SC_GID].values
-        logger.debug(
-            "Connected gids {} out of total supply curve gids {}".format(
-                len(connected), len(sc_gids)
-            )
-        )
+        logger.debug('Connected gids {} out of total supply curve gids {}'
+                     .format(len(connected), len(sc_gids)))
         unconnected = ~np.isin(sc_gids, connected)
         unconnected = sc_gids[unconnected].tolist()
 
@@ -1245,8 +1202,7 @@ class SupplyCurve:
             warn(msg)
 
         supply_curve = self._sc_points.merge(
-            connections, on=MetaKeyName.SC_GID
-        )
+            connections, on=MetaKeyName.SC_GID)
 
         return supply_curve.reset_index(drop=True)
 
@@ -1264,19 +1220,11 @@ class SupplyCurve:
         """Add extra output columns, if needed."""
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
-        extra_cols = [
-            "ba_str",
-            "poi_lat",
-            "poi_lon",
-            "reinforcement_poi_lat",
-            "reinforcement_poi_lon",
-            "eos_mult",
-            "reg_mult",
-            "reinforcement_cost_per_mw",
-            "reinforcement_dist_km",
-            "n_parallel_trans",
-            MetaKeyName.TOTAL_LCOE_FRICTION,
-        ]
+        extra_cols = ['ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                      'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                      MetaKeyName.REG_MULT,
+                      'reinforcement_cost_per_mw', 'reinforcement_dist_km',
+                      'n_parallel_trans', MetaKeyName.TOTAL_LCOE_FRICTION]
         if not consider_friction:
             extra_cols -= {MetaKeyName.TOTAL_LCOE_FRICTION}
 
@@ -1397,9 +1345,8 @@ class SupplyCurve:
 
         total_lcoe_fric = None
         if consider_friction and MetaKeyName.MEAN_LCOE_FRICTION in trans_table:
-            total_lcoe_fric = trans_table[
-                MetaKeyName.TOTAL_LCOE_FRICTION
-            ].values
+            total_lcoe_fric = \
+                trans_table[MetaKeyName.TOTAL_LCOE_FRICTION].values
 
         comp_wind_dirs = None
         if wind_dirs is not None:
@@ -1525,15 +1472,15 @@ class SupplyCurve:
         columns = self._adjust_output_columns(columns, consider_friction)
         sort_on = self._determine_sort_on(sort_on)
 
-        connections = trans_table.sort_values([sort_on, "trans_gid"])
+        connections = trans_table.sort_values([sort_on, 'trans_gid'])
         connections = connections.groupby(MetaKeyName.SC_GID).first()
-        rename = {"trans_gid": "trans_gid", "category": "trans_type"}
+        rename = {'trans_gid': 'trans_gid',
+                  'category': 'trans_type'}
         connections = connections.rename(columns=rename)
         connections = connections[columns].reset_index()
 
-        supply_curve = self._sc_points.merge(
-            connections, on=MetaKeyName.SC_GID
-        )
+        supply_curve = self._sc_points.merge(connections,
+                                             on=MetaKeyName.SC_GID)
         if wind_dirs is not None:
             supply_curve = CompetitiveWindFarms.run(
                 wind_dirs,

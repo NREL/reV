@@ -6,7 +6,6 @@ Created on Dec 16 2019
 
 @author: gbuster
 """
-
 import json
 import os
 import shutil
@@ -22,9 +21,9 @@ from reV import TESTDATADIR
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.nrwal.nrwal import RevNrwal
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName
 
-SOURCE_DIR = os.path.join(TESTDATADIR, "nrwal/")
+SOURCE_DIR = os.path.join(TESTDATADIR, 'nrwal/')
 
 
 def test_nrwal():
@@ -34,17 +33,12 @@ def test_nrwal():
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
-        gen_fpath = os.path.join(td, "gen_2010_node00.h5")
-        site_data = os.path.join(td, "example_offshore_data.csv")
-        offshore_config = os.path.join(td, "offshore.json")
-        onshore_config = os.path.join(td, "onshore.json")
-        sam_configs = {
-            "onshore": onshore_config,
-            MetaKeyName.OFFSHORE: offshore_config,
-        }
-        nrwal_configs = {
-            MetaKeyName.OFFSHORE: os.path.join(td, "nrwal_offshore.yaml")
-        }
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, "a") as f:
             f.time_index = pd_date_range(
@@ -75,17 +69,10 @@ def test_nrwal():
             cf_profile_raw = f["cf_profile"]
             mask = meta_raw.offshore == 1
 
-        output_request = [
-            "fixed_charge_rate",
-            "depth",
-            "total_losses",
-            "array",
-            "export",
-            "gcf_adjustment",
-            "lcoe_fcr",
-            "cf_mean",
-            "cf_profile",
-        ]
+        output_request = ['fixed_charge_rate', 'depth',
+                          'total_losses',
+                          'array', 'export', 'gcf_adjustment',
+                          'lcoe_fcr', 'cf_mean', ]
 
         obj = RevNrwal(
             gen_fpath,
@@ -184,17 +171,12 @@ def test_nrwal_csv(out_fn):
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
-        gen_fpath = os.path.join(td, "gen_2010_node00.h5")
-        site_data = os.path.join(td, "example_offshore_data.csv")
-        offshore_config = os.path.join(td, "offshore.json")
-        onshore_config = os.path.join(td, "onshore.json")
-        sam_configs = {
-            "onshore": onshore_config,
-            MetaKeyName.OFFSHORE: offshore_config,
-        }
-        nrwal_configs = {
-            MetaKeyName.OFFSHORE: os.path.join(td, "nrwal_offshore.yaml")
-        }
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, "a") as f:
             f.time_index = pd_date_range(
@@ -222,17 +204,10 @@ def test_nrwal_csv(out_fn):
                 chunks=None,
             )
 
-        compatible = [
-            "depth",
-            "total_losses",
-            "array",
-            "export",
-            "gcf_adjustment",
-            "fixed_charge_rate",
-            "lcoe_fcr",
-            "cf_mean",
-        ]
-        incompatible = ["cf_profile"]
+        compatible = ['depth', 'total_losses', 'array', 'export',
+                      'gcf_adjustment', 'fixed_charge_rate',
+                      'lcoe_fcr', 'cf_mean']
+        incompatible = []
         output_request = compatible + incompatible
 
         with pytest.warns(Warning) as record:
@@ -273,17 +248,12 @@ def test_nrwal_constant_eq_output_request():
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
-        gen_fpath = os.path.join(td, "gen_2010_node00.h5")
-        site_data = os.path.join(td, "example_offshore_data.csv")
-        offshore_config = os.path.join(td, "offshore.json")
-        onshore_config = os.path.join(td, "onshore.json")
-        sam_configs = {
-            "onshore": onshore_config,
-            MetaKeyName.OFFSHORE: offshore_config,
-        }
-        nrwal_configs = {
-            MetaKeyName.OFFSHORE: os.path.join(td, "nrwal_offshore.yaml")
-        }
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, "a") as f:
             f.time_index = pd_date_range(
@@ -338,17 +308,13 @@ def test_nrwal_cli(runner, clear_loggers):
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
-        gen_fpath = os.path.join(td, "gen_2010_node00.h5")
-        site_data = os.path.join(td, "example_offshore_data.csv")
-        offshore_config = os.path.join(td, "offshore.json")
-        onshore_config = os.path.join(td, "onshore.json")
-        sam_configs = {
-            "onshore": onshore_config,
-            MetaKeyName.OFFSHORE: offshore_config,
-        }
-        nrwal_configs = {
-            MetaKeyName.OFFSHORE: os.path.join(td, "nrwal_offshore.yaml")
-        }
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config,
+                       "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, "a") as f:
             f.time_index = pd_date_range(
@@ -379,17 +345,9 @@ def test_nrwal_cli(runner, clear_loggers):
             cf_profile_raw = f["cf_profile"]
             mask = meta_raw.offshore == 1
 
-        output_request = [
-            "fixed_charge_rate",
-            "depth",
-            "total_losses",
-            "array",
-            "export",
-            "gcf_adjustment",
-            "lcoe_fcr",
-            "cf_mean",
-            "cf_profile",
-        ]
+        output_request = ['fixed_charge_rate', 'depth', 'total_losses',
+                          'array', 'export', 'gcf_adjustment',
+                          'lcoe_fcr', 'cf_mean', ]
 
         config = {
             "execution_control": {
@@ -507,17 +465,13 @@ def test_nrwal_cli_csv(runner, clear_loggers):
         for fn in os.listdir(SOURCE_DIR):
             shutil.copy(os.path.join(SOURCE_DIR, fn), os.path.join(td, fn))
 
-        gen_fpath = os.path.join(td, "gen_2010_node00.h5")
-        site_data = os.path.join(td, "example_offshore_data.csv")
-        offshore_config = os.path.join(td, "offshore.json")
-        onshore_config = os.path.join(td, "onshore.json")
-        sam_configs = {
-            "onshore": onshore_config,
-            MetaKeyName.OFFSHORE: offshore_config,
-        }
-        nrwal_configs = {
-            MetaKeyName.OFFSHORE: os.path.join(td, "nrwal_offshore.yaml")
-        }
+        gen_fpath = os.path.join(td, 'gen_2010_node00.h5')
+        site_data = os.path.join(td, 'example_offshore_data.csv')
+        offshore_config = os.path.join(td, 'offshore.json')
+        onshore_config = os.path.join(td, 'onshore.json')
+        sam_configs = {'onshore': onshore_config,
+                       "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, "a") as f:
             f.time_index = pd_date_range(
@@ -545,17 +499,9 @@ def test_nrwal_cli_csv(runner, clear_loggers):
                 chunks=None,
             )
 
-        output_request = [
-            "fixed_charge_rate",
-            "depth",
-            "total_losses",
-            "array",
-            "export",
-            "gcf_adjustment",
-            "lcoe_fcr",
-            "cf_mean",
-            "cf_profile",
-        ]
+        output_request = ['fixed_charge_rate', 'depth',
+                          'total_losses', 'array', 'export', 'gcf_adjustment',
+                          'lcoe_fcr', 'cf_mean', ]
 
         config = {
             "execution_control": {

@@ -28,36 +28,23 @@ from reV.utilities.exceptions import (
 logger = logging.getLogger(__name__)
 
 MERGE_COLUMN = MetaKeyName.SC_POINT_GID
-PROFILE_DSET_REGEX = "rep_profiles_[0-9]+$"
-SOLAR_PREFIX = "solar_"
-WIND_PREFIX = "wind_"
+PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
+SOLAR_PREFIX = 'solar_'
+WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
-    MetaKeyName.LATITUDE,
-    MetaKeyName.LONGITUDE,
-    "country",
-    "state",
-    "county",
-    MetaKeyName.ELEVATION,
-    MetaKeyName.TIMEZONE,
-    MetaKeyName.SC_POINT_GID,
-    MetaKeyName.SC_ROW_IND,
-    MetaKeyName.SC_COL_IND,
+    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE,
+    MetaKeyName.COUNTRY, MetaKeyName.STATE, MetaKeyName.COUNTY,
+    MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
+    MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
 }
 DROPPED_COLUMNS = [MetaKeyName.GID]
-DEFAULT_FILL_VALUES = {
-    "solar_capacity": 0,
-    "wind_capacity": 0,
-    "solar_mean_cf": 0,
-    "wind_mean_cf": 0,
-}
-OUTPUT_PROFILE_NAMES = [
-    "hybrid_profile",
-    "hybrid_solar_profile",
-    "hybrid_wind_profile",
-]
-RatioColumns = namedtuple(
-    "RatioColumns", ["num", "denom", "fixed"], defaults=(None, None, None)
-)
+DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
+                       'solar_mean_cf': 0, 'wind_mean_cf': 0}
+OUTPUT_PROFILE_NAMES = ['hybrid_profile',
+                        'hybrid_solar_profile',
+                        'hybrid_wind_profile']
+RatioColumns = namedtuple('RatioColumns', ['num', 'denom', 'fixed'],
+                          defaults=(None, None, None))
 
 
 class ColNameFormatter:
@@ -257,12 +244,10 @@ class HybridsData:
                     logger.error(e)
                     raise FileInputError(e)
                 if len(profile_dset_names) > 1:
-                    msg = (
-                        "Found more than one profile in {!r}: {}. "
-                        "This module is not intended for hybridization of "
-                        "multiple representative profiles. Please re-run "
-                        "on a single aggregated profile."
-                    )
+                    msg = ("Found more than one profile in {!r}: {}. "
+                           "This module is not intended for hybridization of "
+                           "multiple representative profiles. Please re-run "
+                           "on a single aggregated profile.")
                     e = msg.format(fp, profile_dset_names)
                     logger.error(e)
                     raise FileInputError(e)
@@ -700,12 +685,12 @@ class MetaHybridizer:
     def _merge_type(self):
         """Determine the type of merge to use for meta based on user input."""
         if self._allow_solar_only and self._allow_wind_only:
-            return "outer"
+            return 'outer'
         if self._allow_solar_only and not self._allow_wind_only:
-            return "left"
+            return 'left'
         if not self._allow_solar_only and self._allow_wind_only:
-            return "right"
-        return "inner"
+            return 'right'
+        return 'inner'
 
     def _format_meta_post_merge(self):
         """Format hybrid meta after merging."""
@@ -776,7 +761,7 @@ class MetaHybridizer:
 
     def _verify_col_match_post_merge(self, col_name):
         """Verify that all (non-null) values in a column match post merge."""
-        c1, c2 = col_name, "{}_x".format(col_name)
+        c1, c2 = col_name, '{}_x'.format(col_name)
         if c1 in self._hybrid_meta.columns and c2 in self._hybrid_meta.columns:
             compare_df = self._hybrid_meta[
                 (self._hybrid_meta[c1].notnull())
@@ -799,11 +784,9 @@ class MetaHybridizer:
     @staticmethod
     def __warn_missing_col(col_name, action):
         """Warn that a column the user request an action for is missing."""
-        msg = (
-            "Skipping {} values for {!r}: Unable to find column "
-            "in hybrid meta. Did you forget to prefix with "
-            "{!r} or {!r}? "
-        )
+        msg = ("Skipping {} values for {!r}: Unable to find column "
+               "in hybrid meta. Did you forget to prefix with "
+               "{!r} or {!r}? ")
         w = msg.format(action, col_name, SOLAR_PREFIX, WIND_PREFIX)
         logger.warning(w)
         warn(w, InputWarning)

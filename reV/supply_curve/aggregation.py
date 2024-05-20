@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-reV aggregation framework.
-"""
+"""reV aggregation framework."""
 
+import contextlib
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -698,7 +697,7 @@ class Aggregation(BaseAggregation):
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
         }
-        dsets = agg_dset + ("meta",)
+        dsets = (*agg_dset, "meta",)
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0
@@ -949,11 +948,9 @@ class Aggregation(BaseAggregation):
         """
         agg_out = aggregation.copy()
         meta = agg_out.pop("meta").reset_index()
-        for c in meta.columns:
-            try:
+        with contextlib.suppress(ValueError, TypeError):
+            for c in meta.columns:
                 meta[c] = pd.to_numeric(meta[c])
-            except (ValueError, TypeError):
-                pass
 
         dsets = []
         shapes = {}

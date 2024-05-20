@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
-from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.exclusions import ExclusionLayers, LATITUDE, LONGITUDE
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities import MetaKeyName
@@ -45,8 +45,8 @@ def plot_tech_mapping(dist_margin=1.05):
     import matplotlib.pyplot as plt
 
     with h5py.File(EXCL, 'r') as f:
-        lats = f[MetaKeyName.LATITUDE][...].flatten()
-        lons = f[MetaKeyName.LONGITUDE][...].flatten()
+        lats = f[LATITUDE][...].flatten()
+        lons = f[LONGITUDE][...].flatten()
         ind_truth = f[TM_DSET][...].flatten()
 
     with Outputs(GEN) as fgen:
@@ -55,8 +55,8 @@ def plot_tech_mapping(dist_margin=1.05):
     ind_test = TechMapping.run(EXCL, RES, dset=None, max_workers=2,
                                dist_margin=dist_margin)
 
-    df = pd.DataFrame({MetaKeyName.LATITUDE: lats,
-                       MetaKeyName.LONGITUDE: lons,
+    df = pd.DataFrame({LATITUDE: lats,
+                       LONGITUDE: lons,
                        TM_DSET: ind_truth,
                        'test': ind_test.flatten()})
 
@@ -67,31 +67,31 @@ def plot_tech_mapping(dist_margin=1.05):
     for i, ind in enumerate(df[TM_DSET].unique()):
         if ind != -1:
             mask = df[TM_DSET] == ind
-            axs.scatter(df.loc[mask, MetaKeyName.LONGITUDE],
-                        df.loc[mask, MetaKeyName.LATITUDE],
+            axs.scatter(df.loc[mask, LONGITUDE],
+                        df.loc[mask, LATITUDE],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
             mask = df[TM_DSET] == ind
-            axs.scatter(df.loc[mask, MetaKeyName.LONGITUDE],
-                        df.loc[mask, MetaKeyName.LATITUDE],
+            axs.scatter(df.loc[mask, LONGITUDE],
+                        df.loc[mask, LATITUDE],
                         c='r', s=0.001)
 
     for ind in df[TM_DSET].unique():
         if ind != -1:
-            axs.scatter(gen_meta.loc[ind, MetaKeyName.LONGITUDE],
-                        gen_meta.loc[ind, MetaKeyName.LATITUDE],
+            axs.scatter(gen_meta.loc[ind, LONGITUDE],
+                        gen_meta.loc[ind, LATITUDE],
                         c='w', s=1)
 
     for ind in df['test'].unique():
         if ind != -1:
-            axs.scatter(gen_meta.loc[ind, MetaKeyName.LONGITUDE],
-                        gen_meta.loc[ind, MetaKeyName.LATITUDE],
+            axs.scatter(gen_meta.loc[ind, LONGITUDE],
+                        gen_meta.loc[ind, LATITUDE],
                         c='r', s=1)
 
     mask = df[TM_DSET].values != df['test']
-    axs.scatter(df.loc[mask, MetaKeyName.LONGITUDE],
-                df.loc[mask, MetaKeyName.LATITUDE],
+    axs.scatter(df.loc[mask, LONGITUDE],
+                df.loc[mask, LATITUDE],
                 c='k', s=1)
 
     axs.axis('equal')

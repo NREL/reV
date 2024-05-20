@@ -2,7 +2,6 @@
 """
 Compute and plot summary data
 """
-
 import logging
 import os
 
@@ -172,24 +171,20 @@ class SummarizeH5:
 
                 summary = pd.concat(summary)
             elif process_size is None:
-                summary = self._compute_sites_summary(
-                    self.h5_file, ds_name, sites=sites, group=self._group
-                )
+                summary = self._compute_sites_summary(self.h5_file,
+                                                      ds_name,
+                                                      sites=sites,
+                                                      group=self._group)
             else:
                 sites = np.array_split(
-                    sites, int(np.ceil(len(sites) / process_size))
-                )
+                    sites, int(np.ceil(len(sites) / process_size)))
 
                 summary = []
                 for site_slice in sites:
-                    summary.append(
-                        self._compute_sites_summary(
-                            self.h5_file,
-                            ds_name,
-                            sites=site_slice,
-                            group=self._group,
-                        )
-                    )
+                    summary.append(self._compute_sites_summary(
+                        self.h5_file, ds_name,
+                        sites=site_slice,
+                        group=self._group))
 
                 summary = pd.concat(summary)
 
@@ -555,15 +550,9 @@ class SummaryPlots(PlotBase):
             Additional kwargs for plotting.dataframes.df_scatter
         """
         self._check_value(self.summary, value)
-        mplt.df_scatter(
-            self.summary,
-            x=MetaKeyName.LONGITUDE,
-            y=MetaKeyName.LATITUDE,
-            c=value,
-            colormap=cmap,
-            filename=out_path,
-            **kwargs,
-        )
+        mplt.df_scatter(self.summary, x=MetaKeyName.LONGITUDE,
+                        y=MetaKeyName.LATITUDE, c=value, colormap=cmap,
+                        filename=out_path, **kwargs)
 
     def scatter_plotly(self, value, cmap="Viridis", out_path=None, **kwargs):
         """
@@ -583,14 +572,9 @@ class SummaryPlots(PlotBase):
             Additional kwargs for plotly.express.scatter
         """
         self._check_value(self.summary, value)
-        fig = px.scatter(
-            self.summary,
-            x=MetaKeyName.LONGITUDE,
-            y=MetaKeyName.LATITUDE,
-            color=value,
-            color_continuous_scale=cmap,
-            **kwargs,
-        )
+        fig = px.scatter(self.summary, x=MetaKeyName.LONGITUDE,
+                         y=MetaKeyName.LATITUDE, color=value,
+                         color_continuous_scale=cmap, **kwargs)
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -605,8 +589,8 @@ class SummaryPlots(PlotBase):
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to use for supply curve, by default
-            MetaKeyName.MEAN_LCOE
+            LCOE value to use for supply curve,
+            by default :obj:`MetaKeyName.MEAN_LCOE`
 
         Returns
         -------
@@ -616,7 +600,7 @@ class SummaryPlots(PlotBase):
         values = [MetaKeyName.CAPACITY, lcoe]
         self._check_value(self.summary, values, scatter=False)
         sc_df = self.summary[values].sort_values(lcoe)
-        sc_df["cumulative_capacity"] = sc_df[MetaKeyName.CAPACITY].cumsum()
+        sc_df['cumulative_capacity'] = sc_df[MetaKeyName.CAPACITY].cumsum()
 
         return sc_df
 
@@ -806,8 +790,8 @@ class SupplyCurvePlot(PlotBase):
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to use for supply curve, by default
-            `MetaKeyName.MEAN_LCOE`
+            LCOE value to use for supply curve,
+            by default :obj:`MetaKeyName.MEAN_LCOE`
 
         Returns
         -------
@@ -817,20 +801,19 @@ class SupplyCurvePlot(PlotBase):
         values = [MetaKeyName.CAPACITY, lcoe]
         self._check_value(self.sc_table, values, scatter=False)
         sc_df = self.sc_table[values].sort_values(lcoe)
-        sc_df["cumulative_capacity"] = sc_df[MetaKeyName.CAPACITY].cumsum()
+        sc_df['cumulative_capacity'] = sc_df[MetaKeyName.CAPACITY].cumsum()
 
         return sc_df
 
-    def supply_curve_plot(
-        self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs
-    ):
+    def supply_curve_plot(self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None,
+                          **kwargs):
         """
         Plot supply curve (cumulative capacity vs lcoe) using seaborn.scatter
 
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to plot, by default MetaKeyName.MEAN_LCOE
+            LCOE value to plot, by default :obj:`MetaKeyName.MEAN_LCOE`
         out_path : str, optional
             File path to save plot to, by default None
         kwargs : dict
@@ -841,9 +824,8 @@ class SupplyCurvePlot(PlotBase):
             sc_df, x="cumulative_capacity", y=lcoe, filename=out_path, **kwargs
         )
 
-    def supply_curve_plotly(
-        self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None, **kwargs
-    ):
+    def supply_curve_plotly(self, lcoe=MetaKeyName.MEAN_LCOE, out_path=None,
+                            **kwargs):
         """
         Plot supply curve (cumulative capacity vs lcoe) using plotly
 
@@ -867,14 +849,8 @@ class SupplyCurvePlot(PlotBase):
         fig.show()
 
     @classmethod
-    def plot(
-        cls,
-        sc_table,
-        out_dir,
-        plot_type="plotly",
-        lcoe=MetaKeyName.MEAN_LCOE,
-        **kwargs,
-    ):
+    def plot(cls, sc_table, out_dir, plot_type='plotly',
+             lcoe=MetaKeyName.MEAN_LCOE, **kwargs):
         """
         Create supply curve plot from supply curve table using lcoe value
         and save to out_dir
@@ -888,7 +864,7 @@ class SupplyCurvePlot(PlotBase):
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         lcoe : str, optional
-            LCOE value to plot, by default MetaKeyName.MEAN_LCOE
+            LCOE value to plot, by default :obj:`MetaKeyName.MEAN_LCOE`
         kwargs : dict
             Additional plotting kwargs
         """

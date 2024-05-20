@@ -22,6 +22,7 @@ from reV.cli import main
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
+from reV.utilities import SiteDataField
 
 RTOL = 0.0
 ATOL = 0.04
@@ -99,8 +100,6 @@ def test_gen_from_config(runner, tech, clear_loggers):
 
                     msg = 'cf_profile not written to disk'
                     assert 'cf_profile' in cf.datasets, msg
-                    print(cf.scale_factors['cf_profile'])
-                    print(cf.dtypes['cf_profile'])
                     rev2_profiles = cf['cf_profile']
 
                     msg = 'monthly_energy not written to disk'
@@ -143,8 +142,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 100)
-        points_config = pd.DataFrame({"gid": range(0, 100),
-                                      "config": ['default'] * 100})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 100),
+                                      SiteDataField.CONFIG: ['default'] * 100})
 
         gen_json = Gen('pvwattsv5', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=50)
@@ -164,8 +163,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 10)
-        points_config = pd.DataFrame({"gid": range(0, 10),
-                                      "config": ['default'] * 10})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 10),
+                                      SiteDataField.CONFIG: ['default'] * 10})
 
         gen_json = Gen('windpower', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=3)

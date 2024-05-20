@@ -36,7 +36,8 @@ from reV.supply_curve.aggregation import AggFileHandler, BaseAggregation
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.utilities import MetaKeyName, ModuleName, log_versions
+from reV.utilities import (MetaKeyName, ModuleName, ResourceMetaField,
+                           log_versions)
 from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -199,7 +200,7 @@ class BespokeSinglePlantData:
 
 
 class BespokeSinglePlant:
-    """Framework for analyzing and optimized a wind plant layout specific to
+    """Framework for analyzing and optimizing a wind plant layout specific to
     the local wind resource and exclusions for a single reV supply curve point.
     """
 
@@ -519,9 +520,8 @@ class BespokeSinglePlant:
                 dset = req.replace("_mean", "")
                 self._outputs[req] = self.res_df[dset].mean()
 
-        if (
-            "lcoe_fcr" in self._out_req
-            and "fixed_charge_rate" not in self.original_sam_sys_inputs
+        if "lcoe_fcr" in self._out_req and (
+            "fixed_charge_rate" not in self.original_sam_sys_inputs
         ):
             msg = (
                 'User requested "lcoe_fcr" but did not input '
@@ -581,13 +581,12 @@ class BespokeSinglePlant:
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                assert (
-                    MetaKeyName.GID in gid_map
-                ), 'Need "gid" in gid_map column'
+                err_msg = f'Need {ResourceMetaField.GID} in gid_map column'
+                assert ResourceMetaField.GID in gid_map, err_msg
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
-                    gid_map[MetaKeyName.GID][i]: gid_map["gid_map"][i]
-                    for i in gid_map[MetaKeyName.GID].keys()
+                    gid_map[ResourceMetaField.GID][i]: gid_map["gid_map"][i]
+                    for i in gid_map[ResourceMetaField.GID].keys()
                 }
 
             elif gid_map.endswith(".json"):
@@ -819,9 +818,9 @@ class BespokeSinglePlant:
                     MetaKeyName.LATITUDE: self.sc_point.latitude,
                     MetaKeyName.LONGITUDE: self.sc_point.longitude,
                     MetaKeyName.TIMEZONE: self.sc_point.timezone,
-                    "country": self.sc_point.country,
-                    "state": self.sc_point.state,
-                    "county": self.sc_point.county,
+                    MetaKeyName.COUNTRY: self.sc_point.country,
+                    MetaKeyName.STATE: self.sc_point.state,
+                    MetaKeyName.COUNTY: self.sc_point.county,
                     MetaKeyName.ELEVATION: self.sc_point.elevation,
                     MetaKeyName.OFFSHORE: self.sc_point.offshore,
                     MetaKeyName.RES_GIDS: res_gids,
@@ -1320,12 +1319,12 @@ class BespokeSinglePlant:
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta["eos_mult"] = (
+        self._meta[MetaKeyName.EOS_MULT] = (
             self.plant_optimizer.capital_cost
             / self.plant_optimizer.capacity
             / baseline_cost
         )
-        self._meta["reg_mult"] = self.sam_sys_inputs.get(
+        self._meta[MetaKeyName.REG_MULT] = self.sam_sys_inputs.get(
             "capital_cost_multiplier", 1
         )
 
@@ -2046,7 +2045,7 @@ class BespokeWindPlants(BaseAggregation):
 
         sc_gid_to_hh = {
             gid: self._hh_for_sc_gid(gid)
-            for gid in self._project_points.df["gid"]
+            for gid in self._project_points.df[ResourceMetaField.GID]
         }
 
         with ExclusionLayers(self._excl_fpath) as excl:
@@ -2055,7 +2054,7 @@ class BespokeWindPlants(BaseAggregation):
         scp_kwargs = {"shape": self.shape, "resolution": self._resolution}
         slices = {
             gid: SupplyCurvePoint.get_agg_slices(gid=gid, **scp_kwargs)
-            for gid in self._project_points.df["gid"]
+            for gid in self._project_points.df[ResourceMetaField.GID]
         }
 
         sc_gid_to_res_gid = {

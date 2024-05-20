@@ -6,7 +6,6 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-
 import logging
 import os
 from concurrent.futures import as_completed
@@ -171,20 +170,15 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
             if self._pdf.endswith(".csv"):
                 self._power_density = pd.read_csv(self._pdf)
-                if (
-                    MetaKeyName.GID in self._power_density
-                    and "power_density" in self._power_density
-                ):
-                    self._power_density = self._power_density.set_index(
-                        MetaKeyName.GID
-                    )
+                if (MetaKeyName.GID in self._power_density
+                        and 'power_density' in self._power_density):
+                    self._power_density = \
+                        self._power_density.set_index(MetaKeyName.GID)
                 else:
-                    msg = (
-                        'Variable power density file must include "gid" '
-                        'and "power_density" columns, but received: {}'.format(
-                            self._power_density.columns.values
-                        )
-                    )
+                    msg = ('Variable power density file must include "{}" '
+                           'and "power_density" columns, but received: {}'
+                           .format(MetaKeyName.GID,
+                                   self._power_density.columns.values))
                     logger.error(msg)
                     raise FileInputError(msg)
             else:
@@ -252,31 +246,14 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 class SupplyCurveAggregation(BaseAggregation):
     """SupplyCurveAggregation"""
 
-    def __init__(
-        self,
-        excl_fpath,
-        tm_dset,
-        econ_fpath=None,
-        excl_dict=None,
-        area_filter_kernel="queen",
-        min_area=None,
-        resolution=64,
-        excl_area=None,
-        res_fpath=None,
-        gids=None,
-        pre_extract_inclusions=False,
-        res_class_dset=None,
-        res_class_bins=None,
-        cf_dset="cf_mean-means",
-        lcoe_dset="lcoe_fcr-means",
-        h5_dsets=None,
-        data_layers=None,
-        power_density=None,
-        friction_fpath=None,
-        friction_dset=None,
-        cap_cost_scale=None,
-        recalc_lcoe=True,
-    ):
+    def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
+                 excl_dict=None, area_filter_kernel='queen', min_area=None,
+                 resolution=64, excl_area=None, res_fpath=None, gids=None,
+                 pre_extract_inclusions=False, res_class_dset=None,
+                 res_class_bins=None, cf_dset='cf_mean-means',
+                 lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
+                 power_density=None, friction_fpath=None, friction_dset=None,
+                 cap_cost_scale=None, recalc_lcoe=True):
         r"""ReV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
@@ -902,16 +879,13 @@ class SupplyCurveAggregation(BaseAggregation):
         # look for the datasets required by the LCOE re-calculation and make
         # lists of the missing datasets
         gen_dsets = [] if gen is None else gen.datasets
-        lcoe_recalc_req = (
-            "fixed_charge_rate",
-            "capital_cost",
-            "fixed_operating_cost",
-            "variable_operating_cost",
-            "system_capacity",
-        )
-        missing_lcoe_source = [
-            k for k in lcoe_recalc_req if k not in gen_dsets
-        ]
+        lcoe_recalc_req = ('fixed_charge_rate',
+                           'capital_cost',
+                           'fixed_operating_cost',
+                           'variable_operating_cost',
+                           'system_capacity')
+        missing_lcoe_source = [k for k in lcoe_recalc_req
+                               if k not in gen_dsets]
         missing_lcoe_request = []
 
         if isinstance(gen, Resource):
@@ -1178,13 +1152,11 @@ class SupplyCurveAggregation(BaseAggregation):
                         logger.debug("SC point {} is empty".format(gid))
                     else:
                         pointsum[MetaKeyName.SC_POINT_GID] = gid
-                        pointsum[MetaKeyName.SC_ROW_IND] = points.loc[
-                            gid, "row_ind"
-                        ]
-                        pointsum[MetaKeyName.SC_COL_IND] = points.loc[
-                            gid, "col_ind"
-                        ]
-                        pointsum["res_class"] = ri
+                        pointsum[MetaKeyName.SC_ROW_IND] = \
+                            points.loc[gid, 'row_ind']
+                        pointsum[MetaKeyName.SC_COL_IND] = \
+                            points.loc[gid, 'col_ind']
+                        pointsum['res_class'] = ri
 
                         summary.append(pointsum)
                         logger.debug(
@@ -1363,9 +1335,8 @@ class SupplyCurveAggregation(BaseAggregation):
             Summary of the SC points.
         """
         summary = pd.DataFrame(summary)
-        sort_by = [
-            x for x in (MetaKeyName.SC_POINT_GID, "res_class") if x in summary
-        ]
+        sort_by = [x for x in (MetaKeyName.SC_POINT_GID, 'res_class')
+                   if x in summary]
         summary = summary.sort_values(sort_by)
         summary = summary.reset_index(drop=True)
         summary.index.name = MetaKeyName.SC_GID

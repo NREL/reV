@@ -28,8 +28,9 @@ from reV.losses.power_curve import (
     PowerCurveLossesMixin,
 )
 from reV.losses.scheduled import ScheduledLossesMixin
-from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
+from reV.utilities import ResourceMetaField
+
 
 REV_POINTS = list(range(3))
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
@@ -150,7 +151,7 @@ def _run_gen_with_and_without_losses(
 
     # undo UTC array rolling
     for ind, row in gen.meta.iterrows():
-        time_shift = row[MetaKeyName.TIMEZONE]
+        time_shift = row[ResourceMetaField.TIMEZONE]
         gen_profiles_with_losses[:, ind] = np.roll(
             gen_profiles_with_losses[:, ind], time_shift
         )
@@ -169,7 +170,7 @@ def _run_gen_with_and_without_losses(
     gen_profiles = gen.out['gen_profile']
 
     for ind, row in gen.meta.iterrows():
-        time_shift = row[MetaKeyName.TIMEZONE]
+        time_shift = row[ResourceMetaField.TIMEZONE]
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
     return gen_profiles, gen_profiles_with_losses
@@ -180,7 +181,7 @@ def _make_site_data_df(site_data):
     if site_data is not None:
         site_specific_losses = [json.dumps(site_data)] * len(REV_POINTS)
         site_data_dict = {
-            MetaKeyName.GID: REV_POINTS,
+            ResourceMetaField.GID: REV_POINTS,
             PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY: site_specific_losses
         }
         site_data = pd.DataFrame(site_data_dict)

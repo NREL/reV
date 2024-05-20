@@ -1,13 +1,34 @@
 # -*- coding: utf-8 -*-
-"""
-reV utilities.
-"""
+"""reV utilities."""
 from enum import Enum
 
 import PySAM
 from rex.utilities.loggers import log_versions as rex_log_versions
 
 from reV.version import __version__
+
+
+class SiteDataField(str, Enum):
+    GID = "gid"
+    CONFIG = "config"
+
+
+class ResourceMetaField(str, Enum):
+    """An enumerated map to resource meta column names.
+
+    Each output name should match the name of a key the resource file
+    meta table.
+    """
+
+    GID = "gid"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    ELEVATION = "elevation"
+    TIMEZONE = "timezone"
+    COUNTY = "county"
+    STATE = "state"
+    COUNTRY = "country"
+    OFFSHORE = 'offshore'
 
 
 class MetaKeyName(str, Enum):
@@ -18,7 +39,6 @@ class MetaKeyName(str, Enum):
     meth:`GenerationSupplyCurvePoint.point_summary` or
     meth:`BespokeSinglePlant.meta`
     """
-
     SC_POINT_GID = 'sc_point_gid'
     SOURCE_GIDS = 'source_gids'
     SC_GID = 'sc_gid'
@@ -32,6 +52,9 @@ class MetaKeyName(str, Enum):
     LONGITUDE = 'longitude'
     ELEVATION = 'elevation'
     TIMEZONE = 'timezone'
+    COUNTY = "county"
+    STATE = "state"
+    COUNTRY = "country"
     MEAN_CF = 'mean_cf'
     MEAN_LCOE = 'mean_lcoe'
     MEAN_RES = 'mean_res'
@@ -53,6 +76,8 @@ class MetaKeyName(str, Enum):
     SCALED_SC_POINT_CAPITAL_COST = 'scaled_sc_point_capital_cost'
     TURBINE_X_COORDS = 'turbine_x_coords'
     TURBINE_Y_COORDS = 'turbine_y_coords'
+    EOS_MULT = "eos_mult"
+    REG_MULT = "reg_mult"
 
     def __str__(self):
         return self.value

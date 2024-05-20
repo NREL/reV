@@ -45,7 +45,7 @@ def test_vpd():
     for i in summary.index:
         capacity = summary.loc[i, MetaKeyName.CAPACITY]
         area = summary.loc[i, MetaKeyName.AREA_SQ_KM]
-        res_gids = np.array(summary.loc[i, MetaKeyName.RES_GIDS])
+        res_gids = np.array(summary.loc[i, 'res_gids'])
         gid_counts = np.array(summary.loc[i, MetaKeyName.GID_COUNTS])
         vpd_per_gid = vpd.loc[res_gids, 'power_density'].values
         truth = area * (vpd_per_gid * gid_counts).sum() / gid_counts.sum()

@@ -10,10 +10,10 @@ from rex.multi_file_resource import MultiFileResource
 from rex.resource import Resource
 from rex.utilities.parse_keys import parse_keys
 
-from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import HandlerKeyError, MultiFileExclusionError
 
 logger = logging.getLogger(__name__)
+LATITUDE, LONGITUDE = "latitude", "longitude"
 
 
 class ExclusionLayers:
@@ -82,8 +82,8 @@ class ExclusionLayers:
 
     def _preflight_multi_file(self):
         """Run simple multi-file exclusion checks."""
-        lat_shape = self.h5.shapes[MetaKeyName.LATITUDE]
-        lon_shape = self.h5.shapes[MetaKeyName.LONGITUDE]
+        lat_shape = self.h5.shapes[LATITUDE]
+        lon_shape = self.h5.shapes[LONGITUDE]
         for layer in self.layers:
             lshape = self.h5.shapes[layer]
             lshape = lshape[1:] if len(lshape) > 2 else lshape
@@ -232,7 +232,7 @@ class ExclusionLayers:
         """
         shape = self.h5.attrs.get('shape', None)
         if shape is None:
-            shape = self.h5.shapes[MetaKeyName.LATITUDE]
+            shape = self.h5.shapes[LATITUDE]
 
         return tuple(shape)
 
@@ -248,7 +248,7 @@ class ExclusionLayers:
         """
         chunks = self.h5.attrs.get('chunks', None)
         if chunks is None:
-            chunks = self.h5.chunks[MetaKeyName.LATITUDE]
+            chunks = self.h5.chunks[LATITUDE]
 
         return chunks
 
@@ -261,7 +261,7 @@ class ExclusionLayers:
         -------
         ndarray
         """
-        return self[MetaKeyName.LATITUDE]
+        return self[LATITUDE]
 
     @property
     def longitude(self):
@@ -272,7 +272,7 @@ class ExclusionLayers:
         -------
         ndarray
         """
-        return self[MetaKeyName.LONGITUDE]
+        return self[LONGITUDE]
 
     def get_layer_profile(self, layer):
         """
@@ -385,13 +385,13 @@ class ExclusionLayers:
         lat : ndarray
             Latitude coordinates
         """
-        if MetaKeyName.LATITUDE not in self.h5:
+        if LATITUDE not in self.h5:
             msg = ('"latitude" is missing from {}'
                    .format(self.h5_file))
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        ds_slice = (MetaKeyName.LATITUDE, ) + ds_slice
+        ds_slice = (LATITUDE, ) + ds_slice
 
         lat = self.h5[ds_slice]
 
@@ -411,13 +411,13 @@ class ExclusionLayers:
         lon : ndarray
             Longitude coordinates
         """
-        if MetaKeyName.LONGITUDE not in self.h5:
+        if LONGITUDE not in self.h5:
             msg = ('"longitude" is missing from {}'
                    .format(self.h5_file))
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        ds_slice = (MetaKeyName.LONGITUDE, ) + ds_slice
+        ds_slice = (LONGITUDE, ) + ds_slice
 
         lon = self.h5[ds_slice]
 

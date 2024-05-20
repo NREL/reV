@@ -30,7 +30,8 @@ def test_competitive_wind_dirs(downwind):
     """Run CompetitiveWindFarms and verify results against baseline file."""
 
     sc_points = CompetitiveWindFarms.run(WIND_DIRS, SC_POINTS,
-                                         n_dirs=2, sort_on=MetaKeyName.MEAN_LCOE,
+                                         n_dirs=2,
+                                         sort_on=MetaKeyName.MEAN_LCOE,
                                          downwind=downwind)
 
     if downwind:

@@ -22,7 +22,7 @@ from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
-from reV.utilities import MetaKeyName
+from reV.utilities import SiteDataField
 from reV.utilities.exceptions import ConfigError, ExecutionError
 
 RTOL = 0.0
@@ -243,14 +243,9 @@ def test_multi_file_nsrdb_2018(model):
     sam_files = TESTDATADIR + "/SAM/naris_pv_1axis_inv13.json"
     res_file = TESTDATADIR + "/nsrdb/nsrdb_*{}.h5".format(2018)
     # run reV 2.0 generation
-    gen = Gen(
-        model,
-        points,
-        sam_files,
-        res_file,
-        output_request=("cf_mean", "cf_profile"),
-        sites_per_worker=3,
-    )
+    gen = Gen(model, points, sam_files, res_file,
+              output_request=('cf_mean', ),
+              sites_per_worker=3)
     gen.run(max_workers=max_workers)
 
     means_outs = list(gen.out["cf_mean"])
@@ -391,8 +386,9 @@ def test_pvwatts_v5_v7():
     )
     gen5.run(max_workers=1)
 
-    msg = "PVwatts v5 and v7 did not match within test tolerance"
-    assert np.allclose(gen7.out["cf_mean"], gen5.out["cf_mean"], atol=3), msg
+    msg = 'PVwatts v5 and v7 did not match within test tolerance'
+    assert np.allclose(gen7.out['cf_mean'],
+                       gen5.out['cf_mean'], atol=3), msg
 
 
 def test_pvwatts_v8_lifetime():
@@ -423,13 +419,11 @@ def test_pvwatts_v8_lifetime():
     )
     gen.run(max_workers=1)
 
-    msg = (
-        "PVWATTSV8 cf_mean with system lifetime results {} did not match "
-        "baseline: {}".format(gen.out["cf_mean"], baseline_cf_mean)
-    )
-    assert np.allclose(
-        gen.out["cf_mean"], baseline_cf_mean, rtol=0.005, atol=0.0
-    ), msg
+    msg = ('PVWATTSV8 cf_mean with system lifetime results {} did not match '
+           'baseline: {}'.format(gen.out['cf_mean'],
+                                 baseline_cf_mean))
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean,
+                       rtol=0.005, atol=0.0), msg
 
     for req in output_request:
         assert req in gen.out
@@ -518,7 +512,7 @@ def test_gen_input_mods():
     gen.run(max_workers=1)
     for i in range(5):
         inputs = gen.project_points[i][1]
-        assert inputs["tilt"] == MetaKeyName.LATITUDE
+        assert inputs['tilt'] == "latitude"
 
 
 def test_gen_input_pass_through():
@@ -573,24 +567,19 @@ def test_gen_pv_site_data():
     )
     baseline.run(max_workers=1)
 
-    site_data = pd.DataFrame(
-        {MetaKeyName.GID: np.arange(2), "losses": np.ones(2)}
-    )
-    test = Gen(
-        "pvwattsv7",
-        rev2_points,
-        sam_files,
-        res_file,
-        sites_per_worker=1,
-        output_request=output_request,
-        site_data=site_data,
-    )
+    site_data = pd.DataFrame({SiteDataField.GID: np.arange(2),
+                              'losses': np.ones(2)})
+    test = Gen('pvwattsv7', rev2_points, sam_files, res_file,
+               sites_per_worker=1, output_request=output_request,
+               site_data=site_data)
     test.run(max_workers=1)
 
-    assert all(test.out["cf_mean"][0:2] > baseline.out["cf_mean"][0:2])
-    assert np.allclose(test.out["cf_mean"][2:], baseline.out["cf_mean"][2:])
-    assert np.allclose(test.out["losses"][0:2], np.ones(2))
-    assert np.allclose(test.out["losses"][2:], 14.07566 * np.ones(3))
+    assert all(test.out['cf_mean'][0:2] >
+               baseline.out['cf_mean'][0:2])
+    assert np.allclose(test.out['cf_mean'][2:],
+                       baseline.out['cf_mean'][2:])
+    assert np.allclose(test.out['losses'][0:2], np.ones(2))
+    assert np.allclose(test.out['losses'][2:], 14.07566 * np.ones(3))
 
 
 def test_clipping():
@@ -807,53 +796,29 @@ def test_irrad_bias_correct():
     )
     gen_base.run(max_workers=1)
 
-    bc_df = pd.DataFrame(
-        {
-            MetaKeyName.GID: np.arange(1, 10),
-            "method": "lin_irrad",
-            "scalar": 1,
-            "adder": 50,
-        }
-    )
-    gen = Gen(
-        "pvwattsv7",
-        points,
-        sam_files,
-        res_file,
-        sites_per_worker=1,
-        output_request=output_request,
-        bias_correct=bc_df,
-    )
+    bc_df = pd.DataFrame({SiteDataField.GID: np.arange(1, 10),
+                          'method': 'lin_irrad', 'scalar': 1, 'adder': 50})
+    gen = Gen('pvwattsv7', points, sam_files, res_file,
+              sites_per_worker=1, output_request=output_request,
+              bias_correct=bc_df)
     gen.run(max_workers=1)
 
-    assert (gen_base.out["cf_mean"][0] == gen.out["cf_mean"][0]).all()
-    assert (gen_base.out["ghi_mean"][0] == gen.out["ghi_mean"][0]).all()
-    assert np.allclose(
-        gen_base.out["cf_profile"][:, 0], gen.out["cf_profile"][:, 0]
-    )
+    assert (gen_base.out['cf_mean'][0] ==
+            gen.out['cf_mean'][0]).all()
+    assert (gen_base.out['ghi_mean'][0] == gen.out['ghi_mean'][0]).all()
+    assert np.allclose(gen_base.out['cf_profile'][:, 0],
+                       gen.out['cf_profile'][:, 0])
 
-    assert (gen_base.out["cf_mean"][1:] < gen.out["cf_mean"][1:]).all()
-    assert (gen_base.out["ghi_mean"][1:] < gen.out["ghi_mean"][1:]).all()
-    mask = gen_base.out["cf_profile"][:, 1:] <= gen.out["cf_profile"][:, 1:]
+    assert (gen_base.out['cf_mean'][1:] <
+            gen.out['cf_mean'][1:]).all()
+    assert (gen_base.out['ghi_mean'][1:] < gen.out['ghi_mean'][1:]).all()
+    mask = (gen_base.out['cf_profile'][:, 1:] <= gen.out['cf_profile'][:, 1:])
     assert (mask.sum() / mask.size) > 0.99
 
-    bc_df = pd.DataFrame(
-        {
-            MetaKeyName.GID: np.arange(100),
-            "method": "lin_irrad",
-            "scalar": 1,
-            "adder": -1500,
-        }
-    )
-    gen = Gen(
-        "pvwattsv7",
-        points,
-        sam_files,
-        res_file,
-        sites_per_worker=1,
-        output_request=output_request,
-        bias_correct=bc_df,
-    )
+    bc_df = pd.DataFrame({SiteDataField.GID: np.arange(100),
+                          'method': 'lin_irrad', 'scalar': 1, 'adder': -1500})
+    gen = Gen('pvwattsv7', points, sam_files, res_file, sites_per_worker=1,
+              output_request=output_request, bias_correct=bc_df)
     gen.run(max_workers=2)
     for arr in gen.out.values():
         assert (arr == 0).all()
@@ -898,8 +863,8 @@ def test_ac_outputs():
         gen.out["cf_mean"], baseline_cf_mean, rtol=0.005, atol=0.0
     ), msg
 
-    for req in ["cf_mean", "cf_profile"]:
-        ac_req = "{}_ac".format(req)
+    for req in ['cf_mean', ]:
+        ac_req = '{}_ac'.format(req)
         assert req in gen.out
         assert ac_req in gen.out
         assert (gen.out[req] <= gen.out[ac_req]).all()

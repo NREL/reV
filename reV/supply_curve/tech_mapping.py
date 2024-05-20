@@ -8,7 +8,6 @@ Created on Fri Jun 21 16:05:47 2019
 
 @author: gbuster
 """
-
 import logging
 import os
 from concurrent.futures import as_completed
@@ -22,8 +21,7 @@ from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.utilities import res_dist_threshold
 from scipy.spatial import cKDTree
 
-from reV.supply_curve.extent import SupplyCurveExtent
-from reV.utilities import MetaKeyName
+from reV.supply_curve.extent import SupplyCurveExtent, LATITUDE, LONGITUDE
 from reV.utilities.exceptions import FileInputError, FileInputWarning
 
 logger = logging.getLogger(__name__)
@@ -183,16 +181,9 @@ class TechMapping:
         return row_slice, col_slice
 
     @classmethod
-    def _get_excl_coords(
-        cls,
-        excl_fpath,
-        gids,
-        sc_row_indices,
-        sc_col_indices,
-        excl_row_slices,
-        excl_col_slices,
-        coord_labels=(MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE),
-    ):
+    def _get_excl_coords(cls, excl_fpath, gids, sc_row_indices, sc_col_indices,
+                         excl_row_slices, excl_col_slices,
+                         coord_labels=(LATITUDE, LONGITUDE)):
         """
         Extract the exclusion coordinates for teh desired gids for TechMapping.
 
@@ -393,15 +384,12 @@ class TechMapping:
 
     def _check_fout(self):
         """Check the TechMapping output file for cached data."""
-        with h5py.File(self._excl_fpath, "r") as f:
-            if MetaKeyName.LATITUDE not in f or MetaKeyName.LONGITUDE not in f:
-                emsg = (
-                    'Datasets "latitude" and/or "longitude" not in '
-                    'pre-existing Exclusions TechMapping file "{}". '
-                    "Cannot proceed.".format(
-                        os.path.basename(self._excl_fpath)
-                    )
-                )
+        with h5py.File(self._excl_fpath, 'r') as f:
+            if LATITUDE not in f or LONGITUDE not in f:
+                emsg = ('Datasets "latitude" and/or "longitude" not in '
+                        'pre-existing Exclusions TechMapping file "{}". '
+                        'Cannot proceed.'
+                        .format(os.path.basename(self._excl_fpath)))
                 logger.exception(emsg)
                 raise FileInputError(emsg)
 

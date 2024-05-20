@@ -2,7 +2,6 @@
 """
 reV base gen and econ module.
 """
-
 import copy
 import json
 import logging
@@ -22,7 +21,7 @@ from reV.config.output_request import SAMOutputRequest
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.handlers.outputs import Outputs
 from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities import MetaKeyName, ModuleName, log_versions
+from reV.utilities import ModuleName, ResourceMetaField, log_versions
 from reV.utilities.exceptions import (
     ExecutionError,
     OffshoreWindInputWarning,
@@ -34,16 +33,16 @@ logger = logging.getLogger(__name__)
 
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
-ATTR_DIR = os.path.join(ATTR_DIR, "output_attributes")
-with open(os.path.join(ATTR_DIR, "other.json")) as f:
+ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
+with open(os.path.join(ATTR_DIR, 'other.json')) as f:
     OTHER_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "lcoe_fcr.json")) as f:
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json')) as f:
     LCOE_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "single_owner.json")) as f:
+with open(os.path.join(ATTR_DIR, 'single_owner.json')) as f:
     SO_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "windbos.json")) as f:
+with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
     BOS_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "lcoe_fcr_inputs.json")) as f:
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
 
@@ -69,12 +68,9 @@ class BaseGen(ABC):
     # SAM argument names used to calculate LCOE
     # Note that system_capacity is not included here because it is never used
     # downstream and could be confused with the supply_curve point capacity
-    LCOE_ARGS = (
-        "fixed_charge_rate",
-        "capital_cost",
-        "fixed_operating_cost",
-        "variable_operating_cost",
-    )
+    LCOE_ARGS = ('fixed_charge_rate', 'capital_cost',
+                 'fixed_operating_cost',
+                 'variable_operating_cost')
 
     def __init__(
         self,
@@ -809,7 +805,7 @@ class BaseGen(ABC):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = MetaKeyName.GID
+            site_data.index.name = ResourceMetaField.GID
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -824,29 +820,25 @@ class BaseGen(ABC):
                     "dataframe, but received: {}".format(inp)
                 )
 
-            if (
-                MetaKeyName.GID not in site_data
-                and site_data.index.name != MetaKeyName.GID
-            ):
+            if (ResourceMetaField.GID not in site_data
+                and site_data.index.name != ResourceMetaField.GID):
                 # require gid as column label or index
-                raise KeyError(
-                    'Site data input must have "gid" column '
-                    "to match reV site gid."
-                )
+                raise KeyError('Site data input must have '
+                               f'{ResourceMetaField.GID} column to match '
+                               'reV site gid.')
 
             # pylint: disable=no-member
-            if site_data.index.name != MetaKeyName.GID:
+            if site_data.index.name != ResourceMetaField.GID:
                 # make gid the dataframe index if not already
-                site_data = site_data.set_index(MetaKeyName.GID, drop=True)
+                site_data = site_data.set_index(ResourceMetaField.GID,
+                                                drop=True)
 
-        if MetaKeyName.OFFSHORE in site_data:
-            if site_data[MetaKeyName.OFFSHORE].sum() > 1:
-                w = (
-                    "Found offshore sites in econ site data input. "
-                    "This functionality has been deprecated. "
-                    "Please run the reV offshore module to "
-                    "calculate offshore wind lcoe."
-                )
+        if "offshore" in site_data:
+            if site_data["offshore"].sum() > 1:
+                w = ('Found offshore sites in econ site data input. '
+                     'This functionality has been deprecated. '
+                     'Please run the reV offshore module to '
+                     'calculate offshore wind lcoe.')
                 warn(w, OffshoreWindInputWarning)
                 logger.warning(w)
 

@@ -3,7 +3,6 @@
 """
 PyTest file for reV LCOE economies of scale
 """
-
 import os
 import shutil
 import tempfile
@@ -107,20 +106,20 @@ def test_lcoe_calc_simple():
     assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
 
     eqn = 2
-    true_scaled = (data["fcr"] * eqn * data["capital_cost"] + data["foc"]) / (
-        data["aep"] / 1000
-    )
+    true_scaled = ((data['fcr'] * eqn * data['capital_cost']
+                    + data['foc'])
+                   / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert eqn * eos.raw_capital_cost == eos.scaled_capital_cost
     assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 
-    data["system_capacity"] = 2
-    eqn = "1 / system_capacity"
-    true_scaled = (data["fcr"] * 0.5 * data["capital_cost"] + data["foc"]) / (
-        data["aep"] / 1000
-    )
+    data['system_capacity'] = 2
+    eqn = '1 / system_capacity'
+    true_scaled = ((data['fcr'] * 0.5 * data['capital_cost']
+                    + data['foc'])
+                   / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert 0.5 * eos.raw_capital_cost == eos.scaled_capital_cost
     assert eos.raw_capital_cost == data["capital_cost"]
@@ -149,14 +148,10 @@ def test_econ_of_scale_baseline():
         with Resource(GEN) as res:
             cf = res["cf_mean-means"]
 
-        lcoe = (
-            1000
-            * (
-                data["fixed_charge_rate"] * data["capital_cost"]
-                + data["fixed_operating_cost"]
-            )
-            / (cf * data["system_capacity"] * 8760)
-        )
+        lcoe = (1000 * (data['fixed_charge_rate'] *
+                        data['capital_cost']
+                        + data['fixed_operating_cost'])
+                / (cf * data['system_capacity'] * 8760))
 
         with h5py.File(gen_temp, "a") as res:
             res["lcoe_fcr-means"][...] = lcoe
@@ -192,13 +187,11 @@ def test_econ_of_scale_baseline():
 
         base_df = pd.read_csv(out_fp_base + ".csv")
         sc_df = pd.read_csv(out_fp_sc + ".csv")
-        assert np.allclose(
-            base_df[MetaKeyName.MEAN_LCOE], sc_df[MetaKeyName.MEAN_LCOE]
-        )
+        assert np.allclose(base_df[MetaKeyName.MEAN_LCOE],
+                           sc_df[MetaKeyName.MEAN_LCOE])
         assert (sc_df[MetaKeyName.CAPITAL_COST_SCALAR] == 1).all()
-        assert np.allclose(
-            sc_df["mean_capital_cost"], sc_df[MetaKeyName.SCALED_CAPITAL_COST]
-        )
+        assert np.allclose(sc_df['mean_capital_cost'],
+                           sc_df[MetaKeyName.SCALED_CAPITAL_COST])
 
 
 def test_sc_agg_econ_scale():
@@ -251,22 +244,20 @@ def test_sc_agg_econ_scale():
 
         # check that econ of scale saved the raw lcoe and that it reduced all
         # of the mean lcoe values from baseline
-        assert np.allclose(
-            sc_df[MetaKeyName.RAW_LCOE], base_df[MetaKeyName.MEAN_LCOE]
-        )
-        assert all(
-            sc_df[MetaKeyName.MEAN_LCOE] < base_df[MetaKeyName.MEAN_LCOE]
-        )
+        assert np.allclose(sc_df[MetaKeyName.RAW_LCOE],
+                           base_df[MetaKeyName.MEAN_LCOE])
+        assert all(sc_df[MetaKeyName.MEAN_LCOE] <
+                   base_df[MetaKeyName.MEAN_LCOE])
 
-        aep = (
-            sc_df["mean_fixed_charge_rate"] * sc_df["mean_capital_cost"]
-            + sc_df["mean_fixed_operating_cost"]
-        ) / sc_df[MetaKeyName.RAW_LCOE]
+        aep = ((sc_df['mean_fixed_charge_rate'] *
+                sc_df['mean_capital_cost']
+                + sc_df['mean_fixed_operating_cost']) /
+               sc_df[MetaKeyName.RAW_LCOE])
 
-        true_raw_lcoe = (
-            data["fixed_charge_rate"] * data["capital_cost"]
-            + data["fixed_operating_cost"]
-        ) / aep + data["variable_operating_cost"]
+        true_raw_lcoe = ((data['fixed_charge_rate'] *
+                          data['capital_cost']
+                          + data['fixed_operating_cost'])
+                         / aep + data['variable_operating_cost'])
 
         eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used
@@ -278,26 +269,20 @@ def test_sc_agg_econ_scale():
         ) / aep + data["variable_operating_cost"]
 
         assert np.allclose(scalars, sc_df[MetaKeyName.CAPITAL_COST_SCALAR])
-        assert np.allclose(
-            scalars * sc_df["mean_capital_cost"],
-            sc_df[MetaKeyName.SCALED_CAPITAL_COST],
-        )
+        assert np.allclose(scalars * sc_df['mean_capital_cost'],
+                           sc_df[MetaKeyName.SCALED_CAPITAL_COST])
 
         assert np.allclose(true_scaled_lcoe, sc_df[MetaKeyName.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[MetaKeyName.RAW_LCOE])
         sc_df = sc_df.sort_values(MetaKeyName.CAPACITY)
         assert all(sc_df[MetaKeyName.MEAN_LCOE].diff()[1:] < 0)
         for i in sc_df.index.values:
-            if sc_df.loc[i, "scalars"] < 1:
-                assert (
-                    sc_df.loc[i, MetaKeyName.MEAN_LCOE]
-                    < sc_df.loc[i, MetaKeyName.RAW_LCOE]
-                )
+            if sc_df.loc[i, 'scalars'] < 1:
+                assert (sc_df.loc[i, MetaKeyName.MEAN_LCOE] <
+                        sc_df.loc[i, MetaKeyName.RAW_LCOE])
             else:
-                assert (
-                    sc_df.loc[i, MetaKeyName.MEAN_LCOE]
-                    >= sc_df.loc[i, MetaKeyName.RAW_LCOE]
-                )
+                assert (sc_df.loc[i, MetaKeyName.MEAN_LCOE] >=
+                        sc_df.loc[i, MetaKeyName.RAW_LCOE])
 
 
 def execute_pytest(capture="all", flags="-rapP"):

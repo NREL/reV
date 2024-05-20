@@ -5,7 +5,7 @@ Created on Thu Oct 31 12:49:23 2019
 
 @author: gbuster
 """
-
+import contextlib
 import json
 import logging
 import os
@@ -318,16 +318,10 @@ class RegionRepProfile:
     RES_GID_COL = MetaKeyName.RES_GIDS
     GEN_GID_COL = MetaKeyName.GEN_GIDS
 
-    def __init__(
-        self,
-        gen_fpath,
-        rev_summary,
-        cf_dset="cf_profile",
-        rep_method="meanoid",
-        err_method="rmse",
-        weight=MetaKeyName.GID_COUNTS,
-        n_profiles=1,
-    ):
+    def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse',
+                 weight=MetaKeyName.GID_COUNTS,
+                 n_profiles=1):
         """
         Parameters
         ----------
@@ -402,11 +396,9 @@ class RegionRepProfile:
 
             assert MetaKeyName.GID in meta
             source_res_gids = meta[MetaKeyName.GID].values
-            msg = (
-                'Resource gids from "gid" column in meta data from "{}" '
-                "must be sorted! reV generation should always be run with "
-                "sequential project points.".format(self._gen_fpath)
-            )
+            msg = ('Resource gids from "gid" column in meta data from "{}" '
+                   'must be sorted! reV generation should always be run with '
+                   'sequential project points.'.format(self._gen_fpath))
             assert np.all(source_res_gids[:-1] <= source_res_gids[1:]), msg
 
             missing = set(self._res_gids) - set(source_res_gids)
@@ -486,29 +478,20 @@ class RegionRepProfile:
         """Run the representative profile methods to find the meanoid/medianoid
         profile and find the profiles most similar."""
 
-        if self.weights is not None:
-            if len(self.weights) != self.source_profiles.shape[1]:
-                e = (
-                    'Weights column "{}" resulted in {} weight scalars '
-                    "which doesnt match gid column which yields "
-                    "profiles with shape {}.".format(
-                        self._weight,
-                        len(self.weights),
-                        self.source_profiles.shape,
-                    )
-                )
-                logger.debug(
-                    'Gids from column "res_gids" with len {}: {}'.format(
-                        len(self._res_gids), self._res_gids
-                    )
-                )
-                logger.debug(
-                    'Weights from column "{}" with len {}: {}'.format(
-                        self._weight, len(self.weights), self.weights
-                    )
-                )
-                logger.error(e)
-                raise DataShapeError(e)
+        if (self.weights is not None and
+                (len(self.weights) != self.source_profiles.shape[1])):
+            e = ('Weights column "{}" resulted in {} weight scalars '
+                 'which doesnt match gid column which yields '
+                 'profiles with shape {}.'
+                 .format(self._weight, len(self.weights),
+                         self.source_profiles.shape))
+            logger.debug('Gids from column "res_gids" with len {}: {}'
+                         .format(len(self._res_gids), self._res_gids))
+            logger.debug('Weights from column "{}" with len {}: {}'
+                         .format(self._weight, len(self.weights),
+                                 self.weights))
+            logger.error(e)
+            raise DataShapeError(e)
 
         self._profiles, self._i_reps = RepresentativeMethods.run(
             self.source_profiles,
@@ -518,7 +501,7 @@ class RegionRepProfile:
             n_profiles=self._n_profiles,
         )
 
-    @property
+    @ property
     def rep_profiles(self):
         """Get the representative profiles of this region."""
         if self._profiles is None:
@@ -526,7 +509,7 @@ class RegionRepProfile:
 
         return self._profiles
 
-    @property
+    @ property
     def i_reps(self):
         """Get the representative profile index(es) of this region."""
         if self._i_reps is None:
@@ -534,7 +517,7 @@ class RegionRepProfile:
 
         return self._i_reps
 
-    @property
+    @ property
     def rep_gen_gids(self):
         """Get the representative profile gen gids of this region."""
         gids = self._gen_gids
@@ -545,7 +528,7 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @property
+    @ property
     def rep_res_gids(self):
         """Get the representative profile resource gids of this region."""
         gids = self._res_gids
@@ -556,17 +539,13 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @classmethod
-    def get_region_rep_profile(
-        cls,
-        gen_fpath,
-        rev_summary,
-        cf_dset="cf_profile",
-        rep_method="meanoid",
-        err_method="rmse",
-        weight=MetaKeyName.GID_COUNTS,
-        n_profiles=1,
-    ):
+    @ classmethod
+    def get_region_rep_profile(cls, gen_fpath, rev_summary,
+                               cf_dset='cf_profile',
+                               rep_method='meanoid',
+                               err_method='rmse',
+                               weight=MetaKeyName.GID_COUNTS,
+                               n_profiles=1):
         """Class method for parallelization of rep profile calc.
 
         Parameters
@@ -621,17 +600,10 @@ class RegionRepProfile:
 class RepProfilesBase(ABC):
     """Abstract utility framework for representative profile run classes."""
 
-    def __init__(
-        self,
-        gen_fpath,
-        rev_summary,
-        reg_cols=None,
-        cf_dset="cf_profile",
-        rep_method="meanoid",
-        err_method="rmse",
-        weight=MetaKeyName.GID_COUNTS,
-        n_profiles=1,
-    ):
+    def __init__(self, gen_fpath, rev_summary, reg_cols=None,
+                 cf_dset='cf_profile', rep_method='meanoid',
+                 err_method='rmse', weight=MetaKeyName.GID_COUNTS,
+                 n_profiles=1):
         """
         Parameters
         ----------
@@ -703,7 +675,7 @@ class RepProfilesBase(ABC):
         self._rep_method = rep_method
         self._err_method = err_method
 
-    @staticmethod
+    @ staticmethod
     def _parse_rev_summary(rev_summary):
         """Extract, parse, and check the rev summary table.
 
@@ -740,7 +712,7 @@ class RepProfilesBase(ABC):
 
         return rev_summary
 
-    @staticmethod
+    @ staticmethod
     def _check_req_cols(df, cols):
         """Check a dataframe for required columns.
 
@@ -755,10 +727,7 @@ class RepProfilesBase(ABC):
             if isinstance(cols, str):
                 cols = [cols]
 
-            missing = []
-            for c in cols:
-                if c not in df:
-                    missing.append(c)
+            missing = [c for c in cols if c not in df]
 
             if any(missing):
                 e = "Column labels not found in rev_summary table: {}".format(
@@ -767,7 +736,7 @@ class RepProfilesBase(ABC):
                 logger.error(e)
                 raise KeyError(e)
 
-    @staticmethod
+    @ staticmethod
     def _check_rev_gen(gen_fpath, cf_dset, rev_summary):
         """Check rev gen file for requisite datasets.
 
@@ -820,7 +789,7 @@ class RepProfilesBase(ABC):
             for k in range(self._n_profiles)
         }
 
-    @property
+    @ property
     def time_index(self):
         """Get the time index for the rep profiles.
 
@@ -840,7 +809,7 @@ class RepProfilesBase(ABC):
 
         return self._time_index
 
-    @property
+    @ property
     def meta(self):
         """Meta data for the representative profiles.
 
@@ -852,7 +821,7 @@ class RepProfilesBase(ABC):
         """
         return self._meta
 
-    @property
+    @ property
     def profiles(self):
         """Get the arrays of representative CF profiles corresponding to meta.
 
@@ -899,10 +868,8 @@ class RepProfilesBase(ABC):
 
         meta = self.meta.copy()
         for c in meta.columns:
-            try:
+            with contextlib.suppress(ValueError):
                 meta[c] = pd.to_numeric(meta[c])
-            except ValueError:
-                pass
 
         Outputs.init_h5(
             fout,
@@ -965,15 +932,15 @@ class RepProfilesBase(ABC):
         )
         self._write_h5_out(fout, save_rev_summary=save_rev_summary)
 
-    @abstractmethod
+    @ abstractmethod
     def _run_serial(self):
         """Abstract method for serial run method."""
 
-    @abstractmethod
+    @ abstractmethod
     def _run_parallel(self):
         """Abstract method for parallel run method."""
 
-    @abstractmethod
+    @ abstractmethod
     def run(self):
         """Abstract method for generic run method."""
 
@@ -981,18 +948,11 @@ class RepProfilesBase(ABC):
 class RepProfiles(RepProfilesBase):
     """RepProfiles"""
 
-    def __init__(
-        self,
-        gen_fpath,
-        rev_summary,
-        reg_cols,
-        cf_dset="cf_profile",
-        rep_method="meanoid",
-        err_method="rmse",
-        weight=MetaKeyName.GID_COUNTS,
-        n_profiles=1,
-        aggregate_profiles=False,
-    ):
+    def __init__(self, gen_fpath, rev_summary, reg_cols,
+                 cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse',
+                 weight=MetaKeyName.GID_COUNTS,
+                 n_profiles=1, aggregate_profiles=False):
         """ReV rep profiles class.
 
         ``reV`` rep profiles compute representative generation profiles
@@ -1084,7 +1044,7 @@ class RepProfiles(RepProfilesBase):
                *equally* to the meanoid profile unless these weights are
                specified.
 
-            By default, ``MetaKeyName.GID_COUNTS``.
+            By default, :obj:`MetaKeyName.GID_COUNTS`.
         n_profiles : int, optional
             Number of representative profiles to save to the output
             file. By default, ``1``.
@@ -1148,8 +1108,9 @@ class RepProfiles(RepProfilesBase):
             self._meta = self._rev_summary
         else:
             self._meta = self._rev_summary.groupby(self._reg_cols)
-            self._meta = self._meta[MetaKeyName.TIMEZONE].apply(
-                lambda x: stats.mode(x, keepdims=True).mode[0]
+            self._meta = (
+                self._meta[MetaKeyName.TIMEZONE]
+                .apply(lambda x: stats.mode(x, keepdims=True).mode[0])
             )
             self._meta = self._meta.reset_index()
 

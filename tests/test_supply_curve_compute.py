@@ -151,20 +151,16 @@ def test_integrated_sc_full_friction():
     sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full = sc.run(
-            out_fpath,
-            fixed_charge_rate=0.1,
-            simple=False,
-            transmission_costs=tcosts,
-            avail_cap_frac=avail_cap_frac,
-            columns=SC_FULL_COLUMNS,
-            sort_on=MetaKeyName.TOTAL_LCOE_FRICTION,
-        )
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         transmission_costs=tcosts,
+                         avail_cap_frac=avail_cap_frac,
+                         columns=SC_FULL_COLUMNS,
+                         sort_on=MetaKeyName.TOTAL_LCOE_FRICTION)
 
         sc_full = pd.read_csv(sc_full)
         assert MetaKeyName.MEAN_LCOE_FRICTION in sc_full
         assert MetaKeyName.TOTAL_LCOE_FRICTION in sc_full
-        test = sc_full[MetaKeyName.MEAN_LCOE_FRICTION] + sc_full["lcot"]
+        test = sc_full[MetaKeyName.MEAN_LCOE_FRICTION] + sc_full['lcot']
         assert np.allclose(test, sc_full[MetaKeyName.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
@@ -180,17 +176,13 @@ def test_integrated_sc_simple_friction():
     sc = SupplyCurve(SC_POINTS_FRICTION, TRANS_TABLE, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_simple = sc.run(
-            out_fpath,
-            fixed_charge_rate=0.1,
-            simple=True,
-            transmission_costs=tcosts,
-            sort_on=MetaKeyName.TOTAL_LCOE_FRICTION,
-        )
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
+                           transmission_costs=tcosts,
+                           sort_on=MetaKeyName.TOTAL_LCOE_FRICTION)
         sc_simple = pd.read_csv(sc_simple)
         assert MetaKeyName.MEAN_LCOE_FRICTION in sc_simple
         assert MetaKeyName.TOTAL_LCOE_FRICTION in sc_simple
-        test = sc_simple[MetaKeyName.MEAN_LCOE_FRICTION] + sc_simple["lcot"]
+        test = sc_simple[MetaKeyName.MEAN_LCOE_FRICTION] + sc_simple['lcot']
         assert np.allclose(test, sc_simple[MetaKeyName.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
@@ -306,13 +298,12 @@ def verify_trans_cap(sc_table, trans_tables, cap_col=MetaKeyName.CAPACITY):
     if "max_cap" in sc_table and "max_cap" in trans_features:
         sc_table = sc_table.drop("max_cap", axis=1)
 
-    test = sc_table.merge(trans_features, on="trans_gid", how="left")
-    mask = test[cap_col] > test["max_cap"]
-    cols = [MetaKeyName.SC_GID, "trans_gid", cap_col, "max_cap"]
-    msg = (
-        "SC points connected to transmission features with "
-        "max_cap < sc_cap:\n{}".format(test.loc[mask, cols])
-    )
+    test = sc_table.merge(trans_features, on='trans_gid', how='left')
+    mask = test[cap_col] > test['max_cap']
+    cols = [MetaKeyName.SC_GID, 'trans_gid', cap_col, 'max_cap']
+    msg = ("SC points connected to transmission features with "
+           "max_cap < sc_cap:\n{}"
+           .format(test.loc[mask, cols]))
     assert any(mask), msg
 
 
@@ -327,13 +318,9 @@ def test_least_cost_full():
     sc = SupplyCurve(SC_POINTS, trans_tables, sc_features=None)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
-        sc_full = sc.run(
-            out_fpath,
-            fixed_charge_rate=0.1,
-            simple=False,
-            avail_cap_frac=0.1,
-            columns=list(SC_FULL_COLUMNS) + ["max_cap"],
-        )
+        sc_full = sc.run(out_fpath, fixed_charge_rate=0.1, simple=False,
+                         avail_cap_frac=0.1,
+                         columns=[*list(SC_FULL_COLUMNS), "max_cap"])
 
         fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
         baseline_verify(sc_full, fpath_baseline)
@@ -438,52 +425,42 @@ def test_multi_parallel_trans():
     sc = SupplyCurve(SC_POINTS, trans_tables)
     sc_2 = sc.simple_sort(fcr=0.1, columns=columns)
 
-    assert not set(SC_POINTS[MetaKeyName.SC_GID]) - set(
-        sc_1[MetaKeyName.SC_GID]
-    )
-    assert not set(SC_POINTS[MetaKeyName.SC_GID]) - set(
-        sc_2[MetaKeyName.SC_GID]
-    )
-    assert not set(SC_POINTS[MetaKeyName.SC_POINT_GID]) - set(
-        sc_1[MetaKeyName.SC_POINT_GID]
-    )
-    assert not set(SC_POINTS[MetaKeyName.SC_POINT_GID]) - set(
-        sc_2[MetaKeyName.SC_POINT_GID]
-    )
-    assert not set(sc_1[MetaKeyName.SC_POINT_GID]) - set(
-        SC_POINTS[MetaKeyName.SC_POINT_GID]
-    )
-    assert not set(sc_2[MetaKeyName.SC_POINT_GID]) - set(
-        SC_POINTS[MetaKeyName.SC_POINT_GID]
-    )
+    assert not (set(SC_POINTS[MetaKeyName.SC_GID])
+                - set(sc_1[MetaKeyName.SC_GID]))
+    assert not (set(SC_POINTS[MetaKeyName.SC_GID])
+                - set(sc_2[MetaKeyName.SC_GID]))
+    assert not (set(SC_POINTS[MetaKeyName.SC_POINT_GID])
+                - set(sc_1[MetaKeyName.SC_POINT_GID]))
+    assert not (set(SC_POINTS[MetaKeyName.SC_POINT_GID])
+                - set(sc_2[MetaKeyName.SC_POINT_GID]))
+    assert not (set(sc_1[MetaKeyName.SC_POINT_GID])
+                - set(SC_POINTS[MetaKeyName.SC_POINT_GID]))
+    assert not (set(sc_2[MetaKeyName.SC_POINT_GID])
+                - set(SC_POINTS[MetaKeyName.SC_POINT_GID]))
 
     assert (sc_2.n_parallel_trans > 1).any()
 
     mask_2 = sc_2["n_parallel_trans"] > 1
 
     for gid in sc_2.loc[mask_2, MetaKeyName.SC_GID]:
-        nx_1 = sc_1.loc[
-            (sc_1[MetaKeyName.SC_GID] == gid), "n_parallel_trans"
-        ].values[0]
-        nx_2 = sc_2.loc[
-            (sc_2[MetaKeyName.SC_GID] == gid), "n_parallel_trans"
-        ].values[0]
+        nx_1 = sc_1.loc[(sc_1[MetaKeyName.SC_GID] == gid),
+                        'n_parallel_trans'].values[0]
+        nx_2 = sc_2.loc[(sc_2[MetaKeyName.SC_GID] == gid),
+                        'n_parallel_trans'].values[0]
         assert nx_2 >= nx_1
         if nx_1 != nx_2:
-            lcot_1 = sc_1.loc[
-                (sc_1[MetaKeyName.SC_GID] == gid), "lcot"
-            ].values[0]
-            lcot_2 = sc_2.loc[
-                (sc_2[MetaKeyName.SC_GID] == gid), "lcot"
-            ].values[0]
+            lcot_1 = sc_1.loc[(sc_1[MetaKeyName.SC_GID] == gid),
+                              'lcot'].values[0]
+            lcot_2 = sc_2.loc[(sc_2[MetaKeyName.SC_GID] == gid),
+                              'lcot'].values[0]
             assert lcot_2 > lcot_1
 
 
 # pylint: disable=no-member
 def test_least_cost_full_with_reinforcement():
     """
-    Test full supply curve sorting with reinforcement costs in the
-    least-cost path transmission tables
+    Test full supply curve sorting with reinforcement costs in the least-cost
+    path transmission tables
     """
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
@@ -509,7 +486,8 @@ def test_least_cost_full_with_reinforcement():
         )
         sc_full = pd.read_csv(sc_full)
 
-        fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_full_lc.csv')
         baseline_verify(sc_full, fpath_baseline)
         verify_trans_cap(sc_full, trans_tables)
 
@@ -562,10 +540,12 @@ def test_least_cost_simple_with_reinforcement():
 
         out_fpath = os.path.join(td, "sc")
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1,
+                           simple=True)
         sc_simple = pd.read_csv(sc_simple)
 
-        fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_simple_lc.csv")
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_simple_lc.csv')
         baseline_verify(sc_simple, fpath_baseline)
         verify_trans_cap(sc_simple, trans_tables)
 
@@ -589,23 +569,18 @@ def test_least_cost_simple_with_reinforcement():
         verify_trans_cap(sc_simple_r, trans_tables)
 
         assert np.allclose(sc_simple.trans_gid, sc_simple_r.trans_gid)
-        assert not np.allclose(sc_simple.total_lcoe, sc_simple_r.total_lcoe)
+        assert not np.allclose(sc_simple.total_lcoe,
+                               sc_simple_r.total_lcoe)
 
 
 def test_least_cost_full_pass_through():
     """
     Test the full supply curve sorting passes through variables correctly
     """
-    check_cols = {
-        "poi_lat",
-        "poi_lon",
-        "reinforcement_poi_lat",
-        "reinforcement_poi_lon",
-        "eos_mult",
-        "reg_mult",
-        "reinforcement_cost_per_mw",
-        "reinforcement_dist_km",
-    }
+    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                  MetaKeyName.REG_MULT,
+                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
         for cap in [100, 200, 400, 1000]:
@@ -640,16 +615,10 @@ def test_least_cost_simple_pass_through():
     """
     Test the simple supply curve sorting passes through variables correctly
     """
-    check_cols = {
-        "poi_lat",
-        "poi_lon",
-        "reinforcement_poi_lat",
-        "reinforcement_poi_lon",
-        "eos_mult",
-        "reg_mult",
-        "reinforcement_cost_per_mw",
-        "reinforcement_dist_km",
-    }
+    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
+                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                  MetaKeyName.REG_MULT,
+                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
         for cap in [100, 200, 400, 1000]:

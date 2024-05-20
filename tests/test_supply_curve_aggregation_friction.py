@@ -5,7 +5,6 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
-
 import os
 import warnings
 
@@ -104,10 +103,12 @@ def test_agg_friction(gid):
         ), m
         m = ("SC point gid {} does not match mean LCOE with friction hand calc"
              .format(gid))
-        assert np.allclose(
-            s[MetaKeyName.MEAN_LCOE_FRICTION],
-            s[MetaKeyName.MEAN_LCOE] * mean_friction,
-        ), m
+        assert np.isclose(s[MetaKeyName.MEAN_FRICTION].values[0],
+                          mean_friction), m
+        m = ('SC point gid {} does not match mean LCOE with friction hand calc'
+             .format(gid))
+        assert np.allclose(s[MetaKeyName.MEAN_LCOE_FRICTION],
+                           s[MetaKeyName.MEAN_LCOE] * mean_friction), m
 
 
 # pylint: disable=no-member
@@ -116,7 +117,6 @@ def make_friction_file():
     import shutil
 
     import matplotlib.pyplot as plt
-
     shutil.copy(EXCL, FRICTION_FPATH)
     with h5py.File(FRICTION_FPATH, "a") as f:
         f[FRICTION_DSET] = f["ri_srtm_slope"]
@@ -134,11 +134,8 @@ def make_friction_file():
 
         f[FRICTION_DSET][...] = data
         for d in f:
-            if d not in [
-                FRICTION_DSET,
-                MetaKeyName.LATITUDE,
-                MetaKeyName.LONGITUDE,
-            ]:
+            if d not in [FRICTION_DSET, MetaKeyName.LATITUDE,
+                         MetaKeyName.LONGITUDE]:
                 del f[d]
 
     with h5py.File(FRICTION_FPATH, "r") as f:

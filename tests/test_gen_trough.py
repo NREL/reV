@@ -7,13 +7,14 @@ This is intended to be run with PySAM 1.2.1
 Created on 2/6/2020
 @author: Mike Bannister
 """
-import numpy as np
 import os
-import pytest
 
-from reV.generation.generation import Gen
-from reV import TESTDATADIR
+import numpy as np
+import pytest
 from rex import Resource
+
+from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_trough_2012.h5')
 RTOL = 0.1

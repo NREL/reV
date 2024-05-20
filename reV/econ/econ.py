@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-reV econ module (lcoe-fcr, single owner, etc...)
-"""
-
+"""reV econ module (lcoe-fcr, single owner, etc...)"""
 import logging
 import os
 import pprint
@@ -20,7 +17,7 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName, ResourceMetaField
 from reV.utilities.exceptions import ExecutionError, OffshoreWindInputWarning
 
 logger = logging.getLogger(__name__)
@@ -53,17 +50,9 @@ class Econ(BaseGen):
     # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = BaseGen.ECON_ATTRS
 
-    def __init__(
-        self,
-        project_points,
-        sam_files,
-        cf_file,
-        site_data=None,
-        output_request=("lcoe_fcr",),
-        sites_per_worker=100,
-        memory_utilization_limit=0.4,
-        append=False,
-    ):
+    def __init__(self, project_points, sam_files, cf_file, site_data=None,
+                 output_request=('lcoe_fcr',), sites_per_worker=100,
+                 memory_utilization_limit=0.4, append=False):
         """ReV econ analysis class.
 
         ``reV`` econ analysis runs SAM econ calculations, typically to
@@ -231,24 +220,20 @@ class Econ(BaseGen):
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
-                    cfh.meta[MetaKeyName.GID].isin(self.points_control.sites)
-                ]
+                    cfh.meta[ResourceMetaField.GID].isin(
+                        self.points_control.sites)]
 
-            if MetaKeyName.OFFSHORE in self._meta:
-                if self._meta[MetaKeyName.OFFSHORE].sum() > 1:
-                    w = (
-                        "Found offshore sites in econ meta data. "
-                        "This functionality has been deprecated. "
-                        "Please run the reV offshore module to "
-                        "calculate offshore wind lcoe."
-                    )
-                    warn(w, OffshoreWindInputWarning)
-                    logger.warning(w)
+            if ("offshore" in self._meta and self._meta["offshore"].sum() > 1):
+                w = ('Found offshore sites in econ meta data. '
+                     'This functionality has been deprecated. '
+                     'Please run the reV offshore module to '
+                     'calculate offshore wind lcoe.')
+                warn(w, OffshoreWindInputWarning)
+                logger.warning(w)
 
         elif self._meta is None and self.cf_file is None:
             self._meta = pd.DataFrame(
-                {MetaKeyName.GID: self.points_control.sites}
-            )
+                {ResourceMetaField.GID: self.points_control.sites})
 
         return self._meta
 
@@ -291,8 +276,8 @@ class Econ(BaseGen):
             res_kwargs = {"hsds": hsds}
 
         with res_cls(cf_file, **res_kwargs) as f:
-            gid0 = f.meta[MetaKeyName.GID].values[0]
-            gid1 = f.meta[MetaKeyName.GID].values[-1]
+            gid0 = f.meta[ResourceMetaField.GID].values[0]
+            gid1 = f.meta[ResourceMetaField.GID].values[-1]
 
         i0 = pp.index(gid0)
         i1 = pp.index(gid1) + 1
@@ -392,7 +377,7 @@ class Econ(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = pc.project_points.df
-        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
+        site_df = site_df.set_index(ResourceMetaField.GID, drop=True)
 
         # SAM execute econ analysis based on output request
         try:
@@ -430,10 +415,8 @@ class Econ(BaseGen):
                 )
                 logger.debug(msg)
 
-        modules = []
-        for request in output_request:
-            if request in self.OPTIONS:
-                modules.append(self.OPTIONS[request])
+        modules = [self.OPTIONS[request] for request in output_request
+                   if request in self.OPTIONS]
 
         if not any(modules):
             msg = (
@@ -544,10 +527,8 @@ class Econ(BaseGen):
         self._init_h5(mode="a" if self._append else "w")
         self._init_out_arrays()
 
-        diff = list(
-            set(self.points_control.sites)
-            - set(self.meta[MetaKeyName.GID].values)
-        )
+        diff = list(set(self.points_control.sites)
+                    - set(self.meta[ResourceMetaField.GID].values))
         if diff:
             raise Exception(
                 "The following analysis sites were requested "

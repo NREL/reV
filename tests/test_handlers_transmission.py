@@ -86,27 +86,23 @@ def trans_table():
     return trans_table
 
 
-@pytest.mark.parametrize(
-    ("i", "trans_costs", "distance", MetaKeyName.GID),
-    (
-        (1, TRANS_COSTS_1, 0, 43300),
-        (2, TRANS_COSTS_2, 0, 43300),
-        (1, TRANS_COSTS_1, 100, 43300),
-        (2, TRANS_COSTS_2, 100, 43300),
-        (1, TRANS_COSTS_1, 0, 68867),
-        (2, TRANS_COSTS_2, 0, 68867),
-        (1, TRANS_COSTS_1, 100, 68867),
-        (2, TRANS_COSTS_2, 100, 68867),
-        (1, TRANS_COSTS_1, 0, 80844),
-        (2, TRANS_COSTS_2, 0, 80844),
-        (1, TRANS_COSTS_1, 100, 80844),
-        (2, TRANS_COSTS_2, 100, 80844),
-        (1, TRANS_COSTS_1, 0, 80843),
-        (2, TRANS_COSTS_2, 0, 80843),
-        (1, TRANS_COSTS_1, 100, 80843),
-        (2, TRANS_COSTS_2, 100, 80843),
-    ),
-)
+@pytest.mark.parametrize(('i', 'trans_costs', 'distance', MetaKeyName.GID),
+                         ((1, TRANS_COSTS_1, 0, 43300),
+                          (2, TRANS_COSTS_2, 0, 43300),
+                          (1, TRANS_COSTS_1, 100, 43300),
+                          (2, TRANS_COSTS_2, 100, 43300),
+                          (1, TRANS_COSTS_1, 0, 68867),
+                          (2, TRANS_COSTS_2, 0, 68867),
+                          (1, TRANS_COSTS_1, 100, 68867),
+                          (2, TRANS_COSTS_2, 100, 68867),
+                          (1, TRANS_COSTS_1, 0, 80844),
+                          (2, TRANS_COSTS_2, 0, 80844),
+                          (1, TRANS_COSTS_1, 100, 80844),
+                          (2, TRANS_COSTS_2, 100, 80844),
+                          (1, TRANS_COSTS_1, 0, 80843),
+                          (2, TRANS_COSTS_2, 0, 80843),
+                          (1, TRANS_COSTS_1, 100, 80843),
+                          (2, TRANS_COSTS_2, 100, 80843)))
 def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     """
     Test tranmission capital cost calculation
@@ -120,19 +116,16 @@ def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     assert true_cost == trans_cost
 
 
-@pytest.mark.parametrize(
-    ("trans_costs", MetaKeyName.CAPACITY, MetaKeyName.GID),
-    (
-        (TRANS_COSTS_1, 350, 43300),
-        (TRANS_COSTS_2, 350, 43300),
-        (TRANS_COSTS_1, 100, 43300),
-        (TRANS_COSTS_2, 100, 43300),
-        (TRANS_COSTS_1, 350, 80844),
-        (TRANS_COSTS_2, 350, 80844),
-        (TRANS_COSTS_1, 100, 80844),
-        (TRANS_COSTS_2, 100, 80844),
-    ),
-)
+@pytest.mark.parametrize(('trans_costs', MetaKeyName.CAPACITY,
+                          MetaKeyName.GID),
+                         ((TRANS_COSTS_1, 350, 43300),
+                          (TRANS_COSTS_2, 350, 43300),
+                          (TRANS_COSTS_1, 100, 43300),
+                          (TRANS_COSTS_2, 100, 43300),
+                          (TRANS_COSTS_1, 350, 80844),
+                          (TRANS_COSTS_2, 350, 80844),
+                          (TRANS_COSTS_1, 100, 80844),
+                          (TRANS_COSTS_2, 100, 80844)))
 def test_connect(trans_costs, capacity, gid, trans_table):
     """
     Test connection to transmission lines and load centers

@@ -2,7 +2,6 @@
 """
 Competitive Wind Farms exclusion handler
 """
-
 import logging
 
 import numpy as np
@@ -84,13 +83,9 @@ class CompetitiveWindFarms:
             Mapped gid(s) for given mapping
         """
         if not isinstance(keys, tuple):
-            msg = (
-                "{} must be a tuple of form (source, gid) where source is: "
-                "MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  or 'upwind', "
-                "'downwind'".format(
-                    keys
-                )
-            )
+            msg = ("{} must be a tuple of form (source, gid) where source is: "
+                   "{}, '{}',  or 'upwind', 'downwind'"
+                   .format(keys, MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -104,10 +99,9 @@ class CompetitiveWindFarms:
         elif source == "downwind":
             out = self.map_downwind(gid)
         else:
-            msg = (
-                "{} must be: MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID,  "
-                "or 'upwind', 'downwind'".format(source)
-            )
+            msg = ("{} must be: {}, {},  or 'upwind', "
+                   "'downwind'".format(source, MetaKeyName.SC_GID,
+                                       MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -198,7 +192,7 @@ class CompetitiveWindFarms:
         wind_dirs = cls._parse_table(wind_dirs)
 
         wind_dirs = wind_dirs.set_index(MetaKeyName.SC_POINT_GID)
-        columns = [c for c in wind_dirs if c.endswith(("_gid", "_pr"))]
+        columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
         wind_dirs = wind_dirs[columns]
 
         return wind_dirs
@@ -228,29 +222,22 @@ class CompetitiveWindFarms:
         """
         sc_points = cls._parse_table(sc_points)
         if MetaKeyName.OFFSHORE in sc_points and not offshore:
-            logger.debug(
-                "Not including offshore supply curve points in "
-                "CompetitiveWindFarm"
-            )
+            logger.debug('Not including offshore supply curve points in '
+                         'CompetitiveWindFarm')
             mask = sc_points[MetaKeyName.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
-        mask = np.ones(
-            int(1 + sc_points[MetaKeyName.SC_POINT_GID].max()), dtype=bool
-        )
+        mask = np.ones(int(1 + sc_points[MetaKeyName.SC_POINT_GID].max()),
+                       dtype=bool)
 
         sc_points = sc_points[[MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID]]
         sc_gids = sc_points.set_index(MetaKeyName.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
-        sc_point_gids = (
-            sc_points.groupby(MetaKeyName.SC_POINT_GID)[MetaKeyName.SC_GID]
-            .unique()
-            .to_frame()
-        )
-        sc_point_gids = {
-            int(k): v[MetaKeyName.SC_GID] for k, v in sc_point_gids.iterrows()
-        }
+        groups = sc_points.groupby(MetaKeyName.SC_POINT_GID)
+        sc_point_gids = groups[MetaKeyName.SC_GID].unique().to_frame()
+        sc_point_gids = {int(k): v[MetaKeyName.SC_GID]
+                         for k, v in sc_point_gids.iterrows()}
 
         return sc_gids, sc_point_gids, mask
 

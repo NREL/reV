@@ -30,7 +30,7 @@ from reV.SAM.generation import (
     TroughPhysicalHeat,
     WindPower,
 )
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName, ResourceMetaField
 from reV.utilities.exceptions import (
     ConfigError,
     InputError,
@@ -41,16 +41,16 @@ logger = logging.getLogger(__name__)
 
 
 ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
-ATTR_DIR = os.path.join(ATTR_DIR, "output_attributes")
-with open(os.path.join(ATTR_DIR, "other.json")) as f:
+ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
+with open(os.path.join(ATTR_DIR, 'other.json')) as f:
     OTHER_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "generation.json")) as f:
+with open(os.path.join(ATTR_DIR, 'generation.json')) as f:
     GEN_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "linear_fresnel.json")) as f:
+with open(os.path.join(ATTR_DIR, 'linear_fresnel.json')) as f:
     LIN_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "solar_water_heat.json")) as f:
+with open(os.path.join(ATTR_DIR, 'solar_water_heat.json')) as f:
     SWH_ATTRS = json.load(f)
-with open(os.path.join(ATTR_DIR, "trough_heat.json")) as f:
+with open(os.path.join(ATTR_DIR, 'trough_heat.json')) as f:
     TPPH_ATTRS = json.load(f)
 
 
@@ -83,24 +83,13 @@ class Gen(BaseGen):
     OUT_ATTRS.update(TPPH_ATTRS)
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
-    def __init__(
-        self,
-        technology,
-        project_points,
-        sam_files,
-        resource_file,
-        low_res_resource_file=None,
-        output_request=("cf_mean",),
-        site_data=None,
-        curtailment=None,
-        gid_map=None,
-        drop_leap=False,
-        sites_per_worker=None,
-        memory_utilization_limit=0.4,
-        scale_outputs=True,
-        write_mapped_gids=False,
-        bias_correct=None,
-    ):
+    def __init__(self, technology, project_points, sam_files, resource_file,
+                 low_res_resource_file=None,
+                 output_request=('cf_mean',),
+                 site_data=None, curtailment=None, gid_map=None,
+                 drop_leap=False, sites_per_worker=None,
+                 memory_utilization_limit=0.4, scale_outputs=True,
+                 write_mapped_gids=False, bias_correct=None):
         """ReV generation analysis class.
 
         ``reV`` generation analysis runs SAM simulations by piping in
@@ -140,14 +129,14 @@ class Gen(BaseGen):
         {'cf_mean': array([0.16966143], dtype=float32)}
         >>>
         >>> sites = [3, 4, 7, 9]
-        >>> req = ('cf_mean', 'cf_profile', 'lcoe_fcr')
+        >>> req = ('cf_mean', 'lcoe_fcr')
         >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
         >>> gen.run()
         >>>
         >>> gen.out
         {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-        'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-        'cf_profile': array([[0., 0., 0., 0.],
+         'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
+        : array([[0., 0., 0., 0.],
                 [0., 0., 0., 0.],
                 [0., 0., 0., 0.],
                 ...,
@@ -484,12 +473,13 @@ class Gen(BaseGen):
 
                 self._meta = res["meta", res_gids]
 
-            self._meta.loc[:, MetaKeyName.GID] = res_gids
+            self._meta.loc[:, ResourceMetaField.GID] = res_gids
             if self.write_mapped_gids:
-                self._meta.loc[:, MetaKeyName.GID] = self.project_points.sites
+                sites = self.project_points.sites
+                self._meta.loc[:, ResourceMetaField.GID] = sites
             self._meta.index = self.project_points.sites
-            self._meta.index.name = MetaKeyName.GID
-            self._meta.loc[:, "reV_tech"] = self.project_points.tech
+            self._meta.index.name = ResourceMetaField.GID
+            self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
 
@@ -579,7 +569,8 @@ class Gen(BaseGen):
         array_vars = [
             var for var, attrs in GEN_ATTRS.items() if attrs["type"] == "array"
         ]
-        valid_vars = ["gen_profile", "cf_profile", "cf_profile_ac"]
+        valid_vars = ['gen_profile', 'cf_profile',
+                      'cf_profile_ac']
         invalid_vars = set(array_vars) - set(valid_vars)
         invalid_requests = [
             var for var in self.output_request if var in invalid_vars
@@ -685,7 +676,7 @@ class Gen(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = points_control.project_points.df
-        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
+        site_df = site_df.set_index(ResourceMetaField.GID, drop=True)
 
         # run generation method for specified technology
         try:
@@ -755,15 +746,14 @@ class Gen(BaseGen):
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                m = 'Need "gid" in gid_map column'
-                assert MetaKeyName.GID in gid_map, m
-                assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
+                msg = f'Need {ResourceMetaField.GID} in gid_map column'
+                assert ResourceMetaField.GID in gid_map, msg
+                assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
-                    gid_map[MetaKeyName.GID][i]: gid_map["gid_map"][i]
-                    for i in gid_map[MetaKeyName.GID].keys()
-                }
+                    gid_map[ResourceMetaField.GID][i]: gid_map['gid_map'][i]
+                    for i in gid_map[ResourceMetaField.GID].keys()}
 
-            elif gid_map.endswith(".json"):
+            elif gid_map.endswith('.json'):
                 with open(gid_map) as f:
                     gid_map = json.load(f)
 
@@ -826,19 +816,14 @@ class Gen(BaseGen):
             if "*" in self.res_file or "*" in self.lr_res_file:
                 handler_class = MultiFileResource
 
-            with handler_class(self.res_file) as hr_res:
-                with handler_class(self.lr_res_file) as lr_res:
-                    logger.info(
-                        "Making nearest neighbor map for multi "
-                        "resolution resource data..."
-                    )
-                    nn_d, nn_map = MultiResolutionResource.make_nn_map(
-                        hr_res, lr_res
-                    )
-                    logger.info(
-                        "Done making nearest neighbor map for multi "
-                        "resolution resource data!"
-                    )
+            with handler_class(self.res_file) as hr_res, \
+                    handler_class(self.lr_res_file) as lr_res:
+                logger.info('Making nearest neighbor map for multi '
+                            'resolution resource data...')
+                nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
+                                                                   lr_res)
+                logger.info('Done making nearest neighbor map for multi '
+                            'resolution resource data!')
 
             logger.info(
                 "Made nearest neighbor mapping between nominal-"
@@ -909,17 +894,13 @@ class Gen(BaseGen):
         )
         assert isinstance(bias_correct, pd.DataFrame), msg
 
-        msg = (
-            'Bias correction table must have "gid" column but only found: '
-            "{}".format(list(bias_correct.columns))
-        )
-        assert (
-            MetaKeyName.GID in bias_correct
-            or bias_correct.index.name == MetaKeyName.GID
-        ), msg
+        msg = ('Bias correction table must have {!r} column but only found: '
+               '{}'.format(ResourceMetaField.GID, list(bias_correct.columns)))
+        assert (ResourceMetaField.GID in bias_correct
+                or bias_correct.index.name == ResourceMetaField.GID), msg
 
-        if bias_correct.index.name != MetaKeyName.GID:
-            bias_correct = bias_correct.set_index(MetaKeyName.GID)
+        if bias_correct.index.name != ResourceMetaField.GID:
+            bias_correct = bias_correct.set_index(ResourceMetaField.GID)
 
         msg = (
             'Bias correction table must have "method" column but only '
