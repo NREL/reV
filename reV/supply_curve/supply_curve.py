@@ -1107,7 +1107,8 @@ class SupplyCurve:
         # These are essentially should-be-defaults that are not
         # backwards-compatible, so have to explicitly check for them
         extra_cols = ['ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                      'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                      'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                      MetaKeyName.REG_MULT,
                       'reinforcement_cost_per_mw', 'reinforcement_dist_km',
                       'n_parallel_trans', MetaKeyName.TOTAL_LCOE_FRICTION]
         if not consider_friction:

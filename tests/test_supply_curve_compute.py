@@ -491,7 +491,8 @@ def test_least_cost_full_pass_through():
     Test the full supply curve sorting passes through variables correctly
     """
     check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                  MetaKeyName.REG_MULT,
                   'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
@@ -523,7 +524,8 @@ def test_least_cost_simple_pass_through():
     Test the simple supply curve sorting passes through variables correctly
     """
     check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', 'eos_mult', 'reg_mult',
+                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
+                  MetaKeyName.REG_MULT,
                   'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []

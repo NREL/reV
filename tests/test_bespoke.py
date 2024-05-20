@@ -463,9 +463,9 @@ def test_extra_outputs(gid=33):
         assert 'reeds_region' in bsp.meta
         assert 'padus' in bsp.meta
 
-        assert 'eos_mult' in bsp.meta
-        assert 'reg_mult' in bsp.meta
-        assert np.allclose(bsp.meta['reg_mult'], 1)
+        assert MetaKeyName.EOS_MULT in bsp.meta
+        assert MetaKeyName.REG_MULT in bsp.meta
+        assert np.allclose(bsp.meta[MetaKeyName.REG_MULT], 1)
 
         n_turbs = round(test_eos_cap / TURB_RATING)
         test_eos_cap_kw = n_turbs * TURB_RATING
@@ -474,7 +474,7 @@ def test_extra_outputs(gid=33):
         eos_mult = (bsp.plant_optimizer.capital_cost
                     / bsp.plant_optimizer.capacity
                     / (baseline_cost / test_eos_cap_kw))
-        assert np.allclose(bsp.meta['eos_mult'], eos_mult)
+        assert np.allclose(bsp.meta[MetaKeyName.EOS_MULT], eos_mult)
 
         bsp.close()
 

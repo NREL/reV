@@ -51,6 +51,8 @@ class MetaKeyName(str, Enum):
     SCALED_SC_POINT_CAPITAL_COST = 'scaled_sc_point_capital_cost'
     TURBINE_X_COORDS = 'turbine_x_coords'
     TURBINE_Y_COORDS = 'turbine_y_coords'
+    EOS_MULT = "eos_mult"
+    REG_MULT = "reg_mult"
 
     def __str__(self):
         return self.value

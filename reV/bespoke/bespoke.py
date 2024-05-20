@@ -1319,12 +1319,12 @@ class BespokeSinglePlant:
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta["eos_mult"] = (
+        self._meta[MetaKeyName.EOS_MULT] = (
             self.plant_optimizer.capital_cost
             / self.plant_optimizer.capacity
             / baseline_cost
         )
-        self._meta["reg_mult"] = self.sam_sys_inputs.get(
+        self._meta[MetaKeyName.REG_MULT] = self.sam_sys_inputs.get(
             "capital_cost_multiplier", 1
         )
 
