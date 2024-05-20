@@ -32,8 +32,8 @@ SOLAR_PREFIX = 'solar_'
 WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
     MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE,
-    'country', 'state', 'county', MetaKeyName.ELEVATION,
-    MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
+    MetaKeyName.COUNTRY, MetaKeyName.STATE, MetaKeyName.COUNTY,
+    MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
     MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
 }
 DROPPED_COLUMNS = [MetaKeyName.GID]

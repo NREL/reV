@@ -16,7 +16,6 @@ class MetaKeyName(str, Enum):
     meth:`GenerationSupplyCurvePoint.point_summary` or
     meth:`BespokeSinglePlant.meta`
     """
-
     SC_POINT_GID = 'sc_point_gid'
     SOURCE_GIDS = 'source_gids'
     SC_GID = 'sc_gid'
@@ -30,6 +29,9 @@ class MetaKeyName(str, Enum):
     LONGITUDE = 'longitude'
     ELEVATION = 'elevation'
     TIMEZONE = 'timezone'
+    COUNTY = "county"
+    STATE = "state"
+    COUNTRY = "country"
     MEAN_CF = 'mean_cf'
     MEAN_LCOE = 'mean_lcoe'
     MEAN_RES = 'mean_res'

@@ -1176,9 +1176,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                 MetaKeyName.AREA_SQ_KM: self.area,
                 MetaKeyName.LATITUDE: self.latitude,
                 MetaKeyName.LONGITUDE: self.longitude,
-                'country': self.country,
-                'state': self.state,
-                'county': self.county,
+                MetaKeyName.COUNTRY: self.country,
+                MetaKeyName.STATE: self.state,
+                MetaKeyName.COUNTY: self.county,
                 MetaKeyName.ELEVATION: self.elevation,
                 MetaKeyName.TIMEZONE: self.timezone,
                 }
