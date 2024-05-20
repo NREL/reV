@@ -581,7 +581,7 @@ class BespokeSinglePlant:
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                err_msg = 'Need "gid" in gid_map column'
+                err_msg = f'Need {ResourceMetaField.GID} in gid_map column'
                 assert ResourceMetaField.GID in gid_map, err_msg
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
