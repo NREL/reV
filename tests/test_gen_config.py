@@ -38,7 +38,7 @@ def get_r1_profiles(year=2012, tech='pv'):
                             'wind_{}_0.h5'.format(year))
 
     with Outputs(rev1) as cf:
-        data = cf[][...] / 10000
+        data = cf['cf_profile'][...] / 10000
 
     return data
 
@@ -98,10 +98,8 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
                 with Outputs(path, 'r') as cf:
 
                     msg = 'cf_profile not written to disk'
-                    assert  in cf.datasets, msg
-                    print(cf.scale_factors[])
-                    print(cf.dtypes[])
-                    rev2_profiles = cf[]
+                    assert 'cf_profile' in cf.datasets, msg
+                    rev2_profiles = cf['cf_profile']
 
                     msg = 'monthly_energy not written to disk'
                     assert 'monthly_energy' in cf.datasets, msg
@@ -147,17 +145,17 @@ def test_sam_config(tech):
                                       "config": ['default'] * 100})
 
         gen_json = Gen('pvwattsv5', points, sam_file, res_file,
-                       output_request=(,), sites_per_worker=50)
+                       output_request=('cf_profile',), sites_per_worker=50)
         gen_json.run(max_workers=2)
 
         gen_dict = Gen('pvwattsv5', points_config, sam_config, res_file,
-                       output_request=(,), sites_per_worker=50)
+                       output_request=('cf_profile',), sites_per_worker=50)
         gen_dict.run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))
-        assert np.allclose(gen_json.out[],
-                           gen_dict.out[]), msg
+        assert np.allclose(gen_json.out['cf_profile'],
+                           gen_dict.out['cf_profile']), msg
     elif tech == 'wind':
         sam_file = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
         res_file = TESTDATADIR + '/wtk/ri_100_wtk_2012.h5'
@@ -168,17 +166,17 @@ def test_sam_config(tech):
                                       "config": ['default'] * 10})
 
         gen_json = Gen('windpower', points, sam_file, res_file,
-                       output_request=(,), sites_per_worker=3)
+                       output_request=('cf_profile',), sites_per_worker=3)
         gen_json.run(max_workers=2)
 
         gen_dict = Gen('windpower', points_config, sam_config, res_file,
-                       output_request=(,), sites_per_worker=3)
+                       output_request=('cf_profile',), sites_per_worker=3)
         gen_dict.run(max_workers=2)
 
         msg = ("reV {} generation run from JSON and SAM config dictionary do "
                "not match".format(tech))
-        assert np.allclose(gen_json.out[],
-                           gen_dict.out[]), msg
+        assert np.allclose(gen_json.out['cf_profile'],
+                           gen_dict.out['cf_profile']), msg
 
 
 @pytest.mark.parametrize('expected_log_message',
