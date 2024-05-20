@@ -20,6 +20,7 @@ from rex.utilities import check_res_file, parse_table
 from reV.config.curtailment import Curtailment
 from reV.config.sam_config import SAMConfig
 from reV.utilities.exceptions import ConfigError, ConfigWarning
+from reV.utilities import SiteDataField
 
 logger = logging.getLogger(__name__)
 
@@ -272,9 +273,9 @@ class ProjectPoints:
             names (keys) and values.
         """
 
-        site_bool = (self.df["gid"] == site)
+        site_bool = (self.df[SiteDataField.GID] == site)
         try:
-            config_id = self.df.loc[site_bool, 'config'].values[0]
+            config_id = self.df.loc[site_bool, SiteDataField.CONFIG].values[0]
         except (KeyError, IndexError) as ex:
             msg = ('Site {} not found in this instance of '
                    'ProjectPoints. Available sites include: {}'
@@ -387,7 +388,7 @@ class ProjectPoints:
             List of integer sites (resource file gids) belonging to this
             instance of ProjectPoints.
         """
-        return self.df["gid"].values.tolist()
+        return self.df[SiteDataField.GID].values.tolist()
 
     @property
     def sites_as_slice(self):
@@ -525,7 +526,7 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
-        df = pd.DataFrame(columns=["gid", "config"])
+        df = pd.DataFrame(columns=[SiteDataField.GID, SiteDataField.CONFIG])
         if isinstance(points, int):
             points = [points]
         if isinstance(points, (list, tuple, np.ndarray)):
@@ -535,7 +536,7 @@ class ProjectPoints:
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            df["gid"] = points
+            df[SiteDataField.GID] = points
         elif isinstance(points, slice):
             stop = points.stop
             if stop is None:
@@ -550,13 +551,13 @@ class ProjectPoints:
                 else:
                     stop = Resource(res_file).shape[1]
 
-            df["gid"] = list(range(*points.indices(stop)))
+            df[SiteDataField.GID] = list(range(*points.indices(stop)))
         else:
             raise TypeError('Project Points sites needs to be set as a list, '
                             'tuple, or slice, but was set as: {}'
                             .format(type(points)))
 
-        df['config'] = None
+        df[SiteDataField.CONFIG] = None
 
         return df
 
@@ -591,14 +592,16 @@ class ProjectPoints:
             raise ValueError('Cannot parse Project points data from {}'
                              .format(type(points)))
 
-        if "gid" not in df.columns:
-            raise KeyError('Project points data must contain "gid" column.')
+        if SiteDataField.GID not in df.columns:
+            raise KeyError('Project points data must contain '
+                           f'{SiteDataField.GID} column.')
 
         # pylint: disable=no-member
-        if 'config' not in df.columns:
-            df = cls._parse_sites(points["gid"].values, res_file=res_file)
+        if SiteDataField.CONFIG not in df.columns:
+            df = cls._parse_sites(points[SiteDataField.GID].values,
+                                  res_file=res_file)
 
-        gids = df["gid"].values
+        gids = df[SiteDataField.GID].values
         if not np.array_equal(np.sort(gids), gids):
             msg = ('WARNING: points are not in sequential order and will be '
                    'sorted! The original order is being preserved under '
@@ -606,7 +609,7 @@ class ProjectPoints:
             logger.warning(msg)
             warn(msg)
             df['points_order'] = df.index.values
-            df = df.sort_values("gid").reset_index(drop=True)
+            df = df.sort_values(SiteDataField.GID).reset_index(drop=True)
 
         return df
 
@@ -694,13 +697,13 @@ class ProjectPoints:
         ind : int
             Row index of gid in the project points dataframe.
         """
-        if gid not in self._df["gid"].values:
+        if gid not in self._df[SiteDataField.GID].values:
             e = ('Requested resource gid {} is not present in the project '
                  'points dataframe. Cannot return row index.'.format(gid))
             logger.error(e)
             raise ConfigError(e)
 
-        ind = np.where(self._df["gid"] == gid)[0][0]
+        ind = np.where(self._df[SiteDataField.GID] == gid)[0][0]
 
         return ind
 
@@ -710,7 +713,7 @@ class ProjectPoints:
         (sam_config_obj) are compatible. Update as necessary or break
         """
         # Extract unique config refences from project_points DataFrame
-        df_configs = self.df['config'].unique()
+        df_configs = self.df[SiteDataField.CONFIG].unique()
         sam_configs = self.sam_inputs
 
         # Checks to make sure that the same number of SAM config files
@@ -723,8 +726,8 @@ class ProjectPoints:
             raise ConfigError(msg)
 
         if len(df_configs) == 1 and df_configs[0] is None:
-            self._df['config'] = list(sam_configs)[0]
-            df_configs = self.df['config'].unique()
+            self._df[SiteDataField.CONFIG] = list(sam_configs)[0]
+            df_configs = self.df[SiteDataField.CONFIG].unique()
 
         # Check to see if config references in project_points DataFrame
         # are valid file paths, if compare with SAM configs
@@ -750,7 +753,7 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
-    def join_df(self, df2, key="gid"):
+    def join_df(self, df2, key=SiteDataField.GID):
         """Join new df2 to the _df attribute using the _df's gid as pkey.
 
         This can be used to add site-specific data to the project_points,
@@ -770,8 +773,9 @@ class ProjectPoints:
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]
-        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on="gid",
-                            right_on=key, copy=False, validate='1:1')
+        self._df = pd.merge(self._df, df2[df2_cols], how='left',
+                            left_on=SiteDataField.GID, right_on=key,
+                            copy=False, validate='1:1')
 
     def get_sites_from_config(self, config):
         """Get a site list that corresponds to a config key.
@@ -787,7 +791,8 @@ class ProjectPoints:
             List of sites associated with the requested configuration ID. If
             the configuration ID is not recognized, an empty list is returned.
         """
-        sites = self.df.loc[(self.df['config'] == config), "gid"].values
+        sites = self.df.loc[(self.df[SiteDataField.CONFIG] == config),
+                            SiteDataField.GID].values
 
         return list(sites)
 

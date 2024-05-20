@@ -25,7 +25,7 @@ from reV.losses.scheduled import ScheduledLossesMixin
 from reV.SAM.generation import WindPower
 from reV.supply_curve.supply_curve import SupplyCurve
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import MetaKeyName, ModuleName, SiteDataField
 
 pytest.importorskip("shapely")
 
@@ -278,8 +278,8 @@ def test_packing_algorithm(gid=33):
 def test_bespoke_points():
     """Test the bespoke points input options"""
     # pylint: disable=W0612
-    points = pd.DataFrame({MetaKeyName.GID: [33, 34, 35],
-                           'config': ['default'] * 3})
+    points = pd.DataFrame({SiteDataField.GID: [33, 34, 35],
+                           SiteDataField.CONFIG: ['default'] * 3})
     pp = BespokeWindPlants._parse_points(points, {'default': SAM})
     assert len(pp) == 3
     for gid in pp.gids:
@@ -288,7 +288,7 @@ def test_bespoke_points():
     points = pd.DataFrame({MetaKeyName.GID: [33, 34, 35]})
     pp = BespokeWindPlants._parse_points(points, {'default': SAM})
     assert len(pp) == 3
-    assert 'config' in pp.df.columns
+    assert SiteDataField.CONFIG in pp.df.columns
     for gid in pp.gids:
         assert pp[gid][0] == 'default'
 
@@ -497,12 +497,13 @@ def test_bespoke():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
         # both 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({MetaKeyName.GID: [33, 35],
-                               'config': ['default'] * 2,
+        points = pd.DataFrame({SiteDataField.GID: [33, 35],
+                               SiteDataField.CONFIG: ['default'] * 2,
                                'extra_unused_data': [0, 42]})
-        fully_excluded_points = pd.DataFrame({MetaKeyName.GID: [37],
-                                              'config': ['default'],
-                                              'extra_unused_data': [0]})
+        fully_excluded_points = pd.DataFrame(
+            {SiteDataField.GID: [37],
+             SiteDataField.CONFIG: ['default'],
+             'extra_unused_data': [0]})
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
@@ -1004,7 +1005,8 @@ def test_bespoke_prior_run():
         res_fp_2013 = res_fp.format('2013')
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({MetaKeyName.GID: [33], 'config': ['default'],
+        points = pd.DataFrame({SiteDataField.GID: [33],
+                               SiteDataField.CONFIG: ['default'],
                                'extra_unused_data': [42]})
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
@@ -1074,7 +1076,8 @@ def test_gid_map():
         res_fp_2013 = res_fp.format('2013')
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({MetaKeyName.GID: [33], 'config': ['default'],
+        points = pd.DataFrame({SiteDataField.GID: [33],
+                               SiteDataField.CONFIG: ['default'],
                                'extra_unused_data': [42]})
 
         gid_map = pd.DataFrame({MetaKeyName.GID: [3, 4, 13, 12, 11, 10, 9]})
@@ -1157,7 +1160,8 @@ def test_bespoke_bias_correct():
         res_fp_2013 = res_fp.format('2013')
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({MetaKeyName.GID: [33], 'config': ['default'],
+        points = pd.DataFrame({SiteDataField.GID: [33],
+                               SiteDataField.CONFIG: ['default'],
                                'extra_unused_data': [42]})
 
         # intentionally leaving out WTK gid 13 which only has 5 included 90m
@@ -1320,8 +1324,8 @@ def test_bespoke_5min_sample():
         shutil.copy(EXCL, excl_fp)
         res_fp = os.path.join(TESTDATADIR, 'wtk/wtk_2010_*m.h5')
 
-        points = pd.DataFrame({MetaKeyName.GID: [33, 35],
-                               'config': ['default'] * 2,
+        points = pd.DataFrame({SiteDataField.GID: [33, 35],
+                               SiteDataField.CONFIG: ['default'] * 2,
                                'extra_unused_data': [0, 42]})
         sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
         sam_sys_inputs['time_index_step'] = 12

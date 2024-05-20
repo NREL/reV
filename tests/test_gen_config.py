@@ -20,6 +20,7 @@ from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
+from reV.utilities import SiteDataField
 
 from rex.utilities.utilities import safe_json_load
 
@@ -141,8 +142,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 100)
-        points_config = pd.DataFrame({"gid": range(0, 100),
-                                      "config": ['default'] * 100})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 100),
+                                      SiteDataField.CONFIG: ['default'] * 100})
 
         gen_json = Gen('pvwattsv5', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=50)
@@ -162,8 +163,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 10)
-        points_config = pd.DataFrame({"gid": range(0, 10),
-                                      "config": ['default'] * 10})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 10),
+                                      SiteDataField.CONFIG: ['default'] * 10})
 
         gen_json = Gen('windpower', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=3)

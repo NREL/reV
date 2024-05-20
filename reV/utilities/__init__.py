@@ -8,6 +8,11 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
 
 
+class SiteDataField(str, Enum):
+    GID = "gid"
+    CONFIG = "config"
+
+
 class ResourceMetaField(str, Enum):
     """An enumerated map to resource meta column names.
 
