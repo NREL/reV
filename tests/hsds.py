@@ -11,6 +11,8 @@ import pandas as pd
 import pytest
 from rex.renewable_resource import NSRDB
 
+from reV.utilities import ResourceMetaField
+
 
 @pytest.fixture
 def NSRDB_hsds():
@@ -54,7 +56,9 @@ def check_meta(res_cls):
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (len(sites), meta_shape[1])
     # select columns
-    meta = res_cls['meta', :, [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]]
+    meta = res_cls[
+        'meta', :, [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
+    ]
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (meta_shape[0], 2)
 

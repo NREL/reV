@@ -23,7 +23,7 @@ from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField
 from reV.utilities.exceptions import ConfigError
 
 
@@ -131,7 +131,7 @@ def test_config_mapping():
         "onshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_0.json"
         ),
-        MetaKeyName.OFFSHORE: os.path.join(
+        "offshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_1.json"
         ),
     }
@@ -153,7 +153,7 @@ def test_sam_config_kw_replace():
         "onshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_0.json"
         ),
-        MetaKeyName.OFFSHORE: os.path.join(
+        "offshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_1.json"
         ),
     }
@@ -168,19 +168,19 @@ def test_sam_config_kw_replace():
         sites_per_worker=100,
     )
     config_on = gen.project_points.sam_inputs["onshore"]
-    config_of = gen.project_points.sam_inputs[MetaKeyName.OFFSHORE]
+    config_of = gen.project_points.sam_inputs["offshore"]
     assert "turb_generic_loss" in config_on
     assert "turb_generic_loss" in config_of
 
     pp_split = ProjectPoints.split(0, 10000, gen.project_points)
     config_on = pp_split.sam_inputs["onshore"]
-    config_of = pp_split.sam_inputs[MetaKeyName.OFFSHORE]
+    config_of = pp_split.sam_inputs["offshore"]
     assert "turb_generic_loss" in config_on
     assert "turb_generic_loss" in config_of
 
     pc_split = PointsControl.split(0, 10000, gen.project_points)
     config_on = pc_split.project_points.sam_inputs["onshore"]
-    config_of = pc_split.project_points.sam_inputs[MetaKeyName.OFFSHORE]
+    config_of = pc_split.project_points.sam_inputs["offshore"]
     assert "turb_generic_loss" in config_on
     assert "turb_generic_loss" in config_of
 
@@ -189,8 +189,8 @@ def test_sam_config_kw_replace():
             config = ipc.project_points.sam_inputs["onshore"]
             assert "turb_generic_loss" in config
 
-        if MetaKeyName.OFFSHORE in ipc.project_points.sam_inputs:
-            config = ipc.project_points.sam_inputs[MetaKeyName.OFFSHORE]
+        if "offshore" in ipc.project_points.sam_inputs:
+            config = ipc.project_points.sam_inputs["offshore"]
             assert "turb_generic_loss" in config
 
 
@@ -229,7 +229,7 @@ def test_coords(sites):
         gids = [gids]
 
     lat_lons = meta.loc[
-        gids, [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
+        gids, [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
     ].values
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_files)
 
@@ -249,7 +249,8 @@ def test_coords_from_file():
     if not isinstance(gids, list):
         gids = [gids]
 
-    lat_lons = meta.loc[gids, [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]]
+    lat_lons = meta.loc[gids, [ResourceMetaField.LATITUDE,
+                               ResourceMetaField.LONGITUDE]]
     with tempfile.TemporaryDirectory() as td:
         coords_fp = os.path.join(td, "lat_lon.csv")
         lat_lons.to_csv(coords_fp, index=False)
@@ -269,7 +270,7 @@ def test_duplicate_coords():
         meta = f.meta
 
     duplicates = meta.loc[
-        [2, 3, 3, 4], [MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE]
+        [2, 3, 3, 4], [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
     ].values
 
     with pytest.raises(RuntimeError):
@@ -289,7 +290,7 @@ def test_sam_configs():
         "onshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_0.json"
         ),
-        MetaKeyName.OFFSHORE: os.path.join(
+        "offshore": os.path.join(
             TESTDATADIR, "SAM/wind_gen_standard_losses_1.json"
         ),
     }

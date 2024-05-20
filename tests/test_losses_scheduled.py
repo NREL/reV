@@ -32,6 +32,7 @@ from reV.losses.scheduled import (
 )
 from reV.losses.utils import hourly_indices_for_months
 from reV.utilities.exceptions import reVLossesValueError, reVLossesWarning
+from reV.utilities import ResourceMetaField
 
 REV_POINTS = list(range(3))
 RTOL = 0
@@ -349,7 +350,7 @@ def _run_gen_with_and_without_losses(
     gen_profiles_with_losses = gen_profiles_with_losses[::time_steps_in_hour]
     # undo UTC array rolling
     for ind, row in gen.meta.iterrows():
-        time_shift = row[MetaKeyName.TIMEZONE]
+        time_shift = row[ResourceMetaField.TIMEZONE]
         gen_profiles_with_losses[:, ind] = np.roll(
             gen_profiles_with_losses[:, ind], time_shift
         )
@@ -374,7 +375,7 @@ def _run_gen_with_and_without_losses(
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
     for ind, row in gen.meta.iterrows():
-        time_shift = row[MetaKeyName.TIMEZONE]
+        time_shift = row[ResourceMetaField.TIMEZONE]
         gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
 
     return gen_profiles, gen_profiles_with_losses
@@ -385,7 +386,7 @@ def _make_site_data_df(site_data):
     if site_data is not None:
         site_specific_outages = [json.dumps(site_data)] * len(REV_POINTS)
         site_data_dict = {
-            MetaKeyName.GID: REV_POINTS,
+            ResourceMetaField.GID: REV_POINTS,
             ScheduledLossesMixin.OUTAGE_CONFIG_KEY: site_specific_outages
         }
         site_data = pd.DataFrame(site_data_dict)

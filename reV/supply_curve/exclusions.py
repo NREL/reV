@@ -9,8 +9,7 @@ import numpy as np
 from rex.utilities.loggers import log_mem
 from scipy import ndimage
 
-from reV.handlers.exclusions import ExclusionLayers
-from reV.utilities import MetaKeyName
+from reV.handlers.exclusions import ExclusionLayers, LATITUDE, LONGITUDE
 from reV.utilities.exceptions import ExclusionLayerError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
@@ -701,7 +700,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5[MetaKeyName.LATITUDE]
+        return self.excl_h5[LATITUDE]
 
     @property
     def longitude(self):
@@ -712,7 +711,7 @@ class ExclusionMask:
         -------
         ndarray
         """
-        return self.excl_h5[MetaKeyName.LONGITUDE]
+        return self.excl_h5[LONGITUDE]
 
     def add_layer(self, layer, replace=False):
         """

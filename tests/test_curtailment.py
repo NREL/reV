@@ -18,7 +18,7 @@ from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField
 from reV.utilities.curtailment import curtail
 
 
@@ -171,8 +171,8 @@ def test_res_curtailment(year, site):
 
     sza = SolarPosition(
         non_curtailed_res.time_index,
-        non_curtailed_res.meta[[MetaKeyName.LATITUDE,
-                                MetaKeyName.LONGITUDE]].values).zenith
+        non_curtailed_res.meta[[ResourceMetaField.LATITUDE,
+                                ResourceMetaField.LONGITUDE]].values).zenith
 
     ti = non_curtailed_res.time_index
 

@@ -19,7 +19,7 @@ from reV import TESTDATADIR
 from reV.econ.econ import Econ
 from reV.generation.generation import Gen
 from reV.SAM.windbos import WindBos
-from reV.utilities import MetaKeyName
+from reV.utilities import SiteDataField
 
 RTOL = 0.000001
 ATOL = 0.001
@@ -287,7 +287,7 @@ def test_run_bos(points=slice(0, 5), max_workers=1):
     # get full file paths.
     sam_files = TESTDATADIR + "/SAM/i_singleowner_windbos.json"
     site_data = pd.DataFrame(
-        {MetaKeyName.GID: range(5), "sales_tax_basis": range(5)}
+        {SiteDataField.GID: range(5), "sales_tax_basis": range(5)}
     )
 
     econ_outs = (

@@ -78,8 +78,8 @@ class CompetitiveWindFarms:
         """
         if not isinstance(keys, tuple):
             msg = ("{} must be a tuple of form (source, gid) where source is: "
-                   "MetaKeyName.SC_GID, '{}',  or 'upwind', 'downwind'"
-                   .format(keys, MetaKeyName.SC_POINT_GID))
+                   "{}, '{}',  or 'upwind', 'downwind'"
+                   .format(keys, MetaKeyName.SC_GID, MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -93,8 +93,9 @@ class CompetitiveWindFarms:
         elif source == 'downwind':
             out = self.map_downwind(gid)
         else:
-            msg = ("{} must be: MetaKeyName.SC_GID, {},  or 'upwind', "
-                   "'downwind'".format(source, MetaKeyName.SC_POINT_GID))
+            msg = ("{} must be: {}, {},  or 'upwind', "
+                   "'downwind'".format(source, MetaKeyName.SC_GID,
+                                       MetaKeyName.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -227,8 +228,8 @@ class CompetitiveWindFarms:
         sc_gids = sc_points.set_index(MetaKeyName.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
-        sc_point_gids = \
-            sc_points.groupby(MetaKeyName.SC_POINT_GID)[MetaKeyName.SC_GID].unique().to_frame()
+        groups = sc_points.groupby(MetaKeyName.SC_POINT_GID)
+        sc_point_gids = groups[MetaKeyName.SC_GID].unique().to_frame()
         sc_point_gids = {int(k): v[MetaKeyName.SC_GID]
                          for k, v in sc_point_gids.iterrows()}
 

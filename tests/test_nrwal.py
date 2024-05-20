@@ -21,7 +21,7 @@ from reV import TESTDATADIR
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.nrwal.nrwal import RevNrwal
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName
 
 SOURCE_DIR = os.path.join(TESTDATADIR, 'nrwal/')
 
@@ -37,10 +37,8 @@ def test_nrwal():
         site_data = os.path.join(td, 'example_offshore_data.csv')
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
-        sam_configs = {'onshore': onshore_config,
-                       MetaKeyName.OFFSHORE: offshore_config}
-        nrwal_configs = {MetaKeyName.OFFSHORE:
-                         os.path.join(td, 'nrwal_offshore.yaml')}
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -48,7 +46,7 @@ def test_nrwal():
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
-            f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
+            f._add_dset('fixed_charge_rate',
                         0.09 * np.ones(f.shape[1], dtype=np.float32),
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
@@ -57,15 +55,15 @@ def test_nrwal():
             original_dsets = [d for d in f.dsets
                               if d not in ('meta', 'time_index')]
             meta_raw = f.meta
-            lcoe_raw = f[MetaKeyName.LCOE_FCR]
+            lcoe_raw = f['lcoe_fcr']
             cf_mean_raw = f['cf_mean']
             cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
-        output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
+        output_request = ['fixed_charge_rate', 'depth',
                           'total_losses',
                           'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
+                          'lcoe_fcr', 'cf_mean', ]
 
         obj = RevNrwal(gen_fpath, site_data, sam_configs, nrwal_configs,
                        output_request, site_meta_cols=['depth'])
@@ -73,14 +71,14 @@ def test_nrwal():
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
-            lcoe_new = f[MetaKeyName.LCOE_FCR]
+            lcoe_new = f['lcoe_fcr']
             losses = f['total_losses']
             gcf_adjustment = f['gcf_adjustment']
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
             cf_mean_new = f['cf_mean']
             cf_profile_new = f['cf_profile']
-            fcr = f[MetaKeyName.FIXED_CHARGE_RATE]
+            fcr = f['fixed_charge_rate']
             depth = f['depth']
 
             for key in [d for d in original_dsets if d in f]:
@@ -104,7 +102,7 @@ def test_nrwal():
 
         # make sure the second offshore compute gives same results as first
         with Outputs(gen_fpath, 'r') as f:
-            assert np.allclose(lcoe_new, f[MetaKeyName.LCOE_FCR])
+            assert np.allclose(lcoe_new, f['lcoe_fcr'])
             assert np.allclose(cf_mean_new, f['cf_mean'])
             assert np.allclose(cf_profile_new, f['cf_profile'])
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
@@ -155,10 +153,8 @@ def test_nrwal_csv(out_fn):
         site_data = os.path.join(td, 'example_offshore_data.csv')
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
-        sam_configs = {'onshore': onshore_config,
-                       MetaKeyName.OFFSHORE: offshore_config}
-        nrwal_configs = {MetaKeyName.OFFSHORE:
-                         os.path.join(td, 'nrwal_offshore.yaml')}
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -169,14 +165,14 @@ def test_nrwal_csv(out_fn):
             f._add_dset('cf_mean_raw', np.random.random(f.shape[1]),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=None)
-            f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
+            f._add_dset('fixed_charge_rate',
                         0.09 * np.ones(f.shape[1], dtype=np.float32),
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
 
         compatible = ['depth', 'total_losses', 'array', 'export',
-                      'gcf_adjustment', MetaKeyName.FIXED_CHARGE_RATE,
-                      MetaKeyName.LCOE_FCR, 'cf_mean']
+                      'gcf_adjustment', 'fixed_charge_rate',
+                      'lcoe_fcr', 'cf_mean']
         incompatible = []
         output_request = compatible + incompatible
 
@@ -216,10 +212,8 @@ def test_nrwal_constant_eq_output_request():
         site_data = os.path.join(td, 'example_offshore_data.csv')
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
-        sam_configs = {'onshore': onshore_config,
-                       MetaKeyName.OFFSHORE: offshore_config}
-        nrwal_configs = {MetaKeyName.OFFSHORE:
-                         os.path.join(td, 'nrwal_offshore.yaml')}
+        sam_configs = {'onshore': onshore_config, "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -227,7 +221,7 @@ def test_nrwal_constant_eq_output_request():
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
-            f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
+            f._add_dset('fixed_charge_rate',
                         0.09 * np.ones(f.shape[1], dtype=np.float32),
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
@@ -261,9 +255,8 @@ def test_nrwal_cli(runner, clear_loggers):
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       MetaKeyName.OFFSHORE: offshore_config}
-        nrwal_configs = {MetaKeyName.OFFSHORE:
-                         os.path.join(td, 'nrwal_offshore.yaml')}
+                       "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -271,7 +264,7 @@ def test_nrwal_cli(runner, clear_loggers):
             f._add_dset('cf_profile', np.random.random(f.shape),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=(None, 10))
-            f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
+            f._add_dset('fixed_charge_rate',
                         0.09 * np.ones(f.shape[1], dtype=np.float32),
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
@@ -280,15 +273,14 @@ def test_nrwal_cli(runner, clear_loggers):
             original_dsets = [d for d in f.dsets
                               if d not in ('meta', 'time_index')]
             meta_raw = f.meta
-            lcoe_raw = f[MetaKeyName.LCOE_FCR]
+            lcoe_raw = f['lcoe_fcr']
             cf_mean_raw = f['cf_mean']
             cf_profile_raw = f['cf_profile']
             mask = meta_raw.offshore == 1
 
-        output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
-                          'total_losses',
+        output_request = ['fixed_charge_rate', 'depth', 'total_losses',
                           'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
+                          'lcoe_fcr', 'cf_mean', ]
 
         config = {
             "execution_control": {
@@ -317,14 +309,14 @@ def test_nrwal_cli(runner, clear_loggers):
 
         with Outputs(gen_fpath, 'r') as f:
             meta_new = f.meta
-            lcoe_new = f[MetaKeyName.LCOE_FCR]
+            lcoe_new = f['lcoe_fcr']
             losses = f['total_losses']
             gcf_adjustment = f['gcf_adjustment']
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
             assert np.allclose(cf_profile_raw, f['cf_profile_raw'])
             cf_mean_new = f['cf_mean']
             cf_profile_new = f['cf_profile']
-            fcr = f[MetaKeyName.FIXED_CHARGE_RATE]
+            fcr = f['fixed_charge_rate']
             depth = f['depth']
 
             for key in [d for d in original_dsets if d in f]:
@@ -352,7 +344,7 @@ def test_nrwal_cli(runner, clear_loggers):
 
         # make sure the second offshore compute gives same results as first
         with Outputs(gen_fpath, 'r') as f:
-            assert np.allclose(lcoe_new, f[MetaKeyName.LCOE_FCR])
+            assert np.allclose(lcoe_new, f['lcoe_fcr'])
             assert np.allclose(cf_mean_new, f['cf_mean'])
             assert np.allclose(cf_profile_new, f['cf_profile'])
             assert np.allclose(cf_mean_raw, f['cf_mean_raw'])
@@ -406,9 +398,8 @@ def test_nrwal_cli_csv(runner, clear_loggers):
         offshore_config = os.path.join(td, 'offshore.json')
         onshore_config = os.path.join(td, 'onshore.json')
         sam_configs = {'onshore': onshore_config,
-                       MetaKeyName.OFFSHORE: offshore_config}
-        nrwal_configs = {MetaKeyName.OFFSHORE:
-                         os.path.join(td, 'nrwal_offshore.yaml')}
+                       "offshore": offshore_config}
+        nrwal_configs = {"offshore": os.path.join(td, 'nrwal_offshore.yaml')}
 
         with Outputs(gen_fpath, 'a') as f:
             f.time_index = pd_date_range('20100101', '20110101',
@@ -419,14 +410,14 @@ def test_nrwal_cli_csv(runner, clear_loggers):
             f._add_dset('cf_mean_raw', np.random.random(f.shape[1]),
                         np.uint32, attrs={'scale_factor': 1000},
                         chunks=None)
-            f._add_dset(MetaKeyName.FIXED_CHARGE_RATE,
+            f._add_dset('fixed_charge_rate',
                         0.09 * np.ones(f.shape[1], dtype=np.float32),
                         np.float32, attrs={'scale_factor': 1},
                         chunks=None)
 
-        output_request = [MetaKeyName.FIXED_CHARGE_RATE, 'depth',
+        output_request = ['fixed_charge_rate', 'depth',
                           'total_losses', 'array', 'export', 'gcf_adjustment',
-                          MetaKeyName.LCOE_FCR, 'cf_mean', ]
+                          'lcoe_fcr', 'cf_mean', ]
 
         config = {
             "execution_control": {

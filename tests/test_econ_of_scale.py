@@ -48,7 +48,7 @@ def test_pass_through_lcoe_args():
     sam_files = os.path.join(TESTDATADIR, 'SAM/i_windpower_lcoe.json')
 
     output_request = ('cf_mean',
-                      MetaKeyName.LCOE_FCR,
+                      'lcoe_fcr',
                       'system_capacity',
                       'capital_cost',
                       'fixed_charge_rate',
@@ -62,7 +62,7 @@ def test_pass_through_lcoe_args():
 
     checks = [x in gen.out for x in Gen.LCOE_ARGS]
     assert all(checks)
-    assert MetaKeyName.LCOE_FCR in gen.out
+    assert 'lcoe_fcr' in gen.out
     assert 'cf_mean' in gen.out
 
 
@@ -78,7 +78,7 @@ def test_lcoe_calc_simple():
 
     true_lcoe = ((data['fcr'] * data['capital_cost'] + data['foc'])
                  / (data['aep'] / 1000))
-    data[MetaKeyName.MEAN_LCOE] = true_lcoe
+    data['mean_lcoe'] = true_lcoe
 
     eos = EconomiesOfScale(eqn, data)
     assert eos.raw_capital_cost == eos.scaled_capital_cost

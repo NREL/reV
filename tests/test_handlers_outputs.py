@@ -17,8 +17,7 @@ from reV.version import __version__
 arr1 = np.ones(100)
 arr2 = np.ones((8760, 100))
 arr3 = np.ones((8760, 100), dtype=float) * 42.42
-meta = pd.DataFrame({MetaKeyName.LATITUDE: np.ones(100),
-                     MetaKeyName.LONGITUDE: np.zeros(100)})
+meta = pd.DataFrame({"latitude": np.ones(100), "longitude": np.zeros(100)})
 time_index = pd_date_range('20210101', '20220101', freq='1h', closed='right')
 
 

@@ -28,6 +28,7 @@ class ResourceMetaField(str, Enum):
     COUNTY = "county"
     STATE = "state"
     COUNTRY = "country"
+    OFFSHORE = 'offshore'
 
 
 class MetaKeyName(str, Enum):

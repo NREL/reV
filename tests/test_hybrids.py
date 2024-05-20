@@ -13,7 +13,7 @@ from reV import TESTDATADIR, Outputs
 from reV.cli import main
 from reV.hybrids import HYBRID_METHODS, Hybridization
 from reV.hybrids.hybrids import MERGE_COLUMN, OUTPUT_PROFILE_NAMES, HybridsData
-from reV.utilities import ModuleName
+from reV.utilities import ModuleName, MetaKeyName
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 
 SOLAR_FPATH = os.path.join(
@@ -112,7 +112,9 @@ def test_hybridization_profile_output():
     h.run()
     hp, hsp, hwp, = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(h_meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid)[0][0]
+    h_idx = np.where(
+        h_meta[MetaKeyName.SC_POINT_GID] == common_sc_point_gid
+    )[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar + weighted_wind)
     assert np.allclose(hsp[:, h_idx], weighted_solar)
@@ -739,8 +741,10 @@ def make_test_file(in_fp, out_fp, p_slice=slice(None), t_slice=slice(None),
             half_n_rows = n_rows // 2
             meta.iloc[-half_n_rows:] = meta.iloc[:half_n_rows].values
         if duplicate_coord_values:
-            meta.loc[0, MetaKeyName.LATITUDE] = meta[MetaKeyName.LATITUDE].iloc[-1]
-            meta.loc[0, MetaKeyName.LATITUDE] = meta[MetaKeyName.LATITUDE].iloc[-1]
+            lat = meta[MetaKeyName.LATITUDE].iloc[-1]
+            meta.loc[0, MetaKeyName.LATITUDE] = lat
+            lon = meta[MetaKeyName.LATITUDE].iloc[-1]
+            meta.loc[0, MetaKeyName.LATITUDE] = lon
         shapes['meta'] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))

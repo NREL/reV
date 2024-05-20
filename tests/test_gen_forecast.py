@@ -21,7 +21,7 @@ from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField
 from reV.utilities.exceptions import SAMExecutionError
 
 
@@ -38,14 +38,15 @@ def test_forecast():
 
         with Outputs(res_file, mode='a') as f:
             meta = f.meta
-            meta = meta.drop([MetaKeyName.TIMEZONE, 'elevation'], axis=1)
+            meta = meta.drop([ResourceMetaField.TIMEZONE,
+                              ResourceMetaField.ELEVATION], axis=1)
             del f._h5['meta']
             f._meta = None
             f.meta = meta
 
         with Outputs(res_file, mode='r') as f:
-            assert MetaKeyName.TIMEZONE not in f.meta
-            assert 'elevation' not in f.meta
+            assert ResourceMetaField.TIMEZONE not in f.meta
+            assert ResourceMetaField.ELEVATION not in f.meta
 
         with Resource(res_file) as res:
             ghi = res['ghi']
@@ -53,9 +54,9 @@ def test_forecast():
         points = ProjectPoints(slice(0, 5), sam_files, 'pvwattsv7',
                                res_file=res_file)
         output_request = ('cf_mean', 'ghi_mean')
-        site_data = pd.DataFrame({MetaKeyName.GID: np.arange(5),
-                                  MetaKeyName.TIMEZONE: -5,
-                                  'elevation': 0})
+        site_data = pd.DataFrame({ResourceMetaField.GID: np.arange(5),
+                                  ResourceMetaField.TIMEZONE: -5,
+                                  ResourceMetaField.ELEVATION: 0})
         gid_map = {0: 20, 1: 20, 2: 50, 3: 51, 4: 51}
 
         # test that this raises an error with missing timezone

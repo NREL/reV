@@ -21,7 +21,7 @@ from reV.SAM.defaults import (
 )
 from reV.SAM.generation import PvWattsv5, PvWattsv7, PvWattsv8
 from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField
 from reV.utilities.exceptions import InputError, PySAMVersionWarning
 
 
@@ -97,7 +97,7 @@ def test_PV_lat_tilt(res, site_index):
             # get SAM inputs from project_points based on the current site
             site = res_df.name
             config, inputs = pp[site]
-            inputs['tilt'] = MetaKeyName.LATITUDE
+            inputs['tilt'] = ResourceMetaField.LATITUDE
             # iterate through requested sites.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -107,7 +107,7 @@ def test_PV_lat_tilt(res, site_index):
             break
         pass
 
-    assert sim.sam_sys_inputs['tilt'] == meta[MetaKeyName.LATITUDE]
+    assert sim.sam_sys_inputs['tilt'] == meta[ResourceMetaField.LATITUDE]
 
 
 @pytest.mark.parametrize('dt', ('1h', '30min', '5min'))

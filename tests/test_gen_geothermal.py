@@ -17,7 +17,7 @@ from rex import Outputs
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
 from reV.SAM.generation import Geothermal
-from reV.utilities import MetaKeyName, ResourceMetaField
+from reV.utilities import ResourceMetaField
 
 DEFAULT_GEO_SAM_FILE = TESTDATADIR + "/SAM/geothermal_default.json"
 RTOL = 0.1
@@ -80,7 +80,7 @@ def test_gen_geothermal(depth, sample_resource_data):
         "cf_mean",
         "cf_profile",
         "gen_profile",
-        MetaKeyName.LCOE_FCR,
+        "lcoe_fcr",
         "nameplate",
     )
     gen = Gen(
@@ -130,7 +130,7 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
         "cf_mean",
         "cf_profile",
         "gen_profile",
-        MetaKeyName.LCOE_FCR,
+        "lcoe_fcr",
         "nameplate",
     )
     gen = Gen(
@@ -185,11 +185,7 @@ def test_per_kw_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = (
-        MetaKeyName.CAPITAL_COST,
-        MetaKeyName.FIXED_OPERATING_COST,
-        MetaKeyName.LCOE_FCR,
-    )
+    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr")
     gen = Gen(
         "geothermal",
         points,
@@ -236,11 +232,7 @@ def test_drill_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = (
-        MetaKeyName.CAPITAL_COST,
-        MetaKeyName.FIXED_OPERATING_COST,
-        MetaKeyName.LCOE_FCR,
-    )
+    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr")
     gen = Gen(
         "geothermal",
         points,
@@ -288,7 +280,7 @@ def test_gen_with_nameplate_input(sample_resource_data):
         "cf_mean",
         "cf_profile",
         "gen_profile",
-        MetaKeyName.LCOE_FCR,
+        "lcoe_fcr",
         "nameplate",
     )
     gen = Gen(
@@ -483,7 +475,7 @@ def test_gen_with_time_index_step_input(sample_resource_data):
         "cf_mean",
         "cf_profile",
         "gen_profile",
-        MetaKeyName.LCOE_FCR,
+        "lcoe_fcr",
         "nameplate",
     )
     gen = Gen(
