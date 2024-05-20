@@ -20,7 +20,6 @@ from rex.utilities import check_res_file, parse_table
 
 from reV.config.curtailment import Curtailment
 from reV.config.sam_config import SAMConfig
-from reV.utilities import MetaKeyName
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 from reV.utilities import SiteDataField
 

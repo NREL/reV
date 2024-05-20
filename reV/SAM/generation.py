@@ -313,8 +313,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return (self.gen_profile() /
-                self.sam_sys_inputs['system_capacity'])
+        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
 
     def annual_energy(self):
         """Get annual energy generation value in kWh from SAM.
@@ -796,8 +795,8 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             if var != "time_index":
                 # ensure that resource array length is multiple of 8760
                 arr = self.ensure_res_len(arr, time_index)
-                n_roll = int(self._meta[ResourceMetaField.TIMEZONE] *
-                             self.time_interval)
+                n_roll = int(self._meta[ResourceMetaField.TIMEZONE]
+                             * self.time_interval)
                 arr = np.roll(arr, n_roll)
 
                 if var in irrad_vars and np.min(arr) < 0:
@@ -1102,8 +1101,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             Datatype is float32 and array length is 8760*time_interval.
             PV CF is calculated as AC power / DC nameplate.
         """
-        return (self.gen_profile() /
-                self.sam_sys_inputs['system_capacity'])
+        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
 
     def cf_profile_ac(self):
         """Get hourly AC capacity factor (frac) profile in local timezone.
@@ -1324,8 +1322,7 @@ class TcsMoltenSalt(AbstractSamSolar):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        x = np.abs(self.gen_profile() /
-                   self.sam_sys_inputs['system_capacity'])
+        x = np.abs(self.gen_profile() / self.sam_sys_inputs['system_capacity'])
         return x
 
     @staticmethod

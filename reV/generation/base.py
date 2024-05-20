@@ -820,8 +820,9 @@ class BaseGen(ABC):
                     "dataframe, but received: {}".format(inp)
                 )
 
-            if (ResourceMetaField.GID not in site_data
-                and site_data.index.name != ResourceMetaField.GID):
+            gid_not_in_site_data = ResourceMetaField.GID not in site_data
+            index_name_not_gid = site_data.index.name != ResourceMetaField.GID
+            if gid_not_in_site_data and index_name_not_gid:
                 # require gid as column label or index
                 raise KeyError('Site data input must have '
                                f'{ResourceMetaField.GID} column to match '

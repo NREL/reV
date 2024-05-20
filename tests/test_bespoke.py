@@ -696,8 +696,8 @@ def test_collect_bespoke():
 
         with Resource(h5_file) as fout:
             meta = fout.meta
-            assert all(meta[MetaKeyName.GID].values ==
-                       sorted(meta[MetaKeyName.GID].values))
+            assert all(meta[MetaKeyName.GID].values
+                       == sorted(meta[MetaKeyName.GID].values))
             ti = fout.time_index
             assert len(ti) == 8760
             assert "time_index-2012" in fout
@@ -799,8 +799,8 @@ def test_bespoke_supply_curve():
             test_ind = np.where(sc_full[MetaKeyName.SC_GID] == sc_gid)[0]
             assert len(test_ind) == 1
             test_row = sc_full.iloc[test_ind]
-            assert (test_row['total_lcoe'].values[0] >
-                    inp_row[MetaKeyName.MEAN_LCOE])
+            assert (test_row['total_lcoe'].values[0]
+                    > inp_row[MetaKeyName.MEAN_LCOE])
 
     fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
     sc_baseline = pd.read_csv(fpath_baseline)

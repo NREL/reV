@@ -394,7 +394,8 @@ class PlaceTurbines:
     def convex_hull(self):
         """This is the convex hull of the turbine locations"""
         turbines = MultiPoint([Point(x, y)
-                               for x,y in zip(self.turbine_x, self.turbine_y)])
+                               for x, y in zip(self.turbine_x,
+                                               self.turbine_y)])
         return turbines.convex_hull
 
     @property

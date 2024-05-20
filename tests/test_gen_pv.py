@@ -574,10 +574,8 @@ def test_gen_pv_site_data():
                site_data=site_data)
     test.run(max_workers=1)
 
-    assert all(test.out['cf_mean'][0:2] >
-               baseline.out['cf_mean'][0:2])
-    assert np.allclose(test.out['cf_mean'][2:],
-                       baseline.out['cf_mean'][2:])
+    assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
+    assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
     assert np.allclose(test.out['losses'][0:2], np.ones(2))
     assert np.allclose(test.out['losses'][2:], 14.07566 * np.ones(3))
 
@@ -803,14 +801,12 @@ def test_irrad_bias_correct():
               bias_correct=bc_df)
     gen.run(max_workers=1)
 
-    assert (gen_base.out['cf_mean'][0] ==
-            gen.out['cf_mean'][0]).all()
+    assert (gen_base.out['cf_mean'][0] == gen.out['cf_mean'][0]).all()
     assert (gen_base.out['ghi_mean'][0] == gen.out['ghi_mean'][0]).all()
     assert np.allclose(gen_base.out['cf_profile'][:, 0],
                        gen.out['cf_profile'][:, 0])
 
-    assert (gen_base.out['cf_mean'][1:] <
-            gen.out['cf_mean'][1:]).all()
+    assert (gen_base.out['cf_mean'][1:] < gen.out['cf_mean'][1:]).all()
     assert (gen_base.out['ghi_mean'][1:] < gen.out['ghi_mean'][1:]).all()
     mask = (gen_base.out['cf_profile'][:, 1:] <= gen.out['cf_profile'][:, 1:])
     assert (mask.sum() / mask.size) > 0.99

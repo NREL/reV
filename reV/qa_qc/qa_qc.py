@@ -105,9 +105,10 @@ class QaQc:
             if file.endswith(".csv"):
                 summary_csv = os.path.join(self.out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                if (MetaKeyName.GID in summary
-                    and MetaKeyName.LATITUDE in summary
-                    and MetaKeyName.LONGITUDE in summary):
+                has_right_cols = (MetaKeyName.GID in summary
+                                  and MetaKeyName.LATITUDE in summary
+                                  and MetaKeyName.LONGITUDE in summary)
+                if has_right_cols:
                     self._scatter_plot(summary_csv, self.out_dir,
                                        plot_type=plot_type, cmap=cmap,
                                        **kwargs)

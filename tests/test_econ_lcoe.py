@@ -153,8 +153,7 @@ def test_append_multi_node(node):
             TESTDATADIR,
             'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
         econ = Econ(points, sam_files, cf_file,
-                    output_request=('lcoe_fcr',
-                    'capital_cost'),
+                    output_request=('lcoe_fcr', 'capital_cost'),
                     sites_per_worker=25, append=True, site_data=site_data)
         econ.run(max_workers=1)
 

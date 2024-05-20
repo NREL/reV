@@ -9,6 +9,7 @@ from reV.version import __version__
 
 
 class SiteDataField(str, Enum):
+    """An enumerated map to site data column names."""
     GID = "gid"
     CONFIG = "config"
 

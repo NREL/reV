@@ -1127,8 +1127,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def country(self):
         """Get the SC point country based on the resource meta data."""
         country = None
-        if (ResourceMetaField.COUNTRY in self.h5.meta
-            and self.county is not None):
+        county_not_none = self.county is not None
+        if ResourceMetaField.COUNTRY in self.h5.meta and county_not_none:
             # make sure country and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
                                         ResourceMetaField.COUNTY].values
@@ -1189,8 +1189,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def timezone(self):
         """Get the SC point timezone based on the resource meta data."""
         timezone = None
-        if (ResourceMetaField.TIMEZONE in self.h5.meta
-            and self.county is not None):
+        county_not_none = self.county is not None
+        if ResourceMetaField.TIMEZONE in self.h5.meta and county_not_none:
             # make sure timezone flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
                                         ResourceMetaField.COUNTY].values
@@ -1211,8 +1211,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point offshore flag based on the resource meta data
         (if offshore column is present)."""
         offshore = None
-        if (ResourceMetaField.OFFSHORE in self.h5.meta
-            and self.county is not None):
+        county_not_none = self.county is not None
+        if ResourceMetaField.OFFSHORE in self.h5.meta and county_not_none:
             # make sure offshore flag and county are coincident
             counties = self.h5.meta.loc[self.h5_gid_set,
                                         ResourceMetaField.COUNTY].values
