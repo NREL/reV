@@ -36,7 +36,8 @@ from reV.supply_curve.aggregation import AggFileHandler, BaseAggregation
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.utilities import MetaKeyName, ModuleName, log_versions
+from reV.utilities import (MetaKeyName, ModuleName, ResourceMetaField,
+                           log_versions)
 from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -580,13 +581,12 @@ class BespokeSinglePlant:
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                assert (
-                    "gid" in gid_map
-                ), 'Need "gid" in gid_map column'
+                err_msg = 'Need "gid" in gid_map column'
+                assert ResourceMetaField.GID in gid_map, err_msg
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
-                    gid_map["gid"][i]: gid_map["gid_map"][i]
-                    for i in gid_map["gid"].keys()
+                    gid_map[ResourceMetaField.GID][i]: gid_map["gid_map"][i]
+                    for i in gid_map[ResourceMetaField.GID].keys()
                 }
 
             elif gid_map.endswith(".json"):
@@ -2045,7 +2045,7 @@ class BespokeWindPlants(BaseAggregation):
 
         sc_gid_to_hh = {
             gid: self._hh_for_sc_gid(gid)
-            for gid in self._project_points.df["gid"]
+            for gid in self._project_points.df[ResourceMetaField.GID]
         }
 
         with ExclusionLayers(self._excl_fpath) as excl:
@@ -2054,7 +2054,7 @@ class BespokeWindPlants(BaseAggregation):
         scp_kwargs = {"shape": self.shape, "resolution": self._resolution}
         slices = {
             gid: SupplyCurvePoint.get_agg_slices(gid=gid, **scp_kwargs)
-            for gid in self._project_points.df["gid"]
+            for gid in self._project_points.df[ResourceMetaField.GID]
         }
 
         sc_gid_to_res_gid = {

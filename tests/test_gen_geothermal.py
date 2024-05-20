@@ -17,7 +17,7 @@ from rex import Outputs
 from reV import TESTDATADIR
 from reV.generation.generation import Gen
 from reV.SAM.generation import Geothermal
-from reV.utilities import MetaKeyName
+from reV.utilities import MetaKeyName, ResourceMetaField
 
 DEFAULT_GEO_SAM_FILE = TESTDATADIR + "/SAM/geothermal_default.json"
 RTOL = 0.1
@@ -30,7 +30,7 @@ def sample_resource_data(request):
     meta = pd.DataFrame(
         {"latitude": [41.29], "longitude": [-71.86], "timezone": [-5]}
     )
-    meta.index.name = "gid"
+    meta.index.name = ResourceMetaField.GID
     with TemporaryDirectory() as td:
         geo_sam_file = os.path.join(td, "geothermal_sam.json")
         geo_res_file = os.path.join(td, "test_geo.h5")

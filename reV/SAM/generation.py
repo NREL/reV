@@ -40,7 +40,7 @@ from reV.SAM.defaults import (
 )
 from reV.SAM.econ import LCOE, SingleOwner
 from reV.SAM.SAM import RevPySam
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField
 from reV.utilities.curtailment import curtail
 from reV.utilities.exceptions import (
     InputError,
@@ -245,23 +245,23 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
         if meta is not None:
             if sam_sys_inputs is not None:
-                if MetaKeyName.ELEVATION in sam_sys_inputs:
-                    meta[MetaKeyName.ELEVATION] = \
-                        sam_sys_inputs[MetaKeyName.ELEVATION]
-                if MetaKeyName.TIMEZONE in sam_sys_inputs:
-                    meta[MetaKeyName.TIMEZONE] = \
-                        int(sam_sys_inputs[MetaKeyName.TIMEZONE])
+                if ResourceMetaField.ELEVATION in sam_sys_inputs:
+                    meta[ResourceMetaField.ELEVATION] = \
+                        sam_sys_inputs[ResourceMetaField.ELEVATION]
+                if ResourceMetaField.TIMEZONE in sam_sys_inputs:
+                    meta[ResourceMetaField.TIMEZONE] = \
+                        int(sam_sys_inputs[ResourceMetaField.TIMEZONE])
 
             # site-specific inputs take priority over generic system inputs
             if site_sys_inputs is not None:
-                if MetaKeyName.ELEVATION in site_sys_inputs:
-                    meta[MetaKeyName.ELEVATION] = \
-                        site_sys_inputs[MetaKeyName.ELEVATION]
-                if MetaKeyName.TIMEZONE in site_sys_inputs:
-                    meta[MetaKeyName.TIMEZONE] = \
-                        int(site_sys_inputs[MetaKeyName.TIMEZONE])
+                if ResourceMetaField.ELEVATION in site_sys_inputs:
+                    meta[ResourceMetaField.ELEVATION] = \
+                        site_sys_inputs[ResourceMetaField.ELEVATION]
+                if ResourceMetaField.TIMEZONE in site_sys_inputs:
+                    meta[ResourceMetaField.TIMEZONE] = \
+                        int(site_sys_inputs[ResourceMetaField.TIMEZONE])
 
-            if MetaKeyName.TIMEZONE not in meta:
+            if ResourceMetaField.TIMEZONE not in meta:
                 msg = ('Need timezone input to run SAM gen. Not found in '
                        'resource meta or technology json input config.')
                 raise SAMExecutionError(msg)
@@ -271,7 +271,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     @property
     def has_timezone(self):
         """Returns true if instance has a timezone set"""
-        if self._meta is not None and MetaKeyName.TIMEZONE in self.meta:
+        if self._meta is not None and ResourceMetaField.TIMEZONE in self.meta:
             return True
 
         return False
@@ -527,11 +527,14 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
     """Base class for running sam generation with a weather file on disk."""
 
-    WF_META_DROP_COLS = {MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE,
-                         'country', 'state',
-                         'county', 'urban', 'population',
-                         'landcover', MetaKeyName.LATITUDE,
-                         MetaKeyName.LONGITUDE}
+    WF_META_DROP_COLS = {ResourceMetaField.LATITUDE,
+                         ResourceMetaField.LONGITUDE,
+                         ResourceMetaField.ELEVATION,
+                         ResourceMetaField.TIMEZONE,
+                         ResourceMetaField.COUNTRY,
+                         ResourceMetaField.STATE,
+                         ResourceMetaField.COUNTY,
+                         'urban', 'population', 'landcover'}
 
     @property
     @abstractmethod
@@ -601,7 +604,7 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
 
         # ------- Process metadata
         m = pd.DataFrame(meta).T
-        timezone = m[MetaKeyName.TIMEZONE]
+        timezone = m[ResourceMetaField.TIMEZONE]
         m['Source'] = 'NSRDB'
         m['Location ID'] = meta.name
         m['City'] = '-'
@@ -609,10 +612,10 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
             lambda x: '-' if x == 'None' else x)
         m['Country'] = m['country'].apply(
             lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m[MetaKeyName.LATITUDE]
-        m['Longitude'] = m[MetaKeyName.LONGITUDE]
+        m['Latitude'] = m[ResourceMetaField.LATITUDE]
+        m['Longitude'] = m[ResourceMetaField.LONGITUDE]
         m['Time Zone'] = timezone
-        m['Elevation'] = m[MetaKeyName.ELEVATION]
+        m['Elevation'] = m[ResourceMetaField.ELEVATION]
         m['Local Time Zone'] = timezone
         m['Dew Point Units'] = 'c'
         m['DHI Units'] = 'w/m2'
@@ -750,7 +753,7 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
                 # ensure that resource array length is multiple of 8760
                 arr = self.ensure_res_len(arr, time_index)
-                n_roll = int(self._meta[MetaKeyName.TIMEZONE] *
+                n_roll = int(self._meta[ResourceMetaField.TIMEZONE] *
                              self.time_interval)
                 arr = np.roll(arr, n_roll)
 
@@ -762,12 +765,12 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
 
                 resource[var] = arr.tolist()
 
-        resource['lat'] = meta[MetaKeyName.LATITUDE]
-        resource['lon'] = meta[MetaKeyName.LONGITUDE]
-        resource['tz'] = meta[MetaKeyName.TIMEZONE]
+        resource['lat'] = meta[ResourceMetaField.LATITUDE]
+        resource['lon'] = meta[ResourceMetaField.LONGITUDE]
+        resource['tz'] = meta[ResourceMetaField.TIMEZONE]
 
-        if MetaKeyName.ELEVATION in meta:
-            resource['elev'] = meta[MetaKeyName.ELEVATION]
+        if ResourceMetaField.ELEVATION in meta:
+            resource['elev'] = meta[ResourceMetaField.ELEVATION]
         else:
             resource['elev'] = 0.0
 
@@ -921,10 +924,10 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                      respectively.
 
         """
-        bad_location_input = ((meta[MetaKeyName.LATITUDE] < -90)
-                              | (meta[MetaKeyName.LATITUDE] > 90)
-                              | (meta[MetaKeyName.LONGITUDE] < -180)
-                              | (meta[MetaKeyName.LONGITUDE] > 180))
+        bad_location_input = ((meta[ResourceMetaField.LATITUDE] < -90)
+                              | (meta[ResourceMetaField.LATITUDE] > 90)
+                              | (meta[ResourceMetaField.LONGITUDE] < -180)
+                              | (meta[ResourceMetaField.LONGITUDE] > 180))
         if bad_location_input.any():
             raise ValueError("Detected latitude/longitude values outside of "
                              "the range -90 to 90 and -180 to 180, "
@@ -962,13 +965,13 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                      SAMInputWarning)
                 set_tilt = True
             elif (sam_sys_inputs['tilt'] == 'lat'
-                    or sam_sys_inputs['tilt'] == MetaKeyName.LATITUDE):
+                    or sam_sys_inputs['tilt'] == ResourceMetaField.LATITUDE):
                 set_tilt = True
 
         if set_tilt:
             # set tilt to abs(latitude)
-            sam_sys_inputs['tilt'] = np.abs(meta[MetaKeyName.LATITUDE])
-            if meta[MetaKeyName.LATITUDE] > 0:
+            sam_sys_inputs['tilt'] = np.abs(meta[ResourceMetaField.LATITUDE])
+            if meta[ResourceMetaField.LATITUDE] > 0:
                 # above the equator, az = 180
                 sam_sys_inputs['azimuth'] = 180
             else:
@@ -1977,7 +1980,7 @@ class WindPower(AbstractSamWind):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = self.ensure_res_len(resource['rh'].values, time_index)
-            n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
+            n_roll = int(meta[ResourceMetaField.TIMEZONE] * self.time_interval)
             rh = np.roll(rh, n_roll, axis=0)
             data_dict['rh'] = rh.tolist()
 
@@ -1985,14 +1988,14 @@ class WindPower(AbstractSamWind):
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = self.ensure_res_len(resource[var_list].values, time_index)
-        n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
+        n_roll = int(meta[ResourceMetaField.TIMEZONE] * self.time_interval)
         temp = np.roll(temp, n_roll, axis=0)
         data_dict['data'] = temp.tolist()
 
-        data_dict['lat'] = float(meta[MetaKeyName.LATITUDE])
-        data_dict['lon'] = float(meta[MetaKeyName.LONGITUDE])
-        data_dict['tz'] = int(meta[MetaKeyName.TIMEZONE])
-        data_dict['elev'] = float(meta[MetaKeyName.ELEVATION])
+        data_dict['lat'] = float(meta[ResourceMetaField.LATITUDE])
+        data_dict['lon'] = float(meta[ResourceMetaField.LONGITUDE])
+        data_dict['tz'] = int(meta[ResourceMetaField.TIMEZONE])
+        data_dict['elev'] = float(meta[ResourceMetaField.ELEVATION])
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute.tolist()
@@ -2157,12 +2160,12 @@ class MhkWave(AbstractSamGeneration):
         # roll the truncated resource array to local timezone
         for var in ['significant_wave_height', 'energy_period']:
             arr = self.ensure_res_len(resource[var].values, time_index)
-            n_roll = int(meta[MetaKeyName.TIMEZONE] * self.time_interval)
+            n_roll = int(meta[ResourceMetaField.TIMEZONE] * self.time_interval)
             data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
-        data_dict['lat'] = meta[MetaKeyName.LATITUDE]
-        data_dict['lon'] = meta[MetaKeyName.LONGITUDE]
-        data_dict['tz'] = meta[MetaKeyName.TIMEZONE]
+        data_dict['lat'] = meta[ResourceMetaField.LATITUDE]
+        data_dict['lon'] = meta[ResourceMetaField.LONGITUDE]
+        data_dict['tz'] = meta[ResourceMetaField.TIMEZONE]
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict['minute'] = time_index.minute

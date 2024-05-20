@@ -8,6 +8,23 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
 
 
+class ResourceMetaField(str, Enum):
+    """An enumerated map to resource meta column names.
+
+    Each output name should match the name of a key the resource file
+    meta table.
+    """
+
+    GID = "gid"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    ELEVATION = "elevation"
+    TIMEZONE = "timezone"
+    COUNTY = "county"
+    STATE = "state"
+    COUNTRY = "country"
+
+
 class MetaKeyName(str, Enum):
     """An enumerated map to summary/meta keys.
 

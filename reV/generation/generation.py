@@ -29,7 +29,7 @@ from reV.SAM.generation import (
     TroughPhysicalHeat,
     WindPower,
 )
-from reV.utilities import ModuleName
+from reV.utilities import ModuleName, ResourceMetaField
 from reV.utilities.exceptions import (
     ConfigError,
     InputError,
@@ -456,11 +456,12 @@ class Gen(BaseGen):
 
                 self._meta = res['meta', res_gids]
 
-            self._meta.loc[:, "gid"] = res_gids
+            self._meta.loc[:, ResourceMetaField.GID] = res_gids
             if self.write_mapped_gids:
-                self._meta.loc[:, "gid"] = self.project_points.sites
+                sites = self.project_points.sites
+                self._meta.loc[:, ResourceMetaField.GID] = sites
             self._meta.index = self.project_points.sites
-            self._meta.index.name = "gid"
+            self._meta.index.name = ResourceMetaField.GID
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
@@ -643,7 +644,7 @@ class Gen(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = points_control.project_points.df
-        site_df = site_df.set_index("gid", drop=True)
+        site_df = site_df.set_index(ResourceMetaField.GID, drop=True)
 
         # run generation method for specified technology
         try:
@@ -709,11 +710,12 @@ class Gen(BaseGen):
         if isinstance(gid_map, str):
             if gid_map.endswith('.csv'):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                msg = f'Need "gid" in gid_map column'
-                assert "gid" in gid_map, msg
+                msg = f'Need {ResourceMetaField.GID} in gid_map column'
+                assert ResourceMetaField.GID in gid_map, msg
                 assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
-                gid_map = {gid_map["gid"][i]: gid_map['gid_map'][i]
-                           for i in gid_map["gid"].keys()}
+                gid_map = {
+                    gid_map[ResourceMetaField.GID][i]: gid_map['gid_map'][i]
+                    for i in gid_map[ResourceMetaField.GID].keys()}
 
             elif gid_map.endswith('.json'):
                 with open(gid_map) as f:
@@ -843,12 +845,13 @@ class Gen(BaseGen):
                'but received: {}'.format(type(bias_correct)))
         assert isinstance(bias_correct, pd.DataFrame), msg
 
-        msg = ('Bias correction table must have "gid" column but only found: '
-               '{}'.format(list(bias_correct.columns)))
-        assert ("gid" in bias_correct or bias_correct.index.name == "gid"), msg
+        msg = ('Bias correction table must have {!r} column but only found: '
+               '{}'.format(ResourceMetaField.GID, list(bias_correct.columns)))
+        assert (ResourceMetaField.GID in bias_correct
+                or bias_correct.index.name == ResourceMetaField.GID), msg
 
-        if bias_correct.index.name != "gid":
-            bias_correct = bias_correct.set_index("gid")
+        if bias_correct.index.name != ResourceMetaField.GID:
+            bias_correct = bias_correct.set_index(ResourceMetaField.GID)
 
         msg = ('Bias correction table must have "method" column but only '
                'found: {}'.format(list(bias_correct.columns)))

@@ -21,7 +21,7 @@ from reV.config.output_request import SAMOutputRequest
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.handlers.outputs import Outputs
 from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities import ModuleName, log_versions
+from reV.utilities import ModuleName, ResourceMetaField, log_versions
 from reV.utilities.exceptions import (
     ExecutionError,
     OffshoreWindInputWarning,
@@ -739,7 +739,7 @@ class BaseGen(ABC):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = "gid"
+            site_data.index.name = ResourceMetaField.GID
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -752,15 +752,18 @@ class BaseGen(ABC):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
-            if ("gid" not in site_data and site_data.index.name != "gid"):
+            if (ResourceMetaField.GID not in site_data
+                and site_data.index.name != ResourceMetaField.GID):
                 # require gid as column label or index
-                raise KeyError('Site data input must have "gid" column '
-                               'to match reV site gid.')
+                raise KeyError('Site data input must have '
+                               f'{ResourceMetaField.GID} column to match '
+                               'reV site gid.')
 
             # pylint: disable=no-member
-            if site_data.index.name != "gid":
+            if site_data.index.name != ResourceMetaField.GID:
                 # make gid the dataframe index if not already
-                site_data = site_data.set_index("gid", drop=True)
+                site_data = site_data.set_index(ResourceMetaField.GID,
+                                                drop=True)
 
         if "offshore" in site_data:
             if site_data["offshore"].sum() > 1:
