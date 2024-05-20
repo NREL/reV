@@ -32,7 +32,7 @@ def test_time_index_step():
 
     # run reV 2.0 generation
     gen = Gen('pvwattsv5', slice(0, None), sam_input, res_file,
-              output_request=('cf_mean', ),
+              output_request=('cf_mean', 'cf_profile'),
               sites_per_worker=100)
     gen.run(max_workers=1)
     gen_outs = gen.out['cf_profile'].astype(np.int32)

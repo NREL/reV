@@ -70,7 +70,7 @@ def test_nrwal():
             mask = meta_raw.offshore == 1
 
         output_request = ['fixed_charge_rate', 'depth',
-                          'total_losses',
+                          'total_losses', 'cf_profile',
                           'array', 'export', 'gcf_adjustment',
                           'lcoe_fcr', 'cf_mean', ]
 
@@ -347,7 +347,7 @@ def test_nrwal_cli(runner, clear_loggers):
 
         output_request = ['fixed_charge_rate', 'depth', 'total_losses',
                           'array', 'export', 'gcf_adjustment',
-                          'lcoe_fcr', 'cf_mean', ]
+                          'lcoe_fcr', 'cf_mean', 'cf_profile']
 
         config = {
             "execution_control": {

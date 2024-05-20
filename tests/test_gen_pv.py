@@ -244,7 +244,7 @@ def test_multi_file_nsrdb_2018(model):
     res_file = TESTDATADIR + "/nsrdb/nsrdb_*{}.h5".format(2018)
     # run reV 2.0 generation
     gen = Gen(model, points, sam_files, res_file,
-              output_request=('cf_mean', ),
+              output_request=('cf_mean', 'cf_profile'),
               sites_per_worker=3)
     gen.run(max_workers=max_workers)
 

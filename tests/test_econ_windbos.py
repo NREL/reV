@@ -247,7 +247,7 @@ def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
             points,
             sam_files,
             res_file,
-            output_request=('cf_mean',),
+            output_request=('cf_mean', 'cf_profile'),
             sites_per_worker=3,
         )
         gen.run(max_workers=max_workers, out_fpath=cf_file)

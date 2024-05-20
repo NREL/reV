@@ -285,6 +285,9 @@ def test_eqn_curtailment(plot=False):
     nc_res = non_curtailed_res[0]
     c_mask = (c_res.windspeed == 0) & (nc_res.windspeed > 0)
 
+    temperature = nc_res['temperature'].values
+    wind_speed = nc_res['windspeed'].values
+
     eval_mask = eval(c_eqn)
 
     # All curtailed windspeeds should satisfy the eqn eval but maybe not the

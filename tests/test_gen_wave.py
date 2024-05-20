@@ -38,7 +38,7 @@ def test_mhkwave():
     sam_files = TESTDATADIR + '/SAM/mhkwave_default.json'
     res_file = TESTDATADIR + '/wave/ri_wave_2010.h5'
     points = slice(0, 100)
-    output_request = ('cf_mean', )
+    output_request = ('cf_mean', 'cf_profile')
 
     test = Gen('mhkwave', points, sam_files, res_file,
                sites_per_worker=3, output_request=output_request)
