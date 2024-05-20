@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     print(meta[mask])
     pp = meta[mask]
-    pp[MetaKeyName.GID] = pp.index.values
+    pp['gid'] = pp.index.values
     pp['config'] = 'def'
-    pp = pp[[MetaKeyName.GID, 'config']]
+    pp = pp[['gid', 'config']]
     pp.to_csv('./points_front_range.csv', index=False)

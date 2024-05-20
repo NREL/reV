@@ -17,7 +17,7 @@ from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import ExecutionError, OffshoreWindInputWarning
 
 logger = logging.getLogger(__name__)
@@ -210,10 +210,9 @@ class Econ(BaseGen):
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
-                    cfh.meta[MetaKeyName.GID].isin(self.points_control.sites)]
+                    cfh.meta["gid"].isin(self.points_control.sites)]
 
-            if (MetaKeyName.OFFSHORE in self._meta and
-                    self._meta[MetaKeyName.OFFSHORE].sum() > 1):
+            if ("offshore" in self._meta and self._meta["offshore"].sum() > 1):
                 w = ('Found offshore sites in econ meta data. '
                      'This functionality has been deprecated. '
                      'Please run the reV offshore module to '
@@ -222,8 +221,7 @@ class Econ(BaseGen):
                 logger.warning(w)
 
         elif self._meta is None and self.cf_file is None:
-            self._meta = pd.DataFrame({MetaKeyName.GID:
-                                       self.points_control.sites})
+            self._meta = pd.DataFrame({"gid": self.points_control.sites})
 
         return self._meta
 
@@ -266,8 +264,8 @@ class Econ(BaseGen):
             res_kwargs = {'hsds': hsds}
 
         with res_cls(cf_file, **res_kwargs) as f:
-            gid0 = f.meta[MetaKeyName.GID].values[0]
-            gid1 = f.meta[MetaKeyName.GID].values[-1]
+            gid0 = f.meta["gid"].values[0]
+            gid1 = f.meta["gid"].values[-1]
 
         i0 = pp.index(gid0)
         i1 = pp.index(gid1) + 1
@@ -353,7 +351,7 @@ class Econ(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = pc.project_points.df
-        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
+        site_df = site_df.set_index("gid", drop=True)
 
         # SAM execute econ analysis based on output request
         try:
@@ -495,7 +493,7 @@ class Econ(BaseGen):
         self._init_out_arrays()
 
         diff = list(set(self.points_control.sites)
-                    - set(self.meta[MetaKeyName.GID].values))
+                    - set(self.meta["gid"].values))
         if diff:
             raise Exception('The following analysis sites were requested '
                             'through project points for econ but are not '

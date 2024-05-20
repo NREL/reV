@@ -21,7 +21,7 @@ from reV.config.output_request import SAMOutputRequest
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.handlers.outputs import Outputs
 from reV.SAM.version_checker import PySamVersionChecker
-from reV.utilities import MetaKeyName, ModuleName, log_versions
+from reV.utilities import ModuleName, log_versions
 from reV.utilities.exceptions import (
     ExecutionError,
     OffshoreWindInputWarning,
@@ -739,7 +739,7 @@ class BaseGen(ABC):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = MetaKeyName.GID
+            site_data.index.name = "gid"
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -752,19 +752,18 @@ class BaseGen(ABC):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
-            if (MetaKeyName.GID not in site_data and
-                    site_data.index.name != MetaKeyName.GID):
+            if ("gid" not in site_data and site_data.index.name != "gid"):
                 # require gid as column label or index
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
 
             # pylint: disable=no-member
-            if site_data.index.name != MetaKeyName.GID:
+            if site_data.index.name != "gid":
                 # make gid the dataframe index if not already
-                site_data = site_data.set_index(MetaKeyName.GID, drop=True)
+                site_data = site_data.set_index("gid", drop=True)
 
-        if MetaKeyName.OFFSHORE in site_data:
-            if site_data[MetaKeyName.OFFSHORE].sum() > 1:
+        if "offshore" in site_data:
+            if site_data["offshore"].sum() > 1:
                 w = ('Found offshore sites in econ site data input. '
                      'This functionality has been deprecated. '
                      'Please run the reV offshore module to '

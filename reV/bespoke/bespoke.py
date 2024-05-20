@@ -581,12 +581,12 @@ class BespokeSinglePlant:
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
                 assert (
-                    MetaKeyName.GID in gid_map
+                    "gid" in gid_map
                 ), 'Need "gid" in gid_map column'
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
-                    gid_map[MetaKeyName.GID][i]: gid_map["gid_map"][i]
-                    for i in gid_map[MetaKeyName.GID].keys()
+                    gid_map["gid"][i]: gid_map["gid_map"][i]
+                    for i in gid_map["gid"].keys()
                 }
 
             elif gid_map.endswith(".json"):

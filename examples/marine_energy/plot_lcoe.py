@@ -12,7 +12,7 @@ fps = ['./atlantic_rm5/atlantic_rm5_agg.csv',
 
 for fp in fps:
     df = pd.read_csv(fp)
-    a = plt.scatter(df.longitude, df.latitude, c=df[MetaKeyName.MEAN_LCOE],
+    a = plt.scatter(df.longitude, df.latitude, c=df["mean_lcoe"],
                     s=0.5, vmin=0, vmax=1500)
     plt.colorbar(a, label='lcoe_fcr ($/MWh)')
     tag = os.path.basename(fp).replace('_agg.csv', '')

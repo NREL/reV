@@ -363,7 +363,7 @@ class PlaceTurbines:
     def fixed_charge_rate(self):
         """Fixed charge rate if input to the SAM WindPowerPD object, None if
         not found in inputs."""
-        return self.wind_plant.sam_sys_inputs.get(MetaKeyName.FIXED_CHARGE_RATE, None)
+        return self.wind_plant.sam_sys_inputs.get("fixed_charge_rate", None)
 
     @property
     @none_until_optimized

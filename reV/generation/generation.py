@@ -29,7 +29,7 @@ from reV.SAM.generation import (
     TroughPhysicalHeat,
     WindPower,
 )
-from reV.utilities import MetaKeyName, ModuleName
+from reV.utilities import ModuleName
 from reV.utilities.exceptions import (
     ConfigError,
     InputError,
@@ -126,7 +126,7 @@ class Gen(BaseGen):
         {'cf_mean': array([0.16966143], dtype=float32)}
         >>>
         >>> sites = [3, 4, 7, 9]
-        >>> req = ('cf_mean', , MetaKeyName.LCOE_FCR)
+        >>> req = ('cf_mean', 'lcoe_fcr')
         >>> gen = Gen(sam_tech, sites, fp_sam, fp_res, output_request=req)
         >>> gen.run()
         >>>
@@ -456,11 +456,11 @@ class Gen(BaseGen):
 
                 self._meta = res['meta', res_gids]
 
-            self._meta.loc[:, MetaKeyName.GID] = res_gids
+            self._meta.loc[:, "gid"] = res_gids
             if self.write_mapped_gids:
-                self._meta.loc[:, MetaKeyName.GID] = self.project_points.sites
+                self._meta.loc[:, "gid"] = self.project_points.sites
             self._meta.index = self.project_points.sites
-            self._meta.index.name = MetaKeyName.GID
+            self._meta.index.name = "gid"
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
@@ -643,7 +643,7 @@ class Gen(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = points_control.project_points.df
-        site_df = site_df.set_index(MetaKeyName.GID, drop=True)
+        site_df = site_df.set_index("gid", drop=True)
 
         # run generation method for specified technology
         try:
@@ -709,11 +709,11 @@ class Gen(BaseGen):
         if isinstance(gid_map, str):
             if gid_map.endswith('.csv'):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                msg = f'Need "{MetaKeyName.GID}" in gid_map column'
-                assert MetaKeyName.GID in gid_map, msg
+                msg = f'Need "gid" in gid_map column'
+                assert "gid" in gid_map, msg
                 assert 'gid_map' in gid_map, 'Need "gid_map" in gid_map column'
-                gid_map = {gid_map[MetaKeyName.GID][i]: gid_map['gid_map'][i]
-                           for i in gid_map[MetaKeyName.GID].keys()}
+                gid_map = {gid_map["gid"][i]: gid_map['gid_map'][i]
+                           for i in gid_map["gid"].keys()}
 
             elif gid_map.endswith('.json'):
                 with open(gid_map) as f:
@@ -770,8 +770,8 @@ class Gen(BaseGen):
             if '*' in self.res_file or '*' in self.lr_res_file:
                 handler_class = MultiFileResource
 
-            with (handler_class(self.res_file) as hr_res,
-                    handler_class(self.lr_res_file) as lr_res):
+            with handler_class(self.res_file) as hr_res, \
+                    handler_class(self.lr_res_file) as lr_res:
                 logger.info('Making nearest neighbor map for multi '
                             'resolution resource data...')
                 nn_d, nn_map = MultiResolutionResource.make_nn_map(hr_res,
@@ -845,11 +845,10 @@ class Gen(BaseGen):
 
         msg = ('Bias correction table must have "gid" column but only found: '
                '{}'.format(list(bias_correct.columns)))
-        assert (MetaKeyName.GID in bias_correct or bias_correct.index.name ==
-                MetaKeyName.GID), msg
+        assert ("gid" in bias_correct or bias_correct.index.name == "gid"), msg
 
-        if bias_correct.index.name != MetaKeyName.GID:
-            bias_correct = bias_correct.set_index(MetaKeyName.GID)
+        if bias_correct.index.name != "gid":
+            bias_correct = bias_correct.set_index("gid")
 
         msg = ('Bias correction table must have "method" column but only '
                'found: {}'.format(list(bias_correct.columns)))

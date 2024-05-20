@@ -272,7 +272,7 @@ class ProjectPoints:
             names (keys) and values.
         """
 
-        site_bool = (self.df[MetaKeyName.GID] == site)
+        site_bool = (self.df["gid"] == site)
         try:
             config_id = self.df.loc[site_bool, 'config'].values[0]
         except (KeyError, IndexError) as ex:
@@ -302,7 +302,7 @@ class ProjectPoints:
         -------
         _df : pd.DataFrame
             Table of sites and corresponding SAM configuration IDs.
-            Has columns MetaKeyName.GID and 'config'.
+            Has columns "gid" and 'config'.
         """
         return self._df
 
@@ -387,7 +387,7 @@ class ProjectPoints:
             List of integer sites (resource file gids) belonging to this
             instance of ProjectPoints.
         """
-        return self.df[MetaKeyName.GID].values.tolist()
+        return self.df["gid"].values.tolist()
 
     @property
     def sites_as_slice(self):
@@ -488,8 +488,8 @@ class ProjectPoints:
         Parameters
         ----------
         fname : str
-            Project points .csv file (with path). Must have MetaKeyName.GID and 'config'
-            column names.
+            Project points .csv file (with path). Must have 'gid' and
+            'config' column names.
 
         Returns
         -------
@@ -525,7 +525,7 @@ class ProjectPoints:
         df : pd.DataFrame
             DataFrame mapping sites (gids) to SAM technology (config)
         """
-        df = pd.DataFrame(columns=[MetaKeyName.GID, 'config'])
+        df = pd.DataFrame(columns=["gid", "config"])
         if isinstance(points, int):
             points = [points]
         if isinstance(points, (list, tuple, np.ndarray)):
@@ -535,7 +535,7 @@ class ProjectPoints:
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            df[MetaKeyName.GID] = points
+            df["gid"] = points
         elif isinstance(points, slice):
             stop = points.stop
             if stop is None:
@@ -550,7 +550,7 @@ class ProjectPoints:
                 else:
                     stop = Resource(res_file).shape[1]
 
-            df[MetaKeyName.GID] = list(range(*points.indices(stop)))
+            df["gid"] = list(range(*points.indices(stop)))
         else:
             raise TypeError('Project Points sites needs to be set as a list, '
                             'tuple, or slice, but was set as: {}'
@@ -591,14 +591,14 @@ class ProjectPoints:
             raise ValueError('Cannot parse Project points data from {}'
                              .format(type(points)))
 
-        if MetaKeyName.GID not in df.columns:
+        if "gid" not in df.columns:
             raise KeyError('Project points data must contain "gid" column.')
 
         # pylint: disable=no-member
         if 'config' not in df.columns:
             df = cls._parse_sites(points["gid"].values, res_file=res_file)
 
-        gids = df[MetaKeyName.GID].values
+        gids = df["gid"].values
         if not np.array_equal(np.sort(gids), gids):
             msg = ('WARNING: points are not in sequential order and will be '
                    'sorted! The original order is being preserved under '
@@ -606,7 +606,7 @@ class ProjectPoints:
             logger.warning(msg)
             warn(msg)
             df['points_order'] = df.index.values
-            df = df.sort_values(MetaKeyName.GID).reset_index(drop=True)
+            df = df.sort_values("gid").reset_index(drop=True)
 
         return df
 
@@ -694,13 +694,13 @@ class ProjectPoints:
         ind : int
             Row index of gid in the project points dataframe.
         """
-        if gid not in self._df[MetaKeyName.GID].values:
+        if gid not in self._df["gid"].values:
             e = ('Requested resource gid {} is not present in the project '
                  'points dataframe. Cannot return row index.'.format(gid))
             logger.error(e)
             raise ConfigError(e)
 
-        ind = np.where(self._df[MetaKeyName.GID] == gid)[0][0]
+        ind = np.where(self._df["gid"] == gid)[0][0]
 
         return ind
 
@@ -750,7 +750,7 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
-    def join_df(self, df2, key=MetaKeyName.GID):
+    def join_df(self, df2, key="gid"):
         """Join new df2 to the _df attribute using the _df's gid as pkey.
 
         This can be used to add site-specific data to the project_points,
@@ -770,7 +770,7 @@ class ProjectPoints:
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]
-        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on=MetaKeyName.GID,
+        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on="gid",
                             right_on=key, copy=False, validate='1:1')
 
     def get_sites_from_config(self, config):
@@ -787,7 +787,7 @@ class ProjectPoints:
             List of sites associated with the requested configuration ID. If
             the configuration ID is not recognized, an empty list is returned.
         """
-        sites = self.df.loc[(self.df['config'] == config), MetaKeyName.GID].values
+        sites = self.df.loc[(self.df['config'] == config), "gid"].values
 
         return list(sites)
 
@@ -941,8 +941,8 @@ class ProjectPoints:
         if 'points_order' in pp.df:
             lat_lons = lat_lons[pp.df['points_order'].values]
 
-        pp._df[MetaKeyName.LATITUDE] = lat_lons[:, 0]
-        pp._df[MetaKeyName.LONGITUDE] = lat_lons[:, 1]
+        pp._df["latitude"] = lat_lons[:, 0]
+        pp._df["longitude"] = lat_lons[:, 1]
 
         return pp
 
