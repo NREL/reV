@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """reV aggregation framework."""
 
-import contextlib
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -948,9 +947,11 @@ class Aggregation(BaseAggregation):
         """
         agg_out = aggregation.copy()
         meta = agg_out.pop("meta").reset_index()
-        with contextlib.suppress(ValueError, TypeError):
-            for c in meta.columns:
+        for c in meta.columns:
+            try:
                 meta[c] = pd.to_numeric(meta[c])
+            except (ValueError, TypeError):
+                pass
 
         dsets = []
         shapes = {}
