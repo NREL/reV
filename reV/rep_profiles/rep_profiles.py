@@ -478,9 +478,10 @@ class RegionRepProfile:
         """Run the representative profile methods to find the meanoid/medianoid
         profile and find the profiles most similar."""
 
-        weights_not_none = self.weights is not None
-        shapes_mismatch = len(self.weights) != self.source_profiles.shape[1]
-        if weights_not_none and shapes_mismatch:
+        num_profiles = self.source_profiles.shape[1]
+        bad_data_shape = (self.weights is not None
+                          and len(self.weights) != num_profiles)
+        if bad_data_shape:
             e = ('Weights column "{}" resulted in {} weight scalars '
                  'which doesnt match gid column which yields '
                  'profiles with shape {}.'

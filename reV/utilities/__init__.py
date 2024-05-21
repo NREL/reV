@@ -65,6 +65,8 @@ class MetaKeyName(str, Enum):
     SC_COL_IND = 'sc_col_ind'
     CAPACITY_AC = 'capacity_ac'
     CAPITAL_COST = 'capital_cost'
+    FIXED_OPERATING_COST = 'fixed_operating_cost'
+    FIXED_CHARGE_RATE = 'fixed_charge_rate'
     SC_POINT_CAPITAL_COST = 'sc_point_capital_cost'
     SC_POINT_FIXED_OPERATING_COST = 'sc_point_fixed_operating_cost'
     SC_POINT_ANNUAL_ENERGY = 'sc_point_annual_energy'
