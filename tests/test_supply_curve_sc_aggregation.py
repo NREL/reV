@@ -515,11 +515,11 @@ def test_recalc_lcoe(cap_cost_scale):
         cc_dset = MetaKeyName.SC_POINT_CAPITAL_COST
     else:
         cc_dset = MetaKeyName.SCALED_SC_POINT_CAPITAL_COST
-    lcoe = lcoe_fcr(summary[MetaKeyName.MEAN_FIXED_CHARGE_RATE],
+    lcoe = lcoe_fcr(summary['mean_fixed_charge_rate'],
                     summary[cc_dset],
                     summary[MetaKeyName.SC_POINT_FIXED_OPERATING_COST],
                     summary[MetaKeyName.SC_POINT_ANNUAL_ENERGY],
-                    summary[MetaKeyName.MEAN_VARIABLE_OPERATING_COST])
+                    summary['mean_variable_operating_cost'])
     assert np.allclose(lcoe, summary[MetaKeyName.MEAN_LCOE])
 
 
