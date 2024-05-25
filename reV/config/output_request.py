@@ -100,5 +100,14 @@ class SAMOutputRequest(OutputRequest):
                    'dc_power': 'dc',
                    'clipping': 'clipped_power',
                    'clipped': 'clipped_power',
-                   'clip': 'clipped_power'
+                   'clip': 'clipped_power',
+                   'capacity': 'system_capacity',
+                   'wd': 'winddirection',
+                   'wind_direction': 'winddirection',
+                   'wind-direction': 'winddirection',
+                   'wl': 'annual_wake_loss_internal_percent',
+                   'wl_kwh': 'annual_wake_loss_internal_kWh',
+                   'wl_pct': 'annual_wake_loss_total_percent',
+                   'wl_ts': 'wake_loss_internal_percent',
+                   'wl_kwh': 'wake_loss_internal_kW',
                    }
