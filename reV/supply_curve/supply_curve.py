@@ -929,16 +929,32 @@ class SupplyCurve:
 
         cost *= self._trans_table[self._sc_capacity_col]
         cost /= self._trans_table[MetaKeyName.CAPACITY]  # align with "mean_cf"
+        cf_mean_arr = self._trans_table[MetaKeyName.MEAN_CF].values
+        resource_lcoe = self._trans_table[MetaKeyName.MEAN_LCOE]
+
+        if 'reinforcement_cost_floored_per_mw' in self._trans_table:
+            logger.info("'reinforcement_cost_floored_per_mw' column found in "
+                        "transmission table. Adding floored reinforcement "
+                        "cost LCOE as sorting option.")
+            fr_cost = (self._trans_table['reinforcement_cost_floored_per_mw']
+                       .values.copy())
+            fr_cost *= self._trans_table[self._sc_capacity_col]
+            # align with "mean_cf"
+            fr_cost /= self._trans_table[MetaKeyName.CAPACITY]
+
+            lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
+            lcoe_fr = lcot + resource_lcoe
+            self._trans_table['lcot_floored_reinforcement'] = lcot_fr
+            self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
         if 'reinforcement_cost_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_per_mw' column found in "
                         "transmission table. Adding reinforcement costs "
                         "to total LCOE.")
-            cf_mean_arr = self._trans_table[MetaKeyName.MEAN_CF].values
-            lcot = (cost * fcr) / (cf_mean_arr * 8760)
-            lcoe = lcot + self._trans_table[MetaKeyName.MEAN_LCOE]
-            self._trans_table['lcot_no_reinforcement'] = lcot
-            self._trans_table['lcoe_no_reinforcement'] = lcoe
+            lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
+            lcoe_nr = lcot + resource_lcoe
+            self._trans_table['lcot_no_reinforcement'] = lcot_nr
+            self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
             r_cost = (self._trans_table['reinforcement_cost_per_mw']
                       .values.copy())
             r_cost *= self._trans_table[self._sc_capacity_col]
@@ -946,13 +962,10 @@ class SupplyCurve:
             r_cost /= self._trans_table[MetaKeyName.CAPACITY]
             cost += r_cost  # $/MW
 
-        cf_mean_arr = self._trans_table[MetaKeyName.MEAN_CF].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
-
         self._trans_table['lcot'] = lcot
-        self._trans_table['total_lcoe'] = (
-            self._trans_table['lcot']
-            + self._trans_table[MetaKeyName.MEAN_LCOE])
+        self._trans_table['total_lcoe'] = (self._trans_table['lcot']
+                                           + resource_lcoe)
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
