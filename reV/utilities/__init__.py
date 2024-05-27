@@ -10,6 +10,7 @@ from reV.version import __version__
 
 class SiteDataField(str, Enum):
     """An enumerated map to site data column names."""
+
     GID = "gid"
     CONFIG = "config"
 
@@ -32,14 +33,15 @@ class ResourceMetaField(str, Enum):
     OFFSHORE = 'offshore'
 
 
-class MetaKeyName(str, Enum):
-    """An enumerated map to summary/meta keys.
+class SupplyCurveField(str, Enum):
+    """An enumerated map to supply curve summary/meta keys.
 
     Each output name should match the name of a key in
     meth:`AggregationSupplyCurvePoint.summary` or
     meth:`GenerationSupplyCurvePoint.point_summary` or
     meth:`BespokeSinglePlant.meta`
     """
+
     SC_POINT_GID = 'sc_point_gid'
     SOURCE_GIDS = 'source_gids'
     SC_GID = 'sc_gid'

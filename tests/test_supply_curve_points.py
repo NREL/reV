@@ -19,7 +19,7 @@ from reV.supply_curve.points import (
     SupplyCurvePoint,
 )
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 
 F_EXCL = os.path.join(TESTDATADIR, "ri_exclusions/ri_exclusions.h5")
 F_GEN = os.path.join(TESTDATADIR, "gen_out/gen_ri_pv_2012_x000.h5")
@@ -68,7 +68,7 @@ def test_slicer(gids, resolution):
 
 
 @pytest.mark.parametrize(
-    (MetaKeyName.GID, "resolution", "excl_dict", "time_series"),
+    (SupplyCurveField.GID, "resolution", "excl_dict", "time_series"),
     [
         (37, 64, None, None),
         (37, 64, EXCL_DICT, None),
@@ -109,7 +109,7 @@ def test_weighted_means(gid, resolution, excl_dict, time_series):
 
 
 @pytest.mark.parametrize(
-    (MetaKeyName.GID, "resolution", "excl_dict", "time_series"),
+    (SupplyCurveField.GID, "resolution", "excl_dict", "time_series"),
     [
         (37, 64, None, None),
         (37, 64, EXCL_DICT, None),
@@ -164,16 +164,16 @@ def plot_all_sc_points(resolution=64):
         for gid in range(len(sc)):
             excl_meta = sc.get_excl_points("meta", gid)
             axs.scatter(
-                excl_meta[MetaKeyName.LONGITUDE],
-                excl_meta[MetaKeyName.LATITUDE],
+                excl_meta[SupplyCurveField.LONGITUDE],
+                excl_meta[SupplyCurveField.LATITUDE],
                 c=colors[gid],
                 s=0.01,
             )
 
     with Outputs(F_GEN) as f:
         axs.scatter(
-            f.meta[MetaKeyName.LONGITUDE],
-            f.meta[MetaKeyName.LATITUDE],
+            f.meta[SupplyCurveField.LONGITUDE],
+            f.meta[SupplyCurveField.LATITUDE],
             c="k",
             s=25,
         )
@@ -208,16 +208,16 @@ def plot_single_gen_sc_point(gid=2, resolution=64):
             if gen_gid != -1:
                 mask = sc._gen_gids == gen_gid
                 axs.scatter(
-                    excl_meta.loc[mask, MetaKeyName.LONGITUDE],
-                    excl_meta.loc[mask, MetaKeyName.LATITUDE],
+                    excl_meta.loc[mask, SupplyCurveField.LONGITUDE],
+                    excl_meta.loc[mask, SupplyCurveField.LATITUDE],
                     marker="s",
                     c=colors[i],
                     s=1,
                 )
 
                 axs.scatter(
-                    sc.gen.meta.loc[gen_gid, MetaKeyName.LONGITUDE],
-                    sc.gen.meta.loc[gen_gid, MetaKeyName.LATITUDE],
+                    sc.gen.meta.loc[gen_gid, SupplyCurveField.LONGITUDE],
+                    sc.gen.meta.loc[gen_gid, SupplyCurveField.LATITUDE],
                     c="k",
                     s=100,
                 )

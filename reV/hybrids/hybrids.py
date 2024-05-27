@@ -17,7 +17,7 @@ from rex.utilities.utilities import to_records_array
 
 from reV.handlers.outputs import Outputs
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import (
     FileInputError,
     InputError,
@@ -27,17 +27,17 @@ from reV.utilities.exceptions import (
 
 logger = logging.getLogger(__name__)
 
-MERGE_COLUMN = MetaKeyName.SC_POINT_GID
+MERGE_COLUMN = SupplyCurveField.SC_POINT_GID
 PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
 SOLAR_PREFIX = 'solar_'
 WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
-    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE,
-    MetaKeyName.COUNTRY, MetaKeyName.STATE, MetaKeyName.COUNTY,
-    MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
-    MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
+    SupplyCurveField.LATITUDE, SupplyCurveField.LONGITUDE,
+    SupplyCurveField.COUNTRY, SupplyCurveField.STATE, SupplyCurveField.COUNTY,
+    SupplyCurveField.ELEVATION, SupplyCurveField.TIMEZONE, SupplyCurveField.SC_POINT_GID,
+    SupplyCurveField.SC_ROW_IND, SupplyCurveField.SC_COL_IND
 }
-DROPPED_COLUMNS = [MetaKeyName.GID]
+DROPPED_COLUMNS = [SupplyCurveField.GID]
 DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
                        'solar_mean_cf': 0, 'wind_mean_cf': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
@@ -699,7 +699,7 @@ class MetaHybridizer:
         self._propagate_duplicate_cols(duplicate_cols)
         self._drop_cols(duplicate_cols)
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
-        self._hybrid_meta.index.name = MetaKeyName.GID
+        self._hybrid_meta.index.name = SupplyCurveField.GID
 
     def _propagate_duplicate_cols(self, duplicate_cols):
         """Fill missing column values from outer merge."""
@@ -744,8 +744,8 @@ class MetaHybridizer:
 
     def _verify_lat_long_match_post_merge(self):
         """Verify that all the lat/lon values match post merge."""
-        lat = self._verify_col_match_post_merge(col_name=MetaKeyName.LATITUDE)
-        lon = self._verify_col_match_post_merge(col_name=MetaKeyName.LONGITUDE)
+        lat = self._verify_col_match_post_merge(col_name=SupplyCurveField.LATITUDE)
+        lon = self._verify_col_match_post_merge(col_name=SupplyCurveField.LONGITUDE)
         if not lat or not lon:
             msg = (
                 "Detected mismatched coordinate values (latitude or "

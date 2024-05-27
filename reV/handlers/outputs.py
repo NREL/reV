@@ -29,8 +29,8 @@ class Outputs(rexOutputs):
     >>> import pandas as pd
     >>> import numpy as np
     >>>
-    >>> meta = pd.DataFrame({MetaKeyName.LATITUDE: np.ones(100),
-    >>>                      MetaKeyName.LONGITUDE: np.ones(100)})
+    >>> meta = pd.DataFrame({SupplyCurveField.LATITUDE: np.ones(100),
+    >>>                      SupplyCurveField.LONGITUDE: np.ones(100)})
     >>>
     >>> time_index = pd.date_range('20210101', '20220101', freq='1h',
     >>>                            closed='right')

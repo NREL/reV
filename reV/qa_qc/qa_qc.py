@@ -19,7 +19,7 @@ from reV.qa_qc.summary import (
     SupplyCurvePlot,
 )
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.utilities import ModuleName, MetaKeyName, log_versions
+from reV.utilities import ModuleName, SupplyCurveField, log_versions
 from reV.utilities.exceptions import PipelineError
 
 logger = logging.getLogger(__name__)
@@ -105,9 +105,9 @@ class QaQc:
             if file.endswith(".csv"):
                 summary_csv = os.path.join(self.out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                has_right_cols = (MetaKeyName.GID in summary
-                                  and MetaKeyName.LATITUDE in summary
-                                  and MetaKeyName.LONGITUDE in summary)
+                has_right_cols = (SupplyCurveField.GID in summary
+                                  and SupplyCurveField.LATITUDE in summary
+                                  and SupplyCurveField.LONGITUDE in summary)
                 if has_right_cols:
                     self._scatter_plot(summary_csv, self.out_dir,
                                        plot_type=plot_type, cmap=cmap,
@@ -181,7 +181,7 @@ class QaQc:
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, columns=None,
-                     lcoe=MetaKeyName.MEAN_LCOE, plot_type='plotly',
+                     lcoe=SupplyCurveField.MEAN_LCOE, plot_type='plotly',
                      cmap='viridis', sc_plot_kwargs=None,
                      scatter_plot_kwargs=None):
         """
@@ -197,7 +197,7 @@ class QaQc:
             Column(s) to summarize, if None summarize all numeric columns,
             by default None
         lcoe : str, optional
-            LCOE value to plot, by default :obj:`MetaKeyName.MEAN_LCOE`
+            LCOE value to plot, by default :obj:`SupplyCurveField.MEAN_LCOE`
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
@@ -345,7 +345,7 @@ class QaQcModule:
         self._default_plot_type = "plotly"
         self._default_cmap = "viridis"
         self._default_plot_step = 100
-        self._default_lcoe = MetaKeyName.MEAN_LCOE
+        self._default_lcoe = SupplyCurveField.MEAN_LCOE
         self._default_area_filter_kernel = 'queen'
 
     @property

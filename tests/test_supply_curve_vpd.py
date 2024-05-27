@@ -11,7 +11,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import FileInputError
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -43,10 +43,10 @@ def test_vpd():
 
     vpd = pd.read_csv(FVPD, index_col=0)
     for i in summary.index:
-        capacity = summary.loc[i, MetaKeyName.CAPACITY]
-        area = summary.loc[i, MetaKeyName.AREA_SQ_KM]
+        capacity = summary.loc[i, SupplyCurveField.CAPACITY]
+        area = summary.loc[i, SupplyCurveField.AREA_SQ_KM]
         res_gids = np.array(summary.loc[i, 'res_gids'])
-        gid_counts = np.array(summary.loc[i, MetaKeyName.GID_COUNTS])
+        gid_counts = np.array(summary.loc[i, SupplyCurveField.GID_COUNTS])
         vpd_per_gid = vpd.loc[res_gids, 'power_density'].values
         truth = area * (vpd_per_gid * gid_counts).sum() / gid_counts.sum()
 
@@ -79,8 +79,8 @@ def test_vpd_fractional_excl():
     summary_2 = sca_2.summarize(GEN, max_workers=1)
 
     for i in summary_1.index:
-        cap_full = summary_1.loc[i, MetaKeyName.CAPACITY]
-        cap_half = summary_2.loc[i, MetaKeyName.CAPACITY]
+        cap_full = summary_1.loc[i, SupplyCurveField.CAPACITY]
+        cap_half = summary_2.loc[i, SupplyCurveField.CAPACITY]
 
         msg = ('Variable power density for fractional exclusions failed! '
                'Index {} has cap full {} and cap half {}'

@@ -14,9 +14,9 @@ from rex.utilities.utilities import jsonify_dict
 
 from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.econ.utilities import lcoe_fcr
-from reV.handlers.exclusions import ExclusionLayers, LATITUDE, LONGITUDE
+from reV.handlers.exclusions import LATITUDE, LONGITUDE, ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
-from reV.utilities import MetaKeyName, ResourceMetaField
+from reV.utilities import ResourceMetaField, SupplyCurveField
 from reV.utilities.exceptions import (
     DataShapeError,
     EmptySupplyCurvePointError,
@@ -1256,18 +1256,18 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         pandas.Series
             List of supply curve point's meta data
         """
-        meta = {MetaKeyName.SC_POINT_GID: self.sc_point_gid,
-                MetaKeyName.SOURCE_GIDS: self.h5_gid_set,
-                MetaKeyName.GID_COUNTS: self.gid_counts,
-                MetaKeyName.N_GIDS: self.n_gids,
-                MetaKeyName.AREA_SQ_KM: self.area,
-                MetaKeyName.LATITUDE: self.latitude,
-                MetaKeyName.LONGITUDE: self.longitude,
-                MetaKeyName.COUNTRY: self.country,
-                MetaKeyName.STATE: self.state,
-                MetaKeyName.COUNTY: self.county,
-                MetaKeyName.ELEVATION: self.elevation,
-                MetaKeyName.TIMEZONE: self.timezone,
+        meta = {SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+                SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
+                SupplyCurveField.GID_COUNTS: self.gid_counts,
+                SupplyCurveField.N_GIDS: self.n_gids,
+                SupplyCurveField.AREA_SQ_KM: self.area,
+                SupplyCurveField.LATITUDE: self.latitude,
+                SupplyCurveField.LONGITUDE: self.longitude,
+                SupplyCurveField.COUNTRY: self.country,
+                SupplyCurveField.STATE: self.state,
+                SupplyCurveField.COUNTY: self.county,
+                SupplyCurveField.ELEVATION: self.elevation,
+                SupplyCurveField.TIMEZONE: self.timezone,
                 }
         meta = pd.Series(meta)
 
@@ -2168,37 +2168,37 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         ARGS = {
-            MetaKeyName.LATITUDE: self.latitude,
-            MetaKeyName.LONGITUDE: self.longitude,
-            MetaKeyName.TIMEZONE: self.timezone,
-            MetaKeyName.COUNTRY: self.country,
-            MetaKeyName.STATE: self.state,
-            MetaKeyName.COUNTY: self.county,
-            MetaKeyName.ELEVATION: self.elevation,
-            MetaKeyName.RES_GIDS: self.res_gid_set,
-            MetaKeyName.GEN_GIDS: self.gen_gid_set,
-            MetaKeyName.GID_COUNTS: self.gid_counts,
-            MetaKeyName.N_GIDS: self.n_gids,
-            MetaKeyName.MEAN_CF: self.mean_cf,
-            MetaKeyName.MEAN_LCOE: self.mean_lcoe,
-            MetaKeyName.MEAN_RES: self.mean_res,
-            MetaKeyName.CAPACITY: self.capacity,
-            MetaKeyName.AREA_SQ_KM: self.area}
+            SupplyCurveField.LATITUDE: self.latitude,
+            SupplyCurveField.LONGITUDE: self.longitude,
+            SupplyCurveField.TIMEZONE: self.timezone,
+            SupplyCurveField.COUNTRY: self.country,
+            SupplyCurveField.STATE: self.state,
+            SupplyCurveField.COUNTY: self.county,
+            SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.RES_GIDS: self.res_gid_set,
+            SupplyCurveField.GEN_GIDS: self.gen_gid_set,
+            SupplyCurveField.GID_COUNTS: self.gid_counts,
+            SupplyCurveField.N_GIDS: self.n_gids,
+            SupplyCurveField.MEAN_CF: self.mean_cf,
+            SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
+            SupplyCurveField.MEAN_RES: self.mean_res,
+            SupplyCurveField.CAPACITY: self.capacity,
+            SupplyCurveField.AREA_SQ_KM: self.area}
 
-        extra_atts = [MetaKeyName.CAPACITY_AC,
-                      MetaKeyName.OFFSHORE,
-                      MetaKeyName.SC_POINT_CAPITAL_COST,
-                      MetaKeyName.SC_POINT_FIXED_OPERATING_COST,
-                      MetaKeyName.SC_POINT_ANNUAL_ENERGY,
-                      MetaKeyName.SC_POINT_ANNUAL_ENERGY_AC]
+        extra_atts = [SupplyCurveField.CAPACITY_AC,
+                      SupplyCurveField.OFFSHORE,
+                      SupplyCurveField.SC_POINT_CAPITAL_COST,
+                      SupplyCurveField.SC_POINT_FIXED_OPERATING_COST,
+                      SupplyCurveField.SC_POINT_ANNUAL_ENERGY,
+                      SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC]
         for attr in extra_atts:
             value = getattr(self, attr)
             if value is not None:
                 ARGS[attr] = value
 
         if self._friction_layer is not None:
-            ARGS[MetaKeyName.MEAN_FRICTION] = self.mean_friction
-            ARGS[MetaKeyName.MEAN_LCOE_FRICTION] = self.mean_lcoe_friction
+            ARGS[SupplyCurveField.MEAN_FRICTION] = self.mean_friction
+            ARGS[SupplyCurveField.MEAN_LCOE_FRICTION] = self.mean_lcoe_friction
 
         if self._h5_dsets is not None:
             for dset, data in self.mean_h5_dsets_data.items():
@@ -2242,14 +2242,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         eos = EconomiesOfScale(cap_cost_scale, summary)
-        summary[MetaKeyName.RAW_LCOE] = eos.raw_lcoe
-        summary[MetaKeyName.MEAN_LCOE] = eos.scaled_lcoe
-        summary[MetaKeyName.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
-        summary[MetaKeyName.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
-        if MetaKeyName.SC_POINT_CAPITAL_COST in summary:
-            scaled_costs = (summary[MetaKeyName.SC_POINT_CAPITAL_COST]
+        summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
+        summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
+        summary[SupplyCurveField.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
+        summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
+        if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
+            scaled_costs = (summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
                             * eos.capital_cost_scalar)
-            summary[MetaKeyName.SCALED_SC_POINT_CAPITAL_COST] = scaled_costs
+            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = scaled_costs
 
         return summary
 

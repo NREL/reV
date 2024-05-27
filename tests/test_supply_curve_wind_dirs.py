@@ -10,7 +10,7 @@ from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import CompetitiveWindFarms, SupplyCurve
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 
 TRANS_COSTS = {'line_tie_in_cost': 200, 'line_cost': 1000,
                'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
@@ -31,7 +31,7 @@ def test_competitive_wind_dirs(downwind):
 
     sc_points = CompetitiveWindFarms.run(WIND_DIRS, SC_POINTS,
                                          n_dirs=2,
-                                         sort_on=MetaKeyName.MEAN_LCOE,
+                                         sort_on=SupplyCurveField.MEAN_LCOE,
                                          downwind=downwind)
 
     if downwind:
@@ -108,11 +108,11 @@ def test_upwind_exclusion():
                           'sc_full_upwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
-    sc_point_gids = sc_out[MetaKeyName.SC_POINT_GID].values.tolist()
+    sc_point_gids = sc_out[SupplyCurveField.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
-        sc_gid = row[MetaKeyName.SC_GID]
-        sc_point_gids.remove(row[MetaKeyName.SC_POINT_GID])
-        sc_point_gid = cwf[MetaKeyName.SC_POINT_GID, sc_gid]
+        sc_gid = row[SupplyCurveField.SC_GID]
+        sc_point_gids.remove(row[SupplyCurveField.SC_POINT_GID])
+        sc_point_gid = cwf[SupplyCurveField.SC_POINT_GID, sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)
             assert gid not in sc_point_gids, msg
@@ -128,11 +128,11 @@ def test_upwind_downwind_exclusion():
                           'sc_full_downwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
-    sc_point_gids = sc_out[MetaKeyName.SC_POINT_GID].values.tolist()
+    sc_point_gids = sc_out[SupplyCurveField.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
-        sc_gid = row[MetaKeyName.SC_GID]
-        sc_point_gids.remove(row[MetaKeyName.SC_POINT_GID])
-        sc_point_gid = cwf[MetaKeyName.SC_POINT_GID, sc_gid]
+        sc_gid = row[SupplyCurveField.SC_GID]
+        sc_point_gids.remove(row[SupplyCurveField.SC_POINT_GID])
+        sc_point_gid = cwf[SupplyCurveField.SC_POINT_GID, sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)
             assert gid not in sc_point_gids, msg

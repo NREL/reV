@@ -7,9 +7,8 @@ import numpy as np
 import pandas as pd
 from packaging import version
 from rex.outputs import Outputs as RexOutputs
-from reV.utilities import ResourceMetaField
 
-from reV.utilities import MetaKeyName
+from reV.utilities import ResourceMetaField, SupplyCurveField
 
 
 def pd_date_range(*args, **kwargs):

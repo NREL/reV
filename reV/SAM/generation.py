@@ -1008,7 +1008,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
         sam_sys_inputs : dict
             Site-agnostic SAM system model inputs arguments.
             If for a pv simulation the "tilt" parameter was originally not
-            present or set to 'lat' or MetaKeyName.LATITUDE, the tilt will be
+            present or set to 'lat' or SupplyCurveField.LATITUDE, the tilt will be
             set to the absolute value of the latitude found in meta and the
             azimuth will be 180 if lat>0, 0 if lat<0.
         """

@@ -36,8 +36,12 @@ from reV.supply_curve.aggregation import AggFileHandler, BaseAggregation
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint as AggSCPoint
 from reV.supply_curve.points import SupplyCurvePoint
-from reV.utilities import (MetaKeyName, ModuleName, ResourceMetaField,
-                           log_versions)
+from reV.utilities import (
+    ModuleName,
+    ResourceMetaField,
+    SupplyCurveField,
+    log_versions,
+)
 from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -536,9 +540,9 @@ class BespokeSinglePlant:
 
         # {meta_column: sam_sys_input_key}
         required = {
-            MetaKeyName.CAPACITY: "system_capacity",
-            MetaKeyName.TURBINE_X_COORDS: "wind_farm_xCoordinates",
-            MetaKeyName.TURBINE_Y_COORDS: "wind_farm_yCoordinates",
+            SupplyCurveField.CAPACITY: "system_capacity",
+            SupplyCurveField.TURBINE_X_COORDS: "wind_farm_xCoordinates",
+            SupplyCurveField.TURBINE_Y_COORDS: "wind_farm_yCoordinates",
         }
 
         if self._prior_meta:
@@ -811,22 +815,22 @@ class BespokeSinglePlant:
 
             self._meta = pd.DataFrame(
                 {
-                    MetaKeyName.SC_POINT_GID: self.sc_point.gid,
-                    MetaKeyName.SC_ROW_IND: row_ind,
-                    MetaKeyName.SC_COL_IND: col_ind,
-                    MetaKeyName.GID: self.sc_point.gid,
-                    MetaKeyName.LATITUDE: self.sc_point.latitude,
-                    MetaKeyName.LONGITUDE: self.sc_point.longitude,
-                    MetaKeyName.TIMEZONE: self.sc_point.timezone,
-                    MetaKeyName.COUNTRY: self.sc_point.country,
-                    MetaKeyName.STATE: self.sc_point.state,
-                    MetaKeyName.COUNTY: self.sc_point.county,
-                    MetaKeyName.ELEVATION: self.sc_point.elevation,
-                    MetaKeyName.OFFSHORE: self.sc_point.offshore,
-                    MetaKeyName.RES_GIDS: res_gids,
-                    MetaKeyName.GID_COUNTS: gid_counts,
-                    MetaKeyName.N_GIDS: self.sc_point.n_gids,
-                    MetaKeyName.AREA_SQ_KM: self.sc_point.area,
+                    SupplyCurveField.SC_POINT_GID: self.sc_point.gid,
+                    SupplyCurveField.SC_ROW_IND: row_ind,
+                    SupplyCurveField.SC_COL_IND: col_ind,
+                    SupplyCurveField.GID: self.sc_point.gid,
+                    SupplyCurveField.LATITUDE: self.sc_point.latitude,
+                    SupplyCurveField.LONGITUDE: self.sc_point.longitude,
+                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
+                    SupplyCurveField.COUNTRY: self.sc_point.country,
+                    SupplyCurveField.STATE: self.sc_point.state,
+                    SupplyCurveField.COUNTY: self.sc_point.county,
+                    SupplyCurveField.ELEVATION: self.sc_point.elevation,
+                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
+                    SupplyCurveField.RES_GIDS: res_gids,
+                    SupplyCurveField.GID_COUNTS: gid_counts,
+                    SupplyCurveField.N_GIDS: self.sc_point.n_gids,
+                    SupplyCurveField.AREA_SQ_KM: self.sc_point.area,
                 },
                 index=[self.sc_point.gid],
             )
@@ -1047,7 +1051,7 @@ class BespokeSinglePlant:
             my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
             self._outputs["lcoe_fcr-means"] = my_mean_lcoe
-            self._meta[MetaKeyName.MEAN_LCOE] = my_mean_lcoe
+            self._meta[SupplyCurveField.MEAN_LCOE] = my_mean_lcoe
 
     def get_lcoe_kwargs(self):
         """Get a namespace of arguments for calculating LCOE based on the
@@ -1224,11 +1228,11 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
-            self._meta.loc[:, MetaKeyName.MEAN_CF] = self.outputs[
+            self._meta.loc[:, SupplyCurveField.MEAN_CF] = self.outputs[
                 "cf_mean-means"
             ]
         if "lcoe_fcr-means" in self.outputs:
-            self._meta.loc[:, MetaKeyName.MEAN_LCOE] = self.outputs[
+            self._meta.loc[:, SupplyCurveField.MEAN_LCOE] = self.outputs[
                 "lcoe_fcr-means"
             ]
             self.recalc_lcoe()
@@ -1311,7 +1315,7 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta[MetaKeyName.CAPACITY] = (
+        self._meta[SupplyCurveField.CAPACITY] = (
             self.outputs["system_capacity"] / 1e3
         )
 
@@ -1319,12 +1323,12 @@ class BespokeSinglePlant:
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta[MetaKeyName.EOS_MULT] = (
+        self._meta[SupplyCurveField.EOS_MULT] = (
             self.plant_optimizer.capital_cost
             / self.plant_optimizer.capacity
             / baseline_cost
         )
-        self._meta[MetaKeyName.REG_MULT] = self.sam_sys_inputs.get(
+        self._meta[SupplyCurveField.REG_MULT] = self.sam_sys_inputs.get(
             "capital_cost_multiplier", 1
         )
 
@@ -1923,7 +1927,7 @@ class BespokeWindPlants(BaseAggregation):
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
-            `MetaKeyName.GID` and 'config' column, the config maps to the
+            `SupplyCurveField.GID` and 'config' column, the config maps to the
             sam_configs dict keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
@@ -2003,7 +2007,7 @@ class BespokeWindPlants(BaseAggregation):
         meta = None
 
         if self._prior_meta is not None:
-            mask = self._prior_meta[MetaKeyName.GID] == gid
+            mask = self._prior_meta[SupplyCurveField.GID] == gid
             if any(mask):
                 meta = self._prior_meta[mask]
 
