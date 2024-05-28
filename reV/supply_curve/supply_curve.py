@@ -910,7 +910,9 @@ class SupplyCurve:
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
         """
-        if "trans_cap_cost" not in self._trans_table:
+        if "trans_cap_cost_per_mw" in self._trans_table:
+            cost = self._trans_table["trans_cap_cost_per_mw"]
+        elif "trans_cap_cost" not in self._trans_table:
             scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(
                 self._trans_table,
