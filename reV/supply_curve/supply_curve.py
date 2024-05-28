@@ -943,7 +943,7 @@ class SupplyCurve:
             fr_cost /= self._trans_table[MetaKeyName.CAPACITY]
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
-            lcoe_fr = lcot + resource_lcoe
+            lcoe_fr = lcot_fr + resource_lcoe
             self._trans_table['lcot_floored_reinforcement'] = lcot_fr
             self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
@@ -952,7 +952,7 @@ class SupplyCurve:
                         "transmission table. Adding reinforcement costs "
                         "to total LCOE.")
             lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
-            lcoe_nr = lcot + resource_lcoe
+            lcoe_nr = lcot_nr + resource_lcoe
             self._trans_table['lcot_no_reinforcement'] = lcot_nr
             self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
             r_cost = (self._trans_table['reinforcement_cost_per_mw']
@@ -964,8 +964,7 @@ class SupplyCurve:
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
         self._trans_table['lcot'] = lcot
-        self._trans_table['total_lcoe'] = (self._trans_table['lcot']
-                                           + resource_lcoe)
+        self._trans_table['total_lcoe'] = lcot + resource_lcoe
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
