@@ -585,7 +585,7 @@ class BespokeSinglePlant:
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
                 gid_map = pd.read_csv(gid_map).to_dict()
-                err_msg = f'Need {ResourceMetaField.GID} in gid_map column'
+                err_msg = f"Need {ResourceMetaField.GID} in gid_map column"
                 assert ResourceMetaField.GID in gid_map, err_msg
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
@@ -1278,8 +1278,8 @@ class BespokeSinglePlant:
         pxc = json.dumps(pxc)
         pyc = json.dumps(pyc)
 
-        self._meta["turbine_x_coords"] = txc
-        self._meta["turbine_y_coords"] = tyc
+        self._meta[SupplyCurveField.TURBINE_X_COORDS] = txc
+        self._meta[SupplyCurveField.TURBINE_Y_COORDS] = tyc
         self._meta["possible_x_coords"] = pxc
         self._meta["possible_y_coords"] = pyc
 

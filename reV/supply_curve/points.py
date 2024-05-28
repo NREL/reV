@@ -2,6 +2,7 @@
 """
 reV supply curve points frameworks.
 """
+
 import logging
 from abc import ABC
 from warnings import warn
@@ -1130,16 +1131,19 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         county_not_none = self.county is not None
         if ResourceMetaField.COUNTRY in self.h5.meta and county_not_none:
             # make sure country and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.COUNTY].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            country = self.h5.meta.loc[self.h5_gid_set,
-                                       ResourceMetaField.COUNTRY].values
+            country = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTRY
+            ].values
             country = country[iloc]
 
         elif ResourceMetaField.COUNTRY in self.h5.meta:
-            country = self.h5.meta.loc[self.h5_gid_set,
-                                       ResourceMetaField.COUNTRY].mode()
+            country = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTRY
+            ].mode()
             country = country.values[0]
 
         return country
@@ -1150,16 +1154,19 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         state = None
         if ResourceMetaField.STATE in self.h5.meta and self.county is not None:
             # make sure state and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.COUNTY].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            state = self.h5.meta.loc[self.h5_gid_set,
-                                     ResourceMetaField.STATE].values
+            state = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.STATE
+            ].values
             state = state[iloc]
 
         elif ResourceMetaField.STATE in self.h5.meta:
-            state = self.h5.meta.loc[self.h5_gid_set,
-                                     ResourceMetaField.STATE].mode()
+            state = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.STATE
+            ].mode()
             state = state.values[0]
 
         return state
@@ -1169,8 +1176,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point county based on the resource meta data."""
         county = None
         if ResourceMetaField.COUNTY in self.h5.meta:
-            county = self.h5.meta.loc[self.h5_gid_set,
-                                      ResourceMetaField.COUNTY].mode()
+            county = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].mode()
             county = county.values[0]
 
         return county
@@ -1180,8 +1188,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point elevation based on the resource meta data."""
         elevation = None
         if ResourceMetaField.ELEVATION in self.h5.meta:
-            elevation = self.h5.meta.loc[self.h5_gid_set,
-                                         ResourceMetaField.ELEVATION].mean()
+            elevation = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.ELEVATION
+            ].mean()
 
         return elevation
 
@@ -1192,16 +1201,19 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         county_not_none = self.county is not None
         if ResourceMetaField.TIMEZONE in self.h5.meta and county_not_none:
             # make sure timezone flag and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.COUNTY].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            timezone = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.TIMEZONE].values
+            timezone = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.TIMEZONE
+            ].values
             timezone = timezone[iloc]
 
         elif ResourceMetaField.TIMEZONE in self.h5.meta:
-            timezone = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.TIMEZONE].mode()
+            timezone = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.TIMEZONE
+            ].mode()
             timezone = timezone.values[0]
 
         return timezone
@@ -1214,16 +1226,19 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         county_not_none = self.county is not None
         if ResourceMetaField.OFFSHORE in self.h5.meta and county_not_none:
             # make sure offshore flag and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.COUNTY].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            offshore = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.OFFSHORE].values
+            offshore = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.OFFSHORE
+            ].values
             offshore = offshore[iloc]
 
         elif ResourceMetaField.OFFSHORE in self.h5.meta:
-            offshore = self.h5.meta.loc[self.h5_gid_set,
-                                        ResourceMetaField.OFFSHORE].mode()
+            offshore = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.OFFSHORE
+            ].mode()
             offshore = offshore.values[0]
 
         return offshore
@@ -1256,19 +1271,20 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         pandas.Series
             List of supply curve point's meta data
         """
-        meta = {SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
-                SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
-                SupplyCurveField.GID_COUNTS: self.gid_counts,
-                SupplyCurveField.N_GIDS: self.n_gids,
-                SupplyCurveField.AREA_SQ_KM: self.area,
-                SupplyCurveField.LATITUDE: self.latitude,
-                SupplyCurveField.LONGITUDE: self.longitude,
-                SupplyCurveField.COUNTRY: self.country,
-                SupplyCurveField.STATE: self.state,
-                SupplyCurveField.COUNTY: self.county,
-                SupplyCurveField.ELEVATION: self.elevation,
-                SupplyCurveField.TIMEZONE: self.timezone,
-                }
+        meta = {
+            SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+            SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
+            SupplyCurveField.GID_COUNTS: self.gid_counts,
+            SupplyCurveField.N_GIDS: self.n_gids,
+            SupplyCurveField.AREA_SQ_KM: self.area,
+            SupplyCurveField.LATITUDE: self.latitude,
+            SupplyCurveField.LONGITUDE: self.longitude,
+            SupplyCurveField.COUNTRY: self.country,
+            SupplyCurveField.STATE: self.state,
+            SupplyCurveField.COUNTY: self.county,
+            SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.TIMEZONE: self.timezone,
+        }
         meta = pd.Series(meta)
 
         return meta
@@ -1722,24 +1738,31 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         # year CF, but the output should be identical to the original LCOE and
         # so is not consequential).
         if self._recalc_lcoe:
-            required = ('fixed_charge_rate',
-                        'capital_cost',
-                        'fixed_operating_cost',
-                        'variable_operating_cost',
-                        'system_capacity')
-            if (self.mean_h5_dsets_data is not None
-                    and all(k in self.mean_h5_dsets_data for k in required)):
-                aep = (self.mean_h5_dsets_data['system_capacity']
-                       * self.mean_cf * 8760)
+            required = (
+                "fixed_charge_rate",
+                "capital_cost",
+                "fixed_operating_cost",
+                "variable_operating_cost",
+                "system_capacity",
+            )
+            if self.mean_h5_dsets_data is not None and all(
+                k in self.mean_h5_dsets_data for k in required
+            ):
+                aep = (
+                    self.mean_h5_dsets_data["system_capacity"]
+                    * self.mean_cf
+                    * 8760
+                )
                 # Note the AEP computation uses the SAM config
                 # `system_capacity`, so no need to scale `capital_cost`
                 # or `fixed_operating_cost` by anything
                 mean_lcoe = lcoe_fcr(
-                    self.mean_h5_dsets_data['fixed_charge_rate'],
-                    self.mean_h5_dsets_data['capital_cost'],
-                    self.mean_h5_dsets_data['fixed_operating_cost'],
-                    aep, self.mean_h5_dsets_data[
-                        'variable_operating_cost'])
+                    self.mean_h5_dsets_data["fixed_charge_rate"],
+                    self.mean_h5_dsets_data["capital_cost"],
+                    self.mean_h5_dsets_data["fixed_operating_cost"],
+                    aep,
+                    self.mean_h5_dsets_data["variable_operating_cost"],
+                )
 
         # alternative if lcoe was not able to be re-calculated from
         # multi year mean CF
@@ -1977,8 +2000,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         cap_cost_per_mw = (
-            self.mean_h5_dsets_data['capital_cost']
-            / self.mean_h5_dsets_data['system_capacity'])
+            self.mean_h5_dsets_data["capital_cost"]
+            / self.mean_h5_dsets_data["system_capacity"]
+        )
         return cap_cost_per_mw * self.capacity
 
     @property
@@ -1999,14 +2023,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if self.mean_h5_dsets_data is None:
             return None
 
-        required = ('fixed_operating_cost',
-                    'system_capacity')
+        required = ("fixed_operating_cost", "system_capacity")
         if not all(k in self.mean_h5_dsets_data for k in required):
             return None
 
         fixed_cost_per_mw = (
-            self.mean_h5_dsets_data['fixed_operating_cost']
-            / self.mean_h5_dsets_data['system_capacity'])
+            self.mean_h5_dsets_data["fixed_operating_cost"]
+            / self.mean_h5_dsets_data["system_capacity"]
+        )
         return fixed_cost_per_mw * self.capacity
 
     @property
@@ -2183,14 +2207,17 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
             SupplyCurveField.CAPACITY: self.capacity,
-            SupplyCurveField.AREA_SQ_KM: self.area}
+            SupplyCurveField.AREA_SQ_KM: self.area,
+        }
 
-        extra_atts = [SupplyCurveField.CAPACITY_AC,
-                      SupplyCurveField.OFFSHORE,
-                      SupplyCurveField.SC_POINT_CAPITAL_COST,
-                      SupplyCurveField.SC_POINT_FIXED_OPERATING_COST,
-                      SupplyCurveField.SC_POINT_ANNUAL_ENERGY,
-                      SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC]
+        extra_atts = [
+            SupplyCurveField.CAPACITY_AC,
+            SupplyCurveField.OFFSHORE,
+            SupplyCurveField.SC_POINT_CAPITAL_COST,
+            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST,
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY,
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC,
+        ]
         for attr in extra_atts:
             value = getattr(self, attr)
             if value is not None:
@@ -2247,9 +2274,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary[SupplyCurveField.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
         summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
         if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
-            scaled_costs = (summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
-                            * eos.capital_cost_scalar)
-            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = scaled_costs
+            scaled_costs = (
+                summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
+                * eos.capital_cost_scalar
+            )
+            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = (
+                scaled_costs
+            )
 
         return summary
 
