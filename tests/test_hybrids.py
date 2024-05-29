@@ -13,7 +13,7 @@ from reV import TESTDATADIR, Outputs
 from reV.cli import main
 from reV.hybrids import HYBRID_METHODS, Hybridization
 from reV.hybrids.hybrids import MERGE_COLUMN, OUTPUT_PROFILE_NAMES, HybridsData
-from reV.utilities import ModuleName, SupplyCurveField
+from reV.utilities import ModuleName, SupplyCurveField, OldSupplyCurveField
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 
 SOLAR_FPATH = os.path.join(
@@ -29,9 +29,15 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, "rep_profiles_out", "rep_profiles_solar_multiple.h5"
 )
 with Resource(SOLAR_FPATH) as res:
-    SOLAR_SCPGIDS = set(res.meta[SupplyCurveField.SC_POINT_GID])
+    meta = res.meta.rename(
+        columns=SupplyCurveField.map_from(OldSupplyCurveField)
+    )
+    SOLAR_SCPGIDS = set(meta[SupplyCurveField.SC_POINT_GID])
 with Resource(WIND_FPATH) as res:
-    WIND_SCPGIDS = set(res.meta[SupplyCurveField.SC_POINT_GID])
+    meta = res.meta.rename(
+        columns=SupplyCurveField.map_from(OldSupplyCurveField)
+    )
+    WIND_SCPGIDS = set(meta[SupplyCurveField.SC_POINT_GID])
 
 
 def test_hybridization_profile_output_single_resource():
@@ -57,7 +63,9 @@ def test_hybridization_profile_output_single_resource():
         hwp,
     ) = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid)[0][0]
+    h_idx = np.where(
+        h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
+    )[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar)
     assert np.allclose(hsp[:, h_idx], weighted_solar)
