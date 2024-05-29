@@ -26,6 +26,7 @@ from reV.supply_curve.sc_aggregation import (
     SupplyCurveAggregation,
     _warn_about_large_datasets,
 )
+from reV.handlers.exclusions import LATITUDE
 from reV.utilities import ModuleName, SupplyCurveField
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -42,13 +43,12 @@ DATA_LAYERS = {
     "reeds_region": {"dset": "ri_reeds_regions", "method": "mode"},
     "padus": {"dset": "ri_padus", "method": "mode"},
 }
-
 EXCL_DICT = {
     "ri_srtm_slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
     "ri_padus": {"exclude_values": [1], "exclude_nodata": True},
 }
-
 RTOL = 0.001
+LEGACY_SC_COL_MAP = SupplyCurveField.map_from_legacy()
 
 
 def test_agg_extent(resolution=64):
@@ -124,7 +124,9 @@ def test_agg_summary():
                   SupplyCurveField.GID_COUNTS]:
             summary[c] = summary[c].astype(str)
 
-    s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+    s_baseline = pd.read_csv(AGG_BASELINE)
+    s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
@@ -160,8 +162,9 @@ def test_agg_summary_solar_ac(pd):
         )
         summary = sca.summarize(gen, max_workers=1)
 
-    assert "capacity_ac" in summary
-    assert np.allclose(summary["capacity"] / 1.3, summary["capacity_ac"])
+    assert SupplyCurveField.CAPACITY_AC in summary
+    assert np.allclose(summary[SupplyCurveField.CAPACITY] / 1.3,
+                       summary[SupplyCurveField.CAPACITY_AC])
 
 
 def test_multi_file_excl():
@@ -183,7 +186,7 @@ def test_multi_file_excl():
         shutil.copy(EXCL, excl_temp_2)
 
         with h5py.File(excl_temp_1, 'a') as f:
-            shape = f[SupplyCurveField.LATITUDE].shape
+            shape = f[LATITUDE].shape
             attrs = dict(f['ri_srtm_slope'].attrs)
             data = np.ones(shape)
             test_dset = "excl_test"
@@ -201,7 +204,9 @@ def test_multi_file_excl():
         )
         summary = sca.summarize(GEN)
 
-        s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+        s_baseline = pd.read_csv(AGG_BASELINE)
+        s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+        s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
         summary = summary.fillna("None")
         s_baseline = s_baseline.fillna("None")
@@ -237,7 +242,9 @@ def test_pre_extract_inclusions(pre_extract):
                   SupplyCurveField.GID_COUNTS]:
             summary[c] = summary[c].astype(str)
 
-    s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+    s_baseline = pd.read_csv(AGG_BASELINE)
+    s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
@@ -425,16 +432,17 @@ def test_data_layer_methods():
 
 
 @pytest.mark.parametrize(
-    "cap_cost_scale", ["1", "2 * np.multiply(1000, capacity) ** -0.3"]
+    "cap_cost_scale",
+    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"]
 )
 def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
-    data = {SupplyCurveField.CAPITAL_COST: 34900000,
-            SupplyCurveField.FIXED_OPERATING_COST: 280000,
-            SupplyCurveField.FIXED_CHARGE_RATE: 0.09606382995843887,
-            SupplyCurveField.VARIABLE_OPERATING_COST: 0,
+    data = {"capital_cost": 34900000,
+            "fixed_operating_cost": 280000,
+            "fixed_charge_rate": 0.09606382995843887,
+            "variable_operating_cost": 0,
             'system_capacity': 20000}
     annual_cf = [0.24, 0.26, 0.37, 0.15]
     annual_lcoe = []
@@ -451,11 +459,11 @@ def test_recalc_lcoe(cap_cost_scale):
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
             for year, cf in zip(years, annual_cf):
-                lcoe = lcoe_fcr(data[SupplyCurveField.FIXED_CHARGE_RATE],
-                                data[SupplyCurveField.CAPITAL_COST],
-                                data[SupplyCurveField.FIXED_OPERATING_COST],
+                lcoe = lcoe_fcr(data["fixed_charge_rate"],
+                                data["capital_cost"],
+                                data["fixed_operating_cost"],
                                 data['system_capacity'] * cf * 8760,
-                                data[SupplyCurveField.VARIABLE_OPERATING_COST])
+                                data["variable_operating_cost"])
                 cf_arr = np.full(res['meta'].shape, cf)
                 lcoe_arr = np.full(res['meta'].shape, lcoe)
                 annual_lcoe.append(lcoe)
@@ -476,10 +484,10 @@ def test_recalc_lcoe(cap_cost_scale):
                 "lcoe_fcr-means", res["meta"].shape, data=lcoe_arr
             )
 
-        h5_dsets = [SupplyCurveField.CAPITAL_COST,
-                    SupplyCurveField.FIXED_OPERATING_COST,
-                    SupplyCurveField.FIXED_CHARGE_RATE,
-                    SupplyCurveField.VARIABLE_OPERATING_COST,
+        h5_dsets = ["capital_cost",
+                    "fixed_operating_cost",
+                    "fixed_charge_rate",
+                    "variable_operating_cost",
                     'system_capacity']
 
         base = SupplyCurveAggregation(
