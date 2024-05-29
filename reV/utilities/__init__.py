@@ -32,6 +32,8 @@ OldSupplyCurveField = {
     "sc_col_ind": "SC_COL_IND",
     "mean_cf": "MEAN_CF",
     "capital_cost": "CAPITAL_COST",
+    "mean_lcoe_friction": "MEAN_LCOE_FRICTION",
+    "total_lcoe_friction": "TOTAL_LCOE_FRICTION",
 }
 
 

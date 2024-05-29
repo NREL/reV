@@ -37,16 +37,17 @@ TRANS_COSTS_2 = {
 }
 
 path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary.csv")
-SC_POINTS = pd.read_csv(path)
+LEGACY_SC_COL_MAP = SupplyCurveField.map_from_legacy()
+SC_POINTS = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary_friction.csv")
-SC_POINTS_FRICTION = pd.read_csv(path)
+SC_POINTS_FRICTION = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "trans_tables/ri_transmission_table.csv")
-TRANS_TABLE = pd.read_csv(path)
+TRANS_TABLE = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "trans_tables/transmission_multipliers.csv")
-MULTIPLIERS = pd.read_csv(path)
+MULTIPLIERS = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 SC_FULL_COLUMNS = (
     "trans_gid",
@@ -67,6 +68,7 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
+        baseline = baseline.rename(columns=LEGACY_SC_COL_MAP)
         # double check useful for when tables are changing
         # but lcoe should be the same
         check = np.allclose(baseline["total_lcoe"], sc_full["total_lcoe"])
@@ -681,11 +683,13 @@ def test_least_cost_simple_with_ac_capacity_column():
             trans_tables.append(out_fp)
 
         sc = SC_POINTS.copy()
-        sc["capacity_ac"] = sc["capacity"] / 1.02
+        sc[SupplyCurveField.CAPACITY_AC] = sc[SupplyCurveField.CAPACITY] / 1.02
 
-        sc = SupplyCurve(sc, trans_tables, sc_capacity_col="capacity_ac")
+        sc = SupplyCurve(sc, trans_tables,
+                         sc_capacity_col=SupplyCurveField.CAPACITY_AC)
         sc_simple_ac_cap = sc.simple_sort(fcr=0.1)
-        verify_trans_cap(sc_simple_ac_cap, trans_tables, cap_col="capacity_ac")
+        verify_trans_cap(sc_simple_ac_cap, trans_tables,
+                         cap_col=SupplyCurveField.CAPACITY_AC)
 
         assert np.allclose(
             sc_simple["trans_cap_cost_per_mw"] * 1.02,
