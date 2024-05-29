@@ -68,7 +68,7 @@ def test_slicer(gids, resolution):
 
 
 @pytest.mark.parametrize(
-    (SupplyCurveField.GID, "resolution", "excl_dict", "time_series"),
+    ("gid", "resolution", "excl_dict", "time_series"),
     [
         (37, 64, None, None),
         (37, 64, EXCL_DICT, None),
@@ -109,7 +109,7 @@ def test_weighted_means(gid, resolution, excl_dict, time_series):
 
 
 @pytest.mark.parametrize(
-    (SupplyCurveField.GID, "resolution", "excl_dict", "time_series"),
+    ("gid", "resolution", "excl_dict", "time_series"),
     [
         (37, 64, None, None),
         (37, 64, EXCL_DICT, None),

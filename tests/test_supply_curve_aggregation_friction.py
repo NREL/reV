@@ -64,7 +64,7 @@ def test_friction_mask():
     assert diff < 0.0001, m
 
 
-@pytest.mark.parametrize(SupplyCurveField.GID, [100, 114, 130, 181])
+@pytest.mark.parametrize("gid", [100, 114, 130, 181])
 def test_agg_friction(gid):
     """Test SC Aggregation with friction by checking friction factors and LCOE
     against a hand calc."""

@@ -86,7 +86,7 @@ def trans_table():
     return trans_table
 
 
-@pytest.mark.parametrize(('i', 'trans_costs', 'distance', SupplyCurveField.GID),
+@pytest.mark.parametrize(('i', 'trans_costs', 'distance', 'gid'),
                          ((1, TRANS_COSTS_1, 0, 43300),
                           (2, TRANS_COSTS_2, 0, 43300),
                           (1, TRANS_COSTS_1, 100, 43300),
