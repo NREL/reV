@@ -5,6 +5,7 @@ Created on Fri Mar  1 15:24:13 2019
 
 @author: gbuster
 """
+
 import os
 from copy import deepcopy
 
@@ -63,10 +64,16 @@ def test_cf_curtailment(year, site):
     points = slice(site, site + 1)
 
     # run reV 2.0 generation
-    gen = Gen('windpower', points, sam_files, res_file,
-              output_request=('cf_profile',),
-              curtailment=curtailment,
-              sites_per_worker=50, scale_outputs=True)
+    gen = Gen(
+        "windpower",
+        points,
+        sam_files,
+        res_file,
+        output_request=("cf_profile",),
+        curtailment=curtailment,
+        sites_per_worker=50,
+        scale_outputs=True,
+    )
     gen.run(max_workers=1)
     results, check_curtailment = test_res_curtailment(year, site=site)
     results["cf_profile"] = gen.out["cf_profile"].flatten()
@@ -82,8 +89,6 @@ def test_cf_curtailment(year, site):
         "was not curtailed!"
     )
     assert np.sum(check) == 0, msg
-
-    return results
 
 
 @pytest.mark.parametrize("year", ["2012", "2013"])
@@ -200,8 +205,10 @@ def test_res_curtailment(year, site):
 
     sza = SolarPosition(
         non_curtailed_res.time_index,
-        non_curtailed_res.meta[[ResourceMetaField.LATITUDE,
-                                ResourceMetaField.LONGITUDE]].values).zenith
+        non_curtailed_res.meta[
+            [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
+        ].values,
+    ).zenith
 
     ti = non_curtailed_res.time_index
 
@@ -285,8 +292,8 @@ def test_eqn_curtailment(plot=False):
     nc_res = non_curtailed_res[0]
     c_mask = (c_res.windspeed == 0) & (nc_res.windspeed > 0)
 
-    temperature = nc_res['temperature'].values
-    wind_speed = nc_res['windspeed'].values
+    temperature = nc_res["temperature"].values
+    wind_speed = nc_res["windspeed"].values
 
     eval_mask = eval(c_eqn)
 

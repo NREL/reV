@@ -257,13 +257,14 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         Returns
         -------
         meta : pd.DataFrame | pd.Series
-            Datafram or series for a single site. Will include "timezone"
+            Dataframe or series for a single site. Will include "timezone"
             and "elevation" from the sam and site system inputs if found.
         """
 
         if meta is not None:
+            axis = 0 if isinstance(meta, pd.core.series.Series) else 1
             meta = meta.rename(
-                SupplyCurveField.map_to(ResourceMetaField), axis=1
+                SupplyCurveField.map_to(ResourceMetaField), axis=axis
             )
             if sam_sys_inputs is not None:
                 if ResourceMetaField.ELEVATION in sam_sys_inputs:
