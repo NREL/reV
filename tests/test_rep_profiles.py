@@ -17,7 +17,7 @@ from reV.rep_profiles.rep_profiles import (
     RepProfiles,
     RepresentativeMethods,
 )
-from reV.utilities import SupplyCurveField
+from reV.utilities import ResourceMetaField, SupplyCurveField
 
 GEN_FPATH = os.path.join(TESTDATADIR, "gen_out/gen_ri_pv_2012_x000.h5")
 
@@ -137,7 +137,7 @@ def test_integrated():
                                 'res_class': zeros,
                                 'weight': ones,
                                 'region': regions,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
     rp = RepProfiles(GEN_FPATH, rev_summary, 'region', weight='weight')
     rp.run(max_workers=1)
     p1, m1 = rp.profiles, rp.meta
@@ -161,7 +161,7 @@ def test_sc_points():
     rev_summary = pd.DataFrame({SupplyCurveField.SC_GID: sites,
                                 SupplyCurveField.GEN_GIDS: sites,
                                 SupplyCurveField.RES_GIDS: sites,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
 
     rp = RepProfiles(GEN_FPATH, rev_summary,
                      SupplyCurveField.SC_GID, weight=None)
@@ -206,7 +206,7 @@ def test_agg_profile():
 
             raw_profiles = []
             for gid in res_gids:
-                iloc = np.where(meta[SupplyCurveField.GID] == gid)[0][0]
+                iloc = np.where(meta[ResourceMetaField.GID] == gid)[0][0]
                 prof = np.expand_dims(res['cf_profile', :, iloc], 1)
                 raw_profiles.append(prof)
 
@@ -247,7 +247,7 @@ def test_many_regions(use_weights):
                                 'region1': region1,
                                 'region2': region2,
                                 'weight': sites + 1,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
     reg_cols = ['region1', 'region2']
     if use_weights:
         rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight="weight")
