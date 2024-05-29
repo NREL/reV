@@ -19,7 +19,7 @@ import pandas as pd
 
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
-from reV.utilities import SiteDataField, SupplyCurveField, log_versions
+from reV.utilities import SiteDataField, ResourceMetaField, log_versions
 from reV.utilities.exceptions import (
     DataShapeError,
     OffshoreWindInputError,
@@ -36,7 +36,8 @@ class RevNrwal:
     """Columns from the `site_data` table to join to the output meta data"""
 
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
-                 output_request, save_raw=True, meta_gid_col=SupplyCurveField.GID,
+                 output_request, save_raw=True,
+                 meta_gid_col=ResourceMetaField.GID,
                  site_meta_cols=None):
         """Framework to handle reV-NRWAL analysis.
 
