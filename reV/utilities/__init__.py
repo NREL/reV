@@ -38,8 +38,6 @@ OldSupplyCurveField = {
 class FieldEnum(str, Enum):
     """Base Field enum with some mapping methods."""
 
-    _OLD_NAMES = OldSupplyCurveField
-
     @classmethod
     def map_to(cls, other):
         """Return a rename map from this enum to another."""
@@ -57,9 +55,9 @@ class FieldEnum(str, Enum):
 
     @classmethod
     def map_from_legacy(cls):
-        """Return a rename map from a dictionary of name / member pairs (e.g.
-        'sc_gid': 'SC_GID') to this enum."""
-        return {name: cls[mem] for name, mem in cls._OLD_NAMES.items()}
+        """Return a dictionary -> this enum map using the dictionary of legacy
+        names"""
+        return cls.map_from(OldSupplyCurveField)
 
     def __str__(self):
         return self.value
