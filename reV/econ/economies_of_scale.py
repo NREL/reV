@@ -13,6 +13,7 @@ import pandas as pd
 from rex.utilities.utilities import check_eval_str
 
 from reV.econ.utilities import lcoe_fcr
+from reV.utilities import SupplyCurveField
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +191,7 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
-        key_list = ['capital_cost', 'mean_capital_cost']
+        key_list = [SupplyCurveField.CAPITAL_COST, 'mean_capital_cost']
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -229,7 +230,7 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = ['fixed_charge_rate',
+        key_list = [SupplyCurveField.FIXED_CHARGE_RATE,
                     'mean_fixed_charge_rate',
                     'fcr', 'mean_fcr']
         return self._get_prioritized_keys(self._data, key_list)
@@ -243,7 +244,7 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = ['fixed_operating_cost',
+        key_list = [SupplyCurveField.FIXED_OPERATING_COST,
                     'mean_fixed_operating_cost',
                     'foc', 'mean_foc']
         return self._get_prioritized_keys(self._data, key_list)
@@ -257,7 +258,7 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = ['variable_operating_cost',
+        key_list = [SupplyCurveField.VARIABLE_OPERATING_COST,
                     'mean_variable_operating_cost',
                     'voc', 'mean_voc']
         return self._get_prioritized_keys(self._data, key_list)
@@ -285,7 +286,7 @@ class EconomiesOfScale:
         -------
         lcoe : float | np.ndarray
         """
-        key_list = ["raw_lcoe", "mean_lcoe"]
+        key_list = [SupplyCurveField.RAW_LCOE, SupplyCurveField.MEAN_LCOE]
         return copy.deepcopy(self._get_prioritized_keys(self._data, key_list))
 
     @property
