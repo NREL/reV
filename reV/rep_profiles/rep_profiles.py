@@ -23,7 +23,7 @@ from rex.utilities.utilities import parse_year, to_records_array
 from scipy import stats
 
 from reV.handlers.outputs import Outputs
-from reV.utilities import SupplyCurveField, log_versions
+from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
 from reV.utilities.exceptions import DataShapeError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -394,8 +394,8 @@ class RegionRepProfile:
         with Resource(self._gen_fpath) as res:
             meta = res.meta
 
-            assert SupplyCurveField.GID in meta
-            source_res_gids = meta[SupplyCurveField.GID].values
+            assert ResourceMetaField.GID in meta
+            source_res_gids = meta[ResourceMetaField.GID].values
             msg = ('Resource gids from "gid" column in meta data from "{}" '
                    'must be sorted! reV generation should always be run with '
                    'sequential project points.'.format(self._gen_fpath))
