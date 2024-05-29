@@ -46,7 +46,10 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
-                truth = truth.set_index('sc_gid')
+                truth = truth.rename(
+                    columns=SupplyCurveField.map_from_legacy()
+                )
+                truth = truth.set_index(SupplyCurveField.SC_GID)
                 for c in [SupplyCurveField.SOURCE_GIDS,
                           SupplyCurveField.GID_COUNTS]:
                     test[c] = test[c].astype(str)
