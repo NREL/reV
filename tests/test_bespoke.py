@@ -1690,9 +1690,7 @@ def test_bespoke_5min_sample():
 
         # hack techmap because 5min data only has 10 wind resource pixels
         with h5py.File(excl_fp, "a") as excl_file:
-            arr = np.random.choice(
-                10, size=excl_file[SupplyCurveField.LATITUDE].shape
-            )
+            arr = np.random.choice(10, size=excl_file["latitude"].shape)
             excl_file.create_dataset(name=tm_dset, data=arr)
 
         bsp = BespokeWindPlants(

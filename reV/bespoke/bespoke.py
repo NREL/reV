@@ -584,13 +584,17 @@ class BespokeSinglePlant:
 
         if isinstance(gid_map, str):
             if gid_map.endswith(".csv"):
-                gid_map = pd.read_csv(gid_map).to_dict()
+                gid_map = (
+                    pd.read_csv(gid_map)
+                    .rename(SupplyCurveField.map_to(ResourceMetaField), axis=1)
+                    .to_dict()
+                )
                 err_msg = f"Need {ResourceMetaField.GID} in gid_map column"
                 assert ResourceMetaField.GID in gid_map, err_msg
                 assert "gid_map" in gid_map, 'Need "gid_map" in gid_map column'
                 gid_map = {
                     gid_map[ResourceMetaField.GID][i]: gid_map["gid_map"][i]
-                    for i in gid_map[ResourceMetaField.GID].keys()
+                    for i in gid_map[ResourceMetaField.GID]
                 }
 
             elif gid_map.endswith(".json"):
