@@ -190,6 +190,8 @@ class CompetitiveWindFarms:
             cardinal direction for each sc point gid
         """
         wind_dirs = cls._parse_table(wind_dirs)
+        wind_dirs = wind_dirs.rename(
+            columns=SupplyCurveField.map_from_legacy())
 
         wind_dirs = wind_dirs.set_index(SupplyCurveField.SC_POINT_GID)
         columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
@@ -221,6 +223,8 @@ class CompetitiveWindFarms:
             Mask array to mask excluded sc_point_gids
         """
         sc_points = cls._parse_table(sc_points)
+        sc_points = sc_points.rename(
+            columns=SupplyCurveField.map_from_legacy())
         if SupplyCurveField.OFFSHORE in sc_points and not offshore:
             logger.debug('Not including offshore supply curve points in '
                          'CompetitiveWindFarm')
@@ -230,7 +234,8 @@ class CompetitiveWindFarms:
         mask = np.ones(int(1 + sc_points[SupplyCurveField.SC_POINT_GID].max()),
                        dtype=bool)
 
-        sc_points = sc_points[[SupplyCurveField.SC_GID, SupplyCurveField.SC_POINT_GID]]
+        sc_points = sc_points[[SupplyCurveField.SC_GID,
+                               SupplyCurveField.SC_POINT_GID]]
         sc_gids = sc_points.set_index(SupplyCurveField.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
@@ -431,13 +436,16 @@ class CompetitiveWindFarms:
             wind farms
         """
         sc_points = self._parse_table(sc_points)
+        sc_points = sc_points.rename(
+            columns=SupplyCurveField.map_from_legacy())
         if SupplyCurveField.OFFSHORE in sc_points and not self._offshore:
             mask = sc_points[SupplyCurveField.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
         sc_points = sc_points.sort_values(sort_on)
 
-        sc_point_gids = sc_points[SupplyCurveField.SC_POINT_GID].values.astype(int)
+        sc_point_gids = sc_points[SupplyCurveField.SC_POINT_GID].values
+        sc_point_gids = sc_point_gids.astype(int)
 
         for i in range(len(sc_points)):
             gid = sc_point_gids[i]

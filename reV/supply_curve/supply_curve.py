@@ -185,6 +185,8 @@ class SupplyCurve:
                 sc_points = sc_points.reset_index()
         else:
             sc_points = parse_table(sc_points)
+            sc_points = sc_points.rename(
+                columns=SupplyCurveField.map_from_legacy())
 
         logger.debug(
             "Supply curve points table imported with columns: {}".format(
@@ -194,6 +196,8 @@ class SupplyCurve:
 
         if sc_features is not None:
             sc_features = parse_table(sc_features)
+            sc_features = sc_features.rename(
+                columns=SupplyCurveField.map_from_legacy())
             merge_cols = [c for c in sc_features if c in sc_points]
             sc_points = sc_points.merge(sc_features, on=merge_cols, how="left")
             logger.debug(
@@ -288,12 +292,13 @@ class SupplyCurve:
             trans_table = trans_table.rename(columns={"dist_mi": "dist_km"})
             trans_table["dist_km"] *= 1.60934
 
-        drop_cols = [SupplyCurveField.SC_GID, 'cap_left', SupplyCurveField.SC_POINT_GID]
+        drop_cols = [SupplyCurveField.SC_GID, 'cap_left',
+                     SupplyCurveField.SC_POINT_GID]
         drop_cols = [c for c in drop_cols if c in trans_table]
         if drop_cols:
             trans_table = trans_table.drop(columns=drop_cols)
 
-        return trans_table
+        return trans_table.rename(columns=SupplyCurveField.map_from_legacy())
 
     @staticmethod
     def _map_trans_capacity(trans_sc_table,
