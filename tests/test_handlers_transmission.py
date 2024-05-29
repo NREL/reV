@@ -116,8 +116,7 @@ def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     assert true_cost == trans_cost
 
 
-@pytest.mark.parametrize(('trans_costs', SupplyCurveField.CAPACITY,
-                          SupplyCurveField.GID),
+@pytest.mark.parametrize(('trans_costs', "capacity", "gid"),
                          ((TRANS_COSTS_1, 350, 43300),
                           (TRANS_COSTS_2, 350, 43300),
                           (TRANS_COSTS_1, 100, 43300),
