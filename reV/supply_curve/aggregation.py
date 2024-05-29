@@ -698,7 +698,10 @@ class Aggregation(BaseAggregation):
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
         }
-        dsets = (*agg_dset, "meta",)
+        dsets = (
+            *agg_dset,
+            "meta",
+        )
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0

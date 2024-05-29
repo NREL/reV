@@ -3,6 +3,7 @@
 reV module for calculating economies of scale where larger power plants will
 have reduced capital cost.
 """
+
 import copy
 import logging
 import re
@@ -60,20 +61,26 @@ class EconomiesOfScale:
             check_eval_str(str(self._eqn))
 
         if isinstance(self._data, pd.DataFrame):
-            self._data = {k: self._data[k].values.flatten()
-                          for k in self._data.columns}
+            self._data = {
+                k: self._data[k].values.flatten() for k in self._data.columns
+            }
 
         if not isinstance(self._data, dict):
-            e = ('Cannot evaluate EconomiesOfScale with data input of type: {}'
-                 .format(type(self._data)))
+            e = (
+                "Cannot evaluate EconomiesOfScale with data input of type: "
+                "{}".format(type(self._data))
+            )
+
             logger.error(e)
             raise TypeError(e)
 
         missing = [name for name in self.vars if name not in self._data]
 
         if any(missing):
-            e = ('Cannot evaluate EconomiesOfScale, missing data for variables'
-                 ': {} for equation: {}'.format(missing, self._eqn))
+            e = (
+                "Cannot evaluate EconomiesOfScale, missing data for variables"
+                ": {} for equation: {}".format(missing, self._eqn)
+            )
             logger.error(e)
             raise KeyError(e)
 
@@ -90,7 +97,7 @@ class EconomiesOfScale:
     @staticmethod
     def is_method(s):
         """Check if a string is a numpy/pandas or python builtin method"""
-        return bool(s.startswith(('np.', 'pd.')) or s in dir(__builtins__))
+        return bool(s.startswith(("np.", "pd.")) or s in dir(__builtins__))
 
     @property
     def vars(self):
@@ -106,8 +113,8 @@ class EconomiesOfScale:
         """
         var_names = []
         if self._eqn is not None:
-            delimiters = ('*', '/', '+', '-', ' ', '(', ')', '[', ']', ',')
-            regex_pattern = '|'.join(map(re.escape, delimiters))
+            delimiters = ("*", "/", "+", "-", " ", "(", ")", "[", "]", ",")
+            regex_pattern = "|".join(map(re.escape, delimiters))
             var_names = []
             for sub in re.split(regex_pattern, str(self._eqn)):
                 if sub and not self.is_num(sub) and not self.is_method(sub):
@@ -161,9 +168,10 @@ class EconomiesOfScale:
                 break
 
         if out is None:
-            e = ('Could not find requested key list ({}) in the input '
-                 'dictionary keys: {}'
-                 .format(key_list, list(input_dict.keys())))
+            e = (
+                "Could not find requested key list ({}) in the input "
+                "dictionary keys: {}".format(key_list, list(input_dict.keys()))
+            )
             logger.error(e)
             raise KeyError(e)
 
@@ -191,7 +199,10 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
-        key_list = [SupplyCurveField.CAPITAL_COST, 'mean_capital_cost']
+        key_list = [
+            SupplyCurveField.CAPITAL_COST,
+            "mean_capital_cost",
+        ]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -218,7 +229,7 @@ class EconomiesOfScale:
         -------
         out : float | np.ndarray
         """
-        key_list = ['system_capacity', 'mean_system_capacity']
+        key_list = ["system_capacity", "mean_system_capacity"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -230,9 +241,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = [SupplyCurveField.FIXED_CHARGE_RATE,
-                    'mean_fixed_charge_rate',
-                    'fcr', 'mean_fcr']
+        key_list = [
+            SupplyCurveField.FIXED_CHARGE_RATE,
+            "mean_fixed_charge_rate",
+            "fcr",
+            "mean_fcr",
+        ]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -244,9 +258,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = [SupplyCurveField.FIXED_OPERATING_COST,
-                    'mean_fixed_operating_cost',
-                    'foc', 'mean_foc']
+        key_list = [
+            SupplyCurveField.FIXED_OPERATING_COST,
+            "mean_fixed_operating_cost",
+            "foc",
+            "mean_foc",
+        ]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -258,9 +275,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = [SupplyCurveField.VARIABLE_OPERATING_COST,
-                    'mean_variable_operating_cost',
-                    'voc', 'mean_voc']
+        key_list = [
+            SupplyCurveField.VARIABLE_OPERATING_COST,
+            "mean_variable_operating_cost",
+            "voc",
+            "mean_voc",
+        ]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -302,5 +322,6 @@ class EconomiesOfScale:
             LCOE calculated with the scaled capital cost based on the
             EconomiesOfScale input equation.
         """
-        return lcoe_fcr(self.fcr, self.scaled_capital_cost, self.foc,
-                        self.aep, self.voc)
+        return lcoe_fcr(
+            self.fcr, self.scaled_capital_cost, self.foc, self.aep, self.voc
+        )
