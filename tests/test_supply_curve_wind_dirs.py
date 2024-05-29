@@ -45,9 +45,12 @@ def test_competitive_wind_dirs(downwind):
         sc_points.to_csv(baseline, index=False)
     else:
         baseline = pd.read_csv(baseline)
+        baseline = baseline.rename(columns=SupplyCurveField.map_from_legacy())
 
-    sc_points = sc_points.sort_values(by="sc_gid").reset_index(drop=True)
-    baseline = baseline.sort_values(by="sc_gid").reset_index(drop=True)
+    sc_points = sc_points.sort_values(by=SupplyCurveField.SC_GID)
+    sc_points = sc_points.reset_index(drop=True)
+    baseline = baseline.sort_values(by=SupplyCurveField.SC_GID)
+    baseline = baseline.reset_index(drop=True)
 
     assert_frame_equal(sc_points, baseline, check_dtype=False)
 
@@ -72,6 +75,7 @@ def test_sc_full_wind_dirs(downwind):
         sc_out.to_csv(baseline, index=False)
     else:
         baseline = pd.read_csv(baseline)
+        baseline = baseline.rename(columns=SupplyCurveField.map_from_legacy())
 
     assert_frame_equal(sc_out, baseline, check_dtype=False)
 
@@ -94,6 +98,7 @@ def test_sc_simple_wind_dirs(downwind):
         sc_out.to_csv(baseline, index=False)
     else:
         baseline = pd.read_csv(baseline)
+        baseline = baseline.rename(columns=SupplyCurveField.map_from_legacy())
 
     assert_frame_equal(sc_out, baseline, check_dtype=False)
 
@@ -107,6 +112,7 @@ def test_upwind_exclusion():
     sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
                           'sc_full_upwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
+    sc_out = sc_out.rename(columns=SupplyCurveField.map_from_legacy())
 
     sc_point_gids = sc_out[SupplyCurveField.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
@@ -127,6 +133,7 @@ def test_upwind_downwind_exclusion():
     sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
                           'sc_full_downwind.csv')
     sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
+    sc_out = sc_out.rename(columns=SupplyCurveField.map_from_legacy())
 
     sc_point_gids = sc_out[SupplyCurveField.SC_POINT_GID].values.tolist()
     for _, row in sc_out.iterrows():
