@@ -2210,16 +2210,21 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.AREA_SQ_KM: self.area,
         }
 
-        extra_atts = [
-            SupplyCurveField.CAPACITY_AC,
-            SupplyCurveField.OFFSHORE,
-            SupplyCurveField.SC_POINT_CAPITAL_COST,
-            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST,
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY,
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC,
-        ]
-        for attr in extra_atts:
-            value = getattr(self, attr)
+        extra_atts = {
+            SupplyCurveField.CAPACITY_AC: self.capacity_ac,
+            SupplyCurveField.OFFSHORE: self.offshore,
+            SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
+            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
+                self.sc_point_fixed_operating_cost
+            ),
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
+                self.sc_point_annual_energy
+            ),
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC: (
+                self.sc_point_annual_energy_ac
+            ),
+        }
+        for attr, value in extra_atts.items():
             if value is not None:
                 ARGS[attr] = value
 
