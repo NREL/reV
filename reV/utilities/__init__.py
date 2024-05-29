@@ -86,6 +86,7 @@ OldSupplyCurveField = {
     "sc_row_ind": "SC_ROW_IND",
     "sc_col_ind": "SC_COL_IND",
     "mean_cf": "MEAN_CF",
+    "capital_cost": "CAPITAL_COST",
 }
 
 

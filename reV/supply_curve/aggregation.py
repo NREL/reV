@@ -18,7 +18,7 @@ from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities import SupplyCurveField, log_versions
+from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
 from reV.utilities.exceptions import (
     EmptySupplyCurvePointError,
     FileInputError,
@@ -472,12 +472,17 @@ class BaseAggregation(ABC):
             logger.error(msg)
             raise FileInputError(msg)
 
+        gen_index = gen_index.rename(
+            ResourceMetaField.map_to(SupplyCurveField), axis=1
+        )
         if SupplyCurveField.GID in gen_index:
             gen_index = gen_index.rename(
                 columns={SupplyCurveField.GID: SupplyCurveField.RES_GIDS}
             )
             gen_index[SupplyCurveField.GEN_GIDS] = gen_index.index
-            gen_index = gen_index[[SupplyCurveField.RES_GIDS, SupplyCurveField.GEN_GIDS]]
+            gen_index = gen_index[
+                [SupplyCurveField.RES_GIDS, SupplyCurveField.GEN_GIDS]
+            ]
             gen_index = gen_index.set_index(keys=SupplyCurveField.RES_GIDS)
             gen_index = gen_index.reindex(
                 range(int(gen_index.index.max() + 1))
@@ -696,7 +701,10 @@ class Aggregation(BaseAggregation):
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
         }
-        dsets = (*agg_dset, "meta",)
+        dsets = (
+            *agg_dset,
+            "meta",
+        )
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0

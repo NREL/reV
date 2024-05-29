@@ -2219,7 +2219,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC,
         ]
         for attr in extra_atts:
-            value = getattr(self, attr)
+            value = getattr(self, attr.name.lower())
             if value is not None:
                 ARGS[attr] = value
 
