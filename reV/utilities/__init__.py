@@ -8,9 +8,37 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 
 from reV.version import __version__
 
+OldSupplyCurveField = {
+    "sc_point_gid": "SC_POINT_GID",
+    "source_gids": "SOURCE_GIDS",
+    "sc_gid": "SC_GID",
+    "gid_counts": "GID_COUNTS",
+    "gid": "GID",
+    "n_gids": "N_GIDS",
+    "res_gids": "RES_GIDS",
+    "gen_gids": "GEN_GIDS",
+    "area_sq_km": "AREA_SQ_KM",
+    "latitude": "LATITUDE",
+    "longitude": "LONGITUDE",
+    "elevation": "ELEVATION",
+    "timezone": "TIMEZONE",
+    "county": "COUNTY",
+    "state": "STATE",
+    "country": "COUNTRY",
+    "mean_lcoe": "MEAN_LCOE",
+    "mean_res": "MEAN_RES",
+    "capacity": "CAPACITY",
+    "sc_row_ind": "SC_ROW_IND",
+    "sc_col_ind": "SC_COL_IND",
+    "mean_cf": "MEAN_CF",
+    "capital_cost": "CAPITAL_COST",
+}
+
 
 class FieldEnum(str, Enum):
     """Base Field enum with some mapping methods."""
+
+    _OLD_NAMES = OldSupplyCurveField
 
     @classmethod
     def map_to(cls, other):
@@ -26,6 +54,12 @@ class FieldEnum(str, Enum):
         """Return a rename map from a dictionary of name / member pairs (e.g.
         'sc_gid': 'SC_GID') to this enum."""
         return {name: cls[mem] for name, mem in other.items()}
+
+    @classmethod
+    def map_from_legacy(cls):
+        """Return a rename map from a dictionary of name / member pairs (e.g.
+        'sc_gid': 'SC_GID') to this enum."""
+        return {name: cls[mem] for name, mem in cls._OLD_NAMES.items()}
 
     def __str__(self):
         return self.value
@@ -61,33 +95,6 @@ class ResourceMetaField(FieldEnum):
 
 # Dictionary of "old" supply curve field names. Used to rename legacy data to
 # match current naming conventions
-
-
-OldSupplyCurveField = {
-    "sc_point_gid": "SC_POINT_GID",
-    "source_gids": "SOURCE_GIDS",
-    "sc_gid": "SC_GID",
-    "gid_counts": "GID_COUNTS",
-    "gid": "GID",
-    "n_gids": "N_GIDS",
-    "res_gids": "RES_GIDS",
-    "gen_gids": "GEN_GIDS",
-    "area_sq_km": "AREA_SQ_KM",
-    "latitude": "LATITUDE",
-    "longitude": "LONGITUDE",
-    "elevation": "ELEVATION",
-    "timezone": "TIMEZONE",
-    "county": "COUNTY",
-    "state": "STATE",
-    "country": "COUNTRY",
-    "mean_lcoe": "MEAN_LCOE",
-    "mean_res": "MEAN_RES",
-    "capacity": "CAPACITY",
-    "sc_row_ind": "SC_ROW_IND",
-    "sc_col_ind": "SC_COL_IND",
-    "mean_cf": "MEAN_CF",
-    "capital_cost": "CAPITAL_COST",
-}
 
 
 class OriginalSupplyCurveField(FieldEnum):

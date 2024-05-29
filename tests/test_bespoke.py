@@ -28,7 +28,6 @@ from reV.supply_curve.supply_curve import SupplyCurve
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities import (
     ModuleName,
-    OldSupplyCurveField,
     SiteDataField,
     SupplyCurveField,
 )
@@ -738,7 +737,7 @@ def test_collect_bespoke():
         for fp in source_fps:
             with Resource(fp) as source:
                 src_meta = source.meta.rename(
-                    SupplyCurveField.map_from(OldSupplyCurveField), axis=1
+                    SupplyCurveField.map_from_legacy(), axis=1
                 )
                 assert all(
                     np.isin(
@@ -812,7 +811,7 @@ def test_bespoke_supply_curve():
     normal_path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary.csv")
     normal_sc_points = pd.read_csv(normal_path)
     normal_sc_points = normal_sc_points.rename(
-        SupplyCurveField.map_from(OldSupplyCurveField), axis=1
+        SupplyCurveField.map_from_legacy(), axis=1
     )
 
     with tempfile.TemporaryDirectory() as td:

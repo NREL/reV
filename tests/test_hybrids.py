@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""reV hybrids tests.
-"""
+"""reV hybrids tests."""
+
 import json
 import os
 import tempfile
@@ -13,7 +13,7 @@ from reV import TESTDATADIR, Outputs
 from reV.cli import main
 from reV.hybrids import HYBRID_METHODS, Hybridization
 from reV.hybrids.hybrids import MERGE_COLUMN, OUTPUT_PROFILE_NAMES, HybridsData
-from reV.utilities import ModuleName, SupplyCurveField, OldSupplyCurveField
+from reV.utilities import ModuleName, SupplyCurveField
 from reV.utilities.exceptions import FileInputError, InputError, OutputWarning
 
 SOLAR_FPATH = os.path.join(
@@ -29,14 +29,10 @@ SOLAR_FPATH_MULT = os.path.join(
     TESTDATADIR, "rep_profiles_out", "rep_profiles_solar_multiple.h5"
 )
 with Resource(SOLAR_FPATH) as res:
-    meta = res.meta.rename(
-        columns=SupplyCurveField.map_from(OldSupplyCurveField)
-    )
+    meta = res.meta.rename(columns=SupplyCurveField.map_from_legacy())
     SOLAR_SCPGIDS = set(meta[SupplyCurveField.SC_POINT_GID])
 with Resource(WIND_FPATH) as res:
-    meta = res.meta.rename(
-        columns=SupplyCurveField.map_from(OldSupplyCurveField)
-    )
+    meta = res.meta.rename(columns=SupplyCurveField.map_from_legacy())
     WIND_SCPGIDS = set(meta[SupplyCurveField.SC_POINT_GID])
 
 
@@ -51,7 +47,7 @@ def test_hybridization_profile_output_single_resource():
         )[0][0]
 
         solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
-        solar_test_profile = res['rep_profiles_0', :, solar_idx]
+        solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
 
@@ -63,9 +59,9 @@ def test_hybridization_profile_output_single_resource():
         hwp,
     ) = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(
-        h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
-    )[0][0]
+    h_idx = np.where(h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid)[0][
+        0
+    ]
 
     assert np.allclose(hp[:, h_idx], weighted_solar)
     assert np.allclose(hsp[:, h_idx], weighted_solar)
@@ -84,7 +80,7 @@ def test_hybridization_profile_output_with_ratio_none():
         )[0][0]
 
         solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
-        solar_test_profile = res['rep_profiles_0', :, solar_idx]
+        solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
 
@@ -102,9 +98,9 @@ def test_hybridization_profile_output_with_ratio_none():
         hwp,
     ) = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(
-        h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
-    )[0][0]
+    h_idx = np.where(h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid)[0][
+        0
+    ]
 
     assert np.allclose(hp[:, h_idx], weighted_solar)
     assert np.allclose(hsp[:, h_idx], weighted_solar)
@@ -121,14 +117,14 @@ def test_hybridization_profile_output():
             res.meta[SupplyCurveField.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
         solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
-        solar_test_profile = res['rep_profiles_0', :, solar_idx]
+        solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     with Resource(WIND_FPATH) as res:
         wind_idx = np.where(
             res.meta[SupplyCurveField.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
         wind_cap = res.meta.loc[wind_idx, SupplyCurveField.CAPACITY]
-        wind_test_profile = res['rep_profiles_0', :, wind_idx]
+        wind_test_profile = res["rep_profiles_0", :, wind_idx]
 
     weighted_solar = solar_cap * solar_test_profile
     weighted_wind = wind_cap * wind_test_profile
@@ -281,7 +277,7 @@ def test_ratios_input(ratio_cols, ratio_bounds, bounds):
     )
 
     if SupplyCurveField.CAPACITY in ratio:
-        max_solar_capacities = h.hybrid_meta['hybrid_solar_capacity']
+        max_solar_capacities = h.hybrid_meta["hybrid_solar_capacity"]
         max_solar_capacities = max_solar_capacities.values.reshape(1, -1)
         assert np.all(
             h.profiles["hybrid_solar_profile"] <= max_solar_capacities
@@ -834,7 +830,7 @@ def make_test_file(
             meta.loc[0, SupplyCurveField.LATITUDE] = lat
             lon = meta[SupplyCurveField.LATITUDE].iloc[-1]
             meta.loc[0, SupplyCurveField.LATITUDE] = lon
-        shapes['meta'] = len(meta)
+        shapes["meta"] = len(meta)
         for d in dset_names:
             shapes[d] = (len(res.time_index[t_slice]), len(meta))
 
