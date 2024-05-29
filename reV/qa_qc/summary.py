@@ -12,7 +12,7 @@ import plotting as mplt
 from rex import Resource
 from rex.utilities import SpawnProcessPool, parse_table
 
-from reV.utilities import SupplyCurveField
+from reV.utilities import SupplyCurveField, ResourceMetaField
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +188,7 @@ class SummarizeH5:
 
                 summary = pd.concat(summary)
 
-            summary.index.name = SupplyCurveField.GID
+            summary.index.name = ResourceMetaField.GID
 
         else:
             summary = self._compute_ds_summary(
@@ -216,9 +216,9 @@ class SummarizeH5:
         """
         with Resource(self.h5_file, group=self._group) as f:
             meta = f.meta
-            if SupplyCurveField.GID not in meta:
-                if meta.index.name != SupplyCurveField.GID:
-                    meta.index.name = SupplyCurveField.GID
+            if ResourceMetaField.GID not in meta:
+                if meta.index.name != ResourceMetaField.GID:
+                    meta.index.name = ResourceMetaField.GID
 
                 meta = meta.reset_index()
 
