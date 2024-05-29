@@ -292,9 +292,11 @@ def test_agg_extra_dsets():
     for dset in h5_dsets:
         assert "mean_{}".format(dset) in summary.columns
 
-    check = summary['mean_lcoe_fcr-2012'] == summary[SupplyCurveField.MEAN_LCOE]
+    check = (summary['mean_lcoe_fcr-2012']
+             == summary[SupplyCurveField.MEAN_LCOE])
     assert not any(check)
-    check = summary['mean_lcoe_fcr-2013'] == summary[SupplyCurveField.MEAN_LCOE]
+    check = (summary['mean_lcoe_fcr-2013']
+             == summary[SupplyCurveField.MEAN_LCOE])
     assert not any(check)
 
     avg = (summary['mean_lcoe_fcr-2012'] + summary['mean_lcoe_fcr-2013']) / 2

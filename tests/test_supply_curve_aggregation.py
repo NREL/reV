@@ -47,7 +47,8 @@ def check_agg(agg_out, baseline_h5):
             truth = f[dset]
             if dset == 'meta':
                 truth = truth.set_index('sc_gid')
-                for c in [SupplyCurveField.SOURCE_GIDS, SupplyCurveField.GID_COUNTS]:
+                for c in [SupplyCurveField.SOURCE_GIDS,
+                          SupplyCurveField.GID_COUNTS]:
                     test[c] = test[c].astype(str)
 
                 truth = truth.fillna('none')

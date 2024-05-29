@@ -182,8 +182,10 @@ def test_integrated_sc_simple_friction():
         sc_simple = pd.read_csv(sc_simple)
         assert SupplyCurveField.MEAN_LCOE_FRICTION in sc_simple
         assert SupplyCurveField.TOTAL_LCOE_FRICTION in sc_simple
-        test = sc_simple[SupplyCurveField.MEAN_LCOE_FRICTION] + sc_simple['lcot']
-        assert np.allclose(test, sc_simple[SupplyCurveField.TOTAL_LCOE_FRICTION])
+        test = (sc_simple[SupplyCurveField.MEAN_LCOE_FRICTION]
+                + sc_simple['lcot'])
+        assert np.allclose(test,
+                           sc_simple[SupplyCurveField.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
             TESTDATADIR, "sc_out/sc_simple_out_friction.csv"
@@ -279,7 +281,8 @@ def test_parallel():
     assert_frame_equal(sc_full_parallel, sc_full_serial)
 
 
-def verify_trans_cap(sc_table, trans_tables, cap_col=SupplyCurveField.CAPACITY):
+def verify_trans_cap(sc_table, trans_tables,
+                     cap_col=SupplyCurveField.CAPACITY):
     """
     Verify that sc_points are connected to features in the correct capacity
     bins

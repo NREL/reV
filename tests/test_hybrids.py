@@ -102,7 +102,9 @@ def test_hybridization_profile_output_with_ratio_none():
         hwp,
     ) = h.profiles.values()
     h_meta = h.hybrid_meta
-    h_idx = np.where(h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid)[0][0]
+    h_idx = np.where(
+        h_meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
+    )[0][0]
 
     assert np.allclose(hp[:, h_idx], weighted_solar)
     assert np.allclose(hsp[:, h_idx], weighted_solar)

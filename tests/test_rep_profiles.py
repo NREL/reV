@@ -104,7 +104,9 @@ def test_weighted_meanoid():
     sites = np.arange(100)
     rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
                                 SupplyCurveField.RES_GIDS: sites,
-                                SupplyCurveField.GID_COUNTS: [1] * 50 + [0] * 50})
+                                SupplyCurveField.GID_COUNTS: (
+                                    [1] * 50 + [0] * 50
+                                )})
     r = RegionRepProfile(GEN_FPATH, rev_summary)
     weights = r._get_region_attr(r._rev_summary, SupplyCurveField.GID_COUNTS)
 
@@ -161,7 +163,8 @@ def test_sc_points():
                                 SupplyCurveField.RES_GIDS: sites,
                                 'timezone': timezone})
 
-    rp = RepProfiles(GEN_FPATH, rev_summary, SupplyCurveField.SC_GID, weight=None)
+    rp = RepProfiles(GEN_FPATH, rev_summary,
+                     SupplyCurveField.SC_GID, weight=None)
     rp.run(max_workers=1)
 
     with Resource(GEN_FPATH) as res:
@@ -191,8 +194,10 @@ def test_agg_profile():
     rp.run(scaled_precision=False, max_workers=1)
 
     for index in rev_summary.index:
-        gen_gids = json.loads(rev_summary.loc[index, SupplyCurveField.GEN_GIDS])
-        res_gids = json.loads(rev_summary.loc[index, SupplyCurveField.RES_GIDS])
+        gen_gids = json.loads(rev_summary.loc[index,
+                                              SupplyCurveField.GEN_GIDS])
+        res_gids = json.loads(rev_summary.loc[index,
+                                              SupplyCurveField.RES_GIDS])
         weights = np.array(
             json.loads(rev_summary.loc[index, SupplyCurveField.GID_COUNTS]))
 
