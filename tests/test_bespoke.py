@@ -723,7 +723,7 @@ def test_collect_bespoke():
         collector.collect("cf_profile-2012")
 
         with Resource(h5_file) as fout:
-            meta = fout.meta
+            meta = fout.meta.rename(columns=SupplyCurveField.map_from_legacy())
             assert all(
                 meta[SupplyCurveField.GID].values
                 == sorted(meta[SupplyCurveField.GID].values)
@@ -737,8 +737,7 @@ def test_collect_bespoke():
         for fp in source_fps:
             with Resource(fp) as source:
                 src_meta = source.meta.rename(
-                    SupplyCurveField.map_from_legacy(), axis=1
-                )
+                    columns=SupplyCurveField.map_from_legacy())
                 assert all(
                     np.isin(
                         src_meta[SupplyCurveField.GID].values,
