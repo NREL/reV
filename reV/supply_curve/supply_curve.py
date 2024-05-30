@@ -429,7 +429,8 @@ class SupplyCurve:
         return line_gids[~test].tolist()
 
     @classmethod
-    def _check_substation_conns(cls, trans_table, sc_cols=SupplyCurveField.SC_GID):
+    def _check_substation_conns(cls, trans_table,
+                                sc_cols=SupplyCurveField.SC_GID):
         """
         Run checks on substation transmission features to make sure that
         every sc point connecting to a substation can also connect to its
@@ -530,7 +531,8 @@ class SupplyCurve:
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             If the `sc_capacity_col` is not included, it will get added.
-            by default (SupplyCurveField.SC_GID, 'capacity', 'mean_cf', 'mean_lcoe')
+            by default (SupplyCurveField.SC_GID, 'capacity', 'mean_cf',
+            'mean_lcoe')
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
             this column determine the size of transmission lines built.
@@ -597,8 +599,10 @@ class SupplyCurve:
 
     @classmethod
     def _map_tables(cls, sc_points, trans_table,
-                    sc_cols=(SupplyCurveField.SC_GID, SupplyCurveField.CAPACITY,
-                             SupplyCurveField.MEAN_CF, SupplyCurveField.MEAN_LCOE),
+                    sc_cols=(SupplyCurveField.SC_GID,
+                             SupplyCurveField.CAPACITY,
+                             SupplyCurveField.MEAN_CF,
+                             SupplyCurveField.MEAN_LCOE),
                     sc_capacity_col=SupplyCurveField.CAPACITY):
         """
         Map supply curve points to transmission features
@@ -933,7 +937,8 @@ class SupplyCurve:
             self._trans_table["trans_cap_cost_per_mw"] = cost
 
         cost *= self._trans_table[self._sc_capacity_col]
-        cost /= self._trans_table[SupplyCurveField.CAPACITY]  # align with "mean_cf"
+        # align with "mean_cf"
+        cost /= self._trans_table[SupplyCurveField.CAPACITY]
 
         if 'reinforcement_cost_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_per_mw' column found in "
@@ -970,7 +975,9 @@ class SupplyCurve:
             lcoe_friction = (
                 self._trans_table['lcot']
                 + self._trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
-            self._trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = lcoe_friction
+            self._trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
+                lcoe_friction
+            )
             logger.info('Found mean LCOE with friction. Adding key '
                         '"total_lcoe_friction" to trans table.')
 
@@ -1163,9 +1170,8 @@ class SupplyCurve:
                         conn_lists[col_name][sc_gid] = data_arr[i]
 
                     if total_lcoe_fric is not None:
-                        conn_lists[SupplyCurveField.TOTAL_LCOE_FRICTION][sc_gid] = (
-                            total_lcoe_fric[i]
-                        )
+                        col_name = SupplyCurveField.TOTAL_LCOE_FRICTION
+                        conn_lists[col_name][sc_gid] = total_lcoe_fric[i]
 
                     current_prog = connected // (len(self) / 100)
                     if current_prog > progress:
@@ -1349,7 +1355,8 @@ class SupplyCurve:
         trans_table = trans_table.loc[~pos].sort_values([sort_on, "trans_gid"])
 
         total_lcoe_fric = None
-        if consider_friction and SupplyCurveField.MEAN_LCOE_FRICTION in trans_table:
+        col_in_table = SupplyCurveField.MEAN_LCOE_FRICTION in trans_table
+        if consider_friction and col_in_table:
             total_lcoe_fric = \
                 trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION].values
 

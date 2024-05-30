@@ -85,7 +85,8 @@ class CompetitiveWindFarms:
         if not isinstance(keys, tuple):
             msg = ("{} must be a tuple of form (source, gid) where source is: "
                    "{}, '{}',  or 'upwind', 'downwind'"
-                   .format(keys, SupplyCurveField.SC_GID, SupplyCurveField.SC_POINT_GID))
+                   .format(keys, SupplyCurveField.SC_GID,
+                           SupplyCurveField.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 

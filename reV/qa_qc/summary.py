@@ -600,7 +600,9 @@ class SummaryPlots(PlotBase):
         values = [SupplyCurveField.CAPACITY, lcoe]
         self._check_value(self.summary, values, scatter=False)
         sc_df = self.summary[values].sort_values(lcoe)
-        sc_df['cumulative_capacity'] = sc_df[SupplyCurveField.CAPACITY].cumsum()
+        sc_df['cumulative_capacity'] = (
+            sc_df[SupplyCurveField.CAPACITY].cumsum()
+        )
 
         return sc_df
 
@@ -801,7 +803,9 @@ class SupplyCurvePlot(PlotBase):
         values = [SupplyCurveField.CAPACITY, lcoe]
         self._check_value(self.sc_table, values, scatter=False)
         sc_df = self.sc_table[values].sort_values(lcoe)
-        sc_df['cumulative_capacity'] = sc_df[SupplyCurveField.CAPACITY].cumsum()
+        sc_df['cumulative_capacity'] = (
+            sc_df[SupplyCurveField.CAPACITY].cumsum()
+        )
 
         return sc_df
 
@@ -824,8 +828,8 @@ class SupplyCurvePlot(PlotBase):
             sc_df, x="cumulative_capacity", y=lcoe, filename=out_path, **kwargs
         )
 
-    def supply_curve_plotly(self, lcoe=SupplyCurveField.MEAN_LCOE, out_path=None,
-                            **kwargs):
+    def supply_curve_plotly(self, lcoe=SupplyCurveField.MEAN_LCOE,
+                            out_path=None, **kwargs):
         """
         Plot supply curve (cumulative capacity vs lcoe) using plotly
 

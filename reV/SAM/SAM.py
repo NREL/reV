@@ -891,9 +891,8 @@ class RevPySam(Sam):
                     bad_requests.append(req)
 
         if any(bad_requests):
-            msg = 'Could not retrieve outputs "{}" from PySAM object "{}".'.format(
-                bad_requests, self.pysam
-            )
+            msg = ('Could not retrieve outputs "{}" from PySAM object "{}".'
+                   .format(bad_requests, self.pysam))
             logger.error(msg)
             raise SAMExecutionError(msg)
 
