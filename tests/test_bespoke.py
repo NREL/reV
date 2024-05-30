@@ -891,6 +891,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer.wind_plant.assign_inputs()
         optimizer.wind_plant.execute()
+        # pylint: disable=W0612
         aep = optimizer._aep_after_scaled_wake_losses()
         bsp.close()
 
@@ -908,7 +909,6 @@ def test_bespoke_wind_plant_with_power_curve_losses():
                                  BOS_FUN,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request)
-
 
 
 def test_bespoke_run_with_power_curve_losses():

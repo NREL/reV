@@ -1336,7 +1336,7 @@ class BespokeSinglePlant:
         )
         self._meta["bespoke_balance_of_system_cost"] = (
             self.plant_optimizer.balance_of_system_cost
-            )
+        )
         self._meta["included_area"] = self.plant_optimizer.area
         self._meta["included_area_capacity_density"] = (
             self.plant_optimizer.capacity_density
