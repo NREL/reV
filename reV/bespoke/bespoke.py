@@ -236,6 +236,10 @@ class BespokeSinglePlant:
                 - ``avg_sl_dist_to_medoid_m``: Average straight-line
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
+                - ``nn_conn_dist_m``: Total BOS connection distance
+                  using nearest-neighbor connections. This variable is
+                  only available for the
+                  ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
                 - ``capital_cost``: plant capital cost as evaluated
@@ -1204,6 +1208,7 @@ class BespokeSinglePlant:
             self.plant_optimizer.avg_sl_dist_to_center_m
         self._meta["avg_sl_dist_to_medoid_m"] = \
             self.plant_optimizer.avg_sl_dist_to_medoid_m
+        self._meta["nn_conn_dist_m"] = self.plant_optimizer.nn_conn_dist_m
         self._meta["bespoke_aep"] = self.plant_optimizer.aep
         self._meta["bespoke_objective"] = self.plant_optimizer.objective
         self._meta["bespoke_capital_cost"] = \
@@ -1390,6 +1395,10 @@ class BespokeWindPlants(BaseAggregation):
                 - ``avg_sl_dist_to_medoid_m``: Average straight-line
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
+                - ``nn_conn_dist_m``: Total BOS connection distance
+                  using nearest-neighbor connections. This variable is
+                  only available for the
+                  ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
                 - ``capital_cost``: plant capital cost as evaluated
