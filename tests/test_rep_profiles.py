@@ -1,29 +1,32 @@
 # -*- coding: utf-8 -*-
 """reVX representative profile tests.
 """
-import os
-import pytest
-import pandas as pd
-import numpy as np
 import json
+import os
 import tempfile
+
+import numpy as np
+import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
-
-from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
-                                           RepresentativeMethods)
-from reV import TESTDATADIR
-
 from rex.resource import Resource
 
+from reV import TESTDATADIR
+from reV.rep_profiles.rep_profiles import (
+    RegionRepProfile,
+    RepProfiles,
+    RepresentativeMethods,
+)
+from reV.utilities import ResourceMetaField, SupplyCurveField
 
-GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+GEN_FPATH = os.path.join(TESTDATADIR, "gen_out/gen_ri_pv_2012_x000.h5")
 
 
 def test_rep_region_interval():
     """Test the rep profile with a weird interval of gids"""
     sites = np.arange(40) * 2
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
     assert r.i_reps[0] == 14
 
@@ -31,41 +34,66 @@ def test_rep_region_interval():
 def test_rep_methods():
     """Test integrated rep methods against baseline rep profile result"""
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites})
 
-    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
-                         err_method='rmse', weight=None)
+    r = RegionRepProfile(
+        GEN_FPATH,
+        rev_summary,
+        rep_method="meanoid",
+        err_method="rmse",
+        weight=None,
+    )
     assert r.i_reps[0] == 15
 
-    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
-                         err_method='mbe', weight=None)
+    r = RegionRepProfile(
+        GEN_FPATH,
+        rev_summary,
+        rep_method="meanoid",
+        err_method="mbe",
+        weight=None,
+    )
     assert r.i_reps[0] == 13
 
-    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
-                         err_method='mae', weight=None)
+    r = RegionRepProfile(
+        GEN_FPATH,
+        rev_summary,
+        rep_method="meanoid",
+        err_method="mae",
+        weight=None,
+    )
     assert r.i_reps[0] == 15
 
-    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
-                         err_method='rmse', weight=None)
+    r = RegionRepProfile(
+        GEN_FPATH,
+        rev_summary,
+        rep_method="median",
+        err_method="rmse",
+        weight=None,
+    )
     assert r.i_reps[0] == 15
 
-    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
-                         err_method='mbe', weight=None)
+    r = RegionRepProfile(
+        GEN_FPATH,
+        rev_summary,
+        rep_method="median",
+        err_method="mbe",
+        weight=None,
+    )
     assert r.i_reps[0] == 13
 
 
 def test_meanoid():
     """Test the simple meanoid method"""
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles)
 
     with Resource(GEN_FPATH) as res:
-        truth_profiles = res['cf_profile', :, sites]
+        truth_profiles = res["cf_profile", :, sites]
     truth = truth_profiles.mean(axis=1).reshape(meanoid.shape)
     assert np.allclose(meanoid, truth)
 
@@ -74,18 +102,21 @@ def test_weighted_meanoid():
     """Test a meanoid weighted by gid_counts vs. a non-weighted meanoid."""
 
     sites = np.arange(100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
-                                'gid_counts': [1] * 50 + [0] * 50})
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites,
+                                SupplyCurveField.GID_COUNTS: (
+                                    [1] * 50 + [0] * 50
+                                )})
     r = RegionRepProfile(GEN_FPATH, rev_summary)
-    weights = r._get_region_attr(r._rev_summary, 'gid_counts')
+    weights = r._get_region_attr(r._rev_summary, SupplyCurveField.GID_COUNTS)
 
-    w_meanoid = RepresentativeMethods.meanoid(r.source_profiles,
-                                              weights=weights)
+    w_meanoid = RepresentativeMethods.meanoid(
+        r.source_profiles, weights=weights
+    )
 
     sites = np.arange(50)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites})
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary, weight=None)
 
     meanoid = RepresentativeMethods.meanoid(r.source_profiles, weights=None)
@@ -99,42 +130,45 @@ def test_integrated():
     sites = np.arange(100)
     ones = np.ones((100,))
     zeros = np.zeros((100,))
-    regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    regions = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'weight': ones,
                                 'region': regions,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
     rp = RepProfiles(GEN_FPATH, rev_summary, 'region', weight='weight')
     rp.run(max_workers=1)
     p1, m1 = rp.profiles, rp.meta
     rp.run(max_workers=None)
     p2, m2 = rp.profiles, rp.meta
 
-    assert np.allclose(m1['rep_res_gid'].values.astype(int),
-                       m2['rep_res_gid'].values.astype(int))
+    assert np.allclose(
+        m1["rep_res_gid"].values.astype(int),
+        m2["rep_res_gid"].values.astype(int),
+    )
     assert np.allclose(p1[0], p2[0])
-    assert m1.loc[0, 'rep_res_gid'] == 4
-    assert m1.loc[1, 'rep_res_gid'] == 15
-    assert m1.loc[2, 'rep_res_gid'] == 60
+    assert m1.loc[0, "rep_res_gid"] == 4
+    assert m1.loc[1, "rep_res_gid"] == 15
+    assert m1.loc[2, "rep_res_gid"] == 60
 
 
 def test_sc_points():
     """Test rep profiles for each SC point."""
     sites = np.arange(10)
     timezone = np.random.choice([-4, -5, -6, -7], 10)
-    rev_summary = pd.DataFrame({'sc_gid': sites,
-                                'gen_gids': sites,
-                                'res_gids': sites,
-                                'timezone': timezone})
+    rev_summary = pd.DataFrame({SupplyCurveField.SC_GID: sites,
+                                SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites,
+                                SupplyCurveField.TIMEZONE: timezone})
 
-    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', weight=None)
+    rp = RepProfiles(GEN_FPATH, rev_summary,
+                     SupplyCurveField.SC_GID, weight=None)
     rp.run(max_workers=1)
 
     with Resource(GEN_FPATH) as res:
-        truth = res['cf_profile', :, slice(0, 10)]
+        truth = res["cf_profile", :, slice(0, 10)]
 
     assert np.allclose(rp.profiles[0], truth)
 
@@ -149,27 +183,30 @@ def test_agg_profile():
     res_gids = [json.dumps(x) for x in res_gids]
     gid_counts = [json.dumps(x) for x in gid_counts]
     timezone = np.random.choice([-4, -5, -6, -7], 4)
-    rev_summary = pd.DataFrame({'sc_gid': np.arange(4),
-                                'gen_gids': gen_gids,
-                                'res_gids': res_gids,
-                                'gid_counts': gid_counts,
-                                'timezone': timezone})
+    rev_summary = pd.DataFrame({SupplyCurveField.SC_GID: np.arange(4),
+                                SupplyCurveField.GEN_GIDS: gen_gids,
+                                SupplyCurveField.RES_GIDS: res_gids,
+                                SupplyCurveField.GID_COUNTS: gid_counts,
+                                SupplyCurveField.TIMEZONE: timezone})
 
-    rp = RepProfiles(GEN_FPATH, rev_summary, 'sc_gid', cf_dset='cf_profile',
-                     err_method=None)
+    rp = RepProfiles(GEN_FPATH, rev_summary, SupplyCurveField.SC_GID,
+                     cf_dset='cf_profile', err_method=None)
     rp.run(scaled_precision=False, max_workers=1)
 
     for index in rev_summary.index:
-        gen_gids = json.loads(rev_summary.loc[index, 'gen_gids'])
-        res_gids = json.loads(rev_summary.loc[index, 'res_gids'])
-        weights = np.array(json.loads(rev_summary.loc[index, 'gid_counts']))
+        gen_gids = json.loads(rev_summary.loc[index,
+                                              SupplyCurveField.GEN_GIDS])
+        res_gids = json.loads(rev_summary.loc[index,
+                                              SupplyCurveField.RES_GIDS])
+        weights = np.array(
+            json.loads(rev_summary.loc[index, SupplyCurveField.GID_COUNTS]))
 
         with Resource(GEN_FPATH) as res:
             meta = res.meta
 
             raw_profiles = []
             for gid in res_gids:
-                iloc = np.where(meta['gid'] == gid)[0][0]
+                iloc = np.where(meta[ResourceMetaField.GID] == gid)[0][0]
                 prof = np.expand_dims(res['cf_profile', :, iloc], 1)
                 raw_profiles.append(prof)
 
@@ -186,13 +223,13 @@ def test_agg_profile():
 
         assert np.allclose(rp.profiles[0][:, index], truth)
 
-    passthrough_cols = ['gen_gids', 'res_gids', 'gid_counts']
+    passthrough_cols = [SupplyCurveField.GEN_GIDS, SupplyCurveField.RES_GIDS,
+                        SupplyCurveField.GID_COUNTS]
     for col in passthrough_cols:
         assert col in rp.meta
 
     assert_frame_equal(
-        rev_summary[passthrough_cols],
-        rp.meta[passthrough_cols]
+        rev_summary[passthrough_cols], rp.meta[passthrough_cols]
     )
 
 
@@ -201,16 +238,16 @@ def test_many_regions(use_weights):
     """Test multiple complicated regions."""
     sites = np.arange(100)
     zeros = np.zeros((100,))
-    region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
-    region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
+    region1 = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
+    region2 = (["a0"] * 20) + (["b1"] * 10) + (["c2"] * 20) + (["d3"] * 50)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'region1': region1,
                                 'region2': region2,
                                 'weight': sites + 1,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
     reg_cols = ['region1', 'region2']
     if use_weights:
         rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight="weight")
@@ -222,30 +259,33 @@ def test_many_regions(use_weights):
     assert len(rp.meta) == 6
 
     for r1 in set(region1):
-        assert r1 in rp.meta['region1'].values
+        assert r1 in rp.meta["region1"].values
 
     for r2 in set(region2):
-        assert r2 in rp.meta['region2'].values
+        assert r2 in rp.meta["region2"].values
 
 
 def test_many_regions_with_list_weights():
     """Test multiple complicated regions with multiple weights per row."""
-    sites = [list(np.random.choice(np.arange(100), np.random.randint(10) + 10))
-             for __ in np.arange(100)]
-    weights = [str(list(np.random.choice(np.arange(100), len(row))))
-               for row in sites]
+    sites = [
+        list(np.random.choice(np.arange(100), np.random.randint(10) + 10))
+        for __ in np.arange(100)
+    ]
+    weights = [
+        str(list(np.random.choice(np.arange(100), len(row)))) for row in sites
+    ]
     sites = [str(row) for row in sites]
     zeros = np.zeros((100,))
-    region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
-    region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
+    region1 = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
+    region2 = (["a0"] * 20) + (["b1"] * 10) + (["c2"] * 20) + (["d3"] * 50)
     timezone = np.random.choice([-4, -5, -6, -7], 100)
-    rev_summary = pd.DataFrame({'gen_gids': sites,
-                                'res_gids': sites,
+    rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                SupplyCurveField.RES_GIDS: sites,
                                 'res_class': zeros,
                                 'region1': region1,
                                 'region2': region2,
                                 'weights': weights,
-                                'timezone': timezone})
+                                SupplyCurveField.TIMEZONE: timezone})
     reg_cols = ['region1', 'region2']
     rp = RepProfiles(GEN_FPATH, rev_summary, reg_cols, weight='weights')
     rp.run()
@@ -254,10 +294,10 @@ def test_many_regions_with_list_weights():
     assert len(rp.meta) == 6
 
     for r1 in set(region1):
-        assert r1 in rp.meta['region1'].values
+        assert r1 in rp.meta["region1"].values
 
     for r2 in set(region2):
-        assert r2 in rp.meta['region2'].values
+        assert r2 in rp.meta["region2"].values
 
 
 def test_write_to_file():
@@ -265,31 +305,30 @@ def test_write_to_file():
     with tempfile.TemporaryDirectory() as td:
         sites = np.arange(100)
         zeros = np.zeros((100,))
-        regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+        regions = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
         timezone = np.random.choice([-4, -5, -6, -7], 100)
-        rev_summary = pd.DataFrame({'gen_gids': sites,
-                                    'res_gids': sites,
+        rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                    SupplyCurveField.RES_GIDS: sites,
                                     'res_class': zeros,
                                     'region': regions,
-                                    'timezone': timezone})
+                                    SupplyCurveField.TIMEZONE: timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
         rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
                          weight=None)
         rp.run(fout=fout)
         with Resource(fout) as res:
-            disk_profiles = res['rep_profiles_0']
+            disk_profiles = res["rep_profiles_0"]
             disk_meta = res.meta
-            assert 'rep_profiles_2' in res.datasets
-            test = np.array_equal(res['rep_profiles_0'],
-                                  res['rep_profiles_1'])
+            assert "rep_profiles_2" in res.datasets
+            test = np.array_equal(res["rep_profiles_0"], res["rep_profiles_1"])
             assert not test
 
         assert np.allclose(rp.profiles[0], disk_profiles)
         assert len(disk_meta) == 3
 
         for i in rp.meta.index:
-            v1 = json.loads(rp.meta.loc[i, 'rep_gen_gid'])
-            v2 = json.loads(disk_meta.loc[i, 'rep_gen_gid'])
+            v1 = json.loads(rp.meta.loc[i, "rep_gen_gid"])
+            v2 = json.loads(disk_meta.loc[i, "rep_gen_gid"])
             assert v1 == v2
 
 
@@ -298,30 +337,30 @@ def test_file_options():
     with tempfile.TemporaryDirectory() as td:
         sites = np.arange(100)
         zeros = np.zeros((100,))
-        regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+        regions = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
         timezone = np.random.choice([-4, -5, -6, -7], 100)
-        rev_summary = pd.DataFrame({'gen_gids': sites,
-                                    'res_gids': sites,
+        rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                    SupplyCurveField.RES_GIDS: sites,
                                     'res_class': zeros,
                                     'region': regions,
-                                    'timezone': timezone})
+                                    SupplyCurveField.TIMEZONE: timezone})
         fout = os.path.join(td, 'temp_rep_profiles.h5')
         rp = RepProfiles(GEN_FPATH, rev_summary, 'region', n_profiles=3,
                          weight=None)
         rp.run(fout=fout, save_rev_summary=False, scaled_precision=True)
         with Resource(fout) as res:
-            dtype = res.get_dset_properties('rep_profiles_0')[1]
-            attrs = res.get_attrs('rep_profiles_0')
-            disk_profiles = res['rep_profiles_0']
+            dtype = res.get_dset_properties("rep_profiles_0")[1]
+            attrs = res.get_attrs("rep_profiles_0")
+            disk_profiles = res["rep_profiles_0"]
             disk_dsets = res.datasets
 
         assert np.issubdtype(dtype, np.integer)
-        assert attrs['scale_factor'] == 1000
+        assert attrs["scale_factor"] == 1000
         assert np.allclose(rp.profiles[0], disk_profiles)
-        assert 'rev_summary' not in disk_dsets
+        assert "rev_summary" not in disk_dsets
 
 
-def execute_pytest(capture='all', flags='-rapP'):
+def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
 
     Parameters
@@ -334,8 +373,8 @@ def execute_pytest(capture='all', flags='-rapP'):
     """
 
     fname = os.path.basename(__file__)
-    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+    pytest.main(["-q", "--show-capture={}".format(capture), fname, flags])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     execute_pytest()

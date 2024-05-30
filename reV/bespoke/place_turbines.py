@@ -4,11 +4,10 @@
 place turbines for bespoke wind plants
 """
 import numpy as np
+from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon
 
-from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
-
-from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
+from reV.bespoke.pack_turbs import PackTurbines
 from reV.utilities.exceptions import WhileLoopPackingError
 
 
@@ -216,7 +215,7 @@ class PlaceTurbines:
                 self.packing_polygons = MultiPolygon([])
 
     def initialize_packing(self):
-        """run the turbine packing algorithm (maximizing plant capacity) to
+        """Run the turbine packing algorithm (maximizing plant capacity) to
         define potential turbine locations that will be used as design
         variables in the gentic algorithm.
         """
@@ -418,7 +417,7 @@ class PlaceTurbines:
     def fixed_charge_rate(self):
         """Fixed charge rate if input to the SAM WindPowerPD object, None if
         not found in inputs."""
-        return self.wind_plant.sam_sys_inputs.get('fixed_charge_rate', None)
+        return self.wind_plant.sam_sys_inputs.get("fixed_charge_rate", None)
 
     @property
     @none_until_optimized
@@ -471,7 +470,8 @@ class PlaceTurbines:
     def convex_hull(self):
         """This is the convex hull of the turbine locations"""
         turbines = MultiPoint([Point(x, y)
-                               for x,y in zip(self.turbine_x, self.turbine_y)])
+                               for x, y in zip(self.turbine_x,
+                                               self.turbine_y)])
         return turbines.convex_hull
 
     @property

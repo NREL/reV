@@ -9,12 +9,12 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 
-from reV.econ.econ import Econ
 from reV import TESTDATADIR
-
+from reV.econ.econ import Econ
 
 RTOL = 0.01
 ATOL = 0.001

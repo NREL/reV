@@ -3,9 +3,10 @@
 QA/QC tests
 """
 import os
+
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
 from reV.qa_qc.summary import SummarizeH5, SummarizeSupplyCurve
@@ -15,7 +16,8 @@ SC_TABLE = os.path.join(TESTDATADIR, 'sc_out', 'sc_full_out_1.csv')
 SUMMARY_DIR = os.path.join(TESTDATADIR, 'qa_qc')
 
 
-@pytest.mark.parametrize('dataset', ['cf_mean', 'cf_profile', None])
+@pytest.mark.parametrize('dataset',
+                         ['cf_mean', 'cf_profile', None])
 def test_summarize(dataset):
     """Run QA/QC Summarize and compare with baseline"""
 

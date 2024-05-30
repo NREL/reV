@@ -2,23 +2,23 @@
 """
 pytests for MultiYear collection and computation
 """
-import h5py
-import numpy as np
+import json
 import os
 import shutil
-import pytest
 import tempfile
-import json
 import traceback
 
-from reV.cli import main
-from reV.handlers.outputs import Outputs
-from reV.handlers.multi_year import MultiYear
-from reV import TESTDATADIR
-from reV.utilities import ModuleName
-
+import h5py
+import numpy as np
+import pytest
 from rex import Resource
 from rex.utilities.loggers import init_logger
+
+from reV import TESTDATADIR
+from reV.cli import main
+from reV.handlers.multi_year import MultiYear
+from reV.handlers.outputs import Outputs
+from reV.utilities import ModuleName
 
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]

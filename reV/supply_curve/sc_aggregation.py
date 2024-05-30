@@ -6,29 +6,35 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-from concurrent.futures import as_completed
 import logging
-import numpy as np
-import psutil
 import os
-import pandas as pd
+from concurrent.futures import as_completed
 from warnings import warn
+
+import numpy as np
+import pandas as pd
+import psutil
+from rex.multi_file_resource import MultiFileResource
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
 
 from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          BaseAggregation, Aggregation)
+from reV.supply_curve.aggregation import (
+    AbstractAggFileHandler,
+    Aggregation,
+    BaseAggregation,
+)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning, FileInputError,
-                                      InputWarning)
-from reV.utilities import log_versions
-
-from rex.resource import Resource
-from rex.multi_file_resource import MultiFileResource
-from rex.utilities.execution import SpawnProcessPool
+from reV.utilities import SupplyCurveField, log_versions
+from reV.utilities.exceptions import (
+    EmptySupplyCurvePointError,
+    FileInputError,
+    InputWarning,
+    OutputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +49,19 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     - variable power density .csv (optional)
     """
 
-    def __init__(self, excl_fpath, gen_fpath, econ_fpath=None,
-                 data_layers=None, power_density=None, excl_dict=None,
-                 friction_fpath=None, friction_dset=None,
-                 area_filter_kernel='queen', min_area=None):
+    def __init__(
+        self,
+        excl_fpath,
+        gen_fpath,
+        econ_fpath=None,
+        data_layers=None,
+        power_density=None,
+        excl_dict=None,
+        friction_fpath=None,
+        friction_dset=None,
+        area_filter_kernel="queen",
+        min_area=None,
+    ):
         """
         Parameters
         ----------
@@ -89,9 +104,12 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         min_area : float | None
             Minimum required contiguous area filter in sq-km
         """
-        super().__init__(excl_fpath, excl_dict=excl_dict,
-                         area_filter_kernel=area_filter_kernel,
-                         min_area=min_area)
+        super().__init__(
+            excl_fpath,
+            excl_dict=excl_dict,
+            area_filter_kernel=area_filter_kernel,
+            min_area=min_area,
+        )
 
         self._gen = self._open_gen_econ_resource(gen_fpath, econ_fpath)
         # pre-initialize the resource meta data
@@ -106,7 +124,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
             self._friction_layer = FrictionMask(friction_fpath, friction_dset)
 
             if not np.all(self._friction_layer.shape == self._excl.shape):
-                e = ('Friction layer shape {} must match exclusions shape {}!'
+                e = ("Friction layer shape {} must match exclusions shape {}!"
                      .format(self._friction_layer.shape, self._excl.shape))
                 logger.error(e)
                 raise FileInputError(e)
@@ -132,14 +150,15 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         """
 
         handler = None
-        is_gen_h5 = isinstance(gen_fpath, str) and gen_fpath.endswith('.h5')
-        is_econ_h5 = isinstance(econ_fpath, str) and econ_fpath.endswith('.h5')
+        is_gen_h5 = isinstance(gen_fpath, str) and gen_fpath.endswith(".h5")
+        is_econ_h5 = isinstance(econ_fpath, str) and econ_fpath.endswith(".h5")
 
         if is_gen_h5 and not is_econ_h5:
             handler = Resource(gen_fpath)
         elif is_gen_h5 and is_econ_h5:
-            handler = MultiFileResource([gen_fpath, econ_fpath],
-                                        check_files=True)
+            handler = MultiFileResource(
+                [gen_fpath, econ_fpath], check_files=True
+            )
 
         return handler
 
@@ -149,20 +168,24 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         if isinstance(self._power_density, str):
             self._pdf = self._power_density
 
-            if self._pdf.endswith('.csv'):
+            if self._pdf.endswith(".csv"):
                 self._power_density = pd.read_csv(self._pdf)
-                if ('gid' in self._power_density
+                if (SupplyCurveField.GID in self._power_density
                         and 'power_density' in self._power_density):
-                    self._power_density = self._power_density.set_index('gid')
+                    self._power_density = \
+                        self._power_density.set_index(SupplyCurveField.GID)
                 else:
-                    msg = ('Variable power density file must include "gid" '
+                    msg = ('Variable power density file must include "{}" '
                            'and "power_density" columns, but received: {}'
-                           .format(self._power_density.columns.values))
+                           .format(SupplyCurveField.GID,
+                                   self._power_density.columns.values))
                     logger.error(msg)
                     raise FileInputError(msg)
             else:
-                msg = ('Variable power density file must be csv but received: '
-                       '{}'.format(self._pdf))
+                msg = (
+                    "Variable power density file must be csv but received: "
+                    "{}".format(self._pdf)
+                )
                 logger.error(msg)
                 raise FileInputError(msg)
 
@@ -231,7 +254,7 @@ class SupplyCurveAggregation(BaseAggregation):
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
                  cap_cost_scale=None, recalc_lcoe=True):
-        """reV supply curve points aggregation framework.
+        r"""ReV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
         (e.g. 90m) exclusion dataset with a (typically) lower resolution
@@ -327,6 +350,13 @@ class SupplyCurveAggregation(BaseAggregation):
                     "more_developable_land": {
                         "force_include_range": [5, 10]
                     },
+                    "viewsheds": {
+                        "exclude_values": 1,
+                        "extent": {
+                            "layer": "federal_parks",
+                            "include_range": [1, 5]
+                        }
+                    }
                     ...
                 }
 
@@ -650,15 +680,22 @@ class SupplyCurveAggregation(BaseAggregation):
                     associated with all pixels with that unique value.
         """
         log_versions(logger)
-        logger.info('Initializing SupplyCurveAggregation...')
-        logger.debug('Exclusion filepath: {}'.format(excl_fpath))
-        logger.debug('Exclusion dict: {}'.format(excl_dict))
+        logger.info("Initializing SupplyCurveAggregation...")
+        logger.debug("Exclusion filepath: {}".format(excl_fpath))
+        logger.debug("Exclusion dict: {}".format(excl_dict))
 
-        super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
-                         area_filter_kernel=area_filter_kernel,
-                         min_area=min_area, resolution=resolution,
-                         excl_area=excl_area, res_fpath=res_fpath, gids=gids,
-                         pre_extract_inclusions=pre_extract_inclusions)
+        super().__init__(
+            excl_fpath,
+            tm_dset,
+            excl_dict=excl_dict,
+            area_filter_kernel=area_filter_kernel,
+            min_area=min_area,
+            resolution=resolution,
+            excl_area=excl_area,
+            res_fpath=res_fpath,
+            gids=gids,
+            pre_extract_inclusions=pre_extract_inclusions,
+        )
 
         self._econ_fpath = econ_fpath
         self._res_class_dset = res_class_dset
@@ -673,7 +710,7 @@ class SupplyCurveAggregation(BaseAggregation):
         self._data_layers = data_layers
         self._recalc_lcoe = recalc_lcoe
 
-        logger.debug('Resource class bins: {}'.format(self._res_class_bins))
+        logger.debug("Resource class bins: {}".format(self._res_class_bins))
 
         if self._cap_cost_scale is not None:
             if self._h5_dsets is None:
@@ -683,16 +720,20 @@ class SupplyCurveAggregation(BaseAggregation):
             self._h5_dsets = list(set(self._h5_dsets))
 
         if self._power_density is None:
-            msg = ('Supply curve aggregation power density not specified. '
-                   'Will try to infer based on lookup table: {}'
-                   .format(GenerationSupplyCurvePoint.POWER_DENSITY))
+            msg = (
+                "Supply curve aggregation power density not specified. "
+                "Will try to infer based on lookup table: {}".format(
+                    GenerationSupplyCurvePoint.POWER_DENSITY
+                )
+            )
             logger.warning(msg)
             warn(msg, InputWarning)
 
         self._check_data_layers()
 
-    def _check_data_layers(self, methods=('mean', 'max', 'min',
-                           'mode', 'sum', 'category')):
+    def _check_data_layers(
+        self, methods=("mean", "max", "min", "mode", "sum", "category")
+    ):
         """Run pre-flight checks on requested aggregation data layers.
 
         Parameters
@@ -702,40 +743,49 @@ class SupplyCurveAggregation(BaseAggregation):
         """
 
         if self._data_layers is not None:
-            logger.debug('Checking data layers...')
+            logger.debug("Checking data layers...")
 
             with ExclusionLayers(self._excl_fpath) as f:
                 shape_base = f.shape
 
             for k, v in self._data_layers.items():
-                if 'dset' not in v:
-                    raise KeyError('Data aggregation "dset" data layer "{}" '
-                                   'must be specified.'.format(k))
-                if 'method' not in v:
-                    raise KeyError('Data aggregation "method" data layer "{}" '
-                                   'must be specified.'.format(k))
-                elif v['method'].lower() not in methods:
-                    raise ValueError('Cannot recognize data layer agg method: '
-                                     '"{}". Can only do: {}.'
-                                     .format(v['method'], methods))
-                if 'fpath' in v:
-                    with ExclusionLayers(v['fpath']) as f:
+                if "dset" not in v:
+                    raise KeyError(
+                        'Data aggregation "dset" data layer "{}" '
+                        "must be specified.".format(k)
+                    )
+                if "method" not in v:
+                    raise KeyError(
+                        'Data aggregation "method" data layer "{}" '
+                        "must be specified.".format(k)
+                    )
+                if v["method"].lower() not in methods:
+                    raise ValueError(
+                        "Cannot recognize data layer agg method: "
+                        '"{}". Can only do: {}.'.format(v["method"], methods)
+                    )
+                if "fpath" in v:
+                    with ExclusionLayers(v["fpath"]) as f:
                         try:
                             mismatched_shapes = any(f.shape != shape_base)
                         except TypeError:
                             mismatched_shapes = f.shape != shape_base
                         if mismatched_shapes:
-                            msg = ('Data shape of data layer "{}" is {}, '
-                                   'which does not match the baseline '
-                                   'exclusions shape {}.'
-                                   .format(k, f.shape, shape_base))
+                            msg = (
+                                'Data shape of data layer "{}" is {}, '
+                                "which does not match the baseline "
+                                "exclusions shape {}.".format(
+                                    k, f.shape, shape_base
+                                )
+                            )
                             raise FileInputError(msg)
 
-        logger.debug('Finished checking data layers.')
+        logger.debug("Finished checking data layers.")
 
     @staticmethod
-    def _get_res_gen_lcoe_data(gen, res_class_dset, res_class_bins,
-                               cf_dset, lcoe_dset):
+    def _get_res_gen_lcoe_data(
+        gen, res_class_dset, res_class_bins, cf_dset, lcoe_dset
+    ):
         """Extract the basic resource / generation / lcoe data to be used in
         the aggregation process.
 
@@ -769,7 +819,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
         dset_list = (res_class_dset, cf_dset, lcoe_dset)
         gen_dsets = [] if gen is None else gen.datasets
-        labels = ('res_class_dset', 'cf_dset', 'lcoe_dset')
+        labels = ("res_class_dset", "cf_dset", "lcoe_dset")
         temp = [None, None, None]
 
         if isinstance(gen, Resource):
@@ -777,8 +827,9 @@ class SupplyCurveAggregation(BaseAggregation):
         elif isinstance(gen, MultiFileResource):
             source_fps = gen._h5_files
         else:
-            msg = ('Did not recognize gen object input of type "{}": {}'
-                   .format(type(gen), gen))
+            msg = 'Did not recognize gen object input of type "{}": {}'.format(
+                type(gen), gen
+            )
             logger.error(msg)
             raise TypeError(msg)
 
@@ -787,9 +838,12 @@ class SupplyCurveAggregation(BaseAggregation):
                 _warn_about_large_datasets(gen, dset)
                 temp[i] = gen[dset]
             elif dset not in gen_dsets and dset is not None:
-                w = ('Could not find "{}" input as "{}" in source files: {}. '
-                     'Available datasets: {}'
-                     .format(labels[i], dset, source_fps, gen_dsets))
+                w = (
+                    'Could not find "{}" input as "{}" in source files: {}. '
+                    "Available datasets: {}".format(
+                        labels[i], dset, source_fps, gen_dsets
+                    )
+                )
                 logger.warning(w)
                 warn(w, OutputWarning)
 
@@ -825,8 +879,10 @@ class SupplyCurveAggregation(BaseAggregation):
         # look for the datasets required by the LCOE re-calculation and make
         # lists of the missing datasets
         gen_dsets = [] if gen is None else gen.datasets
-        lcoe_recalc_req = ('fixed_charge_rate', 'capital_cost',
-                           'fixed_operating_cost', 'variable_operating_cost',
+        lcoe_recalc_req = ('fixed_charge_rate',
+                           'capital_cost',
+                           'fixed_operating_cost',
+                           'variable_operating_cost',
                            'system_capacity')
         missing_lcoe_source = [k for k in lcoe_recalc_req
                                if k not in gen_dsets]
@@ -837,61 +893,91 @@ class SupplyCurveAggregation(BaseAggregation):
         elif isinstance(gen, MultiFileResource):
             source_fps = gen._h5_files
         else:
-            msg = ('Did not recognize gen object input of type "{}": {}'
-                   .format(type(gen), gen))
+            msg = 'Did not recognize gen object input of type "{}": {}'.format(
+                type(gen), gen
+            )
             logger.error(msg)
             raise TypeError(msg)
 
         h5_dsets_data = None
         if h5_dsets is not None:
-            missing_lcoe_request = [k for k in lcoe_recalc_req
-                                    if k not in h5_dsets]
+            missing_lcoe_request = [
+                k for k in lcoe_recalc_req if k not in h5_dsets
+            ]
 
             if not isinstance(h5_dsets, (list, tuple)):
-                e = ('Additional h5_dsets argument must be a list or tuple '
-                     'but received: {} {}'.format(type(h5_dsets), h5_dsets))
+                e = (
+                    "Additional h5_dsets argument must be a list or tuple "
+                    "but received: {} {}".format(type(h5_dsets), h5_dsets)
+                )
                 logger.error(e)
                 raise TypeError(e)
 
             missing_h5_dsets = [k for k in h5_dsets if k not in gen_dsets]
             if any(missing_h5_dsets):
-                msg = ('Could not find requested h5_dsets "{}" in '
-                       'source files: {}. Available datasets: {}'
-                       .format(missing_h5_dsets, source_fps, gen_dsets))
+                msg = (
+                    'Could not find requested h5_dsets "{}" in '
+                    "source files: {}. Available datasets: {}".format(
+                        missing_h5_dsets, source_fps, gen_dsets
+                    )
+                )
                 logger.error(msg)
                 raise FileInputError(msg)
 
             h5_dsets_data = {dset: gen[dset] for dset in h5_dsets}
 
         if any(missing_lcoe_source):
-            msg = ('Could not find the datasets in the gen source file that '
-                   'are required to re-calculate the multi-year LCOE. If you '
-                   'are running a multi-year job, it is strongly suggested '
-                   'you pass through these datasets to re-calculate the LCOE '
-                   'from the multi-year mean CF: {}'
-                   .format(missing_lcoe_source))
+            msg = (
+                "Could not find the datasets in the gen source file that "
+                "are required to re-calculate the multi-year LCOE. If you "
+                "are running a multi-year job, it is strongly suggested "
+                "you pass through these datasets to re-calculate the LCOE "
+                "from the multi-year mean CF: {}".format(missing_lcoe_source)
+            )
             logger.warning(msg)
             warn(msg, InputWarning)
 
         if any(missing_lcoe_request):
-            msg = ('It is strongly advised that you include the following '
-                   'datasets in the h5_dsets request in order to re-calculate '
-                   'the LCOE from the multi-year mean CF and AEP: {}'
-                   .format(missing_lcoe_request))
+            msg = (
+                "It is strongly advised that you include the following "
+                "datasets in the h5_dsets request in order to re-calculate "
+                "the LCOE from the multi-year mean CF and AEP: {}".format(
+                    missing_lcoe_request
+                )
+            )
             logger.warning(msg)
             warn(msg, InputWarning)
 
         return h5_dsets_data
 
     @classmethod
-    def run_serial(cls, excl_fpath, gen_fpath, tm_dset, gen_index,
-                   econ_fpath=None, excl_dict=None, inclusion_mask=None,
-                   area_filter_kernel='queen', min_area=None,
-                   resolution=64, gids=None, args=None, res_class_dset=None,
-                   res_class_bins=None, cf_dset='cf_mean-means',
-                   lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
-                   power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=None, cap_cost_scale=None, recalc_lcoe=True):
+    def run_serial(
+        cls,
+        excl_fpath,
+        gen_fpath,
+        tm_dset,
+        gen_index,
+        econ_fpath=None,
+        excl_dict=None,
+        inclusion_mask=None,
+        area_filter_kernel="queen",
+        min_area=None,
+        resolution=64,
+        gids=None,
+        args=None,
+        res_class_dset=None,
+        res_class_bins=None,
+        cf_dset="cf_mean-means",
+        lcoe_dset="lcoe_fcr-means",
+        h5_dsets=None,
+        data_layers=None,
+        power_density=None,
+        friction_fpath=None,
+        friction_dset=None,
+        excl_area=None,
+        cap_cost_scale=None,
+        recalc_lcoe=True,
+    ):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -1002,34 +1088,38 @@ class SupplyCurveAggregation(BaseAggregation):
 
             slice_lookup = sc.get_slice_lookup(gids)
 
-        logger.debug('Starting SupplyCurveAggregation serial with '
-                     'supply curve {} gids'.format(len(gids)))
+        logger.debug(
+            "Starting SupplyCurveAggregation serial with "
+            "supply curve {} gids".format(len(gids))
+        )
 
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'econ_fpath': econ_fpath,
-                       'data_layers': data_layers,
-                       'power_density': power_density,
-                       'excl_dict': excl_dict,
-                       'area_filter_kernel': area_filter_kernel,
-                       'min_area': min_area,
-                       'friction_fpath': friction_fpath,
-                       'friction_dset': friction_dset}
-        with SupplyCurveAggFileHandler(excl_fpath, gen_fpath,
-                                       **file_kwargs) as fh:
-
-            temp = cls._get_res_gen_lcoe_data(fh.gen, res_class_dset,
-                                              res_class_bins, cf_dset,
-                                              lcoe_dset)
+        file_kwargs = {
+            "econ_fpath": econ_fpath,
+            "data_layers": data_layers,
+            "power_density": power_density,
+            "excl_dict": excl_dict,
+            "area_filter_kernel": area_filter_kernel,
+            "min_area": min_area,
+            "friction_fpath": friction_fpath,
+            "friction_dset": friction_dset,
+        }
+        with SupplyCurveAggFileHandler(
+            excl_fpath, gen_fpath, **file_kwargs
+        ) as fh:
+            temp = cls._get_res_gen_lcoe_data(
+                fh.gen, res_class_dset, res_class_bins, cf_dset, lcoe_dset
+            )
             res_data, res_class_bins, cf_data, lcoe_data = temp
             h5_dsets_data = cls._get_extra_dsets(fh.gen, h5_dsets)
 
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
-                    inclusion_mask, gid, slice_lookup,
-                    resolution=resolution)
+                    inclusion_mask, gid, slice_lookup, resolution=resolution
+                )
 
                 for ri, res_bin in enumerate(res_class_bins):
                     try:
@@ -1055,27 +1145,34 @@ class SupplyCurveAggregation(BaseAggregation):
                             close=False,
                             friction_layer=fh.friction_layer,
                             cap_cost_scale=cap_cost_scale,
-                            recalc_lcoe=recalc_lcoe)
+                            recalc_lcoe=recalc_lcoe,
+                        )
 
                     except EmptySupplyCurvePointError:
-                        logger.debug('SC point {} is empty'.format(gid))
+                        logger.debug("SC point {} is empty".format(gid))
                     else:
-                        pointsum['sc_point_gid'] = gid
-                        pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']
-                        pointsum['sc_col_ind'] = points.loc[gid, 'col_ind']
+                        pointsum[SupplyCurveField.SC_POINT_GID] = gid
+                        pointsum[SupplyCurveField.SC_ROW_IND] = \
+                            points.loc[gid, 'row_ind']
+                        pointsum[SupplyCurveField.SC_COL_IND] = \
+                            points.loc[gid, 'col_ind']
                         pointsum['res_class'] = ri
 
                         summary.append(pointsum)
-                        logger.debug('Serial aggregation completed gid {}: '
-                                     '{} out of {} points complete'
-                                     .format(gid, n_finished, len(gids)))
+                        logger.debug(
+                            "Serial aggregation completed gid {}: "
+                            "{} out of {} points complete".format(
+                                gid, n_finished, len(gids)
+                            )
+                        )
 
                 n_finished += 1
 
         return summary
 
-    def run_parallel(self, gen_fpath, args=None, max_workers=None,
-                     sites_per_worker=100):
+    def run_parallel(
+        self, gen_fpath, args=None, max_workers=None, sites_per_worker=100
+    ):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -1101,25 +1198,31 @@ class SupplyCurveAggregation(BaseAggregation):
         chunks = int(np.ceil(len(self.gids) / sites_per_worker))
         chunks = np.array_split(self.gids, chunks)
 
-        logger.info('Running supply curve point aggregation for '
-                    'points {} through {} at a resolution of {} '
-                    'on {} cores in {} chunks.'
-                    .format(self.gids[0], self.gids[-1], self._resolution,
-                            max_workers, len(chunks)))
+        logger.info(
+            "Running supply curve point aggregation for "
+            "points {} through {} at a resolution of {} "
+            "on {} cores in {} chunks.".format(
+                self.gids[0],
+                self.gids[-1],
+                self._resolution,
+                max_workers,
+                len(chunks),
+            )
+        )
 
         slice_lookup = None
         if self._inclusion_mask is not None:
-            with SupplyCurveExtent(self._excl_fpath,
-                                   resolution=self._resolution) as sc:
+            with SupplyCurveExtent(
+                self._excl_fpath, resolution=self._resolution
+            ) as sc:
                 assert sc.exclusions.shape == self._inclusion_mask.shape
                 slice_lookup = sc.get_slice_lookup(self.gids)
 
         futures = []
         summary = []
         n_finished = 0
-        loggers = [__name__, 'reV.supply_curve.point_summary', 'reV']
+        loggers = [__name__, "reV.supply_curve.point_summary", "reV"]
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
-
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
                 # submit executions and append to futures list
@@ -1130,30 +1233,35 @@ class SupplyCurveAggregation(BaseAggregation):
                         rs, cs = slice_lookup[gid]
                         chunk_incl_masks[gid] = self._inclusion_mask[rs, cs]
 
-                futures.append(exe.submit(
-                    self.run_serial,
-                    self._excl_fpath, gen_fpath,
-                    self._tm_dset, gen_index,
-                    econ_fpath=self._econ_fpath,
-                    excl_dict=self._excl_dict,
-                    inclusion_mask=chunk_incl_masks,
-                    res_class_dset=self._res_class_dset,
-                    res_class_bins=self._res_class_bins,
-                    cf_dset=self._cf_dset,
-                    lcoe_dset=self._lcoe_dset,
-                    h5_dsets=self._h5_dsets,
-                    data_layers=self._data_layers,
-                    resolution=self._resolution,
-                    power_density=self._power_density,
-                    friction_fpath=self._friction_fpath,
-                    friction_dset=self._friction_dset,
-                    area_filter_kernel=self._area_filter_kernel,
-                    min_area=self._min_area,
-                    gids=gid_set,
-                    args=args,
-                    excl_area=self._excl_area,
-                    cap_cost_scale=self._cap_cost_scale,
-                    recalc_lcoe=self._recalc_lcoe))
+                futures.append(
+                    exe.submit(
+                        self.run_serial,
+                        self._excl_fpath,
+                        gen_fpath,
+                        self._tm_dset,
+                        gen_index,
+                        econ_fpath=self._econ_fpath,
+                        excl_dict=self._excl_dict,
+                        inclusion_mask=chunk_incl_masks,
+                        res_class_dset=self._res_class_dset,
+                        res_class_bins=self._res_class_bins,
+                        cf_dset=self._cf_dset,
+                        lcoe_dset=self._lcoe_dset,
+                        h5_dsets=self._h5_dsets,
+                        data_layers=self._data_layers,
+                        resolution=self._resolution,
+                        power_density=self._power_density,
+                        friction_fpath=self._friction_fpath,
+                        friction_dset=self._friction_dset,
+                        area_filter_kernel=self._area_filter_kernel,
+                        min_area=self._min_area,
+                        gids=gid_set,
+                        args=args,
+                        excl_area=self._excl_area,
+                        cap_cost_scale=self._cap_cost_scale,
+                        recalc_lcoe=self._recalc_lcoe,
+                    )
+                )
 
             # gather results
             for future in as_completed(futures):
@@ -1161,12 +1269,17 @@ class SupplyCurveAggregation(BaseAggregation):
                 summary += future.result()
                 if n_finished % 10 == 0:
                     mem = psutil.virtual_memory()
-                    logger.info('Parallel aggregation futures collected: '
-                                '{} out of {}. Memory usage is {:.3f} GB out '
-                                'of {:.3f} GB ({:.2f}% utilized).'
-                                .format(n_finished, len(chunks),
-                                        mem.used / 1e9, mem.total / 1e9,
-                                        100 * mem.used / mem.total))
+                    logger.info(
+                        "Parallel aggregation futures collected: "
+                        "{} out of {}. Memory usage is {:.3f} GB out "
+                        "of {:.3f} GB ({:.2f}% utilized).".format(
+                            n_finished,
+                            len(chunks),
+                            mem.used / 1e9,
+                            mem.total / 1e9,
+                            100 * mem.used / mem.total,
+                        )
+                    )
 
         return summary
 
@@ -1194,17 +1307,18 @@ class SupplyCurveAggregation(BaseAggregation):
         if all(type_check):
             return bins
 
-        elif any(type_check):
-            raise TypeError('Resource class bins has inconsistent '
-                            'entry type: {}'.format(bins))
+        if any(type_check):
+            raise TypeError(
+                "Resource class bins has inconsistent "
+                "entry type: {}".format(bins)
+            )
 
-        else:
-            bbins = []
-            for i, b in enumerate(sorted(bins)):
-                if i < len(bins) - 1:
-                    bbins.append([b, bins[i + 1]])
+        bbins = []
+        for i, b in enumerate(sorted(bins)):
+            if i < len(bins) - 1:
+                bbins.append([b, bins[i + 1]])
 
-            return bbins
+        return bbins
 
     @staticmethod
     def _summary_to_df(summary):
@@ -1221,15 +1335,17 @@ class SupplyCurveAggregation(BaseAggregation):
             Summary of the SC points.
         """
         summary = pd.DataFrame(summary)
-        sort_by = [x for x in ('sc_point_gid', 'res_class') if x in summary]
+        sort_by = [x for x in (SupplyCurveField.SC_POINT_GID, 'res_class')
+                   if x in summary]
         summary = summary.sort_values(sort_by)
         summary = summary.reset_index(drop=True)
-        summary.index.name = 'sc_gid'
+        summary.index.name = SupplyCurveField.SC_GID
 
         return summary
 
-    def summarize(self, gen_fpath, args=None, max_workers=None,
-                  sites_per_worker=100):
+    def summarize(
+        self, gen_fpath, args=None, max_workers=None, sites_per_worker=100
+    ):
         """
         Get the supply curve points aggregation summary
 
@@ -1257,35 +1373,45 @@ class SupplyCurveAggregation(BaseAggregation):
         if max_workers == 1:
             gen_index = self._parse_gen_index(gen_fpath)
             afk = self._area_filter_kernel
-            summary = self.run_serial(self._excl_fpath, gen_fpath,
-                                      self._tm_dset, gen_index,
-                                      econ_fpath=self._econ_fpath,
-                                      excl_dict=self._excl_dict,
-                                      inclusion_mask=self._inclusion_mask,
-                                      res_class_dset=self._res_class_dset,
-                                      res_class_bins=self._res_class_bins,
-                                      cf_dset=self._cf_dset,
-                                      lcoe_dset=self._lcoe_dset,
-                                      h5_dsets=self._h5_dsets,
-                                      data_layers=self._data_layers,
-                                      resolution=self._resolution,
-                                      power_density=self._power_density,
-                                      friction_fpath=self._friction_fpath,
-                                      friction_dset=self._friction_dset,
-                                      area_filter_kernel=afk,
-                                      min_area=self._min_area,
-                                      gids=self.gids, args=args,
-                                      excl_area=self._excl_area,
-                                      cap_cost_scale=self._cap_cost_scale,
-                                      recalc_lcoe=self._recalc_lcoe)
+            summary = self.run_serial(
+                self._excl_fpath,
+                gen_fpath,
+                self._tm_dset,
+                gen_index,
+                econ_fpath=self._econ_fpath,
+                excl_dict=self._excl_dict,
+                inclusion_mask=self._inclusion_mask,
+                res_class_dset=self._res_class_dset,
+                res_class_bins=self._res_class_bins,
+                cf_dset=self._cf_dset,
+                lcoe_dset=self._lcoe_dset,
+                h5_dsets=self._h5_dsets,
+                data_layers=self._data_layers,
+                resolution=self._resolution,
+                power_density=self._power_density,
+                friction_fpath=self._friction_fpath,
+                friction_dset=self._friction_dset,
+                area_filter_kernel=afk,
+                min_area=self._min_area,
+                gids=self.gids,
+                args=args,
+                excl_area=self._excl_area,
+                cap_cost_scale=self._cap_cost_scale,
+                recalc_lcoe=self._recalc_lcoe,
+            )
         else:
-            summary = self.run_parallel(gen_fpath=gen_fpath, args=args,
-                                        max_workers=max_workers,
-                                        sites_per_worker=sites_per_worker)
+            summary = self.run_parallel(
+                gen_fpath=gen_fpath,
+                args=args,
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker,
+            )
 
         if not any(summary):
-            e = ('Supply curve aggregation found no non-excluded SC points. '
-                 'Please check your exclusions or subset SC GID selection.')
+            e = (
+                "Supply curve aggregation found no non-excluded SC points. "
+                "Please check your exclusions or subset SC GID selection."
+            )
             logger.error(e)
             raise EmptySupplyCurvePointError(e)
 
@@ -1293,8 +1419,14 @@ class SupplyCurveAggregation(BaseAggregation):
 
         return summary
 
-    def run(self, out_fpath, gen_fpath=None, args=None, max_workers=None,
-            sites_per_worker=100):
+    def run(
+        self,
+        out_fpath,
+        gen_fpath=None,
+        args=None,
+        max_workers=None,
+        sites_per_worker=100,
+    ):
         """Run a supply curve aggregation.
 
         Parameters
@@ -1333,7 +1465,9 @@ class SupplyCurveAggregation(BaseAggregation):
 
         if gen_fpath is None:
             out = Aggregation.run(
-                self._excl_fpath, self._res_fpath, self._tm_dset,
+                self._excl_fpath,
+                self._res_fpath,
+                self._tm_dset,
                 excl_dict=self._excl_dict,
                 resolution=self._resolution,
                 excl_area=self._excl_area,
@@ -1341,12 +1475,16 @@ class SupplyCurveAggregation(BaseAggregation):
                 min_area=self._min_area,
                 pre_extract_inclusions=self._pre_extract_inclusions,
                 max_workers=max_workers,
-                sites_per_worker=sites_per_worker)
-            summary = out['meta']
+                sites_per_worker=sites_per_worker,
+            )
+            summary = out["meta"]
         else:
-            summary = self.summarize(gen_fpath=gen_fpath, args=args,
-                                     max_workers=max_workers,
-                                     sites_per_worker=sites_per_worker)
+            summary = self.summarize(
+                gen_fpath=gen_fpath,
+                args=args,
+                max_workers=max_workers,
+                sites_per_worker=sites_per_worker,
+            )
 
         out_fpath = _format_sc_agg_out_fpath(out_fpath)
         summary.to_csv(out_fpath)
@@ -1357,11 +1495,12 @@ class SupplyCurveAggregation(BaseAggregation):
 def _format_sc_agg_out_fpath(out_fpath):
     """Add CSV file ending and replace underscore, if necessary."""
     if not out_fpath.endswith(".csv"):
-        out_fpath = '{}.csv'.format(out_fpath)
+        out_fpath = "{}.csv".format(out_fpath)
 
     project_dir, out_fn = os.path.split(out_fpath)
-    out_fn = out_fn.replace("supply_curve_aggregation",
-                            "supply-curve-aggregation")
+    out_fn = out_fn.replace(
+        "supply_curve_aggregation", "supply-curve-aggregation"
+    )
     return os.path.join(project_dir, out_fn)
 
 
@@ -1369,9 +1508,11 @@ def _warn_about_large_datasets(gen, dset):
     """Warn user about multi-dimensional datasets in passthrough datasets"""
     dset_shape = gen.shapes.get(dset, (1,))
     if len(dset_shape) > 1:
-        msg = ("Generation dataset {!r} is not 1-dimensional (shape: {})."
-               "You may run into memory errors during aggregation - use "
-               "rep-profiles for aggregating higher-order datasets instead!"
-               .format(dset, dset_shape))
+        msg = (
+            "Generation dataset {!r} is not 1-dimensional (shape: {})."
+            "You may run into memory errors during aggregation - use "
+            "rep-profiles for aggregating higher-order datasets instead!"
+            .format(dset, dset_shape)
+        )
         logger.warning(msg)
         warn(msg, UserWarning)

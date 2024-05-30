@@ -8,12 +8,12 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 
-from reV.generation.generation import Gen
 from reV import TESTDATADIR
-
+from reV.generation.generation import Gen
 
 YEAR = 2012
 REV2_POINTS = slice(0, 5)
