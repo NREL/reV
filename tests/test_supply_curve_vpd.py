@@ -4,6 +4,7 @@ Test Variable Power Density
 @author: gbuster
 """
 import os
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -11,7 +12,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import FileInputError
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -34,19 +35,25 @@ RTOL = 0.001
 
 def test_vpd():
     """Test variable power density"""
+    vpd = pd.read_csv(FVPD)
+    vpd = vpd.rename(columns=SupplyCurveField.map_from_legacy())
+    vpd = vpd.set_index(vpd.columns[0])
 
-    sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
-                                 res_class_dset=RES_CLASS_DSET,
-                                 res_class_bins=RES_CLASS_BINS,
-                                 data_layers=DATA_LAYERS, power_density=FVPD)
-    summary = sca.summarize(GEN, max_workers=1)
+    with tempfile.TemporaryDirectory() as td:
+        tmp_path = os.path.join(td, "vpd.csv")
+        vpd.to_csv(tmp_path)
+        sca = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=EXCL_DICT,
+                                     res_class_dset=RES_CLASS_DSET,
+                                     res_class_bins=RES_CLASS_BINS,
+                                     data_layers=DATA_LAYERS,
+                                     power_density=tmp_path)
+        summary = sca.summarize(GEN, max_workers=1)
 
-    vpd = pd.read_csv(FVPD, index_col=0)
     for i in summary.index:
-        capacity = summary.loc[i, MetaKeyName.CAPACITY]
-        area = summary.loc[i, MetaKeyName.AREA_SQ_KM]
-        res_gids = np.array(summary.loc[i, 'res_gids'])
-        gid_counts = np.array(summary.loc[i, MetaKeyName.GID_COUNTS])
+        capacity = summary.loc[i, SupplyCurveField.CAPACITY]
+        area = summary.loc[i, SupplyCurveField.AREA_SQ_KM]
+        res_gids = np.array(summary.loc[i, SupplyCurveField.RES_GIDS])
+        gid_counts = np.array(summary.loc[i, SupplyCurveField.GID_COUNTS])
         vpd_per_gid = vpd.loc[res_gids, 'power_density'].values
         truth = area * (vpd_per_gid * gid_counts).sum() / gid_counts.sum()
 
@@ -62,25 +69,35 @@ def test_vpd_fractional_excl():
 
     gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
-    sca_1 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
-                                   res_class_dset=RES_CLASS_DSET,
-                                   res_class_bins=RES_CLASS_BINS,
-                                   data_layers=DATA_LAYERS, power_density=FVPD,
-                                   gids=gids_subset)
-    summary_1 = sca_1.summarize(GEN, max_workers=1)
-
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
-    sca_2 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_2,
-                                   res_class_dset=RES_CLASS_DSET,
-                                   res_class_bins=RES_CLASS_BINS,
-                                   data_layers=DATA_LAYERS, power_density=FVPD,
-                                   gids=gids_subset)
-    summary_2 = sca_2.summarize(GEN, max_workers=1)
+
+    vpd = pd.read_csv(FVPD)
+    vpd = vpd.rename(columns=SupplyCurveField.map_from_legacy())
+    vpd = vpd.set_index(vpd.columns[0])
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp_path = os.path.join(td, "vpd.csv")
+        vpd.to_csv(tmp_path)
+
+        sca_1 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS, power_density=tmp_path,
+                                       gids=gids_subset)
+        summary_1 = sca_1.summarize(GEN, max_workers=1)
+
+        sca_2 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_2,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       power_density=tmp_path,
+                                       gids=gids_subset)
+        summary_2 = sca_2.summarize(GEN, max_workers=1)
 
     for i in summary_1.index:
-        cap_full = summary_1.loc[i, MetaKeyName.CAPACITY]
-        cap_half = summary_2.loc[i, MetaKeyName.CAPACITY]
+        cap_full = summary_1.loc[i, SupplyCurveField.CAPACITY]
+        cap_half = summary_2.loc[i, SupplyCurveField.CAPACITY]
 
         msg = ('Variable power density for fractional exclusions failed! '
                'Index {} has cap full {} and cap half {}'

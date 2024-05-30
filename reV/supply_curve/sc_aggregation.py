@@ -28,7 +28,7 @@ from reV.supply_curve.aggregation import (
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.utilities import MetaKeyName, log_versions
+from reV.utilities import SupplyCurveField, log_versions
 from reV.utilities.exceptions import (
     EmptySupplyCurvePointError,
     FileInputError,
@@ -170,14 +170,14 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
             if self._pdf.endswith(".csv"):
                 self._power_density = pd.read_csv(self._pdf)
-                if (MetaKeyName.GID in self._power_density
+                if (SupplyCurveField.GID in self._power_density
                         and 'power_density' in self._power_density):
                     self._power_density = \
-                        self._power_density.set_index(MetaKeyName.GID)
+                        self._power_density.set_index(SupplyCurveField.GID)
                 else:
                     msg = ('Variable power density file must include "{}" '
                            'and "power_density" columns, but received: {}'
-                           .format(MetaKeyName.GID,
+                           .format(SupplyCurveField.GID,
                                    self._power_density.columns.values))
                     logger.error(msg)
                     raise FileInputError(msg)
@@ -1151,10 +1151,10 @@ class SupplyCurveAggregation(BaseAggregation):
                     except EmptySupplyCurvePointError:
                         logger.debug("SC point {} is empty".format(gid))
                     else:
-                        pointsum[MetaKeyName.SC_POINT_GID] = gid
-                        pointsum[MetaKeyName.SC_ROW_IND] = \
+                        pointsum[SupplyCurveField.SC_POINT_GID] = gid
+                        pointsum[SupplyCurveField.SC_ROW_IND] = \
                             points.loc[gid, 'row_ind']
-                        pointsum[MetaKeyName.SC_COL_IND] = \
+                        pointsum[SupplyCurveField.SC_COL_IND] = \
                             points.loc[gid, 'col_ind']
                         pointsum['res_class'] = ri
 
@@ -1335,11 +1335,11 @@ class SupplyCurveAggregation(BaseAggregation):
             Summary of the SC points.
         """
         summary = pd.DataFrame(summary)
-        sort_by = [x for x in (MetaKeyName.SC_POINT_GID, 'res_class')
+        sort_by = [x for x in (SupplyCurveField.SC_POINT_GID, 'res_class')
                    if x in summary]
         summary = summary.sort_values(sort_by)
         summary = summary.reset_index(drop=True)
-        summary.index.name = MetaKeyName.SC_GID
+        summary.index.name = SupplyCurveField.SC_GID
 
         return summary
 

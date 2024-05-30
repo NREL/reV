@@ -28,6 +28,7 @@ from rex.renewable_resource import (
 )
 from rex.utilities.utilities import check_res_file
 
+from reV.utilities import ResourceMetaField
 from reV.utilities.exceptions import (
     ResourceError,
     SAMExecutionError,
@@ -796,11 +797,10 @@ class RevPySam(Sam):
             location. Should include values for latitude, longitude, elevation,
             and timezone. Can be None for econ runs.
         """
-
         if isinstance(meta, pd.DataFrame):
             msg = (
-                "Meta data must only be for a single site but received: {}"
-                .format(meta)
+                "Meta data must only be for a single site but received: "
+                f"{meta}"
             )
             assert len(meta) == 1, msg
             meta = meta.iloc[0]
@@ -861,7 +861,9 @@ class RevPySam(Sam):
 
                     if self._is_hourly(output):
                         n_roll = int(
-                            -1 * self.meta["timezone"] * self.time_interval
+                            -1
+                            * self.meta[ResourceMetaField.TIMEZONE]
+                            * self.time_interval
                         )
                         output = np.roll(output, n_roll)
 

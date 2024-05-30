@@ -16,7 +16,7 @@ from reV import TESTDATADIR
 from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 
 EXCL_FPATH = os.path.join(TESTDATADIR, "ri_exclusions/ri_exclusions.h5")
 FRICTION_FPATH = os.path.join(TESTDATADIR, "ri_exclusions/ri_friction.h5")
@@ -64,7 +64,7 @@ def test_friction_mask():
     assert diff < 0.0001, m
 
 
-@pytest.mark.parametrize(MetaKeyName.GID, [100, 114, 130, 181])
+@pytest.mark.parametrize("gid", [100, 114, 130, 181])
 def test_agg_friction(gid):
     """Test SC Aggregation with friction by checking friction factors and LCOE
     against a hand calc."""
@@ -99,16 +99,16 @@ def test_agg_friction(gid):
             gid
         )
         assert np.isclose(
-            s[MetaKeyName.MEAN_FRICTION].values[0], mean_friction
+            s[SupplyCurveField.MEAN_FRICTION].values[0], mean_friction
         ), m
         m = ("SC point gid {} does not match mean LCOE with friction hand calc"
              .format(gid))
-        assert np.isclose(s[MetaKeyName.MEAN_FRICTION].values[0],
+        assert np.isclose(s[SupplyCurveField.MEAN_FRICTION].values[0],
                           mean_friction), m
         m = ('SC point gid {} does not match mean LCOE with friction hand calc'
              .format(gid))
-        assert np.allclose(s[MetaKeyName.MEAN_LCOE_FRICTION],
-                           s[MetaKeyName.MEAN_LCOE] * mean_friction), m
+        assert np.allclose(s[SupplyCurveField.MEAN_LCOE_FRICTION],
+                           s[SupplyCurveField.MEAN_LCOE] * mean_friction), m
 
 
 # pylint: disable=no-member
@@ -134,8 +134,8 @@ def make_friction_file():
 
         f[FRICTION_DSET][...] = data
         for d in f:
-            if d not in [FRICTION_DSET, MetaKeyName.LATITUDE,
-                         MetaKeyName.LONGITUDE]:
+            if d not in [FRICTION_DSET, SupplyCurveField.LATITUDE,
+                         SupplyCurveField.LONGITUDE]:
                 del f[d]
 
     with h5py.File(FRICTION_FPATH, "r") as f:

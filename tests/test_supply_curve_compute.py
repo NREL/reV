@@ -14,7 +14,7 @@ from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import SupplyCurveInputError
 
 TRANS_COSTS_1 = {
@@ -37,16 +37,17 @@ TRANS_COSTS_2 = {
 }
 
 path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary.csv")
-SC_POINTS = pd.read_csv(path)
+LEGACY_SC_COL_MAP = SupplyCurveField.map_from_legacy()
+SC_POINTS = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary_friction.csv")
-SC_POINTS_FRICTION = pd.read_csv(path)
+SC_POINTS_FRICTION = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "trans_tables/ri_transmission_table.csv")
-TRANS_TABLE = pd.read_csv(path)
+TRANS_TABLE = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 path = os.path.join(TESTDATADIR, "trans_tables/transmission_multipliers.csv")
-MULTIPLIERS = pd.read_csv(path)
+MULTIPLIERS = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 SC_FULL_COLUMNS = (
     "trans_gid",
@@ -67,6 +68,7 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
+        baseline = baseline.rename(columns=LEGACY_SC_COL_MAP)
         # double check useful for when tables are changing
         # but lcoe should be the same
         check = np.allclose(baseline["total_lcoe"], sc_full["total_lcoe"])
@@ -155,13 +157,13 @@ def test_integrated_sc_full_friction():
                          transmission_costs=tcosts,
                          avail_cap_frac=avail_cap_frac,
                          columns=SC_FULL_COLUMNS,
-                         sort_on=MetaKeyName.TOTAL_LCOE_FRICTION)
+                         sort_on=SupplyCurveField.TOTAL_LCOE_FRICTION)
 
         sc_full = pd.read_csv(sc_full)
-        assert MetaKeyName.MEAN_LCOE_FRICTION in sc_full
-        assert MetaKeyName.TOTAL_LCOE_FRICTION in sc_full
-        test = sc_full[MetaKeyName.MEAN_LCOE_FRICTION] + sc_full['lcot']
-        assert np.allclose(test, sc_full[MetaKeyName.TOTAL_LCOE_FRICTION])
+        assert SupplyCurveField.MEAN_LCOE_FRICTION in sc_full
+        assert SupplyCurveField.TOTAL_LCOE_FRICTION in sc_full
+        test = sc_full[SupplyCurveField.MEAN_LCOE_FRICTION] + sc_full['lcot']
+        assert np.allclose(test, sc_full[SupplyCurveField.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
             TESTDATADIR, "sc_out/sc_full_out_friction.csv"
@@ -178,12 +180,14 @@ def test_integrated_sc_simple_friction():
         out_fpath = os.path.join(td, "sc")
         sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
                            transmission_costs=tcosts,
-                           sort_on=MetaKeyName.TOTAL_LCOE_FRICTION)
+                           sort_on=SupplyCurveField.TOTAL_LCOE_FRICTION)
         sc_simple = pd.read_csv(sc_simple)
-        assert MetaKeyName.MEAN_LCOE_FRICTION in sc_simple
-        assert MetaKeyName.TOTAL_LCOE_FRICTION in sc_simple
-        test = sc_simple[MetaKeyName.MEAN_LCOE_FRICTION] + sc_simple['lcot']
-        assert np.allclose(test, sc_simple[MetaKeyName.TOTAL_LCOE_FRICTION])
+        assert SupplyCurveField.MEAN_LCOE_FRICTION in sc_simple
+        assert SupplyCurveField.TOTAL_LCOE_FRICTION in sc_simple
+        test = (sc_simple[SupplyCurveField.MEAN_LCOE_FRICTION]
+                + sc_simple['lcot'])
+        assert np.allclose(test,
+                           sc_simple[SupplyCurveField.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
             TESTDATADIR, "sc_out/sc_simple_out_friction.csv"
@@ -193,7 +197,7 @@ def test_integrated_sc_simple_friction():
 
 def test_sc_warning1():
     """Run the full SC test with missing connections and verify warning."""
-    mask = TRANS_TABLE[MetaKeyName.SC_POINT_GID].isin(list(range(10)))
+    mask = TRANS_TABLE[SupplyCurveField.SC_POINT_GID].isin(list(range(10)))
     trans_table = TRANS_TABLE[~mask]
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop("available_capacity", 1)
@@ -279,7 +283,8 @@ def test_parallel():
     assert_frame_equal(sc_full_parallel, sc_full_serial)
 
 
-def verify_trans_cap(sc_table, trans_tables, cap_col=MetaKeyName.CAPACITY):
+def verify_trans_cap(sc_table, trans_tables,
+                     cap_col=SupplyCurveField.CAPACITY):
     """
     Verify that sc_points are connected to features in the correct capacity
     bins
@@ -300,7 +305,7 @@ def verify_trans_cap(sc_table, trans_tables, cap_col=MetaKeyName.CAPACITY):
 
     test = sc_table.merge(trans_features, on='trans_gid', how='left')
     mask = test[cap_col] > test['max_cap']
-    cols = [MetaKeyName.SC_GID, 'trans_gid', cap_col, 'max_cap']
+    cols = [SupplyCurveField.SC_GID, 'trans_gid', cap_col, 'max_cap']
     msg = ("SC points connected to transmission features with "
            "max_cap < sc_cap:\n{}"
            .format(test.loc[mask, cols]))
@@ -425,33 +430,33 @@ def test_multi_parallel_trans():
     sc = SupplyCurve(SC_POINTS, trans_tables)
     sc_2 = sc.simple_sort(fcr=0.1, columns=columns)
 
-    assert not (set(SC_POINTS[MetaKeyName.SC_GID])
-                - set(sc_1[MetaKeyName.SC_GID]))
-    assert not (set(SC_POINTS[MetaKeyName.SC_GID])
-                - set(sc_2[MetaKeyName.SC_GID]))
-    assert not (set(SC_POINTS[MetaKeyName.SC_POINT_GID])
-                - set(sc_1[MetaKeyName.SC_POINT_GID]))
-    assert not (set(SC_POINTS[MetaKeyName.SC_POINT_GID])
-                - set(sc_2[MetaKeyName.SC_POINT_GID]))
-    assert not (set(sc_1[MetaKeyName.SC_POINT_GID])
-                - set(SC_POINTS[MetaKeyName.SC_POINT_GID]))
-    assert not (set(sc_2[MetaKeyName.SC_POINT_GID])
-                - set(SC_POINTS[MetaKeyName.SC_POINT_GID]))
+    assert not (set(SC_POINTS[SupplyCurveField.SC_GID])
+                - set(sc_1[SupplyCurveField.SC_GID]))
+    assert not (set(SC_POINTS[SupplyCurveField.SC_GID])
+                - set(sc_2[SupplyCurveField.SC_GID]))
+    assert not (set(SC_POINTS[SupplyCurveField.SC_POINT_GID])
+                - set(sc_1[SupplyCurveField.SC_POINT_GID]))
+    assert not (set(SC_POINTS[SupplyCurveField.SC_POINT_GID])
+                - set(sc_2[SupplyCurveField.SC_POINT_GID]))
+    assert not (set(sc_1[SupplyCurveField.SC_POINT_GID])
+                - set(SC_POINTS[SupplyCurveField.SC_POINT_GID]))
+    assert not (set(sc_2[SupplyCurveField.SC_POINT_GID])
+                - set(SC_POINTS[SupplyCurveField.SC_POINT_GID]))
 
     assert (sc_2.n_parallel_trans > 1).any()
 
     mask_2 = sc_2["n_parallel_trans"] > 1
 
-    for gid in sc_2.loc[mask_2, MetaKeyName.SC_GID]:
-        nx_1 = sc_1.loc[(sc_1[MetaKeyName.SC_GID] == gid),
+    for gid in sc_2.loc[mask_2, SupplyCurveField.SC_GID]:
+        nx_1 = sc_1.loc[(sc_1[SupplyCurveField.SC_GID] == gid),
                         'n_parallel_trans'].values[0]
-        nx_2 = sc_2.loc[(sc_2[MetaKeyName.SC_GID] == gid),
+        nx_2 = sc_2.loc[(sc_2[SupplyCurveField.SC_GID] == gid),
                         'n_parallel_trans'].values[0]
         assert nx_2 >= nx_1
         if nx_1 != nx_2:
-            lcot_1 = sc_1.loc[(sc_1[MetaKeyName.SC_GID] == gid),
+            lcot_1 = sc_1.loc[(sc_1[SupplyCurveField.SC_GID] == gid),
                               'lcot'].values[0]
-            lcot_2 = sc_2.loc[(sc_2[MetaKeyName.SC_GID] == gid),
+            lcot_2 = sc_2.loc[(sc_2[SupplyCurveField.SC_GID] == gid),
                               'lcot'].values[0]
             assert lcot_2 > lcot_1
 
@@ -578,8 +583,8 @@ def test_least_cost_full_pass_through():
     Test the full supply curve sorting passes through variables correctly
     """
     check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
-                  MetaKeyName.REG_MULT,
+                  'reinforcement_poi_lon', SupplyCurveField.EOS_MULT,
+                  SupplyCurveField.REG_MULT,
                   'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
@@ -616,8 +621,8 @@ def test_least_cost_simple_pass_through():
     Test the simple supply curve sorting passes through variables correctly
     """
     check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', MetaKeyName.EOS_MULT,
-                  MetaKeyName.REG_MULT,
+                  'reinforcement_poi_lon', SupplyCurveField.EOS_MULT,
+                  SupplyCurveField.REG_MULT,
                   'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
@@ -678,11 +683,13 @@ def test_least_cost_simple_with_ac_capacity_column():
             trans_tables.append(out_fp)
 
         sc = SC_POINTS.copy()
-        sc["capacity_ac"] = sc["capacity"] / 1.02
+        sc[SupplyCurveField.CAPACITY_AC] = sc[SupplyCurveField.CAPACITY] / 1.02
 
-        sc = SupplyCurve(sc, trans_tables, sc_capacity_col="capacity_ac")
+        sc = SupplyCurve(sc, trans_tables,
+                         sc_capacity_col=SupplyCurveField.CAPACITY_AC)
         sc_simple_ac_cap = sc.simple_sort(fcr=0.1)
-        verify_trans_cap(sc_simple_ac_cap, trans_tables, cap_col="capacity_ac")
+        verify_trans_cap(sc_simple_ac_cap, trans_tables,
+                         cap_col=SupplyCurveField.CAPACITY_AC)
 
         assert np.allclose(
             sc_simple["trans_cap_cost_per_mw"] * 1.02,

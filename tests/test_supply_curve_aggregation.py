@@ -12,7 +12,7 @@ from rex.resource import Resource
 
 from reV import TESTDATADIR
 from reV.supply_curve.aggregation import Aggregation
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -46,8 +46,12 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
-                truth = truth.set_index('sc_gid')
-                for c in [MetaKeyName.SOURCE_GIDS, MetaKeyName.GID_COUNTS]:
+                truth = truth.rename(
+                    columns=SupplyCurveField.map_from_legacy()
+                )
+                truth = truth.set_index(SupplyCurveField.SC_GID)
+                for c in [SupplyCurveField.SOURCE_GIDS,
+                          SupplyCurveField.GID_COUNTS]:
                     test[c] = test[c].astype(str)
 
                 truth = truth.fillna('none')
@@ -100,9 +104,9 @@ def test_gid_counts(excl_dict):
                               excl_dict=excl_dict, max_workers=1)
 
     for i, row in agg_out['meta'].iterrows():
-        n_gids = row[MetaKeyName.N_GIDS]
-        gid_counts = np.sum(row[MetaKeyName.GID_COUNTS])
-        area = row[MetaKeyName.AREA_SQ_KM]
+        n_gids = row[SupplyCurveField.N_GIDS]
+        gid_counts = np.sum(row[SupplyCurveField.GID_COUNTS])
+        area = row[SupplyCurveField.AREA_SQ_KM]
 
         msg = ('For sc_gid {}: the sum of gid_counts ({}), does not match '
                'n_gids ({})'.format(i, n_gids, gid_counts))
@@ -142,8 +146,8 @@ def test_mean_wind_dirs(excl_dict):
     for i, row in out_meta.iterrows():
         test = mean_wind_dirs[:, i]
 
-        gids = row[MetaKeyName.SOURCE_GIDS]
-        fracs = row[MetaKeyName.GID_COUNTS] / row[MetaKeyName.N_GIDS]
+        gids = row[SupplyCurveField.SOURCE_GIDS]
+        fracs = row[SupplyCurveField.GID_COUNTS] / row[SupplyCurveField.N_GIDS]
 
         truth = compute_mean_wind_dirs(RES, DSET, gids, fracs)
 

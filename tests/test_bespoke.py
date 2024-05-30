@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """reV bespoke wind plant optimization tests"""
+
 import copy
 import json
 import os
@@ -25,7 +26,11 @@ from reV.losses.scheduled import ScheduledLossesMixin
 from reV.SAM.generation import WindPower
 from reV.supply_curve.supply_curve import SupplyCurve
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities import MetaKeyName, ModuleName, SiteDataField
+from reV.utilities import (
+    ModuleName,
+    SiteDataField,
+    SupplyCurveField,
+)
 
 pytest.importorskip("shapely")
 
@@ -82,7 +87,7 @@ OBJECTIVE_FUNCTION = (
 
 def test_turbine_placement(gid=33):
     """Test turbine placement with zero available area."""
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -173,8 +178,7 @@ def test_turbine_placement(gid=33):
 
 def test_zero_area(gid=33):
     """Test turbine placement with zero available area."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
 
     objective_function = (
         "(0.0975 * capital_cost + fixed_operating_cost) "
@@ -224,8 +228,7 @@ def test_zero_area(gid=33):
 
 def test_correct_turb_location(gid=33):
     """Test turbine location is reported correctly."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
 
     objective_function = (
         "(0.0975 * capital_cost + fixed_operating_cost) "
@@ -324,15 +327,19 @@ def test_packing_algorithm(gid=33):
 def test_bespoke_points():
     """Test the bespoke points input options"""
     # pylint: disable=W0612
-    points = pd.DataFrame({SiteDataField.GID: [33, 34, 35],
-                           SiteDataField.CONFIG: ['default'] * 3})
-    pp = BespokeWindPlants._parse_points(points, {'default': SAM})
+    points = pd.DataFrame(
+        {
+            SiteDataField.GID: [33, 34, 35],
+            SiteDataField.CONFIG: ["default"] * 3,
+        }
+    )
+    pp = BespokeWindPlants._parse_points(points, {"default": SAM})
     assert len(pp) == 3
     for gid in pp.gids:
         assert pp[gid][0] == "default"
 
-    points = pd.DataFrame({MetaKeyName.GID: [33, 34, 35]})
-    pp = BespokeWindPlants._parse_points(points, {'default': SAM})
+    points = pd.DataFrame({SupplyCurveField.GID: [33, 34, 35]})
+    pp = BespokeWindPlants._parse_points(points, {"default": SAM})
     assert len(pp) == 3
     assert SiteDataField.CONFIG in pp.df.columns
     for gid in pp.gids:
@@ -341,8 +348,7 @@ def test_bespoke_points():
 
 def test_single(gid=33):
     """Test a single wind plant bespoke optimization run"""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -379,12 +385,18 @@ def test_single(gid=33):
         assert "annual_energy-2013" in out
         assert "annual_energy-means" in out
 
-        assert (TURB_RATING * bsp.meta['n_turbines'].values[0]
-                == out['system_capacity'])
-        x_coords = json.loads(bsp.meta[MetaKeyName.TURBINE_X_COORDS].values[0])
-        y_coords = json.loads(bsp.meta[MetaKeyName.TURBINE_Y_COORDS].values[0])
-        assert bsp.meta['n_turbines'].values[0] == len(x_coords)
-        assert bsp.meta['n_turbines'].values[0] == len(y_coords)
+        assert (
+            TURB_RATING * bsp.meta["n_turbines"].values[0]
+            == out["system_capacity"]
+        )
+        x_coords = json.loads(
+            bsp.meta[SupplyCurveField.TURBINE_X_COORDS].values[0]
+        )
+        y_coords = json.loads(
+            bsp.meta[SupplyCurveField.TURBINE_Y_COORDS].values[0]
+        )
+        assert bsp.meta["n_turbines"].values[0] == len(x_coords)
+        assert bsp.meta["n_turbines"].values[0] == len(y_coords)
 
         for y in (2012, 2013):
             cf = out[f"cf_profile-{y}"]
@@ -394,11 +406,11 @@ def test_single(gid=33):
 
         # simple windpower obj for comparison
         wp_sam_config = bsp.sam_sys_inputs
-        wp_sam_config['wind_farm_wake_model'] = 0
-        wp_sam_config['wake_int_loss'] = 0
-        wp_sam_config['wind_farrm_xCoordinates'] = [0]
-        wp_sam_config['wind_farrm_yCoordinates'] = [0]
-        wp_sam_config['system_capacity'] = TURB_RATING
+        wp_sam_config["wind_farm_wake_model"] = 0
+        wp_sam_config["wake_int_loss"] = 0
+        wp_sam_config["wind_farm_xCoordinates"] = [0]
+        wp_sam_config["wind_farm_yCoordinates"] = [0]
+        wp_sam_config["system_capacity"] = TURB_RATING
         res_df = bsp.res_df[(bsp.res_df.index.year == 2012)].copy()
         wp = WindPower(
             res_df, bsp.meta, wp_sam_config, output_request=bsp._out_req
@@ -425,8 +437,7 @@ def test_single(gid=33):
 
 def test_extra_outputs(gid=33):
     """Test running bespoke single farm optimization with lcoe requests"""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'lcoe_fcr')
+    output_request = ("system_capacity", "cf_mean", "cf_profile", "lcoe_fcr")
 
     objective_function = (
         "(fixed_charge_rate * capital_cost + fixed_operating_cost) "
@@ -487,9 +498,9 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert MetaKeyName.CAPACITY in bsp.meta
-        assert MetaKeyName.MEAN_CF in bsp.meta
-        assert MetaKeyName.MEAN_LCOE in bsp.meta
+        assert SupplyCurveField.CAPACITY in bsp.meta
+        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta
         assert "reeds_region" in bsp.meta
@@ -527,37 +538,47 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert MetaKeyName.CAPACITY in bsp.meta
-        assert MetaKeyName.MEAN_CF in bsp.meta
-        assert MetaKeyName.MEAN_LCOE in bsp.meta
+        assert SupplyCurveField.CAPACITY in bsp.meta
+        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta
         assert "reeds_region" in bsp.meta
         assert "padus" in bsp.meta
 
-        assert MetaKeyName.EOS_MULT in bsp.meta
-        assert MetaKeyName.REG_MULT in bsp.meta
-        assert np.allclose(bsp.meta[MetaKeyName.REG_MULT], 1)
+        assert SupplyCurveField.EOS_MULT in bsp.meta
+        assert SupplyCurveField.REG_MULT in bsp.meta
+        assert np.allclose(bsp.meta[SupplyCurveField.REG_MULT], 1)
 
         n_turbs = round(test_eos_cap / TURB_RATING)
         test_eos_cap_kw = n_turbs * TURB_RATING
-        baseline_cost = (140 * test_eos_cap_kw
-                         * np.exp(-test_eos_cap_kw / 1E5 * 0.1 + (1 - 0.1)))
-        eos_mult = (bsp.plant_optimizer.capital_cost
-                    / bsp.plant_optimizer.capacity
-                    / (baseline_cost / test_eos_cap_kw))
-        assert np.allclose(bsp.meta[MetaKeyName.EOS_MULT], eos_mult)
+        baseline_cost = (
+            140
+            * test_eos_cap_kw
+            * np.exp(-test_eos_cap_kw / 1e5 * 0.1 + (1 - 0.1))
+        )
+        eos_mult = (
+            bsp.plant_optimizer.capital_cost
+            / bsp.plant_optimizer.capacity
+            / (baseline_cost / test_eos_cap_kw)
+        )
+        assert np.allclose(bsp.meta[SupplyCurveField.EOS_MULT], eos_mult)
 
         bsp.close()
 
 
 def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
-    file output. """
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile',
-                      'extra_unused_data', 'winddirection', 'windspeed',
-                      'ws_mean')
+    file output."""
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "extra_unused_data",
+        "winddirection",
+        "windspeed",
+        "ws_mean",
+    )
 
     with tempfile.TemporaryDirectory() as td:
         out_fpath_request = os.path.join(td, "wind")
@@ -569,13 +590,20 @@ def test_bespoke():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
         # both 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({SiteDataField.GID: [33, 35],
-                               SiteDataField.CONFIG: ['default'] * 2,
-                               'extra_unused_data': [0, 42]})
+        points = pd.DataFrame(
+            {
+                SiteDataField.GID: [33, 35],
+                SiteDataField.CONFIG: ["default"] * 2,
+                "extra_unused_data": [0, 42],
+            }
+        )
         fully_excluded_points = pd.DataFrame(
-            {SiteDataField.GID: [37],
-             SiteDataField.CONFIG: ['default'],
-             'extra_unused_data': [0]})
+            {
+                SiteDataField.GID: [37],
+                SiteDataField.CONFIG: ["default"],
+                "extra_unused_data": [0],
+            }
+        )
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
@@ -621,12 +649,12 @@ def test_bespoke():
         with Resource(out_fpath_truth) as f:
             meta = f.meta
             assert len(meta) <= len(points)
-            assert MetaKeyName.SC_POINT_GID in meta
-            assert MetaKeyName.TURBINE_X_COORDS in meta
-            assert MetaKeyName.TURBINE_Y_COORDS in meta
-            assert 'possible_x_coords' in meta
-            assert 'possible_y_coords' in meta
-            assert MetaKeyName.RES_GIDS in meta
+            assert SupplyCurveField.SC_POINT_GID in meta
+            assert SupplyCurveField.TURBINE_X_COORDS in meta
+            assert SupplyCurveField.TURBINE_Y_COORDS in meta
+            assert "possible_x_coords" in meta
+            assert "possible_y_coords" in meta
+            assert SupplyCurveField.RES_GIDS in meta
 
             dsets_1d = (
                 "system_capacity",
@@ -695,9 +723,11 @@ def test_collect_bespoke():
         collector.collect("cf_profile-2012")
 
         with Resource(h5_file) as fout:
-            meta = fout.meta
-            assert all(meta[MetaKeyName.GID].values
-                       == sorted(meta[MetaKeyName.GID].values))
+            meta = fout.meta.rename(columns=SupplyCurveField.map_from_legacy())
+            assert all(
+                meta[SupplyCurveField.GID].values
+                == sorted(meta[SupplyCurveField.GID].values)
+            )
             ti = fout.time_index
             assert len(ti) == 8760
             assert "time_index-2012" in fout
@@ -706,20 +736,28 @@ def test_collect_bespoke():
 
         for fp in source_fps:
             with Resource(fp) as source:
-                assert all(np.isin(source.meta[MetaKeyName.GID].values,
-                                   meta[MetaKeyName.GID].values))
+                src_meta = source.meta.rename(
+                    columns=SupplyCurveField.map_from_legacy())
+                assert all(
+                    np.isin(
+                        src_meta[SupplyCurveField.GID].values,
+                        meta[SupplyCurveField.GID].values,
+                    )
+                )
                 for isource, gid in enumerate(
-                        source.meta[MetaKeyName.GID].values):
-                    iout = np.where(meta[MetaKeyName.GID].values == gid)[0]
-                    truth = source['cf_profile-2012', :, isource].flatten()
+                    src_meta[SupplyCurveField.GID].values
+                ):
+                    iout = np.where(meta[SupplyCurveField.GID].values == gid)[
+                        0
+                    ]
+                    truth = source["cf_profile-2012", :, isource].flatten()
                     test = data[:, iout].flatten()
                     assert np.allclose(truth, test)
 
 
 def test_consistent_eval_namespace(gid=33):
     """Test that all the same variables are available for every eval."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     cap_cost_fun = "2000"
     foc_fun = "0"
     voc_fun = "0"
@@ -771,6 +809,9 @@ def test_bespoke_supply_curve():
 
     normal_path = os.path.join(TESTDATADIR, "sc_out/baseline_agg_summary.csv")
     normal_sc_points = pd.read_csv(normal_path)
+    normal_sc_points = normal_sc_points.rename(
+        SupplyCurveField.map_from_legacy(), axis=1
+    )
 
     with tempfile.TemporaryDirectory() as td:
         bespoke_sc_fp = os.path.join(td, "bespoke_out.h5")
@@ -779,7 +820,7 @@ def test_bespoke_supply_curve():
             del f["meta"]
         with Outputs(bespoke_sc_fp, mode="a") as f:
             bespoke_meta = normal_sc_points.copy()
-            bespoke_meta = bespoke_meta.drop(MetaKeyName.SC_GID, axis=1)
+            bespoke_meta = bespoke_meta.drop(SupplyCurveField.SC_GID, axis=1)
             f.meta = bespoke_meta
 
         # this is basically copied from test_supply_curve_compute.py
@@ -791,16 +832,20 @@ def test_bespoke_supply_curve():
         sc = SupplyCurve(bespoke_sc_fp, trans_tables)
         sc_full = sc.full_sort(fcr=0.1, avail_cap_frac=0.1)
 
-        assert all(gid in sc_full[MetaKeyName.SC_GID]
-                   for gid in normal_sc_points[MetaKeyName.SC_GID])
+        assert all(
+            gid in sc_full[SupplyCurveField.SC_GID]
+            for gid in normal_sc_points[SupplyCurveField.SC_GID]
+        )
         for _, inp_row in normal_sc_points.iterrows():
-            sc_gid = inp_row[MetaKeyName.SC_GID]
-            assert sc_gid in sc_full[MetaKeyName.SC_GID]
-            test_ind = np.where(sc_full[MetaKeyName.SC_GID] == sc_gid)[0]
+            sc_gid = inp_row[SupplyCurveField.SC_GID]
+            assert sc_gid in sc_full[SupplyCurveField.SC_GID]
+            test_ind = np.where(sc_full[SupplyCurveField.SC_GID] == sc_gid)[0]
             assert len(test_ind) == 1
             test_row = sc_full.iloc[test_ind]
-            assert (test_row['total_lcoe'].values[0]
-                    > inp_row[MetaKeyName.MEAN_LCOE])
+            assert (
+                test_row["total_lcoe"].values[0]
+                > inp_row[SupplyCurveField.MEAN_LCOE]
+            )
 
     fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
     sc_baseline = pd.read_csv(fpath_baseline)
@@ -810,8 +855,7 @@ def test_bespoke_supply_curve():
 @pytest.mark.parametrize("wlm", [2, 100])
 def test_wake_loss_multiplier(wlm):
     """Test wake loss multiplier."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -887,8 +931,7 @@ def test_wake_loss_multiplier(wlm):
 
 def test_bespoke_wind_plant_with_power_curve_losses():
     """Test bespoke ``wind_plant`` with power curve losses."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -961,8 +1004,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
 def test_bespoke_run_with_power_curve_losses():
     """Test bespoke run with power curve losses."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -1027,8 +1069,7 @@ def test_bespoke_run_with_power_curve_losses():
 
 def test_bespoke_run_with_scheduled_losses():
     """Test bespoke run with scheduled losses."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -1058,16 +1099,25 @@ def test_bespoke_run_with_scheduled_losses():
         bsp.close()
 
         sam_inputs = copy.deepcopy(SAM_SYS_INPUTS)
-        sam_inputs[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = [{
-            'name': 'Environmental',
-            'count': 115,
-            'duration': 2,
-            'percentage_of_capacity_lost': 100,
-            'allowed_months': ['April', 'May', 'June', 'July', 'August',
-                               'September', 'October']}]
-        sam_inputs['hourly'] = [0] * 8760  # only needed for testing
-        output_request = ('system_capacity', 'cf_mean',
-                          'cf_profile', 'hourly')
+        sam_inputs[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = [
+            {
+                "name": "Environmental",
+                "count": 115,
+                "duration": 2,
+                "percentage_of_capacity_lost": 100,
+                "allowed_months": [
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                ],
+            }
+        ]
+        sam_inputs["hourly"] = [0] * 8760  # only needed for testing
+        output_request = ("system_capacity", "cf_mean", "cf_profile", "hourly")
 
         bsp = BespokeSinglePlant(
             33,
@@ -1104,8 +1154,7 @@ def test_bespoke_run_with_scheduled_losses():
 
 def test_bespoke_aep_is_zero_if_no_turbines_placed():
     """Test that bespoke aep output is zero if no turbines placed."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile')
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
 
     objective_function = "aep"
 
@@ -1153,11 +1202,15 @@ def test_bespoke_prior_run():
     single vertical level (e.g., with Sup3rCC data)
     """
     sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
-    sam_sys_inputs['fixed_charge_rate'] = 0.096
-    sam_configs = {'default': sam_sys_inputs}
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'extra_unused_data',
-                      'lcoe_fcr')
+    sam_sys_inputs["fixed_charge_rate"] = 0.096
+    sam_configs = {"default": sam_sys_inputs}
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "extra_unused_data",
+        "lcoe_fcr",
+    )
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, "bespoke_out2.h5")
         out_fpath2 = os.path.join(td, "bespoke_out1.h5")
@@ -1178,9 +1231,13 @@ def test_bespoke_prior_run():
         res_fp_2013 = res_fp.format("2013")
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({SiteDataField.GID: [33],
-                               SiteDataField.CONFIG: ['default'],
-                               'extra_unused_data': [42]})
+        points = pd.DataFrame(
+            {
+                SiteDataField.GID: [33],
+                SiteDataField.CONFIG: ["default"],
+                "extra_unused_data": [42],
+            }
+        )
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
@@ -1232,9 +1289,14 @@ def test_bespoke_prior_run():
             meta2 = f2.meta
             data2 = {k: f2[k] for k in f2.dsets}
 
-        cols = [MetaKeyName.TURBINE_X_COORDS, MetaKeyName.TURBINE_Y_COORDS,
-                MetaKeyName.CAPACITY, MetaKeyName.N_GIDS,
-                MetaKeyName.GID_COUNTS, MetaKeyName.RES_GIDS]
+        cols = [
+            SupplyCurveField.TURBINE_X_COORDS,
+            SupplyCurveField.TURBINE_Y_COORDS,
+            SupplyCurveField.CAPACITY,
+            SupplyCurveField.N_GIDS,
+            SupplyCurveField.GID_COUNTS,
+            SupplyCurveField.RES_GIDS,
+        ]
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 
         # multi-year means should not match the 2nd run with 2013 only.
@@ -1255,9 +1317,14 @@ def test_gid_map():
     new resource data files for example so you can run forecasted resource with
     the same spatial configuration."""
 
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'extra_unused_data',
-                      'winddirection', 'ws_mean')
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "extra_unused_data",
+        "winddirection",
+        "ws_mean",
+    )
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, "bespoke_out2.h5")
         out_fpath2 = os.path.join(td, "bespoke_out1.h5")
@@ -1269,11 +1336,17 @@ def test_gid_map():
         res_fp_2013 = res_fp.format("2013")
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({SiteDataField.GID: [33],
-                               SiteDataField.CONFIG: ['default'],
-                               'extra_unused_data': [42]})
+        points = pd.DataFrame(
+            {
+                SiteDataField.GID: [33],
+                SiteDataField.CONFIG: ["default"],
+                "extra_unused_data": [42],
+            }
+        )
 
-        gid_map = pd.DataFrame({MetaKeyName.GID: [3, 4, 13, 12, 11, 10, 9]})
+        gid_map = pd.DataFrame(
+            {SupplyCurveField.GID: [3, 4, 13, 12, 11, 10, 9]}
+        )
         new_gid = 50
         gid_map["gid_map"] = new_gid
         fp_gid_map = os.path.join(td, "gid_map.csv")
@@ -1333,8 +1406,11 @@ def test_gid_map():
         with Resource(res_fp_2013) as f3:
             ws = f3[f"windspeed_{hh}m", :, new_gid]
 
-        cols = [MetaKeyName.N_GIDS, MetaKeyName.GID_COUNTS,
-                MetaKeyName.RES_GIDS]
+        cols = [
+            SupplyCurveField.N_GIDS,
+            SupplyCurveField.GID_COUNTS,
+            SupplyCurveField.RES_GIDS,
+        ]
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 
         assert not np.allclose(data1["cf_mean-2013"], data2["cf_mean-2013"])
@@ -1369,8 +1445,13 @@ def test_gid_map():
 
 def test_bespoke_bias_correct():
     """Test bespoke run with bias correction on windspeed data."""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'extra_unused_data', 'ws_mean')
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "extra_unused_data",
+        "ws_mean",
+    )
     with tempfile.TemporaryDirectory() as td:
         out_fpath1 = os.path.join(td, "bespoke_out2.h5")
         out_fpath2 = os.path.join(td, "bespoke_out1.h5")
@@ -1382,16 +1463,22 @@ def test_bespoke_bias_correct():
         res_fp_2013 = res_fp.format("2013")
 
         # gids 33 and 35 are included, 37 is fully excluded
-        points = pd.DataFrame({SiteDataField.GID: [33],
-                               SiteDataField.CONFIG: ['default'],
-                               'extra_unused_data': [42]})
+        points = pd.DataFrame(
+            {
+                SiteDataField.GID: [33],
+                SiteDataField.CONFIG: ["default"],
+                "extra_unused_data": [42],
+            }
+        )
 
         # intentionally leaving out WTK gid 13 which only has 5 included 90m
         # pixels in order to check that this is dynamically patched.
-        bias_correct = pd.DataFrame({MetaKeyName.GID: [3, 4, 12, 11, 10, 9]})
-        bias_correct['method'] = 'lin_ws'
-        bias_correct['scalar'] = 0.5
-        fp_bc = os.path.join(td, 'bc.csv')
+        bias_correct = pd.DataFrame(
+            {SupplyCurveField.GID: [3, 4, 12, 11, 10, 9]}
+        )
+        bias_correct["method"] = "lin_ws"
+        bias_correct["scalar"] = 0.5
+        fp_bc = os.path.join(td, "bc.csv")
         bias_correct.to_csv(fp_bc)
 
         TechMapping.run(excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1)
@@ -1444,8 +1531,11 @@ def test_bespoke_bias_correct():
             meta2 = f2.meta
             data2 = {k: f2[k] for k in f2.dsets}
 
-        cols = [MetaKeyName.N_GIDS, MetaKeyName.GID_COUNTS,
-                MetaKeyName.RES_GIDS]
+        cols = [
+            SupplyCurveField.N_GIDS,
+            SupplyCurveField.GID_COUNTS,
+            SupplyCurveField.RES_GIDS,
+        ]
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 
         assert data1["cf_mean-2013"] * 0.5 > data2["cf_mean-2013"]
@@ -1454,9 +1544,14 @@ def test_bespoke_bias_correct():
 
 def test_cli(runner, clear_loggers):
     """Test bespoke CLI"""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'winddirection', 'windspeed',
-                      'ws_mean')
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "winddirection",
+        "windspeed",
+        "ws_mean",
+    )
 
     with tempfile.TemporaryDirectory() as td:
         dirname = os.path.basename(td)
@@ -1523,12 +1618,12 @@ def test_cli(runner, clear_loggers):
         with Resource(out_fpath) as f:
             meta = f.meta
             assert len(meta) == 2
-            assert MetaKeyName.SC_POINT_GID in meta
-            assert MetaKeyName.TURBINE_X_COORDS in meta
-            assert MetaKeyName.TURBINE_Y_COORDS in meta
-            assert 'possible_x_coords' in meta
-            assert 'possible_y_coords' in meta
-            assert MetaKeyName.RES_GIDS in meta
+            assert SupplyCurveField.SC_POINT_GID in meta
+            assert SupplyCurveField.TURBINE_X_COORDS in meta
+            assert SupplyCurveField.TURBINE_Y_COORDS in meta
+            assert "possible_x_coords" in meta
+            assert "possible_y_coords" in meta
+            assert SupplyCurveField.RES_GIDS in meta
 
             dsets_1d = (
                 "system_capacity",
@@ -1563,10 +1658,16 @@ def test_cli(runner, clear_loggers):
 
 def test_bespoke_5min_sample():
     """Sample a 5min resource dataset for 60min outputs in bespoke"""
-    output_request = ('system_capacity', 'cf_mean',
-                      'cf_profile', 'extra_unused_data',
-                      'winddirection', 'windspeed', 'ws_mean')
-    tm_dset = 'test_wtk_5min'
+    output_request = (
+        "system_capacity",
+        "cf_mean",
+        "cf_profile",
+        "extra_unused_data",
+        "winddirection",
+        "windspeed",
+        "ws_mean",
+    )
+    tm_dset = "test_wtk_5min"
 
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "wind_bespoke.h5")
@@ -1574,17 +1675,20 @@ def test_bespoke_5min_sample():
         shutil.copy(EXCL, excl_fp)
         res_fp = os.path.join(TESTDATADIR, "wtk/wtk_2010_*m.h5")
 
-        points = pd.DataFrame({SiteDataField.GID: [33, 35],
-                               SiteDataField.CONFIG: ['default'] * 2,
-                               'extra_unused_data': [0, 42]})
+        points = pd.DataFrame(
+            {
+                SiteDataField.GID: [33, 35],
+                SiteDataField.CONFIG: ["default"] * 2,
+                "extra_unused_data": [0, 42],
+            }
+        )
         sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
         sam_sys_inputs["time_index_step"] = 12
         sam_configs = {"default": sam_sys_inputs}
 
         # hack techmap because 5min data only has 10 wind resource pixels
-        with h5py.File(excl_fp, 'a') as excl_file:
-            arr = np.random.choice(10,
-                                   size=excl_file[MetaKeyName.LATITUDE].shape)
+        with h5py.File(excl_fp, "a") as excl_file:
+            arr = np.random.choice(10, size=excl_file["latitude"].shape)
             excl_file.create_dataset(name=tm_dset, data=arr)
 
         bsp = BespokeWindPlants(

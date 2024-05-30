@@ -23,7 +23,7 @@ from rex.utilities.utilities import parse_year, to_records_array
 from scipy import stats
 
 from reV.handlers.outputs import Outputs
-from reV.utilities import MetaKeyName, log_versions
+from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
 from reV.utilities.exceptions import DataShapeError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -315,12 +315,12 @@ class RepresentativeMethods:
 class RegionRepProfile:
     """Framework to handle rep profile for one resource region"""
 
-    RES_GID_COL = MetaKeyName.RES_GIDS
-    GEN_GID_COL = MetaKeyName.GEN_GIDS
+    RES_GID_COL = SupplyCurveField.RES_GIDS
+    GEN_GID_COL = SupplyCurveField.GEN_GIDS
 
     def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse',
-                 weight=MetaKeyName.GID_COUNTS,
+                 weight=SupplyCurveField.GID_COUNTS,
                  n_profiles=1):
         """
         Parameters
@@ -394,8 +394,8 @@ class RegionRepProfile:
         with Resource(self._gen_fpath) as res:
             meta = res.meta
 
-            assert MetaKeyName.GID in meta
-            source_res_gids = meta[MetaKeyName.GID].values
+            assert ResourceMetaField.GID in meta
+            source_res_gids = meta[ResourceMetaField.GID].values
             msg = ('Resource gids from "gid" column in meta data from "{}" '
                    'must be sorted! reV generation should always be run with '
                    'sequential project points.'.format(self._gen_fpath))
@@ -546,7 +546,7 @@ class RegionRepProfile:
                                cf_dset='cf_profile',
                                rep_method='meanoid',
                                err_method='rmse',
-                               weight=MetaKeyName.GID_COUNTS,
+                               weight=SupplyCurveField.GID_COUNTS,
                                n_profiles=1):
         """Class method for parallelization of rep profile calc.
 
@@ -604,7 +604,7 @@ class RepProfilesBase(ABC):
 
     def __init__(self, gen_fpath, rev_summary, reg_cols=None,
                  cf_dset='cf_profile', rep_method='meanoid',
-                 err_method='rmse', weight=MetaKeyName.GID_COUNTS,
+                 err_method='rmse', weight=SupplyCurveField.GID_COUNTS,
                  n_profiles=1):
         """
         Parameters
@@ -953,7 +953,7 @@ class RepProfiles(RepProfilesBase):
     def __init__(self, gen_fpath, rev_summary, reg_cols,
                  cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse',
-                 weight=MetaKeyName.GID_COUNTS,
+                 weight=SupplyCurveField.GID_COUNTS,
                  n_profiles=1, aggregate_profiles=False):
         """ReV rep profiles class.
 
@@ -1046,7 +1046,7 @@ class RepProfiles(RepProfilesBase):
                *equally* to the meanoid profile unless these weights are
                specified.
 
-            By default, :obj:`MetaKeyName.GID_COUNTS`.
+            By default, :obj:`SupplyCurveField.GID_COUNTS`.
         n_profiles : int, optional
             Number of representative profiles to save to the output
             file. By default, ``1``.
@@ -1111,7 +1111,7 @@ class RepProfiles(RepProfilesBase):
         else:
             self._meta = self._rev_summary.groupby(self._reg_cols)
             self._meta = (
-                self._meta[MetaKeyName.TIMEZONE]
+                self._meta[SupplyCurveField.TIMEZONE]
                 .apply(lambda x: stats.mode(x, keepdims=True).mode[0])
             )
             self._meta = self._meta.reset_index()

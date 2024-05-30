@@ -17,7 +17,7 @@ from rex.utilities.utilities import to_records_array
 
 from reV.handlers.outputs import Outputs
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import (
     FileInputError,
     InputError,
@@ -27,19 +27,22 @@ from reV.utilities.exceptions import (
 
 logger = logging.getLogger(__name__)
 
-MERGE_COLUMN = MetaKeyName.SC_POINT_GID
+MERGE_COLUMN = SupplyCurveField.SC_POINT_GID
 PROFILE_DSET_REGEX = 'rep_profiles_[0-9]+$'
 SOLAR_PREFIX = 'solar_'
 WIND_PREFIX = 'wind_'
 NON_DUPLICATE_COLS = {
-    MetaKeyName.LATITUDE, MetaKeyName.LONGITUDE,
-    MetaKeyName.COUNTRY, MetaKeyName.STATE, MetaKeyName.COUNTY,
-    MetaKeyName.ELEVATION, MetaKeyName.TIMEZONE, MetaKeyName.SC_POINT_GID,
-    MetaKeyName.SC_ROW_IND, MetaKeyName.SC_COL_IND
+    SupplyCurveField.LATITUDE, SupplyCurveField.LONGITUDE,
+    SupplyCurveField.COUNTRY, SupplyCurveField.STATE, SupplyCurveField.COUNTY,
+    SupplyCurveField.ELEVATION, SupplyCurveField.TIMEZONE,
+    SupplyCurveField.SC_POINT_GID, SupplyCurveField.SC_ROW_IND,
+    SupplyCurveField.SC_COL_IND
 }
-DROPPED_COLUMNS = [MetaKeyName.GID]
-DEFAULT_FILL_VALUES = {'solar_capacity': 0, 'wind_capacity': 0,
-                       'solar_mean_cf': 0, 'wind_mean_cf': 0}
+DROPPED_COLUMNS = [SupplyCurveField.GID]
+DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY}': 0,
+                       f'wind_{SupplyCurveField.CAPACITY}': 0,
+                       f'solar_{SupplyCurveField.MEAN_CF}': 0,
+                       f'wind_{SupplyCurveField.MEAN_CF}': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
                         'hybrid_solar_profile',
                         'hybrid_wind_profile']
@@ -637,7 +640,7 @@ class MetaHybridizer:
         """Combine the solar and wind metas and run hybridize methods."""
         self._format_meta_pre_merge()
         self._merge_solar_wind_meta()
-        self._verify_lat_long_match_post_merge()
+        self._verify_lat_lon_match_post_merge()
         self._format_meta_post_merge()
         self._fillna_meta_cols()
         self._apply_limits()
@@ -699,7 +702,7 @@ class MetaHybridizer:
         self._propagate_duplicate_cols(duplicate_cols)
         self._drop_cols(duplicate_cols)
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
-        self._hybrid_meta.index.name = MetaKeyName.GID
+        self._hybrid_meta.index.name = SupplyCurveField.GID
 
     def _propagate_duplicate_cols(self, duplicate_cols):
         """Fill missing column values from outer merge."""
@@ -742,10 +745,14 @@ class MetaHybridizer:
             first_index = -1
         return first_index, self._hybrid_meta.columns.get_loc(c)
 
-    def _verify_lat_long_match_post_merge(self):
+    def _verify_lat_lon_match_post_merge(self):
         """Verify that all the lat/lon values match post merge."""
-        lat = self._verify_col_match_post_merge(col_name=MetaKeyName.LATITUDE)
-        lon = self._verify_col_match_post_merge(col_name=MetaKeyName.LONGITUDE)
+        lat = self._verify_col_match_post_merge(
+            col_name=ColNameFormatter.fmt(SupplyCurveField.LATITUDE)
+        )
+        lon = self._verify_col_match_post_merge(
+            col_name=ColNameFormatter.fmt(SupplyCurveField.LONGITUDE)
+        )
         if not lat or not lon:
             msg = (
                 "Detected mismatched coordinate values (latitude or "
@@ -1189,7 +1196,8 @@ class Hybridization:
     def __rep_profile_hybridization_params(self):
         """Zip the rep profile hybridization parameters."""
 
-        cap_col_names = ["hybrid_solar_capacity", "hybrid_wind_capacity"]
+        cap_col_names = [f"hybrid_solar_{SupplyCurveField.CAPACITY}",
+                         f"hybrid_wind_{SupplyCurveField.CAPACITY}"]
         idx_maps = [
             self.meta_hybridizer.solar_profile_indices_map,
             self.meta_hybridizer.wind_profile_indices_map,

@@ -26,7 +26,8 @@ from reV.supply_curve.sc_aggregation import (
     SupplyCurveAggregation,
     _warn_about_large_datasets,
 )
-from reV.utilities import MetaKeyName, ModuleName
+from reV.handlers.exclusions import LATITUDE
+from reV.utilities import ModuleName, SupplyCurveField
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -42,13 +43,12 @@ DATA_LAYERS = {
     "reeds_region": {"dset": "ri_reeds_regions", "method": "mode"},
     "padus": {"dset": "ri_padus", "method": "mode"},
 }
-
 EXCL_DICT = {
     "ri_srtm_slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
     "ri_padus": {"exclude_values": [1], "exclude_nodata": True},
 }
-
 RTOL = 0.001
+LEGACY_SC_COL_MAP = SupplyCurveField.map_from_legacy()
 
 
 def test_agg_extent(resolution=64):
@@ -67,12 +67,12 @@ def test_agg_extent(resolution=64):
     summary = sca.summarize(GEN)
 
     all_res_gids = []
-    for gids in summary[MetaKeyName.RES_GIDS]:
+    for gids in summary[SupplyCurveField.RES_GIDS]:
         all_res_gids += gids
 
-    assert MetaKeyName.SC_COL_IND in summary
-    assert MetaKeyName.SC_ROW_IND in summary
-    assert MetaKeyName.GEN_GIDS in summary
+    assert SupplyCurveField.SC_COL_IND in summary
+    assert SupplyCurveField.SC_ROW_IND in summary
+    assert SupplyCurveField.GEN_GIDS in summary
     assert len(set(all_res_gids)) == 177
 
 
@@ -120,11 +120,13 @@ def test_agg_summary():
         )
 
     else:
-        for c in [MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS,
-                  MetaKeyName.GID_COUNTS]:
+        for c in [SupplyCurveField.RES_GIDS, SupplyCurveField.GEN_GIDS,
+                  SupplyCurveField.GID_COUNTS]:
             summary[c] = summary[c].astype(str)
 
-    s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+    s_baseline = pd.read_csv(AGG_BASELINE)
+    s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
@@ -160,8 +162,9 @@ def test_agg_summary_solar_ac(pd):
         )
         summary = sca.summarize(gen, max_workers=1)
 
-    assert "capacity_ac" in summary
-    assert np.allclose(summary["capacity"] / 1.3, summary["capacity_ac"])
+    assert SupplyCurveField.CAPACITY_AC in summary
+    assert np.allclose(summary[SupplyCurveField.CAPACITY] / 1.3,
+                       summary[SupplyCurveField.CAPACITY_AC])
 
 
 def test_multi_file_excl():
@@ -183,7 +186,7 @@ def test_multi_file_excl():
         shutil.copy(EXCL, excl_temp_2)
 
         with h5py.File(excl_temp_1, 'a') as f:
-            shape = f[MetaKeyName.LATITUDE].shape
+            shape = f[LATITUDE].shape
             attrs = dict(f['ri_srtm_slope'].attrs)
             data = np.ones(shape)
             test_dset = "excl_test"
@@ -201,13 +204,15 @@ def test_multi_file_excl():
         )
         summary = sca.summarize(GEN)
 
-        s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+        s_baseline = pd.read_csv(AGG_BASELINE)
+        s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+        s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
         summary = summary.fillna("None")
         s_baseline = s_baseline.fillna("None")
 
-        assert np.allclose(summary[MetaKeyName.AREA_SQ_KM] * 2,
-                           s_baseline[MetaKeyName.AREA_SQ_KM])
+        assert np.allclose(summary[SupplyCurveField.AREA_SQ_KM] * 2,
+                           s_baseline[SupplyCurveField.AREA_SQ_KM])
 
 
 @pytest.mark.parametrize("pre_extract", (True, False))
@@ -233,11 +238,13 @@ def test_pre_extract_inclusions(pre_extract):
         )
 
     else:
-        for c in [MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS,
-                  MetaKeyName.GID_COUNTS]:
+        for c in [SupplyCurveField.RES_GIDS, SupplyCurveField.GEN_GIDS,
+                  SupplyCurveField.GID_COUNTS]:
             summary[c] = summary[c].astype(str)
 
-    s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
+    s_baseline = pd.read_csv(AGG_BASELINE)
+    s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline = s_baseline.set_index(s_baseline.columns[0])
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
@@ -292,13 +299,15 @@ def test_agg_extra_dsets():
     for dset in h5_dsets:
         assert "mean_{}".format(dset) in summary.columns
 
-    check = summary['mean_lcoe_fcr-2012'] == summary[MetaKeyName.MEAN_LCOE]
+    check = (summary['mean_lcoe_fcr-2012']
+             == summary[SupplyCurveField.MEAN_LCOE])
     assert not any(check)
-    check = summary['mean_lcoe_fcr-2013'] == summary[MetaKeyName.MEAN_LCOE]
+    check = (summary['mean_lcoe_fcr-2013']
+             == summary[SupplyCurveField.MEAN_LCOE])
     assert not any(check)
 
     avg = (summary['mean_lcoe_fcr-2012'] + summary['mean_lcoe_fcr-2013']) / 2
-    assert np.allclose(avg.values, summary[MetaKeyName.MEAN_LCOE].values)
+    assert np.allclose(avg.values, summary[SupplyCurveField.MEAN_LCOE].values)
 
 
 def test_agg_extra_2D_dsets():
@@ -351,7 +360,7 @@ def test_agg_scalar_excl():
     )
     summary_with_weights = sca.summarize(GEN, max_workers=1)
 
-    dsets = [MetaKeyName.AREA_SQ_KM, MetaKeyName.CAPACITY]
+    dsets = [SupplyCurveField.AREA_SQ_KM, SupplyCurveField.CAPACITY]
     for dset in dsets:
         diff = summary_base[dset].values / summary_with_weights[dset].values
         msg = ("Fractional exclusions failed for {} which has values {} and {}"
@@ -360,8 +369,8 @@ def test_agg_scalar_excl():
         assert all(diff == 2), msg
 
     for i in summary_base.index:
-        counts_full = summary_base.loc[i, MetaKeyName.GID_COUNTS]
-        counts_half = summary_with_weights.loc[i, MetaKeyName.GID_COUNTS]
+        counts_full = summary_base.loc[i, SupplyCurveField.GID_COUNTS]
+        counts_half = summary_with_weights.loc[i, SupplyCurveField.GID_COUNTS]
 
         for j, counts in enumerate(counts_full):
             msg = ("GID counts for fractional exclusions failed for index {}!"
@@ -391,7 +400,7 @@ def test_data_layer_methods():
 
     for i in summary.index.values:
         # Check categorical data layers
-        counts = summary.loc[i, MetaKeyName.GID_COUNTS]
+        counts = summary.loc[i, SupplyCurveField.GID_COUNTS]
         rr = summary.loc[i, 'reeds_region']
         assert isinstance(rr, str)
         rr = json.loads(rr)
@@ -412,7 +421,7 @@ def test_data_layer_methods():
             raise RuntimeError(e)
 
         # Check min/mean/max of the same data layer
-        n = summary.loc[i, MetaKeyName.N_GIDS]
+        n = summary.loc[i, SupplyCurveField.N_GIDS]
         slope_mean = summary.loc[i, 'pct_slope_mean']
         slope_max = summary.loc[i, 'pct_slope_max']
         slope_min = summary.loc[i, 'pct_slope_min']
@@ -423,16 +432,17 @@ def test_data_layer_methods():
 
 
 @pytest.mark.parametrize(
-    "cap_cost_scale", ["1", "2 * np.multiply(1000, capacity) ** -0.3"]
+    "cap_cost_scale",
+    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"]
 )
 def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
-    data = {MetaKeyName.CAPITAL_COST: 34900000,
-            MetaKeyName.FIXED_OPERATING_COST: 280000,
-            MetaKeyName.FIXED_CHARGE_RATE: 0.09606382995843887,
-            MetaKeyName.VARIABLE_OPERATING_COST: 0,
+    data = {"capital_cost": 34900000,
+            "fixed_operating_cost": 280000,
+            "fixed_charge_rate": 0.09606382995843887,
+            "variable_operating_cost": 0,
             'system_capacity': 20000}
     annual_cf = [0.24, 0.26, 0.37, 0.15]
     annual_lcoe = []
@@ -449,11 +459,11 @@ def test_recalc_lcoe(cap_cost_scale):
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
             for year, cf in zip(years, annual_cf):
-                lcoe = lcoe_fcr(data[MetaKeyName.FIXED_CHARGE_RATE],
-                                data[MetaKeyName.CAPITAL_COST],
-                                data[MetaKeyName.FIXED_OPERATING_COST],
+                lcoe = lcoe_fcr(data["fixed_charge_rate"],
+                                data["capital_cost"],
+                                data["fixed_operating_cost"],
                                 data['system_capacity'] * cf * 8760,
-                                data[MetaKeyName.VARIABLE_OPERATING_COST])
+                                data["variable_operating_cost"])
                 cf_arr = np.full(res['meta'].shape, cf)
                 lcoe_arr = np.full(res['meta'].shape, lcoe)
                 annual_lcoe.append(lcoe)
@@ -474,10 +484,10 @@ def test_recalc_lcoe(cap_cost_scale):
                 "lcoe_fcr-means", res["meta"].shape, data=lcoe_arr
             )
 
-        h5_dsets = [MetaKeyName.CAPITAL_COST,
-                    MetaKeyName.FIXED_OPERATING_COST,
-                    MetaKeyName.FIXED_CHARGE_RATE,
-                    MetaKeyName.VARIABLE_OPERATING_COST,
+        h5_dsets = ["capital_cost",
+                    "fixed_operating_cost",
+                    "fixed_charge_rate",
+                    "variable_operating_cost",
                     'system_capacity']
 
         base = SupplyCurveAggregation(
@@ -508,19 +518,19 @@ def test_recalc_lcoe(cap_cost_scale):
         )
         summary = sca.summarize(gen_temp, max_workers=1)
 
-    assert not np.allclose(summary_base[MetaKeyName.MEAN_LCOE],
-                           summary[MetaKeyName.MEAN_LCOE])
+    assert not np.allclose(summary_base[SupplyCurveField.MEAN_LCOE],
+                           summary[SupplyCurveField.MEAN_LCOE])
 
     if cap_cost_scale == '1':
-        cc_dset = MetaKeyName.SC_POINT_CAPITAL_COST
+        cc_dset = SupplyCurveField.SC_POINT_CAPITAL_COST
     else:
-        cc_dset = MetaKeyName.SCALED_SC_POINT_CAPITAL_COST
+        cc_dset = SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST
     lcoe = lcoe_fcr(summary['mean_fixed_charge_rate'],
                     summary[cc_dset],
-                    summary[MetaKeyName.SC_POINT_FIXED_OPERATING_COST],
-                    summary[MetaKeyName.SC_POINT_ANNUAL_ENERGY],
+                    summary[SupplyCurveField.SC_POINT_FIXED_OPERATING_COST],
+                    summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY],
                     summary['mean_variable_operating_cost'])
-    assert np.allclose(lcoe, summary[MetaKeyName.MEAN_LCOE])
+    assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
 
 
 @pytest.mark.parametrize("tm_dset", ("techmap_ri", "techmap_ri_new"))

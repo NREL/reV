@@ -18,7 +18,7 @@ from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.utilities import MetaKeyName, log_versions
+from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
 from reV.utilities.exceptions import (
     EmptySupplyCurvePointError,
     FileInputError,
@@ -472,17 +472,19 @@ class BaseAggregation(ABC):
             logger.error(msg)
             raise FileInputError(msg)
 
-        if MetaKeyName.GID in gen_index:
+        if ResourceMetaField.GID in gen_index:
             gen_index = gen_index.rename(
-                columns={MetaKeyName.GID: MetaKeyName.RES_GIDS}
+                columns={ResourceMetaField.GID: SupplyCurveField.RES_GIDS}
             )
-            gen_index[MetaKeyName.GEN_GIDS] = gen_index.index
-            gen_index = gen_index[[MetaKeyName.RES_GIDS, MetaKeyName.GEN_GIDS]]
-            gen_index = gen_index.set_index(keys=MetaKeyName.RES_GIDS)
+            gen_index[SupplyCurveField.GEN_GIDS] = gen_index.index
+            gen_index = gen_index[
+                [SupplyCurveField.RES_GIDS, SupplyCurveField.GEN_GIDS]
+            ]
+            gen_index = gen_index.set_index(keys=SupplyCurveField.RES_GIDS)
             gen_index = gen_index.reindex(
                 range(int(gen_index.index.max() + 1))
             )
-            gen_index = gen_index[MetaKeyName.GEN_GIDS].values
+            gen_index = gen_index[SupplyCurveField.GEN_GIDS].values
             gen_index[np.isnan(gen_index)] = -1
             gen_index = gen_index.astype(np.int32)
         else:
@@ -696,7 +698,10 @@ class Aggregation(BaseAggregation):
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
         }
-        dsets = (*agg_dset, "meta",)
+        dsets = (
+            *agg_dset,
+            "meta",
+        )
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             n_finished = 0
@@ -920,9 +925,9 @@ class Aggregation(BaseAggregation):
         for k, v in agg.items():
             if k == "meta":
                 v = pd.concat(v, axis=1).T
-                v = v.sort_values(MetaKeyName.SC_POINT_GID)
+                v = v.sort_values(SupplyCurveField.SC_POINT_GID)
                 v = v.reset_index(drop=True)
-                v.index.name = MetaKeyName.SC_GID
+                v.index.name = SupplyCurveField.SC_GID
                 agg[k] = v
             else:
                 v = np.dstack(v)[0]

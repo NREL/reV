@@ -4,6 +4,7 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
+
 import copy
 import logging
 import os
@@ -40,7 +41,7 @@ from reV.SAM.defaults import (
 )
 from reV.SAM.econ import LCOE, SingleOwner
 from reV.SAM.SAM import RevPySam
-from reV.utilities import ResourceMetaField
+from reV.utilities import ResourceMetaField, SupplyCurveField
 from reV.utilities.curtailment import curtail
 from reV.utilities.exceptions import (
     InputError,
@@ -256,31 +257,41 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         Returns
         -------
         meta : pd.DataFrame | pd.Series
-            Datafram or series for a single site. Will include "timezone"
+            Dataframe or series for a single site. Will include "timezone"
             and "elevation" from the sam and site system inputs if found.
         """
 
         if meta is not None:
+            axis = 0 if isinstance(meta, pd.core.series.Series) else 1
+            meta = meta.rename(
+                SupplyCurveField.map_to(ResourceMetaField), axis=axis
+            )
             if sam_sys_inputs is not None:
                 if ResourceMetaField.ELEVATION in sam_sys_inputs:
-                    meta[ResourceMetaField.ELEVATION] = \
-                        sam_sys_inputs[ResourceMetaField.ELEVATION]
+                    meta[ResourceMetaField.ELEVATION] = sam_sys_inputs[
+                        ResourceMetaField.ELEVATION
+                    ]
                 if ResourceMetaField.TIMEZONE in sam_sys_inputs:
-                    meta[ResourceMetaField.TIMEZONE] = \
-                        int(sam_sys_inputs[ResourceMetaField.TIMEZONE])
+                    meta[ResourceMetaField.TIMEZONE] = int(
+                        sam_sys_inputs[ResourceMetaField.TIMEZONE]
+                    )
 
             # site-specific inputs take priority over generic system inputs
             if site_sys_inputs is not None:
                 if ResourceMetaField.ELEVATION in site_sys_inputs:
-                    meta[ResourceMetaField.ELEVATION] = \
-                        site_sys_inputs[ResourceMetaField.ELEVATION]
+                    meta[ResourceMetaField.ELEVATION] = site_sys_inputs[
+                        ResourceMetaField.ELEVATION
+                    ]
                 if ResourceMetaField.TIMEZONE in site_sys_inputs:
-                    meta[ResourceMetaField.TIMEZONE] = \
-                        int(site_sys_inputs[ResourceMetaField.TIMEZONE])
+                    meta[ResourceMetaField.TIMEZONE] = int(
+                        site_sys_inputs[ResourceMetaField.TIMEZONE]
+                    )
 
             if ResourceMetaField.TIMEZONE not in meta:
-                msg = ('Need timezone input to run SAM gen. Not found in '
-                       'resource meta or technology json input config.')
+                msg = (
+                    "Need timezone input to run SAM gen. Not found in "
+                    "resource meta or technology json input config."
+                )
                 raise SAMExecutionError(msg)
 
         return meta
@@ -313,7 +324,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+        return self.gen_profile() / self.sam_sys_inputs["system_capacity"]
 
     def annual_energy(self):
         """Get annual energy generation value in kWh from SAM.
@@ -375,14 +386,22 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 
         lcoe_out_reqs = None
         so_out_reqs = None
-        lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate',
-                     'capital_cost',
-                     'fixed_operating_cost',
-                     'variable_operating_cost')
-        so_vars = ('ppa_price', 'lcoe_real', 'lcoe_nom',
-                   'project_return_aftertax_npv', 'flip_actual_irr',
-                   'gross_revenue')
-        if 'lcoe_fcr' in self.output_request:
+        lcoe_vars = (
+            "lcoe_fcr",
+            "fixed_charge_rate",
+            "capital_cost",
+            "fixed_operating_cost",
+            "variable_operating_cost",
+        )
+        so_vars = (
+            "ppa_price",
+            "lcoe_real",
+            "lcoe_nom",
+            "project_return_aftertax_npv",
+            "flip_actual_irr",
+            "gross_revenue",
+        )
+        if "lcoe_fcr" in self.output_request:
             lcoe_out_reqs = [r for r in self.output_request if r in lcoe_vars]
             self.output_request = [
                 r for r in self.output_request if r not in lcoe_out_reqs
@@ -562,14 +581,18 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
 class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
     """Base class for running sam generation with a weather file on disk."""
 
-    WF_META_DROP_COLS = {ResourceMetaField.LATITUDE,
-                         ResourceMetaField.LONGITUDE,
-                         ResourceMetaField.ELEVATION,
-                         ResourceMetaField.TIMEZONE,
-                         ResourceMetaField.COUNTRY,
-                         ResourceMetaField.STATE,
-                         ResourceMetaField.COUNTY,
-                         'urban', 'population', 'landcover'}
+    WF_META_DROP_COLS = {
+        ResourceMetaField.LATITUDE,
+        ResourceMetaField.LONGITUDE,
+        ResourceMetaField.ELEVATION,
+        ResourceMetaField.TIMEZONE,
+        ResourceMetaField.COUNTRY,
+        ResourceMetaField.STATE,
+        ResourceMetaField.COUNTY,
+        "urban",
+        "population",
+        "landcover",
+    }
 
     @property
     @abstractmethod
@@ -640,24 +663,22 @@ class AbstractSamGenerationFromWeatherFile(AbstractSamGeneration, ABC):
         # ------- Process metadata
         m = pd.DataFrame(meta).T
         timezone = m[ResourceMetaField.TIMEZONE]
-        m['Source'] = 'NSRDB'
-        m['Location ID'] = meta.name
-        m['City'] = '-'
-        m['State'] = m['state'].apply(
-            lambda x: '-' if x == 'None' else x)
-        m['Country'] = m['country'].apply(
-            lambda x: '-' if x == 'None' else x)
-        m['Latitude'] = m[ResourceMetaField.LATITUDE]
-        m['Longitude'] = m[ResourceMetaField.LONGITUDE]
-        m['Time Zone'] = timezone
-        m['Elevation'] = m[ResourceMetaField.ELEVATION]
-        m['Local Time Zone'] = timezone
-        m['Dew Point Units'] = 'c'
-        m['DHI Units'] = 'w/m2'
-        m['DNI Units'] = 'w/m2'
-        m['Temperature Units'] = 'c'
-        m['Pressure Units'] = 'mbar'
-        m['Wind Speed'] = 'm/s'
+        m["Source"] = "NSRDB"
+        m["Location ID"] = meta.name
+        m["City"] = "-"
+        m["State"] = m["state"].apply(lambda x: "-" if x == "None" else x)
+        m["Country"] = m["country"].apply(lambda x: "-" if x == "None" else x)
+        m["Latitude"] = m[ResourceMetaField.LATITUDE]
+        m["Longitude"] = m[ResourceMetaField.LONGITUDE]
+        m["Time Zone"] = timezone
+        m["Elevation"] = m[ResourceMetaField.ELEVATION]
+        m["Local Time Zone"] = timezone
+        m["Dew Point Units"] = "c"
+        m["DHI Units"] = "w/m2"
+        m["DNI Units"] = "w/m2"
+        m["Temperature Units"] = "c"
+        m["Pressure Units"] = "mbar"
+        m["Wind Speed"] = "m/s"
         keep_cols = [c for c in m.columns if c not in self.WF_META_DROP_COLS]
         m[keep_cols].to_csv(fname, index=False, mode="w")
 
@@ -795,26 +816,28 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             if var != "time_index":
                 # ensure that resource array length is multiple of 8760
                 arr = self.ensure_res_len(arr, time_index)
-                n_roll = int(self._meta[ResourceMetaField.TIMEZONE]
-                             * self.time_interval)
+                n_roll = int(
+                    self._meta[ResourceMetaField.TIMEZONE] * self.time_interval
+                )
                 arr = np.roll(arr, n_roll)
 
                 if var in irrad_vars and np.min(arr) < 0:
-                    warn('Solar irradiance variable "{}" has a minimum '
-                         'value of {}. Truncating to zero.'
-                         .format(var, np.min(arr)), SAMInputWarning)
+                    warn(
+                        'Solar irradiance variable "{}" has a minimum '
+                        "value of {}. Truncating to zero.".format(
+                            var, np.min(arr)
+                        ),
+                        SAMInputWarning,
+                    )
                     arr = np.where(arr < 0, 0, arr)
 
                 resource[var] = arr.tolist()
 
-        resource['lat'] = meta[ResourceMetaField.LATITUDE]
-        resource['lon'] = meta[ResourceMetaField.LONGITUDE]
-        resource['tz'] = meta[ResourceMetaField.TIMEZONE]
+        resource["lat"] = meta[ResourceMetaField.LATITUDE]
+        resource["lon"] = meta[ResourceMetaField.LONGITUDE]
+        resource["tz"] = meta[ResourceMetaField.TIMEZONE]
 
-        if ResourceMetaField.ELEVATION in meta:
-            resource['elev'] = meta[ResourceMetaField.ELEVATION]
-        else:
-            resource["elev"] = 0.0
+        resource["elev"] = meta.get(ResourceMetaField.ELEVATION, 0.0)
 
         time_index = self.ensure_res_len(time_index, time_index)
         resource["minute"] = time_index.minute
@@ -977,10 +1000,12 @@ class AbstractSamPv(AbstractSamSolar, ABC):
                      respectively.
 
         """
-        bad_location_input = ((meta[ResourceMetaField.LATITUDE] < -90)
-                              | (meta[ResourceMetaField.LATITUDE] > 90)
-                              | (meta[ResourceMetaField.LONGITUDE] < -180)
-                              | (meta[ResourceMetaField.LONGITUDE] > 180))
+        bad_location_input = (
+            (meta[ResourceMetaField.LATITUDE] < -90)
+            | (meta[ResourceMetaField.LATITUDE] > 90)
+            | (meta[ResourceMetaField.LONGITUDE] < -180)
+            | (meta[ResourceMetaField.LONGITUDE] > 180)
+        )
         if bad_location_input.any():
             raise ValueError(
                 "Detected latitude/longitude values outside of "
@@ -1023,15 +1048,15 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             elif (
                 sam_sys_inputs["tilt"] == "lat"
                 or sam_sys_inputs["tilt"] == ResourceMetaField.LATITUDE
+            ) or (
+                sam_sys_inputs["tilt"] == "lat"
+                or sam_sys_inputs["tilt"] == ResourceMetaField.LATITUDE
             ):
-                set_tilt = True
-            elif (sam_sys_inputs['tilt'] == 'lat'
-                    or sam_sys_inputs['tilt'] == ResourceMetaField.LATITUDE):
                 set_tilt = True
 
         if set_tilt:
             # set tilt to abs(latitude)
-            sam_sys_inputs['tilt'] = np.abs(meta[ResourceMetaField.LATITUDE])
+            sam_sys_inputs["tilt"] = np.abs(meta[ResourceMetaField.LATITUDE])
             if meta[ResourceMetaField.LATITUDE] > 0:
                 # above the equator, az = 180
                 sam_sys_inputs["azimuth"] = 180
@@ -1101,7 +1126,7 @@ class AbstractSamPv(AbstractSamSolar, ABC):
             Datatype is float32 and array length is 8760*time_interval.
             PV CF is calculated as AC power / DC nameplate.
         """
-        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
+        return self.gen_profile() / self.sam_sys_inputs["system_capacity"]
 
     def cf_profile_ac(self):
         """Get hourly AC capacity factor (frac) profile in local timezone.
@@ -1209,10 +1234,9 @@ class AbstractSamPv(AbstractSamSolar, ABC):
 
 
 class PvWattsv5(AbstractSamPv):
-    """Photovoltaic (PV) generation with pvwattsv5.
-    """
+    """Photovoltaic (PV) generation with pvwattsv5."""
 
-    MODULE = 'pvwattsv5'
+    MODULE = "pvwattsv5"
     PYSAM = PySamPv5
 
     @staticmethod
@@ -1227,10 +1251,9 @@ class PvWattsv5(AbstractSamPv):
 
 
 class PvWattsv7(AbstractSamPv):
-    """Photovoltaic (PV) generation with pvwattsv7.
-    """
+    """Photovoltaic (PV) generation with pvwattsv7."""
 
-    MODULE = 'pvwattsv7'
+    MODULE = "pvwattsv7"
     PYSAM = PySamPv7
 
     @staticmethod
@@ -1245,10 +1268,9 @@ class PvWattsv7(AbstractSamPv):
 
 
 class PvWattsv8(AbstractSamPv):
-    """Photovoltaic (PV) generation with pvwattsv8.
-    """
+    """Photovoltaic (PV) generation with pvwattsv8."""
 
-    MODULE = 'pvwattsv8'
+    MODULE = "pvwattsv8"
     PYSAM = PySamPv8
 
     @staticmethod
@@ -1305,10 +1327,9 @@ class PvSamv1(AbstractSamPv):
 
 
 class TcsMoltenSalt(AbstractSamSolar):
-    """Concentrated Solar Power (CSP) generation with tower molten salt
-    """
+    """Concentrated Solar Power (CSP) generation with tower molten salt"""
 
-    MODULE = 'tcsmolten_salt'
+    MODULE = "tcsmolten_salt"
     PYSAM = PySamCSP
 
     def cf_profile(self):
@@ -1322,7 +1343,7 @@ class TcsMoltenSalt(AbstractSamSolar):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        x = np.abs(self.gen_profile() / self.sam_sys_inputs['system_capacity'])
+        x = np.abs(self.gen_profile() / self.sam_sys_inputs["system_capacity"])
         return x
 
     @staticmethod
@@ -1341,7 +1362,7 @@ class SolarWaterHeat(AbstractSamGenerationFromWeatherFile):
     Solar Water Heater generation
     """
 
-    MODULE = 'solarwaterheat'
+    MODULE = "solarwaterheat"
     PYSAM = PySamSwh
     PYSAM_WEATHER_TAG = "solar_resource_file"
 
@@ -1361,7 +1382,7 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
     Process heat linear Fresnel direct steam generation
     """
 
-    MODULE = 'lineardirectsteam'
+    MODULE = "lineardirectsteam"
     PYSAM = PySamLds
     PYSAM_WEATHER_TAG = "file_name"
 
@@ -1397,7 +1418,7 @@ class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
     Trough Physical Process Heat generation
     """
 
-    MODULE = 'troughphysicalheat'
+    MODULE = "troughphysicalheat"
     PYSAM = PySamTpph
     PYSAM_WEATHER_TAG = "file_name"
 
@@ -1693,8 +1714,10 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             )
         )
         if len(val) > 1:
-            msg = ("Found multiple values for 'temperature' for site {}: {}"
-                   .format(self.site, val))
+            msg = (
+                "Found multiple values for 'temperature' for site "
+                "{}: {}".format(self.site, val)
+            )
             logger.error(msg)
             raise InputError(msg)
 
@@ -1742,8 +1765,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             msg = (
                 "EGS plant design temperature ({}C) is lower than resource "
                 "temperature ({}C) by more than a factor of {}. Increasing "
-                "EGS plant design temperature to match resource temperature"
-                .format(
+                "EGS plant design temperature to match resource "
+                "temperature".format(
                     egs_plant_design_temp,
                     resource_temp,
                     self.MAX_RT_TO_EGS_RATIO,
@@ -1759,18 +1782,18 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         if "nameplate" in self.sam_sys_inputs:
             msg = (
                 'Found "nameplate" input in config! Resource potential '
-                "from input data will be ignored. Nameplate capacity is {}"
-                .format(
-                    self.sam_sys_inputs["nameplate"]
-                )
+                "from input data will be ignored. Nameplate capacity is "
+                "{}".format(self.sam_sys_inputs["nameplate"])
             )
             logger.info(msg)
             return
 
         val = set(resource["potential_MW"].unique())
         if len(val) > 1:
-            msg = ('Found multiple values for "potential_MW" for site {}: {}'
-                   .format(self.site, val))
+            msg = (
+                'Found multiple values for "potential_MW" for site '
+                "{}: {}".format(self.site, val)
+            )
             logger.error(msg)
             raise InputError(msg)
 
@@ -1797,8 +1820,9 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             self.sam_sys_inputs["resource_potential"] = -1
             return
 
-        gross_gen = (self.pysam.Outputs.gross_output
-                     * self._RESOURCE_POTENTIAL_MULT)
+        gross_gen = (
+            self.pysam.Outputs.gross_output * self._RESOURCE_POTENTIAL_MULT
+        )
         if "resource_potential" in self.sam_sys_inputs:
             msg = (
                 'Setting "resource_potential" is not allowed! Updating '
@@ -1820,7 +1844,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self.sam_sys_inputs["prod_and_inj_wells_to_drill"] = (
             self.pysam.Outputs.num_wells_getem_output
             - ncw
-            + self.pysam.Outputs.num_wells_getem_inj)
+            + self.pysam.Outputs.num_wells_getem_inj
+        )
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
@@ -2047,7 +2072,7 @@ class AbstractSamWind(AbstractSamGeneration, PowerCurveLossesMixin, ABC):
 class WindPower(AbstractSamWind):
     """Class for Wind generation from SAM"""
 
-    MODULE = 'windpower'
+    MODULE = "windpower"
     PYSAM = PySamWindPower
 
     def set_resource_data(self, resource, meta):
@@ -2099,7 +2124,7 @@ class WindPower(AbstractSamWind):
 
         if "rh" in resource:
             # set relative humidity for icing.
-            rh = self.ensure_res_len(resource['rh'].values, time_index)
+            rh = self.ensure_res_len(resource["rh"].values, time_index)
             n_roll = int(meta[ResourceMetaField.TIMEZONE] * self.time_interval)
             rh = np.roll(rh, n_roll, axis=0)
             data_dict["rh"] = rh.tolist()
@@ -2112,10 +2137,10 @@ class WindPower(AbstractSamWind):
         temp = np.roll(temp, n_roll, axis=0)
         data_dict["data"] = temp.tolist()
 
-        data_dict['lat'] = float(meta[ResourceMetaField.LATITUDE])
-        data_dict['lon'] = float(meta[ResourceMetaField.LONGITUDE])
-        data_dict['tz'] = int(meta[ResourceMetaField.TIMEZONE])
-        data_dict['elev'] = float(meta[ResourceMetaField.ELEVATION])
+        data_dict["lat"] = float(meta[ResourceMetaField.LATITUDE])
+        data_dict["lon"] = float(meta[ResourceMetaField.LONGITUDE])
+        data_dict["tz"] = int(meta[ResourceMetaField.TIMEZONE])
+        data_dict["elev"] = float(meta[ResourceMetaField.ELEVATION])
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict["minute"] = time_index.minute.tolist()
@@ -2245,10 +2270,9 @@ class WindPowerPD(AbstractSamGeneration, PowerCurveLossesMixin):
 
 
 class MhkWave(AbstractSamGeneration):
-    """Class for Wave generation from SAM
-    """
+    """Class for Wave generation from SAM"""
 
-    MODULE = 'mhkwave'
+    MODULE = "mhkwave"
     PYSAM = PySamMhkWave
 
     def set_resource_data(self, resource, meta):
@@ -2299,9 +2323,9 @@ class MhkWave(AbstractSamGeneration):
             n_roll = int(meta[ResourceMetaField.TIMEZONE] * self.time_interval)
             data_dict[var] = np.roll(arr, n_roll, axis=0).tolist()
 
-        data_dict['lat'] = meta[ResourceMetaField.LATITUDE]
-        data_dict['lon'] = meta[ResourceMetaField.LONGITUDE]
-        data_dict['tz'] = meta[ResourceMetaField.TIMEZONE]
+        data_dict["lat"] = meta[ResourceMetaField.LATITUDE]
+        data_dict["lon"] = meta[ResourceMetaField.LONGITUDE]
+        data_dict["tz"] = meta[ResourceMetaField.TIMEZONE]
 
         time_index = self.ensure_res_len(time_index, time_index)
         data_dict["minute"] = time_index.minute

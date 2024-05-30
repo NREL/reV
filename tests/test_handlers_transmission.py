@@ -10,7 +10,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.transmission import TransmissionFeatures as TF
-from reV.utilities import MetaKeyName
+from reV.utilities import SupplyCurveField
 
 TRANS_COSTS_1 = {
     "line_tie_in_cost": 200,
@@ -86,7 +86,7 @@ def trans_table():
     return trans_table
 
 
-@pytest.mark.parametrize(('i', 'trans_costs', 'distance', MetaKeyName.GID),
+@pytest.mark.parametrize(('i', 'trans_costs', 'distance', 'gid'),
                          ((1, TRANS_COSTS_1, 0, 43300),
                           (2, TRANS_COSTS_2, 0, 43300),
                           (1, TRANS_COSTS_1, 100, 43300),
@@ -116,8 +116,7 @@ def test_cost_calculation(i, trans_costs, distance, gid, trans_table):
     assert true_cost == trans_cost
 
 
-@pytest.mark.parametrize(('trans_costs', MetaKeyName.CAPACITY,
-                          MetaKeyName.GID),
+@pytest.mark.parametrize(('trans_costs', "capacity", "gid"),
                          ((TRANS_COSTS_1, 350, 43300),
                           (TRANS_COSTS_2, 350, 43300),
                           (TRANS_COSTS_1, 100, 43300),

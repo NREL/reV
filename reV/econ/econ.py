@@ -352,10 +352,10 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
             Must have project_points with df property with all relevant
-            site-specific inputs and a `MetaKeyName.GID` column. By passing
-            site-specific inputs in this dataframe, which was split using
-            points_control, only the data relevant to the current sites is
-            passed.
+            site-specific inputs and a `SupplyCurveField.GID` column.
+            By passing site-specific inputs in this dataframe, which
+            was split using points_control, only the data relevant to
+            the current sites is passed.
         econ_fun : method
             reV_run() method from one of the econ modules (SingleOwner,
             SAM_LCOE, WindBos).

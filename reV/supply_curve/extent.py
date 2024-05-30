@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from rex.utilities.utilities import get_chunk_ranges
 
-from reV.handlers.exclusions import ExclusionLayers, LATITUDE, LONGITUDE
-from reV.utilities import MetaKeyName
+from reV.handlers.exclusions import LATITUDE, LONGITUDE, ExclusionLayers
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
@@ -391,7 +391,7 @@ class SupplyCurveExtent:
                 }
             )
 
-            self._points.index.name = MetaKeyName.GID  # sc_point_gid
+            self._points.index.name = SupplyCurveField.GID  # sc_point_gid
 
         return self._points
 

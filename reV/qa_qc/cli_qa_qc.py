@@ -19,7 +19,7 @@ from reV.qa_qc.summary import (
     SummarizeSupplyCurve,
     SupplyCurvePlot,
 )
-from reV.utilities import ModuleName, MetaKeyName
+from reV.utilities import ModuleName, SupplyCurveField
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +194,7 @@ def supply_curve_table(ctx, sc_table, columns):
               show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
-@click.option('--lcoe', '-lcoe', type=STR, default=MetaKeyName.MEAN_LCOE,
+@click.option('--lcoe', '-lcoe', type=STR, default=SupplyCurveField.MEAN_LCOE,
               help="LCOE value to plot, by default %(default)s")
 @click.pass_context
 def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
