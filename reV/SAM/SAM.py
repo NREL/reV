@@ -714,7 +714,7 @@ class RevPySam(Sam):
 
                 freq = pd.infer_freq(time_index[:s])
                 msg = "frequencies do not match before and after 2/29"
-                assert freq == pd.infer_freq(time_index[s + 1 :]), msg
+                assert freq == pd.infer_freq(time_index[s + 1:]), msg
             else:
                 freq = pd.infer_freq(time_index)
         else:
