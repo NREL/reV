@@ -273,6 +273,7 @@ def test_packing_algorithm(gid=33):
     cap_cost_fun = ""
     foc_fun = ""
     voc_fun = ""
+    bos_fun = ""
     objective_function = ""
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
@@ -293,6 +294,7 @@ def test_packing_algorithm(gid=33):
             cap_cost_fun,
             foc_fun,
             voc_fun,
+            bos_fun,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
