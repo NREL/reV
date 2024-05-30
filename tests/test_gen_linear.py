@@ -6,12 +6,13 @@ Created on 2/6/2020
 @author: Mike Bannister
 """
 import os
-import pytest
-import numpy as np
 
-from reV.generation.generation import Gen
-from reV import TESTDATADIR
+import numpy as np
+import pytest
 from rex import Resource
+
+from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_linear_2012.h5')
 RTOL = 0.01

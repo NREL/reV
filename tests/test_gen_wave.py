@@ -9,14 +9,14 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import pytest
-import numpy as np
 
+import numpy as np
+import pytest
+from rex import Resource, safe_json_load
+
+from reV import TESTDATADIR
 from reV.generation.generation import Gen
 from reV.SAM.defaults import DefaultMhkWave
-from reV import TESTDATADIR
-
-from rex import Resource, safe_json_load
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'ri_wave_2010.h5')
 

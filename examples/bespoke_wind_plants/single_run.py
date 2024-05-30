@@ -2,18 +2,22 @@
 """
 An example single run to get bespoke wind plant layout
 """
-import numpy as np
-import matplotlib.pyplot as plt
-from reV.bespoke.bespoke import BespokeSinglePlant
-from reV.bespoke.plotting_functions import plot_poly, plot_turbines,\
-    plot_windrose
-from reV import TESTDATADIR
-from reV.supply_curve.tech_mapping import TechMapping
-
 import json
 import os
 import shutil
 import tempfile
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from reV import TESTDATADIR
+from reV.bespoke.bespoke import BespokeSinglePlant
+from reV.bespoke.plotting_functions import (
+    plot_poly,
+    plot_turbines,
+    plot_windrose,
+)
+from reV.supply_curve.tech_mapping import TechMapping
 
 SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -29,7 +33,7 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': False}}
 
-with open(SAM, 'r') as f:
+with open(SAM) as f:
     SAM_SYS_INPUTS = json.load(f)
 
 SAM_SYS_INPUTS['wind_farm_wake_model'] = 2
@@ -56,7 +60,8 @@ if __name__ == "__main__":
         1E5 * 0.1 + (1 - 0.1))"""
     objective_function = "cost / aep"
 
-    output_request = ('system_capacity', 'cf_mean', 'cf_profile')
+    output_request = ('system_capacity', 'cf_mean',
+                      'cf_profile')
     gid = 33
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, 'ri_exclusions.h5')

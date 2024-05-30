@@ -5,12 +5,13 @@ Test resource up and down scaling
 """
 
 import os
-import h5py
-import pytest
-import numpy as np
 
-from reV.generation.generation import Gen
+import h5py
+import numpy as np
+import pytest
+
 from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 pytest.importorskip("nsrdb")
 from nsrdb.utilities.statistics import mae_perc

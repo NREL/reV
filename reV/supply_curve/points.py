@@ -2,26 +2,30 @@
 """
 reV supply curve points frameworks.
 """
-from abc import ABC
+
 import logging
+from abc import ABC
+from warnings import warn
+
 import numpy as np
 import pandas as pd
-from warnings import warn
+from rex.multi_time_resource import MultiTimeResource
+from rex.resource import BaseResource, Resource
+from rex.utilities.utilities import jsonify_dict
 
 from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.econ.utilities import lcoe_fcr
-from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.exclusions import LATITUDE, LONGITUDE, ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
-from reV.utilities.exceptions import (SupplyCurveInputError,
-                                      EmptySupplyCurvePointError,
-                                      InputWarning,
-                                      FileInputError,
-                                      DataShapeError,
-                                      OutputWarning)
-
-from rex.resource import Resource, BaseResource
-from rex.multi_time_resource import MultiTimeResource
-from rex.utilities.utilities import jsonify_dict
+from reV.utilities import ResourceMetaField, SupplyCurveField
+from reV.utilities.exceptions import (
+    DataShapeError,
+    EmptySupplyCurvePointError,
+    FileInputError,
+    InputWarning,
+    OutputWarning,
+    SupplyCurveInputError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +52,8 @@ class AbstractSupplyCurvePoint(ABC):
         self._gid = gid
         self._resolution = resolution
         self._rows, self._cols = self._parse_slices(
-            gid, resolution, exclusion_shape)
+            gid, resolution, exclusion_shape
+        )
 
     @staticmethod
     def _ordered_unique(seq):
@@ -98,7 +103,7 @@ class AbstractSupplyCurvePoint(ABC):
 
     @property
     def gid(self):
-        """supply curve point gid"""
+        """Supply curve point gid"""
         return self._gid
 
     @property
@@ -172,8 +177,10 @@ class AbstractSupplyCurvePoint(ABC):
             row = loc[0][0]
             col = loc[1][0]
         except IndexError as exc:
-            msg = ('Gid {} out of bounds for extent shape {} and '
-                   'resolution {}.'.format(gid, shape, resolution))
+            msg = (
+                "Gid {} out of bounds for extent shape {} and "
+                "resolution {}.".format(gid, shape, resolution)
+            )
             raise IndexError(msg) from exc
 
         if row + 1 != nrows:
@@ -192,9 +199,18 @@ class AbstractSupplyCurvePoint(ABC):
 class SupplyCurvePoint(AbstractSupplyCurvePoint):
     """Generic single SC point based on exclusions, resolution, and techmap"""
 
-    def __init__(self, gid, excl, tm_dset, excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=None, exclusion_shape=None,
-                 close=True):
+    def __init__(
+        self,
+        gid,
+        excl,
+        tm_dset,
+        excl_dict=None,
+        inclusion_mask=None,
+        resolution=64,
+        excl_area=None,
+        exclusion_shape=None,
+        close=True,
+    ):
         """
         Parameters
         ----------
@@ -245,8 +261,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         self._incl_mask = inclusion_mask
         self._incl_mask_flat = None
         if inclusion_mask is not None:
-            msg = ('Bad inclusion mask input shape of {} with stated '
-                   'resolution of {}'.format(inclusion_mask.shape, resolution))
+            msg = (
+                "Bad inclusion mask input shape of {} with stated "
+                "resolution of {}".format(inclusion_mask.shape, resolution)
+            )
             assert len(inclusion_mask.shape) == 2, msg
             assert inclusion_mask.shape[0] <= resolution, msg
             assert inclusion_mask.shape[1] <= resolution, msg
@@ -282,11 +300,12 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             excl_fpath = excl.excl_h5.h5_file
             exclusions = excl
         else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs an '
-                                        'exclusions file path, or '
-                                        'ExclusionMask handler but '
-                                        'received: {}'
-                                        .format(type(excl)))
+            raise SupplyCurveInputError(
+                "SupplyCurvePoints needs an "
+                "exclusions file path, or "
+                "ExclusionMask handler but "
+                "received: {}".format(type(excl))
+            )
 
         return excl_fpath, exclusions
 
@@ -312,9 +331,12 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         res_gids = res_gids.astype(np.int32).flatten()
 
         if (res_gids != -1).sum() == 0:
-            emsg = ('Supply curve point gid {} has no viable exclusion points '
-                    'based on exclusions file: "{}"'
-                    .format(self._gid, self._excl_fpath))
+            emsg = (
+                "Supply curve point gid {} has no viable exclusion points "
+                'based on exclusions file: "{}"'.format(
+                    self._gid, self._excl_fpath
+                )
+            )
             raise EmptySupplyCurvePointError(emsg)
 
         return res_gids
@@ -343,8 +365,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             ExclusionMask h5 handler object.
         """
         if self._excls is None:
-            self._excls = ExclusionMaskFromDict(self._excl_fpath,
-                                                layers_dict=self._excl_dict)
+            self._excls = ExclusionMaskFromDict(
+                self._excl_fpath, layers_dict=self._excl_dict
+            )
 
         return self._excls
 
@@ -359,8 +382,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         if self._centroid is None:
-            lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
-            lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
+            lats = self.exclusions.excl_h5[LATITUDE, self.rows, self.cols]
+            lons = self.exclusions.excl_h5[LONGITUDE, self.rows, self.cols]
             self._centroid = (lats.mean(), lons.mean())
 
         return self._centroid
@@ -438,8 +461,12 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             self._incl_mask[out_of_extent] = 0.0
 
             if self._incl_mask.max() > 1:
-                w = ('Exclusions data max value is > 1: {}'
-                     .format(self._incl_mask.max()), InputWarning)
+                w = (
+                    "Exclusions data max value is > 1: {}".format(
+                        self._incl_mask.max()
+                    ),
+                    InputWarning,
+                )
                 logger.warning(w)
                 warn(w)
 
@@ -505,8 +532,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         if all(self.include_mask_flat[self.bool_mask] == 0):
-            msg = ('Supply curve point gid {} is completely excluded!'
-                   .format(self._gid))
+            msg = "Supply curve point gid {} is completely excluded!".format(
+                self._gid
+            )
             raise EmptySupplyCurvePointError(msg)
 
     def exclusion_weighted_mean(self, arr, drop_nan=True):
@@ -530,18 +558,18 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         if len(arr.shape) == 2:
-            x = arr[:, self._gids[self.bool_mask]].astype('float32')
+            x = arr[:, self._gids[self.bool_mask]].astype("float32")
             incl = self.include_mask_flat[self.bool_mask]
             x *= incl
             mean = x.sum(axis=1) / incl.sum()
 
         else:
-            x = arr[self._gids[self.bool_mask]].astype('float32')
+            x = arr[self._gids[self.bool_mask]].astype("float32")
             incl = self.include_mask_flat[self.bool_mask]
 
             if np.isnan(x).all():
                 return np.nan
-            elif drop_nan and np.isnan(x).any():
+            if drop_nan and np.isnan(x).any():
                 nan_mask = np.isnan(x)
                 x = x[~nan_mask]
                 incl = incl[~nan_mask]
@@ -600,10 +628,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Sum of arr masked by the binary exclusions
         """
         if len(arr.shape) == 2:
-            x = arr[:, self._gids[self.bool_mask]].astype('float32')
+            x = arr[:, self._gids[self.bool_mask]].astype("float32")
             ax = 1
         else:
-            x = arr[self._gids[self.bool_mask]].astype('float32')
+            x = arr[self._gids[self.bool_mask]].astype("float32")
             ax = 0
 
         x *= self.include_mask_flat[self.bool_mask]
@@ -612,8 +640,17 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return agg
 
     @classmethod
-    def sc_mean(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
-                exclusion_shape=None, close=True):
+    def sc_mean(
+        cls,
+        gid,
+        excl,
+        tm_dset,
+        data,
+        excl_dict=None,
+        resolution=64,
+        exclusion_shape=None,
+        close=True,
+    ):
         """
         Compute exclusions weight mean for the sc point from data
 
@@ -649,16 +686,29 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         ndarray
             Exclusions weighted means of data for supply curve point
         """
-        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
-                  "exclusion_shape": exclusion_shape, "close": close}
+        kwargs = {
+            "excl_dict": excl_dict,
+            "resolution": resolution,
+            "exclusion_shape": exclusion_shape,
+            "close": close,
+        }
         with cls(gid, excl, tm_dset, **kwargs) as point:
             means = point.exclusion_weighted_mean(data)
 
         return means
 
     @classmethod
-    def sc_sum(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
-               exclusion_shape=None, close=True):
+    def sc_sum(
+        cls,
+        gid,
+        excl,
+        tm_dset,
+        data,
+        excl_dict=None,
+        resolution=64,
+        exclusion_shape=None,
+        close=True,
+    ):
         """
         Compute the aggregate (sum) of data for the sc point
 
@@ -694,8 +744,12 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         ndarray
             Sum / aggregation of data for supply curve point
         """
-        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
-                  "exclusion_shape": exclusion_shape, "close": close}
+        kwargs = {
+            "excl_dict": excl_dict,
+            "resolution": resolution,
+            "exclusion_shape": exclusion_shape,
+            "close": close,
+        }
         with cls(gid, excl, tm_dset, **kwargs) as point:
             agg = point.aggregate(data)
 
@@ -718,9 +772,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
         if not data.size:
             return None
-        else:
-            # pd series is more flexible with non-numeric than stats mode
-            return pd.Series(data).mode().values[0]
+        # pd series is more flexible with non-numeric than stats mode
+        return pd.Series(data).mode().values[0]
 
     @staticmethod
     def _categorize(data, incl_mult):
@@ -743,8 +796,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             total inclusions
         """
 
-        data = {category: float(incl_mult[(data == category)].sum())
-                for category in np.unique(data)}
+        data = {
+            category: float(incl_mult[(data == category)].sum())
+            for category in np.unique(data)
+        }
         data = jsonify_dict(data)
 
         return data
@@ -770,18 +825,22 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         data : float | int | str | None
             Result of applying method to data.
         """
-        method_func = {'mode': cls._mode,
-                       'mean': np.mean,
-                       'max': np.max,
-                       'min': np.min,
-                       'sum': np.sum,
-                       'category': cls._categorize}
+        method_func = {
+            "mode": cls._mode,
+            "mean": np.mean,
+            "max": np.max,
+            "min": np.min,
+            "sum": np.sum,
+            "category": cls._categorize,
+        }
 
         if data is not None:
             method = method.lower()
             if method not in method_func:
-                e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only {}'.format(method, list(method_func)))
+                e = (
+                    "Cannot recognize data layer agg method: "
+                    '"{}". Can only {}'.format(method, list(method_func))
+                )
                 logger.error(e)
                 raise ValueError(e)
 
@@ -789,14 +848,16 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                 data = data.flatten()
 
             if data.shape != incl_mult.shape:
-                e = ('Cannot aggregate data with shape that doesnt '
-                     'match excl mult!')
+                e = (
+                    "Cannot aggregate data with shape that doesnt "
+                    "match excl mult!"
+                )
                 logger.error(e)
                 raise DataShapeError(e)
 
-            if method == 'category':
-                data = method_func['category'](data, incl_mult)
-            elif method in ['mean', 'sum']:
+            if method == "category":
+                data = method_func["category"](data, incl_mult)
+            elif method in ["mean", "sum"]:
                 data = data * incl_mult
                 data = method_func[method](data)
             else:
@@ -828,32 +889,36 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         if data_layers is not None:
             for name, attrs in data_layers.items():
-                excl_fp = attrs.get('fpath', self._excl_fpath)
+                excl_fp = attrs.get("fpath", self._excl_fpath)
                 if excl_fp != self._excl_fpath:
-                    fh = ExclusionLayers(attrs['fpath'])
+                    fh = ExclusionLayers(attrs["fpath"])
                 else:
                     fh = self.exclusions.excl_h5
 
-                raw = fh[attrs['dset'], self.rows, self.cols]
-                nodata = fh.get_nodata_value(attrs['dset'])
+                raw = fh[attrs["dset"], self.rows, self.cols]
+                nodata = fh.get_nodata_value(attrs["dset"])
 
                 data = raw.flatten()[self.bool_mask]
                 incl_mult = self.include_mask_flat[self.bool_mask].copy()
 
                 if nodata is not None:
-                    valid_data_mask = (data != nodata)
+                    valid_data_mask = data != nodata
                     data = data[valid_data_mask]
                     incl_mult = incl_mult[valid_data_mask]
 
                     if not data.size:
-                        m = ('Data layer "{}" has no valid data for '
-                             'SC point gid {} because of exclusions '
-                             'and/or nodata values in the data layer.'
-                             .format(name, self._gid))
+                        m = (
+                            'Data layer "{}" has no valid data for '
+                            "SC point gid {} because of exclusions "
+                            "and/or nodata values in the data layer.".format(
+                                name, self._gid
+                            )
+                        )
                         logger.debug(m)
 
-                data = self._agg_data_layer_method(data, incl_mult,
-                                                   attrs['method'])
+                data = self._agg_data_layer_method(
+                    data, incl_mult, attrs["method"]
+                )
                 summary[name] = data
 
                 if excl_fp != self._excl_fpath:
@@ -865,10 +930,21 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 class AggregationSupplyCurvePoint(SupplyCurvePoint):
     """Generic single SC point to aggregate data from an h5 file."""
 
-    def __init__(self, gid, excl, agg_h5, tm_dset,
-                 excl_dict=None, inclusion_mask=None,
-                 resolution=64, excl_area=None, exclusion_shape=None,
-                 close=True, gen_index=None, apply_exclusions=True):
+    def __init__(
+        self,
+        gid,
+        excl,
+        agg_h5,
+        tm_dset,
+        excl_dict=None,
+        inclusion_mask=None,
+        resolution=64,
+        excl_area=None,
+        exclusion_shape=None,
+        close=True,
+        gen_index=None,
+        apply_exclusions=True,
+    ):
         """
         Parameters
         ----------
@@ -911,13 +987,17 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Flag to apply exclusions to the resource / generation gid's on
             initialization.
         """
-        super().__init__(gid, excl, tm_dset,
-                         excl_dict=excl_dict,
-                         inclusion_mask=inclusion_mask,
-                         resolution=resolution,
-                         excl_area=excl_area,
-                         exclusion_shape=exclusion_shape,
-                         close=close)
+        super().__init__(
+            gid,
+            excl,
+            tm_dset,
+            excl_dict=excl_dict,
+            inclusion_mask=inclusion_mask,
+            resolution=resolution,
+            excl_area=excl_area,
+            exclusion_shape=exclusion_shape,
+            close=close,
+        )
 
         self._h5_fpath, self._h5 = self._parse_h5_file(agg_h5)
 
@@ -927,9 +1007,12 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         self._h5_gids = self._gids
 
         if (self._h5_gids != -1).sum() == 0:
-            emsg = ('Supply curve point gid {} has no viable exclusion '
-                    'points based on exclusions file: "{}"'
-                    .format(self._gid, self._excl_fpath))
+            emsg = (
+                "Supply curve point gid {} has no viable exclusion "
+                'points based on exclusions file: "{}"'.format(
+                    self._gid, self._excl_fpath
+                )
+            )
             raise EmptySupplyCurvePointError(emsg)
 
         if apply_exclusions:
@@ -962,11 +1045,12 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         elif issubclass(h5.__class__, MultiTimeResource):
             h5_fpath = h5.h5_files
         else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs a '
-                                        '.h5 file path, or '
-                                        'Resource handler but '
-                                        'received: {}'
-                                        .format(type(h5)))
+            raise SupplyCurveInputError(
+                "SupplyCurvePoints needs a "
+                ".h5 file path, or "
+                "Resource handler but "
+                "received: {}".format(type(h5))
+            )
 
         return h5_fpath, h5
 
@@ -982,8 +1066,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         self._h5_gids[exclude] = -1
 
         if (self._gids != -1).sum() == 0:
-            msg = ('Supply curve point gid {} is completely excluded!'
-                   .format(self._gid))
+            msg = "Supply curve point gid {} is completely excluded!".format(
+                self._gid
+            )
             raise EmptySupplyCurvePointError(msg)
 
     def close(self):
@@ -1032,7 +1117,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         _h5 : Resource
             Resource h5 handler object.
         """
-        if self._h5 is None and '*' in self._h5_fpath:
+        if self._h5 is None and "*" in self._h5_fpath:
             self._h5 = MultiTimeResource(self._h5_fpath)
         elif self._h5 is None:
             self._h5 = Resource(self._h5_fpath)
@@ -1043,15 +1128,22 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def country(self):
         """Get the SC point country based on the resource meta data."""
         country = None
-        if 'country' in self.h5.meta and self.county is not None:
+        county_not_none = self.county is not None
+        if ResourceMetaField.COUNTRY in self.h5.meta and county_not_none:
             # make sure country and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            country = self.h5.meta.loc[self.h5_gid_set, 'country'].values
+            country = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTRY
+            ].values
             country = country[iloc]
 
-        elif 'country' in self.h5.meta:
-            country = self.h5.meta.loc[self.h5_gid_set, 'country'].mode()
+        elif ResourceMetaField.COUNTRY in self.h5.meta:
+            country = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTRY
+            ].mode()
             country = country.values[0]
 
         return country
@@ -1060,15 +1152,21 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def state(self):
         """Get the SC point state based on the resource meta data."""
         state = None
-        if 'state' in self.h5.meta and self.county is not None:
+        if ResourceMetaField.STATE in self.h5.meta and self.county is not None:
             # make sure state and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            state = self.h5.meta.loc[self.h5_gid_set, 'state'].values
+            state = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.STATE
+            ].values
             state = state[iloc]
 
-        elif 'state' in self.h5.meta:
-            state = self.h5.meta.loc[self.h5_gid_set, 'state'].mode()
+        elif ResourceMetaField.STATE in self.h5.meta:
+            state = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.STATE
+            ].mode()
             state = state.values[0]
 
         return state
@@ -1077,8 +1175,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def county(self):
         """Get the SC point county based on the resource meta data."""
         county = None
-        if 'county' in self.h5.meta:
-            county = self.h5.meta.loc[self.h5_gid_set, 'county'].mode()
+        if ResourceMetaField.COUNTY in self.h5.meta:
+            county = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].mode()
             county = county.values[0]
 
         return county
@@ -1087,8 +1187,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def elevation(self):
         """Get the SC point elevation based on the resource meta data."""
         elevation = None
-        if 'elevation' in self.h5.meta:
-            elevation = self.h5.meta.loc[self.h5_gid_set, 'elevation'].mean()
+        if ResourceMetaField.ELEVATION in self.h5.meta:
+            elevation = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.ELEVATION
+            ].mean()
 
         return elevation
 
@@ -1096,15 +1198,22 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     def timezone(self):
         """Get the SC point timezone based on the resource meta data."""
         timezone = None
-        if 'timezone' in self.h5.meta and self.county is not None:
+        county_not_none = self.county is not None
+        if ResourceMetaField.TIMEZONE in self.h5.meta and county_not_none:
             # make sure timezone flag and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].values
+            timezone = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.TIMEZONE
+            ].values
             timezone = timezone[iloc]
 
-        elif 'timezone' in self.h5.meta:
-            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].mode()
+        elif ResourceMetaField.TIMEZONE in self.h5.meta:
+            timezone = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.TIMEZONE
+            ].mode()
             timezone = timezone.values[0]
 
         return timezone
@@ -1114,15 +1223,22 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """Get the SC point offshore flag based on the resource meta data
         (if offshore column is present)."""
         offshore = None
-        if 'offshore' in self.h5.meta and self.county is not None:
+        county_not_none = self.county is not None
+        if ResourceMetaField.OFFSHORE in self.h5.meta and county_not_none:
             # make sure offshore flag and county are coincident
-            counties = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            counties = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.COUNTY
+            ].values
             iloc = np.where(counties == self.county)[0][0]
-            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].values
+            offshore = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.OFFSHORE
+            ].values
             offshore = offshore[iloc]
 
-        elif 'offshore' in self.h5.meta:
-            offshore = self.h5.meta.loc[self.h5_gid_set, 'offshore'].mode()
+        elif ResourceMetaField.OFFSHORE in self.h5.meta:
+            offshore = self.h5.meta.loc[
+                self.h5_gid_set, ResourceMetaField.OFFSHORE
+            ].mode()
             offshore = offshore.values[0]
 
         return offshore
@@ -1138,8 +1254,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         -------
         gid_counts : list
         """
-        gid_counts = [self.include_mask_flat[(self._h5_gids == gid)].sum()
-                      for gid in self.h5_gid_set]
+        gid_counts = [
+            self.include_mask_flat[(self._h5_gids == gid)].sum()
+            for gid in self.h5_gid_set
+        ]
 
         return gid_counts
 
@@ -1153,28 +1271,41 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         pandas.Series
             List of supply curve point's meta data
         """
-        meta = {'sc_point_gid': self.sc_point_gid,
-                'source_gids': self.h5_gid_set,
-                'gid_counts': self.gid_counts,
-                'n_gids': self.n_gids,
-                'area_sq_km': self.area,
-                'latitude': self.latitude,
-                'longitude': self.longitude,
-                'country': self.country,
-                'state': self.state,
-                'county': self.county,
-                'elevation': self.elevation,
-                'timezone': self.timezone,
-                }
+        meta = {
+            SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+            SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
+            SupplyCurveField.GID_COUNTS: self.gid_counts,
+            SupplyCurveField.N_GIDS: self.n_gids,
+            SupplyCurveField.AREA_SQ_KM: self.area,
+            SupplyCurveField.LATITUDE: self.latitude,
+            SupplyCurveField.LONGITUDE: self.longitude,
+            SupplyCurveField.COUNTRY: self.country,
+            SupplyCurveField.STATE: self.state,
+            SupplyCurveField.COUNTY: self.county,
+            SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.TIMEZONE: self.timezone,
+        }
         meta = pd.Series(meta)
 
         return meta
 
     @classmethod
-    def run(cls, gid, excl, agg_h5, tm_dset, *agg_dset, agg_method='mean',
-            excl_dict=None, inclusion_mask=None,
-            resolution=64, excl_area=None,
-            exclusion_shape=None, close=True, gen_index=None):
+    def run(
+        cls,
+        gid,
+        excl,
+        agg_h5,
+        tm_dset,
+        *agg_dset,
+        agg_method="mean",
+        excl_dict=None,
+        inclusion_mask=None,
+        resolution=64,
+        excl_area=None,
+        exclusion_shape=None,
+        close=True,
+        gen_index=None,
+    ):
         """
         Compute exclusions weight mean for the sc point from data
 
@@ -1228,30 +1359,34 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Given datasets and meta data aggregated to supply curve points
         """
         if isinstance(agg_dset, str):
-            agg_dset = (agg_dset, )
+            agg_dset = (agg_dset,)
 
-        kwargs = {"excl_dict": excl_dict,
-                  "inclusion_mask": inclusion_mask,
-                  "resolution": resolution,
-                  "excl_area": excl_area,
-                  "exclusion_shape": exclusion_shape,
-                  "close": close,
-                  "gen_index": gen_index}
+        kwargs = {
+            "excl_dict": excl_dict,
+            "inclusion_mask": inclusion_mask,
+            "resolution": resolution,
+            "excl_area": excl_area,
+            "exclusion_shape": exclusion_shape,
+            "close": close,
+            "gen_index": gen_index,
+        }
 
         with cls(gid, excl, agg_h5, tm_dset, **kwargs) as point:
-            if agg_method.lower().startswith('mean'):
+            if agg_method.lower().startswith("mean"):
                 agg_method = point.exclusion_weighted_mean
-            elif agg_method.lower().startswith(('sum', 'agg')):
+            elif agg_method.lower().startswith(("sum", "agg")):
                 agg_method = point.aggregate
-            elif 'wind_dir' in agg_method.lower():
+            elif "wind_dir" in agg_method.lower():
                 agg_method = point.mean_wind_dirs
             else:
-                msg = ('Aggregation method must be either mean, '
-                       'sum/aggregate, or wind_dir')
+                msg = (
+                    "Aggregation method must be either mean, "
+                    "sum/aggregate, or wind_dir"
+                )
                 logger.error(msg)
                 raise ValueError(msg)
 
-            out = {'meta': point.summary}
+            out = {"meta": point.summary}
 
             for dset in agg_dset:
                 ds = point.h5.open_dataset(dset)
@@ -1265,15 +1400,31 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     respective generation and resource data."""
 
     # technology-dependent power density estimates in MW/km2
-    POWER_DENSITY = {'pv': 36, 'wind': 3}
+    POWER_DENSITY = {"pv": 36, "wind": 3}
 
-    def __init__(self, gid, excl, gen, tm_dset, gen_index,
-                 excl_dict=None, inclusion_mask=None,
-                 res_class_dset=None, res_class_bin=None, excl_area=None,
-                 power_density=None, cf_dset='cf_mean-means',
-                 lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
-                 exclusion_shape=None, close=False, friction_layer=None,
-                 recalc_lcoe=True, apply_exclusions=True):
+    def __init__(
+        self,
+        gid,
+        excl,
+        gen,
+        tm_dset,
+        gen_index,
+        excl_dict=None,
+        inclusion_mask=None,
+        res_class_dset=None,
+        res_class_bin=None,
+        excl_area=None,
+        power_density=None,
+        cf_dset="cf_mean-means",
+        lcoe_dset="lcoe_fcr-means",
+        h5_dsets=None,
+        resolution=64,
+        exclusion_shape=None,
+        close=False,
+        friction_layer=None,
+        recalc_lcoe=True,
+        apply_exclusions=True,
+    ):
         """
         Parameters
         ----------
@@ -1360,26 +1511,36 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._friction_layer = friction_layer
         self._recalc_lcoe = recalc_lcoe
 
-        super().__init__(gid, excl, gen, tm_dset,
-                         excl_dict=excl_dict,
-                         inclusion_mask=inclusion_mask,
-                         resolution=resolution,
-                         excl_area=excl_area,
-                         exclusion_shape=exclusion_shape,
-                         close=close, apply_exclusions=False)
+        super().__init__(
+            gid,
+            excl,
+            gen,
+            tm_dset,
+            excl_dict=excl_dict,
+            inclusion_mask=inclusion_mask,
+            resolution=resolution,
+            excl_area=excl_area,
+            exclusion_shape=exclusion_shape,
+            close=close,
+            apply_exclusions=False,
+        )
 
         self._res_gid_set = None
         self._gen_gid_set = None
 
         self._gen_fpath, self._gen = self._h5_fpath, self._h5
 
-        self._gen_gids, self._res_gids = self._map_gen_gids(self._gids,
-                                                            gen_index)
+        self._gen_gids, self._res_gids = self._map_gen_gids(
+            self._gids, gen_index
+        )
         self._gids = self._gen_gids
         if (self._gen_gids != -1).sum() == 0:
-            emsg = ('Supply curve point gid {} has no viable exclusion '
-                    'points based on exclusions file: "{}"'
-                    .format(self._gid, self._excl_fpath))
+            emsg = (
+                "Supply curve point gid {} has no viable exclusion "
+                'points based on exclusions file: "{}"'.format(
+                    self._gid, self._excl_fpath
+                )
+            )
             raise EmptySupplyCurvePointError(emsg)
 
         if apply_exclusions:
@@ -1401,7 +1562,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Mean of flat_arr masked by the binary exclusions then weighted by
             the non-zero exclusions.
         """
-        x = flat_arr[self._gen_gids[self.bool_mask]].astype('float32')
+        x = flat_arr[self._gen_gids[self.bool_mask]].astype("float32")
         incl = self.include_mask_flat[self.bool_mask]
         x *= incl
         mean = x.sum() / incl.sum()
@@ -1476,8 +1637,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         gid_counts : list
             List of exclusion pixels in each resource/generation gid.
         """
-        gid_counts = [self.include_mask_flat[(self._res_gids == gid)].sum()
-                      for gid in self.res_gid_set]
+        gid_counts = [
+            self.include_mask_flat[(self._res_gids == gid)].sum()
+            for gid in self.res_gid_set
+        ]
 
         return gid_counts
 
@@ -1495,10 +1658,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._res_class_dset, np.ndarray):
             return self._res_class_dset
 
-        else:
-            if self._res_data is None:
-                if self._res_class_dset in self.gen.datasets:
-                    self._res_data = self.gen[self._res_class_dset]
+        if self._res_data is None:
+            if self._res_class_dset in self.gen.datasets:
+                self._res_data = self.gen[self._res_class_dset]
 
         return self._res_data
 
@@ -1516,10 +1678,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._cf_dset, np.ndarray):
             return self._cf_dset
 
-        else:
-            if self._gen_data is None:
-                if self._cf_dset in self.gen.datasets:
-                    self._gen_data = self.gen[self._cf_dset]
+        if self._gen_data is None:
+            if self._cf_dset in self.gen.datasets:
+                self._gen_data = self.gen[self._cf_dset]
 
         return self._gen_data
 
@@ -1537,10 +1698,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if isinstance(self._lcoe_dset, np.ndarray):
             return self._lcoe_dset
 
-        else:
-            if self._lcoe_data is None:
-                if self._lcoe_dset in self.gen.datasets:
-                    self._lcoe_data = self.gen[self._lcoe_dset]
+        if self._lcoe_data is None:
+            if self._lcoe_dset in self.gen.datasets:
+                self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data
 
@@ -1578,22 +1738,31 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         # year CF, but the output should be identical to the original LCOE and
         # so is not consequential).
         if self._recalc_lcoe:
-            required = ('fixed_charge_rate', 'capital_cost',
-                        'fixed_operating_cost', 'variable_operating_cost',
-                        'system_capacity')
-            if self.mean_h5_dsets_data is not None:
-                if all(k in self.mean_h5_dsets_data for k in required):
-                    aep = (self.mean_h5_dsets_data['system_capacity']
-                           * self.mean_cf * 8760)
-                    # Note the AEP computation uses the SAM config
-                    # `system_capacity`, so no need to scale `capital_cost`
-                    # or `fixed_operating_cost` by anything
-                    mean_lcoe = lcoe_fcr(
-                        self.mean_h5_dsets_data['fixed_charge_rate'],
-                        self.mean_h5_dsets_data['capital_cost'],
-                        self.mean_h5_dsets_data['fixed_operating_cost'],
-                        aep,
-                        self.mean_h5_dsets_data['variable_operating_cost'])
+            required = (
+                "fixed_charge_rate",
+                "capital_cost",
+                "fixed_operating_cost",
+                "variable_operating_cost",
+                "system_capacity",
+            )
+            if self.mean_h5_dsets_data is not None and all(
+                k in self.mean_h5_dsets_data for k in required
+            ):
+                aep = (
+                    self.mean_h5_dsets_data["system_capacity"]
+                    * self.mean_cf
+                    * 8760
+                )
+                # Note the AEP computation uses the SAM config
+                # `system_capacity`, so no need to scale `capital_cost`
+                # or `fixed_operating_cost` by anything
+                mean_lcoe = lcoe_fcr(
+                    self.mean_h5_dsets_data["fixed_charge_rate"],
+                    self.mean_h5_dsets_data["capital_cost"],
+                    self.mean_h5_dsets_data["fixed_operating_cost"],
+                    aep,
+                    self.mean_h5_dsets_data["variable_operating_cost"],
+                )
 
         # alternative if lcoe was not able to be re-calculated from
         # multi year mean CF
@@ -1679,26 +1848,31 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         if self._power_density is None:
-            tech = self.gen.meta['reV_tech'][0]
+            tech = self.gen.meta["reV_tech"][0]
             if tech in self.POWER_DENSITY:
                 self._power_density = self.POWER_DENSITY[tech]
             else:
-                warn('Could not recognize reV technology in generation meta '
-                     'data: "{}". Cannot lookup an appropriate power density '
-                     'to calculate SC point capacity.'.format(tech))
+                warn(
+                    "Could not recognize reV technology in generation meta "
+                    'data: "{}". Cannot lookup an appropriate power density '
+                    "to calculate SC point capacity.".format(tech)
+                )
 
         elif isinstance(self._power_density, pd.DataFrame):
             self._pd_obj = self._power_density
 
             missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
             if any(missing):
-                msg = ('Variable power density input is missing the '
-                       'following resource GIDs: {}'.format(missing))
+                msg = (
+                    "Variable power density input is missing the "
+                    "following resource GIDs: {}".format(missing)
+                )
                 logger.error(msg)
                 raise FileInputError(msg)
 
-            pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
-                                   'power_density'].values
+            pds = self._pd_obj.loc[
+                self._res_gids[self.bool_mask], "power_density"
+            ].values
             pds = pds.astype(np.float32)
             pds *= self.include_mask_flat[self.bool_mask]
             denom = self.include_mask_flat[self.bool_mask].sum()
@@ -1724,18 +1898,20 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         ilr = self.gen["dc_ac_ratio", self._gen_gids[self.bool_mask]]
-        ilr = ilr.astype('float32')
+        ilr = ilr.astype("float32")
         weights = self.include_mask_flat[self.bool_mask]
         if self._power_density_ac is None:
-            tech = self.gen.meta['reV_tech'][0]
+            tech = self.gen.meta["reV_tech"][0]
             if tech in self.POWER_DENSITY:
                 power_density_ac = self.POWER_DENSITY[tech] / ilr
                 power_density_ac *= weights
                 power_density_ac = power_density_ac.sum() / weights.sum()
             else:
-                warn('Could not recognize reV technology in generation meta '
-                     'data: "{}". Cannot lookup an appropriate power density '
-                     'to calculate SC point capacity.'.format(tech))
+                warn(
+                    "Could not recognize reV technology in generation meta "
+                    'data: "{}". Cannot lookup an appropriate power density '
+                    "to calculate SC point capacity.".format(tech)
+                )
                 power_density_ac = None
 
         elif isinstance(self._power_density_ac, pd.DataFrame):
@@ -1743,13 +1919,16 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
             missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
             if any(missing):
-                msg = ('Variable power density input is missing the '
-                       'following resource GIDs: {}'.format(missing))
+                msg = (
+                    "Variable power density input is missing the "
+                    "following resource GIDs: {}".format(missing)
+                )
                 logger.error(msg)
                 raise FileInputError(msg)
 
-            pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
-                                   'power_density'].values
+            pds = self._pd_obj.loc[
+                self._res_gids[self.bool_mask], "power_density"
+            ].values
             power_density_ac = pds.astype(np.float32) / ilr
             power_density_ac *= weights
             power_density_ac = power_density_ac.sum() / weights.sum()
@@ -1816,12 +1995,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if self.mean_h5_dsets_data is None:
             return None
 
-        required = ('capital_cost', 'system_capacity')
+        required = ("capital_cost", "system_capacity")
         if not all(k in self.mean_h5_dsets_data for k in required):
             return None
 
-        cap_cost_per_mw = (self.mean_h5_dsets_data['capital_cost']
-                           / self.mean_h5_dsets_data['system_capacity'])
+        cap_cost_per_mw = (
+            self.mean_h5_dsets_data["capital_cost"]
+            / self.mean_h5_dsets_data["system_capacity"]
+        )
         return cap_cost_per_mw * self.capacity
 
     @property
@@ -1842,12 +2023,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if self.mean_h5_dsets_data is None:
             return None
 
-        required = ('fixed_operating_cost', 'system_capacity')
+        required = ("fixed_operating_cost", "system_capacity")
         if not all(k in self.mean_h5_dsets_data for k in required):
             return None
 
-        fixed_cost_per_mw = (self.mean_h5_dsets_data['fixed_operating_cost']
-                             / self.mean_h5_dsets_data['system_capacity'])
+        fixed_cost_per_mw = (
+            self.mean_h5_dsets_data["fixed_operating_cost"]
+            / self.mean_h5_dsets_data["system_capacity"]
+        )
         return fixed_cost_per_mw * self.capacity
 
     @property
@@ -1909,10 +2092,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             _h5_dsets_data = self._h5_dsets
 
         elif self._h5_dsets is not None:
-            e = ('Cannot recognize h5_dsets input type, should be None, '
-                 'a list of dataset names, or a dictionary or '
-                 'pre-extracted data. Received: {} {}'
-                 .format(type(self._h5_dsets), self._h5_dsets))
+            e = (
+                "Cannot recognize h5_dsets input type, should be None, "
+                "a list of dataset names, or a dictionary or "
+                "pre-extracted data. Received: {} {}".format(
+                    type(self._h5_dsets), self._h5_dsets
+                )
+            )
             logger.error(e)
             raise TypeError(e)
 
@@ -1955,8 +2141,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._incl_mask = self._incl_mask.flatten()
 
         if (self._gen_gids != -1).sum() == 0:
-            msg = ('Supply curve point gid {} is completely excluded for res '
-                   'bin: {}'.format(self._gid, self._res_class_bin))
+            msg = (
+                "Supply curve point gid {} is completely excluded for res "
+                "bin: {}".format(self._gid, self._res_class_bin)
+            )
             raise EmptySupplyCurvePointError(msg)
 
     def _resource_exclusion(self, boolean_exclude):
@@ -1974,14 +2162,16 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             outside of current resource class bin.
         """
 
-        if (self._res_class_dset is not None
-                and self._res_class_bin is not None):
-
+        if (
+            self._res_class_dset is not None
+            and self._res_class_bin is not None
+        ):
             rex = self.res_data[self._gen_gids]
-            rex = ((rex < np.min(self._res_class_bin))
-                   | (rex >= np.max(self._res_class_bin)))
+            rex = (rex < np.min(self._res_class_bin)) | (
+                rex >= np.max(self._res_class_bin)
+            )
 
-            boolean_exclude = (boolean_exclude | rex)
+            boolean_exclude = boolean_exclude | rex
 
         return boolean_exclude
 
@@ -2001,39 +2191,50 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        ARGS = {'res_gids': self.res_gid_set,
-                'gen_gids': self.gen_gid_set,
-                'gid_counts': self.gid_counts,
-                'n_gids': self.n_gids,
-                'mean_cf': self.mean_cf,
-                'mean_lcoe': self.mean_lcoe,
-                'mean_res': self.mean_res,
-                'capacity': self.capacity,
-                'area_sq_km': self.area,
-                'latitude': self.latitude,
-                'longitude': self.longitude,
-                'country': self.country,
-                'state': self.state,
-                'county': self.county,
-                'elevation': self.elevation,
-                'timezone': self.timezone,
-                }
+        ARGS = {
+            SupplyCurveField.LATITUDE: self.latitude,
+            SupplyCurveField.LONGITUDE: self.longitude,
+            SupplyCurveField.TIMEZONE: self.timezone,
+            SupplyCurveField.COUNTRY: self.country,
+            SupplyCurveField.STATE: self.state,
+            SupplyCurveField.COUNTY: self.county,
+            SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.RES_GIDS: self.res_gid_set,
+            SupplyCurveField.GEN_GIDS: self.gen_gid_set,
+            SupplyCurveField.GID_COUNTS: self.gid_counts,
+            SupplyCurveField.N_GIDS: self.n_gids,
+            SupplyCurveField.MEAN_CF: self.mean_cf,
+            SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
+            SupplyCurveField.MEAN_RES: self.mean_res,
+            SupplyCurveField.CAPACITY: self.capacity,
+            SupplyCurveField.AREA_SQ_KM: self.area,
+        }
 
-        extra_atts = ['capacity_ac', 'offshore', 'sc_point_capital_cost',
-                      'sc_point_fixed_operating_cost',
-                      'sc_point_annual_energy', 'sc_point_annual_energy_ac']
-        for attr in extra_atts:
-            value = getattr(self, attr)
+        extra_atts = {
+            SupplyCurveField.CAPACITY_AC: self.capacity_ac,
+            SupplyCurveField.OFFSHORE: self.offshore,
+            SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
+            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
+                self.sc_point_fixed_operating_cost
+            ),
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
+                self.sc_point_annual_energy
+            ),
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC: (
+                self.sc_point_annual_energy_ac
+            ),
+        }
+        for attr, value in extra_atts.items():
             if value is not None:
                 ARGS[attr] = value
 
         if self._friction_layer is not None:
-            ARGS['mean_friction'] = self.mean_friction
-            ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
+            ARGS[SupplyCurveField.MEAN_FRICTION] = self.mean_friction
+            ARGS[SupplyCurveField.MEAN_LCOE_FRICTION] = self.mean_lcoe_friction
 
         if self._h5_dsets is not None:
             for dset, data in self.mean_h5_dsets_data.items():
-                ARGS['mean_{}'.format(dset)] = data
+                ARGS["mean_{}".format(dset)] = data
 
         if args is None:
             args = list(ARGS.keys())
@@ -2043,8 +2244,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             if arg in ARGS:
                 summary[arg] = ARGS[arg]
             else:
-                warn('Cannot find "{}" as an available SC self summary '
-                     'output', OutputWarning)
+                warn(
+                    'Cannot find "{}" as an available SC self summary '
+                    "output",
+                    OutputWarning,
+                )
 
         return summary
 
@@ -2070,26 +2274,47 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """
 
         eos = EconomiesOfScale(cap_cost_scale, summary)
-        summary['raw_lcoe'] = eos.raw_lcoe
-        summary['mean_lcoe'] = eos.scaled_lcoe
-        summary['capital_cost_scalar'] = eos.capital_cost_scalar
-        summary['scaled_capital_cost'] = eos.scaled_capital_cost
-        if "sc_point_capital_cost" in summary:
-            scaled_costs = (summary["sc_point_capital_cost"]
-                            * eos.capital_cost_scalar)
-            summary['scaled_sc_point_capital_cost'] = scaled_costs
+        summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
+        summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
+        summary[SupplyCurveField.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
+        summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
+        if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
+            scaled_costs = (
+                summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
+                * eos.capital_cost_scalar
+            )
+            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = (
+                scaled_costs
+            )
 
         return summary
 
     @classmethod
-    def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
-                  excl_dict=None, inclusion_mask=None,
-                  res_class_dset=None, res_class_bin=None,
-                  excl_area=None, power_density=None,
-                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                  h5_dsets=None, resolution=64, exclusion_shape=None,
-                  close=False, friction_layer=None, args=None,
-                  data_layers=None, cap_cost_scale=None, recalc_lcoe=True):
+    def summarize(
+        cls,
+        gid,
+        excl_fpath,
+        gen_fpath,
+        tm_dset,
+        gen_index,
+        excl_dict=None,
+        inclusion_mask=None,
+        res_class_dset=None,
+        res_class_bin=None,
+        excl_area=None,
+        power_density=None,
+        cf_dset="cf_mean-means",
+        lcoe_dset="lcoe_fcr-means",
+        h5_dsets=None,
+        resolution=64,
+        exclusion_shape=None,
+        close=False,
+        friction_layer=None,
+        args=None,
+        data_layers=None,
+        cap_cost_scale=None,
+        recalc_lcoe=True,
+    ):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -2176,24 +2401,26 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary : dict
             Dictionary of summary outputs for this sc point.
         """
-        kwargs = {"excl_dict": excl_dict,
-                  "inclusion_mask": inclusion_mask,
-                  "res_class_dset": res_class_dset,
-                  "res_class_bin": res_class_bin,
-                  "excl_area": excl_area,
-                  "power_density": power_density,
-                  "cf_dset": cf_dset,
-                  "lcoe_dset": lcoe_dset,
-                  "h5_dsets": h5_dsets,
-                  "resolution": resolution,
-                  "exclusion_shape": exclusion_shape,
-                  "close": close,
-                  'friction_layer': friction_layer,
-                  'recalc_lcoe': recalc_lcoe,
-                  }
+        kwargs = {
+            "excl_dict": excl_dict,
+            "inclusion_mask": inclusion_mask,
+            "res_class_dset": res_class_dset,
+            "res_class_bin": res_class_bin,
+            "excl_area": excl_area,
+            "power_density": power_density,
+            "cf_dset": cf_dset,
+            "lcoe_dset": lcoe_dset,
+            "h5_dsets": h5_dsets,
+            "resolution": resolution,
+            "exclusion_shape": exclusion_shape,
+            "close": close,
+            "friction_layer": friction_layer,
+            "recalc_lcoe": recalc_lcoe,
+        }
 
-        with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
-                 **kwargs) as point:
+        with cls(
+            gid, excl_fpath, gen_fpath, tm_dset, gen_index, **kwargs
+        ) as point:
             summary = point.point_summary(args=args)
 
             if data_layers is not None:

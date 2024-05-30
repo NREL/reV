@@ -11,18 +11,20 @@ Everything in this module operates on the spatiotemporal resolution of the reV
 generation output file. This is usually the wind or solar resource resolution
 but could be the supply curve resolution after representative profiles is run.
 """
-import numpy as np
-import pandas as pd
 import logging
 from warnings import warn
 
+import numpy as np
+import pandas as pd
+
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (DataShapeError,
-                                      OffshoreWindInputWarning,
-                                      OffshoreWindInputError)
-from reV.utilities import log_versions
-
+from reV.utilities import SiteDataField, ResourceMetaField, log_versions
+from reV.utilities.exceptions import (
+    DataShapeError,
+    OffshoreWindInputError,
+    OffshoreWindInputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +32,12 @@ logger = logging.getLogger(__name__)
 class RevNrwal:
     """RevNrwal"""
 
-    DEFAULT_META_COLS = ('config', )
+    DEFAULT_META_COLS = (SiteDataField.CONFIG, )
     """Columns from the `site_data` table to join to the output meta data"""
 
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
-                 output_request, save_raw=True, meta_gid_col='gid',
+                 output_request, save_raw=True,
+                 meta_gid_col=ResourceMetaField.GID,
                  site_meta_cols=None):
         """Framework to handle reV-NRWAL analysis.
 
@@ -163,8 +166,9 @@ class RevNrwal:
         self._save_raw = save_raw
         self._nrwal_inputs = self._out = None
 
-        self._nrwal_configs = {k: NrwalConfig(v) for k, v in
-                               nrwal_configs.items()}
+        self._nrwal_configs = {
+            k: NrwalConfig(v) for k, v in nrwal_configs.items()
+        }
 
         self._site_meta_cols = site_meta_cols
         if self._site_meta_cols is None:
@@ -178,20 +182,27 @@ class RevNrwal:
         self._meta_source = self._parse_gen_data()
         self._analysis_gids, self._site_data = self._parse_analysis_gids()
 
-        pc = Gen.get_pc(self._site_data[['gid', 'config']], points_range=None,
-                        sam_configs=sam_files, tech='windpower')
+        pc = Gen.get_pc(
+            self._site_data[[SiteDataField.GID, SiteDataField.CONFIG]],
+            points_range=None, sam_configs=sam_files, tech='windpower')
         self._project_points = pc.project_points
 
         self._sam_sys_inputs = self._parse_sam_sys_inputs()
         meta_gids = self.meta_source[self._meta_gid_col].values
-        logger.info('Finished initializing NRWAL analysis module for "{}" '
-                    '{} through {} with {} total generation points and '
-                    '{} NRWAL analysis points.'
-                    .format(self._meta_gid_col, meta_gids.min(),
-                            meta_gids.max(), len(self.meta_source),
-                            len(self.analysis_gids)))
+        logger.info(
+            'Finished initializing NRWAL analysis module for "{}" '
+            "{} through {} with {} total generation points and "
+            "{} NRWAL analysis points.".format(
+                self._meta_gid_col,
+                meta_gids.min(),
+                meta_gids.max(),
+                len(self.meta_source),
+                len(self.analysis_gids),
+            )
+        )
 
-    def _parse_site_data(self, required_columns=('gid', 'config')):
+    def _parse_site_data(self, required_columns=(SiteDataField.GID,
+                                                 SiteDataField.CONFIG)):
         """Parse the site-specific spatial input data file
 
         Parameters
@@ -210,24 +221,27 @@ class RevNrwal:
         if isinstance(self._site_data, str):
             self._site_data = pd.read_csv(self._site_data)
 
-        if 'dist_l_to_ts' in self._site_data:
-            if self._site_data['dist_l_to_ts'].sum() > 0:
-                w = ('Possible incorrect Offshore data input! "dist_l_to_ts" '
-                     '(distance land to transmission) input is non-zero. '
-                     'Most reV runs set this to zero and input the cost '
-                     'of transmission from landfall tie-in to '
-                     'transmission feature in the supply curve module.')
+        if "dist_l_to_ts" in self._site_data:
+            if self._site_data["dist_l_to_ts"].sum() > 0:
+                w = (
+                    'Possible incorrect Offshore data input! "dist_l_to_ts" '
+                    "(distance land to transmission) input is non-zero. "
+                    "Most reV runs set this to zero and input the cost "
+                    "of transmission from landfall tie-in to "
+                    "transmission feature in the supply curve module."
+                )
                 logger.warning(w)
                 warn(w, OffshoreWindInputWarning)
 
         for c in required_columns:
             if c not in self._site_data:
-                msg = ('Did not find required "{}" column in site_data!'
-                       .format(c))
+                msg = 'Did not find required "{}" column in site_data!'.format(
+                    c
+                )
                 logger.error(msg)
                 raise KeyError(msg)
 
-        self._site_data = self._site_data.sort_values('gid')
+        self._site_data = self._site_data.sort_values(SiteDataField.GID)
 
         return self._site_data
 
@@ -240,16 +254,19 @@ class RevNrwal:
             Full meta data from gen_fpath.
         """
 
-        with Outputs(self._gen_fpath, mode='r') as out:
+        with Outputs(self._gen_fpath, mode="r") as out:
             meta = out.meta
 
-        msg = ('Could not find "{}" column in source generation h5 file '
-               'meta data! Available cols: {}'
-               .format(self._meta_gid_col, meta.columns.values.tolist()))
+        msg = (
+            'Could not find "{}" column in source generation h5 file '
+            "meta data! Available cols: {}".format(
+                self._meta_gid_col, meta.columns.values.tolist()
+            )
+        )
         assert self._meta_gid_col in meta, msg
 
         # currently an assumption of sorted gids in the reV gen output
-        msg = ('Source capacity factor meta data is not ordered!')
+        msg = "Source capacity factor meta data is not ordered!"
         meta_gids = list(meta[self._meta_gid_col])
         assert meta_gids == sorted(meta_gids), msg
 
@@ -272,27 +289,31 @@ class RevNrwal:
 
         meta_gids = self.meta_source[self._meta_gid_col].values
 
-        missing = ~np.isin(meta_gids, self._site_data['gid'])
+        missing = ~np.isin(meta_gids, self._site_data[SiteDataField.GID])
         if any(missing):
-            msg = ('{} sites from the generation meta data input were '
-                   'missing from the "site_data" input and will not be '
-                   'run through NRWAL: {}'
-                   .format(missing.sum(), meta_gids[missing]))
+            msg = (
+                "{} sites from the generation meta data input were "
+                'missing from the "site_data" input and will not be '
+                "run through NRWAL: {}".format(
+                    missing.sum(), meta_gids[missing]
+                )
+            )
             logger.info(msg)
 
-        missing = ~np.isin(self._site_data['gid'], meta_gids)
+        missing = ~np.isin(self._site_data[SiteDataField.GID], meta_gids)
         if any(missing):
-            missing = self._site_data['gid'].values[missing]
+            missing = self._site_data[SiteDataField.GID].values[missing]
             msg = ('{} sites from the "site_data" input were missing from the '
                    'generation meta data and will not be run through NRWAL: {}'
                    .format(len(missing), missing))
             logger.info(msg)
 
-        analysis_gids = set(meta_gids) & set(self._site_data['gid'])
+        analysis_gids = (set(meta_gids)
+                         & set(self._site_data[SiteDataField.GID]))
         analysis_gids = np.array(sorted(list(analysis_gids)))
 
         # reduce the site data table to only those sites being analyzed
-        mask = np.isin(self._site_data['gid'], meta_gids)
+        mask = np.isin(self._site_data[SiteDataField.GID], meta_gids)
         self._site_data = self._site_data[mask]
 
         return analysis_gids, self._site_data
@@ -315,9 +336,9 @@ class RevNrwal:
 
         system_inputs = pd.DataFrame(system_inputs).T
         system_inputs = system_inputs.sort_index()
-        system_inputs['gid'] = system_inputs.index.values
-        system_inputs.index.name = 'gid'
-        mask = system_inputs['gid'].isin(self.analysis_gids)
+        system_inputs[SiteDataField.GID] = system_inputs.index.values
+        system_inputs.index.name = SiteDataField.GID
+        mask = system_inputs[SiteDataField.GID].isin(self.analysis_gids)
         system_inputs = system_inputs[mask]
 
         return system_inputs
@@ -337,25 +358,30 @@ class RevNrwal:
         out = {}
 
         for key in self._output_request:
-            out[key] = np.full(len(self.analysis_gids), np.nan,
-                               dtype=np.float32)
+            out[key] = np.full(
+                len(self.analysis_gids), np.nan, dtype=np.float32
+            )
 
             if key in self.gen_dsets and not self._save_raw:
-                msg = ('Output request "{0}" was also found in '
-                       'the source gen file but save_raw=False! If '
-                       'you are manipulating this '
-                       'dset, make sure you set save_raw=False '
-                       'and reference "{0}_raw" as the '
-                       'input in the NRWAL equations and then define "{0}" '
-                       'as the final manipulated dataset.'.format(key))
+                msg = (
+                    'Output request "{0}" was also found in '
+                    "the source gen file but save_raw=False! If "
+                    "you are manipulating this "
+                    "dset, make sure you set save_raw=False "
+                    'and reference "{0}_raw" as the '
+                    'input in the NRWAL equations and then define "{0}" '
+                    "as the final manipulated dataset.".format(key)
+                )
                 logger.warning(msg)
                 warn(msg)
             elif key in self.gen_dsets:
-                msg = ('Output request "{0}" was also found in '
-                       'the source gen file. If you are manipulating this '
-                       'dset, make sure you reference "{0}_raw" as the '
-                       'input in the NRWAL equations and then define "{0}" '
-                       'as the final manipulated dataset.'.format(key))
+                msg = (
+                    'Output request "{0}" was also found in '
+                    "the source gen file. If you are manipulating this "
+                    'dset, make sure you reference "{0}_raw" as the '
+                    'input in the NRWAL equations and then define "{0}" '
+                    "as the final manipulated dataset.".format(key)
+                )
                 logger.info(msg)
 
             if key in self._nrwal_inputs:
@@ -365,40 +391,48 @@ class RevNrwal:
 
     def _preflight_checks(self):
         """Run some preflight checks on the offshore inputs"""
-        sam_files = {k: v for k, v in
-                     self._project_points.sam_inputs.items()
-                     if k in self._nrwal_configs}
+        sam_files = {
+            k: v
+            for k, v in self._project_points.sam_inputs.items()
+            if k in self._nrwal_configs
+        }
 
         for cid, sys_in in sam_files.items():
-            loss1 = sys_in.get('wind_farm_losses_percent', 0)
-            loss2 = sys_in.get('turb_generic_loss', 0)
+            loss1 = sys_in.get("wind_farm_losses_percent", 0)
+            loss2 = sys_in.get("turb_generic_loss", 0)
             if loss1 != 0 or loss2 != 0:
-                msg = ('Wind farm loss for config "{}" is not 0. When using '
-                       'NRWAL for offshore analysis, consider using gross '
-                       'capacity factors from reV generation and applying '
-                       'spatially dependent losses from the NRWAL equations'
-                       .format(cid))
+                msg = (
+                    'Wind farm loss for config "{}" is not 0. When using '
+                    "NRWAL for offshore analysis, consider using gross "
+                    "capacity factors from reV generation and applying "
+                    "spatially dependent losses from the NRWAL equations"
+                    .format(cid)
+                )
                 logger.info(msg)
 
         available_ids = list(self._nrwal_configs.keys())
-        requested_ids = list(self._site_data['config'].values)
+        requested_ids = list(self._site_data[SiteDataField.CONFIG].values)
         missing = set(requested_ids) - set(available_ids)
         if any(missing):
-            msg = ('The following config ids were requested in the offshore '
-                   'data input but were not available in the NRWAL config '
-                   'input dict: {}'.format(missing))
+            msg = (
+                "The following config ids were requested in the offshore "
+                "data input but were not available in the NRWAL config "
+                "input dict: {}".format(missing)
+            )
             logger.error(msg)
             raise OffshoreWindInputError(msg)
 
-        check_gid_order = (self._site_data['gid'].values
-                           == self._sam_sys_inputs['gid'].values)
+        check_gid_order = (self._site_data[SiteDataField.GID].values
+                           == self._sam_sys_inputs[SiteDataField.GID].values)
         msg = 'NRWAL site_data and system input dataframe had bad order'
         assert (check_gid_order).all(), msg
 
         missing = [c for c in self._site_meta_cols if c not in self._site_data]
         if any(missing):
-            msg = ('Could not find requested NRWAL site data pass through '
-                   'columns in offshore input data: {}'.format(missing))
+            msg = (
+                "Could not find requested NRWAL site data pass through "
+                "columns in offshore input data: {}".format(missing)
+            )
             logger.error(msg)
             raise OffshoreWindInputError(msg)
 
@@ -413,7 +447,7 @@ class RevNrwal:
             or 2D arrays of inputs for all the analysis_gids
         """
 
-        logger.info('Setting up input data for NRWAL...')
+        logger.info("Setting up input data for NRWAL...")
 
         # preconditions for this to work properly
         assert len(self._site_data) == len(self.analysis_gids)
@@ -424,50 +458,70 @@ class RevNrwal:
             all_required += list(nrwal_config.required_inputs)
             all_required = list(set(all_required))
 
-            missing_vars = [var for var in nrwal_config.required_inputs
-                            if var not in self._site_data
-                            and var not in self.meta_source
-                            and var not in self._sam_sys_inputs
-                            and var not in self.gen_dsets]
+            missing_vars = [
+                var
+                for var in nrwal_config.required_inputs
+                if var not in self._site_data
+                and var not in self.meta_source
+                and var not in self._sam_sys_inputs
+                and var not in self.gen_dsets
+            ]
 
             if any(missing_vars):
-                msg = ('Could not find required input variables {} '
-                       'for NRWAL config "{}" in either the offshore '
-                       'data or the SAM system data!'
-                       .format(missing_vars, config_id))
+                msg = (
+                    "Could not find required input variables {} "
+                    'for NRWAL config "{}" in either the offshore '
+                    "data or the SAM system data!".format(
+                        missing_vars, config_id
+                    )
+                )
                 logger.error(msg)
                 raise OffshoreWindInputError(msg)
 
-        meta_data_vars = [var for var in all_required
-                          if var in self.meta_source]
-        logger.info('Pulling the following inputs from the gen meta data: {}'
-                    .format(meta_data_vars))
-        nrwal_inputs = {var: self.meta_source[var].values[self.analysis_mask]
-                        for var in meta_data_vars}
+        meta_data_vars = [
+            var for var in all_required if var in self.meta_source
+        ]
+        logger.info(
+            "Pulling the following inputs from the gen meta data: {}".format(
+                meta_data_vars
+            )
+        )
+        nrwal_inputs = {
+            var: self.meta_source[var].values[self.analysis_mask]
+            for var in meta_data_vars
+        }
 
         site_data_vars = [var for var in all_required
                           if var in self._site_data
                           and var not in nrwal_inputs]
-        site_data_vars.append('config')
+        site_data_vars.append(SiteDataField.CONFIG)
         logger.info('Pulling the following inputs from the site_data input: {}'
                     .format(site_data_vars))
         for var in site_data_vars:
             nrwal_inputs[var] = self._site_data[var].values
 
-        sam_sys_vars = [var for var in all_required
-                        if var in self._sam_sys_inputs
-                        and var not in nrwal_inputs]
-        logger.info('Pulling the following inputs from the SAM system '
-                    'configs: {}'.format(sam_sys_vars))
+        sam_sys_vars = [
+            var
+            for var in all_required
+            if var in self._sam_sys_inputs and var not in nrwal_inputs
+        ]
+        logger.info(
+            "Pulling the following inputs from the SAM system "
+            "configs: {}".format(sam_sys_vars)
+        )
         for var in sam_sys_vars:
             nrwal_inputs[var] = self._sam_sys_inputs[var].values
 
-        gen_vars = [var for var in all_required
-                    if var in self.gen_dsets
-                    and var not in nrwal_inputs]
-        logger.info('Pulling the following inputs from the generation '
-                    'h5 file: {}'.format(gen_vars))
-        with Outputs(self._gen_fpath, mode='r') as f:
+        gen_vars = [
+            var
+            for var in all_required
+            if var in self.gen_dsets and var not in nrwal_inputs
+        ]
+        logger.info(
+            "Pulling the following inputs from the generation "
+            "h5 file: {}".format(gen_vars)
+        )
+        with Outputs(self._gen_fpath, mode="r") as f:
             source_gids = self.meta_source[self._meta_gid_col]
             gen_gids = np.where(source_gids.isin(self.analysis_gids))[0]
             for var in gen_vars:
@@ -477,12 +531,14 @@ class RevNrwal:
                 elif len(shape) == 2:
                     nrwal_inputs[var] = f[var, :, gen_gids]
                 else:
-                    msg = ('Data shape for "{}" must be 1 or 2D but '
-                           'received: {}'.format(var, shape))
+                    msg = (
+                        'Data shape for "{}" must be 1 or 2D but '
+                        "received: {}".format(var, shape)
+                    )
                     logger.error(msg)
                     raise DataShapeError(msg)
 
-        logger.info('Finished setting up input data for NRWAL!')
+        logger.info("Finished setting up input data for NRWAL!")
 
         return nrwal_inputs
 
@@ -490,7 +546,7 @@ class RevNrwal:
     def time_index(self):
         """Get the source time index."""
         if self._time_index is None:
-            with Outputs(self._gen_fpath, mode='r') as out:
+            with Outputs(self._gen_fpath, mode="r") as out:
                 self._time_index = out.time_index
 
         return self._time_index
@@ -498,7 +554,7 @@ class RevNrwal:
     @property
     def gen_dsets(self):
         """Get the available datasets from the gen source file"""
-        with Outputs(self._gen_fpath, mode='r') as out:
+        with Outputs(self._gen_fpath, mode="r") as out:
             dsets = out.dsets
 
         return dsets
@@ -528,8 +584,9 @@ class RevNrwal:
         -------
         np.ndarray
         """
-        mask = np.isin(self.meta_source[self._meta_gid_col],
-                       self.analysis_gids)
+        mask = np.isin(
+            self.meta_source[self._meta_gid_col], self.analysis_gids
+        )
         return mask
 
     @property
@@ -576,9 +633,12 @@ class RevNrwal:
         elif len(value.shape) == 2:
             if len(self._out[name].shape) == 1:
                 if not all(np.isnan(self._out[name])):
-                    msg = ('Output dataset "{}" was initialized as 1D but was '
-                           'later found to be 2D but was not all NaN!'
-                           .format(name))
+                    msg = (
+                        'Output dataset "{}" was initialized as 1D but was '
+                        "later found to be 2D but was not all NaN!".format(
+                            name
+                        )
+                    )
                     logger.error(msg)
                     raise DataShapeError(msg)
 
@@ -590,8 +650,10 @@ class RevNrwal:
             self._out[name][:, output_mask] = value[:, output_mask]
 
         else:
-            msg = ('Could not make sense of NRWAL output "{}" '
-                   'with shape {}'.format(name, value.shape))
+            msg = (
+                'Could not make sense of NRWAL output "{}" '
+                "with shape {}".format(name, value.shape)
+            )
             logger.error(msg)
             raise DataShapeError(msg)
 
@@ -614,11 +676,14 @@ class RevNrwal:
         """
 
         from NRWAL import Equation
+
         value = nrwal_config[name]
 
         if isinstance(value, Equation):
-            msg = ('Cannot retrieve Equation "{}" from NRWAL. '
-                   'Must be a number!'.format(name))
+            msg = (
+                'Cannot retrieve Equation "{}" from NRWAL. '
+                "Must be a number!".format(name)
+            )
             assert not any(value.variables), msg
             value = value.eval()
 
@@ -631,8 +696,10 @@ class RevNrwal:
             value *= np.ones(len(self.analysis_gids), dtype=np.float32)
 
         if not isinstance(value, np.ndarray):
-            msg = ('NRWAL key "{}" returned bad type of "{}", needs to be '
-                   'numeric or an output array.'.format(name, type(value)))
+            msg = (
+                'NRWAL key "{}" returned bad type of "{}", needs to be '
+                "numeric or an output array.".format(name, type(value))
+            )
             logger.error(msg)
             raise TypeError(msg)
         return value
@@ -646,7 +713,7 @@ class RevNrwal:
         self._out = self._init_outputs()
 
         for i, (cid, nrwal_config) in enumerate(self._nrwal_configs.items()):
-            output_mask = self._site_data['config'].values == cid
+            output_mask = self._site_data[SiteDataField.CONFIG].values == cid
             logger.info('Running NRWAL config {} of {}: "{}" and applying '
                         'to {} out of {} total sites'
                         .format(i + 1, len(self._nrwal_configs), cid,
@@ -663,8 +730,10 @@ class RevNrwal:
                     self._save_nrwal_misc(name, nrwal_config, output_mask)
 
                 elif name not in self._nrwal_inputs:
-                    msg = ('Could not find "{}" in the output dict of NRWAL '
-                           'config {}'.format(name, cid))
+                    msg = (
+                        'Could not find "{}" in the output dict of NRWAL '
+                        "config {}".format(name, cid)
+                    )
                     logger.warning(msg)
                     warn(msg)
 
@@ -672,36 +741,50 @@ class RevNrwal:
         """Check the nrwal outputs for nan values and raise errors if found."""
         for name, arr in self._out.items():
             if np.isnan(arr).all():
-                msg = ('Output array "{}" is all NaN! Probably was not '
-                       'found in the available NRWAL keys.'.format(name))
+                msg = (
+                    'Output array "{}" is all NaN! Probably was not '
+                    "found in the available NRWAL keys.".format(name)
+                )
                 logger.warning(msg)
                 warn(msg)
             elif np.isnan(arr).any():
                 mask = np.isnan(arr)
                 nan_meta = self.meta_source[self.analysis_mask][mask]
                 nan_gids = nan_meta[self._meta_gid_col].values
-                msg = ('NaN values ({} out of {}) persist in NRWAL '
-                       'output "{}"!'
-                       .format(np.isnan(arr).sum(), len(arr), name))
+                msg = (
+                    "NaN values ({} out of {}) persist in NRWAL "
+                    'output "{}"!'.format(np.isnan(arr).sum(), len(arr), name)
+                )
                 logger.warning(msg)
-                logger.warning('This is the NRWAL meta that is causing NaN '
-                               'outputs: {}'.format(nan_meta))
-                logger.warning('These are the resource gids causing NaN '
-                               'outputs: {}'.format(nan_gids))
+                logger.warning(
+                    "This is the NRWAL meta that is causing NaN "
+                    "outputs: {}".format(nan_meta)
+                )
+                logger.warning(
+                    "These are the resource gids causing NaN "
+                    "outputs: {}".format(nan_gids)
+                )
                 warn(msg)
 
     def save_raw_dsets(self):
         """If requested by save_raw=True, archive raw datasets that exist in
         the gen_fpath file and are also requested in the output_request"""
         if self._save_raw:
-            with Outputs(self._gen_fpath, 'a') as f:
+            with Outputs(self._gen_fpath, "a") as f:
                 for dset in self._output_request:
-                    dset_raw = '{}_raw'.format(dset)
+                    dset_raw = "{}_raw".format(dset)
                     if dset in f and dset_raw not in f:
-                        logger.info('Saving raw data from "{}" to "{}"'
-                                    .format(dset, dset_raw))
-                        f._add_dset(dset_raw, f[dset], f.dtypes[dset],
-                                    attrs=f.attrs[dset])
+                        logger.info(
+                            'Saving raw data from "{}" to "{}"'.format(
+                                dset, dset_raw
+                            )
+                        )
+                        f._add_dset(
+                            dset_raw,
+                            f[dset],
+                            f.dtypes[dset],
+                            attrs=f.attrs[dset],
+                        )
 
     def write_to_gen_fpath(self):
         """Save NRWAL outputs to input generation fpath file.
@@ -712,30 +795,34 @@ class RevNrwal:
             Path to output file.
         """
 
-        logger.info('Writing NRWAL outputs to: {}'.format(self._gen_fpath))
+        logger.info("Writing NRWAL outputs to: {}".format(self._gen_fpath))
         write_all = self.analysis_mask.all()
 
-        with Outputs(self._gen_fpath, 'a') as f:
-            meta_attrs = f.attrs['meta']
-            del f._h5['meta']
-            f._set_meta('meta', self.meta_out, attrs=meta_attrs)
+        with Outputs(self._gen_fpath, "a") as f:
+            meta_attrs = f.attrs["meta"]
+            del f._h5["meta"]
+            f._set_meta("meta", self.meta_out, attrs=meta_attrs)
 
             for dset, arr in self._out.items():
                 if len(arr.shape) == 1:
-                    data = np.full(len(self.meta_source), np.nan,
-                                   dtype=np.float32)
+                    data = np.full(
+                        len(self.meta_source), np.nan, dtype=np.float32
+                    )
                 else:
-                    full_shape = (len(self.time_index),
-                                  len(self.meta_source))
+                    full_shape = (len(self.time_index), len(self.meta_source))
                     data = np.full(full_shape, np.nan, dtype=np.float32)
 
-                dset_attrs = {'scale_factor': 1}
+                dset_attrs = {"scale_factor": 1}
                 dset_dtype = np.float32
                 if dset in f.dsets:
-                    logger.info('Found "{}" in file, loading data and '
-                                'overwriting data for {} out of {} sites.'
-                                .format(dset, self.analysis_mask.sum(),
-                                        len(self.analysis_mask)))
+                    logger.info(
+                        'Found "{}" in file, loading data and '
+                        "overwriting data for {} out of {} sites.".format(
+                            dset,
+                            self.analysis_mask.sum(),
+                            len(self.analysis_mask),
+                        )
+                    )
                     dset_attrs = f.attrs[dset]
                     dset_dtype = f.dtypes[dset]
                     if not write_all:
@@ -746,12 +833,14 @@ class RevNrwal:
                 else:
                     data[:, self.analysis_mask] = arr
 
-                logger.info('Writing final "{}" to: {}'
-                            .format(dset, self._gen_fpath))
+                logger.info(
+                    'Writing final "{}" to: {}'.format(dset, self._gen_fpath)
+                )
                 f._add_dset(dset, data, dset_dtype, attrs=dset_attrs)
 
-        logger.info('Finished writing NRWAL outputs to: {}'
-                    .format(self._gen_fpath))
+        logger.info(
+            "Finished writing NRWAL outputs to: {}".format(self._gen_fpath)
+        )
         return self._gen_fpath
 
     def write_meta_to_csv(self, out_fpath=None):
@@ -776,21 +865,24 @@ class RevNrwal:
         elif not out_fpath.endswith(".csv"):
             out_fpath = "{}.csv".format(out_fpath)
 
-        logger.info('Writing NRWAL outputs to: {}'.format(out_fpath))
+        logger.info("Writing NRWAL outputs to: {}".format(out_fpath))
         meta_out = self.meta_out[self.analysis_mask].copy()
 
         for dset, arr in self._out.items():
             if len(arr.shape) != 1 or arr.shape[0] != meta_out.shape[0]:
-                msg = ('Skipping output {!r}: shape {} cannot be combined '
-                       'with meta of shape {}!'
-                       .format(dset, arr.shape, meta_out.shape))
+                msg = (
+                    "Skipping output {!r}: shape {} cannot be combined "
+                    "with meta of shape {}!".format(
+                        dset, arr.shape, meta_out.shape
+                    )
+                )
                 logger.warning(msg)
                 warn(msg)
                 continue
             meta_out[dset] = arr
 
         meta_out.to_csv(out_fpath, index=False)
-        logger.info('Finished writing NRWAL outputs to: {}'.format(out_fpath))
+        logger.info("Finished writing NRWAL outputs to: {}".format(out_fpath))
         return out_fpath
 
     def run(self, csv_output=False, out_fpath=None):
@@ -831,8 +923,10 @@ class RevNrwal:
             Path to output file.
         """
         if csv_output and self._save_raw:
-            msg = ("`save_raw` option not allowed with `csv_output`. Setting"
-                   "`save_raw=False`")
+            msg = (
+                "`save_raw` option not allowed with `csv_output`. Setting"
+                "`save_raw=False`"
+            )
             logger.warning(msg)
             warn(msg)
             self._save_raw = False
@@ -845,6 +939,6 @@ class RevNrwal:
             else:
                 out_fp = self.write_to_gen_fpath()
 
-        logger.info('NRWAL module complete!')
+        logger.info("NRWAL module complete!")
 
         return out_fp

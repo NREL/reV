@@ -3,25 +3,38 @@
 
 Wraps the NREL-PySAM library with additional reV features.
 """
+
 import copy
 import json
 import logging
-import numpy as np
 import os
-import pandas as pd
 from warnings import warn
+
+import numpy as np
+import pandas as pd
 import PySAM.GenericSystem as generic
-
-from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
-                                      SAMExecutionError, ResourceError)
-
-from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
-                                     MultiFileWTK)
-from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
-                                    WaveResource, GeothermalResource)
+from rex.multi_file_resource import (
+    MultiFileNSRDB,
+    MultiFileResource,
+    MultiFileWTK,
+)
 from rex.multi_res_resource import MultiResolutionResource
+from rex.renewable_resource import (
+    NSRDB,
+    GeothermalResource,
+    SolarResource,
+    WaveResource,
+    WindResource,
+)
 from rex.utilities.utilities import check_res_file
 
+from reV.utilities import ResourceMetaField
+from reV.utilities.exceptions import (
+    ResourceError,
+    SAMExecutionError,
+    SAMInputError,
+    SAMInputWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +44,19 @@ class SamResourceRetriever:
 
     # Mapping for reV technology and SAM module to h5 resource handler type
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
-    RESOURCE_TYPES = {'geothermal': GeothermalResource,
-                      'pvwattsv5': SolarResource,
-                      'pvwattsv7': SolarResource,
-                      'pvwattsv8': SolarResource,
-                      'pvsamv1': SolarResource,
-                      'tcsmoltensalt': SolarResource,
-                      'solarwaterheat': SolarResource,
-                      'troughphysicalheat': SolarResource,
-                      'lineardirectsteam': SolarResource,
-                      'windpower': WindResource,
-                      'mhkwave': WaveResource
-                      }
+    RESOURCE_TYPES = {
+        "geothermal": GeothermalResource,
+        "pvwattsv5": SolarResource,
+        "pvwattsv7": SolarResource,
+        "pvwattsv8": SolarResource,
+        "pvsamv1": SolarResource,
+        "tcsmoltensalt": SolarResource,
+        "solarwaterheat": SolarResource,
+        "troughphysicalheat": SolarResource,
+        "lineardirectsteam": SolarResource,
+        "windpower": WindResource,
+        "mhkwave": WaveResource,
+    }
 
     @staticmethod
     def _get_base_handler(res_file, module):
@@ -69,15 +83,17 @@ class SamResourceRetriever:
             res_handler = SamResourceRetriever.RESOURCE_TYPES[module.lower()]
 
         except KeyError as e:
-            msg = ('Cannot interpret what kind of resource handler the SAM '
-                   'module or reV technology "{}" requires. Expecting one of '
-                   'the following SAM modules or reV technologies: {}'
-                   .format(module,
-                           list(SamResourceRetriever.RESOURCE_TYPES.keys())))
+            msg = (
+                "Cannot interpret what kind of resource handler the SAM "
+                'module or reV technology "{}" requires. Expecting one of '
+                "the following SAM modules or reV technologies: {}".format(
+                    module, list(SamResourceRetriever.RESOURCE_TYPES.keys())
+                )
+            )
             logger.exception(msg)
             raise SAMExecutionError(msg) from e
 
-        if res_handler == SolarResource and 'nsrdb' in res_file.lower():
+        if res_handler == SolarResource and "nsrdb" in res_file.lower():
             # Use NSRDB handler if definitely an NSRDB file
             res_handler = NSRDB
 
@@ -113,8 +129,9 @@ class SamResourceRetriever:
         return res_gids
 
     @classmethod
-    def _make_res_kwargs(cls, res_handler, project_points, output_request,
-                         gid_map):
+    def _make_res_kwargs(
+        cls, res_handler, project_points, output_request, gid_map
+    ):
         """
         Make Resource.preloadSam args and kwargs
 
@@ -146,9 +163,9 @@ class SamResourceRetriever:
         kwargs = {}
         if res_handler in (SolarResource, NSRDB):
             # check for clearsky irradiation analysis for NSRDB
-            kwargs['clearsky'] = project_points.sam_config_obj.clearsky
-            kwargs['bifacial'] = project_points.sam_config_obj.bifacial
-            kwargs['tech'] = project_points.tech
+            kwargs["clearsky"] = project_points.sam_config_obj.clearsky
+            kwargs["bifacial"] = project_points.sam_config_obj.bifacial
+            kwargs["tech"] = project_points.tech
 
             downscale = project_points.sam_config_obj.downscale
             # check for downscaling request
@@ -156,30 +173,34 @@ class SamResourceRetriever:
                 # make sure that downscaling is only requested for NSRDB
                 # resource
                 if res_handler != NSRDB:
-                    msg = ('Downscaling was requested for a non-NSRDB '
-                           'resource file. reV does not have this capability '
-                           'at the current time. Please contact a developer '
-                           'for more information on this feature.')
+                    msg = (
+                        "Downscaling was requested for a non-NSRDB "
+                        "resource file. reV does not have this capability "
+                        "at the current time. Please contact a developer "
+                        "for more information on this feature."
+                    )
                     logger.warning(msg)
                     warn(msg, SAMInputWarning)
                 else:
                     # pass through the downscaling request
-                    kwargs['downscale'] = downscale
+                    kwargs["downscale"] = downscale
 
         elif res_handler == WindResource:
-            args += (project_points.h, )
-            kwargs['icing'] = project_points.sam_config_obj.icing
-            if project_points.curtailment is not None:
-                if project_points.curtailment.precipitation:
-                    # make precip rate available for curtailment analysis
-                    kwargs['precip_rate'] = True
+            args += (project_points.h,)
+            kwargs["icing"] = project_points.sam_config_obj.icing
+            if (
+                project_points.curtailment is not None
+                and project_points.curtailment.precipitation
+            ):
+                # make precip rate available for curtailment analysis
+                kwargs["precip_rate"] = True
 
         elif res_handler == GeothermalResource:
-            args += (project_points.d, )
+            args += (project_points.d,)
 
         # Check for resource means
-        if any(req.endswith('_mean') for req in output_request):
-            kwargs['means'] = True
+        if any(req.endswith("_mean") for req in output_request):
+            kwargs["means"] = True
 
         return kwargs, args
 
@@ -218,9 +239,17 @@ class SamResourceRetriever:
         return res_handler, kwargs, res_file
 
     @classmethod
-    def get(cls, res_file, project_points, module,
-            output_request=('cf_mean', ), gid_map=None,
-            lr_res_file=None, nn_map=None, bias_correct=None):
+    def get(
+        cls,
+        res_file,
+        project_points,
+        module,
+        output_request=("cf_mean",),
+        gid_map=None,
+        lr_res_file=None,
+        nn_map=None,
+        bias_correct=None,
+    ):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -280,27 +309,30 @@ class SamResourceRetriever:
         """
 
         res_handler = cls._get_base_handler(res_file, module)
-        kwargs, args = cls._make_res_kwargs(res_handler, project_points,
-                                            output_request, gid_map)
+        kwargs, args = cls._make_res_kwargs(
+            res_handler, project_points, output_request, gid_map
+        )
 
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
-            res_handler, kwargs, res_file = cls._multi_file_mods(res_handler,
-                                                                 kwargs,
-                                                                 res_file)
+            res_handler, kwargs, res_file = cls._multi_file_mods(
+                res_handler, kwargs, res_file
+            )
         else:
-            kwargs['hsds'] = hsds
+            kwargs["hsds"] = hsds
 
-        kwargs['time_index_step'] = \
+        kwargs["time_index_step"] = (
             project_points.sam_config_obj.time_index_step
+        )
 
         if lr_res_file is None:
             res = res_handler.preload_SAM(res_file, *args, **kwargs)
         else:
-            kwargs['handler_class'] = res_handler
-            kwargs['nn_map'] = nn_map
-            res = MultiResolutionResource.preload_SAM(res_file, lr_res_file,
-                                                      *args, **kwargs)
+            kwargs["handler_class"] = res_handler
+            kwargs["nn_map"] = nn_map
+            res = MultiResolutionResource.preload_SAM(
+                res_file, lr_res_file, *args, **kwargs
+            )
 
         if bias_correct is not None:
             res.bias_correct(bias_correct)
@@ -315,15 +347,15 @@ class Sam:
     PYSAM = generic
 
     # callable attributes to be ignored in the get/set logic
-    IGNORE_ATTRS = ['assign', 'execute', 'export']
+    IGNORE_ATTRS = ["assign", "execute", "export"]
 
     def __init__(self):
         self._pysam = self.PYSAM.new()
         self._attr_dict = None
         self._inputs = []
         self.sam_sys_inputs = {}
-        if 'constant' in self.input_list:
-            self['constant'] = 0.0
+        if "constant" in self.input_list:
+            self["constant"] = 0.0
 
     def __getitem__(self, key):
         """Get the value of a PySAM attribute (either input or output).
@@ -359,24 +391,27 @@ class Sam:
         """
 
         if key not in self.input_list:
-            msg = ('Could not set input key "{}". Attribute not '
-                   'found in PySAM object: "{}"'
-                   .format(key, self.pysam))
+            msg = (
+                'Could not set input key "{}". Attribute not '
+                'found in PySAM object: "{}"'.format(key, self.pysam)
+            )
             logger.exception(msg)
             raise SAMInputError(msg)
-        else:
-            self.sam_sys_inputs[key] = value
-            group = self._get_group(key, outputs=False)
-            try:
-                setattr(getattr(self.pysam, group), key, value)
-            except Exception as e:
-                msg = ('Could not set input key "{}" to '
-                       'group "{}" in "{}".\n'
-                       'Data is: {} ({})\n'
-                       'Received the following error: "{}"'
-                       .format(key, group, self.pysam, value, type(value), e))
-                logger.exception(msg)
-                raise SAMInputError(msg) from e
+        self.sam_sys_inputs[key] = value
+        group = self._get_group(key, outputs=False)
+        try:
+            setattr(getattr(self.pysam, group), key, value)
+        except Exception as e:
+            msg = (
+                'Could not set input key "{}" to '
+                'group "{}" in "{}".\n'
+                "Data is: {} ({})\n"
+                'Received the following error: "{}"'.format(
+                    key, group, self.pysam, value, type(value), e
+                )
+            )
+            logger.exception(msg)
+            raise SAMInputError(msg) from e
 
     @property
     def pysam(self):
@@ -391,7 +426,7 @@ class Sam:
         -------
         PySAM.GenericSystem
         """
-        obj = cls.PYSAM.default('GenericSystemNone')
+        obj = cls.PYSAM.default("GenericSystemNone")
         obj.execute()
 
         return obj
@@ -409,8 +444,9 @@ class Sam:
         """
         if self._attr_dict is None:
             keys = self._get_pysam_attrs(self.pysam)
-            self._attr_dict = {k: self._get_pysam_attrs(getattr(self.pysam, k))
-                               for k in keys}
+            self._attr_dict = {
+                k: self._get_pysam_attrs(getattr(self.pysam, k)) for k in keys
+            }
 
         return self._attr_dict
 
@@ -425,7 +461,7 @@ class Sam:
         """
         if not any(self._inputs):
             for k, v in self.attr_dict.items():
-                if k.lower() != 'outputs':
+                if k.lower() != "outputs":
                     self._inputs += v
 
         return self._inputs
@@ -450,8 +486,7 @@ class Sam:
 
         temp = self.attr_dict
         if not outputs:
-            temp = {k: v for (k, v) in temp.items()
-                    if k.lower() != 'outputs'}
+            temp = {k: v for (k, v) in temp.items() if k.lower() != "outputs"}
 
         for k, v in temp.items():
             if key in v:
@@ -474,8 +509,11 @@ class Sam:
             List of attrs belonging to obj with dunder attrs and IGNORE_ATTRS
             not included.
         """
-        attrs = [a for a in dir(obj) if not a.startswith('__')
-                 and a not in self.IGNORE_ATTRS]
+        attrs = [
+            a
+            for a in dir(obj)
+            if not a.startswith("__") and a not in self.IGNORE_ATTRS
+        ]
         return attrs
 
     def execute(self):
@@ -506,19 +544,21 @@ class Sam:
             Filtered Input value associated with key.
         """
 
-        if '.' in key:
-            key = key.replace('.', '_')
+        if "." in key:
+            key = key.replace(".", "_")
 
-        if ':constant' in key and 'adjust:' in key:
-            key = key.replace('adjust:', '')
+        if ":constant" in key and "adjust:" in key:
+            key = key.replace("adjust:", "")
 
-        if isinstance(value, str) and '[' in value and ']' in value:
+        if isinstance(value, str) and "[" in value and "]" in value:
             try:
                 value = json.loads(value)
             except json.JSONDecodeError:
-                msg = ('Found a weird SAM config input for "{}" that looks '
-                       'like a stringified-list but could not run through '
-                       'json.loads() so skipping: {}'.format(key, value))
+                msg = (
+                    'Found a weird SAM config input for "{}" that looks '
+                    "like a stringified-list but could not run through "
+                    "json.loads() so skipping: {}".format(key, value)
+                )
                 logger.warning(msg)
                 warn(msg)
 
@@ -541,8 +581,7 @@ class Sam:
             if k in self.input_list and v is not None:
                 self[k] = v
             elif raise_warning:
-                wmsg = ('Not setting input "{}" to: {}.'
-                        .format(k, v))
+                wmsg = 'Not setting input "{}" to: {}.'.format(k, v)
                 warn(wmsg, SAMInputWarning)
                 logger.warning(wmsg)
 
@@ -553,8 +592,9 @@ class RevPySam(Sam):
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
 
-    def __init__(self, meta, sam_sys_inputs, output_request,
-                 site_sys_inputs=None):
+    def __init__(
+        self, meta, sam_sys_inputs, output_request, site_sys_inputs=None
+    ):
         """Initialize a SAM object.
 
         Parameters
@@ -567,7 +607,7 @@ class RevPySam(Sam):
             Site-agnostic SAM system model inputs arguments.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            , 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         site_sys_inputs : dict
             Optional set of site-specific SAM system inputs to complement the
@@ -623,11 +663,13 @@ class RevPySam(Sam):
             Resource dataframe with all February 29th timesteps removed.
         """
 
-        if hasattr(resource, 'index'):
-            if (hasattr(resource.index, 'month')
-                    and hasattr(resource.index, 'day')):
-                leap_day = ((resource.index.month == 2)
-                            & (resource.index.day == 29))
+        if hasattr(resource, "index"):
+            if hasattr(resource.index, "month") and hasattr(
+                resource.index, "day"
+            ):
+                leap_day = (resource.index.month == 2) & (
+                    resource.index.day == 29
+                )
                 resource = resource.drop(resource.index[leap_day])
 
         return resource
@@ -651,13 +693,15 @@ class RevPySam(Sam):
         arr : ndarray
             Truncated array of data such that there are 365 days
         """
-        msg = ('A valid time_index must be supplied to ensure the proper '
-               'resource length! Instead {} was supplied'
-               .format(type(time_index)))
+        msg = (
+            "A valid time_index must be supplied to ensure the proper "
+            "resource length! Instead {} was supplied".format(type(time_index))
+        )
         assert isinstance(time_index, pd.DatetimeIndex)
 
-        msg = ('arr length {} does not match time_index length {}!'
-               .format(len(arr), len(time_index)))
+        msg = "arr length {} does not match time_index length {}!".format(
+            len(arr), len(time_index)
+        )
         assert len(arr) == len(time_index)
 
         if time_index.is_leap_year.all():
@@ -669,7 +713,7 @@ class RevPySam(Sam):
                 s = np.where(mask)[0][-1]
 
                 freq = pd.infer_freq(time_index[:s])
-                msg = 'frequencies do not match before and after 2/29'
+                msg = "frequencies do not match before and after 2/29"
                 assert freq == pd.infer_freq(time_index[s + 1:]), msg
             else:
                 freq = pd.infer_freq(time_index)
@@ -677,8 +721,10 @@ class RevPySam(Sam):
             freq = pd.infer_freq(time_index)
 
         if freq is None:
-            msg = ('Resource time_index does not have a consistent time-step '
-                   '(frequency)!')
+            msg = (
+                "Resource time_index does not have a consistent time-step "
+                "(frequency)!"
+            )
             logger.error(msg)
             raise ResourceError(msg)
 
@@ -696,7 +742,7 @@ class RevPySam(Sam):
     @staticmethod
     def make_datetime(series):
         """Ensure that pd series is a datetime series with dt accessor"""
-        if not hasattr(series, 'dt'):
+        if not hasattr(series, "dt"):
             series = pd.to_datetime(pd.Series(series))
 
         return series
@@ -727,7 +773,7 @@ class RevPySam(Sam):
             if t == 1.0:
                 time_interval += 1
                 break
-            elif t == 0.0:
+            if t == 0.0:
                 time_interval += 1
 
         return int(time_interval)
@@ -751,10 +797,11 @@ class RevPySam(Sam):
             location. Should include values for latitude, longitude, elevation,
             and timezone. Can be None for econ runs.
         """
-
         if isinstance(meta, pd.DataFrame):
-            msg = ('Meta data must only be for a single site but received: {}'
-                   .format(meta))
+            msg = (
+                "Meta data must only be for a single site but received: "
+                f"{meta}"
+            )
             assert len(meta) == 1, msg
             meta = meta.iloc[0]
 
@@ -785,22 +832,20 @@ class RevPySam(Sam):
         """Returns true if SAM data is array-like. False if scalar."""
         if isinstance(val, (int, float, str)):
             return False
+        try:
+            len(val)
+        except TypeError:
+            return False
         else:
-            try:
-                len(val)
-            except TypeError:
-                return False
-            else:
-                return True
+            return True
 
     @classmethod
     def _is_hourly(cls, val):
         """Returns true if SAM data is hourly or sub-hourly. False otherise."""
         if not cls._is_arr_like(val):
             return False
-        else:
-            L = len(val)
-            return L >= 8760
+        L = len(val)
+        return L >= 8760
 
     def outputs_to_utc_arr(self):
         """Convert array-like SAM outputs to UTC np.ndarrays"""
@@ -815,8 +860,11 @@ class RevPySam(Sam):
                         output = output.astype(np.int32)
 
                     if self._is_hourly(output):
-                        n_roll = int(-1 * self.meta['timezone']
-                                     * self.time_interval)
+                        n_roll = int(
+                            -1
+                            * self.meta[ResourceMetaField.TIMEZONE]
+                            * self.time_interval
+                        )
                         output = np.roll(output, n_roll)
 
                     self.outputs[key] = output
@@ -861,9 +909,10 @@ class RevPySam(Sam):
         try:
             self.pysam.execute()
         except Exception as e:
-            msg = ('PySAM raised an error while executing: "{}"'
-                   .format(self.module))
+            msg = 'PySAM raised an error while executing: "{}"'.format(
+                self.module
+            )
             if self.site is not None:
-                msg += ' for site {}'.format(self.site)
+                msg += " for site {}".format(self.site)
             logger.exception(msg)
             raise SAMExecutionError(msg) from e

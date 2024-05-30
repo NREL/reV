@@ -4,24 +4,27 @@
 Wraps the NREL-PySAM lcoefcr and singleowner modules with
 additional reV features.
 """
-from copy import deepcopy
 import logging
-import numpy as np
+from copy import deepcopy
 from warnings import warn
+
+import numpy as np
 import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
 
-from reV.SAM.defaults import DefaultSingleOwner, DefaultLCOE
 from reV.handlers.outputs import Outputs
-from reV.SAM.windbos import WindBos
+from reV.SAM.defaults import DefaultLCOE, DefaultSingleOwner
 from reV.SAM.SAM import RevPySam
+from reV.SAM.windbos import WindBos
 from reV.utilities.exceptions import SAMExecutionError
+from reV.utilities import ResourceMetaField
 
 logger = logging.getLogger(__name__)
 
 
 class Economic(RevPySam):
     """Base class for SAM economic models."""
+
     MODULE = None
 
     def __init__(self, sam_sys_inputs, site_sys_inputs=None,
@@ -172,7 +175,7 @@ class Economic(RevPySam):
         with Outputs(cf_file) as cfh:
 
             # get the index location of the site in question
-            site_gids = list(cfh.get_meta_arr('gid'))
+            site_gids = list(cfh.get_meta_arr(ResourceMetaField.GID))
             isites = [site_gids.index(s) for s in sites]
 
             # look for the cf_profile dataset
@@ -335,6 +338,7 @@ class Economic(RevPySam):
 class LCOE(Economic):
     """SAM LCOE model.
     """
+
     MODULE = 'lcoefcr'
     PYSAM = PySamLCOE
 
@@ -375,7 +379,7 @@ class LCOE(Economic):
 
         # get the cf_file meta data gid's to use as indexing tools
         with Outputs(cf_file) as cfh:
-            site_gids = list(cfh.meta['gid'])
+            site_gids = list(cfh.meta[ResourceMetaField.GID])
 
         calc_aey = False
         if 'annual_energy' not in site_df:
@@ -463,6 +467,7 @@ class LCOE(Economic):
 class SingleOwner(Economic):
     """SAM single owner economic model.
     """
+
     MODULE = 'singleowner'
     PYSAM = PySamSingleOwner
 
@@ -497,14 +502,13 @@ class SingleOwner(Economic):
         """
 
         outputs = {}
-        if inputs is not None:
-            if 'total_installed_cost' in inputs:
-                if isinstance(inputs['total_installed_cost'], str):
-                    if inputs['total_installed_cost'].lower() == 'windbos':
-                        wb = WindBos(inputs)
-                        inputs['total_installed_cost'] = \
-                            wb.total_installed_cost
-                        outputs = wb.output
+        if (inputs is not None
+                and 'total_installed_cost' in inputs
+                and isinstance(inputs['total_installed_cost'], str)
+                and inputs['total_installed_cost'].lower() == 'windbos'):
+            wb = WindBos(inputs)
+            inputs['total_installed_cost'] = wb.total_installed_cost
+            outputs = wb.output
         return inputs, outputs
 
     @staticmethod
