@@ -699,6 +699,7 @@ def test_consistent_eval_namespace(gid=33):
     cap_cost_fun = "2000"
     foc_fun = "0"
     voc_fun = "0"
+    bos_fun = "0"
     objective_function = (
         "n_turbines + id(self.wind_plant) "
         "+ system_capacity + capital_cost + aep"
@@ -722,6 +723,7 @@ def test_consistent_eval_namespace(gid=33):
             cap_cost_fun,
             foc_fun,
             voc_fun,
+            bos_fun,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
