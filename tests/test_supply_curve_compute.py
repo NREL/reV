@@ -578,6 +578,101 @@ def test_least_cost_simple_with_reinforcement():
                                sc_simple_r.total_lcoe)
 
 
+# pylint: disable=no-member
+@pytest.mark.parametrize("r_costs", [True, False])
+def test_least_cost_simple_with_trans_cap_cost_per_mw(r_costs):
+    """
+    Test simple supply curve with only "trans_cap_cost_per_mw" entry
+    """
+
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(
+                TESTDATADIR, "trans_tables", f"costs_RI_{cap}MW.csv"
+            )
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
+            t_gids = in_table["trans_gid"].values
+            if r_costs:
+                sort_on = "lcoe_no_reinforcement"
+                in_table["reinforcement_cost_per_mw"] = t_gids[::-1]
+            else:
+                sort_on = "total_lcoe"
+                in_table["reinforcement_cost_per_mw"] = 0
+            in_table["reinforcement_dist_km"] = 0
+            in_table["trans_cap_cost_per_mw"] = t_gids
+            in_table = in_table.drop(columns=["trans_cap_cost", "max_cap"])
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1,
+                           simple=True, sort_on=sort_on)
+        sc_simple = pd.read_csv(sc_simple)
+        assert (sc_simple["trans_gid"] == 42445).all()
+
+        if not r_costs:
+            lcot = 4244.5 / (sc_simple[SupplyCurveField.MEAN_CF] * 8760)
+            assert np.allclose(lcot, sc_simple["lcot"], atol=0.001)
+
+
+# pylint: disable=no-member
+def test_least_cost_simple_with_reinforcement_floor():
+    """
+    Test simple supply curve sorting with reinforcement costs in the
+    least-cost path transmission tables
+    """
+
+    with tempfile.TemporaryDirectory() as td:
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(
+                TESTDATADIR, "trans_tables", f"costs_RI_{cap}MW.csv"
+            )
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
+            in_table["reinforcement_cost_per_mw"] = 0
+            in_table["reinforcement_dist_km"] = 0
+            in_table["reinforcement_cost_floored_per_mw"] = 0
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        out_fpath = os.path.join(td, "sc")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1,
+                           simple=True)
+        sc_simple = pd.read_csv(sc_simple)
+
+        fpath_baseline = os.path.join(TESTDATADIR,
+                                      'sc_out/sc_simple_lc.csv')
+        baseline_verify(sc_simple, fpath_baseline)
+        verify_trans_cap(sc_simple, trans_tables)
+
+        trans_tables = []
+        for cap in [100, 200, 400, 1000]:
+            in_table = os.path.join(
+                TESTDATADIR, "trans_tables", f"costs_RI_{cap}MW.csv"
+            )
+            in_table = pd.read_csv(in_table)
+            out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
+            in_table["reinforcement_cost_per_mw"] = 0
+            in_table["reinforcement_dist_km"] = 0
+            in_table["reinforcement_cost_floored_per_mw"] = 2000
+            in_table.to_csv(out_fp, index=False)
+            trans_tables.append(out_fp)
+
+        out_fpath = os.path.join(td, "sc_r")
+        sc = SupplyCurve(SC_POINTS, trans_tables)
+        sc_simple_r = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True,
+                             sort_on="lcot_floored_reinforcement")
+        sc_simple_r = pd.read_csv(sc_simple_r)
+
+        baseline_verify(sc_simple, fpath_baseline)
+        verify_trans_cap(sc_simple, trans_tables)
+
+
 def test_least_cost_full_pass_through():
     """
     Test the full supply curve sorting passes through variables correctly
