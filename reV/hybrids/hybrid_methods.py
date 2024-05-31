@@ -3,18 +3,12 @@
 
 @author: ppinchuk
 """
+from reV.utilities import SupplyCurveField
 
 
 def aggregate_solar_capacity(h):
     """Compute the total solar capcity allowed in hybridization.
 
-    Note
-    ----
-    No limiting is done on the ratio of wind to solar. This method
-    checks for an existing 'hybrid_solar_capacity'. If one does not exist,
-    it is assumed that there is no limit on the solar to wind capacity
-    ratio and the solar capacity is copied into this new column.
-
     Parameters
     ----------
     h : `reV.hybrids.Hybridization`
@@ -26,27 +20,25 @@ def aggregate_solar_capacity(h):
     -------
     data : Series | None
         A series of data containing the capacity allowed in the hybrid
-        capacity sum, or `None` if 'hybrid_solar_capacity' already exists.
+        capacity sum, or `None` if 'hybrid_solar_capacity' already
+        exists.
 
     Notes
     -----
-
+    No limiting is done on the ratio of wind to solar. This method
+    checks for an existing 'hybrid_solar_capacity'. If one does not
+    exist, it is assumed that there is no limit on the solar to wind
+    capacity ratio and the solar capacity is copied into this new
+    column.
     """
-    if 'hybrid_solar_capacity' in h.hybrid_meta:
+    if f'hybrid_solar_{SupplyCurveField.CAPACITY}' in h.hybrid_meta:
         return None
-    return h.hybrid_meta['solar_capacity']
+    return h.hybrid_meta[f'solar_{SupplyCurveField.CAPACITY}']
 
 
 def aggregate_wind_capacity(h):
     """Compute the total wind capcity allowed in hybridization.
 
-    Note
-    ----
-    No limiting is done on the ratio of wind to solar. This method
-    checks for an existing 'hybrid_wind_capacity'. If one does not exist,
-    it is assumed that there is no limit on the solar to wind capacity
-    ratio and the wind capacity is copied into this new column.
-
     Parameters
     ----------
     h : `reV.hybrids.Hybridization`
@@ -58,15 +50,19 @@ def aggregate_wind_capacity(h):
     -------
     data : Series | None
         A series of data containing the capacity allowed in the hybrid
-        capacity sum, or `None` if 'hybrid_solar_capacity' already exists.
+        capacity sum, or `None` if 'hybrid_solar_capacity' already
+        exists.
 
     Notes
     -----
-
+    No limiting is done on the ratio of wind to solar. This method
+    checks for an existing 'hybrid_wind_capacity'. If one does not
+    exist, it is assumed that there is no limit on the solar to wind
+    capacity ratio and the wind capacity is copied into this new column.
     """
-    if 'hybrid_wind_capacity' in h.hybrid_meta:
+    if f'hybrid_wind_{SupplyCurveField.CAPACITY}' in h.hybrid_meta:
         return None
-    return h.hybrid_meta['wind_capacity']
+    return h.hybrid_meta[f'wind_{SupplyCurveField.CAPACITY}']
 
 
 def aggregate_capacity(h):
@@ -85,8 +81,8 @@ def aggregate_capacity(h):
         A series of data containing the aggregated capacity, or `None`
         if the capacity columns are missing.
     """
-
-    sc, wc = 'hybrid_solar_capacity', 'hybrid_wind_capacity'
+    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY}'
+    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY}'
     missing_solar_cap = sc not in h.hybrid_meta.columns
     missing_wind_cap = wc not in h.hybrid_meta.columns
     if missing_solar_cap or missing_wind_cap:
@@ -113,8 +109,10 @@ def aggregate_capacity_factor(h):
         if the capacity and/or mean_cf columns are missing.
     """
 
-    sc, wc = 'hybrid_solar_capacity', 'hybrid_wind_capacity'
-    scf, wcf = 'solar_mean_cf', 'wind_mean_cf'
+    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY}'
+    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY}'
+    scf = f'solar_{SupplyCurveField.MEAN_CF}'
+    wcf = f'wind_{SupplyCurveField.MEAN_CF}'
     missing_solar_cap = sc not in h.hybrid_meta.columns
     missing_wind_cap = wc not in h.hybrid_meta.columns
     missing_solar_mean_cf = scf not in h.hybrid_meta.columns
@@ -132,8 +130,8 @@ def aggregate_capacity_factor(h):
 
 
 HYBRID_METHODS = {
-    'hybrid_solar_capacity': aggregate_solar_capacity,
-    'hybrid_wind_capacity': aggregate_wind_capacity,
-    'hybrid_capacity': aggregate_capacity,
-    'hybrid_mean_cf': aggregate_capacity_factor
+    f'hybrid_solar_{SupplyCurveField.CAPACITY}': aggregate_solar_capacity,
+    f'hybrid_wind_{SupplyCurveField.CAPACITY}': aggregate_wind_capacity,
+    f'hybrid_{SupplyCurveField.CAPACITY}': aggregate_capacity,
+    f'hybrid_{SupplyCurveField.MEAN_CF}': aggregate_capacity_factor
 }

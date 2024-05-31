@@ -12,17 +12,17 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import h5py
-import pytest
-import numpy as np
 import time
 
-from reV import TESTDATADIR
-from reV.handlers.outputs import Outputs
+import h5py
+import numpy as np
+import pytest
 from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger
-from reV.generation.cli_gen import get_node_cmd
 
+from reV import TESTDATADIR
+from reV.generation.cli_gen import get_node_cmd
+from reV.handlers.outputs import Outputs
 
 RTOL = 0.0
 ATOL = 0.04
@@ -115,8 +115,7 @@ def test_eagle(year):
         status = slurm.check_status(name, var='name')
         if status == 'CG':
             break
-        else:
-            time.sleep(5)
+        time.sleep(5)
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)

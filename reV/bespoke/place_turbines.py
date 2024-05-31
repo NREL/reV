@@ -4,11 +4,10 @@
 place turbines for bespoke wind plants
 """
 import numpy as np
+from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon
 
-from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
-
-from reV.bespoke.pack_turbs import PackTurbines
 from reV.bespoke.gradient_free import GeneticAlgorithm
+from reV.bespoke.pack_turbs import PackTurbines
 from reV.utilities.exceptions import WhileLoopPackingError
 
 
@@ -74,6 +73,10 @@ class PlaceTurbines:
                 - ``avg_sl_dist_to_medoid_m``: Average straight-line
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
+                - ``nn_conn_dist_m``: Total BOS connection distance
+                  using nearest-neighbor connections. This variable is
+                  only available for the
+                  ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
                 - ``capital_cost``: plant capital cost as evaluated
@@ -141,6 +144,7 @@ class PlaceTurbines:
         self.packing_polygons = None
         self.optimized_design_variables = None
         self.safe_polygons = None
+        self._optimized_nn_conn_dist_m = None
 
         self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
         self._preflight(self.objective_function)
@@ -203,7 +207,7 @@ class PlaceTurbines:
                 self.packing_polygons = MultiPolygon([])
 
     def initialize_packing(self):
-        """run the turbine packing algorithm (maximizing plant capacity) to
+        """Run the turbine packing algorithm (maximizing plant capacity) to
         define potential turbine locations that will be used as design
         variables in the gentic algorithm.
         """
@@ -260,9 +264,12 @@ class PlaceTurbines:
             aep = self.wind_plant['annual_energy']
             avg_sl_dist_to_center_m = self._avg_sl_dist_to_cent(x_locs, y_locs)
             avg_sl_dist_to_medoid_m = self._avg_sl_dist_to_med(x_locs, y_locs)
+            if "nn_conn_dist_m" in self.balance_of_system_cost_function:
+                nn_conn_dist_m = _compute_nn_conn_dist(x_locs, y_locs)
         else:
             n_turbines = system_capacity = aep = 0
             avg_sl_dist_to_center_m = avg_sl_dist_to_medoid_m = 0
+            nn_conn_dist_m = 0
 
         fixed_charge_rate = self.fixed_charge_rate
         capital_cost = eval(self.capital_cost_function,
@@ -387,7 +394,7 @@ class PlaceTurbines:
     def fixed_charge_rate(self):
         """Fixed charge rate if input to the SAM WindPowerPD object, None if
         not found in inputs."""
-        return self.wind_plant.sam_sys_inputs.get('fixed_charge_rate', None)
+        return self.wind_plant.sam_sys_inputs.get("fixed_charge_rate", None)
 
     @property
     @none_until_optimized
@@ -415,6 +422,16 @@ class PlaceTurbines:
 
     @property
     @none_until_optimized
+    def nn_conn_dist_m(self):
+        """This is the final avg straight line distance to turb medoid (m)"""
+        if self._optimized_nn_conn_dist_m is None:
+            self._optimized_nn_conn_dist_m = _compute_nn_conn_dist(
+                self.turbine_x, self.turbine_y
+            )
+        return self._optimized_nn_conn_dist_m
+
+    @property
+    @none_until_optimized
     def nturbs(self):
         """This is the final optimized number of turbines"""
         return np.sum(self.optimized_design_variables)
@@ -430,7 +447,8 @@ class PlaceTurbines:
     def convex_hull(self):
         """This is the convex hull of the turbine locations"""
         turbines = MultiPoint([Point(x, y)
-                               for x,y in zip(self.turbine_x, self.turbine_y)])
+                               for x, y in zip(self.turbine_x,
+                                               self.turbine_y)])
         return turbines.convex_hull
 
     @property
@@ -513,6 +531,8 @@ class PlaceTurbines:
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
         avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
+        nn_conn_dist_m = self.nn_conn_dist_m
+
         mult = self.wind_plant.sam_sys_inputs.get(
             'capital_cost_multiplier', 1)
         return eval(self.capital_cost_function, globals(), locals()) * mult
@@ -529,6 +549,8 @@ class PlaceTurbines:
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
         avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
+        nn_conn_dist_m = self.nn_conn_dist_m
+
         mult = self.wind_plant.sam_sys_inputs.get(
             'fixed_operating_cost_multiplier', 1)
         return eval(self.fixed_operating_cost_function,
@@ -546,6 +568,8 @@ class PlaceTurbines:
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
         avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
+        nn_conn_dist_m = self.nn_conn_dist_m
+
         mult = self.wind_plant.sam_sys_inputs.get(
             'variable_operating_cost_multiplier', 1)
         return eval(self.variable_operating_cost_function,
@@ -561,6 +585,8 @@ class PlaceTurbines:
         aep = self.aep
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
         avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
+        nn_conn_dist_m = self.nn_conn_dist_m
+
         mult = self.wind_plant.sam_sys_inputs.get(
             'balance_of_system_cost_multiplier', 1)
         return eval(self.balance_of_system_cost_function,
@@ -581,9 +607,40 @@ class PlaceTurbines:
         balance_of_system_cost = self.balance_of_system_cost
         avg_sl_dist_to_center_m = self.avg_sl_dist_to_center_m
         avg_sl_dist_to_medoid_m = self.avg_sl_dist_to_medoid_m
+        nn_conn_dist_m = self.nn_conn_dist_m
+
         return eval(self.objective_function, globals(), locals())
 
 
 def _turb_medoid(x_locs, y_locs):
     """Turbine medoid. """
     return np.median(x_locs), np.median(y_locs)
+
+
+def _compute_nn_conn_dist(x_coords, y_coords):
+    """Connect turbines using a greedy nearest-neighbor approach. """
+    if len(x_coords) <= 1:
+        return 0
+
+    coordinates = np.c_[x_coords, y_coords]
+    allowed_conns = np.r_[coordinates.mean(axis=0)[None], coordinates]
+
+    mask = np.zeros_like(allowed_conns)
+    mask[0] = 1
+    left_to_connect = np.ma.array(allowed_conns, mask=mask)
+
+    mask = np.ones_like(allowed_conns)
+    mask[0] = 0
+    allowed_conns = np.ma.array(allowed_conns, mask=mask)
+
+    total_dist = 0
+    for __ in range(len(coordinates)):
+        dists = left_to_connect[:, :, None] - allowed_conns.T[None]
+        dists = np.hypot(dists[:, 0], dists[:, 1])
+        min_dists = dists.min(axis=-1)
+        total_dist += min_dists.min()
+        next_connection = min_dists.argmin()
+        allowed_conns.mask[next_connection] = 0
+        left_to_connect.mask[next_connection] = 1
+
+    return total_dist

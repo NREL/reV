@@ -3,9 +3,11 @@
 Competitive Wind Farms exclusion handler
 """
 import logging
-import numpy as np
 
+import numpy as np
 from rex.utilities.utilities import parse_table
+
+from reV.utilities import SupplyCurveField
 
 logger = logging.getLogger(__name__)
 
@@ -33,30 +35,36 @@ class CompetitiveWindFarms:
         """
         self._wind_dirs = self._parse_wind_dirs(wind_dirs)
 
-        self._sc_gids, self._sc_point_gids, self._mask = \
-            self._parse_sc_points(sc_points, offshore=offshore)
+        self._sc_gids, self._sc_point_gids, self._mask = self._parse_sc_points(
+            sc_points, offshore=offshore
+        )
 
         self._offshore = offshore
 
         valid = np.isin(self.sc_point_gids, self._wind_dirs.index)
         if not np.all(valid):
-            msg = ("'sc_points contains sc_point_gid values that do not "
-                   "correspond to valid 'wind_dirs' sc_point_gids:\n{}"
-                   .format(self.sc_point_gids[~valid]))
+            msg = (
+                "'sc_points contains sc_point_gid values that do not "
+                "correspond to valid 'wind_dirs' sc_point_gids:\n{}".format(
+                    self.sc_point_gids[~valid]
+                )
+            )
             logger.error(msg)
             raise RuntimeError(msg)
 
         mask = self._wind_dirs.index.isin(self._sc_point_gids.keys())
         self._wind_dirs = self._wind_dirs.loc[mask]
-        self._upwind, self._downwind = self._get_neighbors(self._wind_dirs,
-                                                           n_dirs=n_dirs)
+        self._upwind, self._downwind = self._get_neighbors(
+            self._wind_dirs, n_dirs=n_dirs
+        )
 
     def __repr__(self):
         gids = len(self._upwind)
         # pylint: disable=unsubscriptable-object
         neighbors = len(self._upwind.values[0])
-        msg = ("{} with {} sc_point_gids and {} prominent directions"
-               .format(self.__class__.__name__, gids, neighbors))
+        msg = "{} with {} sc_point_gids and {} prominent directions".format(
+            self.__class__.__name__, gids, neighbors
+        )
 
         return msg
 
@@ -76,23 +84,25 @@ class CompetitiveWindFarms:
         """
         if not isinstance(keys, tuple):
             msg = ("{} must be a tuple of form (source, gid) where source is: "
-                   "'sc_gid', 'sc_point_gid',  or 'upwind', 'downwind'"
-                   .format(keys))
+                   "{}, '{}',  or 'upwind', 'downwind'"
+                   .format(keys, SupplyCurveField.SC_GID,
+                           SupplyCurveField.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
         source, gid = keys
-        if source == 'sc_point_gid':
+        if source == SupplyCurveField.SC_POINT_GID:
             out = self.map_sc_gid_to_sc_point_gid(gid)
-        elif source == 'sc_gid':
+        elif source == SupplyCurveField.SC_GID:
             out = self.map_sc_point_gid_to_sc_gid(gid)
-        elif source == 'upwind':
+        elif source == "upwind":
             out = self.map_upwind(gid)
-        elif source == 'downwind':
+        elif source == "downwind":
             out = self.map_downwind(gid)
         else:
-            msg = ("{} must be: 'sc_gid', 'sc_point_gid',  or 'upwind', "
-                   "'downwind'".format(source))
+            msg = ("{} must be: {}, {},  or 'upwind', "
+                   "'downwind'".format(source, SupplyCurveField.SC_GID,
+                                       SupplyCurveField.SC_POINT_GID))
             logger.error(msg)
             raise ValueError(msg)
 
@@ -133,9 +143,9 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        sc_gids = \
-            np.concatenate([self._sc_point_gids[gid]
-                            for gid in self.sc_point_gids])
+        sc_gids = np.concatenate(
+            [self._sc_point_gids[gid] for gid in self.sc_point_gids]
+        )
 
         return sc_gids
 
@@ -181,8 +191,10 @@ class CompetitiveWindFarms:
             cardinal direction for each sc point gid
         """
         wind_dirs = cls._parse_table(wind_dirs)
+        wind_dirs = wind_dirs.rename(
+            columns=SupplyCurveField.map_from_legacy())
 
-        wind_dirs = wind_dirs.set_index('sc_point_gid')
+        wind_dirs = wind_dirs.set_index(SupplyCurveField.SC_POINT_GID)
         columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
         wind_dirs = wind_dirs[columns]
 
@@ -212,21 +224,25 @@ class CompetitiveWindFarms:
             Mask array to mask excluded sc_point_gids
         """
         sc_points = cls._parse_table(sc_points)
-        if 'offshore' in sc_points and not offshore:
+        sc_points = sc_points.rename(
+            columns=SupplyCurveField.map_from_legacy())
+        if SupplyCurveField.OFFSHORE in sc_points and not offshore:
             logger.debug('Not including offshore supply curve points in '
                          'CompetitiveWindFarm')
-            mask = sc_points['offshore'] == 0
+            mask = sc_points[SupplyCurveField.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
-        mask = np.ones(int(1 + sc_points['sc_point_gid'].max()), dtype=bool)
+        mask = np.ones(int(1 + sc_points[SupplyCurveField.SC_POINT_GID].max()),
+                       dtype=bool)
 
-        sc_points = sc_points[['sc_gid', 'sc_point_gid']]
-        sc_gids = sc_points.set_index('sc_gid')
+        sc_points = sc_points[[SupplyCurveField.SC_GID,
+                               SupplyCurveField.SC_POINT_GID]]
+        sc_gids = sc_points.set_index(SupplyCurveField.SC_GID)
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
 
-        sc_point_gids = \
-            sc_points.groupby('sc_point_gid')['sc_gid'].unique().to_frame()
-        sc_point_gids = {int(k): v['sc_gid']
+        groups = sc_points.groupby(SupplyCurveField.SC_POINT_GID)
+        sc_point_gids = groups[SupplyCurveField.SC_GID].unique().to_frame()
+        sc_point_gids = {int(k): v[SupplyCurveField.SC_GID]
                          for k, v in sc_point_gids.iterrows()}
 
         return sc_gids, sc_point_gids, mask
@@ -251,19 +267,30 @@ class CompetitiveWindFarms:
         downwind : pandas.DataFrame
             Downwind neighbor gids for n prominent wind directions
         """
-        cols = [c for c in wind_dirs
-                if (c.endswith('_gid') and not c.startswith('sc'))]
-        directions = [c.split('_')[0] for c in cols]
+        cols = [
+            c
+            for c in wind_dirs
+            if (c.endswith("_gid") and not c.startswith("sc"))
+        ]
+        directions = [c.split("_")[0] for c in cols]
         upwind_gids = wind_dirs[cols].values
 
-        cols = ['{}_pr'.format(d) for d in directions]
+        cols = ["{}_pr".format(d) for d in directions]
         neighbor_pr = wind_dirs[cols].values
 
         neighbors = np.argsort(neighbor_pr)[:, :n_dirs]
         upwind_gids = np.take_along_axis(upwind_gids, neighbors, axis=1)
 
-        downwind_map = {'N': 'S', 'NE': 'SW', 'E': 'W', 'SE': 'NW', 'S': 'N',
-                        'SW': 'NE', 'W': 'E', 'NW': 'SE'}
+        downwind_map = {
+            "N": "S",
+            "NE": "SW",
+            "E": "W",
+            "SE": "NW",
+            "S": "N",
+            "SW": "NE",
+            "W": "E",
+            "NW": "SE",
+        }
         cols = ["{}_gid".format(downwind_map[d]) for d in directions]
         downwind_gids = wind_dirs[cols].values
         downwind_gids = np.take_along_axis(downwind_gids, neighbors, axis=1)
@@ -338,6 +365,7 @@ class CompetitiveWindFarms:
         ----------
         sc_point_gid : int
             Supply point curve gid to get upwind neighbors
+
         Returns
         -------
         int | list
@@ -353,6 +381,7 @@ class CompetitiveWindFarms:
         ----------
         sc_point_gid : int
             Supply point curve gid to get downwind neighbors
+
         Returns
         -------
         int | list
@@ -383,8 +412,9 @@ class CompetitiveWindFarms:
 
         return out
 
-    def remove_noncompetitive_farm(self, sc_points, sort_on='total_lcoe',
-                                   downwind=False):
+    def remove_noncompetitive_farm(
+        self, sc_points, sort_on="total_lcoe", downwind=False
+    ):
         """
         Remove neighboring sc points for given number of prominent wind
         directions
@@ -407,34 +437,45 @@ class CompetitiveWindFarms:
             wind farms
         """
         sc_points = self._parse_table(sc_points)
-        if 'offshore' in sc_points and not self._offshore:
-            mask = sc_points['offshore'] == 0
+        sc_points = sc_points.rename(
+            columns=SupplyCurveField.map_from_legacy())
+        if SupplyCurveField.OFFSHORE in sc_points and not self._offshore:
+            mask = sc_points[SupplyCurveField.OFFSHORE] == 0
             sc_points = sc_points.loc[mask]
 
         sc_points = sc_points.sort_values(sort_on)
 
-        sc_point_gids = sc_points['sc_point_gid'].values.astype(int)
+        sc_point_gids = sc_points[SupplyCurveField.SC_POINT_GID].values
+        sc_point_gids = sc_point_gids.astype(int)
 
         for i in range(len(sc_points)):
             gid = sc_point_gids[i]
             if self.mask[gid]:
-                upwind_gids = self['upwind', gid]
+                upwind_gids = self["upwind", gid]
                 for n in upwind_gids:
                     self.exclude_sc_point_gid(n)
 
                 if downwind:
-                    downwind_gids = self['downwind', gid]
+                    downwind_gids = self["downwind", gid]
                     for n in downwind_gids:
                         self.exclude_sc_point_gid(n)
 
         sc_gids = self.sc_gids
-        mask = sc_points['sc_gid'].isin(sc_gids)
+        mask = sc_points[SupplyCurveField.SC_GID].isin(sc_gids)
 
         return sc_points.loc[mask].reset_index(drop=True)
 
     @classmethod
-    def run(cls, wind_dirs, sc_points, n_dirs=2, offshore=False,
-            sort_on='total_lcoe', downwind=False, out_fpath=None):
+    def run(
+        cls,
+        wind_dirs,
+        sc_points,
+        n_dirs=2,
+        offshore=False,
+        sort_on="total_lcoe",
+        downwind=False,
+        out_fpath=None,
+    ):
         """
         Exclude given number of neighboring Supply Point gids based on most
         prominent wind directions
@@ -469,8 +510,9 @@ class CompetitiveWindFarms:
             wind farms
         """
         cwf = cls(wind_dirs, sc_points, n_dirs=n_dirs, offshore=offshore)
-        sc_points = cwf.remove_noncompetitive_farm(sc_points, sort_on=sort_on,
-                                                   downwind=downwind)
+        sc_points = cwf.remove_noncompetitive_farm(
+            sc_points, sort_on=sort_on, downwind=downwind
+        )
 
         if out_fpath is not None:
             sc_points.to_csv(out_fpath, index=False)

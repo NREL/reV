@@ -7,13 +7,14 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-import numpy as np
 import os
-import pytest
 
-from reV.generation.generation import Gen
-from reV import TESTDATADIR
+import numpy as np
+import pytest
 from rex import Resource
+
+from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 BASELINE = os.path.join(TESTDATADIR, 'gen_out', 'gen_ri_csp_2012.h5')
 RTOL = 0.1
@@ -27,7 +28,8 @@ def test_gen_csp():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
 
     # run reV 2.0 generation
-    output_request = ('cf_mean', 'cf_profile', 'gen_profile')
+    output_request = ('cf_mean', 'cf_profile',
+                      'gen_profile')
     gen = Gen('tcsmoltensalt', points, sam_files, res_file,
               output_request=output_request, sites_per_worker=1,
               scale_outputs=True)

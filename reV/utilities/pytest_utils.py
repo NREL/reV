@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """Functions used for pytests"""
 
-import numpy as np
 import os
+
+import numpy as np
 import pandas as pd
 from packaging import version
 from rex.outputs import Outputs as RexOutputs
+
+from reV.utilities import ResourceMetaField
 
 
 def pd_date_range(*args, **kwargs):
@@ -89,9 +92,10 @@ def make_fake_h5_chunks(td, features, shuffle=False):
     for i, s1 in enumerate(s_slices):
         for j, s2 in enumerate(s_slices):
             out_file = out_pattern.format(i=i, j=j)
-            meta = pd.DataFrame({'latitude': lat[s1, s2].flatten(),
-                                 'longitude': lon[s1, s2].flatten(),
-                                 'gid': gids[s1, s2].flatten()})
+            meta = pd.DataFrame(
+                {ResourceMetaField.LATITUDE: lat[s1, s2].flatten(),
+                 ResourceMetaField.LONGITUDE: lon[s1, s2].flatten(),
+                 ResourceMetaField.GID: gids[s1, s2].flatten()})
             write_chunk(meta=meta, times=times, data=data[s1, s2],
                         features=features, out_file=out_file)
 

@@ -8,20 +8,21 @@ Created on Thu Nov 29 09:54:51 2018
 @author: gbuster
 """
 import json
-import numpy as np
 import os
-import pandas as pd
-import pytest
 import tempfile
 import traceback
 
+import numpy as np
+import pandas as pd
+import pytest
+from rex.utilities.utilities import safe_json_load
+
+from reV import TESTDATADIR
 from reV.cli import main
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
-from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
-
-from rex.utilities.utilities import safe_json_load
+from reV.utilities import SiteDataField
 
 RTOL = 0.0
 ATOL = 0.04
@@ -43,8 +44,8 @@ def get_r1_profiles(year=2012, tech='pv'):
     return data
 
 
-@pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
-def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
+@pytest.mark.parametrize('tech', ['pv', 'wind'])
+def test_gen_from_config(runner, tech, clear_loggers):
     """Gen PV CF profiles with write to disk and compare against rev1."""
     with tempfile.TemporaryDirectory() as td:
 
@@ -99,8 +100,6 @@ def test_gen_from_config(runner, tech, clear_loggers):  # noqa: C901
 
                     msg = 'cf_profile not written to disk'
                     assert 'cf_profile' in cf.datasets, msg
-                    print(cf.scale_factors['cf_profile'])
-                    print(cf.dtypes['cf_profile'])
                     rev2_profiles = cf['cf_profile']
 
                     msg = 'monthly_energy not written to disk'
@@ -143,8 +142,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 100)
-        points_config = pd.DataFrame({"gid": range(0, 100),
-                                      "config": ['default'] * 100})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 100),
+                                      SiteDataField.CONFIG: ['default'] * 100})
 
         gen_json = Gen('pvwattsv5', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=50)
@@ -164,8 +163,8 @@ def test_sam_config(tech):
         sam_config = {'default': safe_json_load(sam_file)}
 
         points = slice(0, 10)
-        points_config = pd.DataFrame({"gid": range(0, 10),
-                                      "config": ['default'] * 10})
+        points_config = pd.DataFrame({SiteDataField.GID: range(0, 10),
+                                      SiteDataField.CONFIG: ['default'] * 10})
 
         gen_json = Gen('windpower', points, sam_file, res_file,
                        output_request=('cf_profile',), sites_per_worker=3)
@@ -219,7 +218,7 @@ def test_gen_mw_config_input(runner, clear_loggers, expected_log_message):
         assert result.exit_code == 0, msg
 
         log_file = os.path.join(run_dir, 'generation_generation.log')
-        with open(log_file, "r") as fh:
+        with open(log_file) as fh:
             assert expected_log_message in fh.read()
         clear_loggers()
 

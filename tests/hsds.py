@@ -5,11 +5,13 @@ requires installing and configuring h5pyd:
 https://github.com/NREL/hsds-examples
 """
 from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
-
 from rex.renewable_resource import NSRDB
+
+from reV.utilities import ResourceMetaField
 
 
 @pytest.fixture
@@ -54,7 +56,9 @@ def check_meta(res_cls):
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (len(sites), meta_shape[1])
     # select columns
-    meta = res_cls['meta', :, ['latitude', 'longitude']]
+    meta = res_cls[
+        'meta', :, [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
+    ]
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (meta_shape[0], 2)
 
@@ -160,6 +164,7 @@ class TestNSRDB:
     """
     NSRDB Resource handler tests
     """
+
     @staticmethod
     def test_res(NSRDB_hsds):
         """

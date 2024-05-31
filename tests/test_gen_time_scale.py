@@ -4,14 +4,15 @@
 Test resource up and down scaling
 """
 
-import os
 import json
-import h5py
-import pytest
-import numpy as np
+import os
 
-from reV.generation.generation import Gen
+import h5py
+import numpy as np
+import pytest
+
 from reV import TESTDATADIR
+from reV.generation.generation import Gen
 
 
 def test_time_index_step():

@@ -2,20 +2,24 @@
 """
 QA/QC CLI utility functions.
 """
-import click
 import logging
-import numpy as np
 import os
 
-from rex.utilities.cli_dtypes import STR, STRLIST, INT
+import click
+import numpy as np
+from gaps.cli import CLICommandFromFunction, as_click_command
+from rex.utilities.cli_dtypes import INT, STR, STRLIST
 from rex.utilities.loggers import init_logger
-from gaps.cli import as_click_command, CLICommandFromFunction
 
-from reV.utilities import ModuleName
-from reV.qa_qc.qa_qc import QaQc, QaQcModule
-from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve,
-                               SupplyCurvePlot, ExclusionsMask)
 from reV import __version__
+from reV.qa_qc.qa_qc import QaQc, QaQcModule
+from reV.qa_qc.summary import (
+    ExclusionsMask,
+    SummarizeH5,
+    SummarizeSupplyCurve,
+    SupplyCurvePlot,
+)
+from reV.utilities import ModuleName, SupplyCurveField
 
 logger = logging.getLogger(__name__)
 
@@ -190,8 +194,8 @@ def supply_curve_table(ctx, sc_table, columns):
               show_default=True,
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
-@click.option('--lcoe', '-lcoe', type=STR, default='mean_lcoe',
-              help="LCOE value to plot, by default 'mean_lcoe'")
+@click.option('--lcoe', '-lcoe', type=STR, default=SupplyCurveField.MEAN_LCOE,
+              help="LCOE value to plot, by default %(default)s")
 @click.pass_context
 def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
     """

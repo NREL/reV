@@ -4,16 +4,18 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
+import os
+
 import h5py
 import numpy as np
 import pandas as pd
 import pytest
-import os
 
 from reV import TESTDATADIR
-from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.exclusions import ExclusionLayers, LATITUDE, LONGITUDE
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
+
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -43,8 +45,8 @@ def plot_tech_mapping(dist_margin=1.05):
     import matplotlib.pyplot as plt
 
     with h5py.File(EXCL, 'r') as f:
-        lats = f['latitude'][...].flatten()
-        lons = f['longitude'][...].flatten()
+        lats = f[LATITUDE][...].flatten()
+        lons = f[LONGITUDE][...].flatten()
         ind_truth = f[TM_DSET][...].flatten()
 
     with Outputs(GEN) as fgen:
@@ -53,8 +55,8 @@ def plot_tech_mapping(dist_margin=1.05):
     ind_test = TechMapping.run(EXCL, RES, dset=None, max_workers=2,
                                dist_margin=dist_margin)
 
-    df = pd.DataFrame({'latitude': lats,
-                       'longitude': lons,
+    df = pd.DataFrame({LATITUDE: lats,
+                       LONGITUDE: lons,
                        TM_DSET: ind_truth,
                        'test': ind_test.flatten()})
 
@@ -65,31 +67,31 @@ def plot_tech_mapping(dist_margin=1.05):
     for i, ind in enumerate(df[TM_DSET].unique()):
         if ind != -1:
             mask = df[TM_DSET] == ind
-            axs.scatter(df.loc[mask, 'longitude'],
-                        df.loc[mask, 'latitude'],
+            axs.scatter(df.loc[mask, LONGITUDE],
+                        df.loc[mask, LATITUDE],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
             mask = df[TM_DSET] == ind
-            axs.scatter(df.loc[mask, 'longitude'],
-                        df.loc[mask, 'latitude'],
+            axs.scatter(df.loc[mask, LONGITUDE],
+                        df.loc[mask, LATITUDE],
                         c='r', s=0.001)
 
     for ind in df[TM_DSET].unique():
         if ind != -1:
-            axs.scatter(gen_meta.loc[ind, 'longitude'],
-                        gen_meta.loc[ind, 'latitude'],
+            axs.scatter(gen_meta.loc[ind, LONGITUDE],
+                        gen_meta.loc[ind, LATITUDE],
                         c='w', s=1)
 
     for ind in df['test'].unique():
         if ind != -1:
-            axs.scatter(gen_meta.loc[ind, 'longitude'],
-                        gen_meta.loc[ind, 'latitude'],
+            axs.scatter(gen_meta.loc[ind, LONGITUDE],
+                        gen_meta.loc[ind, LATITUDE],
                         c='r', s=1)
 
     mask = df[TM_DSET].values != df['test']
-    axs.scatter(df.loc[mask, 'longitude'],
-                df.loc[mask, 'latitude'],
+    axs.scatter(df.loc[mask, LONGITUDE],
+                df.loc[mask, LATITUDE],
                 c='k', s=1)
 
     axs.axis('equal')
