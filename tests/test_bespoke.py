@@ -18,7 +18,7 @@ from rex import Resource
 
 from reV import TESTDATADIR
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
-from reV.bespoke.place_turbines import PlaceTurbines
+from reV.bespoke.place_turbines import PlaceTurbines, _compute_nn_conn_dist
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.losses.power_curve import PowerCurveLossesMixin
@@ -79,6 +79,7 @@ FOC_FUN = (
     "* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))"
 )
 VOC_FUN = "3"
+BOS_FUN = '0'
 OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
@@ -101,19 +102,16 @@ def test_turbine_placement(gid=33):
         sam_sys_inputs["variable_operating_cost_multiplier"] = 5
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_sys_inputs,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 '10 * nn_conn_dist_m',
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         place_optimizer = bsp.plant_optimizer
         assert place_optimizer.turbine_x is None
@@ -125,6 +123,7 @@ def test_turbine_placement(gid=33):
         assert place_optimizer.capital_cost is None
         assert place_optimizer.fixed_operating_cost is None
         assert place_optimizer.variable_operating_cost is None
+        assert place_optimizer.balance_of_system_cost is None
         assert place_optimizer.objective is None
         place_optimizer.place_turbines(max_time=5)
 
@@ -163,15 +162,18 @@ def test_turbine_placement(gid=33):
         capital_cost = eval(CAP_COST_FUN, globals(), locals())
         fixed_operating_cost = eval(FOC_FUN, globals(), locals()) * 2
         variable_operating_cost = eval(VOC_FUN, globals(), locals()) * 5
+        balance_of_system_cost = 10 * _compute_nn_conn_dist(
+            place_optimizer.turbine_x, place_optimizer.turbine_y
+        )
         # pylint: disable=W0123
         assert place_optimizer.objective == eval(
             OBJECTIVE_FUNCTION, globals(), locals()
         )
         assert place_optimizer.capital_cost == capital_cost
         assert place_optimizer.fixed_operating_cost == fixed_operating_cost
-        assert (
-            place_optimizer.variable_operating_cost == variable_operating_cost
-        )
+        assert (place_optimizer.variable_operating_cost
+                == variable_operating_cost)
+        assert place_optimizer.balance_of_system_cost == balance_of_system_cost
 
         bsp.close()
 
@@ -194,19 +196,13 @@ def test_zero_area(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            objective_function,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         optimizer = bsp.plant_optimizer
         optimizer.include_mask = np.zeros_like(optimizer.include_mask)
@@ -244,32 +240,23 @@ def test_correct_turb_location(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            objective_function,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         include_mask = np.zeros_like(bsp.include_mask)
         include_mask[1, -2] = 1
-        pt = PlaceTurbines(
-            bsp.wind_plant_pd,
-            bsp.objective_function,
-            bsp.capital_cost_function,
-            bsp.fixed_operating_cost_function,
-            bsp.variable_operating_cost_function,
-            include_mask,
-            pixel_side_length=90,
-            min_spacing=45,
-        )
+        pt = PlaceTurbines(bsp.wind_plant_pd, bsp.objective_function,
+                           bsp.capital_cost_function,
+                           bsp.fixed_operating_cost_function,
+                           bsp.variable_operating_cost_function,
+                           bsp.balance_of_system_cost_function,
+                           include_mask, pixel_side_length=90,
+                           min_spacing=45)
 
         pt.define_exclusions()
         pt.initialize_packing()
@@ -286,6 +273,7 @@ def test_packing_algorithm(gid=33):
     cap_cost_fun = ""
     foc_fun = ""
     voc_fun = ""
+    bos_fun = ""
     objective_function = ""
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
@@ -306,6 +294,7 @@ def test_packing_algorithm(gid=33):
             cap_cost_fun,
             foc_fun,
             voc_fun,
+            bos_fun,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
@@ -358,20 +347,14 @@ def test_single(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
@@ -455,40 +438,28 @@ def test_extra_outputs(gid=33):
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 
         with pytest.raises(KeyError):
-            bsp = BespokeSinglePlant(
-                gid,
-                excl_fp,
-                res_fp,
-                TM_DSET,
-                SAM_SYS_INPUTS,
-                objective_function,
-                CAP_COST_FUN,
-                FOC_FUN,
-                VOC_FUN,
-                ga_kwargs={"max_time": 5},
-                excl_dict=EXCL_DICT,
-                output_request=output_request,
-            )
+            bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                     SAM_SYS_INPUTS,
+                                     objective_function, CAP_COST_FUN,
+                                     FOC_FUN, VOC_FUN, BOS_FUN,
+                                     ga_kwargs={'max_time': 5},
+                                     excl_dict=EXCL_DICT,
+                                     output_request=output_request,
+                                     )
 
         sam_sys_inputs = copy.deepcopy(SAM_SYS_INPUTS)
         sam_sys_inputs["fixed_charge_rate"] = 0.0975
         test_eos_cap = 200_000
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_sys_inputs,
-            objective_function,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            data_layers=copy.deepcopy(DATA_LAYERS),
-            eos_mult_baseline_cap_mw=test_eos_cap * 1e-3,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 data_layers=copy.deepcopy(DATA_LAYERS),
+                                 eos_mult_baseline_cap_mw=test_eos_cap * 1e-3
+                                 )
 
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
@@ -514,21 +485,15 @@ def test_extra_outputs(gid=33):
         for layer in data_layers:
             assert "fpath" not in data_layers[layer]
 
-        bsp = BespokeSinglePlant(
-            gid,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_sys_inputs,
-            objective_function,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            data_layers=data_layers,
-        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 sam_sys_inputs,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 data_layers=data_layers,
+                                 )
 
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
@@ -610,39 +575,23 @@ def test_bespoke():
         # test no outputs
         with pytest.warns(UserWarning) as record:
             assert not os.path.exists(out_fpath_truth)
-            bsp = BespokeWindPlants(
-                excl_fp,
-                res_fp,
-                TM_DSET,
-                OBJECTIVE_FUNCTION,
-                CAP_COST_FUN,
-                FOC_FUN,
-                VOC_FUN,
-                fully_excluded_points,
-                SAM_CONFIGS,
-                ga_kwargs={"max_time": 5},
-                excl_dict=EXCL_DICT,
-                output_request=output_request,
-            )
+            bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET,
+                                    OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                    FOC_FUN, VOC_FUN, BOS_FUN,
+                                    fully_excluded_points,
+                                    SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                    excl_dict=EXCL_DICT,
+                                    output_request=output_request)
             test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
             assert out_fpath_truth == test_fpath
             assert "points are excluded" in str(record[0].message)
 
         assert not os.path.exists(out_fpath_truth)
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, BOS_FUN,
+                                points, SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request)
         test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
         assert out_fpath_truth == test_fpath
         assert os.path.exists(out_fpath_truth)
@@ -685,22 +634,13 @@ def test_bespoke():
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
 
-        out_fpath_pre = os.path.join(td, "bespoke_out_pre.h5")
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            pre_load_data=True,
-        )
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, BOS_FUN,
+                                points, SAM_CONFIGS, ga_kwargs={'max_time': 1},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                pre_load_data=True)
         bsp.run(max_workers=1, out_fpath=out_fpath_pre)
 
         with Resource(out_fpath_truth) as f1, Resource(out_fpath_pre) as f2:
@@ -761,6 +701,7 @@ def test_consistent_eval_namespace(gid=33):
     cap_cost_fun = "2000"
     foc_fun = "0"
     voc_fun = "0"
+    bos_fun = "0"
     objective_function = (
         "n_turbines + id(self.wind_plant) "
         "+ system_capacity + capital_cost + aep"
@@ -784,6 +725,7 @@ def test_consistent_eval_namespace(gid=33):
             cap_cost_fun,
             foc_fun,
             voc_fun,
+            bos_fun,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
@@ -865,19 +807,16 @@ def test_wake_loss_multiplier(wlm):
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         optimizer = bsp.plant_optimizer
         optimizer.define_exclusions()
@@ -896,20 +835,16 @@ def test_wake_loss_multiplier(wlm):
         aep = optimizer._aep_after_scaled_wake_losses()
         bsp.close()
 
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            wake_loss_multiplier=wlm,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 wake_loss_multiplier=wlm)
 
         optimizer2 = bsp.plant_optimizer
         optimizer2.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
@@ -941,19 +876,16 @@ def test_bespoke_wind_plant_with_power_curve_losses():
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         optimizer = bsp.plant_optimizer
         optimizer.wind_plant["wind_farm_xCoordinates"] = [1000, -1000]
@@ -963,6 +895,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer.wind_plant.assign_inputs()
         optimizer.wind_plant.execute()
+        # pylint: disable=W0612
         aep = optimizer._aep_after_scaled_wake_losses()
         bsp.close()
 
@@ -971,20 +904,15 @@ def test_bespoke_wind_plant_with_power_curve_losses():
             "target_losses_percent": 10,
             "transformation": "exponential_stretching",
         }
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_inputs,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
-
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 sam_inputs,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request)
         optimizer2 = bsp.plant_optimizer
         optimizer2.wind_plant["wind_farm_xCoordinates"] = [1000, -1000]
         optimizer2.wind_plant["wind_farm_yCoordinates"] = [1000, -1000]
@@ -1024,6 +952,7 @@ def test_bespoke_run_with_power_curve_losses():
             CAP_COST_FUN,
             FOC_FUN,
             VOC_FUN,
+            BOS_FUN,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
@@ -1048,6 +977,7 @@ def test_bespoke_run_with_power_curve_losses():
             CAP_COST_FUN,
             FOC_FUN,
             VOC_FUN,
+            BOS_FUN,
             ga_kwargs={"max_time": 5},
             excl_dict=EXCL_DICT,
             output_request=output_request,
@@ -1079,20 +1009,13 @@ def test_bespoke_run_with_scheduled_losses():
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request)
 
         out = bsp.run_plant_optimization()
         out = bsp.run_wind_plant_ts()
@@ -1119,20 +1042,16 @@ def test_bespoke_run_with_scheduled_losses():
         sam_inputs["hourly"] = [0] * 8760  # only needed for testing
         output_request = ("system_capacity", "cf_mean", "cf_profile", "hourly")
 
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_inputs,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 sam_inputs,
+                                 OBJECTIVE_FUNCTION,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 ga_kwargs={'max_time': 5},
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request)
 
         out_losses = bsp.run_plant_optimization()
         out_losses = bsp.run_wind_plant_ts()
@@ -1167,19 +1086,16 @@ def test_bespoke_aep_is_zero_if_no_turbines_placed():
         res_fp = res_fp.format("*")
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            objective_function,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function,
+                                 CAP_COST_FUN,
+                                 FOC_FUN,
+                                 VOC_FUN,
+                                 BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
 
         optimizer = bsp.plant_optimizer
         optimizer.define_exclusions()
@@ -1244,40 +1160,22 @@ def test_bespoke_prior_run():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_all,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            sam_configs,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_all, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, sam_configs,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            sam_configs,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            prior_run=out_fpath1,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, sam_configs,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                prior_run=out_fpath1)
         bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
@@ -1357,40 +1255,22 @@ def test_gid_map():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            gid_map=fp_gid_map,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                gid_map=fp_gid_map)
         bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
@@ -1417,23 +1297,13 @@ def test_gid_map():
         assert not np.allclose(data1["ws_mean"], data2["ws_mean"], atol=0.2)
         assert np.allclose(ws.mean(), data2["ws_mean"], atol=0.01)
 
-        out_fpath_pre = os.path.join(td, "bespoke_out_pre.h5")
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            gid_map=fp_gid_map,
-            pre_load_data=True,
-        )
+        out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                gid_map=fp_gid_map, pre_load_data=True)
         bsp.run(max_workers=1, out_fpath=out_fpath_pre)
 
         with Resource(out_fpath2) as f1, Resource(out_fpath_pre) as f2:
@@ -1486,40 +1356,22 @@ def test_bespoke_bias_correct():
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request)
         bsp.run(max_workers=1, out_fpath=out_fpath1)
 
         assert os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp_2013,
-            TM_DSET,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            SAM_CONFIGS,
-            ga_kwargs={"max_time": 1},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-            bias_correct=fp_bc,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp_2013, TM_DSET,
+                                OBJECTIVE_FUNCTION, CAP_COST_FUN,
+                                FOC_FUN, VOC_FUN, BOS_FUN, points, SAM_CONFIGS,
+                                ga_kwargs={'max_time': 1}, excl_dict=EXCL_DICT,
+                                output_request=output_request,
+                                bias_correct=fp_bc)
         bsp.run(max_workers=1, out_fpath=out_fpath2)
         assert os.path.exists(out_fpath2)
 
@@ -1581,6 +1433,7 @@ def test_cli(runner, clear_loggers):
             "capital_cost_function": CAP_COST_FUN,
             "fixed_operating_cost_function": FOC_FUN,
             "variable_operating_cost_function": VOC_FUN,
+            "balance_of_system_cost_function": "0",
             "project_points": [33, 35],
             "sam_files": SAM_CONFIGS,
             "min_spacing": "5x",
@@ -1691,20 +1544,11 @@ def test_bespoke_5min_sample():
             arr = np.random.choice(10, size=excl_file["latitude"].shape)
             excl_file.create_dataset(name=tm_dset, data=arr)
 
-        bsp = BespokeWindPlants(
-            excl_fp,
-            res_fp,
-            tm_dset,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            points,
-            sam_configs,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
+        bsp = BespokeWindPlants(excl_fp, res_fp, tm_dset, OBJECTIVE_FUNCTION,
+                                CAP_COST_FUN, FOC_FUN, VOC_FUN, BOS_FUN,
+                                points, sam_configs, ga_kwargs={'max_time': 5},
+                                excl_dict=EXCL_DICT,
+                                output_request=output_request)
         _ = bsp.run(max_workers=1, out_fpath=out_fpath)
 
         with Resource(out_fpath) as f:
