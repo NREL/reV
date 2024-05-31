@@ -913,6 +913,21 @@ def test_bespoke_wind_plant_with_power_curve_losses():
                                  BOS_FUN,
                                  excl_dict=EXCL_DICT,
                                  output_request=output_request)
+        optimizer2 = bsp.plant_optimizer
+        optimizer2.wind_plant["wind_farm_xCoordinates"] = [1000, -1000]
+        optimizer2.wind_plant["wind_farm_yCoordinates"] = [1000, -1000]
+        cap = 2 * optimizer2.turbine_capacity
+        optimizer2.wind_plant["system_capacity"] = cap
+
+        optimizer2.wind_plant.assign_inputs()
+        optimizer2.wind_plant.execute()
+        aep_losses = optimizer2._aep_after_scaled_wake_losses()
+        bsp.close()
+
+    assert aep > aep_losses, f"{aep}, {aep_losses}"
+
+    err_msg = "{:0.3f} != 0.9".format(aep_losses / aep)
+    assert np.isclose(aep_losses / aep, 0.9), err_msg
 
 
 def test_bespoke_run_with_power_curve_losses():
