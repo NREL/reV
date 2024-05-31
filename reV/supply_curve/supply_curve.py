@@ -919,7 +919,9 @@ class SupplyCurve:
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
         """
-        if "trans_cap_cost" not in self._trans_table:
+        if "trans_cap_cost_per_mw" in self._trans_table:
+            cost = self._trans_table["trans_cap_cost_per_mw"].values.copy()
+        elif "trans_cap_cost" not in self._trans_table:
             scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(
                 self._trans_table,
@@ -939,16 +941,32 @@ class SupplyCurve:
         cost *= self._trans_table[self._sc_capacity_col]
         # align with "mean_cf"
         cost /= self._trans_table[SupplyCurveField.CAPACITY]
+        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
+        resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
+
+        if 'reinforcement_cost_floored_per_mw' in self._trans_table:
+            logger.info("'reinforcement_cost_floored_per_mw' column found in "
+                        "transmission table. Adding floored reinforcement "
+                        "cost LCOE as sorting option.")
+            fr_cost = (self._trans_table['reinforcement_cost_floored_per_mw']
+                       .values.copy())
+            fr_cost *= self._trans_table[self._sc_capacity_col]
+            # align with "mean_cf"
+            fr_cost /= self._trans_table[SupplyCurveField.CAPACITY]
+
+            lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
+            lcoe_fr = lcot_fr + resource_lcoe
+            self._trans_table['lcot_floored_reinforcement'] = lcot_fr
+            self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
         if 'reinforcement_cost_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_per_mw' column found in "
                         "transmission table. Adding reinforcement costs "
                         "to total LCOE.")
-            cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
-            lcot = (cost * fcr) / (cf_mean_arr * 8760)
-            lcoe = lcot + self._trans_table[SupplyCurveField.MEAN_LCOE]
-            self._trans_table['lcot_no_reinforcement'] = lcot
-            self._trans_table['lcoe_no_reinforcement'] = lcoe
+            lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
+            lcoe_nr = lcot_nr + resource_lcoe
+            self._trans_table['lcot_no_reinforcement'] = lcot_nr
+            self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
             r_cost = (self._trans_table['reinforcement_cost_per_mw']
                       .values.copy())
             r_cost *= self._trans_table[self._sc_capacity_col]
@@ -956,13 +974,9 @@ class SupplyCurve:
             r_cost /= self._trans_table[SupplyCurveField.CAPACITY]
             cost += r_cost  # $/MW
 
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
-
         self._trans_table['lcot'] = lcot
-        self._trans_table['total_lcoe'] = (
-            self._trans_table['lcot']
-            + self._trans_table[SupplyCurveField.MEAN_LCOE])
+        self._trans_table['total_lcoe'] = lcot + resource_lcoe
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
