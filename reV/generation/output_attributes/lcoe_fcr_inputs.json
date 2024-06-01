@@ -54,5 +54,12 @@
     "scale_factor": 1,
     "type": "scalar",
     "units": "unitless"
+  },
+  "system_capacity": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kW"
   }
 }

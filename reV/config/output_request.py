@@ -61,6 +61,7 @@ class SAMOutputRequest(OutputRequest):
     # all available SAM output variables should be in the values
     CORRECTIONS = {'cf_means': 'cf_mean',
                    'cf': 'cf_mean',
+                   'capacity': 'system_capacity',
                    'capacity_factor': 'cf_mean',
                    'capacityfactor': 'cf_mean',
                    'cf_profiles': 'cf_profile',
