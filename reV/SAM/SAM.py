@@ -827,6 +827,8 @@ class RevPySam(Sam):
                 else:
                     self.sam_sys_inputs[k] = v
 
+        _add_cost_defaults(self.sam_sys_inputs)
+
     @staticmethod
     def _is_arr_like(val):
         """Returns true if SAM data is array-like. False if scalar."""
@@ -916,3 +918,19 @@ class RevPySam(Sam):
                 msg += " for site {}".format(self.site)
             logger.exception(msg)
             raise SAMExecutionError(msg) from e
+
+
+def _add_cost_defaults(sam_inputs):
+    """Add default values for required cost outputs if they are missing. """
+    sam_inputs.setdefault("fixed_charge_rate", 0)
+
+    reg_mult = sam_inputs.setdefault("multiplier_regional", 1)
+    capital_cost = sam_inputs.setdefault("capital_cost", 0)
+    fixed_operating_cost = sam_inputs.setdefault("fixed_operating_cost", 0)
+    variable_operating_cost = sam_inputs.setdefault(
+        "variable_operating_cost", 0)
+
+    sam_inputs["base_capital_cost"] = capital_cost
+    sam_inputs["base_fixed_operating_cost"] = fixed_operating_cost
+    sam_inputs["base_variable_operating_cost"] = variable_operating_cost
+    sam_inputs["capital_cost"] = capital_cost * reg_mult
