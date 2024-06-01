@@ -37,7 +37,7 @@ class OutputRequest(list):
         for request in inp:
             if request in self.CORRECTIONS.values():
                 self.append(request)
-            elif request in self.CORRECTIONS.keys():
+            elif request in self.CORRECTIONS:
                 self.append(self.CORRECTIONS[request])
                 msg = ('Correcting output request "{}" to "{}".'
                        .format(request, self.CORRECTIONS[request]))
