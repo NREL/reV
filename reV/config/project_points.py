@@ -623,9 +623,7 @@ class ProjectPoints:
 
         # pylint: disable=no-member
         if SiteDataField.CONFIG not in df.columns:
-            df = cls._parse_sites(
-                df[SiteDataField.GID].values, res_file=res_file
-            )
+            df[SiteDataField.CONFIG] = None
 
         gids = df[SiteDataField.GID].values
         if not np.array_equal(np.sort(gids), gids):
