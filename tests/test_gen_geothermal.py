@@ -15,6 +15,7 @@ import pytest
 from rex import Outputs
 
 from reV import TESTDATADIR
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
 from reV.generation.generation import Gen
 from reV.SAM.generation import Geothermal
 from reV.utilities import ResourceMetaField
@@ -115,6 +116,8 @@ def test_gen_geothermal(depth, sample_resource_data):
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
 
 @pytest.mark.parametrize(
     "sample_resource_data", [{"temp": 60, "potential": 200}], indirect=True
@@ -165,6 +168,9 @@ def test_gen_geothermal_temp_too_low(sample_resource_data):
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
+
 
 @pytest.mark.parametrize(
     "sample_resource_data", [{"temp": 150, "potential": 100}], indirect=True
@@ -210,6 +216,9 @@ def test_per_kw_cost_inputs(sample_resource_data):
             "at most by: {}".format(dset, np.max(np.abs(truth - test)))
         )
         assert np.allclose(truth, test, rtol=1e-6, atol=ATOL), msg
+
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
 
 
 @pytest.mark.parametrize(
@@ -257,6 +266,9 @@ def test_drill_cost_inputs(sample_resource_data):
             "at most by: {}".format(dset, np.max(np.abs(truth - test)))
         )
         assert np.allclose(truth, test, rtol=1e-6, atol=ATOL), msg
+
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
 
 
 @pytest.mark.parametrize(
@@ -315,6 +327,9 @@ def test_gen_with_nameplate_input(sample_resource_data):
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
+
 
 @pytest.mark.parametrize(
     "sample_resource_data", [{"temp": 150, "potential": 20}], indirect=True
@@ -358,6 +373,9 @@ def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
             "at most by: {}".format(dset, np.max(np.abs(truth - test)))
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
+
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output not in gen.out
 
 
 @pytest.mark.parametrize(
@@ -405,6 +423,9 @@ def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
             "at most by: {}".format(dset, np.max(np.abs(truth - test)))
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
+
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output not in gen.out
 
 
 @pytest.mark.parametrize(
@@ -454,6 +475,9 @@ def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
         )
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output not in gen.out
+
 
 @pytest.mark.parametrize(
     "sample_resource_data", [{"temp": 150, "potential": 20}], indirect=True
@@ -490,6 +514,9 @@ def test_gen_with_time_index_step_input(sample_resource_data):
     gen.run(max_workers=1)
 
     assert gen.out["cf_profile"].shape[0] == 8760 // 2
+
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in gen.out
 
 
 def execute_pytest(capture="all", flags="-rapP"):

@@ -22,6 +22,7 @@ from pandas.testing import assert_frame_equal
 from reV import TESTDATADIR
 from reV.cli import main
 from reV.econ.econ import Econ
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName
 
@@ -60,6 +61,9 @@ def test_lcoe(year, max_workers, spw):
 
     assert result
 
+    for output in LCOE_REQUIRED_OUTPUTS:
+        assert output in obj.out
+
 
 @pytest.mark.parametrize('year', ('2012', '2013'))
 def test_fout(year):
@@ -80,6 +84,8 @@ def test_fout(year):
         econ.run(max_workers=1, out_fpath=fpath)
         with Outputs(fpath) as f:
             lcoe = f['lcoe_fcr']
+            for output in LCOE_REQUIRED_OUTPUTS:
+                assert output in f.datasets
 
         with h5py.File(r1f, mode='r') as f:
             year_rows = {'2012': 0, '2013': 1}
@@ -116,6 +122,8 @@ def test_append_data(year):
             lcoe = f['lcoe_fcr']
             meta = f.meta
             ti = f.time_index
+            for output in LCOE_REQUIRED_OUTPUTS:
+                assert output in f.datasets
 
         with Outputs(original_file) as f:
             og_dsets = f.dsets
@@ -163,6 +171,8 @@ def test_append_multi_node(node):
             meta = out.meta
             data_test = out['lcoe_fcr']
             test_cap_cost = out['capital_cost']
+            for output in LCOE_REQUIRED_OUTPUTS:
+                assert output in out.datasets
 
         assert np.allclose(data_baseline, data_test)
 
@@ -218,6 +228,8 @@ def test_econ_from_config(runner, clear_loggers):
         out_fpath = os.path.join(td, fn_out)
         with Outputs(out_fpath, 'r') as f:
             lcoe = f['lcoe_fcr']
+            for output in LCOE_REQUIRED_OUTPUTS:
+                assert output in f.datasets
 
         with h5py.File(r1f, mode='r') as f:
             r1_lcoe = f['pv']['lcoefcr'][0, 0:10] * 1000
@@ -226,6 +238,43 @@ def test_econ_from_config(runner, clear_loggers):
 
         assert result
 
+        clear_loggers()
+
+
+def test_multiplier_regional(clear_loggers):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    with tempfile.TemporaryDirectory() as dirout:
+        cf_file = os.path.join(TESTDATADIR,
+                               'gen_out/gen_ri_pv_2012_x000.h5')
+        sam_files = os.path.join(TESTDATADIR, 'SAM',
+                                 'i_lcoe_naris_pv_1axis_inv13.json')
+        fpath = os.path.join(dirout, 'lcoe_out_econ_2012.h5')
+        mults = np.arange(0, 100) / 100
+        points = pd.DataFrame({"gid": np.arange(0, 100),
+                               "multiplier_regional": mults})
+        econ = Econ(points, sam_files, cf_file,
+                    output_request='lcoe_fcr',
+                    sites_per_worker=25)
+        econ.run(max_workers=1, out_fpath=fpath)
+
+        with Outputs(cf_file) as f:
+            cf = f['cf_mean']
+
+        with Outputs(fpath) as f:
+            lcoe = f['lcoe_fcr']
+            for output in LCOE_REQUIRED_OUTPUTS:
+                assert output in f.datasets
+
+        with open(sam_files, "r") as fh:
+            sam_config = json.load(fh)
+
+        cc = sam_config["capital_cost"] * mults
+        num = (cc * sam_config["fixed_charge_rate"]
+               + sam_config["fixed_operating_cost"])
+        aep = cf * sam_config["system_capacity"] / 1000 * 8760
+        lcoe_truth = num / aep + sam_config["variable_operating_cost"]
+
+        assert np.allclose(lcoe, lcoe_truth, rtol=RTOL, atol=ATOL)
         clear_loggers()
 
 
