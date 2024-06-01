@@ -45,9 +45,10 @@ with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
 with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
-LCOE_REQUIRED_OUTPUTS = ("multiplier_regional", "capital_cost",
-                         "fixed_operating_cost", "variable_operating_cost",
-                         "base_capital_cost", "base_fixed_operating_cost",
+LCOE_REQUIRED_OUTPUTS = ("system_capacity", "multiplier_regional",
+                         "capital_cost", "fixed_operating_cost",
+                         "variable_operating_cost", "base_capital_cost",
+                         "base_fixed_operating_cost",
                          "base_variable_operating_cost", "fixed_charge_rate")
 """Required econ outputs in generation file."""
 

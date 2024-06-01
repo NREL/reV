@@ -626,6 +626,8 @@ class RevPySam(Sam):
 
         self._meta = self._parse_meta(meta)
         self._parse_site_sys_inputs(site_sys_inputs)
+        _add_cost_defaults(self.sam_sys_inputs)
+        _add_sys_capacity(self.sam_sys_inputs)
 
     @property
     def meta(self):
@@ -827,8 +829,6 @@ class RevPySam(Sam):
                 else:
                     self.sam_sys_inputs[k] = v
 
-        _add_cost_defaults(self.sam_sys_inputs)
-
     @staticmethod
     def _is_arr_like(val):
         """Returns true if SAM data is array-like. False if scalar."""
@@ -934,3 +934,19 @@ def _add_cost_defaults(sam_inputs):
     sam_inputs["base_fixed_operating_cost"] = fixed_operating_cost
     sam_inputs["base_variable_operating_cost"] = variable_operating_cost
     sam_inputs["capital_cost"] = capital_cost * reg_mult
+
+
+def _add_sys_capacity(sam_inputs):
+    """Add system capacity SAM input if it is missing. """
+    cap = sam_inputs.get("system_capacity")
+    if cap is None:
+        cap = sam_inputs.get("turbine_capacity")
+
+    if cap is None:
+        cap = sam_inputs.get("wind_turbine_powercurve_powerout")
+        if cap is not None:
+            cap = max(cap)
+        else:
+            cap = 1
+
+    sam_inputs["system_capacity"] = cap
