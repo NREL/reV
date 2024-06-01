@@ -113,7 +113,7 @@ class Gen(BaseGen):
         allowed and/or required SAM config file inputs. If economic
         parameters are supplied in the SAM config, then you can bundle a
         "follow-on" econ calculation by just adding the desired econ
-        output keys to the `output_request`. You can request ``reV`` to '
+        output keys to the `output_request`. You can request ``reV`` to
         run the analysis for one or more "sites", which correspond to
         the meta indices in the resource data (also commonly called the
         ``gid's``).
