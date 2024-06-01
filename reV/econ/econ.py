@@ -405,7 +405,7 @@ class Econ(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:

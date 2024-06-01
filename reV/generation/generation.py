@@ -128,7 +128,7 @@ class Gen(BaseGen):
         >>> import os
         >>> from reV import Gen, TESTDATADIR
         >>>
-        >>> sam_tech = 'pvwattsv7'
+        >>> sam_tech = 'pvwattsv8'
         >>> sites = 0
         >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
         >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
@@ -145,15 +145,16 @@ class Gen(BaseGen):
         >>> gen.run()
         >>>
         >>> gen.out
-        {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-         'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-        : array([[0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                ...,
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.]])}
+        {'fixed_charge_rate': array([0.096, 0.096, 0.096, 0.096],
+         'base_capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'base_variable_operating_cost': array([0, 0, 0, 0],
+         'base_fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'variable_operating_cost': array([0, 0, 0, 0],
+         'multiplier_regional': array([1, 1, 1, 1],
+         'cf_mean': array([0.17859147, 0.17869979, 0.1834818 , 0.18646291],
+         'lcoe_fcr': array([130.32126, 130.24226, 126.84782, 124.81981]}
 
         Parameters
         ----------
@@ -947,7 +948,7 @@ class Gen(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         # ensure that cf_mean is requested from output
         if "cf_mean" not in output_request:
