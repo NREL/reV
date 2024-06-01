@@ -119,6 +119,7 @@ def test_gen_geothermal(depth, sample_resource_data):
     for output in LCOE_REQUIRED_OUTPUTS:
         assert output in gen.out
 
+
 @pytest.mark.parametrize(
     "sample_resource_data", [{"temp": 60, "potential": 200}], indirect=True
 )
