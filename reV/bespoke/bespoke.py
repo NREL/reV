@@ -1191,7 +1191,10 @@ class BespokeSinglePlant:
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',
-                                  'balance_of_system_cost')):
+                                  'balance_of_system_cost',
+                                  'base_capital_cost',
+                                  'base_fixed_operating_cost',
+                                  'base_variable_operating_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
