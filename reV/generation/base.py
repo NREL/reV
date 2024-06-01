@@ -45,6 +45,20 @@ with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
 with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
+LCOE_REQUIRED_OUTPUTS = ("multiplier_regional", "capital_cost",
+                         "fixed_operating_cost", "variable_operating_cost",
+                         "base_capital_cost", "base_fixed_operating_cost",
+                         "base_variable_operating_cost", "fixed_charge_rate")
+"""Required econ outputs in generation file."""
+
+
+def _add_lcoe_outputs(output_request):
+    """Add required lcoe outputs to output request. """
+    for out_var in LCOE_REQUIRED_OUTPUTS:
+        if out_var not in output_request:
+            output_request.append(out_var)
+    return output_request
+
 
 class BaseGen(ABC):
     """Base class for reV gen and econ classes to run SAM simulations."""
@@ -859,7 +873,6 @@ class BaseGen(ABC):
         """
         self.project_points.join_df(site_data, key=self.site_data.index.name)
 
-    @abstractmethod
     def _parse_output_request(self, req):
         """Set the output variables requested from the user.
 
@@ -873,6 +886,12 @@ class BaseGen(ABC):
         output_request : list
             Output variables requested from SAM.
         """
+        output_request = self._output_request_type_check(req)
+
+        if "lcoe_fcr" in output_request:
+            output_request = _add_lcoe_outputs(output_request)
+
+        return output_request
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
