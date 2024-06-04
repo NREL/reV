@@ -99,7 +99,7 @@ class MultiYearGroup:
         if isinstance(dsets, str) and dsets == 'PIPELINE':
             files = parse_previous_status(self._dirout, ModuleName.MULTI_YEAR)
             with Resource(files[0]) as res:
-                dsets = [d for d in res]
+                dsets = res.datasets
 
         if "lcoe_fcr" in dsets:
             for dset in LCOE_REQUIRED_OUTPUTS:
