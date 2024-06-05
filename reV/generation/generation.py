@@ -713,6 +713,8 @@ class Gen(BaseGen):
                 for k in site_output.keys():
                     # iterate through variable names in each site's output dict
                     if k in cls.OUT_ATTRS:
+                        if out[site][k] is None:
+                            continue
                         # get dtype and scale for output variable name
                         dtype = cls.OUT_ATTRS[k].get("dtype", "float32")
                         scale_factor = cls.OUT_ATTRS[k].get("scale_factor", 1)
