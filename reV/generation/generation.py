@@ -956,6 +956,14 @@ class Gen(BaseGen):
         if "cf_mean" not in output_request:
             output_request.append("cf_mean")
 
+        if _is_solar_run_with_ac_outputs(self.tech):
+            if "dc_ac_ratio" not in output_request:
+                output_request.append("dc_ac_ratio")
+            for dset in ["cf_mean", "cf_profile"]:
+                ac_dset = f"{dset}_ac"
+                if dset in output_request and ac_dset not in output_request:
+                    output_request.append(ac_dset)
+
         for request in output_request:
             if request not in self.OUT_ATTRS:
                 msg = (
@@ -1100,3 +1108,10 @@ class Gen(BaseGen):
             raise e
 
         return self._out_fpath
+
+
+def _is_solar_run_with_ac_outputs(tech):
+    """True if tech is pvwattsv8+"""
+    if "pvwatts" not in tech.casefold():
+        return False
+    return tech.casefold() not in {f"pvwattsv{i}" for i in range(8)}
