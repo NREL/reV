@@ -712,6 +712,9 @@ class BespokeSinglePlant:
             mask = self.sc_point._h5_gids == gid
             weights[i] = self.sc_point.include_mask_flat[mask].sum()
 
+        if "float" not in str(data.dtype):
+            data = data.astype("float32")
+
         weights /= weights.sum()
         data *= weights
         data = np.sum(data, axis=1)
@@ -903,15 +906,18 @@ class BespokeSinglePlant:
             if np.nanmax(pres) > 1000:
                 pres *= 9.86923e-6
 
-            self._res_df = pd.DataFrame(
-                {
-                    "temperature": temp,
-                    "pressure": pres,
-                    "windspeed": ws,
-                    "winddirection": wd,
-                },
-                index=ti,
-            )
+            data = {
+                "temperature": temp,
+                "pressure": pres,
+                "windspeed": ws,
+                "winddirection": wd,
+            }
+
+            if "en_icing_cutoff" in self.sam_sys_inputs:
+                rh = self.get_weighted_res_ts("relativehumidity_2m")
+                data["relativehumidity"] = rh
+
+            self._res_df = pd.DataFrame(data, index=ti)
 
             if "time_index_step" in self.original_sam_sys_inputs:
                 ti_step = self.original_sam_sys_inputs["time_index_step"]
