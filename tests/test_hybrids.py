@@ -328,7 +328,7 @@ def test_ratios_input(ratio_cols, ratio_bounds, bounds, solar_fpath,
         <= h.hybrid_meta[ratio_denominator]
     )
 
-    if SupplyCurveField.CAPACITY in ratio:
+    if SupplyCurveField.CAPACITY_AC_MW in ratio:
         col = f"hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}"
         max_solar_capacities = h.hybrid_meta[col]
         max_solar_capacities = max_solar_capacities.values.reshape(1, -1)
