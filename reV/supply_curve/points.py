@@ -2141,25 +2141,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.mean_cf * self.capacity * 8760
 
     @property
-    def sc_point_annual_energy_ac(self):
-        """Get the total AC annual energy (MWh) for the entire SC point.
-
-        This value is computed using the AC capacity of the supply curve
-        point as well as the mean capacity factor. If either the mean
-        capacity factor or the AC capacity value is `None`, this value
-        will also be `None`.
-
-        Returns
-        -------
-        sc_point_annual_energy_ac : float | None
-            Total AC annual energy (MWh) for the entire SC point.
-        """
-        if self.mean_cf is None or self.capacity_ac is None:
-            return None
-
-        return self.mean_cf * self.capacity_ac * 8760
-
-    @property
     def h5_dsets_data(self):
         """Get any additional/supplemental h5 dataset data to summarize.
 
@@ -2313,9 +2294,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             ),
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
                 self.sc_point_annual_energy
-            ),
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC: (
-                self.sc_point_annual_energy_ac
             ),
         }
         for attr, value in extra_atts.items():

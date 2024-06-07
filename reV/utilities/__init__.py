@@ -150,7 +150,6 @@ class SupplyCurveField(FieldEnum):
     SC_POINT_CAPITAL_COST = "sc_point_capital_cost"
     SC_POINT_FIXED_OPERATING_COST = "sc_point_fixed_operating_cost"
     SC_POINT_ANNUAL_ENERGY = "sc_point_annual_energy"
-    SC_POINT_ANNUAL_ENERGY_AC = "sc_point_annual_energy_ac"
     MEAN_FRICTION = "mean_friction"
     MEAN_LCOE_FRICTION = "mean_lcoe_friction"
     TOTAL_LCOE_FRICTION = "total_lcoe_friction"
