@@ -105,6 +105,9 @@ class MultiYearGroup:
             for dset in LCOE_REQUIRED_OUTPUTS:
                 if dset not in pass_through_dsets:
                     pass_through_dsets.append(dset)
+        if "dc_ac_ratio" in dsets:
+            if "dc_ac_ratio" not in pass_through_dsets:
+                pass_through_dsets.append("dc_ac_ratio")
 
         self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
 
