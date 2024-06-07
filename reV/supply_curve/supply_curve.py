@@ -138,6 +138,7 @@ class SupplyCurve:
             self._sc_points, trans_table, sc_capacity_col=sc_capacity_col
         )
         self._sc_gids, self._mask = self._parse_sc_gids(self._trans_table)
+        self._costs_capacity_col = self._determine_cost_cap_col()
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -156,6 +157,16 @@ class SupplyCurve:
         i = self._sc_gids.index(gid)
 
         return self._sc_points.iloc[i]
+
+    def _determine_cost_cap_col(self):
+        """Determine the cap column used to scale costs (DC for solar runs)"""
+        if SupplyCurveField.CAPACITY_DC_MW not in self._trans_table:
+            return SupplyCurveField.CAPACITY_AC_MW
+
+        if self._trans_table[SupplyCurveField.CAPACITY_DC_MW].isna().all():
+            return SupplyCurveField.CAPACITY_AC_MW
+
+        return SupplyCurveField.CAPACITY_DC_MW
 
     @staticmethod
     def _parse_sc_points(sc_points, sc_features=None):
@@ -584,11 +595,12 @@ class SupplyCurve:
             if isinstance(sc_cols, tuple):
                 sc_cols = list(sc_cols)
 
-            if SupplyCurveField.MEAN_LCOE_FRICTION in sc_points:
-                sc_cols.append(SupplyCurveField.MEAN_LCOE_FRICTION)
-
-            if "transmission_multiplier" in sc_points:
-                sc_cols.append("transmission_multiplier")
+            extra_cols = [SupplyCurveField.CAPACITY_DC_MW,
+                          SupplyCurveField.MEAN_LCOE_FRICTION,
+                          "transmission_multiplier"]
+            for col in extra_cols:
+                if col in sc_points:
+                    sc_cols.append(col)
 
             sc_cols += merge_cols
             sc_points = sc_points[sc_cols].copy()
@@ -943,7 +955,7 @@ class SupplyCurve:
 
         cost *= self._trans_table[self._sc_capacity_col]
         # align with "mean_cf"
-        cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
+        cost /= self._trans_table[self._costs_capacity_col]
         cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
         resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
 
@@ -955,7 +967,7 @@ class SupplyCurve:
                        .values.copy())
             fr_cost *= self._trans_table[self._sc_capacity_col]
             # align with "mean_cf"
-            fr_cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
+            fr_cost /= self._trans_table[self._costs_capacity_col]
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
             lcoe_fr = lcot_fr + resource_lcoe
@@ -974,7 +986,7 @@ class SupplyCurve:
                       .values.copy())
             r_cost *= self._trans_table[self._sc_capacity_col]
             # align with "mean_cf"
-            r_cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
+            r_cost /= self._trans_table[self._costs_capacity_col]
             cost += r_cost  # $/MW
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
