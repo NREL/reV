@@ -83,7 +83,8 @@ def test_vpd_fractional_excl():
         sca_1 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS, power_density=tmp_path,
+                                       data_layers=DATA_LAYERS,
+                                       power_density=tmp_path,
                                        gids=gids_subset)
         summary_1 = sca_1.summarize(GEN, max_workers=1)
 

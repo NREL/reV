@@ -147,9 +147,10 @@ def test_econ_of_scale_baseline():
         with Resource(GEN) as res:
             cf = res["cf_mean-means"]
 
-        lcoe = (1000 * (data['fixed_charge_rate'] * data['capital_cost']
-                        + data['fixed_operating_cost'])
-                        / (cf * data['system_capacity'] * 8760))
+        lcoe = (1000
+                * (data['fixed_charge_rate'] * data['capital_cost']
+                   + data['fixed_operating_cost'])
+                / (cf * data['system_capacity'] * 8760))
 
         with h5py.File(gen_temp, "a") as res:
             res["lcoe_fcr-means"][...] = lcoe
@@ -251,11 +252,11 @@ def test_sc_agg_econ_scale():
 
         aep = ((sc_df['mean_fixed_charge_rate'] * sc_df['mean_capital_cost']
                 + sc_df['mean_fixed_operating_cost'])
-                / sc_df[SupplyCurveField.RAW_LCOE])
+               / sc_df[SupplyCurveField.RAW_LCOE])
 
         true_raw_lcoe = ((data['fixed_charge_rate'] * data['capital_cost']
                           + data['fixed_operating_cost'])
-                          / aep + data['variable_operating_cost'])
+                         / aep + data['variable_operating_cost'])
 
         eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used

@@ -162,7 +162,6 @@ class SupplyCurveField(FieldEnum):
     EOS_MULT = "eos_mult"
     REG_MULT = "reg_mult"
 
-
     @classmethod
     def map_from_legacy(cls):
         """Map of legacy names to current values.

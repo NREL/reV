@@ -45,12 +45,14 @@ def _fix_meta(fp):
 
 @pytest.fixture(scope="module")
 def module_td():
+    """Module-level temporaty dirsctory"""
     with tempfile.TemporaryDirectory() as td:
         yield td
 
 
 @pytest.fixture(scope="module")
 def solar_fpath(module_td):
+    """Solar fpath with legacy columns renamed. """
     new_fp = os.path.join(module_td, "solar.h5")
     shutil.copy(SOLAR_FPATH, new_fp)
     _fix_meta(new_fp)
@@ -59,6 +61,7 @@ def solar_fpath(module_td):
 
 @pytest.fixture(scope="module")
 def wind_fpath(module_td):
+    """Wind fpath with legacy columns renamed. """
     new_fp = os.path.join(module_td, "wind.h5")
     shutil.copy(WIND_FPATH, new_fp)
     _fix_meta(new_fp)
@@ -67,6 +70,7 @@ def wind_fpath(module_td):
 
 @pytest.fixture(scope="module")
 def solar_fpath_30_min(module_td):
+    """Solar fpath (30 min data) with legacy columns renamed."""
     new_fp = os.path.join(module_td, "solar_30min.h5")
     shutil.copy(SOLAR_FPATH_30_MIN, new_fp)
     _fix_meta(new_fp)
@@ -75,6 +79,7 @@ def solar_fpath_30_min(module_td):
 
 @pytest.fixture(scope="module")
 def solar_fpath_mult(module_td):
+    """Solar fpath (with mult) with legacy columns renamed. """
     new_fp = os.path.join(module_td, "solar_mult.h5")
     shutil.copy(SOLAR_FPATH_MULT, new_fp)
     _fix_meta(new_fp)
