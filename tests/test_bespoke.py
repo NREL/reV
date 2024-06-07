@@ -470,7 +470,7 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-means" in out
 
         assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
-        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.MEAN_CF_AC in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta
@@ -504,7 +504,7 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-means" in out
 
         assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
-        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.MEAN_CF_AC in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta

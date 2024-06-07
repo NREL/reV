@@ -525,7 +525,7 @@ class SupplyCurve:
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                sc_cols=(SupplyCurveField.SC_GID,
                                         SupplyCurveField.CAPACITY_AC_MW,
-                                        SupplyCurveField.MEAN_CF,
+                                        SupplyCurveField.MEAN_CF_AC,
                                         SupplyCurveField.MEAN_LCOE),
                                sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW
                                ):
@@ -614,7 +614,7 @@ class SupplyCurve:
     def _map_tables(cls, sc_points, trans_table,
                     sc_cols=(SupplyCurveField.SC_GID,
                              SupplyCurveField.CAPACITY_AC_MW,
-                             SupplyCurveField.MEAN_CF,
+                             SupplyCurveField.MEAN_CF_AC,
                              SupplyCurveField.MEAN_LCOE),
                     sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
@@ -632,7 +632,7 @@ class SupplyCurve:
             List of column from sc_points to transfer into the trans table,
             If the `sc_capacity_col` is not included, it will get added.
             by default (SupplyCurveField.SC_GID,
-            SupplyCurveField.CAPACITY_AC_MW, SupplyCurveField.MEAN_CF,
+            SupplyCurveField.CAPACITY_AC_MW, SupplyCurveField.MEAN_CF_AC,
             SupplyCurveField.MEAN_LCOE)
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
@@ -956,7 +956,7 @@ class SupplyCurve:
         cost *= self._trans_table[self._sc_capacity_col]
         # align with "mean_cf"
         cost /= self._trans_table[self._costs_capacity_col]
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
+        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC].values
         resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
 
         if 'reinforcement_cost_floored_per_mw' in self._trans_table:

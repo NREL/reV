@@ -41,8 +41,8 @@ NON_DUPLICATE_COLS = {
 DROPPED_COLUMNS = [SupplyCurveField.GID]
 DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY_AC_MW}': 0,
                        f'wind_{SupplyCurveField.CAPACITY_AC_MW}': 0,
-                       f'solar_{SupplyCurveField.MEAN_CF}': 0,
-                       f'wind_{SupplyCurveField.MEAN_CF}': 0}
+                       f'solar_{SupplyCurveField.MEAN_CF_AC}': 0,
+                       f'wind_{SupplyCurveField.MEAN_CF_AC}': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
                         'hybrid_solar_profile',
                         'hybrid_wind_profile']

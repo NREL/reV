@@ -614,7 +614,7 @@ def test_least_cost_simple_with_trans_cap_cost_per_mw(r_costs):
         assert (sc_simple["trans_gid"] == 42445).all()
 
         if not r_costs:
-            lcot = 4244.5 / (sc_simple[SupplyCurveField.MEAN_CF] * 8760)
+            lcot = 4244.5 / (sc_simple[SupplyCurveField.MEAN_CF_AC] * 8760)
             assert np.allclose(lcot, sc_simple["lcot"], atol=0.001)
 
 

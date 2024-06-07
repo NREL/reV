@@ -1261,7 +1261,7 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
-            self._meta.loc[:, SupplyCurveField.MEAN_CF] = self.outputs[
+            self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
                 "cf_mean-means"
             ]
         if "lcoe_fcr-means" in self.outputs:

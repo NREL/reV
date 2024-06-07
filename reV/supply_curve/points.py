@@ -2225,7 +2225,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.GEN_GIDS: self.gen_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
-            SupplyCurveField.MEAN_CF: self.mean_cf,
+            SupplyCurveField.MEAN_CF_AC: self.mean_cf,
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
             SupplyCurveField.AREA_SQ_KM: self.area,

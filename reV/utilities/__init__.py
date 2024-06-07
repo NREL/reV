@@ -134,7 +134,7 @@ class SupplyCurveField(FieldEnum):
     COUNTY = "county"
     STATE = "state"
     COUNTRY = "country"
-    MEAN_CF = "mean_cf"
+    MEAN_CF_AC = "mean_cf"
     MEAN_LCOE = "mean_lcoe"
     MEAN_RES = "mean_res"
     CAPACITY_AC_MW = "capacity_ac_mw"
