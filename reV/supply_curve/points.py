@@ -1467,7 +1467,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             (resource) "gid" and "power_density columns".
         cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
-            Can be pre-extracted generation output data in np.ndarray.
+            This name is used to infer AC capacity factor dataset for
+            solar runs (i.e. the AC vsersion of "cf_mean-means" would
+            be inferred to be "cf_mean_ac-means"). This input can also
+            be pre-extracted generation output data in np.ndarray, in
+            which case all DC solar outputs are set to `None`.
         lcoe_dset : str | np.ndarray
             Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
@@ -1685,6 +1689,30 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self._gen_data
 
     @property
+    def gen_ac_data(self):
+        """Get the generation ac capacity factor data array.
+
+        This output is only not `None` for solar runs where `cf_dset`
+        was specified as a string.
+
+        Returns
+        -------
+        gen_ac_data : np.ndarray | None
+            Multi-year-mean ac capacity factor data array for all sites
+            in the generation data output file or `None` if none
+            detected.
+        """
+
+        if isinstance(self._cf_dset, np.ndarray):
+            return None
+
+        ac_cf_dset = _infer_cf_dset_ac(self._cf_dset)
+        if ac_cf_dset in self.gen.datasets:
+            return self.gen[ac_cf_dset]
+
+        return None
+
+    @property
     def lcoe_data(self):
         """Get the LCOE data array.
 
@@ -1720,6 +1748,45 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             mean_cf = self.exclusion_weighted_mean(self.gen_data)
 
         return mean_cf
+
+    @property
+    def mean_cf_ac(self):
+        """Get the mean AC capacity factor for the non-excluded data.
+
+        This output is only not `None` for solar runs.
+
+        Capacity factor is weighted by the exclusions (usually 0 or 1,
+        but 0.5 exclusions will weight appropriately).
+
+        Returns
+        -------
+        mean_cf_ac : float | None
+            Mean capacity factor value for the non-excluded data.
+        """
+        mean_cf_ac = None
+        if self.gen_ac_data is not None:
+            mean_cf_ac = self.exclusion_weighted_mean(self.gen_ac_data)
+
+        return mean_cf_ac
+
+    @property
+    def mean_cf_dc(self):
+        """Get the mean DC capacity factor for the non-excluded data.
+
+        This output is only not `None` for solar runs.
+
+        Capacity factor is weighted by the exclusions (usually 0 or 1,
+        but 0.5 exclusions will weight appropriately).
+
+        Returns
+        -------
+        mean_cf_dc : float | None
+            Mean capacity factor value for the non-excluded data.
+        """
+        if self.mean_cf_ac is not None:
+            return self.mean_cf
+
+        return None
 
     @property
     def mean_lcoe(self):
@@ -2225,7 +2292,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.GEN_GIDS: self.gen_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
-            SupplyCurveField.MEAN_CF_AC: self.mean_cf,
+            SupplyCurveField.MEAN_CF_AC: (
+                self.mean_cf if self.mean_cf_ac is None else self.mean_cf_ac
+            ),
+            SupplyCurveField.MEAN_CF_DC: self.mean_cf_dc,
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
             SupplyCurveField.AREA_SQ_KM: self.area,
@@ -2454,3 +2524,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 summary = point.economies_of_scale(cap_cost_scale, summary)
 
         return summary
+
+
+def _infer_cf_dset_ac(cf_dset):
+    """Infer AC dataset name from input. """
+    parts = cf_dset.split("-")
+    if len(parts) == 1:
+        return f"{cf_dset}_ac"
+
+    cf_name = "-".join(parts[:-1])
+    return f"{cf_name}_ac-{parts[-1]}"

@@ -130,11 +130,21 @@ def test_agg_summary():
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
+
+    assert SupplyCurveField.CAPACITY_AC_MW in summary
+    assert SupplyCurveField.CAPACITY_DC_MW in summary
+    assert SupplyCurveField.MEAN_CF_AC in summary
+    assert SupplyCurveField.MEAN_CF_DC in summary
+
+    # dc outputs are `None` because old gen file does not have correct
+    # output dsets
+    assert not summary[SupplyCurveField.CAPACITY_AC_MW].isna().any()
+    assert not summary[SupplyCurveField.CAPACITY_DC_MW].isna().all()
+    assert not summary[SupplyCurveField.MEAN_CF_AC].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_DC].isna().all()
+
     summary = summary[list(s_baseline.columns)]
-
     assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
-
-    assert "capacity_ac" not in summary
 
 
 @pytest.mark.parametrize("pd", [None, 45])
