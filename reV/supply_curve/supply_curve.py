@@ -28,7 +28,7 @@ class SupplyCurve:
     """SupplyCurve"""
 
     def __init__(self, sc_points, trans_table, sc_features=None,
-                 sc_capacity_col=SupplyCurveField.CAPACITY):
+                 sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
@@ -302,7 +302,7 @@ class SupplyCurve:
 
     @staticmethod
     def _map_trans_capacity(trans_sc_table,
-                            sc_capacity_col=SupplyCurveField.CAPACITY):
+                            sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Map SC gids to transmission features based on capacity. For any SC
         gids with capacity > the maximum transmission feature capacity, map
@@ -513,10 +513,11 @@ class SupplyCurve:
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                sc_cols=(SupplyCurveField.SC_GID,
-                                        SupplyCurveField.CAPACITY,
+                                        SupplyCurveField.CAPACITY_AC_MW,
                                         SupplyCurveField.MEAN_CF,
                                         SupplyCurveField.MEAN_LCOE),
-                               sc_capacity_col=SupplyCurveField.CAPACITY):
+                               sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW
+                               ):
         """
         Merge the supply curve table with the transmission features table.
 
@@ -600,10 +601,10 @@ class SupplyCurve:
     @classmethod
     def _map_tables(cls, sc_points, trans_table,
                     sc_cols=(SupplyCurveField.SC_GID,
-                             SupplyCurveField.CAPACITY,
+                             SupplyCurveField.CAPACITY_AC_MW,
                              SupplyCurveField.MEAN_CF,
                              SupplyCurveField.MEAN_LCOE),
-                    sc_capacity_col=SupplyCurveField.CAPACITY):
+                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Map supply curve points to transmission features
 
@@ -618,8 +619,9 @@ class SupplyCurve:
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             If the `sc_capacity_col` is not included, it will get added.
-            by default (SupplyCurveField.SC_GID, SupplyCurveField.CAPACITY,
-            SupplyCurveField.MEAN_CF, SupplyCurveField.MEAN_LCOE)
+            by default (SupplyCurveField.SC_GID,
+            SupplyCurveField.CAPACITY_AC_MW, SupplyCurveField.MEAN_CF,
+            SupplyCurveField.MEAN_LCOE)
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
             this column determine the size of transmission lines built.
@@ -718,7 +720,7 @@ class SupplyCurve:
 
     @staticmethod
     def _get_capacity(sc_gid, sc_table, connectable=True,
-                      sc_capacity_col=SupplyCurveField.CAPACITY):
+                      sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Get capacity of supply curve point
 
@@ -767,7 +769,8 @@ class SupplyCurve:
     def _compute_trans_cap_cost(cls, trans_table, trans_costs=None,
                                 avail_cap_frac=1, max_workers=None,
                                 connectable=True, line_limited=False,
-                                sc_capacity_col=SupplyCurveField.CAPACITY):
+                                sc_capacity_col=(
+                                    SupplyCurveField.CAPACITY_AC_MW)):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -940,7 +943,7 @@ class SupplyCurve:
 
         cost *= self._trans_table[self._sc_capacity_col]
         # align with "mean_cf"
-        cost /= self._trans_table[SupplyCurveField.CAPACITY]
+        cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
         cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
         resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
 
@@ -952,7 +955,7 @@ class SupplyCurve:
                        .values.copy())
             fr_cost *= self._trans_table[self._sc_capacity_col]
             # align with "mean_cf"
-            fr_cost /= self._trans_table[SupplyCurveField.CAPACITY]
+            fr_cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
             lcoe_fr = lcot_fr + resource_lcoe
@@ -971,7 +974,7 @@ class SupplyCurve:
                       .values.copy())
             r_cost *= self._trans_table[self._sc_capacity_col]
             # align with "mean_cf"
-            r_cost /= self._trans_table[SupplyCurveField.CAPACITY]
+            r_cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]
             cost += r_cost  # $/MW
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)

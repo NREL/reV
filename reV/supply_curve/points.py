@@ -1979,6 +1979,28 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.area * self.power_density_ac
 
     @property
+    def capacity_dc(self):
+        """Get the DC estimated capacity in MW of the supply curve point
+        in the current resource class with the applied exclusions.
+
+        This values is provided only for solar inputs that have
+        the "dc_ac_ratio" dataset in the generation file. If these
+        conditions are not met, this value is `None`.
+
+        Returns
+        -------
+        capacity : float | None
+            Estimated AC capacity in MW of the supply curve point in the
+            current resource class with the applied exclusions. Only not
+            `None` for solar runs with "dc_ac_ratio" dataset in the
+            generation file
+        """
+        if self.power_density_ac is None:
+            return None
+
+        return self.area * self.power_density
+
+    @property
     def sc_point_capital_cost(self):
         """Get the capital cost for the entire SC point.
 
@@ -2206,12 +2228,17 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.MEAN_CF: self.mean_cf,
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
-            SupplyCurveField.CAPACITY: self.capacity,
             SupplyCurveField.AREA_SQ_KM: self.area,
+            SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
         }
 
+        if self.capacity_ac is None:
+            ARGS[SupplyCurveField.CAPACITY_AC_MW] = self.capacity
+        else:
+            ARGS[SupplyCurveField.CAPACITY_AC_MW] = self.capacity_ac
+
         extra_atts = {
-            SupplyCurveField.CAPACITY_AC: self.capacity_ac,
+            # SupplyCurveField.CAPACITY_AC: self.capacity_ac,
             SupplyCurveField.OFFSHORE: self.offshore,
             SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
             SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (

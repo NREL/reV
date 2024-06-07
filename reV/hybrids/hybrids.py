@@ -39,8 +39,8 @@ NON_DUPLICATE_COLS = {
     SupplyCurveField.SC_COL_IND
 }
 DROPPED_COLUMNS = [SupplyCurveField.GID]
-DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY}': 0,
-                       f'wind_{SupplyCurveField.CAPACITY}': 0,
+DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY_AC_MW}': 0,
+                       f'wind_{SupplyCurveField.CAPACITY_AC_MW}': 0,
                        f'solar_{SupplyCurveField.MEAN_CF}': 0,
                        f'wind_{SupplyCurveField.MEAN_CF}': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
@@ -1196,8 +1196,8 @@ class Hybridization:
     def __rep_profile_hybridization_params(self):
         """Zip the rep profile hybridization parameters."""
 
-        cap_col_names = [f"hybrid_solar_{SupplyCurveField.CAPACITY}",
-                         f"hybrid_wind_{SupplyCurveField.CAPACITY}"]
+        cap_col_names = [f"hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}",
+                         f"hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}"]
         idx_maps = [
             self.meta_hybridizer.solar_profile_indices_map,
             self.meta_hybridizer.wind_profile_indices_map,

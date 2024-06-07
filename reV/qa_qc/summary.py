@@ -597,11 +597,11 @@ class SummaryPlots(PlotBase):
         sc_df : pandas.DataFrame
             Supply curve data
         """
-        values = [SupplyCurveField.CAPACITY, lcoe]
+        values = [SupplyCurveField.CAPACITY_AC_MW, lcoe]
         self._check_value(self.summary, values, scatter=False)
         sc_df = self.summary[values].sort_values(lcoe)
         sc_df['cumulative_capacity'] = (
-            sc_df[SupplyCurveField.CAPACITY].cumsum()
+            sc_df[SupplyCurveField.CAPACITY_AC_MW].cumsum()
         )
 
         return sc_df
@@ -800,11 +800,11 @@ class SupplyCurvePlot(PlotBase):
         sc_df : pandas.DataFrame
             Supply curve data
         """
-        values = [SupplyCurveField.CAPACITY, lcoe]
+        values = [SupplyCurveField.CAPACITY_AC_MW, lcoe]
         self._check_value(self.sc_table, values, scatter=False)
         sc_df = self.sc_table[values].sort_values(lcoe)
         sc_df['cumulative_capacity'] = (
-            sc_df[SupplyCurveField.CAPACITY].cumsum()
+            sc_df[SupplyCurveField.CAPACITY_AC_MW].cumsum()
         )
 
         return sc_df

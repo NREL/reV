@@ -211,7 +211,9 @@ def test_sc_agg_econ_scale():
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
 
-        eqn = f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"
+        eqn = (
+            f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"
+        )
         out_fp_base = os.path.join(td, "base")
         base = SupplyCurveAggregation(
             EXCL,
@@ -271,7 +273,7 @@ def test_sc_agg_econ_scale():
 
         assert np.allclose(true_scaled_lcoe, sc_df[SupplyCurveField.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[SupplyCurveField.RAW_LCOE])
-        sc_df = sc_df.sort_values(SupplyCurveField.CAPACITY)
+        sc_df = sc_df.sort_values(SupplyCurveField.CAPACITY_AC_MW)
         assert all(sc_df[SupplyCurveField.MEAN_LCOE].diff()[1:] < 0)
         for i in sc_df.index.values:
             if sc_df.loc[i, 'scalars'] < 1:

@@ -566,7 +566,7 @@ class BespokeSinglePlant:
 
         # {meta_column: sam_sys_input_key}
         required = {
-            SupplyCurveField.CAPACITY: "system_capacity",
+            SupplyCurveField.CAPACITY_AC_MW: "system_capacity",
             SupplyCurveField.TURBINE_X_COORDS: "wind_farm_xCoordinates",
             SupplyCurveField.TURBINE_Y_COORDS: "wind_farm_yCoordinates",
         }
@@ -1356,7 +1356,7 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta[SupplyCurveField.CAPACITY] = (
+        self._meta[SupplyCurveField.CAPACITY_AC_MW] = (
             self.outputs["system_capacity"] / 1e3
         )
 

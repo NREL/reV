@@ -31,9 +31,9 @@ def aggregate_solar_capacity(h):
     capacity ratio and the solar capacity is copied into this new
     column.
     """
-    if f'hybrid_solar_{SupplyCurveField.CAPACITY}' in h.hybrid_meta:
+    if f'hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}' in h.hybrid_meta:
         return None
-    return h.hybrid_meta[f'solar_{SupplyCurveField.CAPACITY}']
+    return h.hybrid_meta[f'solar_{SupplyCurveField.CAPACITY_AC_MW}']
 
 
 def aggregate_wind_capacity(h):
@@ -60,9 +60,9 @@ def aggregate_wind_capacity(h):
     exist, it is assumed that there is no limit on the solar to wind
     capacity ratio and the wind capacity is copied into this new column.
     """
-    if f'hybrid_wind_{SupplyCurveField.CAPACITY}' in h.hybrid_meta:
+    if f'hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}' in h.hybrid_meta:
         return None
-    return h.hybrid_meta[f'wind_{SupplyCurveField.CAPACITY}']
+    return h.hybrid_meta[f'wind_{SupplyCurveField.CAPACITY_AC_MW}']
 
 
 def aggregate_capacity(h):
@@ -81,8 +81,8 @@ def aggregate_capacity(h):
         A series of data containing the aggregated capacity, or `None`
         if the capacity columns are missing.
     """
-    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY}'
-    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY}'
+    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}'
+    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}'
     missing_solar_cap = sc not in h.hybrid_meta.columns
     missing_wind_cap = wc not in h.hybrid_meta.columns
     if missing_solar_cap or missing_wind_cap:
@@ -109,8 +109,8 @@ def aggregate_capacity_factor(h):
         if the capacity and/or mean_cf columns are missing.
     """
 
-    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY}'
-    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY}'
+    sc = f'hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}'
+    wc = f'hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}'
     scf = f'solar_{SupplyCurveField.MEAN_CF}'
     wcf = f'wind_{SupplyCurveField.MEAN_CF}'
     missing_solar_cap = sc not in h.hybrid_meta.columns
@@ -130,8 +130,10 @@ def aggregate_capacity_factor(h):
 
 
 HYBRID_METHODS = {
-    f'hybrid_solar_{SupplyCurveField.CAPACITY}': aggregate_solar_capacity,
-    f'hybrid_wind_{SupplyCurveField.CAPACITY}': aggregate_wind_capacity,
-    f'hybrid_{SupplyCurveField.CAPACITY}': aggregate_capacity,
+    f'hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}': (
+        aggregate_solar_capacity
+    ),
+    f'hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}': aggregate_wind_capacity,
+    f'hybrid_{SupplyCurveField.CAPACITY_AC_MW}': aggregate_capacity,
     f'hybrid_{SupplyCurveField.MEAN_CF}': aggregate_capacity_factor
 }

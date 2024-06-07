@@ -469,7 +469,7 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert SupplyCurveField.CAPACITY in bsp.meta
+        assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
         assert SupplyCurveField.MEAN_CF in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
@@ -503,7 +503,7 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert SupplyCurveField.CAPACITY in bsp.meta
+        assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
         assert SupplyCurveField.MEAN_CF in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
@@ -1190,7 +1190,7 @@ def test_bespoke_prior_run():
         cols = [
             SupplyCurveField.TURBINE_X_COORDS,
             SupplyCurveField.TURBINE_Y_COORDS,
-            SupplyCurveField.CAPACITY,
+            SupplyCurveField.CAPACITY_AC_MW,
             SupplyCurveField.N_GIDS,
             SupplyCurveField.GID_COUNTS,
             SupplyCurveField.RES_GIDS,

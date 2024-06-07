@@ -162,13 +162,13 @@ def test_agg_summary_solar_ac(pd):
         )
         summary = sca.summarize(gen, max_workers=1)
 
-    assert SupplyCurveField.CAPACITY_AC in summary
-    assert np.allclose(summary[SupplyCurveField.CAPACITY] / 1.3,
-                       summary[SupplyCurveField.CAPACITY_AC])
+    assert SupplyCurveField.CAPACITY_AC_MW in summary
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW] / 1.3,
+                       summary[SupplyCurveField.CAPACITY_AC_MW])
 
 
 def test_multi_file_excl():
-    """Test sc aggregation with multple exclusion file inputs."""
+    """Test sc aggregation with multiple exclusion file inputs."""
 
     excl_dict = {
         "ri_srtm_slope": {
@@ -360,7 +360,7 @@ def test_agg_scalar_excl():
     )
     summary_with_weights = sca.summarize(GEN, max_workers=1)
 
-    dsets = [SupplyCurveField.AREA_SQ_KM, SupplyCurveField.CAPACITY]
+    dsets = [SupplyCurveField.AREA_SQ_KM, SupplyCurveField.CAPACITY_AC_MW]
     for dset in dsets:
         diff = summary_base[dset].values / summary_with_weights[dset].values
         msg = ("Fractional exclusions failed for {} which has values {} and {}"
@@ -433,7 +433,7 @@ def test_data_layer_methods():
 
 @pytest.mark.parametrize(
     "cap_cost_scale",
-    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"]
+    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
 )
 def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
