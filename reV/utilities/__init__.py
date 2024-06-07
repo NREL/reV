@@ -190,6 +190,8 @@ class _LegacySCAliases(Enum):
     values where each string value represents a previously known alias.
     """
 
+    CAPACITY_AC_MW = "capacity"
+
 
 class ModuleName(str, Enum):
     """A collection of the module names available in reV.
