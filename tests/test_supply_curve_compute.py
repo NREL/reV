@@ -762,12 +762,6 @@ def test_least_cost_simple_with_ac_capacity_column():
             trans_tables.append(out_fp)
 
         sc = SupplyCurve(SC_POINTS, trans_tables)
-        # sc = SC_POINTS.copy()
-        # sc[SupplyCurveField.CAPACITY_DC_MW] = (
-        #     sc[SupplyCurveField.CAPACITY_AC_MW].values
-        # )
-        # sc = SupplyCurve(sc, trans_tables,
-        #                  sc_capacity_col=SupplyCurveField.CAPACITY_DC_MW)
         sc_simple = sc.simple_sort(fcr=0.1)
         verify_trans_cap(sc_simple, trans_tables)
 
