@@ -2231,7 +2231,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.AREA_SQ_KM: self.area,
             SupplyCurveField.CAPACITY_AC_MW: (
                 self.capacity if self.capacity_ac is None else self.capacity_ac
-            )
+            ),
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
         }
 
