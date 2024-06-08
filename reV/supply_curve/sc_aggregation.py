@@ -784,7 +784,7 @@ class SupplyCurveAggregation(BaseAggregation):
 
     @staticmethod
     def _get_res_gen_lcoe_data(
-        gen, res_class_dset, res_class_bins, cf_dset, lcoe_dset
+        gen, res_class_dset, res_class_bins, lcoe_dset
     ):
         """Extract the basic resource / generation / lcoe data to be used in
         the aggregation process.
@@ -800,8 +800,6 @@ class SupplyCurveAggregation(BaseAggregation):
         res_class_bins : list | None
             List of two-entry lists dictating the resource class bins.
             None if no resource classes.
-        cf_dset : str
-            Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
 
@@ -811,16 +809,14 @@ class SupplyCurveAggregation(BaseAggregation):
             Extracted resource data from res_class_dset
         res_class_bins : list
             List of resouce class bin ranges.
-        cf_data : np.ndarray | None
-            Capacity factor data extracted from cf_dset in gen
         lcoe_data : np.ndarray | None
             LCOE data extracted from lcoe_dset in gen
         """
 
-        dset_list = (res_class_dset, cf_dset, lcoe_dset)
+        dset_list = (res_class_dset, lcoe_dset)
         gen_dsets = [] if gen is None else gen.datasets
-        labels = ("res_class_dset", "cf_dset", "lcoe_dset")
-        temp = [None, None, None]
+        labels = ("res_class_dset", "lcoe_dset")
+        temp = [None, None]
 
         if isinstance(gen, Resource):
             source_fps = [gen.h5_file]
@@ -847,12 +843,12 @@ class SupplyCurveAggregation(BaseAggregation):
                 logger.warning(w)
                 warn(w, OutputWarning)
 
-        res_data, cf_data, lcoe_data = temp
+        res_data, lcoe_data = temp
 
         if res_class_dset is None or res_class_bins is None:
             res_class_bins = [None]
 
-        return res_data, res_class_bins, cf_data, lcoe_data
+        return res_data, res_class_bins, lcoe_data
 
     @staticmethod
     def _get_extra_dsets(gen, h5_dsets):
@@ -1110,9 +1106,9 @@ class SupplyCurveAggregation(BaseAggregation):
             excl_fpath, gen_fpath, **file_kwargs
         ) as fh:
             temp = cls._get_res_gen_lcoe_data(
-                fh.gen, res_class_dset, res_class_bins, cf_dset, lcoe_dset
+                fh.gen, res_class_dset, res_class_bins, lcoe_dset
             )
-            res_data, res_class_bins, cf_data, lcoe_data = temp
+            res_data, res_class_bins, lcoe_data = temp
             h5_dsets_data = cls._get_extra_dsets(fh.gen, h5_dsets)
 
             n_finished = 0
@@ -1131,7 +1127,7 @@ class SupplyCurveAggregation(BaseAggregation):
                             gen_index,
                             res_class_dset=res_data,
                             res_class_bin=res_bin,
-                            cf_dset=cf_data,
+                            cf_dset=cf_dset,
                             lcoe_dset=lcoe_data,
                             h5_dsets=h5_dsets_data,
                             data_layers=fh.data_layers,

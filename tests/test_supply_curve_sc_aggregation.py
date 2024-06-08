@@ -151,15 +151,22 @@ def test_agg_summary():
 def test_agg_summary_solar_ac(pd):
     """Test the aggregation summary method for solar ac outputs."""
 
+    with Outputs(GEN, "r") as out:
+        cf_means_dc = out["cf_mean-means"]
+
     with tempfile.TemporaryDirectory() as td:
         gen = os.path.join(td, "gen.h5")
         shutil.copy(GEN, gen)
         Outputs.add_dataset(
             gen, "dc_ac_ratio", np.array([1.3] * 188), np.float32
         )
+        Outputs.add_dataset(
+            gen, "cf_mean_ac-means", cf_means_dc * 1.3, np.float32
+        )
 
         with Outputs(gen, "r") as out:
             assert "dc_ac_ratio" in out.datasets
+            assert "cf_mean_ac-means" in out.datasets
 
         sca = SupplyCurveAggregation(
             EXCL,
@@ -173,8 +180,21 @@ def test_agg_summary_solar_ac(pd):
         summary = sca.summarize(gen, max_workers=1)
 
     assert SupplyCurveField.CAPACITY_AC_MW in summary
+    assert SupplyCurveField.CAPACITY_DC_MW in summary
+    assert SupplyCurveField.MEAN_CF_AC in summary
+    assert SupplyCurveField.MEAN_CF_DC in summary
+
+    assert not summary[SupplyCurveField.CAPACITY_AC_MW].isna().any()
+    assert not summary[SupplyCurveField.CAPACITY_DC_MW].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_AC].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_DC].isna().any()
+
     assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW] / 1.3,
                        summary[SupplyCurveField.CAPACITY_AC_MW])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_DC],
+                       summary[SupplyCurveField.CAPACITY_AC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_AC])
 
 
 def test_multi_file_excl():
