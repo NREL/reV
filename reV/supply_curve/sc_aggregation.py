@@ -1075,7 +1075,6 @@ class SupplyCurveAggregation(BaseAggregation):
         summary = []
 
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-            points = sc.points
             exclusion_shape = sc.exclusions.shape
             if gids is None:
                 gids = sc.valid_sc_points(tm_dset)
@@ -1147,11 +1146,6 @@ class SupplyCurveAggregation(BaseAggregation):
                     except EmptySupplyCurvePointError:
                         logger.debug("SC point {} is empty".format(gid))
                     else:
-                        pointsum[SupplyCurveField.SC_POINT_GID] = gid
-                        pointsum[SupplyCurveField.SC_ROW_IND] = \
-                            points.loc[gid, 'row_ind']
-                        pointsum[SupplyCurveField.SC_COL_IND] = \
-                            points.loc[gid, 'col_ind']
                         pointsum['res_class'] = ri
 
                         summary.append(pointsum)

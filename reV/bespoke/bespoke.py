@@ -838,28 +838,23 @@ class BespokeSinglePlant:
                 [float(np.round(n, 1)) for n in self.sc_point.gid_counts]
             )
 
-            with SupplyCurveExtent(
-                self.sc_point._excl_fpath, resolution=self.sc_point.resolution
-            ) as sc:
-                row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
-
             self._meta = pd.DataFrame(
                 {
-                    SupplyCurveField.SC_POINT_GID: self.sc_point.gid,
-                    SupplyCurveField.SC_ROW_IND: row_ind,
-                    SupplyCurveField.SC_COL_IND: col_ind,
-                    SupplyCurveField.GID: self.sc_point.gid,
                     SupplyCurveField.LATITUDE: self.sc_point.latitude,
                     SupplyCurveField.LONGITUDE: self.sc_point.longitude,
-                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
                     SupplyCurveField.COUNTRY: self.sc_point.country,
                     SupplyCurveField.STATE: self.sc_point.state,
                     SupplyCurveField.COUNTY: self.sc_point.county,
                     SupplyCurveField.ELEVATION: self.sc_point.elevation,
-                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
+                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
+                    SupplyCurveField.SC_POINT_GID: self.sc_point.sc_point_gid,
+                    SupplyCurveField.SC_ROW_IND: self.sc_point.sc_row_ind,
+                    SupplyCurveField.SC_COL_IND: self.sc_point.sc_col_ind,
                     SupplyCurveField.RES_GIDS: res_gids,
                     SupplyCurveField.GID_COUNTS: gid_counts,
                     SupplyCurveField.N_GIDS: self.sc_point.n_gids,
+                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
+                    SupplyCurveField.GID: self.sc_point.gid,
                     SupplyCurveField.AREA_SQ_KM: self.sc_point.area,
                 },
                 index=[self.sc_point.gid],

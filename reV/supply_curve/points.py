@@ -51,9 +51,9 @@ class AbstractSupplyCurvePoint(ABC):
 
         self._gid = gid
         self._resolution = resolution
-        self._rows, self._cols = self._parse_slices(
-            gid, resolution, exclusion_shape
-        )
+        self._rows = self._cols = self._sc_row_ind = self._sc_col_ind = None
+        self._parse_sc_row_col_ind(resolution, exclusion_shape)
+        self._parse_slices(resolution, exclusion_shape)
 
     @staticmethod
     def _ordered_unique(seq):
@@ -74,32 +74,33 @@ class AbstractSupplyCurvePoint(ABC):
 
         return [x for x in seq if not (x in seen or seen.add(x))]
 
-    def _parse_slices(self, gid, resolution, exclusion_shape):
-        """Parse inputs for the definition of this SC point.
+    def _parse_sc_row_col_ind(self, resolution, exclusion_shape):
+        """Parse SC row and column index.
 
         Parameters
         ----------
-        gid : int | None
-            gid for supply curve point to analyze.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
-            Shape of the exclusions extent (rows, cols). Inputing this will
-            speed things up considerably.
-
-        Returns
-        -------
-        rows : slice
-            Row slice to index the high-res layer (exclusions) for the gid in
-            the agg layer (supply curve).
-        cols : slice
-            Col slice to index the high-res layer (exclusions) for the gid in
-            the agg layer (supply curve).
+            Shape of the exclusions extent (rows, cols).
         """
+        n_sc_cols = int(np.ceil(exclusion_shape[1] / resolution))
 
-        rows, cols = self.get_agg_slices(gid, exclusion_shape, resolution)
+        self._sc_row_ind = self._gid // n_sc_cols
+        self._sc_col_ind = self._gid % n_sc_cols
 
-        return rows, cols
+    def _parse_slices(self, resolution, exclusion_shape):
+        """Parse row and column resource/generation grid slices.
+
+        Parameters
+        ----------
+        resolution : int | None
+            SC resolution, must be input in combination with gid.
+        exclusion_shape : tuple
+            Shape of the exclusions extent (rows, cols).
+        """
+        inds = self.get_agg_slices(self._gid, exclusion_shape, resolution)
+        self._rows, self._cols = inds
 
     @property
     def gid(self):
@@ -116,6 +117,16 @@ class AbstractSupplyCurvePoint(ABC):
         int
         """
         return self._gid
+
+    @property
+    def sc_row_ind(self):
+        """int: Supply curve row index"""
+        return self._sc_row_ind
+
+    @property
+    def sc_col_ind(self):
+        """int: Supply curve column index"""
+        return self._sc_col_ind
 
     @property
     def resolution(self):
@@ -1273,6 +1284,8 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """
         meta = {
             SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+            SupplyCurveField.SC_ROW_IND: self.sc_row_ind,
+            SupplyCurveField.SC_COL_IND: self.sc_col_ind,
             SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
@@ -2264,15 +2277,19 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         ARGS = {
             SupplyCurveField.LATITUDE: self.latitude,
             SupplyCurveField.LONGITUDE: self.longitude,
-            SupplyCurveField.TIMEZONE: self.timezone,
             SupplyCurveField.COUNTRY: self.country,
             SupplyCurveField.STATE: self.state,
             SupplyCurveField.COUNTY: self.county,
             SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.TIMEZONE: self.timezone,
+            SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+            SupplyCurveField.SC_ROW_IND: self.sc_row_ind,
+            SupplyCurveField.SC_COL_IND: self.sc_col_ind,
             SupplyCurveField.RES_GIDS: self.res_gid_set,
             SupplyCurveField.GEN_GIDS: self.gen_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
+            SupplyCurveField.OFFSHORE: self.offshore,
             SupplyCurveField.MEAN_CF_AC: (
                 self.mean_cf if self.mean_cf_ac is None else self.mean_cf_ac
             ),
@@ -2287,7 +2304,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         }
 
         extra_atts = {
-            SupplyCurveField.OFFSHORE: self.offshore,
             SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
             SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
                 self.sc_point_fixed_operating_cost
