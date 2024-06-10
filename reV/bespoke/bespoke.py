@@ -80,6 +80,7 @@ class BespokeMultiPlantData:
         self._wind_speeds = None
         self._temps = None
         self._pressures = None
+        self._relative_humidities = None
         self._time_index = None
         self._pre_load_data()
 
@@ -117,6 +118,10 @@ class BespokeMultiPlantData:
                 hh: res[f"pressure_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
             }
+            self._relative_humidities = {
+                hh: res["relativehumidity_2m", :, gids]
+                for hh, gids in self.hh_to_res_gids.items()
+            }
             self._time_index = res.time_index
 
         logger.debug(
@@ -146,6 +151,7 @@ class BespokeMultiPlantData:
             self._wind_speeds[hh][:, data_inds],
             self._temps[hh][:, data_inds],
             self._pressures[hh][:, data_inds],
+            self._relative_humidities[hh][:, data_inds],
             self._time_index,
         )
 
@@ -159,7 +165,8 @@ class BespokeSinglePlantData:
     """
 
     def __init__(
-        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index
+        self, data_inds, wind_dirs, wind_speeds, temps, pressures,
+        relative_humidities, time_index
     ):
         """Initialize BespokeSinglePlantData
 
@@ -170,9 +177,24 @@ class BespokeSinglePlantData:
             the second dimension of `wind_dirs`, `wind_speeds`, `temps`,
             and `pressures`. The GID value of data_inds[0] should
             correspond to the `wind_dirs[:, 0]` data, etc.
-        wind_dirs, wind_speeds, temps, pressures : 2D np.array
-            Array of wind directions, wind speeds, temperatures, and
-            pressures, respectively. Dimensions should be correspond to
+        wind_dirs : 2D np.array
+            Array of wind directions. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        wind_speeds : 2D np.array
+            Array of wind speeds. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        temps : 2D np.array
+            Array oftemperatures. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        pressures : 2D np.array
+            Array of pressures. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        relative_humidities : 2D np.array
+            Array of relative humidities. Dimensions should be correspond to
             [time, location]. See documentation for `data_inds` for
             required spatial mapping of GID values.
         time_index : 1D np.array
@@ -185,6 +207,7 @@ class BespokeSinglePlantData:
         self.wind_speeds = wind_speeds
         self.temps = temps
         self.pressures = pressures
+        self.relative_humidities = relative_humidities
         self.time_index = time_index
 
     def __getitem__(self, key):
@@ -198,6 +221,8 @@ class BespokeSinglePlantData:
             return self.temps[t_idx, data_inds]
         if "pressure" in dset_name:
             return self.pressures[t_idx, data_inds]
+        if "relativehumidity" in dset_name:
+            return self.relative_humidities[t_idx, data_inds]
         msg = f"Unknown dataset name: {dset_name!r}"
         logger.error(msg)
         raise ValueError(msg)
