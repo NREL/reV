@@ -1554,7 +1554,3 @@ def test_bespoke_5min_sample():
             assert len(f["time_index-2010"]) == 8760
             assert len(f["windspeed-2010"]) == 8760
             assert len(f["winddirection-2010"]) == 8760
-
-
-if __name__ == "__main__":
-    test_bespoke_run_with_icing_cutoff()
