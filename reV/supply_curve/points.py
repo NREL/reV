@@ -1284,8 +1284,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         """
         meta = {
             SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
-            SupplyCurveField.SC_ROW_IND: self.sc_row_ind,
-            SupplyCurveField.SC_COL_IND: self.sc_col_ind,
             SupplyCurveField.SOURCE_GIDS: self.h5_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
