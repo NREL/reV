@@ -84,7 +84,8 @@ OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
 )
-EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
+EXPECTED_META_COLUMNS = [SupplyCurveField.SC_GID,
+                         SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.TURBINE_X_COORDS,
                          SupplyCurveField.TURBINE_Y_COORDS,
                          SupplyCurveField.RES_GIDS,
@@ -603,7 +604,7 @@ def test_bespoke():
         assert out_fpath_truth == test_fpath
         assert os.path.exists(out_fpath_truth)
         with Resource(out_fpath_truth) as f:
-            meta = f.meta
+            meta = f.meta.reset_index()
             assert len(meta) <= len(points)
             for col in EXPECTED_META_COLUMNS:
                 assert col in meta

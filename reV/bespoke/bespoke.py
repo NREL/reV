@@ -2213,6 +2213,7 @@ class BespokeWindPlants(BaseAggregation):
             meta = pd.concat(meta, axis=0)
         else:
             meta = meta[0]
+        meta.index.name = SupplyCurveField.SC_GID
         return meta
 
     @property
