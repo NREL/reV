@@ -2300,15 +2300,15 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             ),
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
             SupplyCurveField.EOS_MULT: 1,  # added later
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
+                self.sc_point_annual_energy
+            ),
         }
 
         extra_atts = {
             SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
             SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
                 self.sc_point_fixed_operating_cost
-            ),
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
-                self.sc_point_annual_energy
             ),
         }
         for attr, value in extra_atts.items():

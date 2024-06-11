@@ -195,6 +195,14 @@ def test_agg_summary_solar_ac(pd):
                        * summary[SupplyCurveField.MEAN_CF_DC],
                        summary[SupplyCurveField.CAPACITY_AC_MW]
                        * summary[SupplyCurveField.MEAN_CF_AC])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_DC]
+                       * 8760,
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_AC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_AC]
+                       * 8760,
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY])
 
 
 def test_multi_file_excl():

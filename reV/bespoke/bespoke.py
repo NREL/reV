@@ -1253,9 +1253,12 @@ class BespokeSinglePlant:
 
         self._outputs.update(means)
 
+        self._meta[SupplyCurveField.MEAN_CF_DC] = None
+        self._meta[SupplyCurveField.MEAN_CF_AC] = None
+        self._meta[SupplyCurveField.MEAN_LCOE] = None
+        self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY] = None
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
-            self._meta.loc[:, SupplyCurveField.MEAN_CF_DC] = None
             self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
                 "cf_mean-means"
             ]
@@ -1264,6 +1267,10 @@ class BespokeSinglePlant:
                 "lcoe_fcr-means"
             ]
             self.recalc_lcoe()
+        if "annual_energy-means" in self.outputs:
+            self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY] = (
+                self.outputs["annual_energy-means"] / 1000
+            )
 
         logger.debug("Timeseries analysis complete!")
 
