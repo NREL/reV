@@ -84,8 +84,7 @@ OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
 )
-EXPECTED_META_COLUMNS = [SupplyCurveField.SC_GID,
-                         SupplyCurveField.SC_POINT_GID,
+EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.TURBINE_X_COORDS,
                          SupplyCurveField.TURBINE_Y_COORDS,
                          SupplyCurveField.RES_GIDS,
@@ -785,6 +784,8 @@ def test_bespoke_supply_curve():
 
         sc = SupplyCurve(bespoke_sc_fp, trans_tables)
         sc_full = sc.full_sort(fcr=0.1, avail_cap_frac=0.1)
+
+        assert SupplyCurveField.SC_GID in sc_full
 
         assert all(
             gid in sc_full[SupplyCurveField.SC_GID]
