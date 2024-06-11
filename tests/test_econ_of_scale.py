@@ -188,7 +188,7 @@ def test_econ_of_scale_baseline():
         sc_df = pd.read_csv(out_fp_sc + ".csv")
         assert np.allclose(base_df[SupplyCurveField.MEAN_LCOE],
                            sc_df[SupplyCurveField.MEAN_LCOE])
-        assert (sc_df[SupplyCurveField.CAPITAL_COST_SCALAR] == 1).all()
+        assert (sc_df[SupplyCurveField.EOS_MULT] == 1).all()
         assert np.allclose(sc_df['mean_capital_cost'],
                            sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
 
@@ -267,8 +267,7 @@ def test_sc_agg_econ_scale():
             + data["fixed_operating_cost"]
         ) / aep + data["variable_operating_cost"]
 
-        assert np.allclose(scalars,
-                           sc_df[SupplyCurveField.CAPITAL_COST_SCALAR])
+        assert np.allclose(scalars, sc_df[SupplyCurveField.EOS_MULT])
         assert np.allclose(scalars * sc_df['mean_capital_cost'],
                            sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
 

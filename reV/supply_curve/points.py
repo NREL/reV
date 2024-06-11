@@ -2299,6 +2299,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 self.capacity if self.capacity_ac is None else self.capacity_ac
             ),
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
+            SupplyCurveField.EOS_MULT: 1,  # added later
         }
 
         extra_atts = {
@@ -2362,7 +2363,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         eos = EconomiesOfScale(cap_cost_scale, summary)
         summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
         summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
-        summary[SupplyCurveField.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
+        summary[SupplyCurveField.EOS_MULT] = eos.capital_cost_scalar
         summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
         if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
             scaled_costs = (

@@ -154,7 +154,6 @@ class SupplyCurveField(FieldEnum):
     MEAN_LCOE_FRICTION = "mean_lcoe_friction"
     TOTAL_LCOE_FRICTION = "total_lcoe_friction"
     RAW_LCOE = "raw_lcoe"
-    CAPITAL_COST_SCALAR = "capital_cost_scalar"
     SCALED_CAPITAL_COST = "scaled_capital_cost"
     SCALED_SC_POINT_CAPITAL_COST = "scaled_sc_point_capital_cost"
     TURBINE_X_COORDS = "turbine_x_coords"
@@ -195,6 +194,7 @@ class _LegacySCAliases(Enum):
     """
 
     CAPACITY_AC_MW = "capacity"
+    EOS_MULT = "capital_cost_multiplier"
 
 
 class ModuleName(str, Enum):
