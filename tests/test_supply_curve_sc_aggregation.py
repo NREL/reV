@@ -135,6 +135,8 @@ def test_agg_summary():
     assert SupplyCurveField.CAPACITY_DC_MW in summary
     assert SupplyCurveField.MEAN_CF_AC in summary
     assert SupplyCurveField.MEAN_CF_DC in summary
+    assert SupplyCurveField.REG_MULT in summary
+    assert SupplyCurveField.EOS_MULT in summary
 
     # dc outputs are `None` because old gen file does not have correct
     # output dsets
@@ -142,6 +144,9 @@ def test_agg_summary():
     assert not summary[SupplyCurveField.CAPACITY_DC_MW].isna().all()
     assert not summary[SupplyCurveField.MEAN_CF_AC].isna().any()
     assert not summary[SupplyCurveField.MEAN_CF_DC].isna().all()
+
+    assert np.allclose(summary[SupplyCurveField.REG_MULT], 1)
+    assert np.allclose(summary[SupplyCurveField.EOS_MULT], 1)
 
     summary = summary[list(s_baseline.columns)]
     assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
@@ -558,6 +563,10 @@ def test_recalc_lcoe(cap_cost_scale):
 
     assert not np.allclose(summary_base[SupplyCurveField.MEAN_LCOE],
                            summary[SupplyCurveField.MEAN_LCOE])
+
+    assert np.allclose(summary[SupplyCurveField.EOS_MULT],
+                       summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST]
+                       / summary[SupplyCurveField.SC_POINT_CAPITAL_COST])
 
     if cap_cost_scale == '1':
         cc_dset = SupplyCurveField.SC_POINT_CAPITAL_COST

@@ -2186,6 +2186,15 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return _h5_dsets_data
 
     @property
+    def regional_multiplier(self):
+        """float: Mean regional capital cost multiplier, defaults to 1."""
+        if "capital_cost_multiplier" not in self.gen.datasets:
+            return 1
+
+        multipliers = self.gen["capital_cost_multiplier"]
+        return self.exclusion_weighted_mean(multipliers)
+
+    @property
     def mean_h5_dsets_data(self):
         """Get the mean supplemental h5 datasets data (optional)
 
@@ -2300,6 +2309,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             ),
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
             SupplyCurveField.EOS_MULT: 1,  # added later
+            SupplyCurveField.REG_MULT: self.regional_multiplier,
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW: (
                 self.sc_point_annual_energy
             ),
