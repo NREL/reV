@@ -28,7 +28,7 @@ from reV.supply_curve.aggregation import (
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import GenerationSupplyCurvePoint
-from reV.utilities import SupplyCurveField, log_versions
+from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
 from reV.utilities.exceptions import (
     EmptySupplyCurvePointError,
     FileInputError,
@@ -170,14 +170,14 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 
             if self._pdf.endswith(".csv"):
                 self._power_density = pd.read_csv(self._pdf)
-                if (SupplyCurveField.GID in self._power_density
+                if (ResourceMetaField.GID in self._power_density
                         and 'power_density' in self._power_density):
                     self._power_density = \
-                        self._power_density.set_index(SupplyCurveField.GID)
+                        self._power_density.set_index(ResourceMetaField.GID)
                 else:
                     msg = ('Variable power density file must include "{}" '
                            'and "power_density" columns, but received: {}'
-                           .format(SupplyCurveField.GID,
+                           .format(ResourceMetaField.GID,
                                    self._power_density.columns.values))
                     logger.error(msg)
                     raise FileInputError(msg)
