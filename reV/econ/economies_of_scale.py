@@ -238,12 +238,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = [
-            SupplyCurveField.FIXED_CHARGE_RATE,
-            "mean_fixed_charge_rate",
-            "fcr",
-            "mean_fcr",
-        ]
+        key_list = ["fixed_charge_rate", "mean_fixed_charge_rate", "fcr",
+                    "mean_fcr"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -255,12 +251,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = [
-            SupplyCurveField.FIXED_OPERATING_COST,
-            "mean_fixed_operating_cost",
-            "foc",
-            "mean_foc",
-        ]
+        key_list = ["fixed_operating_cost", "mean_fixed_operating_cost",
+                    "foc", "mean_foc"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -272,12 +264,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = [
-            SupplyCurveField.VARIABLE_OPERATING_COST,
-            "mean_variable_operating_cost",
-            "voc",
-            "mean_voc",
-        ]
+        key_list = ["variable_operating_cost", "mean_variable_operating_cost",
+                    "voc", "mean_voc"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
