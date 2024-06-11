@@ -152,7 +152,7 @@ class Gen(BaseGen):
          'capital_cost': array([39767200, 39767200, 39767200, 39767200],
          'fixed_operating_cost': array([260000, 260000, 260000, 260000],
          'variable_operating_cost': array([0, 0, 0, 0],
-         'multiplier_regional': array([1, 1, 1, 1],
+         'capital_cost_multiplier': array([1, 1, 1, 1],
          'cf_mean': array([0.17859147, 0.17869979, 0.1834818 , 0.18646291],
          'lcoe_fcr': array([130.32126, 130.24226, 126.84782, 124.81981]}
 

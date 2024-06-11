@@ -241,7 +241,7 @@ def test_econ_from_config(runner, clear_loggers):
         clear_loggers()
 
 
-def test_multiplier_regional(clear_loggers):
+def test_capital_cost_multiplier_regional(clear_loggers):
     """Gen PV CF profiles with write to disk and compare against rev1."""
     with tempfile.TemporaryDirectory() as dirout:
         cf_file = os.path.join(TESTDATADIR,
@@ -251,7 +251,7 @@ def test_multiplier_regional(clear_loggers):
         fpath = os.path.join(dirout, 'lcoe_out_econ_2012.h5')
         mults = np.arange(0, 100) / 100
         points = pd.DataFrame({"gid": np.arange(0, 100),
-                               "multiplier_regional": mults})
+                               "capital_cost_multiplier": mults})
         econ = Econ(points, sam_files, cf_file,
                     output_request='lcoe_fcr',
                     sites_per_worker=25)

@@ -45,7 +45,7 @@ with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
 with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
-LCOE_REQUIRED_OUTPUTS = ("system_capacity", "multiplier_regional",
+LCOE_REQUIRED_OUTPUTS = ("system_capacity", "capital_cost_multiplier",
                          "capital_cost", "fixed_operating_cost",
                          "variable_operating_cost", "base_capital_cost",
                          "base_fixed_operating_cost",

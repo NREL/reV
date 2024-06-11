@@ -924,7 +924,7 @@ def _add_cost_defaults(sam_inputs):
     """Add default values for required cost outputs if they are missing. """
     sam_inputs.setdefault("fixed_charge_rate", None)
 
-    reg_mult = sam_inputs.setdefault("multiplier_regional", 1)
+    reg_mult = sam_inputs.setdefault("capital_cost_multiplier", 1)
     capital_cost = sam_inputs.setdefault("capital_cost", None)
     fixed_operating_cost = sam_inputs.setdefault("fixed_operating_cost", None)
     variable_operating_cost = sam_inputs.setdefault(
