@@ -90,7 +90,7 @@ EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.RES_GIDS,
                          SupplyCurveField.CAPACITY_DC_MW,
                          SupplyCurveField.MEAN_CF_DC,
-                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY]
+                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
 
 
 def test_turbine_placement(gid=33):
@@ -628,7 +628,7 @@ def test_bespoke():
 
             assert np.allclose(
                 f["annual_energy-means"] / 1000,
-                meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY]
+                meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
             )
 
             dsets_2d = (

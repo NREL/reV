@@ -2300,7 +2300,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             ),
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
             SupplyCurveField.EOS_MULT: 1,  # added later
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW: (
                 self.sc_point_annual_energy
             ),
         }
