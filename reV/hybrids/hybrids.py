@@ -713,7 +713,7 @@ class MetaHybridizer:
             self._hybrid_meta.loc[null_idx, no_suffix] = non_null_vals
 
     def _drop_cols(self, duplicate_cols):
-        """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns."""
+        """Drop any remaining duplicate and 'DROPPED_COLUMNS' columns."""
         self._hybrid_meta.drop(
             duplicate_cols + DROPPED_COLUMNS,
             axis=1,

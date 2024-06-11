@@ -455,7 +455,7 @@ class Gen(BaseGen):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a `SupplyCurveField.GID`
+            non-sequential or do not start from 0, so a `SiteDataField.GID`
             column is added.
         """
         if self._meta is None:

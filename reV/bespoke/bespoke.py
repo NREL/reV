@@ -1961,7 +1961,7 @@ class BespokeWindPlants(BaseAggregation):
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
-            `SupplyCurveField.GID` and 'config' column, the config maps to the
+            `SiteDataField.GID` and 'config' column, the config maps to the
             sam_configs dict keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
