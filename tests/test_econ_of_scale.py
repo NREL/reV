@@ -190,7 +190,8 @@ def test_econ_of_scale_baseline():
                            sc_df[SupplyCurveField.MEAN_LCOE])
         assert (sc_df[SupplyCurveField.EOS_MULT] == 1).all()
         assert np.allclose(sc_df['mean_capital_cost'],
-                           sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
+                           sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                           * 20000)
 
 
 def test_sc_agg_econ_scale():

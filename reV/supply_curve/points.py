@@ -1504,7 +1504,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
+            datasets to be aggregated in the gen input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
         apply_exclusions : bool
@@ -1525,6 +1525,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._power_density = self._power_density_ac = power_density
         self._friction_layer = friction_layer
         self._recalc_lcoe = recalc_lcoe
+        self._ssc = None
+        self._slk = {}
 
         super().__init__(
             gid,
@@ -1816,18 +1818,12 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         # year CF, but the output should be identical to the original LCOE and
         # so is not consequential).
         if self._recalc_lcoe:
-            required = (
-                "fixed_charge_rate",
-                "capital_cost",
-                "fixed_operating_cost",
-                "variable_operating_cost",
-                "system_capacity",
-            )
-            if self.mean_h5_dsets_data is not None and all(
-                k in self.mean_h5_dsets_data for k in required
-            ):
+            required = ("fixed_charge_rate", "capital_cost",
+                        "fixed_operating_cost", "variable_operating_cost",
+                        "system_capacity")
+            if all(self._sam_lcoe_kwargs.get(k) is not None for k in required):
                 aep = (
-                    self.mean_h5_dsets_data["system_capacity"]
+                    self._sam_lcoe_kwargs["system_capacity"]
                     * self.mean_cf
                     * 8760
                 )
@@ -1835,11 +1831,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 # `system_capacity`, so no need to scale `capital_cost`
                 # or `fixed_operating_cost` by anything
                 mean_lcoe = lcoe_fcr(
-                    self.mean_h5_dsets_data["fixed_charge_rate"],
-                    self.mean_h5_dsets_data["capital_cost"],
-                    self.mean_h5_dsets_data["fixed_operating_cost"],
+                    self._sam_lcoe_kwargs["fixed_charge_rate"],
+                    self._sam_lcoe_kwargs["capital_cost"],
+                    self._sam_lcoe_kwargs["fixed_operating_cost"],
                     aep,
-                    self.mean_h5_dsets_data["variable_operating_cost"],
+                    self._sam_lcoe_kwargs["variable_operating_cost"],
                 )
 
         # alternative if lcoe was not able to be re-calculated from
@@ -2195,6 +2191,55 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.exclusion_weighted_mean(multipliers)
 
     @property
+    def _sam_system_capacity(self):
+        """float: Mean SAM generation system capacity input, defaults to 0. """
+        if self._ssc is not None:
+            return self._ssc
+
+        self._ssc = 0
+        if "system_capacity" in self.gen.datasets:
+            self._ssc = self.exclusion_weighted_mean(
+                self.gen["system_capacity"]
+            )
+
+        return self._ssc
+
+    @property
+    def _sam_lcoe_kwargs(self):
+        """dict: Mean LCOE inputs, as passed to SAM during generation."""
+        if self._slk:
+            return self._slk
+
+        self._slk = {"capital_cost": None, "fixed_operating_cost": None,
+                     "variable_operating_cost": None,
+                     "fixed_charge_rate": None, "system_capacity": None}
+
+        for dset in self._slk:
+            if dset in self.gen.datasets:
+                self._slk[dset] = self.exclusion_weighted_mean(
+                    self.gen[dset]
+                )
+
+        return self._slk
+
+    def _compute_cost_per_ac_mw(self, dset):
+        """Compute a cost per AC MW for a given input. """
+        if self._sam_system_capacity <= 0:
+            return 0
+
+        if dset not in self.gen.datasets:
+            return 0
+
+        sam_cost = self.exclusion_weighted_mean(self.gen[dset])
+        sam_cost_per_mw = sam_cost / self._sam_system_capacity
+        sc_point_cost = sam_cost_per_mw * self.capacity
+
+        ac_cap = (self.capacity
+                  if self.capacity_ac is None
+                  else self.capacity_ac)
+        return sc_point_cost / ac_cap
+
+    @property
     def mean_h5_dsets_data(self):
         """Get the mean supplemental h5 datasets data (optional)
 
@@ -2313,6 +2358,24 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW: (
                 self.sc_point_annual_energy
             ),
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("capital_cost")
+            ),
+            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_capital_cost")
+            ),
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("fixed_operating_cost")
+            ),
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_fixed_operating_cost")
+            ),
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("variable_operating_cost")
+            ),
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_variable_operating_cost")
+            )
         }
 
         extra_atts = {
@@ -2489,7 +2552,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
+            datasets to be aggregated in the gen input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
 

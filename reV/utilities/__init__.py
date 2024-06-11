@@ -143,15 +143,11 @@ class SupplyCurveField(FieldEnum):
     OFFSHORE = "offshore"
     SC_ROW_IND = "sc_row_ind"
     SC_COL_IND = "sc_col_ind"
-    SC_POINT_CAPITAL_COST = "sc_point_capital_cost"
-    SC_POINT_FIXED_OPERATING_COST = "sc_point_fixed_operating_cost"
     SC_POINT_ANNUAL_ENERGY_MW = "sc_point_annual_energy"
     MEAN_FRICTION = "mean_friction"
     MEAN_LCOE_FRICTION = "mean_lcoe_friction"
     TOTAL_LCOE_FRICTION = "total_lcoe_friction"
     RAW_LCOE = "raw_lcoe"
-    SCALED_CAPITAL_COST = "scaled_capital_cost"
-    SCALED_SC_POINT_CAPITAL_COST = "scaled_sc_point_capital_cost"
     TURBINE_X_COORDS = "turbine_x_coords"
     TURBINE_Y_COORDS = "turbine_y_coords"
     EOS_MULT = "eos_mult"
@@ -161,6 +157,18 @@ class SupplyCurveField(FieldEnum):
     CONVEX_HULL_AREA = "convex_hull_area"
     CONVEX_HULL_CAPACITY_DENSITY = "convex_hull_capacity_density"
     FULL_CELL_CAPACITY_DENSITY = "full_cell_capacity_density"
+
+    COST_BASE_OCC_USD_PER_AC_MW = "cost_base_occ_usd_per_ac_mw"
+    COST_SITE_OCC_USD_PER_AC_MW = "cost_site_occ_usd_per_ac_mw"
+    COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
+    COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
+    COST_BASE_VOC_USD_PER_AC_MW = "cost_base_voc_usd_per_ac_mw"
+    COST_SITE_VOC_USD_PER_AC_MW = "cost_site_voc_usd_per_ac_mw"
+
+    SC_POINT_CAPITAL_COST = "sc_point_capital_cost"
+    SC_POINT_FIXED_OPERATING_COST = "sc_point_fixed_operating_cost"
+    SCALED_CAPITAL_COST = "scaled_capital_cost"
+    SCALED_SC_POINT_CAPITAL_COST = "scaled_sc_point_capital_cost"
 
     @classmethod
     def map_from_legacy(cls):

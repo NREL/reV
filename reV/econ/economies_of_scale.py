@@ -190,6 +190,33 @@ class EconomiesOfScale:
         """
         return self._evaluate()
 
+    def _cost_from_cap(self, col_name):
+        """Get full cost value from cost per mw in data.
+
+        Parameters
+        ----------
+        col_name : str
+            Name of column containing the cost per mw value.
+
+        Returns
+        -------
+        float | None
+            Cost value if it was found in data, ``None`` otherwise.
+        """
+        cap = self._data.get(SupplyCurveField.CAPACITY_AC_MW)
+        if cap is None:
+            return None
+
+        cost_per_mw = self._data.get(col_name)
+        if cost_per_mw is None:
+            return None
+
+        cost = cap * cost_per_mw
+        if cost > 0:
+            return cost
+
+        return None
+
     @property
     def raw_capital_cost(self):
         """Unscaled (raw) capital cost found in the data input arg.
@@ -199,6 +226,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
+        raw_capital_cost_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
+        )
+        if raw_capital_cost_from_cap is not None:
+            return raw_capital_cost_from_cap
+
         key_list = ["capital_cost", "mean_capital_cost"]
         return self._get_prioritized_keys(self._data, key_list)
 
@@ -216,18 +249,6 @@ class EconomiesOfScale:
         cc = copy.deepcopy(self.raw_capital_cost)
         cc *= self.capital_cost_scalar
         return cc
-
-    @property
-    def system_capacity(self):
-        """Get the system capacity in kW (SAM input, not the reV supply
-        curve capacity).
-
-        Returns
-        -------
-        out : float | np.ndarray
-        """
-        key_list = ["system_capacity", "mean_system_capacity"]
-        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def fcr(self):
@@ -251,6 +272,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
+        foc_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW
+        )
+        if foc_from_cap is not None:
+            return foc_from_cap
+
         key_list = ["fixed_operating_cost", "mean_fixed_operating_cost",
                     "foc", "mean_foc"]
         return self._get_prioritized_keys(self._data, key_list)
@@ -264,6 +291,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
+        voc_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW
+        )
+        if voc_from_cap is not None:
+            return voc_from_cap
+
         key_list = ["variable_operating_cost", "mean_variable_operating_cost",
                     "voc", "mean_voc"]
         return self._get_prioritized_keys(self._data, key_list)
