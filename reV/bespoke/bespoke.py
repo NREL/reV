@@ -1335,15 +1335,17 @@ class BespokeSinglePlant:
         self._meta["bespoke_balance_of_system_cost"] = (
             self.plant_optimizer.balance_of_system_cost
         )
-        self._meta["included_area"] = self.plant_optimizer.area
-        self._meta["included_area_capacity_density"] = (
+        self._meta[SupplyCurveField.INCLUDED_AREA] = self.plant_optimizer.area
+        self._meta[SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY] = (
             self.plant_optimizer.capacity_density
         )
-        self._meta["convex_hull_area"] = self.plant_optimizer.convex_hull_area
-        self._meta["convex_hull_capacity_density"] = (
+        self._meta[SupplyCurveField.CONVEX_HULL_AREA] = (
+            self.plant_optimizer.convex_hull_area
+        )
+        self._meta[SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY] = (
             self.plant_optimizer.convex_hull_capacity_density
         )
-        self._meta["full_cell_capacity_density"] = (
+        self._meta[SupplyCurveField.FULL_CELL_CAPACITY_DENSITY] = (
             self.plant_optimizer.full_cell_capacity_density
         )
 

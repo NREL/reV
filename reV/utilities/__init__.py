@@ -112,10 +112,11 @@ class ResourceMetaField(FieldEnum):
 class SupplyCurveField(FieldEnum):
     """An enumerated map to supply curve summary/meta keys.
 
-    Each output name should match the name of a key in
-    meth:`AggregationSupplyCurvePoint.summary` or
-    meth:`GenerationSupplyCurvePoint.point_summary` or
-    meth:`BespokeSinglePlant.meta`
+    This is a collection of known supply curve fields that reV outputs
+    across aggregation, supply curve, and bespoke outputs.
+
+    Not all of these columns are guaranteed in every supply-curve like
+    output (e.g. "convex_hull_area" is a bespoke-only output).
     """
 
     SC_POINT_GID = "sc_point_gid"
@@ -160,6 +161,11 @@ class SupplyCurveField(FieldEnum):
     TURBINE_Y_COORDS = "turbine_y_coords"
     EOS_MULT = "eos_mult"
     REG_MULT = "reg_mult"
+    INCLUDED_AREA = "included_area"
+    INCLUDED_AREA_CAPACITY_DENSITY = "included_area_capacity_density"
+    CONVEX_HULL_AREA = "convex_hull_area"
+    CONVEX_HULL_CAPACITY_DENSITY = "convex_hull_capacity_density"
+    FULL_CELL_CAPACITY_DENSITY = "full_cell_capacity_density"
 
     @classmethod
     def map_from_legacy(cls):
