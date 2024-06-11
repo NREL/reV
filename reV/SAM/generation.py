@@ -887,11 +887,11 @@ class AbstractSamPv(AbstractSamSolar, ABC):
               simulate reduced performance over time.
             - ``analysis_period`` : Integer representing the number of years
               to include in the lifetime of the model generator. Required if
-              ``system_use_lifetime_output``=1.
+              ``system_use_lifetime_output`` is set to 1.
             - ``dc_degradation`` : List of percentage values representing the
               annual DC degradation of capacity factors. Maybe a single value
               that will be compound each year or a vector of yearly rates.
-              Required if ``system_use_lifetime_output``=1.
+              Required if ``system_use_lifetime_output`` is set to 1.
 
         You may also include the following ``reV``-specific keys:
 
@@ -1546,7 +1546,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
               - The design temperature is lower than the resource
                 temperature by a factor of ``MAX_RT_TO_EGS_RATIO``
 
-          If either of these conditions are true, the ``design_temp`` is  a
+          If either of these conditions are true, the ``design_temp`` is
           adjusted to match the resource temperature input in order to
           avoid SAM errors.
         - ``set_EGS_PDT_to_RT`` : Boolean flag to set EGS design

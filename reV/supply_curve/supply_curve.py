@@ -28,7 +28,8 @@ class SupplyCurve:
     """SupplyCurve"""
 
     def __init__(self, sc_points, trans_table, sc_features=None,
-                 sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
+                 # str() to fix docs
+                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW)):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated

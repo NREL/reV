@@ -953,7 +953,7 @@ class RepProfiles(RepProfilesBase):
     def __init__(self, gen_fpath, rev_summary, reg_cols,
                  cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse',
-                 weight=SupplyCurveField.GID_COUNTS,
+                 weight=str(SupplyCurveField.GID_COUNTS),  # str() to fix docs
                  n_profiles=1, aggregate_profiles=False):
         """ReV rep profiles class.
 
