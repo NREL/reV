@@ -81,47 +81,47 @@ def test_lcoe_calc_simple():
     # from pvwattsv7 defaults
     data = {
         "aep": 35188456.00,
-        SupplyCurveField.CAPITAL_COST: 53455000.00,
+        "capital_cost": 53455000.00,
         "foc": 360000.00,
         "voc": 0,
         "fcr": 0.096,
     }
 
-    true_lcoe = (data["fcr"] * data[SupplyCurveField.CAPITAL_COST]
+    true_lcoe = (data["fcr"] * data["capital_cost"]
                  + data["foc"]) / (data["aep"] / 1000)
     data[SupplyCurveField.MEAN_LCOE] = true_lcoe
 
     eos = EconomiesOfScale(eqn, data)
     assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
 
     eqn = 1
     eos = EconomiesOfScale(eqn, data)
     assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
 
     eqn = 2
-    true_scaled = ((data['fcr'] * eqn * data[SupplyCurveField.CAPITAL_COST]
+    true_scaled = ((data['fcr'] * eqn * data["capital_cost"]
                     + data['foc'])
                    / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert eqn * eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 
     data['system_capacity'] = 2
     eqn = '1 / system_capacity'
-    true_scaled = ((data['fcr'] * 0.5 * data[SupplyCurveField.CAPITAL_COST]
+    true_scaled = ((data['fcr'] * 0.5 * data["capital_cost"]
                     + data['foc'])
                    / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert 0.5 * eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 

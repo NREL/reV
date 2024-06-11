@@ -199,10 +199,7 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
-        key_list = [
-            SupplyCurveField.CAPITAL_COST,
-            "mean_capital_cost",
-        ]
+        key_list = ["capital_cost", "mean_capital_cost"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property

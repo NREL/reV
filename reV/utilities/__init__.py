@@ -143,7 +143,6 @@ class SupplyCurveField(FieldEnum):
     OFFSHORE = "offshore"
     SC_ROW_IND = "sc_row_ind"
     SC_COL_IND = "sc_col_ind"
-    CAPITAL_COST = "capital_cost"
     FIXED_OPERATING_COST = "fixed_operating_cost"
     VARIABLE_OPERATING_COST = "variable_operating_cost"
     FIXED_CHARGE_RATE = "fixed_charge_rate"
