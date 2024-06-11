@@ -122,7 +122,6 @@ class SupplyCurveField(FieldEnum):
     SOURCE_GIDS = "source_gids"
     SC_GID = "sc_gid"
     GID_COUNTS = "gid_counts"
-    GID = "gid"
     N_GIDS = "n_gids"
     RES_GIDS = "res_gids"
     GEN_GIDS = "gen_gids"

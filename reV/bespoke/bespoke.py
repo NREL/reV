@@ -854,7 +854,6 @@ class BespokeSinglePlant:
                     SupplyCurveField.GID_COUNTS: gid_counts,
                     SupplyCurveField.N_GIDS: self.sc_point.n_gids,
                     SupplyCurveField.OFFSHORE: self.sc_point.offshore,
-                    SupplyCurveField.GID: self.sc_point.gid,
                     SupplyCurveField.AREA_SQ_KM: self.sc_point.area,
                 },
                 index=[self.sc_point.gid],
@@ -2041,7 +2040,7 @@ class BespokeWindPlants(BaseAggregation):
         meta = None
 
         if self._prior_meta is not None:
-            mask = self._prior_meta[SupplyCurveField.GID] == gid
+            mask = self._prior_meta[SupplyCurveField.SC_POINT_GID] == gid
             if any(mask):
                 meta = self._prior_meta[mask]
 

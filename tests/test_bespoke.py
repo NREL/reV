@@ -327,7 +327,7 @@ def test_bespoke_points():
     for gid in pp.gids:
         assert pp[gid][0] == "default"
 
-    points = pd.DataFrame({SupplyCurveField.GID: [33, 34, 35]})
+    points = pd.DataFrame({SiteDataField.GID: [33, 34, 35]})
     pp = BespokeWindPlants._parse_points(points, {"default": SAM})
     assert len(pp) == 3
     assert SiteDataField.CONFIG in pp.df.columns
@@ -665,8 +665,8 @@ def test_collect_bespoke():
         with Resource(h5_file) as fout:
             meta = fout.meta.rename(columns=SupplyCurveField.map_from_legacy())
             assert all(
-                meta[SupplyCurveField.GID].values
-                == sorted(meta[SupplyCurveField.GID].values)
+                meta[SupplyCurveField.SC_POINT_GID].values
+                == sorted(meta[SupplyCurveField.SC_POINT_GID].values)
             )
             ti = fout.time_index
             assert len(ti) == 8760
@@ -680,16 +680,16 @@ def test_collect_bespoke():
                     columns=SupplyCurveField.map_from_legacy())
                 assert all(
                     np.isin(
-                        src_meta[SupplyCurveField.GID].values,
-                        meta[SupplyCurveField.GID].values,
+                        src_meta[SupplyCurveField.SC_POINT_GID].values,
+                        meta[SupplyCurveField.SC_POINT_GID].values,
                     )
                 )
                 for isource, gid in enumerate(
-                    src_meta[SupplyCurveField.GID].values
+                    src_meta[SupplyCurveField.SC_POINT_GID].values
                 ):
-                    iout = np.where(meta[SupplyCurveField.GID].values == gid)[
-                        0
-                    ]
+                    gid_mask = (meta[SupplyCurveField.SC_POINT_GID].values
+                                == gid)
+                    iout = np.where(gid_mask)[0]
                     truth = source["cf_profile-2012", :, isource].flatten()
                     test = data[:, iout].flatten()
                     assert np.allclose(truth, test)
@@ -1243,7 +1243,7 @@ def test_gid_map():
         )
 
         gid_map = pd.DataFrame(
-            {SupplyCurveField.GID: [3, 4, 13, 12, 11, 10, 9]}
+            {SiteDataField.GID: [3, 4, 13, 12, 11, 10, 9]}
         )
         new_gid = 50
         gid_map["gid_map"] = new_gid
@@ -1344,7 +1344,7 @@ def test_bespoke_bias_correct():
         # intentionally leaving out WTK gid 13 which only has 5 included 90m
         # pixels in order to check that this is dynamically patched.
         bias_correct = pd.DataFrame(
-            {SupplyCurveField.GID: [3, 4, 12, 11, 10, 9]}
+            {SiteDataField.GID: [3, 4, 12, 11, 10, 9]}
         )
         bias_correct["method"] = "lin_ws"
         bias_correct["scalar"] = 0.5
