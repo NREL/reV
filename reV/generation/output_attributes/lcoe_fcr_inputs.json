@@ -48,7 +48,7 @@
     "type": "scalar",
     "units": "usd/kWh"
   },
-  "multiplier_regional": {
+  "capital_cost_multiplier": {
     "chunks": null,
     "dtype": "float32",
     "scale_factor": 1,
