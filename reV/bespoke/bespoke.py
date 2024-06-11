@@ -1255,6 +1255,7 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
+            self._meta.loc[:, SupplyCurveField.MEAN_CF_DC] = None
             self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
                 "cf_mean-means"
             ]
@@ -1353,6 +1354,7 @@ class BespokeSinglePlant:
         self._meta[SupplyCurveField.CAPACITY_AC_MW] = (
             self.outputs["system_capacity"] / 1e3
         )
+        self._meta[SupplyCurveField.CAPACITY_DC_MW] = None
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(

@@ -84,6 +84,12 @@ OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
 )
+EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
+                         SupplyCurveField.TURBINE_X_COORDS,
+                         SupplyCurveField.TURBINE_Y_COORDS,
+                         SupplyCurveField.RES_GIDS,
+                         SupplyCurveField.CAPACITY_DC_MW,
+                         SupplyCurveField.MEAN_CF_DC]
 
 
 def test_turbine_placement(gid=33):
@@ -598,12 +604,11 @@ def test_bespoke():
         with Resource(out_fpath_truth) as f:
             meta = f.meta
             assert len(meta) <= len(points)
-            assert SupplyCurveField.SC_POINT_GID in meta
-            assert SupplyCurveField.TURBINE_X_COORDS in meta
-            assert SupplyCurveField.TURBINE_Y_COORDS in meta
+            for col in EXPECTED_META_COLUMNS:
+                assert col in meta
+
             assert "possible_x_coords" in meta
             assert "possible_y_coords" in meta
-            assert SupplyCurveField.RES_GIDS in meta
 
             dsets_1d = (
                 "system_capacity",
