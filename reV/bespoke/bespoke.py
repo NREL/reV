@@ -1360,22 +1360,44 @@ class BespokeSinglePlant:
 
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta[SupplyCurveField.CAPACITY_AC_MW] = (
-            self.outputs["system_capacity"] / 1e3
-        )
+        capacity_ac_mw = self.outputs["system_capacity"] / 1e3
+        self._meta[SupplyCurveField.CAPACITY_AC_MW] = capacity_ac_mw
         self._meta[SupplyCurveField.CAPACITY_DC_MW] = None
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta[SupplyCurveField.EOS_MULT] = (
+        eos_mult = (self.plant_optimizer.capital_cost
+                    / self.plant_optimizer.capacity
+                    / baseline_cost)
+        reg_mult = self.sam_sys_inputs.get("capital_cost_multiplier", 1)
+
+        self._meta[SupplyCurveField.EOS_MULT] = eos_mult
+        self._meta[SupplyCurveField.REG_MULT] = reg_mult
+
+        cap_cost = (
             self.plant_optimizer.capital_cost
-            / self.plant_optimizer.capacity
-            / baseline_cost
+            + self.plant_optimizer.balance_of_system_cost
         )
-        self._meta[SupplyCurveField.REG_MULT] = self.sam_sys_inputs.get(
-            "capital_cost_multiplier", 1
+        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = cap_cost
+        self._meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW] = (
+            cap_cost / eos_mult / reg_mult / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.FIXED_CHARGE_RATE] = (
+            self.plant_optimizer.fixed_charge_rate
         )
 
         return self.outputs

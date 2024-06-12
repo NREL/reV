@@ -17,6 +17,7 @@ from gaps.collection import Collector
 from rex import Resource
 
 from reV import TESTDATADIR
+from reV.econ.utilities import lcoe_fcr
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.bespoke.place_turbines import PlaceTurbines, _compute_nn_conn_dist
 from reV.cli import main
@@ -88,9 +89,25 @@ EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.TURBINE_X_COORDS,
                          SupplyCurveField.TURBINE_Y_COORDS,
                          SupplyCurveField.RES_GIDS,
+                         SupplyCurveField.CAPACITY_AC_MW,
                          SupplyCurveField.CAPACITY_DC_MW,
+                         SupplyCurveField.MEAN_CF_AC,
                          SupplyCurveField.MEAN_CF_DC,
-                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW,
+                         SupplyCurveField.EOS_MULT,
+                         SupplyCurveField.REG_MULT,
+                         SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+                         SupplyCurveField.FIXED_CHARGE_RATE,
+                         SupplyCurveField.INCLUDED_AREA,
+                         SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
+                         SupplyCurveField.CONVEX_HULL_AREA,
+                         SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
+                         SupplyCurveField.FULL_CELL_CAPACITY_DENSITY]
 
 
 def test_turbine_placement(gid=33):
@@ -644,6 +661,30 @@ def test_bespoke():
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
+
+        fcr = meta[SupplyCurveField.FIXED_CHARGE_RATE]
+        cap_cost = (meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                    * meta[SupplyCurveField.CAPACITY_AC_MW])
+        foc = (meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        voc = (meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+
+        lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+        assert np.allclose(lcoe, meta[SupplyCurveField.MEAN_LCOE])
+
+        cap_cost = (meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+                    * meta[SupplyCurveField.CAPACITY_AC_MW]
+                    * meta[SupplyCurveField.REG_MULT]
+                    * meta[SupplyCurveField.EOS_MULT])
+        foc = (meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+
+        lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+        assert np.allclose(lcoe, meta[SupplyCurveField.MEAN_LCOE])
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
