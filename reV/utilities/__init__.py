@@ -157,17 +157,13 @@ class SupplyCurveField(FieldEnum):
     CONVEX_HULL_AREA = "convex_hull_area"
     CONVEX_HULL_CAPACITY_DENSITY = "convex_hull_capacity_density"
     FULL_CELL_CAPACITY_DENSITY = "full_cell_capacity_density"
-
     COST_BASE_OCC_USD_PER_AC_MW = "cost_base_occ_usd_per_ac_mw"
     COST_SITE_OCC_USD_PER_AC_MW = "cost_site_occ_usd_per_ac_mw"
     COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
     COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
     COST_BASE_VOC_USD_PER_AC_MW = "cost_base_voc_usd_per_ac_mw"
     COST_SITE_VOC_USD_PER_AC_MW = "cost_site_voc_usd_per_ac_mw"
-
-    SC_POINT_CAPITAL_COST = "sc_point_capital_cost"
-    SC_POINT_FIXED_OPERATING_COST = "sc_point_fixed_operating_cost"
-    SCALED_SC_POINT_CAPITAL_COST = "scaled_sc_point_capital_cost"
+    FIXED_CHARGE_RATE = "fixed_charge_rate"
 
     @classmethod
     def map_from_legacy(cls):

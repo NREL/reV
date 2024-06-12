@@ -501,6 +501,19 @@ def test_recalc_lcoe(cap_cost_scale):
             for k, v in data.items():
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
+
+            arr = np.full(res["meta"].shape, data["capital_cost"])
+            res.create_dataset("base_capital_cost", res["meta"].shape,
+                               data=arr)
+
+            arr = np.full(res["meta"].shape, data["fixed_operating_cost"])
+            res.create_dataset("base_fixed_operating_cost", res["meta"].shape,
+                               data=arr)
+
+            arr = np.full(res["meta"].shape, data["variable_operating_cost"])
+            res.create_dataset("base_variable_operating_cost",
+                               res["meta"].shape, data=arr)
+
             for year, cf in zip(years, annual_cf):
                 lcoe = lcoe_fcr(data["fixed_charge_rate"],
                                 data["capital_cost"],
@@ -565,18 +578,31 @@ def test_recalc_lcoe(cap_cost_scale):
                            summary[SupplyCurveField.MEAN_LCOE])
 
     assert np.allclose(summary[SupplyCurveField.EOS_MULT],
-                       summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST]
-                       / summary[SupplyCurveField.SC_POINT_CAPITAL_COST])
+                       summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                       / summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
 
-    if cap_cost_scale == '1':
-        cc_dset = SupplyCurveField.SC_POINT_CAPITAL_COST
-    else:
-        cc_dset = SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST
-    lcoe = lcoe_fcr(summary['mean_fixed_charge_rate'],
-                    summary[cc_dset],
-                    summary[SupplyCurveField.SC_POINT_FIXED_OPERATING_COST],
-                    summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW],
-                    summary['mean_variable_operating_cost'])
+    fcr = summary[SupplyCurveField.FIXED_CHARGE_RATE]
+    cap_cost = (summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                * summary[SupplyCurveField.CAPACITY_AC_MW])
+    foc = (summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = (summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    aep = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+
+    lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+    assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
+
+    cap_cost = (summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+                * summary[SupplyCurveField.CAPACITY_AC_MW]
+                * summary[SupplyCurveField.REG_MULT]
+                * summary[SupplyCurveField.EOS_MULT])
+    foc = (summary[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = (summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+
+    lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
 
 

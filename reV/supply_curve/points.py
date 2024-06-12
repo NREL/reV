@@ -2075,61 +2075,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.area * self.power_density
 
     @property
-    def sc_point_capital_cost(self):
-        """Get the capital cost for the entire SC point.
-
-        This method scales the capital cost based on the included-area
-        capacity. The calculation requires 'capital_cost' and
-        'system_capacity' in the generation file and passed through as
-        `h5_dsets`, otherwise it returns `None`.
-
-        Returns
-        -------
-        sc_point_capital_cost : float | None
-            Total supply curve point capital cost ($).
-        """
-        if self.mean_h5_dsets_data is None:
-            return None
-
-        required = ("capital_cost", "system_capacity")
-        if not all(k in self.mean_h5_dsets_data for k in required):
-            return None
-
-        cap_cost_per_mw = (
-            self.mean_h5_dsets_data["capital_cost"]
-            / self.mean_h5_dsets_data["system_capacity"]
-        )
-        return cap_cost_per_mw * self.capacity
-
-    @property
-    def sc_point_fixed_operating_cost(self):
-        """Get the fixed operating cost for the entire SC point.
-
-        This method scales the fixed operating cost based on the
-        included-area capacity. The calculation requires
-        'fixed_operating_cost' and 'system_capacity' in the generation
-        file and passed through as `h5_dsets`, otherwise it returns
-        `None`.
-
-        Returns
-        -------
-        sc_point_fixed_operating_cost : float | None
-            Total supply curve point fixed operating cost ($).
-        """
-        if self.mean_h5_dsets_data is None:
-            return None
-
-        required = ("fixed_operating_cost", "system_capacity")
-        if not all(k in self.mean_h5_dsets_data for k in required):
-            return None
-
-        fixed_cost_per_mw = (
-            self.mean_h5_dsets_data["fixed_operating_cost"]
-            / self.mean_h5_dsets_data["system_capacity"]
-        )
-        return fixed_cost_per_mw * self.capacity
-
-    @property
     def sc_point_annual_energy(self):
         """Get the total annual energy (MWh) for the entire SC point.
 
@@ -2189,6 +2134,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         multipliers = self.gen["capital_cost_multiplier"]
         return self.exclusion_weighted_mean(multipliers)
+
+    @property
+    def fixed_charge_rate(self):
+        """float: Mean fixed_charge_rate, defaults to 0."""
+        if "fixed_charge_rate" not in self.gen.datasets:
+            return 0
+
+        return self.exclusion_weighted_mean(self.gen["fixed_charge_rate"])
 
     @property
     def _sam_system_capacity(self):
@@ -2375,18 +2328,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             ),
             SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("base_variable_operating_cost")
-            )
-        }
-
-        extra_atts = {
-            SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
-            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
-                self.sc_point_fixed_operating_cost
             ),
+            SupplyCurveField.FIXED_CHARGE_RATE: self.fixed_charge_rate,
         }
-        for attr, value in extra_atts.items():
-            if value is not None:
-                ARGS[attr] = value
 
         if self._friction_layer is not None:
             ARGS[SupplyCurveField.MEAN_FRICTION] = self.mean_friction
@@ -2441,15 +2385,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
             * summary[SupplyCurveField.EOS_MULT]
         )
-        if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
-            scaled_costs = (
-                summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
-                * eos.capital_cost_scalar
-            )
-            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = (
-                scaled_costs
-            )
-
         return summary
 
     @classmethod
