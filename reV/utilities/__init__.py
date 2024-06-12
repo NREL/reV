@@ -148,8 +148,11 @@ class SupplyCurveField(FieldEnum):
     MEAN_LCOE_FRICTION = "mean_lcoe_friction"
     TOTAL_LCOE_FRICTION = "total_lcoe_friction"
     RAW_LCOE = "raw_lcoe"
+    POSSIBLE_X_COORDS = "possible_x_coords"
+    POSSIBLE_Y_COORDS = "possible_y_coords"
     TURBINE_X_COORDS = "turbine_x_coords"
     TURBINE_Y_COORDS = "turbine_y_coords"
+    N_TURBINES = "n_turbines"
     EOS_MULT = "eos_mult"
     REG_MULT = "reg_mult"
     INCLUDED_AREA = "included_area"
@@ -164,6 +167,12 @@ class SupplyCurveField(FieldEnum):
     COST_BASE_VOC_USD_PER_AC_MW = "cost_base_voc_usd_per_ac_mw"
     COST_SITE_VOC_USD_PER_AC_MW = "cost_site_voc_usd_per_ac_mw"
     FIXED_CHARGE_RATE = "fixed_charge_rate"
+    BESPOKE_AEP = "bespoke_aep"
+    BESPOKE_OBJECTIVE = "bespoke_objective"
+    BESPOKE_CAPITAL_COST = "bespoke_capital_cost"
+    BESPOKE_FIXED_OPERATING_COST = "bespoke_fixed_operating_cost"
+    BESPOKE_VARIABLE_OPERATING_COST = "bespoke_variable_operating_cost"
+    BESPOKE_BALANCE_OF_SYSTEM_COST = "bespoke_balance_of_system_cost"
 
     @classmethod
     def map_from_legacy(cls):

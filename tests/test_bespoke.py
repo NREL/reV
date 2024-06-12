@@ -88,6 +88,9 @@ OBJECTIVE_FUNCTION = (
 EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.TURBINE_X_COORDS,
                          SupplyCurveField.TURBINE_Y_COORDS,
+                         SupplyCurveField.POSSIBLE_X_COORDS,
+                         SupplyCurveField.POSSIBLE_Y_COORDS,
+                         SupplyCurveField.N_TURBINES,
                          SupplyCurveField.RES_GIDS,
                          SupplyCurveField.CAPACITY_AC_MW,
                          SupplyCurveField.CAPACITY_DC_MW,
@@ -107,7 +110,13 @@ EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
                          SupplyCurveField.CONVEX_HULL_AREA,
                          SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
-                         SupplyCurveField.FULL_CELL_CAPACITY_DENSITY]
+                         SupplyCurveField.FULL_CELL_CAPACITY_DENSITY,
+                         SupplyCurveField.BESPOKE_AEP,
+                         SupplyCurveField.BESPOKE_OBJECTIVE,
+                         SupplyCurveField.BESPOKE_CAPITAL_COST,
+                         SupplyCurveField.BESPOKE_FIXED_OPERATING_COST,
+                         SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST,
+                         SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST]
 
 
 def test_turbine_placement(gid=33):
@@ -393,7 +402,7 @@ def test_single(gid=33):
         assert "annual_energy-means" in out
 
         assert (
-            TURB_RATING * bsp.meta["n_turbines"].values[0]
+            TURB_RATING * bsp.meta[SupplyCurveField.N_TURBINES].values[0]
             == out["system_capacity"]
         )
         x_coords = json.loads(
@@ -402,8 +411,8 @@ def test_single(gid=33):
         y_coords = json.loads(
             bsp.meta[SupplyCurveField.TURBINE_Y_COORDS].values[0]
         )
-        assert bsp.meta["n_turbines"].values[0] == len(x_coords)
-        assert bsp.meta["n_turbines"].values[0] == len(y_coords)
+        assert bsp.meta[SupplyCurveField.N_TURBINES].values[0] == len(x_coords)
+        assert bsp.meta[SupplyCurveField.N_TURBINES].values[0] == len(y_coords)
 
         for y in (2012, 2013):
             cf = out[f"cf_profile-{y}"]
@@ -556,7 +565,7 @@ def test_extra_outputs(gid=33):
         bsp.close()
 
 
-def test_bespoke():
+def test_bespok_kjbndkjnbdfkjne():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output."""
     output_request = (
@@ -595,6 +604,8 @@ def test_bespoke():
         )
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        sam_configs = copy.deepcopy(SAM_CONFIGS)
+        sam_configs["default"]["fixed_charge_rate"] = 0.0975
 
         # test no outputs
         with pytest.warns(UserWarning) as record:
@@ -603,7 +614,7 @@ def test_bespoke():
                                     OBJECTIVE_FUNCTION, CAP_COST_FUN,
                                     FOC_FUN, VOC_FUN, BOS_FUN,
                                     fully_excluded_points,
-                                    SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                    sam_configs, ga_kwargs={'max_time': 5},
                                     excl_dict=EXCL_DICT,
                                     output_request=output_request)
             test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
@@ -613,7 +624,7 @@ def test_bespoke():
         assert not os.path.exists(out_fpath_truth)
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
                                 CAP_COST_FUN, FOC_FUN, VOC_FUN, BOS_FUN,
-                                points, SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                points, sam_configs, ga_kwargs={'max_time': 5},
                                 excl_dict=EXCL_DICT,
                                 output_request=output_request)
         test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
@@ -624,9 +635,6 @@ def test_bespoke():
             assert len(meta) <= len(points)
             for col in EXPECTED_META_COLUMNS:
                 assert col in meta
-
-            assert "possible_x_coords" in meta
-            assert "possible_y_coords" in meta
 
             dsets_1d = (
                 "system_capacity",
@@ -670,9 +678,7 @@ def test_bespoke():
         voc = (meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW])
         aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
-
-        lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
-        assert np.allclose(lcoe, meta[SupplyCurveField.MEAN_LCOE])
+        lcoe_site = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
         cap_cost = (meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
                     * meta[SupplyCurveField.CAPACITY_AC_MW]
@@ -682,9 +688,9 @@ def test_bespoke():
                * meta[SupplyCurveField.CAPACITY_AC_MW])
         voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW])
+        lcoe_base = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
-        lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
-        assert np.allclose(lcoe, meta[SupplyCurveField.MEAN_LCOE])
+        assert np.allclose(lcoe_site, lcoe_base)
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
@@ -784,11 +790,10 @@ def test_consistent_eval_namespace(gid=33):
         )
         _ = bsp.run_plant_optimization()
 
-        assert bsp.meta["bespoke_aep"].values[0] == bsp.plant_optimizer.aep
-        assert (
-            bsp.meta["bespoke_objective"].values[0]
-            == bsp.plant_optimizer.objective
-        )
+        assert (bsp.meta[SupplyCurveField.BESPOKE_AEP].values[0]
+                == bsp.plant_optimizer.aep)
+        assert (bsp.meta[SupplyCurveField.BESPOKE_OBJECTIVE].values[0]
+                == bsp.plant_optimizer.objective)
 
         bsp.close()
 

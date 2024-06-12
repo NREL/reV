@@ -1071,11 +1071,9 @@ class BespokeSinglePlant:
             cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
             voc = lcoe_kwargs['variable_operating_cost']
-            bos = lcoe_kwargs['balance_of_system_cost']
             aep = self.outputs['annual_energy-means']
-            cap_cost = cc + bos
 
-            my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+            my_mean_lcoe = lcoe_fcr(fcr, cc, foc, aep, voc)
 
             self._outputs["lcoe_fcr-means"] = my_mean_lcoe
             self._meta[SupplyCurveField.MEAN_LCOE] = my_mean_lcoe
@@ -1117,9 +1115,6 @@ class BespokeSinglePlant:
                 value = float(self.meta[kwarg].values[0])
                 lcoe_kwargs[kwarg] = value
 
-        for k, v in lcoe_kwargs.items():
-            self._meta[k] = v
-
         missing = [k for k in kwargs_list if k not in lcoe_kwargs]
         if any(missing):
             msg = (
@@ -1131,6 +1126,8 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise KeyError(msg)
 
+        bos = lcoe_kwargs.pop("balance_of_system_cost")
+        lcoe_kwargs["capital_cost"] = lcoe_kwargs["capital_cost"] + bos
         return lcoe_kwargs
 
     @staticmethod
@@ -1299,9 +1296,12 @@ class BespokeSinglePlant:
             logger.exception(msg)
             raise RuntimeError(msg) from e
 
-        # TODO need to add:
-        # total cell area
-        # cell capacity density
+        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
+        self._outputs["packing_polygons"] = (
+            self.plant_optimizer.packing_polygons
+        )
+        system_capacity_kw = self.plant_optimizer.capacity
+        self._outputs["system_capacity"] = system_capacity_kw
 
         txc = [int(np.round(c)) for c in self.plant_optimizer.turbine_x]
         tyc = [int(np.round(c)) for c in self.plant_optimizer.turbine_y]
@@ -1315,31 +1315,31 @@ class BespokeSinglePlant:
 
         self._meta[SupplyCurveField.TURBINE_X_COORDS] = txc
         self._meta[SupplyCurveField.TURBINE_Y_COORDS] = tyc
-        self._meta["possible_x_coords"] = pxc
-        self._meta["possible_y_coords"] = pyc
+        self._meta[SupplyCurveField.POSSIBLE_X_COORDS] = pxc
+        self._meta[SupplyCurveField.POSSIBLE_Y_COORDS] = pyc
 
-        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
-        self._outputs["packing_polygons"] = (
-            self.plant_optimizer.packing_polygons
-        )
-        self._outputs["system_capacity"] = self.plant_optimizer.capacity
-
-        self._meta["n_turbines"] = self.plant_optimizer.nturbs
-        self._meta["avg_sl_dist_to_center_m"] = \
+        self._meta[SupplyCurveField.N_TURBINES] = self.plant_optimizer.nturbs
+        self._meta["avg_sl_dist_to_center_m"] = (
             self.plant_optimizer.avg_sl_dist_to_center_m
-        self._meta["avg_sl_dist_to_medoid_m"] = \
+        )
+        self._meta["avg_sl_dist_to_medoid_m"] = (
             self.plant_optimizer.avg_sl_dist_to_medoid_m
+        )
         self._meta["nn_conn_dist_m"] = self.plant_optimizer.nn_conn_dist_m
-        self._meta["bespoke_aep"] = self.plant_optimizer.aep
-        self._meta["bespoke_objective"] = self.plant_optimizer.objective
-        self._meta["bespoke_capital_cost"] = self.plant_optimizer.capital_cost
-        self._meta["bespoke_fixed_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_AEP] = self.plant_optimizer.aep
+        self._meta[SupplyCurveField.BESPOKE_OBJECTIVE] = (
+            self.plant_optimizer.objective
+        )
+        self._meta[SupplyCurveField.BESPOKE_CAPITAL_COST] = (
+            self.plant_optimizer.capital_cost
+        )
+        self._meta[SupplyCurveField.BESPOKE_FIXED_OPERATING_COST] = (
             self.plant_optimizer.fixed_operating_cost
         )
-        self._meta["bespoke_variable_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST] = (
             self.plant_optimizer.variable_operating_cost
         )
-        self._meta["bespoke_balance_of_system_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST] = (
             self.plant_optimizer.balance_of_system_cost
         )
         self._meta[SupplyCurveField.INCLUDED_AREA] = self.plant_optimizer.area
@@ -1356,11 +1356,9 @@ class BespokeSinglePlant:
             self.plant_optimizer.full_cell_capacity_density
         )
 
-        logger.debug("Plant layout optimization complete!")
-
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        capacity_ac_mw = self.outputs["system_capacity"] / 1e3
+        capacity_ac_mw = system_capacity_kw / 1e3
         self._meta[SupplyCurveField.CAPACITY_AC_MW] = capacity_ac_mw
         self._meta[SupplyCurveField.CAPACITY_DC_MW] = None
 
@@ -1380,7 +1378,9 @@ class BespokeSinglePlant:
             self.plant_optimizer.capital_cost
             + self.plant_optimizer.balance_of_system_cost
         )
-        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = cap_cost
+        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            cap_cost / capacity_ac_mw
+        )
         self._meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW] = (
             cap_cost / eos_mult / reg_mult / capacity_ac_mw
         )
@@ -1400,6 +1400,7 @@ class BespokeSinglePlant:
             self.plant_optimizer.fixed_charge_rate
         )
 
+        logger.debug("Plant layout optimization complete!")
         return self.outputs
 
     def agg_data_layers(self):
