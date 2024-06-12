@@ -2033,6 +2033,7 @@ class BespokeWindPlants(BaseAggregation):
                 if isinstance(val, str) and val[0] == "[" and val[-1] == "]":
                     meta[col] = meta[col].apply(json.loads)
 
+        meta = meta.rename(columns=SupplyCurveField.map_from_legacy())
         return meta
 
     def _get_prior_meta(self, gid):
