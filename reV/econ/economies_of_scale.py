@@ -292,7 +292,7 @@ class EconomiesOfScale:
             Variable operating cost from input data arg
         """
         voc_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW
         )
         if voc_from_cap is not None:
             return voc_from_cap
