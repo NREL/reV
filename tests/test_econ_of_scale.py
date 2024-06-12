@@ -275,8 +275,6 @@ def test_sc_agg_econ_scale():
         ) / aep + data["variable_operating_cost"]
 
         assert np.allclose(scalars, sc_df[SupplyCurveField.EOS_MULT])
-        assert np.allclose(scalars * sc_df['mean_capital_cost'],
-                           sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
 
         assert np.allclose(true_scaled_lcoe, sc_df[SupplyCurveField.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[SupplyCurveField.RAW_LCOE])

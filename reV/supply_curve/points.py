@@ -2437,7 +2437,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
         summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
         summary[SupplyCurveField.EOS_MULT] = eos.capital_cost_scalar
-        summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
+        summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+            * summary[SupplyCurveField.EOS_MULT]
+        )
         if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
             scaled_costs = (
                 summary[SupplyCurveField.SC_POINT_CAPITAL_COST]

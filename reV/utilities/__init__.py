@@ -167,7 +167,6 @@ class SupplyCurveField(FieldEnum):
 
     SC_POINT_CAPITAL_COST = "sc_point_capital_cost"
     SC_POINT_FIXED_OPERATING_COST = "sc_point_fixed_operating_cost"
-    SCALED_CAPITAL_COST = "scaled_capital_cost"
     SCALED_SC_POINT_CAPITAL_COST = "scaled_sc_point_capital_cost"
 
     @classmethod
