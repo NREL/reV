@@ -159,6 +159,10 @@ def test_econ_of_scale_baseline():
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
 
+            arr = np.full(res["meta"].shape, data["capital_cost"])
+            res.create_dataset("base_capital_cost",
+                               res["meta"].shape, data=arr)
+
         out_fp_base = os.path.join(td, "base")
         base = SupplyCurveAggregation(
             EXCL,
@@ -192,6 +196,8 @@ def test_econ_of_scale_baseline():
         assert np.allclose(sc_df['mean_capital_cost'],
                            sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                            * 20000)
+        assert np.allclose(sc_df[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW],
+                           sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW])
 
 
 def test_sc_agg_econ_scale():
