@@ -13,7 +13,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from reV import TESTDATADIR
-from reV.supply_curve.supply_curve import SupplyCurve
+from reV.supply_curve.supply_curve import SupplyCurve, _REQUIRED_OUTPUT_COLS
 from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import SupplyCurveInputError
 
@@ -50,13 +50,13 @@ path = os.path.join(TESTDATADIR, "trans_tables/transmission_multipliers.csv")
 MULTIPLIERS = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
 
 SC_FULL_COLUMNS = (
-    "trans_gid",
-    "trans_type",
-    "trans_capacity",
-    "trans_cap_cost_per_mw",
-    "dist_km",
-    "lcot",
-    "total_lcoe",
+    SupplyCurveField.TRANS_GID,
+    SupplyCurveField.TRANS_TYPE,
+    SupplyCurveField.TRANS_CAPACITY,
+    SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+    SupplyCurveField.DIST_SPUR_KM,
+    SupplyCurveField.LCOT,
+    SupplyCurveField.TOTAL_LCOE,
 )
 
 
@@ -71,12 +71,16 @@ def baseline_verify(sc_full, fpath_baseline):
         baseline = baseline.rename(columns=LEGACY_SC_COL_MAP)
         # double check useful for when tables are changing
         # but lcoe should be the same
-        check = np.allclose(baseline["total_lcoe"], sc_full["total_lcoe"])
+        check = np.allclose(baseline[SupplyCurveField.TOTAL_LCOE],
+                            sc_full[SupplyCurveField.TOTAL_LCOE])
         if not check:
             diff = np.abs(
-                baseline["total_lcoe"].values - sc_full["total_lcoe"]
+                baseline[SupplyCurveField.TOTAL_LCOE].values
+                - sc_full[SupplyCurveField.TOTAL_LCOE].values
             )
-            rel_diff = 100 * diff / baseline["total_lcoe"].values
+            rel_diff = (
+                100 * diff / baseline[SupplyCurveField.TOTAL_LCOE].values
+            )
             msg = (
                 "Total LCOE values differed from baseline. "
                 "Maximum difference is {:.1f} ({:.1f}%), "
@@ -162,7 +166,8 @@ def test_integrated_sc_full_friction():
         sc_full = pd.read_csv(sc_full)
         assert SupplyCurveField.MEAN_LCOE_FRICTION in sc_full
         assert SupplyCurveField.TOTAL_LCOE_FRICTION in sc_full
-        test = sc_full[SupplyCurveField.MEAN_LCOE_FRICTION] + sc_full['lcot']
+        test = (sc_full[SupplyCurveField.MEAN_LCOE_FRICTION]
+                + sc_full[SupplyCurveField.LCOT])
         assert np.allclose(test, sc_full[SupplyCurveField.TOTAL_LCOE_FRICTION])
 
         fpath_baseline = os.path.join(
@@ -185,7 +190,7 @@ def test_integrated_sc_simple_friction():
         assert SupplyCurveField.MEAN_LCOE_FRICTION in sc_simple
         assert SupplyCurveField.TOTAL_LCOE_FRICTION in sc_simple
         test = (sc_simple[SupplyCurveField.MEAN_LCOE_FRICTION]
-                + sc_simple['lcot'])
+                + sc_simple[SupplyCurveField.LCOT])
         assert np.allclose(test,
                            sc_simple[SupplyCurveField.TOTAL_LCOE_FRICTION])
 
@@ -226,11 +231,11 @@ def test_sc_warning1():
 
 def test_sc_warning2():
     """Run the full SC test without PCA load centers and verify warning."""
-    mask = TRANS_TABLE["category"] == "PCALoadCen"
+    mask = TRANS_TABLE[SupplyCurveField.TRANS_TYPE] == "PCALoadCen"
     trans_table = TRANS_TABLE[~mask]
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop("available_capacity", 1)
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as caught_warnings:
         warnings.simplefilter("always")
         sc = SupplyCurve(SC_POINTS, trans_table, sc_features=MULTIPLIERS)
         with tempfile.TemporaryDirectory() as td:
@@ -244,11 +249,8 @@ def test_sc_warning2():
                 columns=SC_FULL_COLUMNS,
             )
         s1 = "Unconnected sc_gid"
-        s2 = str(w[0].message)
-        msg = "Warning failed! Should have Unconnected sc_gid: " "{}".format(
-            s2
-        )
-        assert s1 in s2, msg
+        msg = "Warning failed! Should have Unconnected sc_gid in warning!"
+        assert any(s1 in str(w.message) for w in caught_warnings), msg
 
 
 def test_parallel():
@@ -292,20 +294,24 @@ def verify_trans_cap(sc_table, trans_tables,
 
     trans_features = []
     for path in trans_tables:
-        df = pd.read_csv(path)
-        trans_features.append(df[["trans_gid", "max_cap"]])
+        df = pd.read_csv(path).rename(columns=LEGACY_SC_COL_MAP)
+        trans_features.append(df[[SupplyCurveField.TRANS_GID, "max_cap"]])
 
     trans_features = pd.concat(trans_features)
 
     if isinstance(sc_table, str) and os.path.exists(sc_table):
-        sc_table = pd.read_csv(sc_table)
+        sc_table = pd.read_csv(sc_table).rename(columns=LEGACY_SC_COL_MAP)
 
     if "max_cap" in sc_table and "max_cap" in trans_features:
         sc_table = sc_table.drop("max_cap", axis=1)
 
-    test = sc_table.merge(trans_features, on='trans_gid', how='left')
+    test = sc_table.merge(trans_features,
+                          on=SupplyCurveField.TRANS_GID, how='left')
     mask = test[cap_col] > test['max_cap']
-    cols = [SupplyCurveField.SC_GID, 'trans_gid', cap_col, 'max_cap']
+    cols = [SupplyCurveField.SC_GID,
+            SupplyCurveField.TRANS_GID,
+            cap_col,
+            'max_cap']
     msg = ("SC points connected to transmission features with "
            "max_cap < sc_cap:\n{}"
            .format(test.loc[mask, cols]))
@@ -375,7 +381,8 @@ def test_substation_conns():
     """
     tcosts = TRANS_COSTS_1.copy()
     avail_cap_frac = tcosts.pop("available_capacity", 1)
-    drop_lines = np.where(TRANS_TABLE["category"] == "TransLine")[0]
+    drop_lines = np.where(TRANS_TABLE[SupplyCurveField.TRANS_TYPE]
+                          == "TransLine")[0]
     drop_lines = np.random.choice(drop_lines, 10, replace=False)
     trans_table = TRANS_TABLE.drop(labels=drop_lines)
 
@@ -407,12 +414,12 @@ def test_multi_parallel_trans():
     """
 
     columns = (
-        "trans_gid",
-        "trans_type",
-        "n_parallel_trans",
-        "lcot",
-        "total_lcoe",
-        "trans_cap_cost_per_mw",
+        SupplyCurveField.TRANS_GID,
+        SupplyCurveField.TRANS_TYPE,
+        SupplyCurveField.N_PARALLEL_TRANS,
+        SupplyCurveField.LCOT,
+        SupplyCurveField.TOTAL_LCOE,
+        SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
         "max_cap",
     )
 
@@ -443,21 +450,21 @@ def test_multi_parallel_trans():
     assert not (set(sc_2[SupplyCurveField.SC_POINT_GID])
                 - set(SC_POINTS[SupplyCurveField.SC_POINT_GID]))
 
-    assert (sc_2.n_parallel_trans > 1).any()
+    assert (sc_2[SupplyCurveField.N_PARALLEL_TRANS] > 1).any()
 
-    mask_2 = sc_2["n_parallel_trans"] > 1
+    mask_2 = sc_2[SupplyCurveField.N_PARALLEL_TRANS] > 1
 
     for gid in sc_2.loc[mask_2, SupplyCurveField.SC_GID]:
         nx_1 = sc_1.loc[(sc_1[SupplyCurveField.SC_GID] == gid),
-                        'n_parallel_trans'].values[0]
+                        SupplyCurveField.N_PARALLEL_TRANS].values[0]
         nx_2 = sc_2.loc[(sc_2[SupplyCurveField.SC_GID] == gid),
-                        'n_parallel_trans'].values[0]
+                        SupplyCurveField.N_PARALLEL_TRANS].values[0]
         assert nx_2 >= nx_1
         if nx_1 != nx_2:
             lcot_1 = sc_1.loc[(sc_1[SupplyCurveField.SC_GID] == gid),
-                              'lcot'].values[0]
+                              SupplyCurveField.LCOT].values[0]
             lcot_2 = sc_2.loc[(sc_2[SupplyCurveField.SC_GID] == gid),
-                              'lcot'].values[0]
+                              SupplyCurveField.LCOT].values[0]
             assert lcot_2 > lcot_1
 
 
@@ -520,8 +527,10 @@ def test_least_cost_full_with_reinforcement():
         sc_full_r = pd.read_csv(sc_full_r)
         verify_trans_cap(sc_full, trans_tables)
 
-        assert np.allclose(sc_full.trans_gid, sc_full_r.trans_gid)
-        assert not np.allclose(sc_full.total_lcoe, sc_full_r.total_lcoe)
+        assert np.allclose(sc_full[SupplyCurveField.TRANS_GID],
+                           sc_full_r[SupplyCurveField.TRANS_GID])
+        assert not np.allclose(sc_full[SupplyCurveField.TOTAL_LCOE],
+                               sc_full_r[SupplyCurveField.TOTAL_LCOE])
 
 
 # pylint: disable=no-member
@@ -561,6 +570,10 @@ def test_least_cost_simple_with_reinforcement():
             )
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
+            in_table["poi_lat"] = 1
+            in_table["poi_lon"] = 2
+            in_table["reinforcement_poi_lat"] = 3
+            in_table["reinforcement_poi_lon"] = 4
             in_table["reinforcement_cost_per_mw"] = 1e6
             in_table["reinforcement_dist_km"] = 10
             in_table.to_csv(out_fp, index=False)
@@ -573,9 +586,24 @@ def test_least_cost_simple_with_reinforcement():
 
         verify_trans_cap(sc_simple_r, trans_tables)
 
-        assert np.allclose(sc_simple.trans_gid, sc_simple_r.trans_gid)
-        assert not np.allclose(sc_simple.total_lcoe,
-                               sc_simple_r.total_lcoe)
+        assert np.allclose(sc_simple[SupplyCurveField.TRANS_GID],
+                           sc_simple_r[SupplyCurveField.TRANS_GID])
+        assert not np.allclose(sc_simple[SupplyCurveField.TOTAL_LCOE],
+                               sc_simple_r[SupplyCurveField.TOTAL_LCOE])
+
+        nan_cols = [SupplyCurveField.POI_LAT,
+                    SupplyCurveField.POI_LON,
+                    SupplyCurveField.REINFORCEMENT_POI_LAT,
+                    SupplyCurveField.REINFORCEMENT_POI_LON]
+        for col in _REQUIRED_OUTPUT_COLS:
+            assert col in sc_simple
+            if col in nan_cols:
+                assert sc_simple[col].isna().all()
+            else:
+                assert np.allclose(sc_simple[col], 0)
+
+            assert col in sc_simple_r
+            assert (sc_simple_r[col] > 0).all()
 
 
 # pylint: disable=no-member
@@ -598,7 +626,7 @@ def test_least_cost_simple_with_trans_cap_cost_per_mw(r_costs):
                 sort_on = "lcoe_no_reinforcement"
                 in_table["reinforcement_cost_per_mw"] = t_gids[::-1]
             else:
-                sort_on = "total_lcoe"
+                sort_on = SupplyCurveField.TOTAL_LCOE
                 in_table["reinforcement_cost_per_mw"] = 0
             in_table["reinforcement_dist_km"] = 0
             in_table["trans_cap_cost_per_mw"] = t_gids
@@ -611,11 +639,12 @@ def test_least_cost_simple_with_trans_cap_cost_per_mw(r_costs):
         sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1,
                            simple=True, sort_on=sort_on)
         sc_simple = pd.read_csv(sc_simple)
-        assert (sc_simple["trans_gid"] == 42445).all()
+        assert (sc_simple[SupplyCurveField.TRANS_GID] == 42445).all()
 
         if not r_costs:
             lcot = 4244.5 / (sc_simple[SupplyCurveField.MEAN_CF_AC] * 8760)
-            assert np.allclose(lcot, sc_simple["lcot"], atol=0.001)
+            assert np.allclose(lcot, sc_simple[SupplyCurveField.LCOT],
+                               atol=0.001)
 
 
 # pylint: disable=no-member
@@ -673,14 +702,11 @@ def test_least_cost_simple_with_reinforcement_floor():
         verify_trans_cap(sc_simple, trans_tables)
 
 
-def test_least_cost_full_pass_through():
+@pytest.mark.parametrize("cols_exist", [True, False])
+def test_least_cost_full_pass_through(cols_exist):
     """
     Test the full supply curve sorting passes through variables correctly
     """
-    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', SupplyCurveField.EOS_MULT,
-                  SupplyCurveField.REG_MULT,
-                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
         for cap in [100, 200, 400, 1000]:
@@ -689,9 +715,9 @@ def test_least_cost_full_pass_through():
             )
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
-            in_table["reinforcement_cost_per_mw"] = 0
-            for col in check_cols:
-                in_table[col] = 0
+            if cols_exist:
+                for col in _REQUIRED_OUTPUT_COLS:
+                    in_table[col] = 0
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
@@ -706,19 +732,19 @@ def test_least_cost_full_pass_through():
         )
         sc_full = pd.read_csv(sc_full)
 
-        for col in check_cols:
+        for col in _REQUIRED_OUTPUT_COLS:
             assert col in sc_full
-            assert np.allclose(sc_full[col], 0)
+            if cols_exist:
+                assert np.allclose(sc_full[col], 0)
+            else:
+                assert sc_full[col].isna().all()
 
 
-def test_least_cost_simple_pass_through():
+@pytest.mark.parametrize("cols_exist", [True, False])
+def test_least_cost_simple_pass_through(cols_exist):
     """
     Test the simple supply curve sorting passes through variables correctly
     """
-    check_cols = {'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                  'reinforcement_poi_lon', SupplyCurveField.EOS_MULT,
-                  SupplyCurveField.REG_MULT,
-                  'reinforcement_cost_per_mw', 'reinforcement_dist_km'}
     with tempfile.TemporaryDirectory() as td:
         trans_tables = []
         for cap in [100, 200, 400, 1000]:
@@ -727,9 +753,9 @@ def test_least_cost_simple_pass_through():
             )
             in_table = pd.read_csv(in_table)
             out_fp = os.path.join(td, f"costs_RI_{cap}MW.csv")
-            in_table["reinforcement_cost_per_mw"] = 0
-            for col in check_cols:
-                in_table[col] = 0
+            if cols_exist:
+                for col in _REQUIRED_OUTPUT_COLS:
+                    in_table[col] = 0
             in_table.to_csv(out_fp, index=False)
             trans_tables.append(out_fp)
 
@@ -738,9 +764,12 @@ def test_least_cost_simple_pass_through():
         sc_simple = sc.run(out_fpath, fixed_charge_rate=0.1, simple=True)
         sc_simple = pd.read_csv(sc_simple)
 
-        for col in check_cols:
+        for col in _REQUIRED_OUTPUT_COLS:
             assert col in sc_simple
-            assert np.allclose(sc_simple[col], 0)
+            if cols_exist:
+                assert np.allclose(sc_simple[col], 0)
+            else:
+                assert sc_simple[col].isna().all()
 
 
 def test_least_cost_simple_with_ac_capacity_column():
@@ -790,15 +819,22 @@ def test_least_cost_simple_with_ac_capacity_column():
         verify_trans_cap(sc_simple_ac_cap, trans_tables,
                          cap_col=SupplyCurveField.CAPACITY_AC_MW)
 
-        assert np.allclose(
-            sc_simple["trans_cap_cost_per_mw"] * 1.02,
-            sc_simple_ac_cap["trans_cap_cost_per_mw"],
+        tcc_no_r_simple = (
+            sc_simple[SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW]
+            - sc_simple[SupplyCurveField.REINFORCEMENT_COST_PER_MW]
         )
+        tcc_no_r_simple_ac_cap = (
+            sc_simple_ac_cap[SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW]
+            - sc_simple_ac_cap[SupplyCurveField.REINFORCEMENT_COST_PER_MW]
+        )
+        assert np.allclose(tcc_no_r_simple * 1.02, tcc_no_r_simple_ac_cap)
         assert np.allclose(
-            sc_simple["reinforcement_cost_per_mw"],
-            sc_simple_ac_cap["reinforcement_cost_per_mw"],
+            sc_simple[SupplyCurveField.REINFORCEMENT_COST_PER_MW],
+            sc_simple_ac_cap[SupplyCurveField.REINFORCEMENT_COST_PER_MW],
         )
 
         # Final reinforcement costs are slightly cheaper for AC capacity
-        assert np.all(sc_simple["lcot"] > sc_simple_ac_cap["lcot"])
-        assert np.all(sc_simple["total_lcoe"] > sc_simple_ac_cap["total_lcoe"])
+        assert np.all(sc_simple[SupplyCurveField.LCOT]
+                      > sc_simple_ac_cap[SupplyCurveField.LCOT])
+        assert np.all(sc_simple[SupplyCurveField.TOTAL_LCOE]
+                      > sc_simple_ac_cap[SupplyCurveField.TOTAL_LCOE])
