@@ -882,7 +882,6 @@ class SupplyCurveAggregation(BaseAggregation):
                            'system_capacity')
         missing_lcoe_source = [k for k in lcoe_recalc_req
                                if k not in gen_dsets]
-        missing_lcoe_request = []
 
         if isinstance(gen, Resource):
             source_fps = [gen.h5_file]
@@ -897,9 +896,6 @@ class SupplyCurveAggregation(BaseAggregation):
 
         h5_dsets_data = None
         if h5_dsets is not None:
-            missing_lcoe_request = [
-                k for k in lcoe_recalc_req if k not in h5_dsets
-            ]
 
             if not isinstance(h5_dsets, (list, tuple)):
                 e = (
@@ -929,17 +925,6 @@ class SupplyCurveAggregation(BaseAggregation):
                 "are running a multi-year job, it is strongly suggested "
                 "you pass through these datasets to re-calculate the LCOE "
                 "from the multi-year mean CF: {}".format(missing_lcoe_source)
-            )
-            logger.warning(msg)
-            warn(msg, InputWarning)
-
-        if any(missing_lcoe_request):
-            msg = (
-                "It is strongly advised that you include the following "
-                "datasets in the h5_dsets request in order to re-calculate "
-                "the LCOE from the multi-year mean CF and AEP: {}".format(
-                    missing_lcoe_request
-                )
             )
             logger.warning(msg)
             warn(msg, InputWarning)
