@@ -10,7 +10,6 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.transmission import TransmissionFeatures as TF
-from reV.utilities import SupplyCurveField
 
 TRANS_COSTS_1 = {
     "line_tie_in_cost": 200,
