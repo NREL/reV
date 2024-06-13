@@ -581,6 +581,16 @@ def test_recalc_lcoe(cap_cost_scale):
                        summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                        / summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
 
+    expected_recalc_lcoe = lcoe_fcr(data["fixed_charge_rate"],
+                                    data["capital_cost"],
+                                    data["fixed_operating_cost"],
+                                    data["system_capacity"]
+                                    * np.array(annual_cf).mean()
+                                    * 8760,
+                                    data["variable_operating_cost"])
+    assert np.allclose(summary[SupplyCurveField.MEAN_LCOE],
+                       expected_recalc_lcoe)
+
     fcr = summary[SupplyCurveField.FIXED_CHARGE_RATE]
     cap_cost = (summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                 * summary[SupplyCurveField.CAPACITY_AC_MW])
