@@ -565,7 +565,7 @@ def test_extra_outputs(gid=33):
         bsp.close()
 
 
-def test_bespok_kjbndkjnbdfkjne():
+def test_bespoke():
     """Test bespoke optimization with multiple plants, parallel processing, and
     file output."""
     output_request = (
@@ -1253,6 +1253,27 @@ def test_bespoke_prior_run():
             SupplyCurveField.N_GIDS,
             SupplyCurveField.GID_COUNTS,
             SupplyCurveField.RES_GIDS,
+            SupplyCurveField.N_TURBINES,
+            SupplyCurveField.EOS_MULT,
+            SupplyCurveField.REG_MULT,
+            SupplyCurveField.INCLUDED_AREA,
+            SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
+            SupplyCurveField.CONVEX_HULL_AREA,
+            SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
+            SupplyCurveField.FULL_CELL_CAPACITY_DENSITY,
+            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+            SupplyCurveField.FIXED_CHARGE_RATE,
+            SupplyCurveField.BESPOKE_AEP,
+            SupplyCurveField.BESPOKE_OBJECTIVE,
+            SupplyCurveField.BESPOKE_CAPITAL_COST,
+            SupplyCurveField.BESPOKE_FIXED_OPERATING_COST,
+            SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST,
+            SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST,
         ]
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 

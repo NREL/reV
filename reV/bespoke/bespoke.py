@@ -1094,17 +1094,23 @@ class BespokeSinglePlant:
             plant_optimizer, original_sam_sys_inputs, meta
         """
 
-        kwargs_list = [
-            "fixed_charge_rate",
-            "system_capacity",
-            "capital_cost",
-            "fixed_operating_cost",
-            "variable_operating_cost",
-            "balance_of_system_cost",
-        ]
+        kwargs_map = {
+            "fixed_charge_rate": SupplyCurveField.FIXED_CHARGE_RATE,
+            "system_capacity": SupplyCurveField.CAPACITY_AC_MW,
+            "capital_cost": SupplyCurveField.BESPOKE_CAPITAL_COST,
+            "fixed_operating_cost": (
+                SupplyCurveField.BESPOKE_FIXED_OPERATING_COST
+            ),
+            "variable_operating_cost": (
+                SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST
+            ),
+            "balance_of_system_cost": (
+                SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST
+            ),
+        }
         lcoe_kwargs = {}
 
-        for kwarg in kwargs_list:
+        for kwarg, meta_field in kwargs_map.items():
             if kwarg in self.outputs:
                 lcoe_kwargs[kwarg] = self.outputs[kwarg]
             elif getattr(self.plant_optimizer, kwarg, None) is not None:
@@ -1114,8 +1120,13 @@ class BespokeSinglePlant:
             elif kwarg in self.meta:
                 value = float(self.meta[kwarg].values[0])
                 lcoe_kwargs[kwarg] = value
+            elif meta_field in self.meta:
+                value = float(self.meta[meta_field].values[0])
+                if meta_field == SupplyCurveField.CAPACITY_AC_MW:
+                    value *= 1000  # MW to kW
+                lcoe_kwargs[kwarg] = value
 
-        missing = [k for k in kwargs_list if k not in lcoe_kwargs]
+        missing = [k for k in kwargs_map if k not in lcoe_kwargs]
         if any(missing):
             msg = (
                 "Could not find these LCOE kwargs in outputs, "
