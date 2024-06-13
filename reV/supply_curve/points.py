@@ -1751,6 +1751,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         factor is weighted by the exclusions (usually 0 or 1, but 0.5
         exclusions will weight appropriately).
 
+        This value represents DC capacity factor for solar and AC
+        capacity factor for all other technologies. This is the capacity
+        factor that should be used for all cost calculations for ALL
+        technologies (to align with SAM).
+
         Returns
         -------
         mean_cf : float | None
@@ -2017,6 +2022,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """Get the estimated capacity in MW of the supply curve point in the
         current resource class with the applied exclusions.
 
+        This value represents DC capacity for solar and AC capacity for
+        all other technologies. This is the capacity that should be used
+        for all cost calculations for ALL technologies (to align with
+        SAM).
+
         Returns
         -------
         capacity : float
@@ -2035,7 +2045,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """Get the AC estimated capacity in MW of the supply curve point in the
         current resource class with the applied exclusions.
 
-        This values is provided only for solar inputs that have
+        This value is provided only for solar inputs that have
         the "dc_ac_ratio" dataset in the generation file. If these
         conditions are not met, this value is `None`.
 
@@ -2057,7 +2067,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """Get the DC estimated capacity in MW of the supply curve point
         in the current resource class with the applied exclusions.
 
-        This values is provided only for solar inputs that have
+        This value is provided only for solar inputs that have
         the "dc_ac_ratio" dataset in the generation file. If these
         conditions are not met, this value is `None`.
 
