@@ -259,6 +259,10 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
+        fcr = self._data.get(SupplyCurveField.FIXED_CHARGE_RATE)
+        if fcr is not None and fcr > 0:
+            return fcr
+
         key_list = ["fixed_charge_rate", "mean_fixed_charge_rate", "fcr",
                     "mean_fcr"]
         return self._get_prioritized_keys(self._data, key_list)
