@@ -36,13 +36,15 @@ _REQUIRED_COMPUTE_AND_OUTPUT_COLS = {
     SupplyCurveField.TOTAL_LCOE: 12,
 }
 _REQUIRED_OUTPUT_COLS = {SupplyCurveField.DIST_EXPORT_KM: 4,
+                         SupplyCurveField.REINFORCEMENT_DIST_KM: 5,
+                         SupplyCurveField.TIE_LINE_COST_PER_MW: 6,
+                         SupplyCurveField.CONNECTION_COST_PER_MW: 7,
                          SupplyCurveField.EXPORT_COST_PER_MW: 8,
+                         SupplyCurveField.REINFORCEMENT_COST_PER_MW: 9,
                          SupplyCurveField.POI_LAT: 13,
                          SupplyCurveField.POI_LON: 14,
                          SupplyCurveField.REINFORCEMENT_POI_LAT: 15,
-                         SupplyCurveField.REINFORCEMENT_POI_LON: 16,
-                         SupplyCurveField.REINFORCEMENT_COST_PER_MW: 9,
-                         SupplyCurveField.REINFORCEMENT_DIST_KM: 5}
+                         SupplyCurveField.REINFORCEMENT_POI_LON: 16}
 DEFAULT_COLUMNS = tuple(str(field)
                         for field in chain(_REQUIRED_COMPUTE_AND_OUTPUT_COLS,
                                            _REQUIRED_OUTPUT_COLS))
