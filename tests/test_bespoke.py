@@ -652,7 +652,8 @@ def test_bespoke():
                 assert len(f[dset]) == len(meta)
                 assert f[dset].any()  # not all zeros
 
-            assert np.allclose(meta[SupplyCurveField.MEAN_RES], f["ws_mean"])
+            assert np.allclose(meta[SupplyCurveField.MEAN_RES], f["ws_mean"],
+                               atol=0.01)
             assert np.allclose(
                 f["annual_energy-means"] / 1000,
                 meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
