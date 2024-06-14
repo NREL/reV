@@ -1261,6 +1261,7 @@ class BespokeSinglePlant:
 
         self._outputs.update(means)
 
+        self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
         self._meta[SupplyCurveField.MEAN_CF_DC] = None
         self._meta[SupplyCurveField.MEAN_CF_AC] = None
         self._meta[SupplyCurveField.MEAN_LCOE] = None

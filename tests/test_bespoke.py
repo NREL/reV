@@ -92,6 +92,7 @@ EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.POSSIBLE_Y_COORDS,
                          SupplyCurveField.N_TURBINES,
                          SupplyCurveField.RES_GIDS,
+                         SupplyCurveField.MEAN_RES,
                          SupplyCurveField.CAPACITY_AC_MW,
                          SupplyCurveField.CAPACITY_DC_MW,
                          SupplyCurveField.MEAN_CF_AC,
@@ -651,6 +652,7 @@ def test_bespoke():
                 assert len(f[dset]) == len(meta)
                 assert f[dset].any()  # not all zeros
 
+            assert np.allclose(meta[SupplyCurveField.MEAN_RES], f["ws_mean"])
             assert np.allclose(
                 f["annual_energy-means"] / 1000,
                 meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
