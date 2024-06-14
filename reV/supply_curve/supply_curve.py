@@ -50,6 +50,7 @@ DEFAULT_COLUMNS = tuple(str(field)
                                            _REQUIRED_OUTPUT_COLS))
 """Default output columns from supply chain computation (not ordered)"""
 
+
 class SupplyCurve:
     """SupplyCurve"""
 
@@ -1134,6 +1135,7 @@ class SupplyCurve:
 
         return table
 
+    # pylint: disable=C901
     def _full_sort(
         self,
         trans_table,
@@ -1205,8 +1207,7 @@ class SupplyCurve:
         trans_sc_gids = trans_table[SupplyCurveField.SC_GID].values.astype(int)
 
         # syntax is final_key: source_key (source from trans_table)
-        # TODO: Update this to list the uses SupplyCurveField
-        all_cols = [k for k in columns]
+        all_cols = list(columns)
         essentials = [SupplyCurveField.TRANS_GID,
                       SupplyCurveField.TRANS_CAPACITY,
                       SupplyCurveField.TRANS_TYPE,
@@ -1314,7 +1315,7 @@ class SupplyCurve:
         missing_cols = [col for col in columns if col not in self._trans_table]
         if missing_cols:
             msg = (f"The following requested columns are not found in "
-                    f"transmission table: {missing_cols}.\nSkipping...")
+                   f"transmission table: {missing_cols}.\nSkipping...")
             logger.warning(msg)
             warn(msg)
 
