@@ -844,13 +844,17 @@ def test_bespoke_supply_curve():
             assert len(test_ind) == 1
             test_row = sc_full.iloc[test_ind]
             assert (
-                test_row["total_lcoe"].values[0]
+                test_row[SupplyCurveField.TOTAL_LCOE].values[0]
                 > inp_row[SupplyCurveField.MEAN_LCOE]
             )
 
     fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
     sc_baseline = pd.read_csv(fpath_baseline)
-    assert np.allclose(sc_baseline["total_lcoe"], sc_full["total_lcoe"])
+    sc_baseline = sc_baseline.rename(
+        columns=SupplyCurveField.map_from_legacy()
+    )
+    assert np.allclose(sc_baseline[SupplyCurveField.TOTAL_LCOE],
+                       sc_full[SupplyCurveField.TOTAL_LCOE])
 
 
 @pytest.mark.parametrize("wlm", [2, 100])

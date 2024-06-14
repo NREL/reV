@@ -722,9 +722,9 @@ def test_hybrids_data_contains_col(solar_fpath, wind_fpath):
     """Test the 'contains_col' method of HybridsData for accuracy."""
 
     h_data = HybridsData(solar_fpath, wind_fpath)
-    assert h_data.contains_col("trans_capacity")
+    assert h_data.contains_col(SupplyCurveField.TRANS_CAPACITY)
     assert h_data.contains_col("dist_mi")
-    assert h_data.contains_col("dist_km")
+    assert h_data.contains_col(SupplyCurveField.DIST_SPUR_KM)
     assert not h_data.contains_col("dne_col_for_test")
 
 
