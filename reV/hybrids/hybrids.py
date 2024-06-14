@@ -38,11 +38,11 @@ NON_DUPLICATE_COLS = {
     SupplyCurveField.SC_POINT_GID, SupplyCurveField.SC_ROW_IND,
     SupplyCurveField.SC_COL_IND
 }
-DROPPED_COLUMNS = [SupplyCurveField.GID]
-DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY}': 0,
-                       f'wind_{SupplyCurveField.CAPACITY}': 0,
-                       f'solar_{SupplyCurveField.MEAN_CF}': 0,
-                       f'wind_{SupplyCurveField.MEAN_CF}': 0}
+HYBRIDS_GID_COL = "gid"
+DEFAULT_FILL_VALUES = {f'solar_{SupplyCurveField.CAPACITY_AC_MW}': 0,
+                       f'wind_{SupplyCurveField.CAPACITY_AC_MW}': 0,
+                       f'solar_{SupplyCurveField.MEAN_CF_AC}': 0,
+                       f'wind_{SupplyCurveField.MEAN_CF_AC}': 0}
 OUTPUT_PROFILE_NAMES = ['hybrid_profile',
                         'hybrid_solar_profile',
                         'hybrid_wind_profile']
@@ -702,7 +702,7 @@ class MetaHybridizer:
         self._propagate_duplicate_cols(duplicate_cols)
         self._drop_cols(duplicate_cols)
         self._hybrid_meta.rename(self.__col_name_map, inplace=True, axis=1)
-        self._hybrid_meta.index.name = SupplyCurveField.GID
+        self._hybrid_meta.index.name = HYBRIDS_GID_COL
 
     def _propagate_duplicate_cols(self, duplicate_cols):
         """Fill missing column values from outer merge."""
@@ -713,9 +713,9 @@ class MetaHybridizer:
             self._hybrid_meta.loc[null_idx, no_suffix] = non_null_vals
 
     def _drop_cols(self, duplicate_cols):
-        """Drop any remaning duplicate and 'DROPPED_COLUMNS' columns."""
+        """Drop any remaining duplicate and 'HYBRIDS_GID_COL' columns."""
         self._hybrid_meta.drop(
-            duplicate_cols + DROPPED_COLUMNS,
+            duplicate_cols + [HYBRIDS_GID_COL],
             axis=1,
             inplace=True,
             errors="ignore",
@@ -1196,8 +1196,8 @@ class Hybridization:
     def __rep_profile_hybridization_params(self):
         """Zip the rep profile hybridization parameters."""
 
-        cap_col_names = [f"hybrid_solar_{SupplyCurveField.CAPACITY}",
-                         f"hybrid_wind_{SupplyCurveField.CAPACITY}"]
+        cap_col_names = [f"hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}",
+                         f"hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}"]
         idx_maps = [
             self.meta_hybridizer.solar_profile_indices_map,
             self.meta_hybridizer.wind_profile_indices_map,

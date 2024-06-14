@@ -9,6 +9,7 @@ import os
 import pandas as pd
 from warnings import warn
 
+from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import (HandlerWarning, HandlerKeyError,
                                       HandlerRuntimeError)
 
@@ -153,12 +154,17 @@ class TransmissionFeatures:
             raise
 
         trans_table = \
-            trans_table.rename(columns={'trans_line_gid': 'trans_gid',
-                                        'trans_gids': 'trans_line_gids'})
+            trans_table.rename(
+                columns={'trans_line_gid': SupplyCurveField.TRANS_GID,
+                         'trans_gids': 'trans_line_gids'})
 
-        if 'dist_mi' in trans_table and 'dist_km' not in trans_table:
-            trans_table = trans_table.rename(columns={'dist_mi': 'dist_km'})
-            trans_table['dist_km'] *= 1.60934
+        contains_dist_in_miles = "dist_mi" in trans_table
+        missing_km_dist = SupplyCurveField.DIST_SPUR_KM not in trans_table
+        if contains_dist_in_miles and missing_km_dist:
+            trans_table = trans_table.rename(
+                columns={"dist_mi": SupplyCurveField.DIST_SPUR_KM}
+            )
+            trans_table[SupplyCurveField.DIST_SPUR_KM] *= 1.60934
 
         return trans_table
 
@@ -184,23 +190,28 @@ class TransmissionFeatures:
         features = {}
 
         cap_frac = self._avail_cap_frac
-        trans_features = trans_table.groupby('trans_gid').first()
+        trans_features = trans_table.groupby(SupplyCurveField.TRANS_GID)
+        trans_features = trans_features.first()
 
         for gid, feature in trans_features.iterrows():
-            name = feature['category'].lower()
+            name = feature[SupplyCurveField.TRANS_TYPE].lower()
             feature_dict = {'type': name}
 
             if name == 'transline':
-                feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
+                feature_dict[SupplyCurveField.TRANS_CAPACITY] = (
+                    feature['ac_cap'] * cap_frac
+                )
 
             elif name == 'substation':
                 feature_dict['lines'] = json.loads(feature['trans_line_gids'])
 
             elif name == 'loadcen':
-                feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
+                feature_dict[SupplyCurveField.TRANS_CAPACITY] = (
+                    feature['ac_cap'] * cap_frac
+                )
 
             elif name == 'pcaloadcen':
-                feature_dict['avail_cap'] = None
+                feature_dict[SupplyCurveField.TRANS_CAPACITY] = None
 
             else:
                 msg = ('Cannot not recognize feature type "{}" '
@@ -297,7 +308,8 @@ class TransmissionFeatures:
             Substation available capacity
         """
         try:
-            line_caps = [self[l_gid]['avail_cap'] for l_gid in line_gids]
+            line_caps = [self[l_gid][SupplyCurveField.TRANS_CAPACITY]
+                         for l_gid in line_gids]
         except HandlerKeyError as e:
             msg = ('Could not find capacities for substation gid {} and '
                    'connected lines: {}'.format(gid, line_gids))
@@ -331,8 +343,8 @@ class TransmissionFeatures:
 
         feature = self[gid]
 
-        if 'avail_cap' in feature:
-            avail_cap = feature['avail_cap']
+        if SupplyCurveField.TRANS_CAPACITY in feature:
+            avail_cap = feature[SupplyCurveField.TRANS_CAPACITY]
 
         elif 'lines' in feature:
             avail_cap = self._substation_capacity(gid, feature['lines'])
@@ -387,7 +399,7 @@ class TransmissionFeatures:
         capacity : float
             Capacity needed in MW
         """
-        avail_cap = self[gid]['avail_cap']
+        avail_cap = self[gid][SupplyCurveField.TRANS_CAPACITY]
 
         if avail_cap < capacity:
             msg = ("Cannot connect to {}: "
@@ -397,7 +409,7 @@ class TransmissionFeatures:
             logger.error(msg)
             raise RuntimeError(msg)
 
-        self[gid]['avail_cap'] -= capacity
+        self[gid][SupplyCurveField.TRANS_CAPACITY] -= capacity
 
     def _fill_lines(self, line_gids, line_caps, capacity):
         """
@@ -471,7 +483,7 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
-        line_caps = np.array([self[gid]['avail_cap']
+        line_caps = np.array([self[gid][SupplyCurveField.TRANS_CAPACITY]
                               for gid in line_gids])
         if self._line_limited:
             gid = line_gids[np.argmax(line_caps)]
@@ -603,8 +615,8 @@ class TransmissionFeatures:
             raise
 
         feature_cap = pd.Series(feature_cap)
-        feature_cap.name = 'avail_cap'
-        feature_cap.index.name = 'trans_gid'
+        feature_cap.name = SupplyCurveField.TRANS_CAPACITY
+        feature_cap.index.name = SupplyCurveField.TRANS_GID
         feature_cap = feature_cap.to_frame().reset_index()
 
         return feature_cap
@@ -635,16 +647,20 @@ class TransmissionCosts(TransmissionFeatures):
 
         features = {}
 
-        if 'avail_cap' not in trans_table:
+        if SupplyCurveField.TRANS_CAPACITY not in trans_table:
             kwargs = {'avail_cap_frac': self._avail_cap_frac}
             fc = TransmissionFeatures.feature_capacity(trans_table,
                                                        **kwargs)
-            trans_table = trans_table.merge(fc, on='trans_gid')
+            trans_table = trans_table.merge(fc, on=SupplyCurveField.TRANS_GID)
 
-        trans_features = trans_table.groupby('trans_gid').first()
+        trans_features = trans_table.groupby(SupplyCurveField.TRANS_GID)
+        trans_features = trans_features.first()
         for gid, feature in trans_features.iterrows():
-            name = feature['category'].lower()
-            feature_dict = {'type': name, 'avail_cap': feature['avail_cap']}
+            name = feature[SupplyCurveField.TRANS_TYPE].lower()
+            feature_dict = {'type': name,
+                            SupplyCurveField.TRANS_CAPACITY: (
+                                feature[SupplyCurveField.TRANS_CAPACITY]
+                            )}
             features[gid] = feature_dict
 
         return features
@@ -665,7 +681,7 @@ class TransmissionCosts(TransmissionFeatures):
             default = 100%
         """
 
-        return self[gid]['avail_cap']
+        return self[gid][SupplyCurveField.TRANS_CAPACITY]
 
     @classmethod
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
@@ -722,8 +738,9 @@ class TransmissionCosts(TransmissionFeatures):
             costs = []
             for _, row in trans_table.iterrows():
                 tm = row.get('transmission_multiplier', 1)
-                costs.append(feature.cost(row['trans_gid'],
-                                          row['dist_km'], capacity=capacity,
+                costs.append(feature.cost(row[SupplyCurveField.TRANS_GID],
+                                          row[SupplyCurveField.DIST_SPUR_KM],
+                                          capacity=capacity,
                                           transmission_multiplier=tm))
         except Exception:
             logger.exception("Error computing costs for all connections in {}"

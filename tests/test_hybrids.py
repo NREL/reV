@@ -45,12 +45,14 @@ def _fix_meta(fp):
 
 @pytest.fixture(scope="module")
 def module_td():
+    """Module-level temporaty dirsctory"""
     with tempfile.TemporaryDirectory() as td:
         yield td
 
 
 @pytest.fixture(scope="module")
 def solar_fpath(module_td):
+    """Solar fpath with legacy columns renamed. """
     new_fp = os.path.join(module_td, "solar.h5")
     shutil.copy(SOLAR_FPATH, new_fp)
     _fix_meta(new_fp)
@@ -59,6 +61,7 @@ def solar_fpath(module_td):
 
 @pytest.fixture(scope="module")
 def wind_fpath(module_td):
+    """Wind fpath with legacy columns renamed. """
     new_fp = os.path.join(module_td, "wind.h5")
     shutil.copy(WIND_FPATH, new_fp)
     _fix_meta(new_fp)
@@ -67,6 +70,7 @@ def wind_fpath(module_td):
 
 @pytest.fixture(scope="module")
 def solar_fpath_30_min(module_td):
+    """Solar fpath (30 min data) with legacy columns renamed."""
     new_fp = os.path.join(module_td, "solar_30min.h5")
     shutil.copy(SOLAR_FPATH_30_MIN, new_fp)
     _fix_meta(new_fp)
@@ -75,6 +79,7 @@ def solar_fpath_30_min(module_td):
 
 @pytest.fixture(scope="module")
 def solar_fpath_mult(module_td):
+    """Solar fpath (with mult) with legacy columns renamed. """
     new_fp = os.path.join(module_td, "solar_mult.h5")
     shutil.copy(SOLAR_FPATH_MULT, new_fp)
     _fix_meta(new_fp)
@@ -91,7 +96,7 @@ def test_hybridization_profile_output_single_resource(solar_fpath, wind_fpath):
             res.meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
         )[0][0]
 
-        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
+        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY_AC_MW]
         solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
@@ -121,7 +126,7 @@ def test_hybridization_profile_output_with_ratio_none(solar_fpath, wind_fpath):
             res.meta[SupplyCurveField.SC_POINT_GID] == sc_point_gid
         )[0][0]
 
-        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
+        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY_AC_MW]
         solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     weighted_solar = solar_cap * solar_test_profile
@@ -154,14 +159,14 @@ def test_hybridization_profile_output(solar_fpath, wind_fpath):
         solar_idx = np.where(
             res.meta[SupplyCurveField.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
-        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY]
+        solar_cap = res.meta.loc[solar_idx, SupplyCurveField.CAPACITY_AC_MW]
         solar_test_profile = res["rep_profiles_0", :, solar_idx]
 
     with Resource(wind_fpath) as res:
         wind_idx = np.where(
             res.meta[SupplyCurveField.SC_POINT_GID] == common_sc_point_gid
         )[0][0]
-        wind_cap = res.meta.loc[wind_idx, SupplyCurveField.CAPACITY]
+        wind_cap = res.meta.loc[wind_idx, SupplyCurveField.CAPACITY_AC_MW]
         wind_test_profile = res["rep_profiles_0", :, wind_idx]
 
     weighted_solar = solar_cap * solar_test_profile
@@ -244,10 +249,10 @@ def test_meta_hybridization(input_combination, expected_shape, overlap,
 def test_limits_and_ratios_output_values(solar_fpath, wind_fpath):
     """Test that limits and ratios are properly applied in succession."""
 
-    limits = {f"solar_{SupplyCurveField.CAPACITY}": 50,
-              f"wind_{SupplyCurveField.CAPACITY}": 0.5}
-    ratio_numerator = f"solar_{SupplyCurveField.CAPACITY}"
-    ratio_denominator = f"wind_{SupplyCurveField.CAPACITY}"
+    limits = {f"solar_{SupplyCurveField.CAPACITY_AC_MW}": 50,
+              f"wind_{SupplyCurveField.CAPACITY_AC_MW}": 0.5}
+    ratio_numerator = f"solar_{SupplyCurveField.CAPACITY_AC_MW}"
+    ratio_denominator = f"wind_{SupplyCurveField.CAPACITY_AC_MW}"
     ratio = "{}/{}".format(ratio_numerator, ratio_denominator)
     ratio_bounds = (0.3, 3.6)
     bounds = (0.3 - 1e6, 3.6 + 1e6)
@@ -274,17 +279,17 @@ def test_limits_and_ratios_output_values(solar_fpath, wind_fpath):
         h.hybrid_meta["hybrid_{}".format(ratio_denominator)]
         <= h.hybrid_meta[ratio_denominator]
     )
-    assert np.all(h.hybrid_meta[f"solar_{SupplyCurveField.CAPACITY}"]
-                  <= limits[f"solar_{SupplyCurveField.CAPACITY}"])
-    assert np.all(h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY}"]
-                  <= limits[f"wind_{SupplyCurveField.CAPACITY}"])
+    assert np.all(h.hybrid_meta[f"solar_{SupplyCurveField.CAPACITY_AC_MW}"]
+                  <= limits[f"solar_{SupplyCurveField.CAPACITY_AC_MW}"])
+    assert np.all(h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"]
+                  <= limits[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"])
 
 
 @pytest.mark.parametrize(
     "ratio_cols",
     [
-        (f"solar_{SupplyCurveField.CAPACITY}",
-         f"wind_{SupplyCurveField.CAPACITY}"),
+        (f"solar_{SupplyCurveField.CAPACITY_AC_MW}",
+         f"wind_{SupplyCurveField.CAPACITY_AC_MW}"),
         (f"solar_{SupplyCurveField.AREA_SQ_KM}",
          f"wind_{SupplyCurveField.AREA_SQ_KM}"),
     ],
@@ -323,14 +328,14 @@ def test_ratios_input(ratio_cols, ratio_bounds, bounds, solar_fpath,
         <= h.hybrid_meta[ratio_denominator]
     )
 
-    if SupplyCurveField.CAPACITY in ratio:
-        col = f"hybrid_solar_{SupplyCurveField.CAPACITY}"
+    if SupplyCurveField.CAPACITY_AC_MW in ratio:
+        col = f"hybrid_solar_{SupplyCurveField.CAPACITY_AC_MW}"
         max_solar_capacities = h.hybrid_meta[col]
         max_solar_capacities = max_solar_capacities.values.reshape(1, -1)
         assert np.all(
             h.profiles["hybrid_solar_profile"] <= max_solar_capacities
         )
-        col = f"hybrid_wind_{SupplyCurveField.CAPACITY}"
+        col = f"hybrid_wind_{SupplyCurveField.CAPACITY_AC_MW}"
         max_wind_capacities = h.hybrid_meta[col]
         max_wind_capacities = max_wind_capacities.values.reshape(1, -1)
         assert np.all(h.profiles["hybrid_wind_profile"] <= max_wind_capacities)
@@ -364,23 +369,23 @@ def test_rep_profile_idx_map(solar_fpath, wind_fpath):
 def test_limits_values(solar_fpath, wind_fpath):
     """Test that column values are properly limited on user input."""
 
-    limits = {f"solar_{SupplyCurveField.CAPACITY}": 100,
-              f"wind_{SupplyCurveField.CAPACITY}": 0.5}
+    limits = {f"solar_{SupplyCurveField.CAPACITY_AC_MW}": 100,
+              f"wind_{SupplyCurveField.CAPACITY_AC_MW}": 0.5}
 
     h = Hybridization(solar_fpath, wind_fpath, limits=limits)
     h.run()
 
-    assert np.all(h.hybrid_meta[f"solar_{SupplyCurveField.CAPACITY}"]
-                  <= limits[f"solar_{SupplyCurveField.CAPACITY}"])
-    assert np.all(h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY}"]
-                  <= limits[f"wind_{SupplyCurveField.CAPACITY}"])
+    assert np.all(h.hybrid_meta[f"solar_{SupplyCurveField.CAPACITY_AC_MW}"]
+                  <= limits[f"solar_{SupplyCurveField.CAPACITY_AC_MW}"])
+    assert np.all(h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"]
+                  <= limits[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"])
 
 
 def test_invalid_limits_column_name(solar_fpath, wind_fpath):
     """Test invalid inputs for limits columns."""
 
     test_limits = {"un_prefixed_col": 0,
-                   f"wind_{SupplyCurveField.CAPACITY}": 10}
+                   f"wind_{SupplyCurveField.CAPACITY_AC_MW}": 10}
     with pytest.raises(InputError) as excinfo:
         Hybridization(solar_fpath, wind_fpath, limits=test_limits)
 
@@ -392,7 +397,7 @@ def test_fillna_values(solar_fpath, wind_fpath):
     """Test that N/A values are filled properly based on user input."""
 
     fill_vals = {f"solar_{SupplyCurveField.N_GIDS}": 0,
-                 f"wind_{SupplyCurveField.CAPACITY}": -1}
+                 f"wind_{SupplyCurveField.CAPACITY_AC_MW}": -1}
 
     h = Hybridization(
         solar_fpath,
@@ -405,19 +410,20 @@ def test_fillna_values(solar_fpath, wind_fpath):
 
     assert not np.any(h.hybrid_meta[f"solar_{SupplyCurveField.N_GIDS}"].isna())
     assert not np.any(
-        h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY}"].isna()
+        h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"].isna()
     )
     assert np.any(h.hybrid_meta[f"solar_{SupplyCurveField.N_GIDS}"].values
                   == 0)
-    assert np.any(h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY}"].values
-                  == -1)
+    assert np.any(
+        h.hybrid_meta[f"wind_{SupplyCurveField.CAPACITY_AC_MW}"].values
+        == -1)
 
 
 def test_invalid_fillna_column_name(solar_fpath, wind_fpath):
     """Test invalid inputs for fillna columns."""
 
     test_fillna = {"un_prefixed_col": 0,
-                   f"wind_{SupplyCurveField.CAPACITY}": 10}
+                   f"wind_{SupplyCurveField.CAPACITY_AC_MW}": 10}
     with pytest.raises(InputError) as excinfo:
         Hybridization(solar_fpath, wind_fpath, fillna=test_fillna)
 
@@ -514,7 +520,8 @@ def test_invalid_ratio_bounds_length_input(solar_fpath, wind_fpath):
     """Test improper ratios input."""
 
     ratio = (
-        f"solar_{SupplyCurveField.CAPACITY}/wind_{SupplyCurveField.CAPACITY}"
+        f"solar_{SupplyCurveField.CAPACITY_AC_MW}"
+        f"/wind_{SupplyCurveField.CAPACITY_AC_MW}"
     )
     with pytest.raises(InputError) as excinfo:
         Hybridization(
@@ -531,7 +538,7 @@ def test_invalid_ratio_bounds_length_input(solar_fpath, wind_fpath):
 def test_ratio_column_missing(solar_fpath, wind_fpath):
     """Test missing ratio column."""
 
-    ratio = f"solar_col_dne/wind_{SupplyCurveField.CAPACITY}"
+    ratio = f"solar_col_dne/wind_{SupplyCurveField.CAPACITY_AC_MW}"
     with pytest.raises(FileInputError) as excinfo:
         Hybridization(
             solar_fpath, wind_fpath, ratio=ratio, ratio_bounds=(1, 1)
@@ -576,7 +583,7 @@ def test_invalid_ratio_format(ratio, solar_fpath, wind_fpath):
 def test_invalid_ratio_column_name(solar_fpath, wind_fpath):
     """Test invalid inputs for ratio columns."""
 
-    ratio = f"un_prefixed_col/wind_{SupplyCurveField.CAPACITY}"
+    ratio = f"un_prefixed_col/wind_{SupplyCurveField.CAPACITY_AC_MW}"
     with pytest.raises(InputError) as excinfo:
         Hybridization(
             solar_fpath, wind_fpath, ratio=ratio, ratio_bounds=(1, 1)
@@ -715,16 +722,17 @@ def test_hybrids_data_contains_col(solar_fpath, wind_fpath):
     """Test the 'contains_col' method of HybridsData for accuracy."""
 
     h_data = HybridsData(solar_fpath, wind_fpath)
-    assert h_data.contains_col("trans_capacity")
+    assert h_data.contains_col(SupplyCurveField.TRANS_CAPACITY)
     assert h_data.contains_col("dist_mi")
-    assert h_data.contains_col("dist_km")
+    assert h_data.contains_col(SupplyCurveField.DIST_SPUR_KM)
     assert not h_data.contains_col("dne_col_for_test")
 
 
 @pytest.mark.parametrize("half_hour", [True, False])
 @pytest.mark.parametrize(
     "ratio",
-    [f"solar_{SupplyCurveField.CAPACITY}/wind_{SupplyCurveField.CAPACITY}",
+    [f"solar_{SupplyCurveField.CAPACITY_AC_MW}"
+     f"/wind_{SupplyCurveField.CAPACITY_AC_MW}",
      f"solar_{SupplyCurveField.AREA_SQ_KM}"
      f"/wind_{SupplyCurveField.AREA_SQ_KM}"],
 )
@@ -738,8 +746,8 @@ def test_hybrids_cli_from_config(
     fv = -999
     allow_solar_only, allow_wind_only = input_combination
     fill_vals = {f"solar_{SupplyCurveField.N_GIDS}": 0,
-                 f"wind_{SupplyCurveField.CAPACITY}": -1}
-    limits = {f"solar_{SupplyCurveField.CAPACITY}": 100}
+                 f"wind_{SupplyCurveField.CAPACITY_AC_MW}": -1}
+    limits = {f"solar_{SupplyCurveField.CAPACITY_AC_MW}": 100}
 
     if half_hour:
         sfp, wfp = solar_fpath_30_min, wind_fpath

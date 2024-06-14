@@ -105,7 +105,7 @@ class QaQc:
             if file.endswith(".csv"):
                 summary_csv = os.path.join(self.out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                has_right_cols = (SupplyCurveField.GID in summary
+                has_right_cols = ("gid" in summary
                                   and SupplyCurveField.LATITUDE in summary
                                   and SupplyCurveField.LONGITUDE in summary)
                 if has_right_cols:

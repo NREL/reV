@@ -17,6 +17,7 @@ from gaps.collection import Collector
 from rex import Resource
 
 from reV import TESTDATADIR
+from reV.econ.utilities import lcoe_fcr
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
 from reV.bespoke.place_turbines import PlaceTurbines, _compute_nn_conn_dist
 from reV.cli import main
@@ -84,6 +85,39 @@ OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
 )
+EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
+                         SupplyCurveField.TURBINE_X_COORDS,
+                         SupplyCurveField.TURBINE_Y_COORDS,
+                         SupplyCurveField.POSSIBLE_X_COORDS,
+                         SupplyCurveField.POSSIBLE_Y_COORDS,
+                         SupplyCurveField.N_TURBINES,
+                         SupplyCurveField.RES_GIDS,
+                         SupplyCurveField.MEAN_RES,
+                         SupplyCurveField.CAPACITY_AC_MW,
+                         SupplyCurveField.CAPACITY_DC_MW,
+                         SupplyCurveField.MEAN_CF_AC,
+                         SupplyCurveField.MEAN_CF_DC,
+                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW,
+                         SupplyCurveField.EOS_MULT,
+                         SupplyCurveField.REG_MULT,
+                         SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+                         SupplyCurveField.FIXED_CHARGE_RATE,
+                         SupplyCurveField.INCLUDED_AREA,
+                         SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
+                         SupplyCurveField.CONVEX_HULL_AREA,
+                         SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
+                         SupplyCurveField.FULL_CELL_CAPACITY_DENSITY,
+                         SupplyCurveField.BESPOKE_AEP,
+                         SupplyCurveField.BESPOKE_OBJECTIVE,
+                         SupplyCurveField.BESPOKE_CAPITAL_COST,
+                         SupplyCurveField.BESPOKE_FIXED_OPERATING_COST,
+                         SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST,
+                         SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST]
 
 
 def test_turbine_placement(gid=33):
@@ -327,7 +361,7 @@ def test_bespoke_points():
     for gid in pp.gids:
         assert pp[gid][0] == "default"
 
-    points = pd.DataFrame({SupplyCurveField.GID: [33, 34, 35]})
+    points = pd.DataFrame({SiteDataField.GID: [33, 34, 35]})
     pp = BespokeWindPlants._parse_points(points, {"default": SAM})
     assert len(pp) == 3
     assert SiteDataField.CONFIG in pp.df.columns
@@ -369,7 +403,7 @@ def test_single(gid=33):
         assert "annual_energy-means" in out
 
         assert (
-            TURB_RATING * bsp.meta["n_turbines"].values[0]
+            TURB_RATING * bsp.meta[SupplyCurveField.N_TURBINES].values[0]
             == out["system_capacity"]
         )
         x_coords = json.loads(
@@ -378,8 +412,8 @@ def test_single(gid=33):
         y_coords = json.loads(
             bsp.meta[SupplyCurveField.TURBINE_Y_COORDS].values[0]
         )
-        assert bsp.meta["n_turbines"].values[0] == len(x_coords)
-        assert bsp.meta["n_turbines"].values[0] == len(y_coords)
+        assert bsp.meta[SupplyCurveField.N_TURBINES].values[0] == len(x_coords)
+        assert bsp.meta[SupplyCurveField.N_TURBINES].values[0] == len(y_coords)
 
         for y in (2012, 2013):
             cf = out[f"cf_profile-{y}"]
@@ -469,8 +503,8 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert SupplyCurveField.CAPACITY in bsp.meta
-        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
+        assert SupplyCurveField.MEAN_CF_AC in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta
@@ -503,8 +537,8 @@ def test_extra_outputs(gid=33):
         assert "lcoe_fcr-2013" in out
         assert "lcoe_fcr-means" in out
 
-        assert SupplyCurveField.CAPACITY in bsp.meta
-        assert SupplyCurveField.MEAN_CF in bsp.meta
+        assert SupplyCurveField.CAPACITY_AC_MW in bsp.meta
+        assert SupplyCurveField.MEAN_CF_AC in bsp.meta
         assert SupplyCurveField.MEAN_LCOE in bsp.meta
 
         assert "pct_slope" in bsp.meta
@@ -571,6 +605,8 @@ def test_bespoke():
         )
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        sam_configs = copy.deepcopy(SAM_CONFIGS)
+        sam_configs["default"]["fixed_charge_rate"] = 0.0975
 
         # test no outputs
         with pytest.warns(UserWarning) as record:
@@ -579,7 +615,7 @@ def test_bespoke():
                                     OBJECTIVE_FUNCTION, CAP_COST_FUN,
                                     FOC_FUN, VOC_FUN, BOS_FUN,
                                     fully_excluded_points,
-                                    SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                    sam_configs, ga_kwargs={'max_time': 5},
                                     excl_dict=EXCL_DICT,
                                     output_request=output_request)
             test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
@@ -589,21 +625,17 @@ def test_bespoke():
         assert not os.path.exists(out_fpath_truth)
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
                                 CAP_COST_FUN, FOC_FUN, VOC_FUN, BOS_FUN,
-                                points, SAM_CONFIGS, ga_kwargs={'max_time': 5},
+                                points, sam_configs, ga_kwargs={'max_time': 5},
                                 excl_dict=EXCL_DICT,
                                 output_request=output_request)
         test_fpath = bsp.run(max_workers=2, out_fpath=out_fpath_request)
         assert out_fpath_truth == test_fpath
         assert os.path.exists(out_fpath_truth)
         with Resource(out_fpath_truth) as f:
-            meta = f.meta
+            meta = f.meta.reset_index()
             assert len(meta) <= len(points)
-            assert SupplyCurveField.SC_POINT_GID in meta
-            assert SupplyCurveField.TURBINE_X_COORDS in meta
-            assert SupplyCurveField.TURBINE_Y_COORDS in meta
-            assert "possible_x_coords" in meta
-            assert "possible_y_coords" in meta
-            assert SupplyCurveField.RES_GIDS in meta
+            for col in EXPECTED_META_COLUMNS:
+                assert col in meta
 
             dsets_1d = (
                 "system_capacity",
@@ -620,6 +652,13 @@ def test_bespoke():
                 assert len(f[dset]) == len(meta)
                 assert f[dset].any()  # not all zeros
 
+            assert np.allclose(meta[SupplyCurveField.MEAN_RES], f["ws_mean"],
+                               atol=0.01)
+            assert np.allclose(
+                f["annual_energy-means"] / 1000,
+                meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+            )
+
             dsets_2d = (
                 "cf_profile-2012",
                 "cf_profile-2013",
@@ -633,6 +672,28 @@ def test_bespoke():
                 assert len(f[dset]) == 8760
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
+
+        fcr = meta[SupplyCurveField.FIXED_CHARGE_RATE]
+        cap_cost = (meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                    * meta[SupplyCurveField.CAPACITY_AC_MW])
+        foc = (meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        voc = (meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+        lcoe_site = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+
+        cap_cost = (meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+                    * meta[SupplyCurveField.CAPACITY_AC_MW]
+                    * meta[SupplyCurveField.REG_MULT]
+                    * meta[SupplyCurveField.EOS_MULT])
+        foc = (meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
+               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        lcoe_base = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+
+        assert np.allclose(lcoe_site, lcoe_base)
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
@@ -665,8 +726,8 @@ def test_collect_bespoke():
         with Resource(h5_file) as fout:
             meta = fout.meta.rename(columns=SupplyCurveField.map_from_legacy())
             assert all(
-                meta[SupplyCurveField.GID].values
-                == sorted(meta[SupplyCurveField.GID].values)
+                meta[SupplyCurveField.SC_POINT_GID].values
+                == sorted(meta[SupplyCurveField.SC_POINT_GID].values)
             )
             ti = fout.time_index
             assert len(ti) == 8760
@@ -680,16 +741,16 @@ def test_collect_bespoke():
                     columns=SupplyCurveField.map_from_legacy())
                 assert all(
                     np.isin(
-                        src_meta[SupplyCurveField.GID].values,
-                        meta[SupplyCurveField.GID].values,
+                        src_meta[SupplyCurveField.SC_POINT_GID].values,
+                        meta[SupplyCurveField.SC_POINT_GID].values,
                     )
                 )
                 for isource, gid in enumerate(
-                    src_meta[SupplyCurveField.GID].values
+                    src_meta[SupplyCurveField.SC_POINT_GID].values
                 ):
-                    iout = np.where(meta[SupplyCurveField.GID].values == gid)[
-                        0
-                    ]
+                    gid_mask = (meta[SupplyCurveField.SC_POINT_GID].values
+                                == gid)
+                    iout = np.where(gid_mask)[0]
                     truth = source["cf_profile-2012", :, isource].flatten()
                     test = data[:, iout].flatten()
                     assert np.allclose(truth, test)
@@ -732,11 +793,10 @@ def test_consistent_eval_namespace(gid=33):
         )
         _ = bsp.run_plant_optimization()
 
-        assert bsp.meta["bespoke_aep"].values[0] == bsp.plant_optimizer.aep
-        assert (
-            bsp.meta["bespoke_objective"].values[0]
-            == bsp.plant_optimizer.objective
-        )
+        assert (bsp.meta[SupplyCurveField.BESPOKE_AEP].values[0]
+                == bsp.plant_optimizer.aep)
+        assert (bsp.meta[SupplyCurveField.BESPOKE_OBJECTIVE].values[0]
+                == bsp.plant_optimizer.objective)
 
         bsp.close()
 
@@ -774,6 +834,8 @@ def test_bespoke_supply_curve():
         sc = SupplyCurve(bespoke_sc_fp, trans_tables)
         sc_full = sc.full_sort(fcr=0.1, avail_cap_frac=0.1)
 
+        assert SupplyCurveField.SC_GID in sc_full
+
         assert all(
             gid in sc_full[SupplyCurveField.SC_GID]
             for gid in normal_sc_points[SupplyCurveField.SC_GID]
@@ -785,13 +847,17 @@ def test_bespoke_supply_curve():
             assert len(test_ind) == 1
             test_row = sc_full.iloc[test_ind]
             assert (
-                test_row["total_lcoe"].values[0]
+                test_row[SupplyCurveField.TOTAL_LCOE].values[0]
                 > inp_row[SupplyCurveField.MEAN_LCOE]
             )
 
     fpath_baseline = os.path.join(TESTDATADIR, "sc_out/sc_full_lc.csv")
     sc_baseline = pd.read_csv(fpath_baseline)
-    assert np.allclose(sc_baseline["total_lcoe"], sc_full["total_lcoe"])
+    sc_baseline = sc_baseline.rename(
+        columns=SupplyCurveField.map_from_legacy()
+    )
+    assert np.allclose(sc_baseline[SupplyCurveField.TOTAL_LCOE],
+                       sc_full[SupplyCurveField.TOTAL_LCOE])
 
 
 def test_bespoke_wind_plant_with_power_curve_losses():
@@ -1187,10 +1253,31 @@ def test_bespoke_prior_run():
         cols = [
             SupplyCurveField.TURBINE_X_COORDS,
             SupplyCurveField.TURBINE_Y_COORDS,
-            SupplyCurveField.CAPACITY,
+            SupplyCurveField.CAPACITY_AC_MW,
             SupplyCurveField.N_GIDS,
             SupplyCurveField.GID_COUNTS,
             SupplyCurveField.RES_GIDS,
+            SupplyCurveField.N_TURBINES,
+            SupplyCurveField.EOS_MULT,
+            SupplyCurveField.REG_MULT,
+            SupplyCurveField.INCLUDED_AREA,
+            SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
+            SupplyCurveField.CONVEX_HULL_AREA,
+            SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
+            SupplyCurveField.FULL_CELL_CAPACITY_DENSITY,
+            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+            SupplyCurveField.FIXED_CHARGE_RATE,
+            SupplyCurveField.BESPOKE_AEP,
+            SupplyCurveField.BESPOKE_OBJECTIVE,
+            SupplyCurveField.BESPOKE_CAPITAL_COST,
+            SupplyCurveField.BESPOKE_FIXED_OPERATING_COST,
+            SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST,
+            SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST,
         ]
         pd.testing.assert_frame_equal(meta1[cols], meta2[cols])
 
@@ -1240,7 +1327,7 @@ def test_gid_map():
         )
 
         gid_map = pd.DataFrame(
-            {SupplyCurveField.GID: [3, 4, 13, 12, 11, 10, 9]}
+            {SiteDataField.GID: [3, 4, 13, 12, 11, 10, 9]}
         )
         new_gid = 50
         gid_map["gid_map"] = new_gid
@@ -1341,7 +1428,7 @@ def test_bespoke_bias_correct():
         # intentionally leaving out WTK gid 13 which only has 5 included 90m
         # pixels in order to check that this is dynamically patched.
         bias_correct = pd.DataFrame(
-            {SupplyCurveField.GID: [3, 4, 12, 11, 10, 9]}
+            {SiteDataField.GID: [3, 4, 12, 11, 10, 9]}
         )
         bias_correct["method"] = "lin_ws"
         bias_correct["scalar"] = 0.5

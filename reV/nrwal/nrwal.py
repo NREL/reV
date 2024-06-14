@@ -37,7 +37,7 @@ class RevNrwal:
 
     def __init__(self, gen_fpath, site_data, sam_files, nrwal_configs,
                  output_request, save_raw=True,
-                 meta_gid_col=ResourceMetaField.GID,
+                 meta_gid_col=str(ResourceMetaField.GID),  # str() to fix docs
                  site_meta_cols=None):
         """Framework to handle reV-NRWAL analysis.
 

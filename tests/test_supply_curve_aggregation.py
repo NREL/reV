@@ -56,6 +56,7 @@ def check_agg(agg_out, baseline_h5):
 
                 truth = truth.fillna('none')
                 test = test.fillna('none')
+                test = test[truth.columns]
                 assert_frame_equal(truth, test, check_dtype=False, rtol=0.0001,
                                    check_index_type=False)
             else:

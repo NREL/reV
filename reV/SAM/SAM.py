@@ -626,6 +626,8 @@ class RevPySam(Sam):
 
         self._meta = self._parse_meta(meta)
         self._parse_site_sys_inputs(site_sys_inputs)
+        _add_cost_defaults(self.sam_sys_inputs)
+        _add_sys_capacity(self.sam_sys_inputs)
 
     @property
     def meta(self):
@@ -916,3 +918,36 @@ class RevPySam(Sam):
                 msg += " for site {}".format(self.site)
             logger.exception(msg)
             raise SAMExecutionError(msg) from e
+
+
+def _add_cost_defaults(sam_inputs):
+    """Add default values for required cost outputs if they are missing. """
+    sam_inputs.setdefault("fixed_charge_rate", None)
+
+    reg_mult = sam_inputs.setdefault("capital_cost_multiplier", 1)
+    capital_cost = sam_inputs.setdefault("capital_cost", None)
+    fixed_operating_cost = sam_inputs.setdefault("fixed_operating_cost", None)
+    variable_operating_cost = sam_inputs.setdefault(
+        "variable_operating_cost", None)
+
+    sam_inputs["base_capital_cost"] = capital_cost
+    sam_inputs["base_fixed_operating_cost"] = fixed_operating_cost
+    sam_inputs["base_variable_operating_cost"] = variable_operating_cost
+    if capital_cost is not None:
+        sam_inputs["capital_cost"] = capital_cost * reg_mult
+    else:
+        sam_inputs["capital_cost"] = None
+
+
+def _add_sys_capacity(sam_inputs):
+    """Add system capacity SAM input if it is missing. """
+    cap = sam_inputs.get("system_capacity")
+    if cap is None:
+        cap = sam_inputs.get("turbine_capacity")
+
+    if cap is None:
+        cap = sam_inputs.get("wind_turbine_powercurve_powerout")
+        if cap is not None:
+            cap = max(cap)
+
+    sam_inputs["system_capacity"] = cap

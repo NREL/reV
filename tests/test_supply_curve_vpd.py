@@ -50,7 +50,7 @@ def test_vpd():
         summary = sca.summarize(GEN, max_workers=1)
 
     for i in summary.index:
-        capacity = summary.loc[i, SupplyCurveField.CAPACITY]
+        capacity = summary.loc[i, SupplyCurveField.CAPACITY_AC_MW]
         area = summary.loc[i, SupplyCurveField.AREA_SQ_KM]
         res_gids = np.array(summary.loc[i, SupplyCurveField.RES_GIDS])
         gid_counts = np.array(summary.loc[i, SupplyCurveField.GID_COUNTS])
@@ -83,7 +83,8 @@ def test_vpd_fractional_excl():
         sca_1 = SupplyCurveAggregation(EXCL, TM_DSET, excl_dict=excl_dict_1,
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
-                                       data_layers=DATA_LAYERS, power_density=tmp_path,
+                                       data_layers=DATA_LAYERS,
+                                       power_density=tmp_path,
                                        gids=gids_subset)
         summary_1 = sca_1.summarize(GEN, max_workers=1)
 
@@ -96,8 +97,8 @@ def test_vpd_fractional_excl():
         summary_2 = sca_2.summarize(GEN, max_workers=1)
 
     for i in summary_1.index:
-        cap_full = summary_1.loc[i, SupplyCurveField.CAPACITY]
-        cap_half = summary_2.loc[i, SupplyCurveField.CAPACITY]
+        cap_full = summary_1.loc[i, SupplyCurveField.CAPACITY_AC_MW]
+        cap_half = summary_2.loc[i, SupplyCurveField.CAPACITY_AC_MW]
 
         msg = ('Variable power density for fractional exclusions failed! '
                'Index {} has cap full {} and cap half {}'

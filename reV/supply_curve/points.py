@@ -51,9 +51,9 @@ class AbstractSupplyCurvePoint(ABC):
 
         self._gid = gid
         self._resolution = resolution
-        self._rows, self._cols = self._parse_slices(
-            gid, resolution, exclusion_shape
-        )
+        self._rows = self._cols = self._sc_row_ind = self._sc_col_ind = None
+        self._parse_sc_row_col_ind(resolution, exclusion_shape)
+        self._parse_slices(resolution, exclusion_shape)
 
     @staticmethod
     def _ordered_unique(seq):
@@ -74,32 +74,33 @@ class AbstractSupplyCurvePoint(ABC):
 
         return [x for x in seq if not (x in seen or seen.add(x))]
 
-    def _parse_slices(self, gid, resolution, exclusion_shape):
-        """Parse inputs for the definition of this SC point.
+    def _parse_sc_row_col_ind(self, resolution, exclusion_shape):
+        """Parse SC row and column index.
 
         Parameters
         ----------
-        gid : int | None
-            gid for supply curve point to analyze.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
-            Shape of the exclusions extent (rows, cols). Inputing this will
-            speed things up considerably.
-
-        Returns
-        -------
-        rows : slice
-            Row slice to index the high-res layer (exclusions) for the gid in
-            the agg layer (supply curve).
-        cols : slice
-            Col slice to index the high-res layer (exclusions) for the gid in
-            the agg layer (supply curve).
+            Shape of the exclusions extent (rows, cols).
         """
+        n_sc_cols = int(np.ceil(exclusion_shape[1] / resolution))
 
-        rows, cols = self.get_agg_slices(gid, exclusion_shape, resolution)
+        self._sc_row_ind = self._gid // n_sc_cols
+        self._sc_col_ind = self._gid % n_sc_cols
 
-        return rows, cols
+    def _parse_slices(self, resolution, exclusion_shape):
+        """Parse row and column resource/generation grid slices.
+
+        Parameters
+        ----------
+        resolution : int | None
+            SC resolution, must be input in combination with gid.
+        exclusion_shape : tuple
+            Shape of the exclusions extent (rows, cols).
+        """
+        inds = self.get_agg_slices(self._gid, exclusion_shape, resolution)
+        self._rows, self._cols = inds
 
     @property
     def gid(self):
@@ -116,6 +117,16 @@ class AbstractSupplyCurvePoint(ABC):
         int
         """
         return self._gid
+
+    @property
+    def sc_row_ind(self):
+        """int: Supply curve row index"""
+        return self._sc_row_ind
+
+    @property
+    def sc_col_ind(self):
+        """int: Supply curve column index"""
+        return self._sc_col_ind
 
     @property
     def resolution(self):
@@ -1467,7 +1478,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             (resource) "gid" and "power_density columns".
         cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
-            Can be pre-extracted generation output data in np.ndarray.
+            This name is used to infer AC capacity factor dataset for
+            solar runs (i.e. the AC vsersion of "cf_mean-means" would
+            be inferred to be "cf_mean_ac-means"). This input can also
+            be pre-extracted generation output data in np.ndarray, in
+            which case all DC solar outputs are set to `None`.
         lcoe_dset : str | np.ndarray
             Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
@@ -1489,7 +1504,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
+            datasets to be aggregated in the gen input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
         apply_exclusions : bool
@@ -1510,6 +1525,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._power_density = self._power_density_ac = power_density
         self._friction_layer = friction_layer
         self._recalc_lcoe = recalc_lcoe
+        self._ssc = None
+        self._slk = {}
 
         super().__init__(
             gid,
@@ -1685,6 +1702,30 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self._gen_data
 
     @property
+    def gen_ac_data(self):
+        """Get the generation ac capacity factor data array.
+
+        This output is only not `None` for solar runs where `cf_dset`
+        was specified as a string.
+
+        Returns
+        -------
+        gen_ac_data : np.ndarray | None
+            Multi-year-mean ac capacity factor data array for all sites
+            in the generation data output file or `None` if none
+            detected.
+        """
+
+        if isinstance(self._cf_dset, np.ndarray):
+            return None
+
+        ac_cf_dset = _infer_cf_dset_ac(self._cf_dset)
+        if ac_cf_dset in self.gen.datasets:
+            return self.gen[ac_cf_dset]
+
+        return None
+
+    @property
     def lcoe_data(self):
         """Get the LCOE data array.
 
@@ -1710,6 +1751,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         factor is weighted by the exclusions (usually 0 or 1, but 0.5
         exclusions will weight appropriately).
 
+        This value represents DC capacity factor for solar and AC
+        capacity factor for all other technologies. This is the capacity
+        factor that should be used for all cost calculations for ALL
+        technologies (to align with SAM).
+
         Returns
         -------
         mean_cf : float | None
@@ -1720,6 +1766,45 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             mean_cf = self.exclusion_weighted_mean(self.gen_data)
 
         return mean_cf
+
+    @property
+    def mean_cf_ac(self):
+        """Get the mean AC capacity factor for the non-excluded data.
+
+        This output is only not `None` for solar runs.
+
+        Capacity factor is weighted by the exclusions (usually 0 or 1,
+        but 0.5 exclusions will weight appropriately).
+
+        Returns
+        -------
+        mean_cf_ac : float | None
+            Mean capacity factor value for the non-excluded data.
+        """
+        mean_cf_ac = None
+        if self.gen_ac_data is not None:
+            mean_cf_ac = self.exclusion_weighted_mean(self.gen_ac_data)
+
+        return mean_cf_ac
+
+    @property
+    def mean_cf_dc(self):
+        """Get the mean DC capacity factor for the non-excluded data.
+
+        This output is only not `None` for solar runs.
+
+        Capacity factor is weighted by the exclusions (usually 0 or 1,
+        but 0.5 exclusions will weight appropriately).
+
+        Returns
+        -------
+        mean_cf_dc : float | None
+            Mean capacity factor value for the non-excluded data.
+        """
+        if self.mean_cf_ac is not None:
+            return self.mean_cf
+
+        return None
 
     @property
     def mean_lcoe(self):
@@ -1738,18 +1823,12 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         # year CF, but the output should be identical to the original LCOE and
         # so is not consequential).
         if self._recalc_lcoe:
-            required = (
-                "fixed_charge_rate",
-                "capital_cost",
-                "fixed_operating_cost",
-                "variable_operating_cost",
-                "system_capacity",
-            )
-            if self.mean_h5_dsets_data is not None and all(
-                k in self.mean_h5_dsets_data for k in required
-            ):
+            required = ("fixed_charge_rate", "capital_cost",
+                        "fixed_operating_cost", "variable_operating_cost",
+                        "system_capacity")
+            if all(self._sam_lcoe_kwargs.get(k) is not None for k in required):
                 aep = (
-                    self.mean_h5_dsets_data["system_capacity"]
+                    self._sam_lcoe_kwargs["system_capacity"]
                     * self.mean_cf
                     * 8760
                 )
@@ -1757,11 +1836,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 # `system_capacity`, so no need to scale `capital_cost`
                 # or `fixed_operating_cost` by anything
                 mean_lcoe = lcoe_fcr(
-                    self.mean_h5_dsets_data["fixed_charge_rate"],
-                    self.mean_h5_dsets_data["capital_cost"],
-                    self.mean_h5_dsets_data["fixed_operating_cost"],
+                    self._sam_lcoe_kwargs["fixed_charge_rate"],
+                    self._sam_lcoe_kwargs["capital_cost"],
+                    self._sam_lcoe_kwargs["fixed_operating_cost"],
                     aep,
-                    self.mean_h5_dsets_data["variable_operating_cost"],
+                    self._sam_lcoe_kwargs["variable_operating_cost"],
                 )
 
         # alternative if lcoe was not able to be re-calculated from
@@ -1943,6 +2022,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """Get the estimated capacity in MW of the supply curve point in the
         current resource class with the applied exclusions.
 
+        This value represents DC capacity for solar and AC capacity for
+        all other technologies. This is the capacity that should be used
+        for all cost calculations for ALL technologies (to align with
+        SAM).
+
         Returns
         -------
         capacity : float
@@ -1961,7 +2045,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         """Get the AC estimated capacity in MW of the supply curve point in the
         current resource class with the applied exclusions.
 
-        This values is provided only for solar inputs that have
+        This value is provided only for solar inputs that have
         the "dc_ac_ratio" dataset in the generation file. If these
         conditions are not met, this value is `None`.
 
@@ -1979,59 +2063,26 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.area * self.power_density_ac
 
     @property
-    def sc_point_capital_cost(self):
-        """Get the capital cost for the entire SC point.
+    def capacity_dc(self):
+        """Get the DC estimated capacity in MW of the supply curve point
+        in the current resource class with the applied exclusions.
 
-        This method scales the capital cost based on the included-area
-        capacity. The calculation requires 'capital_cost' and
-        'system_capacity' in the generation file and passed through as
-        `h5_dsets`, otherwise it returns `None`.
-
-        Returns
-        -------
-        sc_point_capital_cost : float | None
-            Total supply curve point capital cost ($).
-        """
-        if self.mean_h5_dsets_data is None:
-            return None
-
-        required = ("capital_cost", "system_capacity")
-        if not all(k in self.mean_h5_dsets_data for k in required):
-            return None
-
-        cap_cost_per_mw = (
-            self.mean_h5_dsets_data["capital_cost"]
-            / self.mean_h5_dsets_data["system_capacity"]
-        )
-        return cap_cost_per_mw * self.capacity
-
-    @property
-    def sc_point_fixed_operating_cost(self):
-        """Get the fixed operating cost for the entire SC point.
-
-        This method scales the fixed operating cost based on the
-        included-area capacity. The calculation requires
-        'fixed_operating_cost' and 'system_capacity' in the generation
-        file and passed through as `h5_dsets`, otherwise it returns
-        `None`.
+        This value is provided only for solar inputs that have
+        the "dc_ac_ratio" dataset in the generation file. If these
+        conditions are not met, this value is `None`.
 
         Returns
         -------
-        sc_point_fixed_operating_cost : float | None
-            Total supply curve point fixed operating cost ($).
+        capacity : float | None
+            Estimated AC capacity in MW of the supply curve point in the
+            current resource class with the applied exclusions. Only not
+            `None` for solar runs with "dc_ac_ratio" dataset in the
+            generation file
         """
-        if self.mean_h5_dsets_data is None:
+        if self.power_density_ac is None:
             return None
 
-        required = ("fixed_operating_cost", "system_capacity")
-        if not all(k in self.mean_h5_dsets_data for k in required):
-            return None
-
-        fixed_cost_per_mw = (
-            self.mean_h5_dsets_data["fixed_operating_cost"]
-            / self.mean_h5_dsets_data["system_capacity"]
-        )
-        return fixed_cost_per_mw * self.capacity
+        return self.area * self.power_density
 
     @property
     def sc_point_annual_energy(self):
@@ -2050,25 +2101,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         return self.mean_cf * self.capacity * 8760
-
-    @property
-    def sc_point_annual_energy_ac(self):
-        """Get the total AC annual energy (MWh) for the entire SC point.
-
-        This value is computed using the AC capacity of the supply curve
-        point as well as the mean capacity factor. If either the mean
-        capacity factor or the AC capacity value is `None`, this value
-        will also be `None`.
-
-        Returns
-        -------
-        sc_point_annual_energy_ac : float | None
-            Total AC annual energy (MWh) for the entire SC point.
-        """
-        if self.mean_cf is None or self.capacity_ac is None:
-            return None
-
-        return self.mean_cf * self.capacity_ac * 8760
 
     @property
     def h5_dsets_data(self):
@@ -2103,6 +2135,72 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             raise TypeError(e)
 
         return _h5_dsets_data
+
+    @property
+    def regional_multiplier(self):
+        """float: Mean regional capital cost multiplier, defaults to 1."""
+        if "capital_cost_multiplier" not in self.gen.datasets:
+            return 1
+
+        multipliers = self.gen["capital_cost_multiplier"]
+        return self.exclusion_weighted_mean(multipliers)
+
+    @property
+    def fixed_charge_rate(self):
+        """float: Mean fixed_charge_rate, defaults to 0."""
+        if "fixed_charge_rate" not in self.gen.datasets:
+            return 0
+
+        return self.exclusion_weighted_mean(self.gen["fixed_charge_rate"])
+
+    @property
+    def _sam_system_capacity(self):
+        """float: Mean SAM generation system capacity input, defaults to 0. """
+        if self._ssc is not None:
+            return self._ssc
+
+        self._ssc = 0
+        if "system_capacity" in self.gen.datasets:
+            self._ssc = self.exclusion_weighted_mean(
+                self.gen["system_capacity"]
+            )
+
+        return self._ssc
+
+    @property
+    def _sam_lcoe_kwargs(self):
+        """dict: Mean LCOE inputs, as passed to SAM during generation."""
+        if self._slk:
+            return self._slk
+
+        self._slk = {"capital_cost": None, "fixed_operating_cost": None,
+                     "variable_operating_cost": None,
+                     "fixed_charge_rate": None, "system_capacity": None}
+
+        for dset in self._slk:
+            if dset in self.gen.datasets:
+                self._slk[dset] = self.exclusion_weighted_mean(
+                    self.gen[dset]
+                )
+
+        return self._slk
+
+    def _compute_cost_per_ac_mw(self, dset):
+        """Compute a cost per AC MW for a given input. """
+        if self._sam_system_capacity <= 0:
+            return 0
+
+        if dset not in self.gen.datasets:
+            return 0
+
+        sam_cost = self.exclusion_weighted_mean(self.gen[dset])
+        sam_cost_per_mw = sam_cost / self._sam_system_capacity
+        sc_point_cost = sam_cost_per_mw * self.capacity
+
+        ac_cap = (self.capacity
+                  if self.capacity_ac is None
+                  else self.capacity_ac)
+        return sc_point_cost / ac_cap
 
     @property
     def mean_h5_dsets_data(self):
@@ -2194,39 +2292,55 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         ARGS = {
             SupplyCurveField.LATITUDE: self.latitude,
             SupplyCurveField.LONGITUDE: self.longitude,
-            SupplyCurveField.TIMEZONE: self.timezone,
             SupplyCurveField.COUNTRY: self.country,
             SupplyCurveField.STATE: self.state,
             SupplyCurveField.COUNTY: self.county,
             SupplyCurveField.ELEVATION: self.elevation,
+            SupplyCurveField.TIMEZONE: self.timezone,
+            SupplyCurveField.SC_POINT_GID: self.sc_point_gid,
+            SupplyCurveField.SC_ROW_IND: self.sc_row_ind,
+            SupplyCurveField.SC_COL_IND: self.sc_col_ind,
             SupplyCurveField.RES_GIDS: self.res_gid_set,
             SupplyCurveField.GEN_GIDS: self.gen_gid_set,
             SupplyCurveField.GID_COUNTS: self.gid_counts,
             SupplyCurveField.N_GIDS: self.n_gids,
-            SupplyCurveField.MEAN_CF: self.mean_cf,
+            SupplyCurveField.OFFSHORE: self.offshore,
+            SupplyCurveField.MEAN_CF_AC: (
+                self.mean_cf if self.mean_cf_ac is None else self.mean_cf_ac
+            ),
+            SupplyCurveField.MEAN_CF_DC: self.mean_cf_dc,
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
-            SupplyCurveField.CAPACITY: self.capacity,
             SupplyCurveField.AREA_SQ_KM: self.area,
-        }
-
-        extra_atts = {
-            SupplyCurveField.CAPACITY_AC: self.capacity_ac,
-            SupplyCurveField.OFFSHORE: self.offshore,
-            SupplyCurveField.SC_POINT_CAPITAL_COST: self.sc_point_capital_cost,
-            SupplyCurveField.SC_POINT_FIXED_OPERATING_COST: (
-                self.sc_point_fixed_operating_cost
+            SupplyCurveField.CAPACITY_AC_MW: (
+                self.capacity if self.capacity_ac is None else self.capacity_ac
             ),
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY: (
+            SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
+            SupplyCurveField.EOS_MULT: 1,  # added later
+            SupplyCurveField.REG_MULT: self.regional_multiplier,
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW: (
                 self.sc_point_annual_energy
             ),
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_AC: (
-                self.sc_point_annual_energy_ac
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("capital_cost")
             ),
+            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_capital_cost")
+            ),
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("fixed_operating_cost")
+            ),
+            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_fixed_operating_cost")
+            ),
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("variable_operating_cost")
+            ),
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW: (
+                self._compute_cost_per_ac_mw("base_variable_operating_cost")
+            ),
+            SupplyCurveField.FIXED_CHARGE_RATE: self.fixed_charge_rate,
         }
-        for attr, value in extra_atts.items():
-            if value is not None:
-                ARGS[attr] = value
 
         if self._friction_layer is not None:
             ARGS[SupplyCurveField.MEAN_FRICTION] = self.mean_friction
@@ -2276,17 +2390,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         eos = EconomiesOfScale(cap_cost_scale, summary)
         summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
         summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
-        summary[SupplyCurveField.CAPITAL_COST_SCALAR] = eos.capital_cost_scalar
-        summary[SupplyCurveField.SCALED_CAPITAL_COST] = eos.scaled_capital_cost
-        if SupplyCurveField.SC_POINT_CAPITAL_COST in summary:
-            scaled_costs = (
-                summary[SupplyCurveField.SC_POINT_CAPITAL_COST]
-                * eos.capital_cost_scalar
-            )
-            summary[SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST] = (
-                scaled_costs
-            )
-
+        summary[SupplyCurveField.EOS_MULT] = eos.capital_cost_scalar
+        summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+            * summary[SupplyCurveField.EOS_MULT]
+        )
         return summary
 
     @classmethod
@@ -2392,7 +2500,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
-            datasets to be aggregated in the h5_dsets input: system_capacity,
+            datasets to be aggregated in the gen input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
 
@@ -2430,3 +2538,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                 summary = point.economies_of_scale(cap_cost_scale, summary)
 
         return summary
+
+
+def _infer_cf_dset_ac(cf_dset):
+    """Infer AC dataset name from input. """
+    parts = cf_dset.split("-")
+    if len(parts) == 1:
+        return f"{cf_dset}_ac"
+
+    cf_name = "-".join(parts[:-1])
+    return f"{cf_name}_ac-{parts[-1]}"
