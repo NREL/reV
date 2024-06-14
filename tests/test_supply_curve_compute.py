@@ -591,11 +591,17 @@ def test_least_cost_simple_with_reinforcement():
         assert not np.allclose(sc_simple[SupplyCurveField.TOTAL_LCOE],
                                sc_simple_r[SupplyCurveField.TOTAL_LCOE])
 
+        check_cols = [SupplyCurveField.POI_LAT,
+                      SupplyCurveField.POI_LON,
+                      SupplyCurveField.REINFORCEMENT_POI_LAT,
+                      SupplyCurveField.REINFORCEMENT_POI_LON,
+                      SupplyCurveField.REINFORCEMENT_COST_PER_MW,
+                      SupplyCurveField.REINFORCEMENT_DIST_KM]
         nan_cols = [SupplyCurveField.POI_LAT,
                     SupplyCurveField.POI_LON,
                     SupplyCurveField.REINFORCEMENT_POI_LAT,
                     SupplyCurveField.REINFORCEMENT_POI_LON]
-        for col in _REQUIRED_OUTPUT_COLS:
+        for col in check_cols:
             assert col in sc_simple
             if col in nan_cols:
                 assert sc_simple[col].isna().all()
@@ -604,6 +610,15 @@ def test_least_cost_simple_with_reinforcement():
 
             assert col in sc_simple_r
             assert (sc_simple_r[col] > 0).all()
+
+        assert np.allclose(
+            sc_simple[SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW]
+            * 0.1
+            / sc_simple[SupplyCurveField.MEAN_CF_AC]
+            / 8760,
+            sc_simple[SupplyCurveField.LCOT],
+            atol=0.001
+        )
 
 
 # pylint: disable=no-member
@@ -640,6 +655,15 @@ def test_least_cost_simple_with_trans_cap_cost_per_mw(r_costs):
                            simple=True, sort_on=sort_on)
         sc_simple = pd.read_csv(sc_simple)
         assert (sc_simple[SupplyCurveField.TRANS_GID] == 42445).all()
+
+        assert np.allclose(
+            sc_simple[SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW]
+            * 0.1
+            / sc_simple[SupplyCurveField.MEAN_CF_AC]
+            / 8760,
+            sc_simple[SupplyCurveField.LCOT],
+            atol=0.001
+        )
 
         if not r_costs:
             lcot = 4244.5 / (sc_simple[SupplyCurveField.MEAN_CF_AC] * 8760)
