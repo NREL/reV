@@ -182,6 +182,8 @@ class SupplyCurveField(FieldEnum):
     TRANS_TYPE = "trans_type_m"
     TRANS_CAPACITY = "trans_capacity_m"
     DIST_SPUR_KM = "dist_km_m" # "dist_spur_km"
+    DIST_EXPORT_KM = "dist_export_km_m"
+    EXPORT_COST_PER_MW = "cost_export_usd_per_mw_m"
     LCOT = "lcot_m"
     TOTAL_TRANS_CAP_COST_PER_MW = "trans_cap_cost_per_mw_m"
     N_PARALLEL_TRANS = "n_parallel_trans_m"
@@ -228,6 +230,7 @@ class _LegacySCAliases(Enum):
     TRANS_TYPE = "trans_type", "category"
     TRANS_CAPACITY = "trans_capacity", "avail_cap"
     DIST_SPUR_KM = "dist_km"
+    DIST_EXPORT_KM = "dist_export_km"
     LCOT = "lcot"
     TOTAL_TRANS_CAP_COST_PER_MW = "trans_cap_cost_per_mw"
     N_PARALLEL_TRANS = "n_parallel_trans"
@@ -237,6 +240,7 @@ class _LegacySCAliases(Enum):
     REINFORCEMENT_POI_LON = "reinforcement_poi_lon"
     REINFORCEMENT_COST_PER_MW = "reinforcement_cost_per_mw"
     REINFORCEMENT_DIST_KM = "reinforcement_dist_km"
+    EXPORT_COST_PER_MW = "cost_export_usd_per_mw"
 
 
 class ModuleName(str, Enum):

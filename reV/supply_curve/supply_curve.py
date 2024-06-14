@@ -35,7 +35,9 @@ _REQUIRED_COMPUTE_AND_OUTPUT_COLS = {
     SupplyCurveField.LCOT: 11,
     SupplyCurveField.TOTAL_LCOE: 12,
 }
-_REQUIRED_OUTPUT_COLS = {SupplyCurveField.POI_LAT: 13,
+_REQUIRED_OUTPUT_COLS = {SupplyCurveField.DIST_EXPORT_KM: 4,
+                         SupplyCurveField.EXPORT_COST_PER_MW: 8,
+                         SupplyCurveField.POI_LAT: 13,
                          SupplyCurveField.POI_LON: 14,
                          SupplyCurveField.REINFORCEMENT_POI_LAT: 15,
                          SupplyCurveField.REINFORCEMENT_POI_LON: 16,
