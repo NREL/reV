@@ -981,8 +981,10 @@ class SupplyCurve:
             self._trans_table[tcc_per_mw_col].astype("float32")
         )
         cost = cost.astype("float32")
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC].values
+        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC]
+        cf_mean_arr = cf_mean_arr.values.astype("float32")
         resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
+        resource_lcoe = resource_lcoe.values.astype("float32")
 
         if 'reinforcement_cost_floored_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_floored_per_mw' column found in "
