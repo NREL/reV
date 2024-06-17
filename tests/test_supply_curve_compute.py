@@ -857,8 +857,8 @@ def test_least_cost_simple_with_ac_capacity_column():
             sc_simple_ac_cap[SupplyCurveField.REINFORCEMENT_COST_PER_MW],
         )
 
-        # Final reinforcement costs are slightly cheaper for AC capacity
+        # sc_simple_ac_cap lower capacity so higher cost per unit
         assert np.all(sc_simple[SupplyCurveField.LCOT]
-                      > sc_simple_ac_cap[SupplyCurveField.LCOT])
+                      < sc_simple_ac_cap[SupplyCurveField.LCOT])
         assert np.all(sc_simple[SupplyCurveField.TOTAL_LCOE]
-                      > sc_simple_ac_cap[SupplyCurveField.TOTAL_LCOE])
+                      < sc_simple_ac_cap[SupplyCurveField.TOTAL_LCOE])

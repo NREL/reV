@@ -712,13 +712,6 @@ class SupplyCurveAggregation(BaseAggregation):
 
         logger.debug("Resource class bins: {}".format(self._res_class_bins))
 
-        if self._cap_cost_scale is not None:
-            if self._h5_dsets is None:
-                self._h5_dsets = []
-
-            self._h5_dsets += list(BaseGen.LCOE_ARGS)
-            self._h5_dsets = list(set(self._h5_dsets))
-
         if self._power_density is None:
             msg = (
                 "Supply curve aggregation power density not specified. "

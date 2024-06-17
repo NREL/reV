@@ -221,6 +221,8 @@ def test_sc_agg_econ_scale():
 
         eqn = (
             f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"
+            f" * np.where(np.array([2, 5]) > 3)[0][0]"
+            f" * np.where(np.array([2, 1]) == 1)[0][0]"
         )
         out_fp_base = os.path.join(td, "base")
         base = SupplyCurveAggregation(
@@ -231,6 +233,8 @@ def test_sc_agg_econ_scale():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
+            h5_dsets=["capital_cost", "fixed_operating_cost",
+                      "fixed_charge_rate", "variable_operating_cost"],
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -244,6 +248,8 @@ def test_sc_agg_econ_scale():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale=eqn,
+            h5_dsets=["capital_cost", "fixed_operating_cost",
+                      "fixed_charge_rate", "variable_operating_cost"],
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
