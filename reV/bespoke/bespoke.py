@@ -1618,7 +1618,7 @@ class BespokeWindPlants(BaseAggregation):
             multiple sites can be specified to evaluate ``reV`` at
             multiple specific locations. A string pointing to a project
             points CSV file may also be specified. Typically, the CSV
-            contains two columns:
+            contains the following columns:
 
                 - ``gid``: Integer specifying the supply curve GID of
                   each site.
@@ -1635,7 +1635,7 @@ class BespokeWindPlants(BaseAggregation):
             site-specific capital cost value for each location). Columns
             that do not correspond to a config key may also be included,
             but they will be ignored. The CSV file input can also have
-            these extra columns:
+            these extra, optional columns:
 
                 - ``capital_cost_multiplier``
                 - ``fixed_operating_cost_multiplier``
