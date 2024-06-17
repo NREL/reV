@@ -1116,8 +1116,7 @@ class SupplyCurve:
 
         return table
 
-    # pylint: disable=C901
-    def _full_sort(
+    def _full_sort(  # noqa: C901
         self,
         trans_table,
         trans_costs=None,
