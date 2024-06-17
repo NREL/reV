@@ -1263,10 +1263,10 @@ class BespokeSinglePlant:
         self._outputs.update(means)
 
         self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
-        self._meta[SupplyCurveField.MEAN_CF_DC] = None
-        self._meta[SupplyCurveField.MEAN_CF_AC] = None
-        self._meta[SupplyCurveField.MEAN_LCOE] = None
-        self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW] = None
+        self._meta[SupplyCurveField.MEAN_CF_DC] = np.nan
+        self._meta[SupplyCurveField.MEAN_CF_AC] = np.nan
+        self._meta[SupplyCurveField.MEAN_LCOE] = np.nan
+        self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW] = np.nan
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
             self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
@@ -1373,7 +1373,7 @@ class BespokeSinglePlant:
         # convert SAM system capacity in kW to reV supply curve cap in MW
         capacity_ac_mw = system_capacity_kw / 1e3
         self._meta[SupplyCurveField.CAPACITY_AC_MW] = capacity_ac_mw
-        self._meta[SupplyCurveField.CAPACITY_DC_MW] = None
+        self._meta[SupplyCurveField.CAPACITY_DC_MW] = np.nan
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(

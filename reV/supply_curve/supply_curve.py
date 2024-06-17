@@ -1289,7 +1289,7 @@ class SupplyCurve:
 
         for col in _REQUIRED_OUTPUT_COLS:
             if col not in self._trans_table:
-                self._trans_table[col] = None
+                self._trans_table[col] = np.nan
             if col not in columns:
                 columns.append(col)
 

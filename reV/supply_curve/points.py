@@ -2356,7 +2356,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary = {}
         for arg in args:
             if arg in ARGS:
-                summary[arg] = ARGS[arg]
+                val = ARGS[arg]
+                if val is None:
+                    val = np.nan
+                summary[arg] = val
             else:
                 warn(
                     'Cannot find "{}" as an available SC self summary '
