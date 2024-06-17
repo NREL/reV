@@ -81,47 +81,47 @@ def test_lcoe_calc_simple():
     # from pvwattsv7 defaults
     data = {
         "aep": 35188456.00,
-        SupplyCurveField.CAPITAL_COST: 53455000.00,
+        "capital_cost": 53455000.00,
         "foc": 360000.00,
         "voc": 0,
         "fcr": 0.096,
     }
 
-    true_lcoe = (data["fcr"] * data[SupplyCurveField.CAPITAL_COST]
+    true_lcoe = (data["fcr"] * data["capital_cost"]
                  + data["foc"]) / (data["aep"] / 1000)
     data[SupplyCurveField.MEAN_LCOE] = true_lcoe
 
     eos = EconomiesOfScale(eqn, data)
     assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
 
     eqn = 1
     eos = EconomiesOfScale(eqn, data)
     assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
 
     eqn = 2
-    true_scaled = ((data['fcr'] * eqn * data[SupplyCurveField.CAPITAL_COST]
+    true_scaled = ((data['fcr'] * eqn * data["capital_cost"]
                     + data['foc'])
                    / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert eqn * eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 
     data['system_capacity'] = 2
     eqn = '1 / system_capacity'
-    true_scaled = ((data['fcr'] * 0.5 * data[SupplyCurveField.CAPITAL_COST]
+    true_scaled = ((data['fcr'] * 0.5 * data["capital_cost"]
                     + data['foc'])
                    / (data['aep'] / 1000))
     eos = EconomiesOfScale(eqn, data)
     assert 0.5 * eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data[SupplyCurveField.CAPITAL_COST]
+    assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 
@@ -147,9 +147,10 @@ def test_econ_of_scale_baseline():
         with Resource(GEN) as res:
             cf = res["cf_mean-means"]
 
-        lcoe = (1000 * (data['fixed_charge_rate'] * data['capital_cost']
-                        + data['fixed_operating_cost'])
-                        / (cf * data['system_capacity'] * 8760))
+        lcoe = (1000
+                * (data['fixed_charge_rate'] * data['capital_cost']
+                   + data['fixed_operating_cost'])
+                / (cf * data['system_capacity'] * 8760))
 
         with h5py.File(gen_temp, "a") as res:
             res["lcoe_fcr-means"][...] = lcoe
@@ -157,6 +158,10 @@ def test_econ_of_scale_baseline():
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
+
+            arr = np.full(res["meta"].shape, data["capital_cost"])
+            res.create_dataset("base_capital_cost",
+                               res["meta"].shape, data=arr)
 
         out_fp_base = os.path.join(td, "base")
         base = SupplyCurveAggregation(
@@ -167,6 +172,12 @@ def test_econ_of_scale_baseline():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -180,6 +191,12 @@ def test_econ_of_scale_baseline():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale="1",
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
@@ -187,9 +204,12 @@ def test_econ_of_scale_baseline():
         sc_df = pd.read_csv(out_fp_sc + ".csv")
         assert np.allclose(base_df[SupplyCurveField.MEAN_LCOE],
                            sc_df[SupplyCurveField.MEAN_LCOE])
-        assert (sc_df[SupplyCurveField.CAPITAL_COST_SCALAR] == 1).all()
+        assert (sc_df[SupplyCurveField.EOS_MULT] == 1).all()
         assert np.allclose(sc_df['mean_capital_cost'],
-                           sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
+                           sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                           * 20000)
+        assert np.allclose(sc_df[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW],
+                           sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW])
 
 
 def test_sc_agg_econ_scale():
@@ -211,7 +231,11 @@ def test_sc_agg_econ_scale():
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
 
-        eqn = f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"
+        eqn = (
+            f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"
+            f" * np.where(np.array([2, 5]) > 3)[0][0]"
+            f" * np.where(np.array([2, 1]) == 1)[0][0]"
+        )
         out_fp_base = os.path.join(td, "base")
         base = SupplyCurveAggregation(
             EXCL,
@@ -221,6 +245,12 @@ def test_sc_agg_econ_scale():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -234,6 +264,12 @@ def test_sc_agg_econ_scale():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale=eqn,
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
@@ -249,11 +285,11 @@ def test_sc_agg_econ_scale():
 
         aep = ((sc_df['mean_fixed_charge_rate'] * sc_df['mean_capital_cost']
                 + sc_df['mean_fixed_operating_cost'])
-                / sc_df[SupplyCurveField.RAW_LCOE])
+               / sc_df[SupplyCurveField.RAW_LCOE])
 
         true_raw_lcoe = ((data['fixed_charge_rate'] * data['capital_cost']
                           + data['fixed_operating_cost'])
-                          / aep + data['variable_operating_cost'])
+                         / aep + data['variable_operating_cost'])
 
         eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used
@@ -264,14 +300,11 @@ def test_sc_agg_econ_scale():
             + data["fixed_operating_cost"]
         ) / aep + data["variable_operating_cost"]
 
-        assert np.allclose(scalars,
-                           sc_df[SupplyCurveField.CAPITAL_COST_SCALAR])
-        assert np.allclose(scalars * sc_df['mean_capital_cost'],
-                           sc_df[SupplyCurveField.SCALED_CAPITAL_COST])
+        assert np.allclose(scalars, sc_df[SupplyCurveField.EOS_MULT])
 
         assert np.allclose(true_scaled_lcoe, sc_df[SupplyCurveField.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[SupplyCurveField.RAW_LCOE])
-        sc_df = sc_df.sort_values(SupplyCurveField.CAPACITY)
+        sc_df = sc_df.sort_values(SupplyCurveField.CAPACITY_AC_MW)
         assert all(sc_df[SupplyCurveField.MEAN_LCOE].diff()[1:] < 0)
         for i in sc_df.index.values:
             if sc_df.loc[i, 'scalars'] < 1:

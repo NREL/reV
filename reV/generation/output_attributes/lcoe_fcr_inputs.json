@@ -4,7 +4,7 @@
     "dtype": "float32",
     "scale_factor": 1,
     "type": "scalar",
-    "units": "dollars"
+    "units": "usd"
   },
   "fixed_charge_rate": {
     "chunks": null,
@@ -18,13 +18,48 @@
     "dtype": "float32",
     "scale_factor": 1,
     "type": "scalar",
-    "units": "dollars"
+    "units": "usd"
   },
   "variable_operating_cost": {
     "chunks": null,
     "dtype": "float32",
     "scale_factor": 1,
     "type": "scalar",
-    "units": "dol/kWh"
+    "units": "usd/kWh"
+  },
+  "base_capital_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "usd"
+  },
+  "base_fixed_operating_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "usd"
+  },
+  "base_variable_operating_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "usd/kWh"
+  },
+  "capital_cost_multiplier": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "unitless"
+  },
+  "system_capacity": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kW"
   }
 }

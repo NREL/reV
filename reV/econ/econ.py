@@ -352,7 +352,7 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
             Must have project_points with df property with all relevant
-            site-specific inputs and a `SupplyCurveField.GID` column.
+            site-specific inputs and a `SiteDataField.GID` column.
             By passing site-specific inputs in this dataframe, which
             was split using points_control, only the data relevant to
             the current sites is passed.
@@ -405,7 +405,7 @@ class Econ(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:

@@ -391,7 +391,7 @@ class SupplyCurveExtent:
                 }
             )
 
-            self._points.index.name = SupplyCurveField.GID  # sc_point_gid
+            self._points.index.name = "gid"  # sc_point_gid
 
         return self._points
 

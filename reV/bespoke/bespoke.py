@@ -566,7 +566,7 @@ class BespokeSinglePlant:
 
         # {meta_column: sam_sys_input_key}
         required = {
-            SupplyCurveField.CAPACITY: "system_capacity",
+            SupplyCurveField.CAPACITY_AC_MW: "system_capacity",
             SupplyCurveField.TURBINE_X_COORDS: "wind_farm_xCoordinates",
             SupplyCurveField.TURBINE_Y_COORDS: "wind_farm_yCoordinates",
         }
@@ -838,28 +838,23 @@ class BespokeSinglePlant:
                 [float(np.round(n, 1)) for n in self.sc_point.gid_counts]
             )
 
-            with SupplyCurveExtent(
-                self.sc_point._excl_fpath, resolution=self.sc_point.resolution
-            ) as sc:
-                row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
-
             self._meta = pd.DataFrame(
                 {
-                    SupplyCurveField.SC_POINT_GID: self.sc_point.gid,
-                    SupplyCurveField.SC_ROW_IND: row_ind,
-                    SupplyCurveField.SC_COL_IND: col_ind,
-                    SupplyCurveField.GID: self.sc_point.gid,
+                    "gid": self.sc_point.gid,  # needed for collection
                     SupplyCurveField.LATITUDE: self.sc_point.latitude,
                     SupplyCurveField.LONGITUDE: self.sc_point.longitude,
-                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
                     SupplyCurveField.COUNTRY: self.sc_point.country,
                     SupplyCurveField.STATE: self.sc_point.state,
                     SupplyCurveField.COUNTY: self.sc_point.county,
                     SupplyCurveField.ELEVATION: self.sc_point.elevation,
-                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
+                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
+                    SupplyCurveField.SC_POINT_GID: self.sc_point.sc_point_gid,
+                    SupplyCurveField.SC_ROW_IND: self.sc_point.sc_row_ind,
+                    SupplyCurveField.SC_COL_IND: self.sc_point.sc_col_ind,
                     SupplyCurveField.RES_GIDS: res_gids,
                     SupplyCurveField.GID_COUNTS: gid_counts,
                     SupplyCurveField.N_GIDS: self.sc_point.n_gids,
+                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
                     SupplyCurveField.AREA_SQ_KM: self.sc_point.area,
                 },
                 index=[self.sc_point.gid],
@@ -1077,11 +1072,9 @@ class BespokeSinglePlant:
             cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
             voc = lcoe_kwargs['variable_operating_cost']
-            bos = lcoe_kwargs['balance_of_system_cost']
             aep = self.outputs['annual_energy-means']
-            cap_cost = cc + bos
 
-            my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+            my_mean_lcoe = lcoe_fcr(fcr, cc, foc, aep, voc)
 
             self._outputs["lcoe_fcr-means"] = my_mean_lcoe
             self._meta[SupplyCurveField.MEAN_LCOE] = my_mean_lcoe
@@ -1102,17 +1095,23 @@ class BespokeSinglePlant:
             plant_optimizer, original_sam_sys_inputs, meta
         """
 
-        kwargs_list = [
-            "fixed_charge_rate",
-            "system_capacity",
-            "capital_cost",
-            "fixed_operating_cost",
-            "variable_operating_cost",
-            "balance_of_system_cost",
-        ]
+        kwargs_map = {
+            "fixed_charge_rate": SupplyCurveField.FIXED_CHARGE_RATE,
+            "system_capacity": SupplyCurveField.CAPACITY_AC_MW,
+            "capital_cost": SupplyCurveField.BESPOKE_CAPITAL_COST,
+            "fixed_operating_cost": (
+                SupplyCurveField.BESPOKE_FIXED_OPERATING_COST
+            ),
+            "variable_operating_cost": (
+                SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST
+            ),
+            "balance_of_system_cost": (
+                SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST
+            ),
+        }
         lcoe_kwargs = {}
 
-        for kwarg in kwargs_list:
+        for kwarg, meta_field in kwargs_map.items():
             if kwarg in self.outputs:
                 lcoe_kwargs[kwarg] = self.outputs[kwarg]
             elif getattr(self.plant_optimizer, kwarg, None) is not None:
@@ -1122,11 +1121,13 @@ class BespokeSinglePlant:
             elif kwarg in self.meta:
                 value = float(self.meta[kwarg].values[0])
                 lcoe_kwargs[kwarg] = value
+            elif meta_field in self.meta:
+                value = float(self.meta[meta_field].values[0])
+                if meta_field == SupplyCurveField.CAPACITY_AC_MW:
+                    value *= 1000  # MW to kW
+                lcoe_kwargs[kwarg] = value
 
-        for k, v in lcoe_kwargs.items():
-            self._meta[k] = v
-
-        missing = [k for k in kwargs_list if k not in lcoe_kwargs]
+        missing = [k for k in kwargs_map if k not in lcoe_kwargs]
         if any(missing):
             msg = (
                 "Could not find these LCOE kwargs in outputs, "
@@ -1137,6 +1138,8 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise KeyError(msg)
 
+        bos = lcoe_kwargs.pop("balance_of_system_cost")
+        lcoe_kwargs["capital_cost"] = lcoe_kwargs["capital_cost"] + bos
         return lcoe_kwargs
 
     @staticmethod
@@ -1191,7 +1194,10 @@ class BespokeSinglePlant:
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',
-                                  'balance_of_system_cost')):
+                                  'balance_of_system_cost',
+                                  'base_capital_cost',
+                                  'base_fixed_operating_cost',
+                                  'base_variable_operating_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
@@ -1256,9 +1262,14 @@ class BespokeSinglePlant:
 
         self._outputs.update(means)
 
+        self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
+        self._meta[SupplyCurveField.MEAN_CF_DC] = None
+        self._meta[SupplyCurveField.MEAN_CF_AC] = None
+        self._meta[SupplyCurveField.MEAN_LCOE] = None
+        self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW] = None
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
-            self._meta.loc[:, SupplyCurveField.MEAN_CF] = self.outputs[
+            self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
                 "cf_mean-means"
             ]
         if "lcoe_fcr-means" in self.outputs:
@@ -1266,6 +1277,10 @@ class BespokeSinglePlant:
                 "lcoe_fcr-means"
             ]
             self.recalc_lcoe()
+        if "annual_energy-means" in self.outputs:
+            self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW] = (
+                self.outputs["annual_energy-means"] / 1000
+            )
 
         logger.debug("Timeseries analysis complete!")
 
@@ -1294,9 +1309,12 @@ class BespokeSinglePlant:
             logger.exception(msg)
             raise RuntimeError(msg) from e
 
-        # TODO need to add:
-        # total cell area
-        # cell capacity density
+        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
+        self._outputs["packing_polygons"] = (
+            self.plant_optimizer.packing_polygons
+        )
+        system_capacity_kw = self.plant_optimizer.capacity
+        self._outputs["system_capacity"] = system_capacity_kw
 
         txc = [int(np.round(c)) for c in self.plant_optimizer.turbine_x]
         tyc = [int(np.round(c)) for c in self.plant_optimizer.turbine_y]
@@ -1310,66 +1328,92 @@ class BespokeSinglePlant:
 
         self._meta[SupplyCurveField.TURBINE_X_COORDS] = txc
         self._meta[SupplyCurveField.TURBINE_Y_COORDS] = tyc
-        self._meta["possible_x_coords"] = pxc
-        self._meta["possible_y_coords"] = pyc
+        self._meta[SupplyCurveField.POSSIBLE_X_COORDS] = pxc
+        self._meta[SupplyCurveField.POSSIBLE_Y_COORDS] = pyc
 
-        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
-        self._outputs["packing_polygons"] = (
-            self.plant_optimizer.packing_polygons
-        )
-        self._outputs["system_capacity"] = self.plant_optimizer.capacity
-
-        self._meta["n_turbines"] = self.plant_optimizer.nturbs
-        self._meta["avg_sl_dist_to_center_m"] = \
+        self._meta[SupplyCurveField.N_TURBINES] = self.plant_optimizer.nturbs
+        self._meta["avg_sl_dist_to_center_m"] = (
             self.plant_optimizer.avg_sl_dist_to_center_m
-        self._meta["avg_sl_dist_to_medoid_m"] = \
+        )
+        self._meta["avg_sl_dist_to_medoid_m"] = (
             self.plant_optimizer.avg_sl_dist_to_medoid_m
+        )
         self._meta["nn_conn_dist_m"] = self.plant_optimizer.nn_conn_dist_m
-        self._meta["bespoke_aep"] = self.plant_optimizer.aep
-        self._meta["bespoke_objective"] = self.plant_optimizer.objective
-        self._meta["bespoke_capital_cost"] = self.plant_optimizer.capital_cost
-        self._meta["bespoke_fixed_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_AEP] = self.plant_optimizer.aep
+        self._meta[SupplyCurveField.BESPOKE_OBJECTIVE] = (
+            self.plant_optimizer.objective
+        )
+        self._meta[SupplyCurveField.BESPOKE_CAPITAL_COST] = (
+            self.plant_optimizer.capital_cost
+        )
+        self._meta[SupplyCurveField.BESPOKE_FIXED_OPERATING_COST] = (
             self.plant_optimizer.fixed_operating_cost
         )
-        self._meta["bespoke_variable_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST] = (
             self.plant_optimizer.variable_operating_cost
         )
-        self._meta["bespoke_balance_of_system_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST] = (
             self.plant_optimizer.balance_of_system_cost
         )
-        self._meta["included_area"] = self.plant_optimizer.area
-        self._meta["included_area_capacity_density"] = (
+        self._meta[SupplyCurveField.INCLUDED_AREA] = self.plant_optimizer.area
+        self._meta[SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY] = (
             self.plant_optimizer.capacity_density
         )
-        self._meta["convex_hull_area"] = self.plant_optimizer.convex_hull_area
-        self._meta["convex_hull_capacity_density"] = (
+        self._meta[SupplyCurveField.CONVEX_HULL_AREA] = (
+            self.plant_optimizer.convex_hull_area
+        )
+        self._meta[SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY] = (
             self.plant_optimizer.convex_hull_capacity_density
         )
-        self._meta["full_cell_capacity_density"] = (
+        self._meta[SupplyCurveField.FULL_CELL_CAPACITY_DENSITY] = (
             self.plant_optimizer.full_cell_capacity_density
         )
 
-        logger.debug("Plant layout optimization complete!")
-
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta[SupplyCurveField.CAPACITY] = (
-            self.outputs["system_capacity"] / 1e3
-        )
+        capacity_ac_mw = system_capacity_kw / 1e3
+        self._meta[SupplyCurveField.CAPACITY_AC_MW] = capacity_ac_mw
+        self._meta[SupplyCurveField.CAPACITY_DC_MW] = None
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta[SupplyCurveField.EOS_MULT] = (
+        eos_mult = (self.plant_optimizer.capital_cost
+                    / self.plant_optimizer.capacity
+                    / baseline_cost)
+        reg_mult = self.sam_sys_inputs.get("capital_cost_multiplier", 1)
+
+        self._meta[SupplyCurveField.EOS_MULT] = eos_mult
+        self._meta[SupplyCurveField.REG_MULT] = reg_mult
+
+        cap_cost = (
             self.plant_optimizer.capital_cost
-            / self.plant_optimizer.capacity
-            / baseline_cost
+            + self.plant_optimizer.balance_of_system_cost
         )
-        self._meta[SupplyCurveField.REG_MULT] = self.sam_sys_inputs.get(
-            "capital_cost_multiplier", 1
+        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            cap_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW] = (
+            cap_cost / eos_mult / reg_mult / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.FIXED_CHARGE_RATE] = (
+            self.plant_optimizer.fixed_charge_rate
         )
 
+        logger.debug("Plant layout optimization complete!")
         return self.outputs
 
     def agg_data_layers(self):
@@ -1963,7 +2007,7 @@ class BespokeWindPlants(BaseAggregation):
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
-            `SupplyCurveField.GID` and 'config' column, the config maps to the
+            `SiteDataField.GID` and 'config' column, the config maps to the
             sam_configs dict keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
@@ -2018,6 +2062,7 @@ class BespokeWindPlants(BaseAggregation):
 
             with Outputs(prior_run, mode="r") as f:
                 meta = f.meta
+                meta = meta.rename(columns=SupplyCurveField.map_from_legacy())
 
             # pylint: disable=no-member
             for col in meta.columns:
@@ -2043,7 +2088,7 @@ class BespokeWindPlants(BaseAggregation):
         meta = None
 
         if self._prior_meta is not None:
-            mask = self._prior_meta[SupplyCurveField.GID] == gid
+            mask = self._prior_meta[SupplyCurveField.SC_POINT_GID] == gid
             if any(mask):
                 meta = self._prior_meta[mask]
 

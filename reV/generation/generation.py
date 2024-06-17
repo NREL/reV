@@ -113,7 +113,7 @@ class Gen(BaseGen):
         allowed and/or required SAM config file inputs. If economic
         parameters are supplied in the SAM config, then you can bundle a
         "follow-on" econ calculation by just adding the desired econ
-        output keys to the `output_request`. You can request ``reV`` to '
+        output keys to the `output_request`. You can request ``reV`` to
         run the analysis for one or more "sites", which correspond to
         the meta indices in the resource data (also commonly called the
         ``gid's``).
@@ -128,7 +128,7 @@ class Gen(BaseGen):
         >>> import os
         >>> from reV import Gen, TESTDATADIR
         >>>
-        >>> sam_tech = 'pvwattsv7'
+        >>> sam_tech = 'pvwattsv8'
         >>> sites = 0
         >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
         >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
@@ -145,15 +145,16 @@ class Gen(BaseGen):
         >>> gen.run()
         >>>
         >>> gen.out
-        {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-         'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-        : array([[0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                ...,
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.]])}
+        {'fixed_charge_rate': array([0.096, 0.096, 0.096, 0.096],
+         'base_capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'base_variable_operating_cost': array([0, 0, 0, 0],
+         'base_fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'variable_operating_cost': array([0, 0, 0, 0],
+         'capital_cost_multiplier': array([1, 1, 1, 1],
+         'cf_mean': array([0.17859147, 0.17869979, 0.1834818 , 0.18646291],
+         'lcoe_fcr': array([130.32126, 130.24226, 126.84782, 124.81981]}
 
         Parameters
         ----------
@@ -454,7 +455,7 @@ class Gen(BaseGen):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a `SupplyCurveField.GID`
+            non-sequential or do not start from 0, so a `SiteDataField.GID`
             column is added.
         """
         if self._meta is None:
@@ -712,6 +713,8 @@ class Gen(BaseGen):
                 for k in site_output.keys():
                     # iterate through variable names in each site's output dict
                     if k in cls.OUT_ATTRS:
+                        if out[site][k] is None:
+                            continue
                         # get dtype and scale for output variable name
                         dtype = cls.OUT_ATTRS[k].get("dtype", "float32")
                         scale_factor = cls.OUT_ATTRS[k].get("scale_factor", 1)
@@ -947,11 +950,19 @@ class Gen(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         # ensure that cf_mean is requested from output
         if "cf_mean" not in output_request:
             output_request.append("cf_mean")
+
+        if _is_solar_run_with_ac_outputs(self.tech):
+            if "dc_ac_ratio" not in output_request:
+                output_request.append("dc_ac_ratio")
+            for dset in ["cf_mean", "cf_profile"]:
+                ac_dset = f"{dset}_ac"
+                if dset in output_request and ac_dset not in output_request:
+                    output_request.append(ac_dset)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -1097,3 +1108,10 @@ class Gen(BaseGen):
             raise e
 
         return self._out_fpath
+
+
+def _is_solar_run_with_ac_outputs(tech):
+    """True if tech is pvwattsv8+"""
+    if "pvwatts" not in tech.casefold():
+        return False
+    return tech.casefold() not in {f"pvwattsv{i}" for i in range(8)}

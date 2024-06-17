@@ -9,8 +9,8 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
-from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.utilities import SupplyCurveField
+from reV.handlers.transmission import TransmissionFeatures as TF
 
 TRANS_COSTS_1 = {
     "line_tie_in_cost": 200,
@@ -83,6 +83,9 @@ def trans_table():
     """Get the transmission mapping table"""
     path = os.path.join(TESTDATADIR, "trans_tables/ri_transmission_table.csv")
     trans_table = pd.read_csv(path)
+    trans_table = trans_table.rename(
+        columns=SupplyCurveField.map_from_legacy()
+    )
     return trans_table
 
 
@@ -133,7 +136,7 @@ def test_connect(trans_costs, capacity, gid, trans_table):
     avail_cap_frac = tcosts.pop("available_capacity")
 
     tf = TF(trans_table, avail_cap_frac=avail_cap_frac, **tcosts)
-    avail_cap = tf[gid].get("avail_cap", None)
+    avail_cap = tf[gid].get(SupplyCurveField.TRANS_CAPACITY, None)
     if avail_cap is not None:
         if avail_cap > capacity:
             assert tf.connect(gid, capacity, apply=False)
@@ -185,7 +188,9 @@ def test_substation_load_spreading(i, trans_costs, trans_table):
     assert not any(missing), "New gids not in baseline: {}".format(missing)
     for line_id in line_gids:
         msg = "Bad line cap: {}".format(line_id)
-        assert LINE_CAPS[i][line_id] == tf[line_id]["avail_cap"], msg
+        expected_match = (LINE_CAPS[i][line_id]
+                          == tf[line_id][SupplyCurveField.TRANS_CAPACITY])
+        assert expected_match, msg
 
 
 def execute_pytest(capture="all", flags="-rapP"):
