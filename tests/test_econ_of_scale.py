@@ -172,6 +172,12 @@ def test_econ_of_scale_baseline():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -185,6 +191,12 @@ def test_econ_of_scale_baseline():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale="1",
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
@@ -233,8 +245,12 @@ def test_sc_agg_econ_scale():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
-            h5_dsets=["capital_cost", "fixed_operating_cost",
-                      "fixed_charge_rate", "variable_operating_cost"],
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -248,8 +264,12 @@ def test_sc_agg_econ_scale():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale=eqn,
-            h5_dsets=["capital_cost", "fixed_operating_cost",
-                      "fixed_charge_rate", "variable_operating_cost"],
+            h5_dsets=[
+                "capital_cost",
+                "fixed_operating_cost",
+                "fixed_charge_rate",
+                "variable_operating_cost"
+            ],
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
