@@ -2154,7 +2154,7 @@ class BespokeWindPlants(BaseAggregation):
             self._res_fpath,
             sc_gid_to_hh,
             sc_gid_to_res_gid,
-            pre_load_humidity=bool(self.sam_sys_inputs.get("en_icing_cutoff")),
+            pre_load_humidity=self._project_points.sam_config_obj.icing,
         )
 
     def _hh_for_sc_gid(self, sc_gid):
