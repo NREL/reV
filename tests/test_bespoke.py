@@ -85,7 +85,8 @@ OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
     "/ aep + variable_operating_cost"
 )
-EXPECTED_META_COLUMNS = [SupplyCurveField.SC_POINT_GID,
+EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
+                         SupplyCurveField.SC_POINT_GID,
                          SupplyCurveField.TURBINE_X_COORDS,
                          SupplyCurveField.TURBINE_Y_COORDS,
                          SupplyCurveField.POSSIBLE_X_COORDS,
