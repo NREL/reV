@@ -840,6 +840,7 @@ class BespokeSinglePlant:
 
             self._meta = pd.DataFrame(
                 {
+                    "gid": self.sc_point.gid,  # needed for collection
                     SupplyCurveField.LATITUDE: self.sc_point.latitude,
                     SupplyCurveField.LONGITUDE: self.sc_point.longitude,
                     SupplyCurveField.COUNTRY: self.sc_point.country,
