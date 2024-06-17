@@ -113,7 +113,8 @@ class EconomiesOfScale:
         """
         var_names = []
         if self._eqn is not None:
-            delimiters = ("*", "/", "+", "-", " ", "(", ")", "[", "]", ",")
+            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+", "-",
+                          " ", "(", ")", "[", "]")
             regex_pattern = "|".join(map(re.escape, delimiters))
             var_names = []
             for sub in re.split(regex_pattern, str(self._eqn)):
