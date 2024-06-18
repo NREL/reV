@@ -950,4 +950,7 @@ def _add_sys_capacity(sam_inputs):
         if cap is not None:
             cap = max(cap)
 
+    if cap is None:
+        cap = sam_inputs.get("nameplate")
+
     sam_inputs["system_capacity"] = cap

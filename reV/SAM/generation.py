@@ -1786,6 +1786,10 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                 "{}".format(self.sam_sys_inputs["nameplate"])
             )
             logger.info(msg)
+            # required for downstream LCOE calcs
+            self.sam_sys_inputs["system_capacity"] = (
+                self.sam_sys_inputs["nameplate"]
+            )
             return
 
         val = set(resource["potential_MW"].unique())
@@ -1801,6 +1805,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
         logger.debug("Setting the nameplate to {}".format(val))
         self.sam_sys_inputs["nameplate"] = val
+        # required for downstream LCOE calcs
+        self.sam_sys_inputs["system_capacity"] = val
 
     def _set_resource_potential_to_match_gross_output(self):
         """Set the resource potential input to match the gross generation.
@@ -1861,7 +1867,9 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
             logger.debug(
                 "Setting the capital_cost to ${:,.2f}".format(capital_cost)
             )
-            self.sam_sys_inputs["capital_cost"] = capital_cost
+            reg_mult = self.sam_sys_inputs.get("capital_cost_multiplier", 1)
+            self.sam_sys_inputs["base_capital_cost"] = capital_cost
+            self.sam_sys_inputs["capital_cost"] = capital_cost * reg_mult
 
         dc_per_well = self.sam_sys_inputs.pop("drill_cost_per_well", None)
         num_wells = self.sam_sys_inputs.pop(
@@ -1884,19 +1892,35 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
                         drill_cost, num_wells, dc_per_well
                     )
                 )
-                self.sam_sys_inputs["capital_cost"] = capital_cost + drill_cost
+                reg_mult = self.sam_sys_inputs.get(
+                    "capital_cost_multiplier", 1
+                )
+                base_cc = capital_cost / reg_mult
+                new_base_cc = base_cc + drill_cost
+                self.sam_sys_inputs["base_capital_cost"] = new_base_cc
+                self.sam_sys_inputs["capital_cost"] = new_base_cc * reg_mult
 
         foc_per_kw = self.sam_sys_inputs.pop(
             "fixed_operating_cost_per_kw", None
         )
         if foc_per_kw is not None:
-            fixed_operating_cost = foc_per_kw * plant_size_kw
+            foc = foc_per_kw * plant_size_kw
             logger.debug(
-                "Setting the fixed_operating_cost to ${:,.2f}".format(
-                    capital_cost
-                )
+                "Setting the fixed_operating_cost to ${:,.2f}".format(foc)
             )
-            self.sam_sys_inputs["fixed_operating_cost"] = fixed_operating_cost
+            self.sam_sys_inputs["base_fixed_operating_cost"] = foc
+            self.sam_sys_inputs["fixed_operating_cost"] = foc
+
+        voc_per_kw = self.sam_sys_inputs.pop(
+            "variable_operating_cost_per_kw", None
+        )
+        if voc_per_kw is not None:
+            voc = voc_per_kw * plant_size_kw
+            logger.debug(
+                "Setting the variable_operating_cost to ${:,.2f}".format(voc)
+            )
+            self.sam_sys_inputs["base_variable_operating_cost"] = voc
+            self.sam_sys_inputs["variable_operating_cost"] = voc
 
     def _create_pysam_wfile(self, resource, meta):
         """Create PySAM weather input file.

@@ -2356,10 +2356,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary = {}
         for arg in args:
             if arg in ARGS:
-                val = ARGS[arg]
-                if val is None:
-                    val = np.nan
-                summary[arg] = val
+                summary[arg] = ARGS[arg]
             else:
                 warn(
                     'Cannot find "{}" as an available SC self summary '
@@ -2539,6 +2536,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
             if cap_cost_scale is not None:
                 summary = point.economies_of_scale(cap_cost_scale, summary)
+
+        for arg, val in summary.items():
+            if val is None:
+                summary[arg] = np.nan
 
         return summary
 
