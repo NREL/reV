@@ -2537,6 +2537,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             if cap_cost_scale is not None:
                 summary = point.economies_of_scale(cap_cost_scale, summary)
 
+        for arg, val in summary.items():
+            if val is None:
+                summary[arg] = np.nan
+
         return summary
 
 
