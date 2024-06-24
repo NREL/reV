@@ -860,8 +860,6 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
                 time_index, resource.pop("albedo")
             )
 
-        pd.DataFrame(resource).to_csv("/scratch/ppinchuk/test_pvwatts.csv", index=False)
-
         self["solar_resource_data"] = resource
 
 
