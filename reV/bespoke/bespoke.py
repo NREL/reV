@@ -912,6 +912,15 @@ class BespokeSinglePlant:
                 ti_step = self.original_sam_sys_inputs["time_index_step"]
                 self._res_df = self._res_df.iloc[::ti_step]
 
+        if len(self._res_df) < 8760:
+            msg = (f"Detected resource time series of length "
+                   f"{len(self._res_df)}, which is less than 8760. This may "
+                   f"yeild unexpected results or fail altogether. If this "
+                   f"is not intentional, try setting 'time_index_step: 1' "
+                   f"in your SAM config")
+            logger.warning(msg)
+            warn(msg)
+
         return self._res_df
 
     @property

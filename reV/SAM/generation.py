@@ -233,6 +233,15 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             logger.error(msg)
             raise InputError(msg)
 
+        if len(resource) < 8760:
+            msg = (f"Detected resource time series of length "
+                   f"{len(resource)}, which is less than 8760. This may "
+                   f"yeild unexpected results or fail altogether. If this "
+                   f"is not intentional, try setting 'time_index_step: 1' "
+                   f"in your SAM config")
+            logger.warning(msg)
+            warn(msg)
+
     @abstractmethod
     def set_resource_data(self, resource, meta):
         """Placeholder for resource data setting (nsrdb or wtk)"""
@@ -850,6 +859,8 @@ class AbstractSamSolar(AbstractSamGeneration, ABC):
             self["albedo"] = self.agg_albedo(
                 time_index, resource.pop("albedo")
             )
+
+        pd.DataFrame(resource).to_csv("/scratch/ppinchuk/test_pvwatts.csv", index=False)
 
         self["solar_resource_data"] = resource
 
