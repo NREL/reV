@@ -237,7 +237,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             msg = (f"Detected resource time series of length {len(resource)}, "
                    "which is less than 8760. This may yield unexpected "
                    "results or fail altogether. If this is not intentional, "
-                   "try setting 'time_index_step: 1' in your SAM config")
+                   "try setting 'time_index_step: 1' in your SAM config or "
+                   "double check the resource input you're using.")
             logger.warning(msg)
             warn(msg)
 
