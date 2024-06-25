@@ -212,11 +212,7 @@ class EconomiesOfScale:
         if cost_per_mw is None:
             return None
 
-        cost = cap * cost_per_mw
-        if cost > 0:
-            return cost
-
-        return None
+        return cap * cost_per_mw
 
     @property
     def raw_capital_cost(self):
