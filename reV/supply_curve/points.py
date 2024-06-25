@@ -2188,10 +2188,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     def _compute_cost_per_ac_mw(self, dset):
         """Compute a cost per AC MW for a given input. """
         if self._sam_system_capacity <= 0:
-            return 0
+            return None
 
         if dset not in self.gen.datasets:
-            return 0
+            return None
 
         sam_cost = self.exclusion_weighted_mean(self.gen[dset])
         sam_cost_per_mw = sam_cost / self._sam_system_capacity
