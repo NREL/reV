@@ -103,8 +103,9 @@ class MultiYearGroup:
 
         if "lcoe_fcr" in dsets:
             for dset in LCOE_REQUIRED_OUTPUTS:
-                if dset not in pass_through_dsets:
+                if dset not in pass_through_dsets and dset in dsets:
                     pass_through_dsets.append(dset)
+
         if "dc_ac_ratio" in dsets:
             if "dc_ac_ratio" not in pass_through_dsets:
                 pass_through_dsets.append("dc_ac_ratio")
