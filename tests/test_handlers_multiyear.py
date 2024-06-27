@@ -206,6 +206,70 @@ def test_cli(runner, clear_loggers):
         clear_loggers()
 
 
+# pylint: disable=no-member
+def test_cli_single_file(runner, clear_loggers):
+    """Test multi year collection cli for a single yearly file."""
+
+    with tempfile.TemporaryDirectory() as temp:
+        config = {"log_directory": temp,
+                  "execution_control": {"option": "local"},
+                  "groups": {"none": {"dsets": ["cf_mean", "lcoe_fcr"],
+                                      "pass_through_dsets": ['pass_through_1',
+                                                             'pass_through_2'],
+                                      "source_dir": temp,
+                                      "source_prefix": (
+                                          "ri_wind_gen_profiles"
+                                      )}},
+                  "log_level": "INFO"}
+
+        dirname = os.path.basename(temp)
+        fn = "{}_{}.h5".format(dirname, ModuleName.MULTI_YEAR)
+        my_out = os.path.join(temp, fn).replace("-", "_")
+        fp_in = os.path.join(temp, 'ri_wind_gen_profiles_2010.h5')
+        shutil.copy(os.path.join(TESTDATADIR, 'gen_out',
+                                 'ri_wind_gen_profiles_2010.h5'), fp_in)
+
+        pass_through_dsets = config['groups']['none']['pass_through_dsets']
+        for i, dset in enumerate(pass_through_dsets):
+            with h5py.File(fp_in, 'a') as f:
+                shape = f['meta'].shape
+                arr = np.arange(shape[0]) * (i + 1)
+                f.create_dataset(dset, shape, data=arr)
+
+                with h5py.File(my_out, 'a') as f:
+                    f.create_dataset(dset, shape, data=np.zeros_like(arr))
+
+        fp_config = os.path.join(temp, 'config.json')
+        with open(fp_config, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, [str(ModuleName.MULTI_YEAR),
+                                      '-c', fp_config])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+        assert "WARNING" in result.output
+        assert "Found existing multi-year file" in result.output
+
+        with Resource(my_out) as res:
+            assert 'cf_mean-2010' in res.dsets
+            assert 'cf_mean-means' in res.dsets
+            assert 'cf_mean-stdev' in res.dsets
+            assert 'lcoe_fcr-2010' in res.dsets
+            assert 'lcoe_fcr-means' in res.dsets
+            assert 'lcoe_fcr-stdev' in res.dsets
+            assert 'pass_through_1' in res.dsets
+            assert 'pass_through_2' in res.dsets
+            assert 'pass_through_1-means' not in res.dsets
+            assert 'pass_through_2-means' not in res.dsets
+            assert np.allclose(res['pass_through_1'],
+                               1 * np.arange(len(res.meta)))
+            assert np.allclose(res['pass_through_2'],
+                               2 * np.arange(len(res.meta)))
+
+        clear_loggers()
+
+
 @pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
