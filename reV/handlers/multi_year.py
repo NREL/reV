@@ -839,11 +839,6 @@ def my_collect_groups(out_fpath, groups, clobber=True):
                                         dset, group=group['group'])
 
         pass_through_dsets = group.get('pass_through_dsets') or []
-        if "lcoe_fcr" in group['dsets']:
-            for dset in LCOE_REQUIRED_OUTPUTS:
-                if dset not in pass_through_dsets:
-                    pass_through_dsets.append(dset)
-
         for dset in pass_through_dsets:
             MultiYear.pass_through(out_fpath, group['source_files'],
                                    dset, group=group['group'])
