@@ -1,0 +1,35 @@
+reV.bespoke
+===========
+
+.. automodule:: reV.bespoke
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   reV.bespoke.bespoke
+   reV.bespoke.cli_bespoke
+   reV.bespoke.gradient_free
+   reV.bespoke.pack_turbs
+   reV.bespoke.place_turbines
+   reV.bespoke.plotting_functions
+

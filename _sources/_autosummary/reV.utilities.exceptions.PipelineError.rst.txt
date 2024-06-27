@@ -1,0 +1,6 @@
+reV.utilities.exceptions.PipelineError
+======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: PipelineError

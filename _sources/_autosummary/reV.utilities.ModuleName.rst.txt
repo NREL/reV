@@ -1,0 +1,40 @@
+reV.utilities.ModuleName
+========================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: ModuleName
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ModuleName.all_names
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ModuleName.BESPOKE
+      ~ModuleName.COLLECT
+      ~ModuleName.ECON
+      ~ModuleName.GENERATION
+      ~ModuleName.HYBRIDS
+      ~ModuleName.MULTI_YEAR
+      ~ModuleName.NRWAL
+      ~ModuleName.QA_QC
+      ~ModuleName.REP_PROFILES
+      ~ModuleName.SUPPLY_CURVE
+      ~ModuleName.SUPPLY_CURVE_AGGREGATION
+   
+   
