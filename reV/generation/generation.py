@@ -236,10 +236,10 @@ class Gen(BaseGen):
             info on the allowed and/or required SAM config file inputs.
         resource_file : str
             Filepath to resource data. This input can be path to a
-            single resource HDF5 file, a path to a directory containing
-            data spread across multiple HDF5 files, or a path including
-            a wildcard input like ``/h5_dir/prefix*suffix``. In all
-            cases, the resource data must be readable by
+            single resource HDF5 file or a path including a wildcard
+            input like ``/h5_dir/prefix*suffix`` (i.e. if your datasets
+            for a single year are spread out over multiple files). In
+            all cases, the resource data must be readable by
             :py:class:`rex.resource.Resource`
             or :py:class:`rex.multi_file_resource.MultiFileResource`.
             (i.e. the resource data conform to the
