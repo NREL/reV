@@ -253,8 +253,14 @@ class Gen(BaseGen):
             consideration, and its shape must be a multiple of 8760.
 
             .. Note:: If executing ``reV`` from the command line, this
-              path can contain brackets ``{}`` that will be filled in by
-              the `analysis_years` input.
+              input string can contain brackets ``{}`` that will be
+              filled in by the `analysis_years` input. Alternatively,
+              this input can be a list of explicit files to process. In
+              this case, the length of the list must match the length of
+              the `analysis_years` input exactly, and the path are
+              assumed to align with the `analysis_years` (i.e. the first
+              path corresponds to the first analysis year, the second
+              path corresponds to the second analysis year, and so on)
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
