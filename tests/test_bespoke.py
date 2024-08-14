@@ -1498,12 +1498,13 @@ def test_cli(runner, clear_loggers):
         fn_out = "{}_{}.h5".format(dirname, ModuleName.BESPOKE)
         out_fpath = os.path.join(td, fn_out)
 
-        res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
+        res_fp_1 = os.path.join(td, "ri_100_wtk_{}.h5")
+        res_fp_2 = os.path.join(td, "another_name_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
         shutil.copy(EXCL, excl_fp)
-        shutil.copy(RES.format(2012), res_fp.format(2012))
-        shutil.copy(RES.format(2013), res_fp.format(2013))
-        res_fp = res_fp.format("*")
+        shutil.copy(RES.format(2012), res_fp_1.format(2012))
+        shutil.copy(RES.format(2013), res_fp_2.format(2013))
+        res_fp = [res_fp_1.format(2012), res_fp_2.format("*")]
 
         TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
 

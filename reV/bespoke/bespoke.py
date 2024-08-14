@@ -20,7 +20,6 @@ import pandas as pd
 import psutil
 from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
-from rex.renewable_resource import WindResource
 from rex.utilities.bc_parse_table import parse_bc_table
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import create_dirs, log_mem
@@ -60,8 +59,13 @@ class BespokeMultiPlantData:
 
         Parameters
         ----------
-        res_fpath : str
-            Path to resource h5 file.
+        res_fpath : str | list
+            Unix shell style path (potentially containing wildcard (*)
+            patterns) to a single or multi-file resource file set(s).
+            Can also be an explicit list of resource file paths, which
+            themselves can contain wildcards. This input must be
+            readable by
+            :py:class:`rex.multi_year_resource.MultiYearWindResource`.
         sc_gid_to_hh : dict
             Dictionary mapping SC GID values to hub-heights. Data for
             each SC GID will be pulled for the corresponding hub-height
@@ -69,7 +73,7 @@ class BespokeMultiPlantData:
         sc_gid_to_res_gid : dict
             Dictionary mapping SC GID values to an iterable oif resource
             GID values. Resource GID values should correspond to GID
-            values in teh HDF5 file, so any GID map must be applied
+            values in the HDF5 file, so any GID map must be applied
             before initializing :class`BespokeMultiPlantData`.
         """
         self.res_fpath = res_fpath
@@ -95,12 +99,7 @@ class BespokeMultiPlantData:
         }
 
         start_time = time.time()
-        if "*" in self.res_fpath:
-            handler = MultiYearWindResource
-        else:
-            handler = WindResource
-
-        with handler(self.res_fpath) as res:
+        with MultiYearWindResource(self.res_fpath) as res:
             self._wind_dirs = {
                 hh: res[f"winddirection_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
@@ -481,8 +480,7 @@ class BespokeSinglePlant:
         self._pre_loaded_data = pre_loaded_data
         self._outputs = {}
 
-        Handler = self.get_wind_handler(res)
-        res = res if not isinstance(res, str) else Handler(res)
+        res = res if not isinstance(res, str) else MultiYearWindResource(res)
 
         self._sc_point = AggSCPoint(
             gid,
@@ -1142,29 +1140,6 @@ class BespokeSinglePlant:
         lcoe_kwargs["capital_cost"] = lcoe_kwargs["capital_cost"] + bos
         return lcoe_kwargs
 
-    @staticmethod
-    def get_wind_handler(res):
-        """Get a wind resource handler for a resource filepath.
-
-        Parameters
-        ----------
-        res : str
-            Resource filepath to wtk .h5 file. Can include * wildcards
-            for multi year resource.
-
-        Returns
-        -------
-        handler : WindResource | MultiYearWindResource
-            Wind resource handler or multi year handler
-        """
-        handler = res
-        if isinstance(res, str):
-            if "*" in res:
-                handler = MultiYearWindResource
-            else:
-                handler = WindResource
-        return handler
-
     @classmethod
     def check_dependencies(cls):
         """Check special dependencies for bespoke"""
@@ -1521,14 +1496,15 @@ class BespokeWindPlants(BaseAggregation):
             uniquely defined (i.e.only appear once and in a single
             input file).
         res_fpath : str
-            Filepath to wind resource data in NREL WTK format. This
-            input can be path to a single resource HDF5 file or a path
-            including a wildcard input like ``/h5_dir/prefix*suffix`` to
-            run bespoke on multiple years of resource data. The former
-            must be readable by
-            :py:class:`rex.renewable_resource.WindResource` while the
-            latter must be readable by
-            or :py:class:`rex.multi_year_resource.MultiYearWindResource`
+            Unix shell style path to wind resource HDF5 file in NREL WTK
+            format. Can also be a path including a wildcard input like
+            ``/h5_dir/prefix*suffix`` to run bespoke on multiple years
+            of resource data. Can also be an explicit list of resource
+            HDF5 file paths, which themselves can contain wildcards. If
+            multiple files are specified in this way, they must have the
+            same coordinates but can have different time indices (i.e.
+            different years). This input must be readable by
+            :py:class:`rex.multi_year_resource.MultiYearWindResource`
             (i.e. the resource data conform to the
             `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
             means the data file(s) must contain a 1D ``time_index``
@@ -2119,8 +2095,7 @@ class BespokeWindPlants(BaseAggregation):
                 )
 
         # just check that this file exists, cannot check res_fpath if *glob
-        Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
-        with Handler(self._res_fpath) as f:
+        with MultiYearWindResource(self._res_fpath) as f:
             assert any(f.dsets)
 
     def _pre_load_data(self, pre_load_data):
@@ -2480,14 +2455,13 @@ class BespokeWindPlants(BaseAggregation):
                 exclusion_shape = sc.exclusions.shape
 
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
-        Handler = BespokeSinglePlant.get_wind_handler(res_fpath)
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {
             "excl_dict": excl_dict,
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
-            "h5_handler": Handler,
+            "h5_handler": MultiYearWindResource,
         }
 
         with AggFileHandler(excl_fpath, res_fpath, **file_kwargs) as fh:
