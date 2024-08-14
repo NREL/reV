@@ -16,7 +16,7 @@ from reV.utilities.exceptions import ConfigError
 logger = logging.getLogger(__name__)
 
 
-def _preprocessor(config, job_name, log_directory, resource_file, verbose,
+def _preprocessor(config, job_name, log_directory, verbose,
                   analysis_years=None):
     """Preprocess generation config user input.
 
@@ -30,50 +30,6 @@ def _preprocessor(config, job_name, log_directory, resource_file, verbose,
         Path to log output directory.
     verbose : bool
         Flag to signal ``DEBUG`` verbosity (``verbose=True``).
-    resource_file : str | list
-        Filepath to resource data. This input can be path to a
-        single resource HDF5 file or a path including a wildcard input
-        like ``/h5_dir/prefix*suffix``.  This path can contain brackets
-        ``{}``, which will be filled in by unique values from the
-        `analysis_years` input (which must not be null in this case).
-        Alternatively, this input can be a list of explicit files to
-        process. In this case, the length of the list must match the
-        length of the `analysis_years` input exactly, and the path are
-        assumed to align with the `analysis_years` (i.e. the first path
-        corresponds to the first analysis year, the second path
-        corresponds to the second analysis year, and so on). In all
-        cases, the resource data must be readable by
-        :py:class:`rex.resource.Resource`
-        or :py:class:`rex.multi_file_resource.MultiFileResource`.
-        (i.e. the resource data conform to the
-        `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
-        means the data file(s) must contain a 1D ``time_index``
-        dataset indicating the UTC time of observation, a 1D
-        ``meta`` dataset represented by a DataFrame with
-        site-specific columns, and 2D resource datasets that match
-        the dimensions of (``time_index``, ``meta``). The time index
-        must start at 00:00 of January 1st of the year under
-        consideration, and its shape must be a multiple of 8760.
-
-        .. Important:: If you are using custom resource data (i.e.
-            not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
-
-                - The data conforms to the
-                `rex data format <https://tinyurl.com/3fy7v5kx>`_.
-                - The ``meta`` DataFrame is organized such that every
-                row is a pixel and at least the columns
-                ``latitude``, ``longitude``, ``timezone``, and
-                ``elevation`` are given for each location.
-                - The time index and associated temporal data is in
-                UTC.
-                - The latitude is between -90 and 90 and longitude is
-                between -180 and 180.
-                - For solar data, ensure the DNI/DHI are not zero. You
-                can calculate one of these these inputs from the
-                other using the relationship
-
-                .. math:: GHI = DNI * cos(SZA) + DHI
-
     analysis_years : int | list, optional
         A single year or list of years to perform analysis for. These
         years will be used to fill in any brackets ``{}`` in the
@@ -90,7 +46,8 @@ def _preprocessor(config, job_name, log_directory, resource_file, verbose,
     config.get("execution_control", {}).setdefault("max_workers")
     analysis_years = format_analysis_years(analysis_years)
 
-    config["resource_file"] = _parse_res_files(resource_file, analysis_years)
+    config["resource_file"] = _parse_res_files(config["resource_file"],
+                                               analysis_years)
     lr_res_file = config.get("low_res_resource_file")
     if lr_res_file is None:
         config["low_res_resource_file"] = [None] * len(analysis_years)
