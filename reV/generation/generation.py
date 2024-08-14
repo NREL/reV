@@ -260,7 +260,7 @@ class Gen(BaseGen):
               the `analysis_years` input exactly, and the path are
               assumed to align with the `analysis_years` (i.e. the first
               path corresponds to the first analysis year, the second
-              path corresponds to the second analysis year, and so on)
+              path corresponds to the second analysis year, and so on).
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
