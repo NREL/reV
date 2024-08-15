@@ -50,12 +50,25 @@ def _preprocessor(config, out_dir):
 def _format_res_fpath(config):
     """Format res_fpath with year, if need be. """
     res_fpath = config.setdefault("res_fpath", None)
-    if isinstance(res_fpath, str) and '{}' in res_fpath:
-        for year in range(1950, 2100):
-            if os.path.exists(res_fpath.format(year)):
-                break
+    if isinstance(res_fpath, str):
+        if '{}' in res_fpath:
+            for year in range(1950, 2100):
+                if os.path.exists(res_fpath.format(year)):
+                    break
+            else:
+                msg = ("Could not find any files that match the pattern"
+                       "{!r}".format(res_fpath.format("<year>")))
+                logger.error(msg)
+                raise FileNotFoundError(msg)
 
-        config["res_fpath"] = res_fpath.format(year)
+            res_fpath = res_fpath.format(year)
+
+        elif not os.path.exists(res_fpath):
+            msg = "Could not find resource file: {!r}".format(res_fpath)
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+
+        config["res_fpath"] = res_fpath
 
     return config
 
