@@ -51,7 +51,7 @@ def _format_res_fpath(config):
     """Format res_fpath with year, if need be. """
     res_fpath = config.setdefault("res_fpath", None)
     if isinstance(res_fpath, str) and '{}' in res_fpath:
-        for year in range(1998, 2018):
+        for year in range(1950, 2100):
             if os.path.exists(res_fpath.format(year)):
                 break
 
