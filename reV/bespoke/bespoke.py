@@ -1502,8 +1502,9 @@ class BespokeWindPlants(BaseAggregation):
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False, prior_run=None, gid_map=None,
-                 bias_correct=None, pre_load_data=False):
+                 pre_extract_inclusions=False, eos_mult_baseline_cap_mw=200,
+                 prior_run=None, gid_map=None, bias_correct=None,
+                 pre_load_data=False):
         """reV bespoke analysis class.
 
         Much like generation, ``reV`` bespoke analysis runs SAM
@@ -1868,6 +1869,13 @@ class BespokeWindPlants(BaseAggregation):
             the `excl_dict` input. It is typically faster to compute
             the inclusion mask on the fly with parallel workers.
             By default, ``False``.
+        eos_mult_baseline_cap_mw : int | float, optional
+            Baseline plant capacity (MW) used to calculate economies of
+            scale (EOS) multiplier from the `capital_cost_function`. EOS
+            multiplier is calculated as the $-per-kW of the wind plant
+            divided by the $-per-kW of a plant with this baseline
+            capacity. By default, `200` (MW), which aligns the baseline
+            with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
         prior_run : str, optional
             Optional filepath to a bespoke output HDF5 file belonging to
             a prior run. If specified, this module will only run the
@@ -1993,6 +2001,7 @@ class BespokeWindPlants(BaseAggregation):
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._data_layers = data_layers
+        self._eos_mult_baseline_cap_mw = eos_mult_baseline_cap_mw
         self._prior_meta = self._parse_prior_run(prior_run)
         self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
         self._bias_correct = Gen._parse_bc(bias_correct)
@@ -2466,8 +2475,8 @@ class BespokeWindPlants(BaseAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
-                   prior_meta=None, gid_map=None, bias_correct=None,
-                   pre_loaded_data=None):
+                   eos_mult_baseline_cap_mw=200, prior_meta=None,
+                   gid_map=None, bias_correct=None, pre_loaded_data=None):
         """
         Standalone serial method to run bespoke optimization.
         See BespokeWindPlants docstring for parameter description.
@@ -2533,6 +2542,7 @@ class BespokeWindPlants(BaseAggregation):
                         excl_area=excl_area,
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
+                        eos_mult_baseline_cap_mw=eos_mult_baseline_cap_mw,
                         prior_meta=prior_meta,
                         gid_map=gid_map,
                         bias_correct=bias_correct,
@@ -2625,6 +2635,7 @@ class BespokeWindPlants(BaseAggregation):
                     gids=gid,
                     exclusion_shape=self.shape,
                     slice_lookup=copy.deepcopy(self.slice_lookup),
+                    eos_mult_baseline_cap_mw=self._eos_mult_baseline_cap_mw,
                     prior_meta=self._get_prior_meta(gid),
                     gid_map=self._gid_map,
                     bias_correct=self._get_bc_for_gid(gid),
@@ -2689,6 +2700,7 @@ class BespokeWindPlants(BaseAggregation):
                 afk = self._area_filter_kernel
                 wlm = self._wake_loss_multiplier
                 i_bc = self._get_bc_for_gid(gid)
+                ebc = self._eos_mult_baseline_cap_mw
 
                 si = self.run_serial(self._excl_fpath,
                                      self._res_fpath,
@@ -2713,6 +2725,7 @@ class BespokeWindPlants(BaseAggregation):
                                      excl_area=self._excl_area,
                                      data_layers=self._data_layers,
                                      slice_lookup=slice_lookup,
+                                     eos_mult_baseline_cap_mw=ebc,
                                      prior_meta=prior_meta,
                                      gid_map=self._gid_map,
                                      bias_correct=i_bc,
