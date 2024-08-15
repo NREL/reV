@@ -595,6 +595,9 @@ def test_bespoke():
                 SiteDataField.GID: [33, 35],
                 SiteDataField.CONFIG: ["default"] * 2,
                 "extra_unused_data": [0, 42],
+                "capital_cost_multiplier": [1, 2],
+                "fixed_operating_cost_multiplier": [3, 4],
+                "variable_operating_cost_multiplier": [5, 6]
             }
         )
         fully_excluded_points = pd.DataFrame(
@@ -674,6 +677,16 @@ def test_bespoke():
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
 
+        assert not np.allclose(
+            meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW],
+            meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+        assert not np.allclose(
+            meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW],
+            meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW])
+        assert not np.allclose(
+            meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW],
+            meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW])
+
         fcr = meta[SupplyCurveField.FIXED_CHARGE_RATE]
         cap_cost = (meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                     * meta[SupplyCurveField.CAPACITY_AC_MW])
@@ -689,12 +702,15 @@ def test_bespoke():
                     * meta[SupplyCurveField.REG_MULT]
                     * meta[SupplyCurveField.EOS_MULT])
         foc = (meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
-               * meta[SupplyCurveField.CAPACITY_AC_MW])
+               * meta[SupplyCurveField.CAPACITY_AC_MW]
+               * np.array([3, 4]))
         voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
-               * meta[SupplyCurveField.CAPACITY_AC_MW])
+               * meta[SupplyCurveField.CAPACITY_AC_MW]
+               * np.array([5, 6]))
         lcoe_base = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
         assert np.allclose(lcoe_site, lcoe_base)
+        assert np.allclose(meta[SupplyCurveField.REG_MULT], [1, 2])
 
         out_fpath_pre = os.path.join(td, 'bespoke_out_pre.h5')
         bsp = BespokeWindPlants(excl_fp, res_fp, TM_DSET, OBJECTIVE_FUNCTION,
