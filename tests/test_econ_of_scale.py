@@ -126,7 +126,8 @@ def test_lcoe_calc_simple():
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
 
 
-def test_econ_of_scale_baseline():
+@pytest.mark.parametrize("request_h5", [True, False])
+def test_econ_of_scale_baseline(request_h5):
     """Test an economies of scale calculation with scalar = 1 to ensure we can
     reproduce the lcoe values
     """
@@ -137,6 +138,11 @@ def test_econ_of_scale_baseline():
         "system_capacity": 20000,
         "variable_operating_cost": 0,
     }
+    h5_dsets = None
+    if request_h5:
+        h5_dsets = ["capital_cost", "fixed_operating_cost",
+                    "fixed_charge_rate", "variable_operating_cost"]
+
 
     with tempfile.TemporaryDirectory() as td:
         gen_temp = os.path.join(td, "ri_my_pv_gen.h5")
@@ -172,12 +178,7 @@ def test_econ_of_scale_baseline():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
-            h5_dsets=[
-                "capital_cost",
-                "fixed_operating_cost",
-                "fixed_charge_rate",
-                "variable_operating_cost"
-            ],
+            h5_dsets=h5_dsets,
         )
         base.run(out_fp_base, gen_fpath=gen_temp, max_workers=1)
 
@@ -191,12 +192,7 @@ def test_econ_of_scale_baseline():
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
             cap_cost_scale="1",
-            h5_dsets=[
-                "capital_cost",
-                "fixed_operating_cost",
-                "fixed_charge_rate",
-                "variable_operating_cost"
-            ],
+            h5_dsets=h5_dsets,
         )
         sc.run(out_fp_sc, gen_fpath=gen_temp, max_workers=1)
 
@@ -205,9 +201,11 @@ def test_econ_of_scale_baseline():
         assert np.allclose(base_df[SupplyCurveField.MEAN_LCOE],
                            sc_df[SupplyCurveField.MEAN_LCOE])
         assert (sc_df[SupplyCurveField.EOS_MULT] == 1).all()
-        assert np.allclose(sc_df['mean_capital_cost'],
-                           sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
-                           * 20000)
+        if "mean_capital_cost" in sc_df:
+            capital_cost_per_mw = SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
+            assert np.allclose(sc_df['mean_capital_cost'],
+                               sc_df[capital_cost_per_mw]
+                               * data["system_capacity"])
         assert np.allclose(sc_df[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW],
                            sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW])
 

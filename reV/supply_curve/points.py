@@ -2188,10 +2188,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     def _compute_cost_per_ac_mw(self, dset):
         """Compute a cost per AC MW for a given input. """
         if self._sam_system_capacity <= 0:
-            return 0
+            return None
 
         if dset not in self.gen.datasets:
-            return 0
+            return None
 
         sam_cost = self.exclusion_weighted_mean(self.gen[dset])
         sam_cost_per_mw = sam_cost / self._sam_system_capacity
@@ -2391,10 +2391,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
         summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
         summary[SupplyCurveField.EOS_MULT] = eos.capital_cost_scalar
-        summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
-            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
-            * summary[SupplyCurveField.EOS_MULT]
-        )
+        cost = summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+        if cost is not None:
+            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+                cost * summary[SupplyCurveField.EOS_MULT]
+            )
         return summary
 
     @classmethod

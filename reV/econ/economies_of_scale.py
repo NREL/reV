@@ -212,11 +212,7 @@ class EconomiesOfScale:
         if cost_per_mw is None:
             return None
 
-        cost = cap * cost_per_mw
-        if cost > 0:
-            return cost
-
-        return None
+        return cap * cost_per_mw
 
     @property
     def raw_capital_cost(self):
@@ -278,7 +274,7 @@ class EconomiesOfScale:
             Fixed operating cost from input data arg
         """
         foc_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW
         )
         if foc_from_cap is not None:
             return foc_from_cap
@@ -297,7 +293,7 @@ class EconomiesOfScale:
             Variable operating cost from input data arg
         """
         voc_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW
         )
         if voc_from_cap is not None:
             return voc_from_cap
