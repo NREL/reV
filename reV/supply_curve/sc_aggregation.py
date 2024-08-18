@@ -1410,7 +1410,7 @@ class SupplyCurveAggregation(BaseAggregation):
               ``multi-year``, ``collect``, or ``econ``. However, note
               that duplicate executions of any of these commands within
               the pipeline may invalidate this parsing, meaning the
-              `econ_fpath` input will have to be specified manually.
+              `gen_fpath` input will have to be specified manually.
 
             By default, ``None``.
         args : tuple | list, optional
