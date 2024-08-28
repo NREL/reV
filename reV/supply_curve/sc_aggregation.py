@@ -18,7 +18,6 @@ from rex.multi_file_resource import MultiFileResource
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 
-from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.aggregation import (
     AbstractAggFileHandler,
