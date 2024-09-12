@@ -8,7 +8,7 @@ can be run locally using resource .h5 files stored locally.
 reV Gen
 -------
 
-reV Generation uses `PySAM <https://pysam.readthedocs.io/en/latest/>`_ to
+reV Generation uses `PySAM <https://nrel-pysam.readthedocs.io/en/latest/>`_ to
 compute technologically specific capcity factor means and profiles. reV Gen
 uses ``SAM`` technology terms and input configuration files
 

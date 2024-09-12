@@ -1548,7 +1548,7 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
           or 1 allowed.
         - ``design_temp`` : EGS plant design temperature (in C). Only
           affects EGS runs. This value may be adjusted internally by
-          ``reV under the following conditions:
+          ``reV`` under the following conditions:
 
               - The design temperature is larger than the resource
                 temperature
