@@ -195,6 +195,11 @@ class SamResourceRetriever:
                 # make precip rate available for curtailment analysis
                 kwargs["precip_rate"] = True
 
+            sam_configs = project_points.sam_inputs.values()
+            needs_wd = any(_sam_config_contains_turbine_layout(sam_config)
+                           for sam_config in sam_configs)
+            kwargs["require_wind_dir"] = needs_wd
+
         elif res_handler == GeothermalResource:
             args += (project_points.d,)
 
@@ -954,3 +959,8 @@ def _add_sys_capacity(sam_inputs):
         cap = sam_inputs.get("nameplate")
 
     sam_inputs["system_capacity"] = cap
+
+
+def _sam_config_contains_turbine_layout(sam_config):
+    """Detect wether SAM config contains multiple turbines in layout. """
+    return len(sam_config.get("wind_farm_xCoordinates", ())) > 1
