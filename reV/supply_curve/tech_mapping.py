@@ -185,7 +185,7 @@ class TechMapping:
                          excl_row_slices, excl_col_slices,
                          coord_labels=(LATITUDE, LONGITUDE)):
         """
-        Extract the exclusion coordinates for teh desired gids for TechMapping.
+        Extract the exclusion coordinates for the desired gids for TechMapping.
 
         Parameters
         ----------
