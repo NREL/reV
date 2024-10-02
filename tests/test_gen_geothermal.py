@@ -414,16 +414,13 @@ def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
         assert output not in gen.out
 
 
-@pytest.mark.parametrize(
-    "sample_resource_data",
-    [{"temp": 200 * Geothermal.MAX_RT_TO_EGS_RATIO + 10, "potential": 20}],
-    indirect=True,
-)
+@pytest.mark.parametrize("sample_resource_data",
+                         [{"temp": 310, "potential": 20}], indirect=True)
 def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
     """Test generation for EGS too low plant design temp"""
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
-    high_temp = 200 * Geothermal.MAX_RT_TO_EGS_RATIO + 10
+    high_temp = 310
 
     with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
@@ -434,46 +431,39 @@ def test_gen_egs_too_low_egs_plant_design_temp(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ("design_temp",)
+    output_request = ("design_temp", "cf_mean")
     with pytest.warns(UserWarning):
-        gen = Gen(
-            "geothermal",
-            points,
-            geo_sam_file,
-            geo_res_file,
-            output_request=output_request,
-            sites_per_worker=1,
-            scale_outputs=True,
-        )
+        gen = Gen("geothermal",
+                  points,
+                  geo_sam_file,
+                  geo_res_file,
+                  output_request=output_request,
+                  sites_per_worker=1,
+                  scale_outputs=True)
         gen.run(max_workers=1)
 
-    truth_vals = {"design_temp": high_temp}
+    truth_vals = {"design_temp": high_temp, "cf_mean": 0.995}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
         if len(test.shape) == 2:
             test = np.mean(test, axis=0)
 
-        msg = (
-            "{} outputs do not match baseline value! Values differ "
-            "at most by: {}".format(dset, np.max(np.abs(truth - test)))
-        )
+        msg = ("{} outputs do not match baseline value! Values differ "
+               "at most by: {}".format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
     for output in LCOE_REQUIRED_OUTPUTS:
         assert output not in gen.out
 
 
-@pytest.mark.parametrize(
-    "sample_resource_data",
-    [{"temp": 200 * Geothermal.MAX_RT_TO_EGS_RATIO - 1, "potential": 20}],
-    indirect=True,
-)
-def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
-    """Test generation for user-requested match of EGS plant design and RT"""
+@pytest.mark.parametrize("sample_resource_data",
+                         [{"temp": 100, "potential": 20}], indirect=True)
+def test_gen_egs_too_high_egs_plant_design_temp(sample_resource_data):
+    """Test generation for EGS too high plant design temp"""
     points = slice(0, 1)
     geo_sam_file, geo_res_file = sample_resource_data
-    not_too_high_temp = 200 * Geothermal.MAX_RT_TO_EGS_RATIO - 1
+    not_too_high_temp = 100
 
     with open(DEFAULT_GEO_SAM_FILE) as fh:
         geo_config = json.load(fh)
@@ -481,34 +471,29 @@ def test_gen_egs_plant_design_temp_adjusted_from_user(sample_resource_data):
     geo_config["resource_depth"] = 2000
     geo_config["resource_type"] = 1
     geo_config["design_temp"] = 200
-    geo_config["set_EGS_PDT_to_RT"] = True
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ("design_temp",)
+    output_request = ("design_temp", "cf_mean")
     with pytest.warns(UserWarning):
-        gen = Gen(
-            "geothermal",
-            points,
-            geo_sam_file,
-            geo_res_file,
-            output_request=output_request,
-            sites_per_worker=1,
-            scale_outputs=True,
-        )
+        gen = Gen("geothermal",
+                  points,
+                  geo_sam_file,
+                  geo_res_file,
+                  output_request=output_request,
+                  sites_per_worker=1,
+                  scale_outputs=True)
         gen.run(max_workers=1)
 
-    truth_vals = {"design_temp": not_too_high_temp}
+    truth_vals = {"design_temp": not_too_high_temp, "cf_mean": 0.995}
     for dset in output_request:
         truth = truth_vals[dset]
         test = gen.out[dset]
         if len(test.shape) == 2:
             test = np.mean(test, axis=0)
 
-        msg = (
-            "{} outputs do not match baseline value! Values differ "
-            "at most by: {}".format(dset, np.max(np.abs(truth - test)))
-        )
+        msg = ("{} outputs do not match baseline value! Values differ "
+               "at most by: {}".format(dset, np.max(np.abs(truth - test))))
         assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
 
     for output in LCOE_REQUIRED_OUTPUTS:
