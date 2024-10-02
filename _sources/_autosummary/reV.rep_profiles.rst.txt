@@ -1,0 +1,31 @@
+reV.rep\_profiles
+=================
+
+.. automodule:: reV.rep_profiles
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   reV.rep_profiles.cli_rep_profiles
+   reV.rep_profiles.rep_profiles
+

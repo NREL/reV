@@ -1,0 +1,56 @@
+reV.generation.base.BaseGen
+===========================
+
+.. currentmodule:: reV.generation.base
+
+.. autoclass:: BaseGen
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BaseGen.add_site_data_to_pp
+      ~BaseGen.flush
+      ~BaseGen.get_pc
+      ~BaseGen.get_sites_per_worker
+      ~BaseGen.handle_leap_ti
+      ~BaseGen.site_index
+      ~BaseGen.unpack_futures
+      ~BaseGen.unpack_output
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BaseGen.ECON_ATTRS
+      ~BaseGen.LCOE_ARGS
+      ~BaseGen.OPTIONS
+      ~BaseGen.OUT_ATTRS
+      ~BaseGen.meta
+      ~BaseGen.out
+      ~BaseGen.out_chunk
+      ~BaseGen.output_request
+      ~BaseGen.points_control
+      ~BaseGen.project_points
+      ~BaseGen.run_attrs
+      ~BaseGen.sam_configs
+      ~BaseGen.sam_metas
+      ~BaseGen.sam_module
+      ~BaseGen.site_data
+      ~BaseGen.site_limit
+      ~BaseGen.site_mem
+      ~BaseGen.tech
+      ~BaseGen.time_index
+      ~BaseGen.year
+   
+   

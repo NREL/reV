@@ -1,0 +1,36 @@
+reV.losses.scheduled.Outage
+===========================
+
+.. currentmodule:: reV.losses.scheduled
+
+.. autoclass:: Outage
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Outage.REQUIRED_KEYS
+      ~Outage.allow_outage_overlap
+      ~Outage.allowed_months
+      ~Outage.count
+      ~Outage.duration
+      ~Outage.name
+      ~Outage.percentage_of_capacity_lost
+      ~Outage.total_available_hours
+   
+   

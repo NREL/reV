@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SupplyCurveError
+=========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SupplyCurveError

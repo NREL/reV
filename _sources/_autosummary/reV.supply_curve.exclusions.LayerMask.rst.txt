@@ -1,0 +1,36 @@
+reV.supply\_curve.exclusions.LayerMask
+======================================
+
+.. currentmodule:: reV.supply_curve.exclusions
+
+.. autoclass:: LayerMask
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LayerMask.exclude_values
+      ~LayerMask.force_include
+      ~LayerMask.include_values
+      ~LayerMask.include_weights
+      ~LayerMask.mask_type
+      ~LayerMask.max_value
+      ~LayerMask.min_value
+      ~LayerMask.name
+   
+   
