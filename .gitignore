@@ -117,3 +117,8 @@ tags
 # Scratch and temp work
 .tmp/
 .scratch/
+
+
+# pixi environments
+.pixi
+*.egg-info
