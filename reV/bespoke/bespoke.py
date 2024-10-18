@@ -54,7 +54,8 @@ class BespokeMultiPlantData:
     reads to a single HDF5 file.
     """
 
-    def __init__(self, res_fpath, sc_gid_to_hh, sc_gid_to_res_gid):
+    def __init__(self, res_fpath, sc_gid_to_hh, sc_gid_to_res_gid,
+                 pre_load_humidity=False):
         """Initialize BespokeMultiPlantData
 
         Parameters
@@ -75,6 +76,9 @@ class BespokeMultiPlantData:
             GID values. Resource GID values should correspond to GID
             values in the HDF5 file, so any GID map must be applied
             before initializing :class`BespokeMultiPlantData`.
+        pre_load_humidity : optional, default=False
+            Option to pre-load relative humidity data (useful for icing
+            runs). If ``False``, relative humidities are not loaded.
         """
         self.res_fpath = res_fpath
         self.sc_gid_to_hh = sc_gid_to_hh
@@ -84,6 +88,8 @@ class BespokeMultiPlantData:
         self._wind_speeds = None
         self._temps = None
         self._pressures = None
+        self._relative_humidities = None
+        self._pre_load_humidity = pre_load_humidity
         self._time_index = None
         self._pre_load_data()
 
@@ -117,6 +123,11 @@ class BespokeMultiPlantData:
                 for hh, gids in self.hh_to_res_gids.items()
             }
             self._time_index = res.time_index
+            if self._pre_load_humidity:
+                self._relative_humidities = {
+                    hh: res["relativehumidity_2m", :, gids]
+                    for hh, gids in self.hh_to_res_gids.items()
+                }
 
         logger.debug(
             f"Data took {(time.time() - start_time) / 60:.2f} " f"min to load"
@@ -139,6 +150,9 @@ class BespokeMultiPlantData:
         hh = self.sc_gid_to_hh[sc_gid]
         sc_point_res_gids = sorted(self.sc_gid_to_res_gid[sc_gid])
         data_inds = np.searchsorted(self.hh_to_res_gids[hh], sc_point_res_gids)
+
+        rh = (None if not self._pre_load_humidity
+              else self._relative_humidities[hh][:, data_inds])
         return BespokeSinglePlantData(
             sc_point_res_gids,
             self._wind_dirs[hh][:, data_inds],
@@ -146,6 +160,7 @@ class BespokeMultiPlantData:
             self._temps[hh][:, data_inds],
             self._pressures[hh][:, data_inds],
             self._time_index,
+            rh,
         )
 
 
@@ -158,7 +173,8 @@ class BespokeSinglePlantData:
     """
 
     def __init__(
-        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index
+        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index,
+        relative_humidities=None,
     ):
         """Initialize BespokeSinglePlantData
 
@@ -169,22 +185,41 @@ class BespokeSinglePlantData:
             the second dimension of `wind_dirs`, `wind_speeds`, `temps`,
             and `pressures`. The GID value of data_inds[0] should
             correspond to the `wind_dirs[:, 0]` data, etc.
-        wind_dirs, wind_speeds, temps, pressures : 2D np.array
-            Array of wind directions, wind speeds, temperatures, and
+        wind_dirs : 2D np.array
+            Array of wind directions. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        wind_speeds : 2D np.array
+            Array of wind speeds. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        temps : 2D np.array
+            Array oftemperatures. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        pressures : 2D np.array
+            Array of pressures. Dimensions should be correspond to
             pressures, respectively. Dimensions should be correspond to
             [time, location]. See documentation for `data_inds` for
             required spatial mapping of GID values.
         time_index : 1D np.array
             Time index array corresponding to the temporal dimension of
             the 2D data. Will be exposed directly to user.
-
+        relative_humidities : 2D np.array, optional
+            Array of relative humidities. Dimensions should be
+            correspond to [time, location]. See documentation for
+            `data_inds` for required spatial mapping of GID values.
+            If ``None``, relative_humidities cannot be queried.
         """
+
         self.data_inds = data_inds
         self.wind_dirs = wind_dirs
         self.wind_speeds = wind_speeds
         self.temps = temps
         self.pressures = pressures
         self.time_index = time_index
+        self.relative_humidities = relative_humidities
+        self._humidities_exist = relative_humidities is not None
 
     def __getitem__(self, key):
         dset_name, t_idx, gids = key
@@ -197,6 +232,8 @@ class BespokeSinglePlantData:
             return self.temps[t_idx, data_inds]
         if "pressure" in dset_name:
             return self.pressures[t_idx, data_inds]
+        if self._humidities_exist and "relativehumidity" in dset_name:
+            return self.relative_humidities[t_idx, data_inds]
         msg = f"Unknown dataset name: {dset_name!r}"
         logger.error(msg)
         raise ValueError(msg)
@@ -711,6 +748,7 @@ class BespokeSinglePlant:
             weights[i] = self.sc_point.include_mask_flat[mask].sum()
 
         weights /= weights.sum()
+        data = data.astype(np.float32)
         data *= weights
         data = np.sum(data, axis=1)
 
@@ -896,15 +934,18 @@ class BespokeSinglePlant:
             if np.nanmax(pres) > 1000:
                 pres *= 9.86923e-6
 
-            self._res_df = pd.DataFrame(
-                {
-                    "temperature": temp,
-                    "pressure": pres,
-                    "windspeed": ws,
-                    "winddirection": wd,
-                },
-                index=ti,
-            )
+            data = {
+                "temperature": temp,
+                "pressure": pres,
+                "windspeed": ws,
+                "winddirection": wd,
+            }
+
+            if self.sam_sys_inputs.get("en_icing_cutoff"):
+                rh = self.get_weighted_res_ts("relativehumidity_2m")
+                data["relativehumidity"] = rh
+
+            self._res_df = pd.DataFrame(data, index=ti)
 
             if "time_index_step" in self.original_sam_sys_inputs:
                 ti_step = self.original_sam_sys_inputs["time_index_step"]
@@ -2156,7 +2197,10 @@ class BespokeWindPlants(BaseAggregation):
 
         logger.info("Pre-loading resource data for Bespoke run... ")
         self._pre_loaded_data = BespokeMultiPlantData(
-            self._res_fpath, sc_gid_to_hh, sc_gid_to_res_gid
+            self._res_fpath,
+            sc_gid_to_hh,
+            sc_gid_to_res_gid,
+            pre_load_humidity=self._project_points.sam_config_obj.icing,
         )
 
     def _hh_for_sc_gid(self, sc_gid):
