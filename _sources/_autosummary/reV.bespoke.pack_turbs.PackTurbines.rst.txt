@@ -1,0 +1,25 @@
+reV.bespoke.pack\_turbs.PackTurbines
+====================================
+
+.. currentmodule:: reV.bespoke.pack_turbs
+
+.. autoclass:: PackTurbines
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PackTurbines.clear
+      ~PackTurbines.pack_turbines_poly
+   
+   
+
+   
+   
+   

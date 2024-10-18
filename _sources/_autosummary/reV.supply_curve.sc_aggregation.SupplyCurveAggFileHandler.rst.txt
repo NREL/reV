@@ -1,0 +1,35 @@
+reV.supply\_curve.sc\_aggregation.SupplyCurveAggFileHandler
+===========================================================
+
+.. currentmodule:: reV.supply_curve.sc_aggregation
+
+.. autoclass:: SupplyCurveAggFileHandler
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupplyCurveAggFileHandler.close
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SupplyCurveAggFileHandler.data_layers
+      ~SupplyCurveAggFileHandler.exclusions
+      ~SupplyCurveAggFileHandler.friction_layer
+      ~SupplyCurveAggFileHandler.gen
+      ~SupplyCurveAggFileHandler.h5
+      ~SupplyCurveAggFileHandler.power_density
+   
+   

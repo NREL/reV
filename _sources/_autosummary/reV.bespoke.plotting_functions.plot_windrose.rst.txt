@@ -1,0 +1,6 @@
+reV.bespoke.plotting\_functions.plot\_windrose
+==============================================
+
+.. currentmodule:: reV.bespoke.plotting_functions
+
+.. autofunction:: plot_windrose

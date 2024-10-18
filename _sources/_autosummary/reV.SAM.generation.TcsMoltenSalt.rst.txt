@@ -1,0 +1,64 @@
+reV.SAM.generation.TcsMoltenSalt
+================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: TcsMoltenSalt
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TcsMoltenSalt.add_scheduled_losses
+      ~TcsMoltenSalt.agg_albedo
+      ~TcsMoltenSalt.annual_energy
+      ~TcsMoltenSalt.assign_inputs
+      ~TcsMoltenSalt.cf_mean
+      ~TcsMoltenSalt.cf_profile
+      ~TcsMoltenSalt.check_resource_data
+      ~TcsMoltenSalt.collect_outputs
+      ~TcsMoltenSalt.default
+      ~TcsMoltenSalt.drop_leap
+      ~TcsMoltenSalt.energy_yield
+      ~TcsMoltenSalt.ensure_res_len
+      ~TcsMoltenSalt.execute
+      ~TcsMoltenSalt.gen_profile
+      ~TcsMoltenSalt.get_sam_res
+      ~TcsMoltenSalt.get_time_interval
+      ~TcsMoltenSalt.make_datetime
+      ~TcsMoltenSalt.outputs_to_utc_arr
+      ~TcsMoltenSalt.reV_run
+      ~TcsMoltenSalt.run
+      ~TcsMoltenSalt.run_gen_and_econ
+      ~TcsMoltenSalt.set_resource_data
+      ~TcsMoltenSalt.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TcsMoltenSalt.DIR
+      ~TcsMoltenSalt.IGNORE_ATTRS
+      ~TcsMoltenSalt.MODULE
+      ~TcsMoltenSalt.OUTAGE_CONFIG_KEY
+      ~TcsMoltenSalt.OUTAGE_SEED_CONFIG_KEY
+      ~TcsMoltenSalt.attr_dict
+      ~TcsMoltenSalt.has_timezone
+      ~TcsMoltenSalt.input_list
+      ~TcsMoltenSalt.meta
+      ~TcsMoltenSalt.module
+      ~TcsMoltenSalt.outage_seed
+      ~TcsMoltenSalt.pysam
+      ~TcsMoltenSalt.site
+   
+   

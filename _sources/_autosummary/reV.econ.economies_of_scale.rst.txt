@@ -1,0 +1,31 @@
+reV.econ.economies\_of\_scale
+=============================
+
+.. automodule:: reV.econ.economies_of_scale
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      EconomiesOfScale
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,6 @@
+reV.bespoke.place\_turbines.none\_until\_optimized
+==================================================
+
+.. currentmodule:: reV.bespoke.place_turbines
+
+.. autofunction:: none_until_optimized

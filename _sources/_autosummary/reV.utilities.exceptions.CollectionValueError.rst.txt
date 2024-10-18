@@ -1,0 +1,6 @@
+reV.utilities.exceptions.CollectionValueError
+=============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: CollectionValueError
