@@ -9,6 +9,7 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
+import json
 import shutil
 import tempfile
 
@@ -873,6 +874,56 @@ def test_ac_outputs():
 
     assert not np.isclose(gen.out["cf_profile"], 1).any()
     assert np.isclose(gen.out["cf_profile_ac"], 1).any()
+
+
+def test_pv_regional_mults():
+    """Test reV pvwattsv8 regional multiplier outputs"""
+
+    res_file = TESTDATADIR + "/nsrdb/ri_100_nsrdb_2012.h5"
+    points = pd.DataFrame({"gid": [0, 1, 2],
+                           "capital_cost_multiplier": [0.6, 0.8, 1]})
+
+    output_request = ("cf_mean", "cf_mean_ac", "cf_profile", "cf_profile_ac",
+                      "system_capacity", "system_capacity_ac", "ac", "dc",
+                      "dc_ac_ratio", "lcoe_fcr")
+
+    with open(TESTDATADIR + "/SAM/i_pvwattsv8.json") as fh:
+        sam_config = json.load(fh)
+
+    costs = {"capital_cost": 39767200, "fixed_charge_rate": 0.096,
+             "fixed_operating_cost": 260000, "variable_operating_cost": 10,
+             "system_capacity": 20_000}
+    sam_config.update(costs)
+    sam_files = {"default": sam_config}
+
+    # run reV 2.0 generation
+    gen = Gen("pvwattsv8", points, sam_files, res_file, sites_per_worker=1,
+              output_request=output_request)
+    gen.run(max_workers=1)
+
+    # SAM config unchanged
+    assert sam_config["capital_cost"] == 39767200
+    assert sam_config["fixed_operating_cost"] == 260000
+    assert sam_config["variable_operating_cost"] == 10
+
+    assert np.allclose(gen.out["base_fixed_operating_cost"], 260000)
+    assert np.allclose(gen.out["fixed_operating_cost"], 260000)
+    assert np.allclose(gen.out["base_variable_operating_cost"], 10)
+    assert np.allclose(gen.out["variable_operating_cost"], 10)
+
+    assert np.allclose(gen.out["capital_cost_multiplier"],
+                       points["capital_cost_multiplier"])
+
+    assert np.allclose(gen.out["base_capital_cost"], 39767200)
+    cc = sam_config["capital_cost"] * points["capital_cost_multiplier"]
+    assert np.allclose(gen.out["capital_cost"], cc)
+
+    cost = (cc * sam_config["fixed_charge_rate"]
+            + sam_config["fixed_operating_cost"])
+    aep = gen.out["cf_mean"] * sam_config["system_capacity"] / 1000 * 8760
+    lcoe_truth = cost / aep + sam_config["variable_operating_cost"] * 1000
+
+    assert np.allclose(gen.out["lcoe_fcr"], lcoe_truth)
 
 
 @pytest.mark.parametrize(
