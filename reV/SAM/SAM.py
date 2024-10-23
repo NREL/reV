@@ -927,6 +927,9 @@ class RevPySam(Sam):
 
 def _add_cost_defaults(sam_inputs):
     """Add default values for required cost outputs if they are missing. """
+    if sam_inputs.get("__already_added_cost_defaults"):
+        return
+
     sam_inputs.setdefault("fixed_charge_rate", None)
 
     reg_mult = sam_inputs.setdefault("capital_cost_multiplier", 1)
@@ -942,6 +945,8 @@ def _add_cost_defaults(sam_inputs):
         sam_inputs["capital_cost"] = capital_cost * reg_mult
     else:
         sam_inputs["capital_cost"] = None
+
+    sam_inputs["__already_added_cost_defaults"] = True
 
 
 def _add_sys_capacity(sam_inputs):

@@ -272,7 +272,7 @@ def test_capital_cost_multiplier_regional(clear_loggers):
         num = (cc * sam_config["fixed_charge_rate"]
                + sam_config["fixed_operating_cost"])
         aep = cf * sam_config["system_capacity"] / 1000 * 8760
-        lcoe_truth = num / aep + sam_config["variable_operating_cost"]
+        lcoe_truth = num / aep + sam_config["variable_operating_cost"] * 1000
 
         assert np.allclose(lcoe, lcoe_truth, rtol=RTOL, atol=ATOL)
         clear_loggers()
