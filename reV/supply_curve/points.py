@@ -2318,7 +2318,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.CAPACITY_DC_MW: self.capacity_dc,
             SupplyCurveField.EOS_MULT: 1,  # added later
             SupplyCurveField.REG_MULT: self.regional_multiplier,
-            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW: (
+            SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH: (
                 self.sc_point_annual_energy
             ),
             SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW: (

@@ -205,11 +205,11 @@ def test_agg_summary_solar_ac(pd):
     assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW]
                        * summary[SupplyCurveField.MEAN_CF_DC]
                        * 8760,
-                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW])
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH])
     assert np.allclose(summary[SupplyCurveField.CAPACITY_AC_MW]
                        * summary[SupplyCurveField.MEAN_CF_AC]
                        * 8760,
-                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW])
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH])
 
 
 def test_multi_file_excl():
@@ -604,7 +604,7 @@ def test_recalc_lcoe(cap_cost_scale):
            * summary[SupplyCurveField.CAPACITY_AC_MW])
     voc = (summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    aep = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+    aep = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] * 1000
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
