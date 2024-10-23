@@ -1,0 +1,67 @@
+reV.SAM.generation.AbstractSamWind
+==================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: AbstractSamWind
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSamWind.add_power_curve_losses
+      ~AbstractSamWind.add_scheduled_losses
+      ~AbstractSamWind.annual_energy
+      ~AbstractSamWind.assign_inputs
+      ~AbstractSamWind.cf_mean
+      ~AbstractSamWind.cf_profile
+      ~AbstractSamWind.check_resource_data
+      ~AbstractSamWind.collect_outputs
+      ~AbstractSamWind.default
+      ~AbstractSamWind.drop_leap
+      ~AbstractSamWind.energy_yield
+      ~AbstractSamWind.ensure_res_len
+      ~AbstractSamWind.execute
+      ~AbstractSamWind.gen_profile
+      ~AbstractSamWind.get_sam_res
+      ~AbstractSamWind.get_time_interval
+      ~AbstractSamWind.make_datetime
+      ~AbstractSamWind.outputs_to_utc_arr
+      ~AbstractSamWind.reV_run
+      ~AbstractSamWind.run
+      ~AbstractSamWind.run_gen_and_econ
+      ~AbstractSamWind.set_resource_data
+      ~AbstractSamWind.tz_elev_check
+      ~AbstractSamWind.wind_resource_from_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSamWind.DIR
+      ~AbstractSamWind.IGNORE_ATTRS
+      ~AbstractSamWind.MODULE
+      ~AbstractSamWind.OUTAGE_CONFIG_KEY
+      ~AbstractSamWind.OUTAGE_SEED_CONFIG_KEY
+      ~AbstractSamWind.POWER_CURVE_CONFIG_KEY
+      ~AbstractSamWind.attr_dict
+      ~AbstractSamWind.has_timezone
+      ~AbstractSamWind.input_list
+      ~AbstractSamWind.input_power_curve
+      ~AbstractSamWind.meta
+      ~AbstractSamWind.module
+      ~AbstractSamWind.outage_seed
+      ~AbstractSamWind.pysam
+      ~AbstractSamWind.site
+   
+   

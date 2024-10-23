@@ -1,0 +1,42 @@
+reV.SAM.windbos.WindBos
+=======================
+
+.. currentmodule:: reV.SAM.windbos
+
+.. autoclass:: WindBos
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WindBos.reV_run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WindBos.KEYS
+      ~WindBos.MODULE
+      ~WindBos.bos_cost
+      ~WindBos.hub_height
+      ~WindBos.machine_rating
+      ~WindBos.number_of_turbines
+      ~WindBos.output
+      ~WindBos.rotor_diameter
+      ~WindBos.sales_tax_cost
+      ~WindBos.sales_tax_mult
+      ~WindBos.total_installed_cost
+      ~WindBos.turbine_capital_cost
+      ~WindBos.turbine_cost
+   
+   

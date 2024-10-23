@@ -1,0 +1,34 @@
+reV.config.project\_points.PointsControl
+========================================
+
+.. currentmodule:: reV.config.project_points
+
+.. autoclass:: PointsControl
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PointsControl.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PointsControl.N
+      ~PointsControl.project_points
+      ~PointsControl.sites
+      ~PointsControl.sites_per_split
+      ~PointsControl.split_range
+   
+   

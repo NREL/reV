@@ -1,0 +1,6 @@
+reV.utilities.exceptions.InputError
+===================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: InputError

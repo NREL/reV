@@ -1,0 +1,6 @@
+reV.losses.power\_curve.TRANSFORMATIONS
+=======================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autodata:: TRANSFORMATIONS

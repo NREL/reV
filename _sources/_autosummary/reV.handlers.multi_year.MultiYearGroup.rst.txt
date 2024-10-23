@@ -1,0 +1,32 @@
+reV.handlers.multi\_year.MultiYearGroup
+=======================================
+
+.. currentmodule:: reV.handlers.multi_year
+
+.. autoclass:: MultiYearGroup
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiYearGroup.dsets
+      ~MultiYearGroup.name
+      ~MultiYearGroup.pass_through_dsets
+      ~MultiYearGroup.source_files
+   
+   
