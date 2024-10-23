@@ -96,14 +96,15 @@ class MultiYearGroup:
         pass_through_dsets : list
             List of pass through datasets.
         """
+        with Resource(self.source_files[0]) as res:
+            all_dsets = res.datasets
+
         if isinstance(dsets, str) and dsets == 'PIPELINE':
-            files = parse_previous_status(self._dirout, ModuleName.MULTI_YEAR)
-            with Resource(files[0]) as res:
-                dsets = res.datasets
+            dsets = all_dsets
 
         if "lcoe_fcr" in dsets:
             for dset in LCOE_REQUIRED_OUTPUTS:
-                if dset not in pass_through_dsets and dset in dsets:
+                if dset not in pass_through_dsets and dset in all_dsets:
                     pass_through_dsets.append(dset)
 
         if "dc_ac_ratio" in dsets:
