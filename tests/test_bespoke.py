@@ -98,7 +98,7 @@ EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.CAPACITY_DC_MW,
                          SupplyCurveField.MEAN_CF_AC,
                          SupplyCurveField.MEAN_CF_DC,
-                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW,
+                         SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH,
                          SupplyCurveField.EOS_MULT,
                          SupplyCurveField.REG_MULT,
                          SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
@@ -660,7 +660,7 @@ def test_bespoke():
                                atol=0.01)
             assert np.allclose(
                 f["annual_energy-means"] / 1000,
-                meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+                meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH]
             )
 
             dsets_2d = (
@@ -694,7 +694,7 @@ def test_bespoke():
                * meta[SupplyCurveField.CAPACITY_AC_MW])
         voc = (meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW])
-        aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MW]
+        aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH]
         lcoe_site = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
         cap_cost = (meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
