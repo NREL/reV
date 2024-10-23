@@ -2194,7 +2194,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             return None
 
         sam_cost = self.exclusion_weighted_mean(self.gen[dset])
-        sam_cost_per_mw = sam_cost / self._sam_system_capacity_kw
+        sam_cost_per_mw = sam_cost / (self._sam_system_capacity_kw / 1000)
         sc_point_cost = sam_cost_per_mw * self.capacity
 
         ac_cap = (self.capacity

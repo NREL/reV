@@ -205,7 +205,7 @@ def test_econ_of_scale_baseline(request_h5):
             capital_cost_per_mw = SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
             assert np.allclose(sc_df['mean_capital_cost'],
                                sc_df[capital_cost_per_mw]
-                               * data["system_capacity"])
+                               * data["system_capacity"] / 1000)
         assert np.allclose(sc_df[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW],
                            sc_df[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW])
 
