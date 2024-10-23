@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import traceback
+from copy import deepcopy
 
 import h5py
 import numpy as np
@@ -16,7 +17,8 @@ from rex.utilities.loggers import init_logger
 
 from reV import TESTDATADIR
 from reV.cli import main
-from reV.handlers.multi_year import MultiYear
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
+from reV.handlers.multi_year import MultiYear, MultiYearGroup
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName
 
@@ -369,6 +371,42 @@ def test_my_stdev(dset, group):
             dset_std = my.stdev(dset)
 
         compare_arrays(my_std, dset_std, "Saved STDEV")
+
+
+def test_pass_through_dsets():
+    """test that LCOE dsets correctly added to pass through. """
+    test_pass_through_dsets = ["capital_cost", "reg_mult",
+                               "fixed_operating_cost", "system_capacity",
+                               "system_capacity_ac", "fixed_charge_rate",
+                               "variable_operating_cost", "dc_ac_ratio"]
+
+    existing_dsets = list(LCOE_REQUIRED_OUTPUTS) + ["dc_ac_ratio"]
+
+    with tempfile.TemporaryDirectory() as temp:
+        temp_h5_files = [os.path.join(temp, os.path.basename(fp))
+                         for fp in H5_FILES]
+        for fp, fp_temp in zip(H5_FILES, temp_h5_files):
+            shutil.copy(fp, fp_temp)
+
+        for fp in temp_h5_files:
+            for i, dset in enumerate(existing_dsets):
+                with h5py.File(fp, 'a') as f:
+                    shape = f['meta'].shape
+                    arr = np.arange(shape[0]) * (i + 1)
+                    f.create_dataset(dset, shape, data=arr)
+
+        group = {"dsets": ["cf_profile", "cf_profile_ac", "cf_mean",
+                           "cf_mean_ac", "ghi_mean", "lcoe_fcr", "ac", "dc",
+                           "clipped_power"],
+                "source_dir": temp,
+                "source_prefix": "gen_ri_pv",
+                "pass_through_dsets": deepcopy(test_pass_through_dsets)}
+
+        group = MultiYearGroup("test", ".", **group)
+        test_ptd = group.pass_through_dsets
+
+        assert test_pass_through_dsets != test_ptd
+        assert all(dset in test_ptd for dset in LCOE_REQUIRED_OUTPUTS)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
