@@ -582,6 +582,8 @@ def test_recalc_lcoe(cap_cost_scale):
     assert np.allclose(summary[SupplyCurveField.EOS_MULT],
                        summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                        / summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+    assert np.allclose(data['capital_cost'] / data['system_capacity'] * 1000,
+                       summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
 
     expected_recalc_lcoe = lcoe_fcr(data["fixed_charge_rate"],
                                     data["capital_cost"],
