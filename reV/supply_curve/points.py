@@ -2154,7 +2154,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return self.exclusion_weighted_mean(self.gen["fixed_charge_rate"])
 
     @property
-    def _sam_system_capacity(self):
+    def _sam_system_capacity_kw(self):
         """float: Mean SAM generation system capacity input, defaults to 0. """
         if self._ssc is not None:
             return self._ssc
@@ -2187,14 +2187,14 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
     def _compute_cost_per_ac_mw(self, dset):
         """Compute a cost per AC MW for a given input. """
-        if self._sam_system_capacity <= 0:
+        if self._sam_system_capacity_kw <= 0:
             return None
 
         if dset not in self.gen.datasets:
             return None
 
         sam_cost = self.exclusion_weighted_mean(self.gen[dset])
-        sam_cost_per_mw = sam_cost / self._sam_system_capacity
+        sam_cost_per_mw = sam_cost / self._sam_system_capacity_kw
         sc_point_cost = sam_cost_per_mw * self.capacity
 
         ac_cap = (self.capacity
