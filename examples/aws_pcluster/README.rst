@@ -1,9 +1,9 @@
 Running reV on AWS Parallel Cluster HPC Infrastructure
 ======================================================
 
-reV was originally designed to run on the NREL high performance computer (HPC), but you can now run reV on AWS using the NREL renewable energy resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 via HSDS.
+reV was originally designed to run on the NREL high performance computer (HPC), but you can now run reV on AWS using the NREL renewable energy resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 (optionally via HSDS).
 
-If you plan on only running reV for a handful of sites (less than 100), first check out our `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NREL HSDS developer API.
+If you plan on only running reV for a handful of sites (less than 100), first check out our `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ or `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NREL HSDS developer API.
 
 Note that everything should be done in AWS region us-west-2 (Oregon) since this is where the NSRDB and WTK data live on S3.
 
@@ -29,7 +29,7 @@ Setting up an AWS Parallel Cluster
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
     #. ``source ~/.bashrc``
 
-#. Set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See `the HSDS instructions below <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster>`_ for details.
+#. Use S3 filepaths or for better performance, set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See `the HSDS instructions below <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster>`_ for details.
 #. Install reV
 
     #. You need to clone the reV repo to get the ``aws_pcluster`` `example files <https://github.com/NREL/reV/tree/main/examples/aws_pcluster>`_. reV example files do not ship with the pypi package.
@@ -50,7 +50,7 @@ Setting up an AWS Parallel Cluster
 Notes on Running reV in the AWS Parallel Cluster
 ------------------------------------------------
 
-#. If you don't configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
+#. If you use the NREL developer API key for HSDS and don't configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
 #. AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (at least for the c5 instances) (see ``disable_hyperthreading = false``). The pcluster framework treats each thread as a "node" that can accept one reV job. For this reason, it is recommended that you scale the ``"nodes"`` entry in the reV generation config file but keep ``"max_workers": 1``. For example, if you use two ``c5.2xlarge`` instances in your compute fleet, this is a total of 16 vCPUs, each of which can be thought of as a HPC "node" that can run one process at a time.
 #. If you setup an HSDS local server but the parallel cluster ends up sending too many requests (some nodes but not all will see 503 errors), you can try upping the ``max_task_count`` in the ``~/hsds/admin/config/override.yml`` file.
 #. If your HSDS local server nodes run out of memory (monitor with ``docker stats``), you can try upping the ``dn_ram`` or ``sn_ram`` options in the ``~/hsds/admin/config/override.yml`` file.
@@ -60,9 +60,11 @@ Notes on Running reV in the AWS Parallel Cluster
 Setting up HSDS Local Servers on your Compute Cluster
 -----------------------------------------------------
 
+Before starting with HSDS services, try pointing reV to files directly on S3. This will be slow but a good starting point. See the `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ for an example of this. If you need better performance, read on.
+
 The current recommended approach for setting up an HSDS service for reV is to start local HSDS servers on your AWS parallel cluster compute nodes. These instructions set up a shell script that each reV compute job will run on its respective compute node. The shell script checks that an HSDS local server is running, and will start one if not. These instructions are generally copied from the `HSDS AWS README <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ with a few modifications.
 
-Note that these instructions were originally developed and tested in February 2022 and have not been maintained. The latest instructions for setting up HSDS local servers can be found in the rex docs page: `HSDS local server instructions <https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server>`_. The best way to run reV on an AWS PCluster with HSDS local servers may be a combination of the instructions below and the latest instructions from the rex docs page. 
+Note that these instructions were originally developed and tested in February 2022 and have not been maintained. The latest instructions for setting up HSDS local servers can be found in the rex docs page: `HSDS local server instructions <https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server>`_. The best way to run reV on an AWS PCluster with HSDS local servers may be a combination of the instructions below and the latest instructions from the rex docs page. You may have to modify the ``start_hsds.sh`` script with the latest guidance on running HSDS local servers.
 
 #. Make sure you have installed Miniconda but have not yet installed reV/rex.
 #. Clone the `HSDS Repository <https://github.com/HDFGroup/hsds>`_. into your home directory in the pcluster login node: ``git clone git@github.com:HDFGroup/hsds.git`` (you may have to set up your ssh keys first).
