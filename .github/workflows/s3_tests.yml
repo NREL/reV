@@ -13,6 +13,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 1
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -28,4 +31,4 @@ jobs:
       - name: Run pytest and Generate coverage report
         shell: bash
         run: |
-          pytest -v tests/s3_tests.py
+          python -m pytest -v tests/s3_tests.py --disable-warnings
