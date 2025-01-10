@@ -126,8 +126,11 @@ Option 1: Install from PIP (recommended for analysts):
 3. Install reV:
     1) ``pip install NREL-reV`` or
 
+       - NOTE: If you install using conda and want to run from files directly on S3 like in the `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_
+         you will also need to install S3 filesystem dependencies: ``pip install NREL-reV[s3]``
+
        - NOTE: If you install using conda and want to use `HSDS <https://github.com/NREL/hsds-examples>`_
-         you will also need to install h5pyd manually: ``pip install h5pyd``
+         you will also need to install HSDS dependencies: ``pip install NREL-reV[hsds]``
 
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
