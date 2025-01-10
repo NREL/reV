@@ -8,8 +8,7 @@
     "nodes": 16,
     "option": "slurm",
     "sites_per_worker": 20,
-    "max_workers": 1,
-    "sh_script": "sh ~/start_hsds.sh"
+    "max_workers": 1
   },
   "log_level": "INFO",
   "output_request": [
@@ -18,7 +17,10 @@
     "lcoe_fcr"
   ],
   "project_points": "./wtk_points_front_range.csv",
-  "resource_file": "/nrel/wtk/conus/wtk_conus_{}.h5",
+  "resource_file": [
+      "s3://nrel-pds-wtk/conus/v1.0.0/wtk_conus_2007.h5",
+      "s3://nrel-pds-wtk/conus/v1.0.0/wtk_conus_2008.h5"
+  ],
   "sam_files": {
     "def": "./windpower.json"
   },

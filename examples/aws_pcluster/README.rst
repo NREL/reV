@@ -29,7 +29,7 @@ Setting up an AWS Parallel Cluster
     #. ``sh Miniconda3-latest-Linux-x86_64.sh``
     #. ``source ~/.bashrc``
 
-#. Use S3 filepaths or for better performance, set up an HSDS service. At this time, it is recommended that you use HSDS Local Servers on your compute cluster. See `the HSDS instructions below <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster>`_ for details.
+#.  Decide on if you want to access `resource files on S3 <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#using-rev-directly-with-s3-files>`_ for easy setup or `HSDS <https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster>`_ for better performance. At this time, it is recommended that you try using S3 files first and then use HSDS Local Servers if you want better performance.
 #. Install reV
 
     #. You need to clone the reV repo to get the ``aws_pcluster`` `example files <https://github.com/NREL/reV/tree/main/examples/aws_pcluster>`_. reV example files do not ship with the pypi package.
@@ -38,7 +38,7 @@ Setting up an AWS Parallel Cluster
     #. ``cd /shared/``
     #. ``git clone git@github.com:NREL/reV.git``
     #. ``cd /shared/reV/``
-    #. ``pip install -e .``
+    #. ``pip install -e .[s3]`` if you're using s3 filepaths or ``pip install -e .[hsds]`` if you're setting up an HSDS local server
 
 #. Try running the reV ``aws_pcluster`` example:
 
@@ -57,10 +57,16 @@ Notes on Running reV in the AWS Parallel Cluster
 #. The best way to stop your pcluster is using ``pcluster stop pcluster_name`` from the cloud9 IDE (not ssh'd into the pcluster) and then stop the login node in the AWS Console EC2 interface (find the "master" node and stop the instance). This will keep the EBS data intact and not charge you for EC2 costs. When you're done with the pcluster you can call ``pcluster delete pcluster_name`` but this will also delete all of the EBS data.
 
 
+Using reV Directly with S3 Files
+--------------------------------
+
+You can now point reV directly to a list of files on S3. This is recommended before starting with HSDS services because it is much more simple and doesn't require any HSDS setup. This will be slow but a good starting point. See the `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ for an example of this.
+
+If you want to use S3 files, find the file paths using the AWS CLI or a similar utility, replace the ``resource_file`` entry in ``config_gen.json`` with an appropriate file list (there should be a list of s3 filepaths there by default as example). If you need better performance than the basic S3 file setup, read on below for how to setup an HSDS local server.
+
+
 Setting up HSDS Local Servers on your Compute Cluster
 -----------------------------------------------------
-
-Before starting with HSDS services, try pointing reV to files directly on S3. This will be slow but a good starting point. See the `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ for an example of this. If you need better performance, read on.
 
 The current recommended approach for setting up an HSDS service for reV is to start local HSDS servers on your AWS parallel cluster compute nodes. These instructions set up a shell script that each reV compute job will run on its respective compute node. The shell script checks that an HSDS local server is running, and will start one if not. These instructions are generally copied from the `HSDS AWS README <https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md>`_ with a few modifications.
 
@@ -92,6 +98,8 @@ Note that these instructions were originally developed and tested in February 20
 
 #. Make sure this key-value pair is set in the ``execution_control`` block of the ``config_gen.json`` file: ``"sh_script": "sh ~/start_hsds.sh"``
 #. Optional, copy the config override file: ``cp ~/hsds/admin/config/config.yml ~/hsds/admin/config/override.yml``, update any config lines in the ``override.yml`` file that you wish to change, and remove all other lines (see notes on ``max_task_count`` and ``dn_ram``).
+#. Add the following to ``config_gen.json``: ``config_gen["execution_control"]["sh_script"] = "sh ~/start_hsds.sh"`` this will start the HSDS server on each compute node before running reV.
+#. Set the resource file paths in ``config_gen.json`` to the appropriate file paths on HSDS: ``config_gen["resource_file"] = "/nrel/wtk/conus/wtk_conus_{}.h5"`` (the curly bracket will be filled in automatically by reV). To find the appropriate HSDS filepaths, see the instruction set `here <https://nrel.github.io/rex/misc/examples.nrel_data.html#data-location-external-users>`_.
 #. You should be good to go! The line in the generation config file makes reV run the ``start_hsds.sh`` script before running the reV job. The script will install docker and make sure one HSDS server is running per EC2 instance.
 
 
