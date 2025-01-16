@@ -221,6 +221,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         excl_area=None,
         exclusion_shape=None,
         close=True,
+        zone_mask=None,
     ):
         """
         Parameters
@@ -254,6 +255,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             will speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
+        zone_mask : np.ndarray | None, optional
+            2D array defining zone within the supply curve to be evaluated,
+            where 1 is included and 0 is excluded. The shape of this will be
+            checked against the input resolution.
         """
 
         self._excl_dict = excl_dict
@@ -281,6 +286,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             assert inclusion_mask.shape[1] <= resolution, msg
             assert inclusion_mask.size == len(self._gids), msg
             self._incl_mask = inclusion_mask.copy()
+
+        self._zone_mask = zone_mask
+        self._check_zone_mask()
 
         self._centroid = None
         self._excl_area = excl_area
@@ -455,6 +463,24 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return n_gids
 
     @property
+    def zone_mask(self):
+        """
+        Get the 2D zone mask, where 1 is included and 0 is excluded.
+
+        Returns
+        -------
+        np.ndarray
+        """
+
+        if self._zone_mask is None:
+            return None
+        else:
+            out_of_extent = self._gids.reshape(self._zone_mask.shape) == -1
+            self._zone_mask[out_of_extent] = 0.0
+
+            return self._zone_mask
+
+    @property
     def include_mask(self):
         """Get the 2D inclusion mask (normalized with expected range: [0, 1]
         where 1 is included and 0 is excluded).
@@ -480,6 +506,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                 )
                 logger.warning(w)
                 warn(w)
+
+        if self.zone_mask is not None:
+            out_of_zone = self.zone_mask == 0
+            self._incl_mask[out_of_zone] = 0.0
 
         return self._incl_mask
 
@@ -547,6 +577,31 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                 self._gid
             )
             raise EmptySupplyCurvePointError(msg)
+
+    def _check_zone_mask(self):
+        """
+        Check that the zone mask is the correct size and shape, and that it
+        contains only values of 0 and 1.
+        """
+        if self._zone_mask is not None:
+            msg = (
+                "Bad zone mask input shape of {} with stated "
+                "resolution of {}".format(
+                    self._zone_mask.shape, self._resolution
+                )
+            )
+            assert len(self._zone_mask.shape) == 2, msg
+            assert self._zone_mask.shape[0] <= self._resolution, msg
+            assert self._zone_mask.shape[1] <= self._resolution, msg
+            assert self._zone_mask.size == len(self._gids), msg
+
+            if not np.isin(self._zone_mask, [0, 1]).all():
+                msg = (
+                    "zone_mask includes unexpected values. All values must be "
+                    "in the domain: [0, 1]"
+                )
+                logger.error(msg)
+                raise ValueError(msg)
 
     def exclusion_weighted_mean(self, arr, drop_nan=True):
         """
@@ -955,6 +1010,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         close=True,
         gen_index=None,
         apply_exclusions=True,
+        zone_mask=None,
     ):
         """
         Parameters
@@ -997,6 +1053,10 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         apply_exclusions : bool
             Flag to apply exclusions to the resource / generation gid's on
             initialization.
+        zone_mask : np.ndarray | None, optional
+            2D array defining zone within the supply curve to be evaluated,
+            where 1 is included and 0 is excluded. The shape of this will be
+            checked against the input resolution.
         """
         super().__init__(
             gid,
@@ -1008,6 +1068,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             excl_area=excl_area,
             exclusion_shape=exclusion_shape,
             close=close,
+            zone_mask=zone_mask,
         )
 
         self._h5_fpath, self._h5 = self._parse_h5_file(agg_h5)
@@ -1435,6 +1496,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         friction_layer=None,
         recalc_lcoe=True,
         apply_exclusions=True,
+        zone_mask=None,
     ):
         """
         Parameters
@@ -1510,6 +1572,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         apply_exclusions : bool
             Flag to apply exclusions to the resource / generation gid's on
             initialization.
+        zone_mask : np.ndarray | None, optional
+            2D array defining zone within the supply curve to be summarized,
+            where 1 is included and 0 is excluded. The shape of this will be
+            checked against the input resolution.
         """
 
         self._res_class_dset = res_class_dset
@@ -1540,6 +1606,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             exclusion_shape=exclusion_shape,
             close=close,
             apply_exclusions=False,
+            zone_mask=zone_mask,
         )
 
         self._res_gid_set = None
@@ -2423,6 +2490,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         data_layers=None,
         cap_cost_scale=None,
         recalc_lcoe=True,
+        zone_mask=None,
     ):
         """Get a summary dictionary of a single supply curve point.
 
@@ -2504,6 +2572,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             datasets to be aggregated in the gen input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
+        zone_mask : np.ndarray | None, optional
+            2D array defining zone within the supply curve to be summarized,
+            where 1 is included and 0 is excluded. The shape of this will be
+            checked against the input resolution. If not specified, no zone
+            mask will be applied.
 
         Returns
         -------
@@ -2525,6 +2598,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             "close": close,
             "friction_layer": friction_layer,
             "recalc_lcoe": recalc_lcoe,
+            "zone_mask": zone_mask,
         }
 
         with cls(
