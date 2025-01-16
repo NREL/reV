@@ -252,7 +252,8 @@ class SupplyCurveAggregation(BaseAggregation):
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
-                 cap_cost_scale=None, recalc_lcoe=True):
+                 cap_cost_scale=None, recalc_lcoe=True, zones_fpath=None,
+                 zones_dset=None):
         r"""ReV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
@@ -297,7 +298,6 @@ class SupplyCurveAggregation(BaseAggregation):
               exclusion HDF5 file is a blocking operation, so you may
               only run a single ``reV`` aggregation step at a time this
               way.
-
         econ_fpath : str, optional
             Filepath to HDF5 file with ``reV`` econ output results
             containing an `lcoe_dset` dataset. If ``None``, `lcoe_dset`
@@ -544,6 +544,22 @@ class SupplyCurveAggregation(BaseAggregation):
             generation HDF5 output, or if `recalc_lcoe` is set to
             ``False``, the mean LCOE will be computed from the data
             stored under the `lcoe_dset` instead. By default, ``True``.
+        zones_fpath : str, optional
+            Filepath to HDF5 file containing `zones_dset`. If both
+            `zones_fpath` and `zones_dset` are specified, supply curve
+            aggregation will be applied separately for each zone within each
+            supply curve site. This file should match the format of a typical
+            exclusions HDF5 file. If specified without zones_dset, a warning
+            will be logged.
+        zones_dset: str, optoinal
+            Dataset name in the `zones_fpath` file containing the zones to be
+            applied. This data layer should consist of unique integer values
+            for each zone, and should be consistent in shape with datasets in
+            `excl_fpath`. Values of zero will be treated as no data /ignored.
+            If both `zones_fpath` and `zones_dset` are specified, supply curve
+            aggregation will be applied separately for each zone within each
+            supply curve site. If specified without `zones_fpath`, a warning
+            will be logged.
 
         Examples
         --------
@@ -708,6 +724,8 @@ class SupplyCurveAggregation(BaseAggregation):
         self._friction_dset = friction_dset
         self._data_layers = data_layers
         self._recalc_lcoe = recalc_lcoe
+        self._zones_fpath = zones_fpath
+        self._zones_dset = zones_dset
 
         logger.debug("Resource class bins: {}".format(self._res_class_bins))
 
@@ -717,6 +735,22 @@ class SupplyCurveAggregation(BaseAggregation):
                 "Will try to infer based on lookup table: {}".format(
                     GenerationSupplyCurvePoint.POWER_DENSITY
                 )
+            )
+            logger.warning(msg)
+            warn(msg, InputWarning)
+
+        if self._zones_fpath is not None and self._zones_dset is None:
+            msg = (
+                "zones_fpath specified without zones_dset. Supply curve "
+                "aggregation will be performed without zones."
+            )
+            logger.warning(msg)
+            warn(msg, InputWarning)
+
+        if self._zones_dset is not None and self._zones_fpath is None:
+            msg = (
+                "_zones_dset specified without _zones_fpath. Supply curve "
+                "aggregation will be performed without zones."
             )
             logger.warning(msg)
             warn(msg, InputWarning)
@@ -950,6 +984,8 @@ class SupplyCurveAggregation(BaseAggregation):
         excl_area=None,
         cap_cost_scale=None,
         recalc_lcoe=True,
+        zones_fpath=None,
+        zones_dset=None,
     ):
         """Standalone method to create agg summary - can be parallelized.
 
@@ -1043,6 +1079,20 @@ class SupplyCurveAggregation(BaseAggregation):
             datasets to be aggregated in the h5_dsets input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
+        zones_fpath : str | None, optional
+            Filepath to HDF5 file containing `zones_dset`. If both
+            `zones_fpath` and `zones_dset` are specified, supply curve
+            aggregation will be applied separately for each zone within each
+            supply curve site. This file should match the format of a typical
+            exclusions HDF5 file.
+        zones_dset: str | None, optional
+            Dataset name in the `zones_fpath` file containing the zones to be
+            applied. This data layer should consist of unique integer values
+            for each zone, and should be consistent in shape with datasets in
+            `excl_fpath`. Values of zero will be treated as no data /ignored.
+            Ifboth `zones_fpath` and `zones_dset` are specified, supply curve
+            aggregation will be applied separately for each zone within each
+            supply curve site.
 
         Returns
         -------
@@ -1093,45 +1143,55 @@ class SupplyCurveAggregation(BaseAggregation):
                     inclusion_mask, gid, slice_lookup, resolution=resolution
                 )
 
+                zones = cls._get_gid_zones(
+                    zones_fpath, zones_dset, gid, slice_lookup
+                )
+                zone_ids = np.unique(zones).tolist()
+
                 for ri, res_bin in enumerate(res_class_bins):
-                    try:
-                        pointsum = GenerationSupplyCurvePoint.summarize(
-                            gid,
-                            fh.exclusions,
-                            fh.gen,
-                            tm_dset,
-                            gen_index,
-                            res_class_dset=res_data,
-                            res_class_bin=res_bin,
-                            cf_dset=cf_dset,
-                            lcoe_dset=lcoe_data,
-                            h5_dsets=h5_dsets_data,
-                            data_layers=fh.data_layers,
-                            resolution=resolution,
-                            exclusion_shape=exclusion_shape,
-                            power_density=fh.power_density,
-                            args=args,
-                            excl_dict=excl_dict,
-                            inclusion_mask=gid_inclusions,
-                            excl_area=excl_area,
-                            close=False,
-                            friction_layer=fh.friction_layer,
-                            cap_cost_scale=cap_cost_scale,
-                            recalc_lcoe=recalc_lcoe,
-                        )
-
-                    except EmptySupplyCurvePointError:
-                        logger.debug("SC point {} is empty".format(gid))
-                    else:
-                        pointsum['res_class'] = ri
-
-                        summary.append(pointsum)
-                        logger.debug(
-                            "Serial aggregation completed gid {}: "
-                            "{} out of {} points complete".format(
-                                gid, n_finished, len(gids)
+                    for zone_id in zone_ids:
+                        zone_mask = zones == zone_id
+                        try:
+                            pointsum = GenerationSupplyCurvePoint.summarize(
+                                gid,
+                                fh.exclusions,
+                                fh.gen,
+                                tm_dset,
+                                gen_index,
+                                res_class_dset=res_data,
+                                res_class_bin=res_bin,
+                                cf_dset=cf_dset,
+                                lcoe_dset=lcoe_data,
+                                h5_dsets=h5_dsets_data,
+                                data_layers=fh.data_layers,
+                                resolution=resolution,
+                                exclusion_shape=exclusion_shape,
+                                power_density=fh.power_density,
+                                args=args,
+                                excl_dict=excl_dict,
+                                inclusion_mask=gid_inclusions,
+                                excl_area=excl_area,
+                                close=False,
+                                friction_layer=fh.friction_layer,
+                                cap_cost_scale=cap_cost_scale,
+                                recalc_lcoe=recalc_lcoe,
+                                zone_mask=zone_mask,
                             )
-                        )
+
+                        except EmptySupplyCurvePointError:
+                            logger.debug("SC point {} is empty".format(gid))
+                        else:
+                            pointsum['res_class'] = ri
+
+                            summary.append(pointsum)
+                            logger.debug(
+                                "Serial aggregation completed gid {}, "
+                                "resource class {}, zone ID {}: "
+                                "{} out of {} points complete".format(
+                                    gid, ri, zone_id, n_finished,
+                                    len(gids)
+                                )
+                            )
 
                 n_finished += 1
 
@@ -1227,6 +1287,8 @@ class SupplyCurveAggregation(BaseAggregation):
                         excl_area=self._excl_area,
                         cap_cost_scale=self._cap_cost_scale,
                         recalc_lcoe=self._recalc_lcoe,
+                        zones_fpath=self._zones_fpath,
+                        zones_dset=self._zones_dset,
                     )
                 )
 
@@ -1365,6 +1427,8 @@ class SupplyCurveAggregation(BaseAggregation):
                 excl_area=self._excl_area,
                 cap_cost_scale=self._cap_cost_scale,
                 recalc_lcoe=self._recalc_lcoe,
+                zones_fpath=self._zones_fpath,
+                zones_dset=self._zones_dset,
             )
         else:
             summary = self.run_parallel(
