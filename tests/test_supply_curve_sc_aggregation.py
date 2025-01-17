@@ -29,6 +29,7 @@ from reV.supply_curve.sc_aggregation import (
 from reV.supply_curve.cli_sc_aggregation import _format_res_fpath
 from reV.handlers.exclusions import LATITUDE
 from reV.utilities import ModuleName, SupplyCurveField
+from reV.supply_curve.extent import SupplyCurveExtent
 
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -711,6 +712,89 @@ def test_format_res_fpath_with_year_pattern():
         assert _format_res_fpath(config) == {"res_fpath": tf.format(2010)}
 
 
+@pytest.mark.parametrize("zone_config", ["one_full"])
+def test_agg_zones(zone_config):
+    """Test sc aggregation with zones within each sc site."""
+    # TODO: other test permutations:
+    # multiple zone configurations:
+    #   single zone (full), single zone (one_partial) 2 zones (two), 3 zones
+    #   (four)?
+    # run parallel, run serial, run with inclusion mask
+    # separate test for running via cli
+    # test with only 1 or the other of the 2 inputs (should produce warnings)
+
+    resolution = 64
+    gids = [1, 2, 3]
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp = os.path.join(td, "excl.h5")
+        shutil.copy(EXCL, excl_temp)
+        with SupplyCurveExtent(excl_temp, resolution=resolution) as sc:
+            slice_lookup = sc.get_slice_lookup(gids)
+
+        with h5py.File(excl_temp, 'a') as f:
+            shape = f[LATITUDE].shape
+            attrs = dict(f['ri_smod'].attrs)
+            profile = json.loads(attrs["profile"])
+            profile["dtype"] = "uint32"
+            profile["nodata"] = 0
+            attrs["profile"] = json.dumps(profile)
+            data = np.zeros(shape, dtype=np.uint32)
+            if zone_config == "one_full":
+                # each supply curve cell is a single zone, where the zone ID is
+                # 10 + the gid
+                for gid, gid_slice in slice_lookup.items():
+                    data[gid_slice] = gid + 10
+                # use the standard test dataset
+                baseline = AGG_BASELINE
+            else:
+                raise NotImplementedError(
+                    "Test for zone_config {zone_config} not yet implemented"
+                )
+            test_dset = "parcels"
+            f.create_dataset(test_dset, shape, data=data)
+            for k, v in attrs.items():
+                f[test_dset].attrs[k] = v
+
+        sca = SupplyCurveAggregation(
+            excl_temp,
+            TM_DSET,
+            excl_dict=EXCL_DICT,
+            res_class_dset=RES_CLASS_DSET,
+            res_class_bins=RES_CLASS_BINS,
+            zones_fpath=excl_temp,
+            zones_dset=test_dset,
+            resolution=resolution,
+            gids=gids,
+        )
+        summary = sca.summarize(GEN)
+
+        s_baseline = pd.read_csv(baseline)
+        s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+        s_baseline = s_baseline.set_index(s_baseline.columns[0])
+        s_baseline_subset = s_baseline[
+            s_baseline["sc_point_gid"].isin(gids)
+        ].copy()
+        list_cols = ["res_gids", "gen_gids", "gid_counts"]
+        # convert columns containing lists of integers as strings to lists
+        # of integers
+        for list_col in list_cols:
+            s_baseline_subset[list_col] = s_baseline_subset[list_col].apply(
+                json.loads
+            )
+
+        summary = summary.fillna("None")
+        s_baseline_subset = s_baseline_subset.fillna("None")
+
+        compare_cols = list(
+            set(s_baseline_subset.columns).intersection(summary.columns)
+        )
+        assert_frame_equal(
+            summary[compare_cols],
+            s_baseline_subset[compare_cols], check_dtype=False, rtol=0.0001
+        )
+
+
 def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
 
@@ -723,7 +807,7 @@ def execute_pytest(capture="all", flags="-rapP"):
         Which tests to show logs and results for.
     """
 
-    fname = os.path.basename(__file__)
+    fname = __file__
     pytest.main(["-q", "--show-capture={}".format(capture), fname, flags])
 
 
