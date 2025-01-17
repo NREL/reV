@@ -1182,6 +1182,7 @@ class SupplyCurveAggregation(BaseAggregation):
                             logger.debug("SC point {} is empty".format(gid))
                         else:
                             pointsum['res_class'] = ri
+                            pointsum['zone_id'] = zone_id
 
                             summary.append(pointsum)
                             logger.debug(
