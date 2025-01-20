@@ -257,8 +257,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Flag to close object file handlers on exit.
         zone_mask : np.ndarray | None, optional
             2D array defining zone within the supply curve to be evaluated,
-            where 1 is included and 0 is excluded. The shape of this will be
-            checked against the input resolution.
+            where values of 0 or False will be excluded. The shape of this
+            array will be checked against the input resolution.
         """
 
         self._excl_dict = excl_dict
@@ -594,14 +594,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             assert self._zone_mask.shape[0] <= self._resolution, msg
             assert self._zone_mask.shape[1] <= self._resolution, msg
             assert self._zone_mask.size == len(self._gids), msg
-
-            if not np.isin(self._zone_mask, [0, 1]).all():
-                msg = (
-                    "zone_mask includes unexpected values. All values must be "
-                    "in the domain: [0, 1]"
-                )
-                logger.error(msg)
-                raise ValueError(msg)
 
     def exclusion_weighted_mean(self, arr, drop_nan=True):
         """
