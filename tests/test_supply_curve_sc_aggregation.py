@@ -712,12 +712,16 @@ def test_format_res_fpath_with_year_pattern():
         assert _format_res_fpath(config) == {"res_fpath": tf.format(2010)}
 
 
-@pytest.mark.parametrize("zone_config", ["one_full", 1, 2, 3])
-def test_agg_zones(zone_config):
+@pytest.mark.parametrize("zone_config,max_workers,pre_extract_inclusions", [
+    ("one_full", None, False),
+    (1, None, False),
+    (2, None, False),
+    (3, None, False),
+    (1, 1, False),  # test with run_serial
+    (1, None, True),  # test with pre_extract_exclusions
+])
+def test_agg_zones(zone_config, max_workers, pre_extract_inclusions):
     """Test sc aggregation with zones within each sc site."""
-    # TODO: other test permutations:
-    # run parallel, run serial, run with inclusion mask
-    # separate test for running via cli
 
     resolution = 64
     gids = [1, 2, 3]
@@ -780,8 +784,9 @@ def test_agg_zones(zone_config):
             resolution=resolution,
             power_density=36.0,
             gids=gids,
+            pre_extract_inclusions=pre_extract_inclusions,
         )
-        summary = sca.summarize(GEN)
+        summary = sca.summarize(GEN, max_workers=max_workers)
 
     s_baseline = pd.read_csv(baseline)
     if apply_legacy_remap:
