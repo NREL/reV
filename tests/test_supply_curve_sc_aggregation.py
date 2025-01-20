@@ -712,12 +712,15 @@ def test_format_res_fpath_with_year_pattern():
         assert _format_res_fpath(config) == {"res_fpath": tf.format(2010)}
 
 
-@pytest.mark.parametrize("zone_config", ["one_full"])
+@pytest.mark.parametrize("zone_config", [
+    "one_full",
+    "one_partial",
+])
 def test_agg_zones(zone_config):
     """Test sc aggregation with zones within each sc site."""
     # TODO: other test permutations:
     # multiple zone configurations:
-    #   single zone (full), single zone (one_partial) 2 zones (two), 3 zones
+    #   single zone (one_partial) 2 zones (two), 3 zones
     #   (four)?
     # run parallel, run serial, run with inclusion mask
     # separate test for running via cli
@@ -741,16 +744,36 @@ def test_agg_zones(zone_config):
             attrs["profile"] = json.dumps(profile)
             data = np.zeros(shape, dtype=np.uint32)
             if zone_config == "one_full":
-                # each supply curve cell is a single zone, where the zone ID is
-                # 10 + the gid
                 for gid, gid_slice in slice_lookup.items():
                     data[gid_slice] = gid + 10
                 # use the standard test dataset
                 baseline = AGG_BASELINE
+                excl_dict = EXCL_DICT.copy()
+                res_class_bins = RES_CLASS_BINS
+                apply_legacy_remap = True
             else:
-                raise NotImplementedError(
-                    "Test for zone_config {zone_config} not yet implemented"
+                excl_dict = {
+                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm_slope"
+                }
+                res_class_bins = None
+                baseline = os.path.join(
+                    TESTDATADIR,
+                    f"sc_out/baseline_agg_summary_zones_{zone_config}.csv"
                 )
+                apply_legacy_remap = False
+                if zone_config == "one_partial":
+                    for gid, gid_slice in slice_lookup.items():
+                        gid_rows, gid_cols = gid_slice
+                        zone_rows = slice(gid_rows.stop - 4, gid_rows.stop)
+                        zone_cols = slice(gid_cols.stop - 4, gid_cols.stop)
+                        data[(zone_rows, zone_cols)] = gid + 10
+                elif zone_config == "two":
+                    for gid, gid_slice in slice_lookup.items():
+                        gid_rows, gid_cols = gid_slice
+                        zone_rows = slice(gid_rows.stop - 4, gid_rows.stop)
+                        zone_cols = slice(gid_cols.stop - 4, gid_cols.stop)
+                        data[(zone_rows, zone_cols)] = gid + 10
+
             test_dset = "parcels"
             f.create_dataset(test_dset, shape, data=data)
             for k, v in attrs.items():
@@ -759,17 +782,19 @@ def test_agg_zones(zone_config):
         sca = SupplyCurveAggregation(
             excl_temp,
             TM_DSET,
-            excl_dict=EXCL_DICT,
+            excl_dict=excl_dict,
             res_class_dset=RES_CLASS_DSET,
-            res_class_bins=RES_CLASS_BINS,
+            res_class_bins=res_class_bins,
             zones_dset=test_dset,
             resolution=resolution,
+            power_density=36.0,
             gids=gids,
         )
         summary = sca.summarize(GEN)
 
         s_baseline = pd.read_csv(baseline)
-        s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+        if apply_legacy_remap:
+            s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
         s_baseline = s_baseline.set_index(s_baseline.columns[0])
         s_baseline_subset = s_baseline[
             s_baseline["sc_point_gid"].isin(gids)

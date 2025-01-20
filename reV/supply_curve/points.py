@@ -287,7 +287,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             assert inclusion_mask.size == len(self._gids), msg
             self._incl_mask = inclusion_mask.copy()
 
-        self._zone_mask = zone_mask
+        self._zone_mask = zone_mask.copy()
         self._check_zone_mask()
 
         self._centroid = None

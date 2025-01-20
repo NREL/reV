@@ -1109,7 +1109,7 @@ class SupplyCurveAggregation(BaseAggregation):
                 zones = cls._get_gid_zones(
                     excl_fpath, zones_dset, gid, slice_lookup
                 )
-                zone_ids = np.unique(zones).tolist()
+                zone_ids = np.unique(zones[zones != 0]).tolist()
 
                 for ri, res_bin in enumerate(res_class_bins):
                     for zone_id in zone_ids:
