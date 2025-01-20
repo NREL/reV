@@ -439,13 +439,13 @@ class BaseAggregation(ABC):
         return gid_inclusions
 
     @staticmethod
-    def _get_gid_zones(zones_fpath, zones_dset, gid, slice_lookup):
+    def _get_gid_zones(excl_fpath, zones_dset, gid, slice_lookup):
         """
         Get zones 2D array for desired gid.
 
         Parameters
         ----------
-        zones_fpath : str | None, optional
+        excl_fpath : str | None, optional
             Filepath to HDF5 file containing `zones_dset`. If not specified,
             output of function will be an array containing all values equal to
             1.
@@ -466,12 +466,12 @@ class BaseAggregation(ABC):
         """
 
         row_slice, col_slice = slice_lookup[gid]
-        if zones_fpath is not None and zones_dset is not None:
-            with ExclusionLayers(zones_fpath) as fh:
+        if excl_fpath is not None and zones_dset is not None:
+            with ExclusionLayers(excl_fpath) as fh:
                 if zones_dset not in fh:
                     msg = (
                         f"Could not find zones_dset {zones_dset} in "
-                        f"zones_fpath {zones_fpath}."
+                        f"zones_fpath {excl_fpath}."
                     )
                     logger.error(msg)
                     raise FileInputError(msg)

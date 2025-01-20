@@ -474,11 +474,11 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         if self._zone_mask is None:
             return None
-        else:
-            out_of_extent = self._gids.reshape(self._zone_mask.shape) == -1
-            self._zone_mask[out_of_extent] = 0.0
 
-            return self._zone_mask
+        out_of_extent = self._gids.reshape(self._zone_mask.shape) == -1
+        self._zone_mask[out_of_extent] = 0.0
+
+        return self._zone_mask
 
     @property
     def include_mask(self):

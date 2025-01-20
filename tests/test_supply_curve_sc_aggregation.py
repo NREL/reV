@@ -762,7 +762,6 @@ def test_agg_zones(zone_config):
             excl_dict=EXCL_DICT,
             res_class_dset=RES_CLASS_DSET,
             res_class_bins=RES_CLASS_BINS,
-            zones_fpath=excl_temp,
             zones_dset=test_dset,
             resolution=resolution,
             gids=gids,
