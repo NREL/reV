@@ -450,7 +450,7 @@ class BaseAggregation(ABC):
             output of function will be an array containing all values equal to
             1.
         zones_dset : str | None, optional
-            Dataset name in the `zones_fpath` file containing the zones to be
+            Dataset name in the `excl_fpath` file containing the zones to be
             loaded. If not specified, output of function will be an array
             containing all values equal to 1.
         gid : int
@@ -471,7 +471,7 @@ class BaseAggregation(ABC):
                 if zones_dset not in fh:
                     msg = (
                         f"Could not find zones_dset {zones_dset} in "
-                        f"zones_fpath {excl_fpath}."
+                        f"excl_fpath {excl_fpath}."
                     )
                     logger.error(msg)
                     raise FileInputError(msg)
