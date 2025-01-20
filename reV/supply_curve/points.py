@@ -287,8 +287,17 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             assert inclusion_mask.size == len(self._gids), msg
             self._incl_mask = inclusion_mask.copy()
 
-        self._zone_mask = zone_mask.copy()
-        self._check_zone_mask()
+        self._zone_mask = zone_mask
+        if zone_mask is not None:
+            msg = (
+                "Bad zone mask input shape of {} with stated "
+                "resolution of {}".format(zone_mask.shape, resolution)
+            )
+            assert len(zone_mask.shape) == 2, msg
+            assert zone_mask.shape[0] <= resolution, msg
+            assert zone_mask.shape[1] <= resolution, msg
+            assert zone_mask.size == len(self._gids), msg
+            self._zone_mask = zone_mask.copy()
 
         self._centroid = None
         self._excl_area = excl_area
@@ -577,23 +586,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                 self._gid
             )
             raise EmptySupplyCurvePointError(msg)
-
-    def _check_zone_mask(self):
-        """
-        Check that the zone mask is the correct size and shape, and that it
-        contains only values of 0 and 1.
-        """
-        if self._zone_mask is not None:
-            msg = (
-                "Bad zone mask input shape of {} with stated "
-                "resolution of {}".format(
-                    self._zone_mask.shape, self._resolution
-                )
-            )
-            assert len(self._zone_mask.shape) == 2, msg
-            assert self._zone_mask.shape[0] <= self._resolution, msg
-            assert self._zone_mask.shape[1] <= self._resolution, msg
-            assert self._zone_mask.size == len(self._gids), msg
 
     def exclusion_weighted_mean(self, arr, drop_nan=True):
         """
