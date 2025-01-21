@@ -258,7 +258,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         zone_mask : np.ndarray | None, optional
             2D array defining zone within the supply curve to be evaluated,
             where values of 0 or False will be excluded. The shape of this
-            array will be checked against the input resolution.
+            array will be checked against the input resolution. If not
+            specified, no zone mask will be applied.
         """
 
         self._excl_dict = excl_dict
@@ -1032,8 +1033,9 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             initialization.
         zone_mask : np.ndarray | None, optional
             2D array defining zone within the supply curve to be evaluated,
-            where 1 is included and 0 is excluded. The shape of this will be
-            checked against the input resolution.
+            where values of 0 or False will be excluded. The shape of this
+            array will be checked against the input resolution. If not
+            specified, no zone mask will be applied.
         """
         super().__init__(
             gid,
@@ -1550,9 +1552,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Flag to apply exclusions to the resource / generation gid's on
             initialization.
         zone_mask : np.ndarray | None, optional
-            2D array defining zone within the supply curve to be summarized,
-            where 1 is included and 0 is excluded. The shape of this will be
-            checked against the input resolution.
+            2D array defining zone within the supply curve to be evaluated,
+            where values of 0 or False will be excluded. The shape of this
+            array will be checked against the input resolution. If not
+            specified, no zone mask will be applied.
         """
 
         self._res_class_dset = res_class_dset
@@ -2550,10 +2553,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
         zone_mask : np.ndarray | None, optional
-            2D array defining zone within the supply curve to be summarized,
-            where 1 is included and 0 is excluded. The shape of this will be
-            checked against the input resolution. If not specified, no zone
-            mask will be applied.
+            2D array defining zone within the supply curve to be evaluated,
+            where values of 0 or False will be excluded. The shape of this
+            array will be checked against the input resolution. If not
+            specified, no zone mask will be applied.
 
         Returns
         -------

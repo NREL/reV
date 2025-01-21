@@ -543,12 +543,15 @@ class SupplyCurveAggregation(BaseAggregation):
             generation HDF5 output, or if `recalc_lcoe` is set to
             ``False``, the mean LCOE will be computed from the data
             stored under the `lcoe_dset` instead. By default, ``True``.
-        zones_dset: str, optoinal
+        zones_dset: str, optional
             Dataset name in `excl_fpath` containing the zones to be applied.
-            This data layer should consist of unique integer values for each
-            zone. Values of zero will be treated as no data /ignored. If
-            `zones_dset` is provided, supply curve aggregation will be applied
-            separately for each zone within each supply curve site.
+            If specified, supply curve aggregation will be performed separately
+            for each discrete zone within each supply curve site. This option
+            can be used for uses cases such as subdividing sites by parcel,
+            such that each parcel within each site is output to a separate
+            sc_gid. The input data layer should consist of unique integer
+            values for each zone. Values of zero will be treated as excluded
+            areas.
 
         Examples
         --------
@@ -1050,12 +1053,15 @@ class SupplyCurveAggregation(BaseAggregation):
             datasets to be aggregated in the h5_dsets input: system_capacity,
             fixed_charge_rate, capital_cost, fixed_operating_cost,
             and variable_operating_cost.
-        zones_dset: str, optoinal
+        zones_dset: str, optional
             Dataset name in `excl_fpath` containing the zones to be applied.
-            This data layer should consist of unique integer values for each
-            zone. Values of zero will be treated as no data /ignored. If
-            `zones_dset` is provided, supply curve aggregation will be applied
-            separately for each zone within each supply curve site.
+            If specified, supply curve aggregation will be performed separately
+            for each discrete zone within each supply curve site. This option
+            can be used for uses cases such as subdividing sites by parcel,
+            such that each parcel within each site is output to a separate
+            sc_gid. The input data layer should consist of unique integer
+            values for each zone. Values of zero will be treated as excluded
+            areas.
 
         Returns
         -------
