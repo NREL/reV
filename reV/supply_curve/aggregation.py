@@ -481,7 +481,7 @@ class BaseAggregation(ABC):
                 row_slice.stop - row_slice.start,
                 col_slice.stop - col_slice.start
             )
-            zones = np.ones(shape, dtype="uint32")
+            zones = np.ones(shape, dtype="uint8")
 
         return zones
 
