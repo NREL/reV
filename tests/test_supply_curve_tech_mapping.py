@@ -5,6 +5,7 @@ Created on Wed Jun 19 15:37:05 2019
 @author: gbuster
 """
 import os
+import shutil
 
 import h5py
 import numpy as np
@@ -23,9 +24,17 @@ GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 TM_DSET = 'techmap_nsrdb_ri_truth'
 
 
-def test_resource_tech_mapping():
+@pytest.mark.parametrize("dset", [None, "tm"])
+def test_resource_tech_mapping(tmp_path, dset):
     """Run the supply curve technology mapping and compare to baseline file"""
-    ind = TechMapping.run(EXCL, RES, dset=None, max_workers=2)
+
+    if dset is None:
+        excl_fpath = EXCL
+    else:
+        excl_fpath = tmp_path.joinpath("excl.h5").as_posix()
+        shutil.copy(EXCL, excl_fpath)
+
+    ind = TechMapping.run(excl_fpath, RES, dset=dset, max_workers=2)
 
     with ExclusionLayers(EXCL) as ex:
         ind_truth = ex[TM_DSET]
@@ -35,6 +44,14 @@ def test_resource_tech_mapping():
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
+
+    if dset is not None:
+        with h5py.File(excl_fpath, 'r') as f:
+            assert dset in f, "Techmap dataset was not written to H5"
+            ind_h5 = np.array(f[dset])
+            assert np.allclose(ind_h5, ind_truth), (
+                "H5 tech map dataset does not match baseline results."
+            )
 
 
 # pylint: disable=no-member
@@ -111,8 +128,8 @@ def execute_pytest(capture='all', flags='-rapP'):
         Which tests to show logs and results for.
     """
 
-    fname = os.path.basename(__file__)
-    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+    fname = __file__
+    pytest.main(["-q", "--show-capture={}".format(capture), fname, flags])
 
 
 if __name__ == '__main__':
