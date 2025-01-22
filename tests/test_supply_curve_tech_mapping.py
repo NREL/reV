@@ -24,34 +24,28 @@ GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 TM_DSET = 'techmap_nsrdb_ri_truth'
 
 
-@pytest.mark.parametrize("dset", [None, "tm"])
-def test_resource_tech_mapping(tmp_path, dset):
+def test_resource_tech_mapping(tmp_path):
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    if dset is None:
-        excl_fpath = EXCL
-    else:
-        excl_fpath = tmp_path.joinpath("excl.h5").as_posix()
-        shutil.copy(EXCL, excl_fpath)
+    excl_fpath = EXCL
+    excl_fpath = tmp_path.joinpath("excl.h5").as_posix()
+    shutil.copy(EXCL, excl_fpath)
 
-    ind = TechMapping.run(excl_fpath, RES, dset=dset, max_workers=2)
+    dset = "tm"
+    TechMapping.run(excl_fpath, RES, dset=dset, max_workers=2)
 
     with ExclusionLayers(EXCL) as ex:
         ind_truth = ex[TM_DSET]
+
+    with ExclusionLayers(excl_fpath) as out:
+        assert dset in out, "Techmap dataset was not written to H5"
+        ind = out[dset]
 
     msg = 'Tech mapping failed for {} vs. baseline results.'
     assert np.allclose(ind, ind_truth), msg.format('index mappings')
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
-
-    if dset is not None:
-        with h5py.File(excl_fpath, 'r') as f:
-            assert dset in f, "Techmap dataset was not written to H5"
-            ind_h5 = np.array(f[dset])
-            assert np.allclose(ind_h5, ind_truth), (
-                "H5 tech map dataset does not match baseline results."
-            )
 
 
 # pylint: disable=no-member
