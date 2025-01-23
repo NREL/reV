@@ -12,6 +12,7 @@ from reV.handlers.cli_collect import collect_command
 from reV.handlers.cli_multi_year import my_command
 from reV.supply_curve.cli_sc_aggregation import sc_agg_command
 from reV.supply_curve.cli_supply_curve import sc_command
+from reV.supply_curve.cli_tech_mapping import tm_command
 from reV.rep_profiles.cli_rep_profiles import rep_profiles_command
 from reV.hybrids.cli_hybrids import hybrids_command
 from reV.nrwal.cli_nrwal import nrwal_command
@@ -24,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 commands = [bespoke_command, gen_command, econ_command, collect_command,
-            my_command, sc_agg_command, sc_command, rep_profiles_command,
-            hybrids_command, nrwal_command, qa_qc_command]
+            my_command, tm_command, sc_agg_command, sc_command,
+            rep_profiles_command, hybrids_command, nrwal_command,
+            qa_qc_command]
 main = make_cli(commands, info={"name": "reV", "version": __version__})
 main.add_command(qa_qc_extra)
 main.add_command(project_points)
