@@ -320,6 +320,10 @@ class TechMapping:
                 logger.warning(wmsg)
                 warn(wmsg, FileInputWarning)
             else:
+                logger.info(
+                    f"Initializing tech map dataset {tm_dset} in "
+                    f"{self._excl_fpath}"
+                )
                 f.create_dataset(
                     tm_dset,
                     shape=self._excl_shape,
