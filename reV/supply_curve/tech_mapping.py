@@ -329,8 +329,8 @@ class TechMapping:
                     shape=self._excl_shape,
                     dtype=np.int32,
                     chunks=chunks,
+                    fillvalue=-1
                 )
-                f[tm_dset][:] = -1
 
             if self._dist_thresh:
                 f[tm_dset].attrs["distance_threshold"] = self._dist_thresh
