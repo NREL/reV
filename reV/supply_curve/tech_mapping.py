@@ -373,7 +373,12 @@ class TechMapping:
         n_jobs = len(gid_chunks)
         batch_size = 100
         n_submitted = 0
-        logger.info(f"Kicking off {n_jobs} resource mapping jobs.")
+        n_batches = ceil(n_jobs / batch_size)
+        n_finished = 0
+        logger.info(
+            f"Kicking off {n_jobs} resource mapping jobs in {n_batches} "
+            "batches."
+        )
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
             while n_submitted < n_jobs:
                 futures = {}
@@ -401,18 +406,10 @@ class TechMapping:
                         )
                     ] = i
                 n_submitted += batch_size
-                logger.info("{n_submitted} jobs submitted.")
 
                 with h5py.File(self._excl_fpath, "a") as f:
                     indices = f[tm_dset]
-                    n_finished = 0
                     for future in as_completed(futures):
-                        n_finished += 1
-                        logger.info(
-                            "Parallel TechMapping futures collected: "
-                            "{} out of {}".format(n_finished, len(futures))
-                        )
-
                         i = futures[future]
                         result = future.result()
 
@@ -430,6 +427,11 @@ class TechMapping:
                             indices[row_slice, col_slice] = result[j].reshape(
                                 result_shape
                             )
+                n_finished += 1
+                logger.info(
+                    "Parallel TechMapping batches completed: "
+                    f"{n_finished} out of {n_batches}"
+                )
 
     @classmethod
     def run(
