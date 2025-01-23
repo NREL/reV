@@ -371,7 +371,7 @@ class TechMapping:
 
         futures = {}
         loggers = [__name__, "reV"]
-        logger.info(f"Kicking off {gid_chunks} resource mapping jobs.")
+        logger.info(f"Kicking off {len(gid_chunks)} resource mapping jobs.")
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
             # iterate through split executions, submitting each to worker
             for i, gid_set in enumerate(gid_chunks):
