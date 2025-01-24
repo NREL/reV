@@ -1148,7 +1148,8 @@ class SupplyCurveAggregation(BaseAggregation):
                             )
 
                         except EmptySupplyCurvePointError:
-                            logger.debug("SC point {} is empty".format(gid))
+                            logger.debug("SC point {}, zone ID {} is empty"
+                                         .format(gid, zone_id))
                         else:
                             pointsum['res_class'] = ri
                             pointsum['zone_id'] = zone_id
