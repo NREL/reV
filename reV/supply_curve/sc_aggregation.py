@@ -1118,7 +1118,7 @@ class SupplyCurveAggregation(BaseAggregation):
                 zone_ids = np.unique(zones[zones != 0]).tolist()
 
                 for ri, res_bin in enumerate(res_class_bins):
-                    for zone_id in zone_ids:
+                    for zi, zone_id in enumerate(zone_ids, start=1):
                         zone_mask = zones == zone_id
                         try:
                             pointsum = GenerationSupplyCurvePoint.summarize(
@@ -1164,6 +1164,12 @@ class SupplyCurveAggregation(BaseAggregation):
                             )
 
                 n_finished += 1
+                logger.debug(
+                    "Serial aggregation completed for gid {}: "
+                    "{:,d} out of {:,d} points complete".format(
+                        gid, n_finished, len(gids)
+                    )
+                )
 
         return summary
 
