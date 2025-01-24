@@ -1156,11 +1156,10 @@ class SupplyCurveAggregation(BaseAggregation):
 
                             summary.append(pointsum)
                             logger.debug(
-                                "Serial aggregation completed gid {}, "
+                                "Serial aggregation completed for"
                                 "resource class {}, zone ID {}: "
-                                "{} out of {} points complete".format(
-                                    gid, ri, zone_id, n_finished,
-                                    len(gids)
+                                "{:,d} out of {:,d} zones complete".format(
+                                    ri, zone_id, zi, len(zone_ids)
                                 )
                             )
 
