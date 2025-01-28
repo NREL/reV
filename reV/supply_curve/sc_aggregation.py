@@ -1106,6 +1106,9 @@ class SupplyCurveAggregation(BaseAggregation):
             res_data, res_class_bins, lcoe_data = temp
             h5_dsets_data = cls._get_extra_dsets(fh.gen, h5_dsets)
 
+            if inclusion_mask is None:
+                inclusion_mask = fh.exclusions
+
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(

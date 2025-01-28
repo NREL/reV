@@ -425,7 +425,7 @@ class BaseAggregation(ABC):
             gid_inclusions = inclusion_mask[gid]
             assert gid_inclusions.shape[0] <= resolution
             assert gid_inclusions.shape[1] <= resolution
-        elif isinstance(inclusion_mask, np.ndarray):
+        elif isinstance(inclusion_mask, (np.ndarray, ExclusionMaskFromDict)):
             row_slice, col_slice = slice_lookup[gid]
             gid_inclusions = inclusion_mask[row_slice, col_slice]
         elif inclusion_mask is not None:
