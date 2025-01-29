@@ -1626,11 +1626,18 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Mean of flat_arr masked by the binary exclusions then weighted by
             the non-zero exclusions.
         """
-        x = flat_arr[self._gen_gids[self.bool_mask]].astype("float32")
+
+        if len(flat_arr) > len(self.gen_gid_set):
+            incl_indices = self._gen_gids[self.bool_mask]
+        else:
+            incl_indices = pd.Series(
+                self._gen_gids[self.bool_mask]
+            ).map({v: i for i, v in enumerate(self.gen_gid_set)}).values
+
+        x = flat_arr[incl_indices].astype("float32")
         incl = self.include_mask_flat[self.bool_mask]
         x *= incl
         mean = x.sum() / incl.sum()
-
         return mean
 
     @property
@@ -1724,7 +1731,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         if self._res_data is None:
             if self._res_class_dset in self.gen.datasets:
-                self._res_data = self.gen[self._res_class_dset]
+                self._res_data = self.gen[
+                    self._res_class_dset, self.gen_gid_set
+                ]
 
         return self._res_data
 
@@ -1744,7 +1753,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         if self._gen_data is None:
             if self._cf_dset in self.gen.datasets:
-                self._gen_data = self.gen[self._cf_dset]
+                self._gen_data = self.gen[self._cf_dset, self.gen_gid_set]
 
         return self._gen_data
 
@@ -1768,7 +1777,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         ac_cf_dset = _infer_cf_dset_ac(self._cf_dset)
         if ac_cf_dset in self.gen.datasets:
-            return self.gen[ac_cf_dset]
+            return self.gen[ac_cf_dset, self.gen_gid_set]
 
         return None
 
@@ -1788,7 +1797,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         if self._lcoe_data is None:
             if self._lcoe_dset in self.gen.datasets:
-                self._lcoe_data = self.gen[self._lcoe_dset]
+                self._lcoe_data = self.gen[self._lcoe_dset, self.gen_gid_set]
 
         return self._lcoe_data
 
@@ -2165,7 +2174,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             _h5_dsets_data = {}
             for dset in self._h5_dsets:
                 if dset in self.gen.datasets:
-                    _h5_dsets_data[dset] = self.gen[dset]
+                    _h5_dsets_data[dset] = self.gen[dset, self.gen_gid_set]
 
         elif isinstance(self._h5_dsets, dict):
             _h5_dsets_data = self._h5_dsets
@@ -2189,7 +2198,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if "capital_cost_multiplier" not in self.gen.datasets:
             return 1
 
-        multipliers = self.gen["capital_cost_multiplier"]
+        multipliers = self.gen["capital_cost_multiplier", self.gen_gid_set]
         return self.exclusion_weighted_mean(multipliers)
 
     @property
@@ -2198,7 +2207,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if "fixed_charge_rate" not in self.gen.datasets:
             return 0
 
-        return self.exclusion_weighted_mean(self.gen["fixed_charge_rate"])
+        return self.exclusion_weighted_mean(
+            self.gen["fixed_charge_rate", self.gen_gid_set]
+        )
 
     @property
     def _sam_system_capacity_kw(self):
@@ -2209,7 +2220,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         self._ssc = 0
         if "system_capacity" in self.gen.datasets:
             self._ssc = self.exclusion_weighted_mean(
-                self.gen["system_capacity"]
+                self.gen["system_capacity", self.gen_gid_set]
             )
 
         return self._ssc
@@ -2227,7 +2238,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         for dset in self._slk:
             if dset in self.gen.datasets:
                 self._slk[dset] = self.exclusion_weighted_mean(
-                    self.gen[dset]
+                    self.gen[dset, self.gen_gid_set]
                 )
 
         return self._slk
@@ -2240,7 +2251,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         if dset not in self.gen.datasets:
             return None
 
-        sam_cost = self.exclusion_weighted_mean(self.gen[dset])
+        sam_cost = self.exclusion_weighted_mean(
+            self.gen[dset, self.gen_gid_set]
+        )
         sam_cost_per_mw = sam_cost / (self._sam_system_capacity_kw / 1000)
         sc_point_cost = sam_cost_per_mw * self.capacity
 
