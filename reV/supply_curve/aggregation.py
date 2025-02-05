@@ -274,7 +274,7 @@ class BaseAggregation(ABC):
             )
             try:
                 TechMapping.run(
-                    self._excl_fpath, self._res_fpath, dset=self._tm_dset
+                    self._excl_fpath, self._res_fpath, tm_dset=self._tm_dset
                 )
             except Exception as e:
                 msg = (

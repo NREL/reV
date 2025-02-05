@@ -292,6 +292,7 @@ class ModuleName(str, Enum):
     REP_PROFILES = "rep-profiles"
     SUPPLY_CURVE = "supply-curve"
     SUPPLY_CURVE_AGGREGATION = "supply-curve-aggregation"
+    TECH_MAPPING = "tech-mapping"
 
     def __str__(self):
         return self.value
