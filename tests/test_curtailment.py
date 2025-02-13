@@ -40,7 +40,8 @@ def get_curtailment(year, curt_fn="curtailment.json"):
     resource = RevPySam.get_sam_res(res_file, pp, "windpower")
     non_curtailed_res = deepcopy(resource)
 
-    out = curtail(resource, pp.curtailment, random_seed=0)
+    curtailment_config = list(pp.curtailment.values())[0]
+    out = curtail(resource, curtailment_config, resource.sites, random_seed=0)
 
     return out, non_curtailed_res, pp
 
@@ -178,7 +179,7 @@ def test_random(year, site):
             sam_files,
             res_file,
             output_request=("cf_profile",),
-            curtailment=c,
+            curtailment=None if c is None else {"test": c},
             sites_per_worker=50,
             scale_outputs=True,
         )
@@ -202,6 +203,7 @@ def test_random(year, site):
 def test_res_curtailment(year, site):
     """Test wind resource curtailment."""
     out, non_curtailed_res, pp = get_curtailment(year)
+    curtailment_config = list(pp.curtailment.values())[0]
 
     sza = SolarPosition(
         non_curtailed_res.time_index,
@@ -213,21 +215,23 @@ def test_res_curtailment(year, site):
     ti = non_curtailed_res.time_index
 
     # was it in a curtailment month?
-    check1 = np.isin(non_curtailed_res.time_index.month, pp.curtailment.months)
+    check1 = np.isin(non_curtailed_res.time_index.month,
+                     curtailment_config.months)
     check1 = np.tile(
         np.expand_dims(check1, axis=1), non_curtailed_res.shape[1]
     )
 
     # was the non-curtailed wind speed threshold met?
     check2 = (
-        non_curtailed_res._res_arrays["windspeed"] < pp.curtailment.wind_speed
+        non_curtailed_res._res_arrays["windspeed"]
+        < curtailment_config.wind_speed
     )
 
     # was it nighttime?
-    check3 = sza > pp.curtailment.dawn_dusk
+    check3 = sza > curtailment_config.dawn_dusk
 
     # was the temperature threshold met?
-    check4 = out._res_arrays["temperature"] > pp.curtailment.temperature
+    check4 = out._res_arrays["temperature"] > curtailment_config.temperature
 
     # thresholds for curtailment
     check_curtailment = check1 & check2 & check3 & check4
