@@ -363,11 +363,11 @@ def test_basic_spatial_curtailment():
     curtail_config = os.path.join(TESTDATADIR, "config", curt_fn)
 
     points = pd.DataFrame({"gid": [0, 1], "curtailment": ["default", None]})
+    out_req = ("cf_profile", "windspeed", "cf_mean")
     # run reV 2.0 generation
-    gen = Gen("windpower", points, sam_files, res_file,
-              output_request=("cf_profile", "windspeed"),
-              curtailment=curtail_config,
-              sites_per_worker=50, scale_outputs=True)
+    gen = Gen("windpower", points, sam_files, res_file, output_request=out_req,
+              curtailment=curtail_config, sites_per_worker=50,
+              scale_outputs=True)
 
     gen.run(max_workers=1)
 
@@ -378,6 +378,15 @@ def test_basic_spatial_curtailment():
     df, __ = test_res_curtailment(2012, 1, curt_fn=curt_fn)
     assert np.allclose(gen.out["windspeed"][:, 1], df["original_wind"])
     assert not np.allclose(gen.out["windspeed"][:, 1], df["curtailed_wind"])
+
+    non_curtailed_gen = Gen("windpower", points, sam_files, res_file,
+                            output_request=out_req, sites_per_worker=50,
+                            scale_outputs=True)
+
+    non_curtailed_gen.run(max_workers=1)
+
+    assert non_curtailed_gen.out["cf_mean"][0] > gen.out["cf_mean"][0]
+    assert non_curtailed_gen.out["cf_mean"][1] == gen.out["cf_mean"][1]
 
 
 def test_multiple_spatial_curtailment():
