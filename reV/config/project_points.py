@@ -532,10 +532,9 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : int | str | pd.DataFrame | slice | list
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-            Can also be a single integer site value.
+        points : int | str | slice | list
+            Slice specifying project points, string pointing to a
+            project points csv. Can also be a single integer site value.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
