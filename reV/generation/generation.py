@@ -175,12 +175,20 @@ class Gen(BaseGen):
 
                 - ``gid``: Integer specifying the generation GID of each
                   site.
-                - ``config``: Key in the `sam_files` input dictionary
+                - ``config``: This is an *optional* column that contains
+                  a key from the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
-                  ``None`` (or left out completely) if you specify only
-                  a single SAM configuration file as the `sam_files`
-                  input.
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single SAM configuration file as the
+                  `sam_files` input.
+                - ``curtailment``: This is an *optional* column that
+                  contains a key from the `curtailment` input dictionary
+                  (see below) corresponding to the curtailment to apply
+                  at that particular site. This value can also be
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single curtailment configuration file
+                  as the `curtailment` input.
                 - ``capital_cost_multiplier``: This is an *optional*
                   multiplier input that, if included, will be used to
                   regionally scale the ``capital_cost`` input in the SAM
@@ -338,13 +346,20 @@ class Gen(BaseGen):
         curtailment : dict | str, optional
             Inputs for curtailment parameters, which can be:
 
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config file with path (str)
+                - Dictionary mapping curtailment "names" to strings
+                  (paths) or explicit namespaces of curtailment
+                  variables (dicts)
+                - Single pointer to curtailment config file with path
+                  (str). In this case, the curtailment config is given
+                  a "default" name.
 
             The allowed key-value input pairs in the curtailment
             configuration are documented as properties of the
             :class:`reV.config.curtailment.Curtailment` class. If
-            ``None``, no curtailment is modeled. By default, ``None``.
+            ``None``, no curtailment is modeled. You can select which
+            curtailment gets applied to which site using the
+            "curtailment" column key in the project points input.
+            By default, ``None``.
         gid_map : dict | str, optional
             Mapping of unique integer generation gids (keys) to single
             integer resource gids (values). This enables unique
