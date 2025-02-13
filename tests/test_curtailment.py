@@ -319,6 +319,35 @@ def test_eqn_curtailment(plot=False):
         plt.savefig("equation_based_curtailment.png")
 
 
+def test_points_missing_curtailment():
+    """Test that points with missing curtailment values throw a warning"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    curtail_config = os.path.join(TESTDATADIR, "config/", "curtailment.json")
+
+    curtailment = {"test_c1": curtail_config, "test_c2": curtail_config}
+    points = slice(0, 1)
+    # run reV 2.0 generation
+    gen = Gen("windpower", points, sam_files, res_file,
+              output_request=("cf_profile", "windspeed"),
+              curtailment=curtailment,
+              sites_per_worker=50, scale_outputs=True)
+
+    with pytest.warns(UserWarning) as warn:
+        gen.run(max_workers=1)
+
+    expected_msgs = ("One or more curtailment configurations not found "
+                     "in project points and are thus ignored",
+                     "test_c1", "test_c2")
+    for msg in expected_msgs:
+        assert any(msg in str(record) for record in warn)
+
+    df, __ = test_res_curtailment(2012, 0)
+    assert np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
+
+
 def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
 
