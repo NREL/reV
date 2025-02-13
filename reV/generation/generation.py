@@ -246,9 +246,9 @@ class Gen(BaseGen):
             Filepath to resource data. This input can be path to a
             single resource HDF5 file or a path including a wildcard
             input like ``/h5_dir/prefix*suffix`` (i.e. if your datasets
-            for a single year are spread out over multiple files). In
-            all cases, the resource data must be readable by
-            :py:class:`rex.resource.Resource`
+            like wind speed, wind direction, pressure, and so on are
+            spread out over multiple files). In all cases, the resource
+            data must be readable by :py:class:`rex.resource.Resource`
             or :py:class:`rex.multi_file_resource.MultiFileResource`.
             (i.e. the resource data conform to the
             `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
@@ -262,13 +262,19 @@ class Gen(BaseGen):
 
             .. Note:: If executing ``reV`` from the command line, this
               input string can contain brackets ``{}`` that will be
-              filled in by the `analysis_years` input. Alternatively,
-              this input can be a list of explicit files to process. In
-              this case, the length of the list must match the length of
-              the `analysis_years` input exactly, and the path are
-              assumed to align with the `analysis_years` (i.e. the first
-              path corresponds to the first analysis year, the second
-              path corresponds to the second analysis year, and so on).
+              filled in by the `analysis_years` input. If your datasets
+              span multiple files (e.g. "wtk_wind_speed_2012.h5",
+              "wtk_pressure_2012.h5", "wtk_wind_direction_2012.h5"), you
+              may use a wildcard input along with brackets, like so:
+              ``"wtk_*_{}.h5"``. Alternatively, this input can be a list
+              of explicit files to process. In this case, the length of
+              the list must match the length of the `analysis_years`
+              input exactly, and the paths are assumed to align with the
+              `analysis_years` (i.e. the first path corresponds to the
+              first analysis year, the second path corresponds to the
+              second analysis year, and so on). Wild cards are allowed,
+              even if you list out the years explicitly (i.e.
+              ``["wtk_*_2012.h5", "wtk_*_2013.h5", ...]``)
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
