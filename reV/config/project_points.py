@@ -830,9 +830,20 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
-        if len(df_configs) == 1 and df_configs[0] is None:
+        can_fill_null = (len(df_configs) == 1
+                         and df_configs[0] is None
+                         and len(curtail_configs) == 1)
+        if can_fill_null:
             self._df[SiteDataField.CURTAILMENT] = list(curtail_configs)[0]
             df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+
+        unused_configs = set(curtail_configs) - set(df_configs)
+        if unused_configs:
+            msg = ("One or more curtailment configurations not found in "
+                   "project points and are thus ignored: {}"
+                   .format(unused_configs))
+            logger.warning(msg)
+            warn(msg, UserWarning)
 
         # Check to see if config references in project_points DataFrame
         # are valid file paths, if compare with curtailment configs
