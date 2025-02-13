@@ -89,6 +89,7 @@ class SiteDataField(FieldEnum):
 
     GID = "gid"
     CONFIG = "config"
+    CURTAILMENT = "curtailment"
 
 
 class ResourceMetaField(FieldEnum):
