@@ -818,9 +818,16 @@ class ProjectPoints:
         df_configs = self.df[SiteDataField.CURTAILMENT].unique()
         curtail_configs = self.curtailment
 
+        can_fill_null = (len(df_configs) == 1
+                         and df_configs[0] is None
+                         and len(curtail_configs) == 1)
+        if can_fill_null:
+            self._df[SiteDataField.CURTAILMENT] = list(curtail_configs)[0]
+            df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+
         # Checks to make sure that the same number of curtailment config
         # files as references in project_points DataFrame
-        if len(df_configs) > len(curtail_configs):
+        if len(set(df_configs) - {None}) > len(curtail_configs):
             msg = (
                 "Points references {} curtailment configs while only "
                 "{} curtailment configs were provided!".format(
@@ -830,12 +837,6 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
-        can_fill_null = (len(df_configs) == 1
-                         and df_configs[0] is None
-                         and len(curtail_configs) == 1)
-        if can_fill_null:
-            self._df[SiteDataField.CURTAILMENT] = list(curtail_configs)[0]
-            df_configs = self.df[SiteDataField.CURTAILMENT].unique()
 
         unused_configs = set(curtail_configs) - set(df_configs)
         if unused_configs:
