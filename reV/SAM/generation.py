@@ -543,6 +543,8 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         if curtailment is not None:
             for curtail_type, curtail_config in curtailment.items():
                 curtail_sites = points.get_sites_from_curtailment(curtail_type)
+                if not curtail_sites:
+                    continue
                 resources = curtail(resources, curtail_config, curtail_sites,
                                     random_seed=curtail_config.random_seed)
 
