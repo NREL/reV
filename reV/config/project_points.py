@@ -24,6 +24,7 @@ from reV.utilities import SiteDataField, SupplyCurveField
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
 logger = logging.getLogger(__name__)
+_DEFAULT_CURTAIL_KEY = "default"
 
 
 class PointsControl:
@@ -269,6 +270,7 @@ class ProjectPoints:
         self._tech = str(tech)
         self._h = self._d = None
         self._curtailment = self._parse_curtailment(curtailment)
+        self._check_points_curtailment_mapping()
 
     def __getitem__(self, site):
         """Get the SAM config ID and dictionary for the requested site.
@@ -799,6 +801,63 @@ class ProjectPoints:
                 "A wild config has appeared! Requested config keys for "
                 "ProjectPoints are {} and previous config keys are {}".format(
                     list(configs), list(sam_configs)
+                )
+            )
+            logger.error(msg)
+            raise ConfigError(msg)
+
+    def _check_points_curtailment_mapping(self):
+        """
+        Check to ensure the project points (df) and curtailment configs
+        are compatible. Update as necessary or break
+        """
+        if not self.curtailment:
+            return
+
+        # Extract unique config references from project_points DataFrame
+        df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+        curtail_configs = self.curtailment
+
+        # Checks to make sure that the same number of curtailment config
+        # files as references in project_points DataFrame
+        if len(df_configs) > len(curtail_configs):
+            msg = (
+                "Points references {} curtailment configs while only "
+                "{} curtailment configs were provided!".format(
+                    len(df_configs), len(curtail_configs)
+                )
+            )
+            logger.error(msg)
+            raise ConfigError(msg)
+
+        if len(df_configs) == 1 and df_configs[0] is None:
+            self._df[SiteDataField.CURTAILMENT] = list(curtail_configs)[0]
+            df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+
+        # Check to see if config references in project_points DataFrame
+        # are valid file paths, if compare with curtailment configs
+        # and update as needed
+        configs = {}
+        for config in df_configs:
+            if config is None:
+                continue
+            if os.path.isfile(config):
+                configs[config] = config
+            elif config in curtail_configs:
+                configs[config] = curtail_configs[config]
+            else:
+                msg = ("Curtailment {} does not map to a valid "
+                       "configuration file".format(config))
+                logger.error(msg)
+                raise ConfigError(msg)
+
+        # If configs has any keys that are not in curtailment configs then
+        # something really weird happened so raise an error.
+        if any(set(configs) - set(curtail_configs)):
+            msg = (
+                "A wild config has appeared! Requested config keys for "
+                "ProjectPoints are {} and previous config keys are {}".format(
+                    list(configs), list(curtail_configs)
                 )
             )
             logger.error(msg)
