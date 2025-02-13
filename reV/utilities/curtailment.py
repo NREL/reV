@@ -19,7 +19,7 @@ from rex.utilities.utilities import check_tz, get_lat_lon_cols
 logger = logging.getLogger(__name__)
 
 
-def curtail(resource, curtailment, random_seed=0):
+def curtail(resource, curtailment, sites, random_seed=0):
     """Curtail the SAM wind resource object based on project points.
 
     Parameters
@@ -28,6 +28,8 @@ def curtail(resource, curtailment, random_seed=0):
         SAM resource object for WIND resource.
     curtailment : reV.config.curtailment.Curtailment
         Curtailment config object.
+    sites : list
+        List of GID's to apply this curtailment to.
     random_seed : int | NoneType
         Number to seed the numpy random number generator. Used to generate
         reproducable psuedo-random results if the probability of curtailment
@@ -124,6 +126,6 @@ def curtail(resource, curtailment, random_seed=0):
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply curtailment multiplier directly to resource
-    resource.curtail_windspeed(resource.sites, curtail_mult)
+    resource.curtail_windspeed(sites, curtail_mult)
 
     return resource
