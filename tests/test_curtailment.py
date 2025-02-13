@@ -61,7 +61,8 @@ def test_cf_curtailment(year, site):
         TESTDATADIR, "SAM/wind_gen_standard_losses_0.json"
     )
 
-    curtailment = os.path.join(TESTDATADIR, "config/", "curtailment.json")
+    curt_fn = "curtailment.json"
+    curtailment = os.path.join(TESTDATADIR, "config", curt_fn)
     points = slice(site, site + 1)
 
     # run reV 2.0 generation
@@ -76,7 +77,8 @@ def test_cf_curtailment(year, site):
         scale_outputs=True,
     )
     gen.run(max_workers=1)
-    results, check_curtailment = test_res_curtailment(year, site=site)
+    results, check_curtailment = test_res_curtailment(year, site=site,
+                                                      curt_fn=curt_fn)
     results["cf_profile"] = gen.out["cf_profile"].flatten()
 
     # was capacity factor NOT curtailed?
@@ -199,10 +201,12 @@ def test_random(year, site):
     assert diff <= 2, msg
 
 
-@pytest.mark.parametrize(("year", "site"), [("2012", 50), ("2013", 50)])
-def test_res_curtailment(year, site):
+@pytest.mark.parametrize("year", ["2012", "2013"])
+@pytest.mark.parametrize("site", [50])
+@pytest.mark.parametrize("curt_fn", ["curtailment.json"])
+def test_res_curtailment(year, site, curt_fn):
     """Test wind resource curtailment."""
-    out, non_curtailed_res, pp = get_curtailment(year)
+    out, non_curtailed_res, pp = get_curtailment(year, curt_fn=curt_fn)
     curtailment_config = list(pp.curtailment.values())[0]
 
     sza = SolarPosition(
@@ -325,7 +329,8 @@ def test_points_missing_curtailment():
     res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
     sam_files = os.path.join(TESTDATADIR,
                              "SAM/wind_gen_standard_losses_0.json")
-    curtail_config = os.path.join(TESTDATADIR, "config/", "curtailment.json")
+    curt_fn = "curtailment.json"
+    curtail_config = os.path.join(TESTDATADIR, "config", curt_fn)
 
     curtailment = {"test_c1": curtail_config, "test_c2": curtail_config}
     points = slice(0, 1)
@@ -344,7 +349,7 @@ def test_points_missing_curtailment():
     for msg in expected_msgs:
         assert any(msg in str(record) for record in warn)
 
-    df, __ = test_res_curtailment(2012, 0)
+    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
     assert np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
 
 
