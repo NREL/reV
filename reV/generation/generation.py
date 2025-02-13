@@ -352,9 +352,9 @@ class Gen(BaseGen):
         curtailment : dict | str, optional
             Inputs for curtailment parameters, which can be:
 
-                - Dictionary mapping curtailment "names" to strings
-                  (paths) or explicit namespaces of curtailment
-                  variables (dicts)
+                - Dictionary mapping curtailment "names" to A) strings
+                  (paths) or B) explicit namespaces of curtailment
+                  configurations (dicts)
                 - Single pointer to curtailment config file with path
                   (str). In this case, the curtailment config is given
                   a "default" name.
