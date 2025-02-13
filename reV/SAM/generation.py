@@ -524,12 +524,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         """
         # initialize output dictionary
         out = {}
+        points = points_control.project_points
 
         # Get the RevPySam resource object
         resources = RevPySam.get_sam_res(
             res_file,
-            points_control.project_points,
-            points_control.project_points.tech,
+            points,
+            points.tech,
             output_request=output_request,
             gid_map=gid_map,
             lr_res_file=lr_res_file,
@@ -538,14 +539,15 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         )
 
         # run resource through curtailment filter if applicable
-        curtailment = points_control.project_points.curtailment
+        curtailment = points.curtailment
         if curtailment is not None:
-            resources = curtail(
-                resources, curtailment, random_seed=curtailment.random_seed
-            )
+            for curtail_type, curtail_config in curtailment.items():
+                curtail_sites = points.get_sites_from_curtailment(curtail_type)
+                resources = curtail(resources, curtail_config, curtail_sites,
+                                    random_seed=curtail_config.random_seed)
 
         # iterate through project_points gen_gid values
-        for gen_gid in points_control.project_points.sites:
+        for gen_gid in points.sites:
             # Lookup the resource gid if there's a mapping and get the resource
             # data from the SAMResource object using the res_gid.
             res_gid = gen_gid if gid_map is None else gid_map[gen_gid]
@@ -555,7 +557,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             if drop_leap:
                 site_res_df = cls.drop_leap(site_res_df)
 
-            _, inputs = points_control.project_points[gen_gid]
+            _, inputs = points[gen_gid]
 
             # get resource data pass-throughs and resource means
             res_outs, out_req_cleaned = cls._get_res(
