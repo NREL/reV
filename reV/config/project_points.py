@@ -913,6 +913,28 @@ class ProjectPoints:
 
         return list(sites)
 
+    def get_sites_from_curtailment(self, curtailment):
+        """Get a site list that corresponds to a curtailment key.
+
+        Parameters
+        ----------
+        curtailment : str
+            Curtailment configuration ID associated with sites.
+
+        Returns
+        -------
+        sites : list
+            List of sites associated with the requested curtailment ID.
+            If the curtailment ID is not recognized, an empty list is
+            returned.
+        """
+        sites = self.df.loc[
+            (self.df[SiteDataField.CURTAILMENT] == curtailment),
+            SiteDataField.GID
+        ].values
+
+        return list(sites)
+
     @classmethod
     def split(cls, i0, i1, project_points):
         """Return split instance of a ProjectPoints instance w/ site subset.
