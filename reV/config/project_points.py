@@ -690,18 +690,29 @@ class ProjectPoints:
 
         Returns
         -------
-        curtailments : NoneType | reV.config.curtailment.Curtailment
-            None if no curtailment, reV curtailment config object if
-            curtailment is being assessed.
+        curtailments : NoneType | dict
+            None if no curtailment, dictionary of reV curtailment config
+            objects if curtailment is being assessed.
         """
-        if isinstance(curtailment_input, (str, dict)):
-            # pointer to config file or explicit input namespace,
-            # instantiate curtailment config object
-            curtailment = Curtailment(curtailment_input)
+        if curtailment_input is None:
+            return None
 
-        elif isinstance(curtailment_input, (Curtailment, type(None))):
-            # pre-initialized curtailment object or no curtailment (None)
-            curtailment = curtailment_input
+        if isinstance(curtailment_input, str):
+            # pointer to config file - instantiate curtailment config
+            # object under default key
+            curtailment = {
+                _DEFAULT_CURTAIL_KEY: Curtailment(curtailment_input)}
+
+        elif isinstance(curtailment_input, dict):
+            # pointer to dict of configs - instantiate all
+            # curtailment config objects
+            curtailment = {k: Curtailment(v)
+                           for k, v in curtailment_input.items()}
+
+        elif isinstance(curtailment_input, Curtailment):
+            # pre-initialized curtailment object - instantiate
+            # curtailment config object under default key
+            curtailment = {_DEFAULT_CURTAIL_KEY: curtailment_input}
 
         else:
             curtailment = None
