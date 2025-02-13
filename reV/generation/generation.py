@@ -350,14 +350,18 @@ class Gen(BaseGen):
 
             By default, ``None``.
         curtailment : dict | str, optional
-            Inputs for curtailment parameters, which can be:
+            Input for curtailment parameters, which can be one of:
 
-                - Dictionary mapping curtailment "names" to A) strings
-                  (paths) or B) explicit namespaces of curtailment
-                  configurations (dicts)
-                - Single pointer to curtailment config file with path
-                  (str). In this case, the curtailment config is given
-                  a "default" name.
+                - Single string representing path to curtailment config
+                  file. In this case, the curtailment config is given
+                  the name "default" and applied everywhere (if the
+                  project points "curtailment" column is missing or all
+                  ``None``) or only where the project points
+                  "curtailment" column contains a value of "default"
+                - Dictionary mapping user-defined curtailment "names" to
+                  either A) strings (paths) or B) explicit namespaces of
+                  curtailment configurations (dicts). Mixing these two
+                  _is_ allowed.
 
             The allowed key-value input pairs in the curtailment
             configuration are documented as properties of the
