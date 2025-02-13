@@ -43,7 +43,8 @@ def curtail(resource, curtailment, sites, random_seed=0):
         where curtailment is in effect.
     """
 
-    shape = resource.shape
+    shape = (resource.shape[0], len(sites))
+    site_pos = [resource.sites.index(id) for id in sites]
 
     # start with curtailment everywhere
     curtail_mult = np.zeros(shape)
@@ -76,10 +77,10 @@ def curtail(resource, curtailment, sites, random_seed=0):
         raise KeyError(msg)
 
     # Curtail resource when curtailment is possible and is nighttime
-    lat_lon_cols = get_lat_lon_cols(resource.meta)
-    solar_zenith_angle = SolarPosition(
-        resource.time_index,
-        resource.meta[lat_lon_cols].values).zenith
+    meta = resource["meta", sites]
+    lat_lon_cols = get_lat_lon_cols(meta)
+    solar_zenith_angle = SolarPosition(resource.time_index,
+                                       meta[lat_lon_cols].values).zenith
     mask = (solar_zenith_angle > curtailment.dawn_dusk)
     curtail_mult = np.where(mask, curtail_mult, 1)
 
@@ -94,28 +95,29 @@ def curtail(resource, curtailment, sites, random_seed=0):
                          list(resource._res_arrays.keys())),
                  HandlerWarning)
         else:
-            mask = (resource._res_arrays['precipitationrate']
+            mask = (resource._res_arrays['precipitationrate'][:, site_pos]
                     < curtailment.precipitation)
             curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and temperature is high
     if curtailment.temperature is not None:
-        mask = (resource._res_arrays['temperature']
+        mask = (resource._res_arrays['temperature'][:, site_pos]
                 > curtailment.temperature)
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not that windy
     if curtailment.wind_speed is not None:
-        mask = (resource._res_arrays['windspeed']
+        mask = (resource._res_arrays['windspeed'][:, site_pos]
                 < curtailment.wind_speed)
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     if curtailment.equation is not None:
         # pylint: disable=W0123,W0612
-        wind_speed = resource._res_arrays['windspeed']
-        temperature = resource._res_arrays['temperature']
+        wind_speed = resource._res_arrays['windspeed'][:, site_pos]
+        temperature = resource._res_arrays['temperature'][:, site_pos]
         if 'precipitationrate' in resource._res_arrays:
-            precipitation_rate = resource._res_arrays['precipitationrate']
+            precipitation_rate = (
+                resource._res_arrays['precipitationrate'][:, site_pos])
         mask = eval(curtailment.equation)
         curtail_mult = np.where(mask, curtail_mult, 1)
 
