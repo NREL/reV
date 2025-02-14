@@ -190,7 +190,10 @@ class SamResourceRetriever:
             kwargs["icing"] = project_points.sam_config_obj.icing
             if (
                 project_points.curtailment is not None
-                and project_points.curtailment.precipitation
+                and any(
+                    config.precipitation
+                    for config in project_points.curtailment.values()
+                )
             ):
                 # make precip rate available for curtailment analysis
                 kwargs["precip_rate"] = True
