@@ -1,0 +1,35 @@
+reV.SAM
+=======
+
+.. automodule:: reV.SAM
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   reV.SAM.SAM
+   reV.SAM.defaults
+   reV.SAM.econ
+   reV.SAM.generation
+   reV.SAM.version_checker
+   reV.SAM.windbos
+

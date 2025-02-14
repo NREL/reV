@@ -1,0 +1,38 @@
+reV.bespoke.pack\_turbs
+=======================
+
+.. automodule:: reV.bespoke.pack_turbs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      smallest_area_with_tiebreakers
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      PackTurbines
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,33 @@
+reV.rep\_profiles.rep\_profiles.RepProfiles
+===========================================
+
+.. currentmodule:: reV.rep_profiles.rep_profiles
+
+.. autoclass:: RepProfiles
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RepProfiles.run
+      ~RepProfiles.save_profiles
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RepProfiles.meta
+      ~RepProfiles.profiles
+      ~RepProfiles.time_index
+   
+   

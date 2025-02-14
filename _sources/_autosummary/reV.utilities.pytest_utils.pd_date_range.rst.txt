@@ -1,0 +1,6 @@
+reV.utilities.pytest\_utils.pd\_date\_range
+===========================================
+
+.. currentmodule:: reV.utilities.pytest_utils
+
+.. autofunction:: pd_date_range

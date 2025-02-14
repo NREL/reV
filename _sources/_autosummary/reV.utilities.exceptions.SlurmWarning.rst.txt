@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SlurmWarning
+=====================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SlurmWarning

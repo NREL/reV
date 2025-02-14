@@ -1,0 +1,6 @@
+reV.losses.utils.full\_month\_name\_from\_abbr
+==============================================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: full_month_name_from_abbr
