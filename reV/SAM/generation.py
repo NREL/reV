@@ -1809,11 +1809,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
-        """Set the costs based on gross plant generation."""
-        plant_size_kw = (
-            self.sam_sys_inputs["resource_potential"]
-            / self._RESOURCE_POTENTIAL_MULT
-        ) * 1000
+        """Set the costs based on plant size"""
+        plant_size_kw = self.sam_sys_inputs["nameplate"]
 
         cc_per_kw = self.sam_sys_inputs.pop("capital_cost_per_kw", None)
         if cc_per_kw is not None:
