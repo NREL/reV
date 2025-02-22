@@ -530,6 +530,14 @@ class Sam:
             for a in dir(obj)
             if not a.startswith("__") and a not in self.IGNORE_ATTRS
         ]
+        try:
+            # adjustment factors are "dynamic" as of PySAM 5+
+            # Not found by dir() function, so must check for them
+            # explicitly
+            __ = obj.AdjustmentFactors
+            attrs.append("AdjustmentFactors")
+        except AttributeError:
+            pass
         return attrs
 
     def execute(self):
