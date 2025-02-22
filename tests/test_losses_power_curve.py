@@ -66,7 +66,7 @@ def real_power_curve():
     return PowerCurve(wind_speed, generation)
 
 
-@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('generic_losses', [0, 5])
 @pytest.mark.parametrize('target_losses', [0, 10, 50])
 @pytest.mark.parametrize('transformation', TRANSFORMATIONS)
 def test_power_curve_losses(generic_losses, target_losses, transformation):
@@ -86,10 +86,10 @@ def test_power_curve_losses(generic_losses, target_losses, transformation):
         assert np.allclose(gen_profiles, gen_profiles_with_losses)
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
+    assert abs((1 - annual_gen_ratio) * 100 - target_losses) < 0.1
 
 
-@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('generic_losses', [0, 5])
 def test_power_curve_losses_site_specific(generic_losses):
     """Test full gen run with scheduled losses."""
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
@@ -106,7 +106,7 @@ def test_power_curve_losses_site_specific(generic_losses):
     assert (gen_profiles - gen_profiles_with_losses > 0).any()
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
+    assert abs((1 - annual_gen_ratio) * 100 - target_losses) < 0.1
 
 
 def _run_gen_with_and_without_losses(
@@ -191,13 +191,13 @@ def _make_site_data_df(site_data):
 def test_power_curve_losses_witch_scheduled_outages():
     """Test full gen run with scheduled losses."""
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses=0.2,
+        generic_losses=5,
         target_losses=20, transformation='exponential_stretching',
         include_outages=True
     )
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert (1 - annual_gen_ratio) * 100 > 21  # 1% tolerance
+    assert abs(1 - annual_gen_ratio) * 100 > 20.1  # 0.1% tolerance
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
