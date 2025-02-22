@@ -606,6 +606,7 @@ class ScheduledLossesMixin:
 
         final_hourly_mult = hourly_mult * user_hourly_mult
         self.sam_sys_inputs['hourly'] = (1 - final_hourly_mult) * 100
+        self.sam_sys_inputs['en_hourly'] = 1
 
     @property
     def outage_seed(self):
