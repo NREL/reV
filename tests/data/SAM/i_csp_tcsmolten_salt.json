@@ -34,7 +34,7 @@
   "_sco2_eta_c": 1e+38,
   "_sco2_eta_t": 1e+38,
   "_sco2_recup_eff_max": 1e+38,
-  "adjust_constant": 4,
+  "adjust:constant": 4,
   "analysis_period": 25,
   "aux_par": 0.023000000044703484,
   "aux_par_0": 0.4830000102519989,
