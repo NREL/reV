@@ -570,8 +570,13 @@ class Sam:
         if "." in key:
             key = key.replace(".", "_")
 
-        if ":constant" in key and "adjust:" in key:
-            key = key.replace("adjust:", "")
+        if "adjust:" in key:
+            msg = ("The 'adjust:' syntax is deprecated in PySAm 6+. Please"
+                   "use 'adjust_' instead (e.g. 'adjust:hourly' -> "
+                   "'adjust_hourly')")
+            logger.warning(msg)
+            warn(msg)
+            key = key.replace(":", "_")
 
         if isinstance(value, str) and "[" in value and "]" in value:
             try:
