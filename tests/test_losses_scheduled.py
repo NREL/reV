@@ -523,6 +523,7 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
+    assert 'en_hourly' in mixin.sam_sys_inputs
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():
