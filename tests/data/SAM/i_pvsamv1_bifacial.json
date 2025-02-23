@@ -19,7 +19,7 @@
   "6par_vmp": 30,
   "6par_voc": 37,
   "acwiring_loss": 1,
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "albedo": [
     0.2,
     0.2,
@@ -67,7 +67,7 @@
   "cec_transient_thermal_model_unit_mass": 11.0919,
   "cec_v_mp_ref": 57.3,
   "cec_v_oc_ref": 67.9,
-  "dc_adjust:constant": 0,
+  "dc_adjust_constant": 0,
   "dcoptimizer_loss": 0,
   "en_batt": 0,
   "en_snow_model": 0,

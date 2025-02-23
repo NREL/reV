@@ -311,7 +311,7 @@
     ]
   ],
   "V_wind_max": 20,
-  "adjust:constant": 4,
+  "adjust_constant": 4,
   "alpha_abs": [
     [
       0.9599999785423279,
