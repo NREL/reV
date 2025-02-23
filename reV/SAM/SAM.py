@@ -12,7 +12,7 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
-import PySAM.GenericSystem as generic
+import PySAM.CustomGeneration as generic
 from rex.multi_file_resource import (
     MultiFileNSRDB,
     MultiFileResource,
@@ -439,9 +439,9 @@ class Sam:
 
         Returns
         -------
-        PySAM.GenericSystem
+        PySAM.CustomGeneration
         """
-        obj = cls.PYSAM.default("GenericSystemNone")
+        obj = cls.PYSAM.default("CustomGenerationProfileNone")
         obj.execute()
 
         return obj
