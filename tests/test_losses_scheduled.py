@@ -348,7 +348,7 @@ def _run_gen_with_and_without_losses(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -376,7 +376,7 @@ def _run_gen_with_and_without_losses(
 
     gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
               sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
@@ -431,7 +431,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         outages = copy.deepcopy(outages)
@@ -444,7 +444,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -479,7 +479,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -492,7 +492,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -505,7 +505,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_third_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)

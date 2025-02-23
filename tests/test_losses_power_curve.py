@@ -146,7 +146,7 @@ def _run_gen_with_and_without_losses(
         gen = Gen('windpower', REV_POINTS, sam_fp, RES_FILE,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
 
     # undo UTC array rolling
@@ -166,7 +166,7 @@ def _run_gen_with_and_without_losses(
 
     gen = Gen('windpower', pc, sam_file, RES_FILE,
               output_request=('gen_profile'), sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
 
     for ind, row in gen.meta.iterrows():
@@ -589,7 +589,7 @@ def test_power_curve_losses_with_generic_losses(transformation):
         gen = Gen('windpower', REV_POINTS, sam_fp, RES_FILE,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
 
     # undo UTC array rolling
@@ -605,7 +605,7 @@ def test_power_curve_losses_with_generic_losses(transformation):
     del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
     gen = Gen('windpower', pc, sam_file, RES_FILE,
               output_request=('gen_profile'), sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
 
     for ind, row in gen.meta.iterrows():
