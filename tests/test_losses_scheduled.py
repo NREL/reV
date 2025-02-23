@@ -165,7 +165,8 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
             )
 
             if not outage.allow_outage_overlap or outage_percentage == 100:
-                min_num_expected_outage_hours = (
+                min_num_expected_outage_hours = max(
+                    0,
                     outage.count * outage.duration
                     - zero_gen_in_comparison_count
                 )
