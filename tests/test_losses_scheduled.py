@@ -201,7 +201,10 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
                 <= num_outage_hours
                 <= max_num_expected_outage_hours
             )
-            assert num_outage_hours_meet_expectations
+            err_msg = (f"{min_num_expected_outage_hours=}, "
+                       f"{num_outage_hours=}, "
+                       f"{max_num_expected_outage_hours=}")
+            assert num_outage_hours_meet_expectations, err_msg
 
         total_expected_outage = sum(
             outage.count * outage.duration * outage.percentage_of_capacity_lost
