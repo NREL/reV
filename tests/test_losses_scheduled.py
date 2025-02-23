@@ -336,6 +336,7 @@ def _run_gen_with_and_without_losses(
 
         if haf is not None:
             sam_config['hourly'] = haf.tolist()
+            sam_config['en_hourly'] = 1
 
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
@@ -370,6 +371,7 @@ def _run_gen_with_and_without_losses(
 
     if haf is not None:
         pc.project_points.sam_inputs[sam_file]['hourly'] = haf.tolist()
+        pc.project_points.sam_inputs[sam_file]['en_hourly'] = 1
 
     gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
               sites_per_worker=3)
