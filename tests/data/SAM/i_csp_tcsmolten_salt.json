@@ -45175,7 +45175,6 @@
   "sf_adjust_constant": 0,
   "sf_excess": 1,
   "site_spec_cost": 16,
-  "solar_resource_file": "./data/SAM/USA CA Daggett (TMY2).csv",
   "solarm": 2.4000000953674316,
   "startup_frac": 0.5,
   "startup_time": 0.5,
