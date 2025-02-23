@@ -27,7 +27,6 @@ from reV.SAM.generation import (
     PvWattsv8,
     SolarWaterHeat,
     TcsMoltenSalt,
-    TroughPhysicalHeat,
     WindPower,
 )
 from reV.utilities import ModuleName, ResourceMetaField, SupplyCurveField
@@ -68,7 +67,6 @@ class Gen(BaseGen):
         "pvwattsv8": PvWattsv8,
         "solarwaterheat": SolarWaterHeat,
         "tcsmoltensalt": TcsMoltenSalt,
-        "troughphysicalheat": TroughPhysicalHeat,
         "windpower": WindPower,
     }
 
@@ -675,7 +673,7 @@ class Gen(BaseGen):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,

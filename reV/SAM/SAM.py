@@ -52,7 +52,6 @@ class SamResourceRetriever:
         "pvsamv1": SolarResource,
         "tcsmoltensalt": SolarResource,
         "solarwaterheat": SolarResource,
-        "troughphysicalheat": SolarResource,
         "lineardirectsteam": SolarResource,
         "windpower": WindResource,
         "mhkwave": WaveResource,

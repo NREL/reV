@@ -368,7 +368,7 @@ class BaseGen(ABC):
         -------
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam, econ)
+            solarwaterheat, lineardirectsteam, geothermal, econ)
             The string should be lower-cased with spaces and _ removed.
         """
         return self.project_points.tech
@@ -540,7 +540,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -622,7 +622,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -783,7 +783,7 @@ class BaseGen(ABC):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
