@@ -524,10 +524,10 @@ class ScheduledLossesMixin:
         information is expected to be a list of dictionaries containing
         outage specifications. See :class:`Outage` for a description of
         the specifications allowed for each outage. The scheduled losses
-        are passed to SAM via the ``hourly`` key to signify which hourly
-        capacity factors should be adjusted with outage losses. If no
-        outage info is specified in ``sam_sys_inputs``, no scheduled
-        losses are added.
+        are passed to SAM via the ``adjust_hourly`` key to signify which
+        hourly capacity factors should be adjusted with outage losses.
+        If no outage info is specified in ``sam_sys_inputs``, no
+        scheduled losses are added.
 
         Parameters
         ----------
@@ -543,13 +543,14 @@ class ScheduledLossesMixin:
 
         Notes
         -----
-        The scheduled losses are passed to SAM via the ``hourly`` key to
-        signify which hourly capacity factors should be adjusted with
-        outage losses. If the user specifies other hourly adjustment
-        factors via the ``hourly`` key, the effect is combined. For
-        example, if the user inputs a 33% hourly adjustment factor and
-        reV schedules an outage for 70% of the farm down for the same
-        hour, then the resulting adjustment factor is
+        The scheduled losses are passed to SAM via the ``adjust_hourly``
+        key to signify which hourly capacity factors should be adjusted
+        with outage losses. If the user specifies other hourly
+        adjustment factors via the ``adjust_hourly`` key, the effect is
+        combined. For example, if the user inputs a 33% hourly
+        adjustment factor and reV schedules an outage for 70% of the
+        farm down for the same hour, then the resulting adjustment
+        factor is
 
             .. math: 1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
 
@@ -574,7 +575,7 @@ class ScheduledLossesMixin:
         self._add_outages_to_sam_inputs(hourly_outages)
 
         logger.debug("Hourly adjustment factors after scheduled outages: {}"
-                     .format(list(self.sam_sys_inputs['hourly'])))
+                     .format(list(self.sam_sys_inputs['adjust_hourly'])))
 
     def _user_outage_input(self):
         """Get outage and seed info from config. """
@@ -603,12 +604,13 @@ class ScheduledLossesMixin:
         hourly_mult = 1 - outages / 100
         hourly_mult = self._fix_pysam_bug(hourly_mult)
 
-        user_hourly_input = self.sam_sys_inputs.pop('hourly', [0] * 8760)
+        user_hourly_input = self.sam_sys_inputs.pop('adjust_hourly',
+                                                    [0] * 8760)
         user_hourly_mult = 1 - np.array(user_hourly_input) / 100
 
         final_hourly_mult = hourly_mult * user_hourly_mult
-        self.sam_sys_inputs['hourly'] = (1 - final_hourly_mult) * 100
-        self.sam_sys_inputs['en_hourly'] = 1
+        self.sam_sys_inputs['adjust_hourly'] = (1 - final_hourly_mult) * 100
+        self.sam_sys_inputs['adjust_en_hourly'] = 1
 
     @property
     def outage_seed(self):

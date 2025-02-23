@@ -1122,8 +1122,9 @@ def test_bespoke_run_with_scheduled_losses():
                 ],
             }
         ]
-        sam_inputs["hourly"] = [0] * 8760  # only needed for testing
-        output_request = ("system_capacity", "cf_mean", "cf_profile", "hourly")
+        sam_inputs["adjust_hourly"] = [0] * 8760  # only needed for testing
+        output_request = ("system_capacity", "cf_mean", "cf_profile",
+                          "adjust_hourly")
 
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  sam_inputs,
@@ -1150,7 +1151,7 @@ def test_bespoke_run_with_scheduled_losses():
         assert out[dset] > out_losses[dset]
 
     assert not np.allclose(
-        out_losses["hourly-2012"], out_losses["hourly-2013"]
+        out_losses["adjust_hourly-2012"], out_losses["adjust_hourly-2013"]
     )
 
 
