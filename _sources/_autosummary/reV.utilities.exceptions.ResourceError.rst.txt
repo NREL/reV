@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ResourceError
+======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ResourceError

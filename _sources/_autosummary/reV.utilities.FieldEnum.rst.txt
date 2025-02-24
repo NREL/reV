@@ -1,0 +1,25 @@
+reV.utilities.FieldEnum
+=======================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: FieldEnum
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FieldEnum.map_to
+      ~FieldEnum.map_from
+   
+   
+
+   
+   
+   

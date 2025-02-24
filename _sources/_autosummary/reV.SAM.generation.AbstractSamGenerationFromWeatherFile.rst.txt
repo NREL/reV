@@ -1,0 +1,65 @@
+reV.SAM.generation.AbstractSamGenerationFromWeatherFile
+=======================================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: AbstractSamGenerationFromWeatherFile
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSamGenerationFromWeatherFile.add_scheduled_losses
+      ~AbstractSamGenerationFromWeatherFile.annual_energy
+      ~AbstractSamGenerationFromWeatherFile.assign_inputs
+      ~AbstractSamGenerationFromWeatherFile.cf_mean
+      ~AbstractSamGenerationFromWeatherFile.cf_profile
+      ~AbstractSamGenerationFromWeatherFile.check_resource_data
+      ~AbstractSamGenerationFromWeatherFile.collect_outputs
+      ~AbstractSamGenerationFromWeatherFile.default
+      ~AbstractSamGenerationFromWeatherFile.drop_leap
+      ~AbstractSamGenerationFromWeatherFile.energy_yield
+      ~AbstractSamGenerationFromWeatherFile.ensure_res_len
+      ~AbstractSamGenerationFromWeatherFile.execute
+      ~AbstractSamGenerationFromWeatherFile.gen_profile
+      ~AbstractSamGenerationFromWeatherFile.get_sam_res
+      ~AbstractSamGenerationFromWeatherFile.get_time_interval
+      ~AbstractSamGenerationFromWeatherFile.make_datetime
+      ~AbstractSamGenerationFromWeatherFile.outputs_to_utc_arr
+      ~AbstractSamGenerationFromWeatherFile.reV_run
+      ~AbstractSamGenerationFromWeatherFile.run
+      ~AbstractSamGenerationFromWeatherFile.run_gen_and_econ
+      ~AbstractSamGenerationFromWeatherFile.set_resource_data
+      ~AbstractSamGenerationFromWeatherFile.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSamGenerationFromWeatherFile.DIR
+      ~AbstractSamGenerationFromWeatherFile.IGNORE_ATTRS
+      ~AbstractSamGenerationFromWeatherFile.MODULE
+      ~AbstractSamGenerationFromWeatherFile.OUTAGE_CONFIG_KEY
+      ~AbstractSamGenerationFromWeatherFile.OUTAGE_SEED_CONFIG_KEY
+      ~AbstractSamGenerationFromWeatherFile.PYSAM_WEATHER_TAG
+      ~AbstractSamGenerationFromWeatherFile.WF_META_DROP_COLS
+      ~AbstractSamGenerationFromWeatherFile.attr_dict
+      ~AbstractSamGenerationFromWeatherFile.has_timezone
+      ~AbstractSamGenerationFromWeatherFile.input_list
+      ~AbstractSamGenerationFromWeatherFile.meta
+      ~AbstractSamGenerationFromWeatherFile.module
+      ~AbstractSamGenerationFromWeatherFile.outage_seed
+      ~AbstractSamGenerationFromWeatherFile.pysam
+      ~AbstractSamGenerationFromWeatherFile.site
+   
+   

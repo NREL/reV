@@ -1,0 +1,36 @@
+reV.supply\_curve.points.AbstractSupplyCurvePoint
+=================================================
+
+.. currentmodule:: reV.supply_curve.points
+
+.. autoclass:: AbstractSupplyCurvePoint
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSupplyCurvePoint.get_agg_slices
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSupplyCurvePoint.cols
+      ~AbstractSupplyCurvePoint.gid
+      ~AbstractSupplyCurvePoint.resolution
+      ~AbstractSupplyCurvePoint.rows
+      ~AbstractSupplyCurvePoint.sc_col_ind
+      ~AbstractSupplyCurvePoint.sc_point_gid
+      ~AbstractSupplyCurvePoint.sc_row_ind
+   
+   

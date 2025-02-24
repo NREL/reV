@@ -1,0 +1,32 @@
+reV.losses
+==========
+
+.. automodule:: reV.losses
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   reV.losses.power_curve
+   reV.losses.scheduled
+   reV.losses.utils
+

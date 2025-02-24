@@ -1,0 +1,37 @@
+reV.rep\_profiles.rep\_profiles.RepresentativeMethods
+=====================================================
+
+.. currentmodule:: reV.rep_profiles.rep_profiles
+
+.. autoclass:: RepresentativeMethods
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RepresentativeMethods.mae
+      ~RepresentativeMethods.mbe
+      ~RepresentativeMethods.meanoid
+      ~RepresentativeMethods.medianoid
+      ~RepresentativeMethods.nargmin
+      ~RepresentativeMethods.rmse
+      ~RepresentativeMethods.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RepresentativeMethods.err_methods
+      ~RepresentativeMethods.rep_methods
+   
+   

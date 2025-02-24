@@ -1,0 +1,6 @@
+reV.bespoke.plotting\_functions.get\_xy
+=======================================
+
+.. currentmodule:: reV.bespoke.plotting_functions
+
+.. autofunction:: get_xy

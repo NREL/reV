@@ -1,0 +1,32 @@
+reV.utilities.ResourceMetaField
+===============================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: ResourceMetaField
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ResourceMetaField.GID
+      ~ResourceMetaField.LATITUDE
+      ~ResourceMetaField.LONGITUDE
+      ~ResourceMetaField.ELEVATION
+      ~ResourceMetaField.TIMEZONE
+      ~ResourceMetaField.COUNTY
+      ~ResourceMetaField.STATE
+      ~ResourceMetaField.COUNTRY
+      ~ResourceMetaField.OFFSHORE
+   
+   

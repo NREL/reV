@@ -1,0 +1,33 @@
+reV.supply\_curve.tech\_mapping.TechMapping
+===========================================
+
+.. currentmodule:: reV.supply_curve.tech_mapping
+
+.. autoclass:: TechMapping
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TechMapping.map_resource
+      ~TechMapping.map_resource_gids
+      ~TechMapping.run
+      ~TechMapping.save_tech_map
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TechMapping.distance_threshold
+   
+   

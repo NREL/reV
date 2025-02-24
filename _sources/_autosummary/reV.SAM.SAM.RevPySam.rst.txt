@@ -1,0 +1,47 @@
+reV.SAM.SAM.RevPySam
+====================
+
+.. currentmodule:: reV.SAM.SAM
+
+.. autoclass:: RevPySam
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RevPySam.assign_inputs
+      ~RevPySam.collect_outputs
+      ~RevPySam.default
+      ~RevPySam.drop_leap
+      ~RevPySam.ensure_res_len
+      ~RevPySam.execute
+      ~RevPySam.get_sam_res
+      ~RevPySam.get_time_interval
+      ~RevPySam.make_datetime
+      ~RevPySam.outputs_to_utc_arr
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RevPySam.DIR
+      ~RevPySam.IGNORE_ATTRS
+      ~RevPySam.MODULE
+      ~RevPySam.attr_dict
+      ~RevPySam.input_list
+      ~RevPySam.meta
+      ~RevPySam.module
+      ~RevPySam.pysam
+      ~RevPySam.site
+   
+   
