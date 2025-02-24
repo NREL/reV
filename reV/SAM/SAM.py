@@ -52,7 +52,6 @@ class SamResourceRetriever:
         "pvsamv1": SolarResource,
         "tcsmoltensalt": SolarResource,
         "solarwaterheat": SolarResource,
-        "troughphysicalheat": SolarResource,
         "lineardirectsteam": SolarResource,
         "windpower": WindResource,
         "mhkwave": WaveResource,
@@ -405,6 +404,14 @@ class Sam:
             )
             logger.exception(msg)
             raise SAMInputError(msg)
+
+        if (key == "total_installed_cost" and isinstance(value, str)
+            and value.casefold() == "windbos"):
+            # "windbos" is a special reV key to tell reV to compute
+            # total installed costs using WindBOS module. If detected,
+            # don't try to set it as a PySAM attribute
+            return
+
         self.sam_sys_inputs[key] = value
         group = self._get_group(key, outputs=False)
         try:
@@ -522,6 +529,14 @@ class Sam:
             for a in dir(obj)
             if not a.startswith("__") and a not in self.IGNORE_ATTRS
         ]
+        try:
+            # adjustment factors are "dynamic" as of PySAM 5+
+            # Not found by dir() function, so must check for them
+            # explicitly
+            __ = obj.AdjustmentFactors
+            attrs.append("AdjustmentFactors")
+        except AttributeError:
+            pass
         return attrs
 
     def execute(self):

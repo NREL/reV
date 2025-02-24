@@ -11,7 +11,6 @@ import PySAM.Pvsamv1 as PySamDetailedPV
 import PySAM.Windpower as PySamWindPower
 import PySAM.TcsmoltenSalt as PySamCSP
 import PySAM.Swh as PySamSWH
-import PySAM.TroughPhysicalProcessHeat as PySamTPPH
 import PySAM.LinearFresnelDsgIph as PySamLDS
 import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
@@ -48,7 +47,7 @@ class AbstractDefaultFromConfigFile:
             config = json.load(f)
 
         for k, v in config.items():
-            if 'adjust:' in k or'file' in k :
+            if 'adjust:' in k or 'file' in k :
                 continue
             if 'geotherm.cost' in k:
                 k = k.replace(".", "_")
@@ -161,21 +160,6 @@ class DefaultSwh:
                                 'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamSWH.default('SolarWaterHeatingNone')
         obj.Weather.solar_resource_file = res_file
-        obj.execute()
-
-        return obj
-
-
-class DefaultTroughPhysicalProcessHeat:
-    """Class for default parabolic trough process heat"""
-
-    @staticmethod
-    def default():
-        """Get the default PySAM object"""
-        res_file = os.path.join(DEFAULTSDIR,
-                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-        obj = PySamTPPH.default('PhysicalTroughIPHNone')
-        obj.Weather.file_name = res_file
         obj.execute()
 
         return obj

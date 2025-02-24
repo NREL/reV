@@ -247,7 +247,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         res_file : str | NoneType
@@ -446,7 +446,7 @@ class ProjectPoints:
         -------
         _tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         """
         return "windpower" if "wind" in self._tech.lower() else self._tech
@@ -1043,7 +1043,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
@@ -1142,7 +1142,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment

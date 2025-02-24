@@ -7,6 +7,7 @@ import warnings
 import json
 
 import numpy as np
+import PySAM
 
 from reV.losses.utils import (convert_to_full_month_names,
                               filter_unknown_month_names,
@@ -600,12 +601,14 @@ class ScheduledLossesMixin:
         """Add the hourly adjustment factors to config, checking user input."""
 
         hourly_mult = 1 - outages / 100
+        hourly_mult = self._fix_pysam_bug(hourly_mult)
 
         user_hourly_input = self.sam_sys_inputs.pop('hourly', [0] * 8760)
         user_hourly_mult = 1 - np.array(user_hourly_input) / 100
 
         final_hourly_mult = hourly_mult * user_hourly_mult
         self.sam_sys_inputs['hourly'] = (1 - final_hourly_mult) * 100
+        self.sam_sys_inputs['en_hourly'] = 1
 
     @property
     def outage_seed(self):
@@ -626,3 +629,19 @@ class ScheduledLossesMixin:
             pass
 
         return self.__base_seed
+
+    def _fix_pysam_bug(self, hourly_mult):
+        """Fix PySAM bug that squares HAF user input"""
+        if getattr(self, "MODULE", "").casefold() != "windpower":
+            return hourly_mult
+
+        bugged_pysam_version = (PySAM.__version__.startswith("5")
+                                or PySAM.__version__.startswith("6"))
+        if not bugged_pysam_version:
+            return hourly_mult
+
+        # Bug in PySAM windpower module that applies HAF twice (i.e.
+        # squares the input values), so we sqrt the desired loss value
+        return np.sqrt(hourly_mult)
+
+

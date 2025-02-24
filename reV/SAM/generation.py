@@ -23,7 +23,6 @@ import PySAM.Pvwattsv7 as PySamPv7
 import PySAM.Pvwattsv8 as PySamPv8
 import PySAM.Swh as PySamSwh
 import PySAM.TcsmoltenSalt as PySamCSP
-import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.Windpower as PySamWindPower
 
 from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
@@ -36,7 +35,6 @@ from reV.SAM.defaults import (
     DefaultPvWattsv8,
     DefaultSwh,
     DefaultTcsMoltenSalt,
-    DefaultTroughPhysicalProcessHeat,
     DefaultWindPower,
 )
 from reV.SAM.econ import LCOE, SingleOwner
@@ -1426,42 +1424,6 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
         return DefaultLinearFresnelDsgIph.default()
 
 
-class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
-    """
-    Trough Physical Process Heat generation
-    """
-
-    MODULE = "troughphysicalheat"
-    PYSAM = PySamTpph
-    PYSAM_WEATHER_TAG = "file_name"
-
-    def cf_mean(self):
-        """Calculate mean capacity factor (fractional) from SAM.
-
-        Returns
-        -------
-        output : float
-            Mean capacity factor (fractional).
-        """
-        net_power = (
-            self["annual_gross_energy"] - self["annual_thermal_consumption"]
-        )  # kW-hr
-        # q_pb_des is in MW, convert to kW-hr
-        name_plate = self["q_pb_design"] * 8760 * 1000
-
-        return net_power / name_plate
-
-    @staticmethod
-    def default():
-        """Get the executed default pysam trough object.
-
-        Returns
-        -------
-        PySAM.TroughPhysicalProcessHeat
-        """
-        return DefaultTroughPhysicalProcessHeat.default()
-
-
 # pylint: disable=line-too-long
 class Geothermal(AbstractSamGenerationFromWeatherFile):
     """reV-SAM geothermal generation.
@@ -1809,11 +1771,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
-        """Set the costs based on gross plant generation."""
-        plant_size_kw = (
-            self.sam_sys_inputs["resource_potential"]
-            / self._RESOURCE_POTENTIAL_MULT
-        ) * 1000
+        """Set the costs based on plant size"""
+        plant_size_kw = self.sam_sys_inputs["nameplate"]
 
         cc_per_kw = self.sam_sys_inputs.pop("capital_cost_per_kw", None)
         if cc_per_kw is not None:
