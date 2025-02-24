@@ -19,6 +19,7 @@ YEAR = 2012
 REV2_POINTS = slice(0, 5)
 SAM_FILE = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
 RES_FILE = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(YEAR)
+LAYOUT_SAM_FILE = TESTDATADIR + '/nrwal/offshore.json'
 RTOL = 0
 ATOL = 0.001
 
@@ -99,6 +100,29 @@ def test_wind_low_temp_cutoff(i):
 
     assert np.allclose(gen_outs, LOW_TEMP_BASELINE[i]['output'],
                        rtol=RTOL, atol=ATOL)
+
+
+def test_wind_wake_loss_multiplier():
+    """Test varying wind turbine losses"""
+    pc = Gen.get_pc(REV2_POINTS, None, LAYOUT_SAM_FILE, 'windpower',
+                    sites_per_worker=3, res_file=RES_FILE)
+    output_request = ('cf_mean', 'annual_wake_loss_total_percent')
+
+    gen_baseline = Gen('windpower', pc, LAYOUT_SAM_FILE, RES_FILE,
+                       output_request=output_request, sites_per_worker=3)
+    gen_baseline.run(max_workers=1)
+    cf_baseline = gen_baseline.out['cf_mean']
+    wl_baseline = gen_baseline.out['annual_wake_loss_total_percent']
+
+    pc.project_points.sam_inputs[LAYOUT_SAM_FILE]['wake_loss_multiplier'] = 1.5
+    gen_test = Gen('windpower', pc, LAYOUT_SAM_FILE, RES_FILE,
+                   output_request=output_request, sites_per_worker=3)
+    gen_test.run(max_workers=1)
+    cf_test = gen_test.out['cf_mean']
+    wl_test = gen_test.out['annual_wake_loss_total_percent']
+
+    assert (cf_baseline > cf_test).all()
+    assert np.allclose(wl_baseline * 1.5, wl_test)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
