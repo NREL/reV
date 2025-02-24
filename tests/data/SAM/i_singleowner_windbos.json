@@ -1,6 +1,6 @@
 {
   "access_road_entrances": 2,
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "analysis_period": 25,
   "cbi_fed_amount": 0,
   "cbi_fed_deprbas_fed": 0,

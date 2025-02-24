@@ -38,7 +38,7 @@ class AbstractDefaultFromConfigFile:
 
     @classmethod
     def init_default_pysam_obj(cls):
-        """Initialize a defualt PySM object from a config file."""
+        """Initialize a default PySAM object from a config file."""
         config_file = os.path.join(DEFAULTSDIR, cls.CONFIG_FILE_NAME)
 
         # pylint: disable=no-member
@@ -47,13 +47,13 @@ class AbstractDefaultFromConfigFile:
             config = json.load(f)
 
         for k, v in config.items():
-            if 'adjust:' in k or 'file' in k :
+            if 'adjust_' in k or 'file' in k:
                 continue
             if 'geotherm.cost' in k:
                 k = k.replace(".", "_")
             obj.value(k, v)
 
-        obj.AdjustmentFactors.constant = 0.0
+        obj.AdjustmentFactors.adjust_constant = 0.0
         return obj
 
 

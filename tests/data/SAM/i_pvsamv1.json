@@ -18,7 +18,7 @@
   "6par_vmp": 30,
   "6par_voc": 37,
   "acwiring_loss": 1,
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "albedo": [
     0.2,
     0.2,

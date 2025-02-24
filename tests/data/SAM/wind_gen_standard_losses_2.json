@@ -1,5 +1,5 @@
 {
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "system_capacity": 1500,
   "wind_farm_losses_percent": 16.7,
   "wind_farm_wake_model": 0,
