@@ -27,7 +27,6 @@ from reV.SAM.generation import (
     PvWattsv8,
     SolarWaterHeat,
     TcsMoltenSalt,
-    TroughPhysicalHeat,
     WindPower,
 )
 from reV.utilities import ModuleName, ResourceMetaField, SupplyCurveField
@@ -68,7 +67,6 @@ class Gen(BaseGen):
         "pvwattsv8": PvWattsv8,
         "solarwaterheat": SolarWaterHeat,
         "tcsmoltensalt": TcsMoltenSalt,
-        "troughphysicalheat": TroughPhysicalHeat,
         "windpower": WindPower,
     }
 
@@ -113,7 +111,7 @@ class Gen(BaseGen):
         allowed and/or required SAM config file inputs. If economic
         parameters are supplied in the SAM config, then you can bundle a
         "follow-on" econ calculation by just adding the desired econ
-        output keys to the `output_request`. You can request ``reV`` to '
+        output keys to the `output_request`. You can request ``reV`` to
         run the analysis for one or more "sites", which correspond to
         the meta indices in the resource data (also commonly called the
         ``gid's``).
@@ -128,7 +126,7 @@ class Gen(BaseGen):
         >>> import os
         >>> from reV import Gen, TESTDATADIR
         >>>
-        >>> sam_tech = 'pvwattsv7'
+        >>> sam_tech = 'pvwattsv8'
         >>> sites = 0
         >>> fp_sam = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
         >>> fp_res = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2013.h5')
@@ -145,15 +143,16 @@ class Gen(BaseGen):
         >>> gen.run()
         >>>
         >>> gen.out
-        {'lcoe_fcr': array([131.39166, 131.31221, 127.54539, 125.49656]),
-         'cf_mean': array([0.17713654, 0.17724372, 0.1824783 , 0.1854574 ]),
-        : array([[0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                ...,
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.],
-                [0., 0., 0., 0.]])}
+        {'fixed_charge_rate': array([0.096, 0.096, 0.096, 0.096],
+         'base_capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'base_variable_operating_cost': array([0, 0, 0, 0],
+         'base_fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'capital_cost': array([39767200, 39767200, 39767200, 39767200],
+         'fixed_operating_cost': array([260000, 260000, 260000, 260000],
+         'variable_operating_cost': array([0, 0, 0, 0],
+         'capital_cost_multiplier': array([1, 1, 1, 1],
+         'cf_mean': array([0.17859147, 0.17869979, 0.1834818 , 0.18646291],
+         'lcoe_fcr': array([130.32126, 130.24226, 126.84782, 124.81981]}
 
         Parameters
         ----------
@@ -170,26 +169,43 @@ class Gen(BaseGen):
             multiple sites can be specified to evaluate reV at multiple
             specific locations. A string pointing to a project points
             CSV file may also be specified. Typically, the CSV contains
-            two columns:
+            the following columns:
 
                 - ``gid``: Integer specifying the generation GID of each
                   site.
-                - ``config``: Key in the `sam_files` input dictionary
+                - ``config``: This is an *optional* column that contains
+                  a key from the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
-                  ``None`` (or left out completely) if you specify only
-                  a single SAM configuration file as the `sam_files`
-                  input.
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single SAM configuration file as the
+                  `sam_files` input.
+                - ``curtailment``: This is an *optional* column that
+                  contains a key from the `curtailment` input dictionary
+                  (see below) corresponding to the curtailment to apply
+                  at that particular site. This value can also be
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single curtailment configuration file
+                  as the `curtailment` input.
+                - ``capital_cost_multiplier``: This is an *optional*
+                  multiplier input that, if included, will be used to
+                  regionally scale the ``capital_cost`` input in the SAM
+                  config. If you include this column in your CSV, you
+                  *do not* need to specify ``capital_cost``, unless you
+                  would like that value to vary regionally and
+                  independently of the multiplier (i.e. the multiplier
+                  will still be applied on top of the ``capital_cost``
+                  input).
 
-            The CSV file may also contain site-specific inputs by
+            The CSV file may also contain other site-specific inputs by
             including a column named after a config keyword (e.g. a
-            column called ``capital_cost`` may be included to specify a
-            site-specific capital cost value for each location). Columns
-            that do not correspond to a config key may also be included,
-            but they will be ignored. A DataFrame following the same
-            guidelines as the CSV input (or a dictionary that can be
-            used to initialize such a DataFrame) may be used for this
-            input as well.
+            column called ``wind_turbine_rotor_diameter`` may be
+            included to specify a site-specific turbine diameter for
+            each location). Columns that do not correspond to a config
+            key may also be included, but they will be ignored. A
+            DataFrame following the same guidelines as the CSV input
+            (or a dictionary that can be used to initialize such a
+            DataFrame) may be used for this input as well.
 
             .. Note:: By default, the generation GID of each site is
               assumed to match the resource GID to be evaluated for that
@@ -226,11 +242,11 @@ class Gen(BaseGen):
             info on the allowed and/or required SAM config file inputs.
         resource_file : str
             Filepath to resource data. This input can be path to a
-            single resource HDF5 file, a path to a directory containing
-            data spread across multiple HDF5 files, or a path including
-            a wildcard input like ``/h5_dir/prefix*suffix``. In all
-            cases, the resource data must be readable by
-            :py:class:`rex.resource.Resource`
+            single resource HDF5 file or a path including a wildcard
+            input like ``/h5_dir/prefix*suffix`` (i.e. if your datasets
+            like wind speed, wind direction, pressure, and so on are
+            spread out over multiple files). In all cases, the resource
+            data must be readable by :py:class:`rex.resource.Resource`
             or :py:class:`rex.multi_file_resource.MultiFileResource`.
             (i.e. the resource data conform to the
             `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
@@ -243,8 +259,20 @@ class Gen(BaseGen):
             consideration, and its shape must be a multiple of 8760.
 
             .. Note:: If executing ``reV`` from the command line, this
-              path can contain brackets ``{}`` that will be filled in by
-              the `analysis_years` input.
+              input string can contain brackets ``{}`` that will be
+              filled in by the `analysis_years` input. If your datasets
+              span multiple files (e.g. "wtk_wind_speed_2012.h5",
+              "wtk_pressure_2012.h5", "wtk_wind_direction_2012.h5"), you
+              may use a wildcard input along with brackets, like so:
+              ``"wtk_*_{}.h5"``. Alternatively, this input can be a list
+              of explicit files to process. In this case, the length of
+              the list must match the length of the `analysis_years`
+              input exactly, and the paths are assumed to align with the
+              `analysis_years` (i.e. the first path corresponds to the
+              first analysis year, the second path corresponds to the
+              second analysis year, and so on). Wild cards are allowed,
+              even if you list out the years explicitly (i.e.
+              ``["wtk_*_2012.h5", "wtk_*_2013.h5", ...]``)
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
@@ -320,15 +348,26 @@ class Gen(BaseGen):
 
             By default, ``None``.
         curtailment : dict | str, optional
-            Inputs for curtailment parameters, which can be:
+            Input for curtailment parameters, which can be one of:
 
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config file with path (str)
+                - Single string representing path to curtailment config
+                  file. In this case, the curtailment config is given
+                  the name "default" and applied everywhere (if the
+                  project points "curtailment" column is missing or all
+                  ``None``) or only where the project points
+                  "curtailment" column contains a value of "default"
+                - Dictionary mapping user-defined curtailment "names" to
+                  either A) strings (paths) or B) explicit namespaces of
+                  curtailment configurations (dicts). Mixing these two
+                  _is_ allowed.
 
             The allowed key-value input pairs in the curtailment
             configuration are documented as properties of the
             :class:`reV.config.curtailment.Curtailment` class. If
-            ``None``, no curtailment is modeled. By default, ``None``.
+            ``None``, no curtailment is modeled. You can select which
+            curtailment gets applied to which site using the
+            "curtailment" column key in the project points input.
+            By default, ``None``.
         gid_map : dict | str, optional
             Mapping of unique integer generation gids (keys) to single
             integer resource gids (values). This enables unique
@@ -454,7 +493,7 @@ class Gen(BaseGen):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a `SupplyCurveField.GID`
+            non-sequential or do not start from 0, so a `SiteDataField.GID`
             column is added.
         """
         if self._meta is None:
@@ -634,7 +673,7 @@ class Gen(BaseGen):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
@@ -712,6 +751,8 @@ class Gen(BaseGen):
                 for k in site_output.keys():
                     # iterate through variable names in each site's output dict
                     if k in cls.OUT_ATTRS:
+                        if out[site][k] is None:
+                            continue
                         # get dtype and scale for output variable name
                         dtype = cls.OUT_ATTRS[k].get("dtype", "float32")
                         scale_factor = cls.OUT_ATTRS[k].get("scale_factor", 1)
@@ -947,11 +988,19 @@ class Gen(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         # ensure that cf_mean is requested from output
         if "cf_mean" not in output_request:
             output_request.append("cf_mean")
+
+        if _is_solar_run_with_ac_outputs(self.tech):
+            if "dc_ac_ratio" not in output_request:
+                output_request.append("dc_ac_ratio")
+            for dset in ["cf_mean", "cf_profile"]:
+                ac_dset = f"{dset}_ac"
+                if dset in output_request and ac_dset not in output_request:
+                    output_request.append(ac_dset)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -1097,3 +1146,10 @@ class Gen(BaseGen):
             raise e
 
         return self._out_fpath
+
+
+def _is_solar_run_with_ac_outputs(tech):
+    """True if tech is pvwattsv8+"""
+    if "pvwatts" not in tech.casefold():
+        return False
+    return tech.casefold() not in {f"pvwattsv{i}" for i in range(8)}

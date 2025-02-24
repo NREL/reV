@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import traceback
+from copy import deepcopy
 
 import h5py
 import numpy as np
@@ -16,7 +17,8 @@ from rex.utilities.loggers import init_logger
 
 from reV import TESTDATADIR
 from reV.cli import main
-from reV.handlers.multi_year import MultiYear
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
+from reV.handlers.multi_year import MultiYear, MultiYearGroup
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName
 
@@ -206,6 +208,70 @@ def test_cli(runner, clear_loggers):
         clear_loggers()
 
 
+# pylint: disable=no-member
+def test_cli_single_file(runner, clear_loggers):
+    """Test multi year collection cli for a single yearly file."""
+
+    with tempfile.TemporaryDirectory() as temp:
+        config = {"log_directory": temp,
+                  "execution_control": {"option": "local"},
+                  "groups": {"none": {"dsets": ["cf_mean", "lcoe_fcr"],
+                                      "pass_through_dsets": ['pass_through_1',
+                                                             'pass_through_2'],
+                                      "source_dir": temp,
+                                      "source_prefix": (
+                                          "ri_wind_gen_profiles"
+                                      )}},
+                  "log_level": "INFO"}
+
+        dirname = os.path.basename(temp)
+        fn = "{}_{}.h5".format(dirname, ModuleName.MULTI_YEAR)
+        my_out = os.path.join(temp, fn).replace("-", "_")
+        fp_in = os.path.join(temp, 'ri_wind_gen_profiles_2010.h5')
+        shutil.copy(os.path.join(TESTDATADIR, 'gen_out',
+                                 'ri_wind_gen_profiles_2010.h5'), fp_in)
+
+        pass_through_dsets = config['groups']['none']['pass_through_dsets']
+        for i, dset in enumerate(pass_through_dsets):
+            with h5py.File(fp_in, 'a') as f:
+                shape = f['meta'].shape
+                arr = np.arange(shape[0]) * (i + 1)
+                f.create_dataset(dset, shape, data=arr)
+
+                with h5py.File(my_out, 'a') as f:
+                    f.create_dataset(dset, shape, data=np.zeros_like(arr))
+
+        fp_config = os.path.join(temp, 'config.json')
+        with open(fp_config, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, [str(ModuleName.MULTI_YEAR),
+                                      '-c', fp_config])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+        assert "WARNING" in result.output
+        assert "Found existing multi-year file" in result.output
+
+        with Resource(my_out) as res:
+            assert 'cf_mean-2010' in res.dsets
+            assert 'cf_mean-means' in res.dsets
+            assert 'cf_mean-stdev' in res.dsets
+            assert 'lcoe_fcr-2010' in res.dsets
+            assert 'lcoe_fcr-means' in res.dsets
+            assert 'lcoe_fcr-stdev' in res.dsets
+            assert 'pass_through_1' in res.dsets
+            assert 'pass_through_2' in res.dsets
+            assert 'pass_through_1-means' not in res.dsets
+            assert 'pass_through_2-means' not in res.dsets
+            assert np.allclose(res['pass_through_1'],
+                               1 * np.arange(len(res.meta)))
+            assert np.allclose(res['pass_through_2'],
+                               2 * np.arange(len(res.meta)))
+
+        clear_loggers()
+
+
 @pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
@@ -305,6 +371,42 @@ def test_my_stdev(dset, group):
             dset_std = my.stdev(dset)
 
         compare_arrays(my_std, dset_std, "Saved STDEV")
+
+
+def test_pass_through_dsets():
+    """test that LCOE dsets correctly added to pass through. """
+    test_pass_through_dsets = ["capital_cost", "reg_mult",
+                               "fixed_operating_cost", "system_capacity",
+                               "system_capacity_ac", "fixed_charge_rate",
+                               "variable_operating_cost", "dc_ac_ratio"]
+
+    existing_dsets = list(LCOE_REQUIRED_OUTPUTS) + ["dc_ac_ratio"]
+
+    with tempfile.TemporaryDirectory() as temp:
+        temp_h5_files = [os.path.join(temp, os.path.basename(fp))
+                         for fp in H5_FILES]
+        for fp, fp_temp in zip(H5_FILES, temp_h5_files):
+            shutil.copy(fp, fp_temp)
+
+        for fp in temp_h5_files:
+            for i, dset in enumerate(existing_dsets):
+                with h5py.File(fp, 'a') as f:
+                    shape = f['meta'].shape
+                    arr = np.arange(shape[0]) * (i + 1)
+                    f.create_dataset(dset, shape, data=arr)
+
+        group = {"dsets": ["cf_profile", "cf_profile_ac", "cf_mean",
+                           "cf_mean_ac", "ghi_mean", "lcoe_fcr", "ac", "dc",
+                           "clipped_power"],
+                "source_dir": temp,
+                "source_prefix": "gen_ri_pv",
+                "pass_through_dsets": deepcopy(test_pass_through_dsets)}
+
+        group = MultiYearGroup("test", ".", **group)
+        test_ptd = group.pass_through_dsets
+
+        assert test_pass_through_dsets != test_ptd
+        assert all(dset in test_ptd for dset in LCOE_REQUIRED_OUTPUTS)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

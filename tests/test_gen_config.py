@@ -20,6 +20,7 @@ from rex.utilities.utilities import safe_json_load
 from reV import TESTDATADIR
 from reV.cli import main
 from reV.config.project_points import ProjectPoints
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.utilities import SiteDataField
@@ -106,6 +107,12 @@ def test_gen_from_config(runner, tech, clear_loggers):
                     assert 'monthly_energy' in cf.datasets, msg
                     monthly = cf['monthly_energy']
                     assert monthly.shape == (12, 10)
+
+                    for output in LCOE_REQUIRED_OUTPUTS:
+                        if tech == 'pv':
+                            assert output in cf.datasets
+                        else:
+                            assert output not in cf.datasets
 
                 break
 

@@ -45,6 +45,21 @@ with open(os.path.join(ATTR_DIR, 'windbos.json')) as f:
 with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json')) as f:
     LCOE_IN_ATTRS = json.load(f)
 
+LCOE_REQUIRED_OUTPUTS = ("system_capacity", "capital_cost_multiplier",
+                         "capital_cost", "fixed_operating_cost",
+                         "variable_operating_cost", "base_capital_cost",
+                         "base_fixed_operating_cost",
+                         "base_variable_operating_cost", "fixed_charge_rate")
+"""Required econ outputs in generation file."""
+
+
+def _add_lcoe_outputs(output_request):
+    """Add required lcoe outputs to output request. """
+    for out_var in LCOE_REQUIRED_OUTPUTS:
+        if out_var not in output_request:
+            output_request.append(out_var)
+    return output_request
+
 
 class BaseGen(ABC):
     """Base class for reV gen and econ classes to run SAM simulations."""
@@ -302,7 +317,7 @@ class BaseGen(ABC):
             Meta data df for sites in project points. Column names are meta
             data variables, rows are different sites. The row index
             does not indicate the site number if the project points are
-            non-sequential or do not start from 0, so a `SupplyCurveField.GID`
+            non-sequential or do not start from 0, so a `SiteDataField.GID`
             column is added.
         """
         return self._meta
@@ -353,7 +368,7 @@ class BaseGen(ABC):
         -------
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam, econ)
+            solarwaterheat, lineardirectsteam, geothermal, econ)
             The string should be lower-cased with spaces and _ removed.
         """
         return self.project_points.tech
@@ -525,7 +540,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -607,7 +622,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -768,7 +783,7 @@ class BaseGen(ABC):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
@@ -859,7 +874,6 @@ class BaseGen(ABC):
         """
         self.project_points.join_df(site_data, key=self.site_data.index.name)
 
-    @abstractmethod
     def _parse_output_request(self, req):
         """Set the output variables requested from the user.
 
@@ -873,6 +887,12 @@ class BaseGen(ABC):
         output_request : list
             Output variables requested from SAM.
         """
+        output_request = self._output_request_type_check(req)
+
+        if "lcoe_fcr" in output_request:
+            output_request = _add_lcoe_outputs(output_request)
+
+        return output_request
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
@@ -1127,10 +1147,28 @@ class BaseGen(ABC):
                 if not isinstance(value, np.ndarray):
                     value = np.array(value)
 
+                value = self._patch_wave_gen_pysam_5(var, value)
                 self._out[var][:, i] = value.T
 
             elif value != 0:
                 self._out[var][i] = value
+
+    def _patch_wave_gen_pysam_5(self, var, value):
+        """Patch the "gen" output of wave generation for PySAm 5+
+
+        As of PySAM 5+, the "gen" array is of shape 8760, but only the
+        first 2920 entires are populated.
+        See this line: https://github.com/NREL/ssc/blob/2098300044a9be7745c2b93b911adb2d9dc3c282/ssc/cmod_mhk_wave.cpp#L687
+        """
+        if self.tech.casefold() != "mhkwave":
+            return value
+        if var.casefold() not in ("gen", "cf_profile", "gen_profile"):
+            return value
+
+        if any(value[2920:]):
+            msg = "Found non-zero values at end of gen array!"
+            raise ValueError(msg)
+        return value[:2920]
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.

@@ -165,7 +165,8 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
             )
 
             if not outage.allow_outage_overlap or outage_percentage == 100:
-                min_num_expected_outage_hours = (
+                min_num_expected_outage_hours = max(
+                    0,
                     outage.count * outage.duration
                     - zero_gen_in_comparison_count
                 )
@@ -201,7 +202,10 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
                 <= num_outage_hours
                 <= max_num_expected_outage_hours
             )
-            assert num_outage_hours_meet_expectations
+            err_msg = (f"{min_num_expected_outage_hours=}, "
+                       f"{num_outage_hours=}, "
+                       f"{max_num_expected_outage_hours=}")
+            assert num_outage_hours_meet_expectations, err_msg
 
         total_expected_outage = sum(
             outage.count * outage.duration * outage.percentage_of_capacity_lost
@@ -333,6 +337,7 @@ def _run_gen_with_and_without_losses(
 
         if haf is not None:
             sam_config['hourly'] = haf.tolist()
+            sam_config['en_hourly'] = 1
 
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
@@ -343,7 +348,7 @@ def _run_gen_with_and_without_losses(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -367,10 +372,11 @@ def _run_gen_with_and_without_losses(
 
     if haf is not None:
         pc.project_points.sam_inputs[sam_file]['hourly'] = haf.tolist()
+        pc.project_points.sam_inputs[sam_file]['en_hourly'] = 1
 
     gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
               sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
@@ -425,7 +431,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         outages = copy.deepcopy(outages)
@@ -438,7 +444,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -473,7 +479,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -486,7 +492,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -499,7 +505,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_third_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -518,6 +524,7 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
     assert 'hourly' in mixin.sam_sys_inputs
+    assert 'en_hourly' in mixin.sam_sys_inputs
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():

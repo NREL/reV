@@ -23,7 +23,6 @@ SAM = os.path.join(TESTDATADIR, 'SAM/i_windpower.json')
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
 TM_DSET = 'techmap_wtk_ri_100'
-AGG_DSET = ('cf_mean', 'cf_profile')
 
 # note that this differs from the
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),

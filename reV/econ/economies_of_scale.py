@@ -113,7 +113,8 @@ class EconomiesOfScale:
         """
         var_names = []
         if self._eqn is not None:
-            delimiters = ("*", "/", "+", "-", " ", "(", ")", "[", "]", ",")
+            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+", "-",
+                          " ", "(", ")", "[", "]")
             regex_pattern = "|".join(map(re.escape, delimiters))
             var_names = []
             for sub in re.split(regex_pattern, str(self._eqn)):
@@ -190,6 +191,29 @@ class EconomiesOfScale:
         """
         return self._evaluate()
 
+    def _cost_from_cap(self, col_name):
+        """Get full cost value from cost per mw in data.
+
+        Parameters
+        ----------
+        col_name : str
+            Name of column containing the cost per mw value.
+
+        Returns
+        -------
+        float | None
+            Cost value if it was found in data, ``None`` otherwise.
+        """
+        cap = self._data.get(SupplyCurveField.CAPACITY_AC_MW)
+        if cap is None:
+            return None
+
+        cost_per_mw = self._data.get(col_name)
+        if cost_per_mw is None:
+            return None
+
+        return cap * cost_per_mw
+
     @property
     def raw_capital_cost(self):
         """Unscaled (raw) capital cost found in the data input arg.
@@ -199,10 +223,13 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
-        key_list = [
-            SupplyCurveField.CAPITAL_COST,
-            "mean_capital_cost",
-        ]
+        raw_capital_cost_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
+        )
+        if raw_capital_cost_from_cap is not None:
+            return raw_capital_cost_from_cap
+
+        key_list = ["capital_cost", "mean_capital_cost"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -221,18 +248,6 @@ class EconomiesOfScale:
         return cc
 
     @property
-    def system_capacity(self):
-        """Get the system capacity in kW (SAM input, not the reV supply
-        curve capacity).
-
-        Returns
-        -------
-        out : float | np.ndarray
-        """
-        key_list = ["system_capacity", "mean_system_capacity"]
-        return self._get_prioritized_keys(self._data, key_list)
-
-    @property
     def fcr(self):
         """Fixed charge rate from input data arg
 
@@ -241,12 +256,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = [
-            SupplyCurveField.FIXED_CHARGE_RATE,
-            "mean_fixed_charge_rate",
-            "fcr",
-            "mean_fcr",
-        ]
+        fcr = self._data.get(SupplyCurveField.FIXED_CHARGE_RATE)
+        if fcr is not None and fcr > 0:
+            return fcr
+
+        key_list = ["fixed_charge_rate", "mean_fixed_charge_rate", "fcr",
+                    "mean_fcr"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -258,12 +273,14 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = [
-            SupplyCurveField.FIXED_OPERATING_COST,
-            "mean_fixed_operating_cost",
-            "foc",
-            "mean_foc",
-        ]
+        foc_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW
+        )
+        if foc_from_cap is not None:
+            return foc_from_cap
+
+        key_list = ["fixed_operating_cost", "mean_fixed_operating_cost",
+                    "foc", "mean_foc"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -275,12 +292,14 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = [
-            SupplyCurveField.VARIABLE_OPERATING_COST,
-            "mean_variable_operating_cost",
-            "voc",
-            "mean_voc",
-        ]
+        voc_from_cap = self._cost_from_cap(
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW
+        )
+        if voc_from_cap is not None:
+            return voc_from_cap
+
+        key_list = ["variable_operating_cost", "mean_variable_operating_cost",
+                    "voc", "mean_voc"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property

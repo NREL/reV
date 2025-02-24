@@ -77,7 +77,7 @@ def test_sc_full_wind_dirs(downwind):
         baseline = pd.read_csv(baseline)
         baseline = baseline.rename(columns=SupplyCurveField.map_from_legacy())
 
-    assert_frame_equal(sc_out, baseline, check_dtype=False)
+    assert_frame_equal(sc_out[baseline.columns], baseline, check_dtype=False)
 
 
 @pytest.mark.parametrize('downwind', [False, True])
@@ -100,7 +100,7 @@ def test_sc_simple_wind_dirs(downwind):
         baseline = pd.read_csv(baseline)
         baseline = baseline.rename(columns=SupplyCurveField.map_from_legacy())
 
-    assert_frame_equal(sc_out, baseline, check_dtype=False)
+    assert_frame_equal(sc_out[baseline.columns], baseline, check_dtype=False)
 
 
 def test_upwind_exclusion():

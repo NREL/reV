@@ -20,7 +20,6 @@ import pandas as pd
 import psutil
 from rex.joint_pd.joint_pd import JointPD
 from rex.multi_year_resource import MultiYearWindResource
-from rex.renewable_resource import WindResource
 from rex.utilities.bc_parse_table import parse_bc_table
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import create_dirs, log_mem
@@ -55,13 +54,19 @@ class BespokeMultiPlantData:
     reads to a single HDF5 file.
     """
 
-    def __init__(self, res_fpath, sc_gid_to_hh, sc_gid_to_res_gid):
+    def __init__(self, res_fpath, sc_gid_to_hh, sc_gid_to_res_gid,
+                 pre_load_humidity=False):
         """Initialize BespokeMultiPlantData
 
         Parameters
         ----------
-        res_fpath : str
-            Path to resource h5 file.
+        res_fpath : str | list
+            Unix shell style path (potentially containing wildcard (*)
+            patterns) to a single or multi-file resource file set(s).
+            Can also be an explicit list of resource file paths, which
+            themselves can contain wildcards. This input must be
+            readable by
+            :py:class:`rex.multi_year_resource.MultiYearWindResource`.
         sc_gid_to_hh : dict
             Dictionary mapping SC GID values to hub-heights. Data for
             each SC GID will be pulled for the corresponding hub-height
@@ -69,8 +74,11 @@ class BespokeMultiPlantData:
         sc_gid_to_res_gid : dict
             Dictionary mapping SC GID values to an iterable oif resource
             GID values. Resource GID values should correspond to GID
-            values in teh HDF5 file, so any GID map must be applied
+            values in the HDF5 file, so any GID map must be applied
             before initializing :class`BespokeMultiPlantData`.
+        pre_load_humidity : optional, default=False
+            Option to pre-load relative humidity data (useful for icing
+            runs). If ``False``, relative humidities are not loaded.
         """
         self.res_fpath = res_fpath
         self.sc_gid_to_hh = sc_gid_to_hh
@@ -80,6 +88,8 @@ class BespokeMultiPlantData:
         self._wind_speeds = None
         self._temps = None
         self._pressures = None
+        self._relative_humidities = None
+        self._pre_load_humidity = pre_load_humidity
         self._time_index = None
         self._pre_load_data()
 
@@ -95,12 +105,7 @@ class BespokeMultiPlantData:
         }
 
         start_time = time.time()
-        if "*" in self.res_fpath:
-            handler = MultiYearWindResource
-        else:
-            handler = WindResource
-
-        with handler(self.res_fpath) as res:
+        with MultiYearWindResource(self.res_fpath) as res:
             self._wind_dirs = {
                 hh: res[f"winddirection_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
@@ -118,6 +123,11 @@ class BespokeMultiPlantData:
                 for hh, gids in self.hh_to_res_gids.items()
             }
             self._time_index = res.time_index
+            if self._pre_load_humidity:
+                self._relative_humidities = {
+                    hh: res["relativehumidity_2m", :, gids]
+                    for hh, gids in self.hh_to_res_gids.items()
+                }
 
         logger.debug(
             f"Data took {(time.time() - start_time) / 60:.2f} " f"min to load"
@@ -140,6 +150,9 @@ class BespokeMultiPlantData:
         hh = self.sc_gid_to_hh[sc_gid]
         sc_point_res_gids = sorted(self.sc_gid_to_res_gid[sc_gid])
         data_inds = np.searchsorted(self.hh_to_res_gids[hh], sc_point_res_gids)
+
+        rh = (None if not self._pre_load_humidity
+              else self._relative_humidities[hh][:, data_inds])
         return BespokeSinglePlantData(
             sc_point_res_gids,
             self._wind_dirs[hh][:, data_inds],
@@ -147,6 +160,7 @@ class BespokeMultiPlantData:
             self._temps[hh][:, data_inds],
             self._pressures[hh][:, data_inds],
             self._time_index,
+            rh,
         )
 
 
@@ -159,7 +173,8 @@ class BespokeSinglePlantData:
     """
 
     def __init__(
-        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index
+        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index,
+        relative_humidities=None,
     ):
         """Initialize BespokeSinglePlantData
 
@@ -170,22 +185,41 @@ class BespokeSinglePlantData:
             the second dimension of `wind_dirs`, `wind_speeds`, `temps`,
             and `pressures`. The GID value of data_inds[0] should
             correspond to the `wind_dirs[:, 0]` data, etc.
-        wind_dirs, wind_speeds, temps, pressures : 2D np.array
-            Array of wind directions, wind speeds, temperatures, and
+        wind_dirs : 2D np.array
+            Array of wind directions. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        wind_speeds : 2D np.array
+            Array of wind speeds. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        temps : 2D np.array
+            Array oftemperatures. Dimensions should be correspond to
+            [time, location]. See documentation for `data_inds` for
+            required spatial mapping of GID values.
+        pressures : 2D np.array
+            Array of pressures. Dimensions should be correspond to
             pressures, respectively. Dimensions should be correspond to
             [time, location]. See documentation for `data_inds` for
             required spatial mapping of GID values.
         time_index : 1D np.array
             Time index array corresponding to the temporal dimension of
             the 2D data. Will be exposed directly to user.
-
+        relative_humidities : 2D np.array, optional
+            Array of relative humidities. Dimensions should be
+            correspond to [time, location]. See documentation for
+            `data_inds` for required spatial mapping of GID values.
+            If ``None``, relative_humidities cannot be queried.
         """
+
         self.data_inds = data_inds
         self.wind_dirs = wind_dirs
         self.wind_speeds = wind_speeds
         self.temps = temps
         self.pressures = pressures
         self.time_index = time_index
+        self.relative_humidities = relative_humidities
+        self._humidities_exist = relative_humidities is not None
 
     def __getitem__(self, key):
         dset_name, t_idx, gids = key
@@ -198,6 +232,8 @@ class BespokeSinglePlantData:
             return self.temps[t_idx, data_inds]
         if "pressure" in dset_name:
             return self.pressures[t_idx, data_inds]
+        if self._humidities_exist and "relativehumidity" in dset_name:
+            return self.relative_humidities[t_idx, data_inds]
         msg = f"Unknown dataset name: {dset_name!r}"
         logger.error(msg)
         raise ValueError(msg)
@@ -450,8 +486,7 @@ class BespokeSinglePlant:
         self._pre_loaded_data = pre_loaded_data
         self._outputs = {}
 
-        Handler = self.get_wind_handler(res)
-        res = res if not isinstance(res, str) else Handler(res)
+        res = res if not isinstance(res, str) else MultiYearWindResource(res)
 
         self._sc_point = AggSCPoint(
             gid,
@@ -535,7 +570,7 @@ class BespokeSinglePlant:
 
         # {meta_column: sam_sys_input_key}
         required = {
-            SupplyCurveField.CAPACITY: "system_capacity",
+            SupplyCurveField.CAPACITY_AC_MW: "system_capacity",
             SupplyCurveField.TURBINE_X_COORDS: "wind_farm_xCoordinates",
             SupplyCurveField.TURBINE_Y_COORDS: "wind_farm_yCoordinates",
         }
@@ -682,6 +717,7 @@ class BespokeSinglePlant:
             weights[i] = self.sc_point.include_mask_flat[mask].sum()
 
         weights /= weights.sum()
+        data = data.astype(np.float32)
         data *= weights
         data = np.sum(data, axis=1)
 
@@ -807,28 +843,23 @@ class BespokeSinglePlant:
                 [float(np.round(n, 1)) for n in self.sc_point.gid_counts]
             )
 
-            with SupplyCurveExtent(
-                self.sc_point._excl_fpath, resolution=self.sc_point.resolution
-            ) as sc:
-                row_ind, col_ind = sc.get_sc_row_col_ind(self.sc_point.gid)
-
             self._meta = pd.DataFrame(
                 {
-                    SupplyCurveField.SC_POINT_GID: self.sc_point.gid,
-                    SupplyCurveField.SC_ROW_IND: row_ind,
-                    SupplyCurveField.SC_COL_IND: col_ind,
-                    SupplyCurveField.GID: self.sc_point.gid,
+                    "gid": self.sc_point.gid,  # needed for collection
                     SupplyCurveField.LATITUDE: self.sc_point.latitude,
                     SupplyCurveField.LONGITUDE: self.sc_point.longitude,
-                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
                     SupplyCurveField.COUNTRY: self.sc_point.country,
                     SupplyCurveField.STATE: self.sc_point.state,
                     SupplyCurveField.COUNTY: self.sc_point.county,
                     SupplyCurveField.ELEVATION: self.sc_point.elevation,
-                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
+                    SupplyCurveField.TIMEZONE: self.sc_point.timezone,
+                    SupplyCurveField.SC_POINT_GID: self.sc_point.sc_point_gid,
+                    SupplyCurveField.SC_ROW_IND: self.sc_point.sc_row_ind,
+                    SupplyCurveField.SC_COL_IND: self.sc_point.sc_col_ind,
                     SupplyCurveField.RES_GIDS: res_gids,
                     SupplyCurveField.GID_COUNTS: gid_counts,
                     SupplyCurveField.N_GIDS: self.sc_point.n_gids,
+                    SupplyCurveField.OFFSHORE: self.sc_point.offshore,
                     SupplyCurveField.AREA_SQ_KM: self.sc_point.area,
                 },
                 index=[self.sc_point.gid],
@@ -872,15 +903,18 @@ class BespokeSinglePlant:
             if np.nanmax(pres) > 1000:
                 pres *= 9.86923e-6
 
-            self._res_df = pd.DataFrame(
-                {
-                    "temperature": temp,
-                    "pressure": pres,
-                    "windspeed": ws,
-                    "winddirection": wd,
-                },
-                index=ti,
-            )
+            data = {
+                "temperature": temp,
+                "pressure": pres,
+                "windspeed": ws,
+                "winddirection": wd,
+            }
+
+            if self.sam_sys_inputs.get("en_icing_cutoff"):
+                rh = self.get_weighted_res_ts("relativehumidity_2m")
+                data["relativehumidity"] = rh
+
+            self._res_df = pd.DataFrame(data, index=ti)
 
             if "time_index_step" in self.original_sam_sys_inputs:
                 ti_step = self.original_sam_sys_inputs["time_index_step"]
@@ -1044,11 +1078,9 @@ class BespokeSinglePlant:
             cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
             voc = lcoe_kwargs['variable_operating_cost']
-            bos = lcoe_kwargs['balance_of_system_cost']
             aep = self.outputs['annual_energy-means']
-            cap_cost = cc + bos
 
-            my_mean_lcoe = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
+            my_mean_lcoe = lcoe_fcr(fcr, cc, foc, aep, voc)
 
             self._outputs["lcoe_fcr-means"] = my_mean_lcoe
             self._meta[SupplyCurveField.MEAN_LCOE] = my_mean_lcoe
@@ -1069,17 +1101,23 @@ class BespokeSinglePlant:
             plant_optimizer, original_sam_sys_inputs, meta
         """
 
-        kwargs_list = [
-            "fixed_charge_rate",
-            "system_capacity",
-            "capital_cost",
-            "fixed_operating_cost",
-            "variable_operating_cost",
-            "balance_of_system_cost",
-        ]
+        kwargs_map = {
+            "fixed_charge_rate": SupplyCurveField.FIXED_CHARGE_RATE,
+            "system_capacity": SupplyCurveField.CAPACITY_AC_MW,
+            "capital_cost": SupplyCurveField.BESPOKE_CAPITAL_COST,
+            "fixed_operating_cost": (
+                SupplyCurveField.BESPOKE_FIXED_OPERATING_COST
+            ),
+            "variable_operating_cost": (
+                SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST
+            ),
+            "balance_of_system_cost": (
+                SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST
+            ),
+        }
         lcoe_kwargs = {}
 
-        for kwarg in kwargs_list:
+        for kwarg, meta_field in kwargs_map.items():
             if kwarg in self.outputs:
                 lcoe_kwargs[kwarg] = self.outputs[kwarg]
             elif getattr(self.plant_optimizer, kwarg, None) is not None:
@@ -1089,11 +1127,13 @@ class BespokeSinglePlant:
             elif kwarg in self.meta:
                 value = float(self.meta[kwarg].values[0])
                 lcoe_kwargs[kwarg] = value
+            elif meta_field in self.meta:
+                value = float(self.meta[meta_field].values[0])
+                if meta_field == SupplyCurveField.CAPACITY_AC_MW:
+                    value *= 1000  # MW to kW
+                lcoe_kwargs[kwarg] = value
 
-        for k, v in lcoe_kwargs.items():
-            self._meta[k] = v
-
-        missing = [k for k in kwargs_list if k not in lcoe_kwargs]
+        missing = [k for k in kwargs_map if k not in lcoe_kwargs]
         if any(missing):
             msg = (
                 "Could not find these LCOE kwargs in outputs, "
@@ -1104,30 +1144,9 @@ class BespokeSinglePlant:
             logger.error(msg)
             raise KeyError(msg)
 
+        bos = lcoe_kwargs.pop("balance_of_system_cost")
+        lcoe_kwargs["capital_cost"] = lcoe_kwargs["capital_cost"] + bos
         return lcoe_kwargs
-
-    @staticmethod
-    def get_wind_handler(res):
-        """Get a wind resource handler for a resource filepath.
-
-        Parameters
-        ----------
-        res : str
-            Resource filepath to wtk .h5 file. Can include * wildcards
-            for multi year resource.
-
-        Returns
-        -------
-        handler : WindResource | MultiYearWindResource
-            Wind resource handler or multi year handler
-        """
-        handler = res
-        if isinstance(res, str):
-            if "*" in res:
-                handler = MultiYearWindResource
-            else:
-                handler = WindResource
-        return handler
 
     @classmethod
     def check_dependencies(cls):
@@ -1158,7 +1177,10 @@ class BespokeSinglePlant:
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',
-                                  'balance_of_system_cost')):
+                                  'balance_of_system_cost',
+                                  'base_capital_cost',
+                                  'base_fixed_operating_cost',
+                                  'base_variable_operating_cost')):
         """Check two reV-SAM models for matching system inputs.
 
         Parameters
@@ -1223,9 +1245,14 @@ class BespokeSinglePlant:
 
         self._outputs.update(means)
 
+        self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
+        self._meta[SupplyCurveField.MEAN_CF_DC] = np.nan
+        self._meta[SupplyCurveField.MEAN_CF_AC] = np.nan
+        self._meta[SupplyCurveField.MEAN_LCOE] = np.nan
+        self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] = np.nan
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
-            self._meta.loc[:, SupplyCurveField.MEAN_CF] = self.outputs[
+            self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
                 "cf_mean-means"
             ]
         if "lcoe_fcr-means" in self.outputs:
@@ -1233,6 +1260,10 @@ class BespokeSinglePlant:
                 "lcoe_fcr-means"
             ]
             self.recalc_lcoe()
+        if "annual_energy-means" in self.outputs:
+            self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] = (
+                self.outputs["annual_energy-means"] / 1000
+            )
 
         logger.debug("Timeseries analysis complete!")
 
@@ -1261,9 +1292,12 @@ class BespokeSinglePlant:
             logger.exception(msg)
             raise RuntimeError(msg) from e
 
-        # TODO need to add:
-        # total cell area
-        # cell capacity density
+        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
+        self._outputs["packing_polygons"] = (
+            self.plant_optimizer.packing_polygons
+        )
+        system_capacity_kw = self.plant_optimizer.capacity
+        self._outputs["system_capacity"] = system_capacity_kw
 
         txc = [int(np.round(c)) for c in self.plant_optimizer.turbine_x]
         tyc = [int(np.round(c)) for c in self.plant_optimizer.turbine_y]
@@ -1277,66 +1311,105 @@ class BespokeSinglePlant:
 
         self._meta[SupplyCurveField.TURBINE_X_COORDS] = txc
         self._meta[SupplyCurveField.TURBINE_Y_COORDS] = tyc
-        self._meta["possible_x_coords"] = pxc
-        self._meta["possible_y_coords"] = pyc
+        self._meta[SupplyCurveField.POSSIBLE_X_COORDS] = pxc
+        self._meta[SupplyCurveField.POSSIBLE_Y_COORDS] = pyc
 
-        self._outputs["full_polygons"] = self.plant_optimizer.full_polygons
-        self._outputs["packing_polygons"] = (
-            self.plant_optimizer.packing_polygons
-        )
-        self._outputs["system_capacity"] = self.plant_optimizer.capacity
-
-        self._meta["n_turbines"] = self.plant_optimizer.nturbs
-        self._meta["avg_sl_dist_to_center_m"] = \
+        self._meta[SupplyCurveField.N_TURBINES] = self.plant_optimizer.nturbs
+        self._meta["avg_sl_dist_to_center_m"] = (
             self.plant_optimizer.avg_sl_dist_to_center_m
-        self._meta["avg_sl_dist_to_medoid_m"] = \
+        )
+        self._meta["avg_sl_dist_to_medoid_m"] = (
             self.plant_optimizer.avg_sl_dist_to_medoid_m
+        )
         self._meta["nn_conn_dist_m"] = self.plant_optimizer.nn_conn_dist_m
-        self._meta["bespoke_aep"] = self.plant_optimizer.aep
-        self._meta["bespoke_objective"] = self.plant_optimizer.objective
-        self._meta["bespoke_capital_cost"] = self.plant_optimizer.capital_cost
-        self._meta["bespoke_fixed_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_AEP] = self.plant_optimizer.aep
+        self._meta[SupplyCurveField.BESPOKE_OBJECTIVE] = (
+            self.plant_optimizer.objective
+        )
+        self._meta[SupplyCurveField.BESPOKE_CAPITAL_COST] = (
+            self.plant_optimizer.capital_cost
+        )
+        self._meta[SupplyCurveField.BESPOKE_FIXED_OPERATING_COST] = (
             self.plant_optimizer.fixed_operating_cost
         )
-        self._meta["bespoke_variable_operating_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST] = (
             self.plant_optimizer.variable_operating_cost
         )
-        self._meta["bespoke_balance_of_system_cost"] = (
+        self._meta[SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST] = (
             self.plant_optimizer.balance_of_system_cost
         )
-        self._meta["included_area"] = self.plant_optimizer.area
-        self._meta["included_area_capacity_density"] = (
+        self._meta[SupplyCurveField.INCLUDED_AREA] = self.plant_optimizer.area
+        self._meta[SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY] = (
             self.plant_optimizer.capacity_density
         )
-        self._meta["convex_hull_area"] = self.plant_optimizer.convex_hull_area
-        self._meta["convex_hull_capacity_density"] = (
+        self._meta[SupplyCurveField.CONVEX_HULL_AREA] = (
+            self.plant_optimizer.convex_hull_area
+        )
+        self._meta[SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY] = (
             self.plant_optimizer.convex_hull_capacity_density
         )
-        self._meta["full_cell_capacity_density"] = (
+        self._meta[SupplyCurveField.FULL_CELL_CAPACITY_DENSITY] = (
             self.plant_optimizer.full_cell_capacity_density
         )
 
-        logger.debug("Plant layout optimization complete!")
-
         # copy dataset outputs to meta data for supply curve table summary
         # convert SAM system capacity in kW to reV supply curve cap in MW
-        self._meta[SupplyCurveField.CAPACITY] = (
-            self.outputs["system_capacity"] / 1e3
-        )
+        capacity_ac_mw = system_capacity_kw / 1e3
+        self._meta[SupplyCurveField.CAPACITY_AC_MW] = capacity_ac_mw
+        self._meta[SupplyCurveField.CAPACITY_DC_MW] = np.nan
 
         # add required ReEDS multipliers to meta
         baseline_cost = self.plant_optimizer.capital_cost_per_kw(
             capacity_mw=self._baseline_cap_mw
         )
-        self._meta[SupplyCurveField.EOS_MULT] = (
-            self.plant_optimizer.capital_cost
-            / self.plant_optimizer.capacity
-            / baseline_cost
+        eos_mult = (self.plant_optimizer.capital_cost
+                    / self.plant_optimizer.capacity
+                    / baseline_cost)
+        reg_mult_cc = self.sam_sys_inputs.get(
+            "capital_cost_multiplier", 1)
+        reg_mult_foc = self.sam_sys_inputs.get(
+            "fixed_operating_cost_multiplier", 1)
+        reg_mult_voc = self.sam_sys_inputs.get(
+            "variable_operating_cost_multiplier", 1)
+        reg_mult_bos = self.sam_sys_inputs.get(
+            "balance_of_system_cost_multiplier", 1)
+
+        self._meta[SupplyCurveField.EOS_MULT] = eos_mult
+        self._meta[SupplyCurveField.REG_MULT] = reg_mult_cc
+
+        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            (self.plant_optimizer.capital_cost
+             + self.plant_optimizer.balance_of_system_cost)
+            / capacity_ac_mw
         )
-        self._meta[SupplyCurveField.REG_MULT] = self.sam_sys_inputs.get(
-            "capital_cost_multiplier", 1
+        self._meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW] = (
+            (self.plant_optimizer.capital_cost / eos_mult / reg_mult_cc
+             + self.plant_optimizer.balance_of_system_cost / reg_mult_bos)
+            / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost
+            / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.fixed_operating_cost
+            / reg_mult_foc
+            / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost
+            / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW] = (
+            self.plant_optimizer.variable_operating_cost
+            / reg_mult_voc
+            / capacity_ac_mw
+        )
+        self._meta[SupplyCurveField.FIXED_CHARGE_RATE] = (
+            self.plant_optimizer.fixed_charge_rate
         )
 
+        logger.debug("Plant layout optimization complete!")
         return self.outputs
 
     def agg_data_layers(self):
@@ -1412,8 +1485,9 @@ class BespokeWindPlants(BaseAggregation):
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
-                 pre_extract_inclusions=False, prior_run=None, gid_map=None,
-                 bias_correct=None, pre_load_data=False):
+                 pre_extract_inclusions=False, eos_mult_baseline_cap_mw=200,
+                 prior_run=None, gid_map=None, bias_correct=None,
+                 pre_load_data=False):
         """reV bespoke analysis class.
 
         Much like generation, ``reV`` bespoke analysis runs SAM
@@ -1444,14 +1518,15 @@ class BespokeWindPlants(BaseAggregation):
             uniquely defined (i.e.only appear once and in a single
             input file).
         res_fpath : str
-            Filepath to wind resource data in NREL WTK format. This
-            input can be path to a single resource HDF5 file or a path
-            including a wildcard input like ``/h5_dir/prefix*suffix`` to
-            run bespoke on multiple years of resource data. The former
-            must be readable by
-            :py:class:`rex.renewable_resource.WindResource` while the
-            latter must be readable by
-            or :py:class:`rex.multi_year_resource.MultiYearWindResource`
+            Unix shell style path to wind resource HDF5 file in NREL WTK
+            format. Can also be a path including a wildcard input like
+            ``/h5_dir/prefix*suffix`` to run bespoke on multiple years
+            of resource data. Can also be an explicit list of resource
+            HDF5 file paths, which themselves can contain wildcards. If
+            multiple files are specified in this way, they must have the
+            same coordinates but can have different time indices (i.e.
+            different years). This input must be readable by
+            :py:class:`rex.multi_year_resource.MultiYearWindResource`
             (i.e. the resource data conform to the
             `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
             means the data file(s) must contain a 1D ``time_index``
@@ -1541,7 +1616,7 @@ class BespokeWindPlants(BaseAggregation):
             multiple sites can be specified to evaluate ``reV`` at
             multiple specific locations. A string pointing to a project
             points CSV file may also be specified. Typically, the CSV
-            contains two columns:
+            contains the following columns:
 
                 - ``gid``: Integer specifying the supply curve GID of
                   each site.
@@ -1558,7 +1633,7 @@ class BespokeWindPlants(BaseAggregation):
             site-specific capital cost value for each location). Columns
             that do not correspond to a config key may also be included,
             but they will be ignored. The CSV file input can also have
-            these extra columns:
+            these extra, optional columns:
 
                 - ``capital_cost_multiplier``
                 - ``fixed_operating_cost_multiplier``
@@ -1768,6 +1843,13 @@ class BespokeWindPlants(BaseAggregation):
             the `excl_dict` input. It is typically faster to compute
             the inclusion mask on the fly with parallel workers.
             By default, ``False``.
+        eos_mult_baseline_cap_mw : int | float, optional
+            Baseline plant capacity (MW) used to calculate economies of
+            scale (EOS) multiplier from the `capital_cost_function`. EOS
+            multiplier is calculated as the $-per-kW of the wind plant
+            divided by the $-per-kW of a plant with this baseline
+            capacity. By default, `200` (MW), which aligns the baseline
+            with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
         prior_run : str, optional
             Optional filepath to a bespoke output HDF5 file belonging to
             a prior run. If specified, this module will only run the
@@ -1890,6 +1972,7 @@ class BespokeWindPlants(BaseAggregation):
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._data_layers = data_layers
+        self._eos_mult_baseline_cap_mw = eos_mult_baseline_cap_mw
         self._prior_meta = self._parse_prior_run(prior_run)
         self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
         self._bias_correct = Gen._parse_bc(bias_correct)
@@ -1917,7 +2000,7 @@ class BespokeWindPlants(BaseAggregation):
             Slice or list specifying project points, string pointing to a
             project points csv, or a fully instantiated PointsControl object.
             Can also be a single site integer value. Points csv should have
-            `SupplyCurveField.GID` and 'config' column, the config maps to the
+            `SiteDataField.GID` and 'config' column, the config maps to the
             sam_configs dict keys.
         sam_configs : dict | str | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
@@ -1972,6 +2055,7 @@ class BespokeWindPlants(BaseAggregation):
 
             with Outputs(prior_run, mode="r") as f:
                 meta = f.meta
+                meta = meta.rename(columns=SupplyCurveField.map_from_legacy())
 
             # pylint: disable=no-member
             for col in meta.columns:
@@ -1997,7 +2081,7 @@ class BespokeWindPlants(BaseAggregation):
         meta = None
 
         if self._prior_meta is not None:
-            mask = self._prior_meta[SupplyCurveField.GID] == gid
+            mask = self._prior_meta[SupplyCurveField.SC_POINT_GID] == gid
             if any(mask):
                 meta = self._prior_meta[mask]
 
@@ -2028,8 +2112,7 @@ class BespokeWindPlants(BaseAggregation):
                 )
 
         # just check that this file exists, cannot check res_fpath if *glob
-        Handler = BespokeSinglePlant.get_wind_handler(self._res_fpath)
-        with Handler(self._res_fpath) as f:
+        with MultiYearWindResource(self._res_fpath) as f:
             assert any(f.dsets)
 
     def _pre_load_data(self, pre_load_data):
@@ -2068,7 +2151,10 @@ class BespokeWindPlants(BaseAggregation):
 
         logger.info("Pre-loading resource data for Bespoke run... ")
         self._pre_loaded_data = BespokeMultiPlantData(
-            self._res_fpath, sc_gid_to_hh, sc_gid_to_res_gid
+            self._res_fpath,
+            sc_gid_to_hh,
+            sc_gid_to_res_gid,
+            pre_load_humidity=self._project_points.sam_config_obj.icing,
         )
 
     def _hh_for_sc_gid(self, sc_gid):
@@ -2362,8 +2448,8 @@ class BespokeWindPlants(BaseAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
-                   prior_meta=None, gid_map=None, bias_correct=None,
-                   pre_loaded_data=None):
+                   eos_mult_baseline_cap_mw=200, prior_meta=None,
+                   gid_map=None, bias_correct=None, pre_loaded_data=None):
         """
         Standalone serial method to run bespoke optimization.
         See BespokeWindPlants docstring for parameter description.
@@ -2389,14 +2475,13 @@ class BespokeWindPlants(BaseAggregation):
                 exclusion_shape = sc.exclusions.shape
 
         cls._check_inclusion_mask(inclusion_mask, gids, exclusion_shape)
-        Handler = BespokeSinglePlant.get_wind_handler(res_fpath)
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {
             "excl_dict": excl_dict,
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
-            "h5_handler": Handler,
+            "h5_handler": MultiYearWindResource,
         }
 
         with AggFileHandler(excl_fpath, res_fpath, **file_kwargs) as fh:
@@ -2428,6 +2513,7 @@ class BespokeWindPlants(BaseAggregation):
                         excl_area=excl_area,
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
+                        eos_mult_baseline_cap_mw=eos_mult_baseline_cap_mw,
                         prior_meta=prior_meta,
                         gid_map=gid_map,
                         bias_correct=bias_correct,
@@ -2519,6 +2605,7 @@ class BespokeWindPlants(BaseAggregation):
                     gids=gid,
                     exclusion_shape=self.shape,
                     slice_lookup=copy.deepcopy(self.slice_lookup),
+                    eos_mult_baseline_cap_mw=self._eos_mult_baseline_cap_mw,
                     prior_meta=self._get_prior_meta(gid),
                     gid_map=self._gid_map,
                     bias_correct=self._get_bc_for_gid(gid),
@@ -2582,6 +2669,7 @@ class BespokeWindPlants(BaseAggregation):
                 pre_loaded_data = self._pre_loaded_data_for_sc_gid(gid)
                 afk = self._area_filter_kernel
                 i_bc = self._get_bc_for_gid(gid)
+                ebc = self._eos_mult_baseline_cap_mw
 
                 si = self.run_serial(self._excl_fpath,
                                      self._res_fpath,
@@ -2605,6 +2693,7 @@ class BespokeWindPlants(BaseAggregation):
                                      excl_area=self._excl_area,
                                      data_layers=self._data_layers,
                                      slice_lookup=slice_lookup,
+                                     eos_mult_baseline_cap_mw=ebc,
                                      prior_meta=prior_meta,
                                      gid_map=self._gid_map,
                                      bias_correct=i_bc,

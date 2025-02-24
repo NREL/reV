@@ -26,8 +26,10 @@ from reV.supply_curve.sc_aggregation import (
     SupplyCurveAggregation,
     _warn_about_large_datasets,
 )
+from reV.supply_curve.cli_sc_aggregation import _format_res_fpath
 from reV.handlers.exclusions import LATITUDE
 from reV.utilities import ModuleName, SupplyCurveField
+
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
@@ -130,16 +132,34 @@ def test_agg_summary():
 
     summary = summary.fillna("None")
     s_baseline = s_baseline.fillna("None")
+
+    assert SupplyCurveField.CAPACITY_AC_MW in summary
+    assert SupplyCurveField.CAPACITY_DC_MW in summary
+    assert SupplyCurveField.MEAN_CF_AC in summary
+    assert SupplyCurveField.MEAN_CF_DC in summary
+    assert SupplyCurveField.REG_MULT in summary
+    assert SupplyCurveField.EOS_MULT in summary
+
+    # dc outputs are `None` because old gen file does not have correct
+    # output dsets
+    assert not summary[SupplyCurveField.CAPACITY_AC_MW].isna().any()
+    assert not summary[SupplyCurveField.CAPACITY_DC_MW].isna().all()
+    assert not summary[SupplyCurveField.MEAN_CF_AC].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_DC].isna().all()
+
+    assert np.allclose(summary[SupplyCurveField.REG_MULT], 1)
+    assert np.allclose(summary[SupplyCurveField.EOS_MULT], 1)
+
     summary = summary[list(s_baseline.columns)]
-
     assert_frame_equal(summary, s_baseline, check_dtype=False, rtol=0.0001)
-
-    assert "capacity_ac" not in summary
 
 
 @pytest.mark.parametrize("pd", [None, 45])
 def test_agg_summary_solar_ac(pd):
     """Test the aggregation summary method for solar ac outputs."""
+
+    with Outputs(GEN, "r") as out:
+        cf_means_dc = out["cf_mean-means"]
 
     with tempfile.TemporaryDirectory() as td:
         gen = os.path.join(td, "gen.h5")
@@ -147,9 +167,13 @@ def test_agg_summary_solar_ac(pd):
         Outputs.add_dataset(
             gen, "dc_ac_ratio", np.array([1.3] * 188), np.float32
         )
+        Outputs.add_dataset(
+            gen, "cf_mean_ac-means", cf_means_dc * 1.3, np.float32
+        )
 
         with Outputs(gen, "r") as out:
             assert "dc_ac_ratio" in out.datasets
+            assert "cf_mean_ac-means" in out.datasets
 
         sca = SupplyCurveAggregation(
             EXCL,
@@ -162,13 +186,34 @@ def test_agg_summary_solar_ac(pd):
         )
         summary = sca.summarize(gen, max_workers=1)
 
-    assert SupplyCurveField.CAPACITY_AC in summary
-    assert np.allclose(summary[SupplyCurveField.CAPACITY] / 1.3,
-                       summary[SupplyCurveField.CAPACITY_AC])
+    assert SupplyCurveField.CAPACITY_AC_MW in summary
+    assert SupplyCurveField.CAPACITY_DC_MW in summary
+    assert SupplyCurveField.MEAN_CF_AC in summary
+    assert SupplyCurveField.MEAN_CF_DC in summary
+
+    assert not summary[SupplyCurveField.CAPACITY_AC_MW].isna().any()
+    assert not summary[SupplyCurveField.CAPACITY_DC_MW].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_AC].isna().any()
+    assert not summary[SupplyCurveField.MEAN_CF_DC].isna().any()
+
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW] / 1.3,
+                       summary[SupplyCurveField.CAPACITY_AC_MW])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_DC],
+                       summary[SupplyCurveField.CAPACITY_AC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_AC])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_DC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_DC]
+                       * 8760,
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH])
+    assert np.allclose(summary[SupplyCurveField.CAPACITY_AC_MW]
+                       * summary[SupplyCurveField.MEAN_CF_AC]
+                       * 8760,
+                       summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH])
 
 
 def test_multi_file_excl():
-    """Test sc aggregation with multple exclusion file inputs."""
+    """Test sc aggregation with multiple exclusion file inputs."""
 
     excl_dict = {
         "ri_srtm_slope": {
@@ -360,7 +405,7 @@ def test_agg_scalar_excl():
     )
     summary_with_weights = sca.summarize(GEN, max_workers=1)
 
-    dsets = [SupplyCurveField.AREA_SQ_KM, SupplyCurveField.CAPACITY]
+    dsets = [SupplyCurveField.AREA_SQ_KM, SupplyCurveField.CAPACITY_AC_MW]
     for dset in dsets:
         diff = summary_base[dset].values / summary_with_weights[dset].values
         msg = ("Fractional exclusions failed for {} which has values {} and {}"
@@ -433,7 +478,7 @@ def test_data_layer_methods():
 
 @pytest.mark.parametrize(
     "cap_cost_scale",
-    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY}) ** -0.3"]
+    ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
 )
 def test_recalc_lcoe(cap_cost_scale):
     """Test supply curve aggregation with the re-calculation of lcoe using the
@@ -458,6 +503,19 @@ def test_recalc_lcoe(cap_cost_scale):
             for k, v in data.items():
                 arr = np.full(res["meta"].shape, v)
                 res.create_dataset(k, res["meta"].shape, data=arr)
+
+            arr = np.full(res["meta"].shape, data["capital_cost"])
+            res.create_dataset("base_capital_cost", res["meta"].shape,
+                               data=arr)
+
+            arr = np.full(res["meta"].shape, data["fixed_operating_cost"])
+            res.create_dataset("base_fixed_operating_cost", res["meta"].shape,
+                               data=arr)
+
+            arr = np.full(res["meta"].shape, data["variable_operating_cost"])
+            res.create_dataset("base_variable_operating_cost",
+                               res["meta"].shape, data=arr)
+
             for year, cf in zip(years, annual_cf):
                 lcoe = lcoe_fcr(data["fixed_charge_rate"],
                                 data["capital_cost"],
@@ -521,15 +579,48 @@ def test_recalc_lcoe(cap_cost_scale):
     assert not np.allclose(summary_base[SupplyCurveField.MEAN_LCOE],
                            summary[SupplyCurveField.MEAN_LCOE])
 
-    if cap_cost_scale == '1':
-        cc_dset = SupplyCurveField.SC_POINT_CAPITAL_COST
+    assert np.allclose(summary[SupplyCurveField.EOS_MULT],
+                       summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                       / summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+    assert np.allclose(data['capital_cost'] / data['system_capacity'] * 1000,
+                       summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+
+    expected_recalc_lcoe = lcoe_fcr(data["fixed_charge_rate"],
+                                    data["capital_cost"],
+                                    data["fixed_operating_cost"],
+                                    data["system_capacity"]
+                                    * np.array(annual_cf).mean()
+                                    * 8760,
+                                    data["variable_operating_cost"])
+    if cap_cost_scale == "1":
+        assert np.allclose(summary[SupplyCurveField.MEAN_LCOE],
+                           expected_recalc_lcoe)
     else:
-        cc_dset = SupplyCurveField.SCALED_SC_POINT_CAPITAL_COST
-    lcoe = lcoe_fcr(summary['mean_fixed_charge_rate'],
-                    summary[cc_dset],
-                    summary[SupplyCurveField.SC_POINT_FIXED_OPERATING_COST],
-                    summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY],
-                    summary['mean_variable_operating_cost'])
+        assert not np.allclose(summary[SupplyCurveField.MEAN_LCOE],
+                               expected_recalc_lcoe)
+
+    fcr = summary[SupplyCurveField.FIXED_CHARGE_RATE]
+    cap_cost = (summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+                * summary[SupplyCurveField.CAPACITY_AC_MW])
+    foc = (summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = (summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    aep_kwh = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] * 1000
+
+    lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
+    assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
+
+    cap_cost = (summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+                * summary[SupplyCurveField.CAPACITY_AC_MW]
+                * summary[SupplyCurveField.REG_MULT]
+                * summary[SupplyCurveField.EOS_MULT])
+    foc = (summary[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = (summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
+           * summary[SupplyCurveField.CAPACITY_AC_MW])
+
+    lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
 
 
@@ -576,6 +667,48 @@ def test_cli_basic_agg(runner, clear_loggers, tm_dset, pre_extract):
             dirname, ModuleName.SUPPLY_CURVE_AGGREGATION
         )
         assert out_csv_fn in fn_list
+
+
+def test_format_res_fpath():
+    """Test the format_res_fpath function."""
+    assert _format_res_fpath({"test": 1}) == {"test": 1, "res_fpath": None}
+
+    with tempfile.TemporaryDirectory() as td:
+        test_file = os.path.join(td, "gen.h5")
+        config = {"res_fpath": test_file}
+        with pytest.raises(FileNotFoundError) as error:
+            _format_res_fpath(config)
+        assert "Could not find resource file" in str(error)
+        assert "gen.h5" in str(error)
+
+        with open(test_file, 'w'):
+            pass
+
+        assert _format_res_fpath(config) == config
+
+
+def test_format_res_fpath_with_year_pattern():
+    """Test the format_res_fpath function with {} substitute for year."""
+
+    with tempfile.TemporaryDirectory() as td:
+        tf = os.path.join(td, "gen_{}.h5")
+        config = {"res_fpath": tf}
+        with pytest.raises(FileNotFoundError) as error:
+            _format_res_fpath(config)
+        assert "Could not find any files that match the pattern" in str(error)
+        assert "gen_<year>.h5" in str(error)
+
+        with open(tf.format(2012), 'w'):
+            pass
+
+        config = {"res_fpath": tf}
+        assert _format_res_fpath(config) == {"res_fpath": tf.format(2012)}
+
+        with open(tf.format(2010), 'w'):
+            pass
+
+        config = {"res_fpath": tf}
+        assert _format_res_fpath(config) == {"res_fpath": tf.format(2010)}
 
 
 def execute_pytest(capture="all", flags="-rapP"):

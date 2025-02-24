@@ -7,6 +7,7 @@ reV supply curve module
 import json
 import logging
 import os
+from itertools import chain
 from copy import deepcopy
 from warnings import warn
 
@@ -24,11 +25,38 @@ from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
 logger = logging.getLogger(__name__)
 
 
+# map is column name to relative order in which it should appear in output file
+_REQUIRED_COMPUTE_AND_OUTPUT_COLS = {
+    SupplyCurveField.TRANS_GID: 0,
+    SupplyCurveField.TRANS_TYPE: 1,
+    SupplyCurveField.N_PARALLEL_TRANS: 2,
+    SupplyCurveField.DIST_SPUR_KM: 3,
+    SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW: 10,
+    SupplyCurveField.LCOT: 11,
+    SupplyCurveField.TOTAL_LCOE: 12,
+}
+_REQUIRED_OUTPUT_COLS = {SupplyCurveField.DIST_EXPORT_KM: 4,
+                         SupplyCurveField.REINFORCEMENT_DIST_KM: 5,
+                         SupplyCurveField.TIE_LINE_COST_PER_MW: 6,
+                         SupplyCurveField.CONNECTION_COST_PER_MW: 7,
+                         SupplyCurveField.EXPORT_COST_PER_MW: 8,
+                         SupplyCurveField.REINFORCEMENT_COST_PER_MW: 9,
+                         SupplyCurveField.POI_LAT: 13,
+                         SupplyCurveField.POI_LON: 14,
+                         SupplyCurveField.REINFORCEMENT_POI_LAT: 15,
+                         SupplyCurveField.REINFORCEMENT_POI_LON: 16}
+DEFAULT_COLUMNS = tuple(str(field)
+                        for field in chain(_REQUIRED_COMPUTE_AND_OUTPUT_COLS,
+                                           _REQUIRED_OUTPUT_COLS))
+"""Default output columns from supply chain computation (not ordered)"""
+
+
 class SupplyCurve:
     """SupplyCurve"""
 
     def __init__(self, sc_points, trans_table, sc_features=None,
-                 sc_capacity_col=SupplyCurveField.CAPACITY):
+                 # str() to fix docs
+                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW)):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
@@ -282,15 +310,19 @@ class SupplyCurve:
         # also xformer_cost_p_mw -> xformer_cost_per_mw (not sure why there
         # would be a *_p_mw but here we are...)
         rename_map = {
-            "trans_line_gid": "trans_gid",
+            "trans_line_gid": SupplyCurveField.TRANS_GID,
             "trans_gids": "trans_line_gids",
             "xformer_cost_p_mw": "xformer_cost_per_mw",
         }
         trans_table = trans_table.rename(columns=rename_map)
 
-        if "dist_mi" in trans_table and "dist_km" not in trans_table:
-            trans_table = trans_table.rename(columns={"dist_mi": "dist_km"})
-            trans_table["dist_km"] *= 1.60934
+        contains_dist_in_miles = "dist_mi" in trans_table
+        missing_km_dist = SupplyCurveField.DIST_SPUR_KM not in trans_table
+        if contains_dist_in_miles and missing_km_dist:
+            trans_table = trans_table.rename(
+                columns={"dist_mi": SupplyCurveField.DIST_SPUR_KM}
+            )
+            trans_table[SupplyCurveField.DIST_SPUR_KM] *= 1.60934
 
         drop_cols = [SupplyCurveField.SC_GID, 'cap_left',
                      SupplyCurveField.SC_POINT_GID]
@@ -302,7 +334,7 @@ class SupplyCurve:
 
     @staticmethod
     def _map_trans_capacity(trans_sc_table,
-                            sc_capacity_col=SupplyCurveField.CAPACITY):
+                            sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Map SC gids to transmission features based on capacity. For any SC
         gids with capacity > the maximum transmission feature capacity, map
@@ -331,7 +363,7 @@ class SupplyCurve:
 
         nx = trans_sc_table[sc_capacity_col] / trans_sc_table["max_cap"]
         nx = np.ceil(nx).astype(int)
-        trans_sc_table["n_parallel_trans"] = nx
+        trans_sc_table[SupplyCurveField.N_PARALLEL_TRANS] = nx
 
         if (nx > 1).any():
             mask = nx > 1
@@ -409,11 +441,12 @@ class SupplyCurve:
         """
         features = features.rename(
             columns={
-                "trans_line_gid": "trans_gid",
+                "trans_line_gid": SupplyCurveField.TRANS_GID,
                 "trans_gids": "trans_line_gids",
             }
         )
-        mask = features["category"].str.lower() == "substation"
+        mask = (features[SupplyCurveField.TRANS_TYPE].str.casefold()
+                == "substation")
 
         if not any(mask):
             return []
@@ -424,7 +457,7 @@ class SupplyCurve:
 
         line_gids = np.unique(np.concatenate(line_gids.values))
 
-        test = np.isin(line_gids, features["trans_gid"].values)
+        test = np.isin(line_gids, features[SupplyCurveField.TRANS_GID].values)
 
         return line_gids[~test].tolist()
 
@@ -513,10 +546,11 @@ class SupplyCurve:
     @classmethod
     def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                sc_cols=(SupplyCurveField.SC_GID,
-                                        SupplyCurveField.CAPACITY,
-                                        SupplyCurveField.MEAN_CF,
+                                        SupplyCurveField.CAPACITY_AC_MW,
+                                        SupplyCurveField.MEAN_CF_AC,
                                         SupplyCurveField.MEAN_LCOE),
-                               sc_capacity_col=SupplyCurveField.CAPACITY):
+                               sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW
+                               ):
         """
         Merge the supply curve table with the transmission features table.
 
@@ -583,11 +617,13 @@ class SupplyCurve:
             if isinstance(sc_cols, tuple):
                 sc_cols = list(sc_cols)
 
-            if SupplyCurveField.MEAN_LCOE_FRICTION in sc_points:
-                sc_cols.append(SupplyCurveField.MEAN_LCOE_FRICTION)
-
-            if "transmission_multiplier" in sc_points:
-                sc_cols.append("transmission_multiplier")
+            extra_cols = [SupplyCurveField.CAPACITY_DC_MW,
+                          SupplyCurveField.MEAN_CF_DC,
+                          SupplyCurveField.MEAN_LCOE_FRICTION,
+                          "transmission_multiplier"]
+            for col in extra_cols:
+                if col in sc_points:
+                    sc_cols.append(col)
 
             sc_cols += merge_cols
             sc_points = sc_points[sc_cols].copy()
@@ -600,10 +636,10 @@ class SupplyCurve:
     @classmethod
     def _map_tables(cls, sc_points, trans_table,
                     sc_cols=(SupplyCurveField.SC_GID,
-                             SupplyCurveField.CAPACITY,
-                             SupplyCurveField.MEAN_CF,
+                             SupplyCurveField.CAPACITY_AC_MW,
+                             SupplyCurveField.MEAN_CF_AC,
                              SupplyCurveField.MEAN_LCOE),
-                    sc_capacity_col=SupplyCurveField.CAPACITY):
+                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Map supply curve points to transmission features
 
@@ -618,8 +654,9 @@ class SupplyCurve:
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             If the `sc_capacity_col` is not included, it will get added.
-            by default (SupplyCurveField.SC_GID, SupplyCurveField.CAPACITY,
-            SupplyCurveField.MEAN_CF, SupplyCurveField.MEAN_LCOE)
+            by default (SupplyCurveField.SC_GID,
+            SupplyCurveField.CAPACITY_AC_MW, SupplyCurveField.MEAN_CF_AC,
+            SupplyCurveField.MEAN_LCOE)
         sc_capacity_col : str, optional
             Name of capacity column in `trans_sc_table`. The values in
             this column determine the size of transmission lines built.
@@ -646,9 +683,9 @@ class SupplyCurve:
                 trans_sc_table, sc_capacity_col=scc
             )
 
-        trans_sc_table = \
-            trans_sc_table.sort_values(
-                [SupplyCurveField.SC_GID, 'trans_gid']).reset_index(drop=True)
+        sort_cols = [SupplyCurveField.SC_GID, SupplyCurveField.TRANS_GID]
+        trans_sc_table = trans_sc_table.sort_values(sort_cols)
+        trans_sc_table = trans_sc_table.reset_index(drop=True)
 
         cls._check_sc_trans_table(sc_points, trans_sc_table)
 
@@ -718,7 +755,7 @@ class SupplyCurve:
 
     @staticmethod
     def _get_capacity(sc_gid, sc_table, connectable=True,
-                      sc_capacity_col=SupplyCurveField.CAPACITY):
+                      sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
         """
         Get capacity of supply curve point
 
@@ -767,7 +804,8 @@ class SupplyCurve:
     def _compute_trans_cap_cost(cls, trans_table, trans_costs=None,
                                 avail_cap_frac=1, max_workers=None,
                                 connectable=True, line_limited=False,
-                                sc_capacity_col=SupplyCurveField.CAPACITY):
+                                sc_capacity_col=(
+                                    SupplyCurveField.CAPACITY_AC_MW)):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -919,8 +957,9 @@ class SupplyCurve:
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
         """
-        if "trans_cap_cost_per_mw" in self._trans_table:
-            cost = self._trans_table["trans_cap_cost_per_mw"].values.copy()
+        tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+        if tcc_per_mw_col in self._trans_table:
+            cost = self._trans_table[tcc_per_mw_col].values.copy()
         elif "trans_cap_cost" not in self._trans_table:
             scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(
@@ -932,17 +971,20 @@ class SupplyCurve:
                 max_workers=max_workers,
                 sc_capacity_col=scc,
             )
-            self._trans_table["trans_cap_cost_per_mw"] = cost  # $/MW
+            self._trans_table[tcc_per_mw_col] = cost  # $/MW
         else:
             cost = self._trans_table["trans_cap_cost"].values.copy()  # $
-            cost /= self._trans_table[self._sc_capacity_col]  # $/MW
-            self._trans_table["trans_cap_cost_per_mw"] = cost
+            cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]  # $/MW
+            self._trans_table[tcc_per_mw_col] = cost
 
-        cost *= self._trans_table[self._sc_capacity_col]
-        # align with "mean_cf"
-        cost /= self._trans_table[SupplyCurveField.CAPACITY]
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF].values
+        self._trans_table[tcc_per_mw_col] = (
+            self._trans_table[tcc_per_mw_col].astype("float32")
+        )
+        cost = cost.astype("float32")
+        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC]
+        cf_mean_arr = cf_mean_arr.values.astype("float32")
         resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
+        resource_lcoe = resource_lcoe.values.astype("float32")
 
         if 'reinforcement_cost_floored_per_mw' in self._trans_table:
             logger.info("'reinforcement_cost_floored_per_mw' column found in "
@@ -950,33 +992,30 @@ class SupplyCurve:
                         "cost LCOE as sorting option.")
             fr_cost = (self._trans_table['reinforcement_cost_floored_per_mw']
                        .values.copy())
-            fr_cost *= self._trans_table[self._sc_capacity_col]
-            # align with "mean_cf"
-            fr_cost /= self._trans_table[SupplyCurveField.CAPACITY]
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
             lcoe_fr = lcot_fr + resource_lcoe
             self._trans_table['lcot_floored_reinforcement'] = lcot_fr
             self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
-        if 'reinforcement_cost_per_mw' in self._trans_table:
-            logger.info("'reinforcement_cost_per_mw' column found in "
-                        "transmission table. Adding reinforcement costs "
-                        "to total LCOE.")
+        if SupplyCurveField.REINFORCEMENT_COST_PER_MW in self._trans_table:
+            logger.info("%s column found in transmission table. Adding "
+                        "reinforcement costs to total LCOE.",
+                        SupplyCurveField.REINFORCEMENT_COST_PER_MW)
             lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe_nr = lcot_nr + resource_lcoe
             self._trans_table['lcot_no_reinforcement'] = lcot_nr
             self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
-            r_cost = (self._trans_table['reinforcement_cost_per_mw']
-                      .values.copy())
-            r_cost *= self._trans_table[self._sc_capacity_col]
-            # align with "mean_cf"
-            r_cost /= self._trans_table[SupplyCurveField.CAPACITY]
+
+            col_name = SupplyCurveField.REINFORCEMENT_COST_PER_MW
+            r_cost = self._trans_table[col_name].astype("float32")
+            r_cost = r_cost.values.copy()
+            self._trans_table[tcc_per_mw_col] += r_cost
             cost += r_cost  # $/MW
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
-        self._trans_table['lcot'] = lcot
-        self._trans_table['total_lcoe'] = lcot + resource_lcoe
+        self._trans_table[SupplyCurveField.LCOT] = lcot
+        self._trans_table[SupplyCurveField.TOTAL_LCOE] = lcot + resource_lcoe
 
         if consider_friction:
             self._calculate_total_lcoe_friction()
@@ -987,7 +1026,7 @@ class SupplyCurve:
 
         if SupplyCurveField.MEAN_LCOE_FRICTION in self._trans_table:
             lcoe_friction = (
-                self._trans_table['lcot']
+                self._trans_table[SupplyCurveField.LCOT]
                 + self._trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
             self._trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
                 lcoe_friction
@@ -1077,22 +1116,22 @@ class SupplyCurve:
 
         return table
 
-    def _full_sort(
+    def _full_sort(  # noqa: C901
         self,
         trans_table,
         trans_costs=None,
         avail_cap_frac=1,
         comp_wind_dirs=None,
         total_lcoe_fric=None,
-        sort_on="total_lcoe",
+        sort_on=SupplyCurveField.TOTAL_LCOE,
         columns=(
-            "trans_gid",
-            "trans_capacity",
-            "trans_type",
-            "trans_cap_cost_per_mw",
-            "dist_km",
-            "lcot",
-            "total_lcoe",
+            SupplyCurveField.TRANS_GID,
+            SupplyCurveField.TRANS_CAPACITY,
+            SupplyCurveField.TRANS_TYPE,
+            SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+            SupplyCurveField.DIST_SPUR_KM,
+            SupplyCurveField.LCOT,
+            SupplyCurveField.TOTAL_LCOE,
         ),
         downwind=False,
     ):
@@ -1148,22 +1187,20 @@ class SupplyCurve:
         trans_sc_gids = trans_table[SupplyCurveField.SC_GID].values.astype(int)
 
         # syntax is final_key: source_key (source from trans_table)
-        all_cols = {k: k for k in columns}
-        essentials = {
-            "trans_gid": "trans_gid",
-            "trans_capacity": "avail_cap",
-            "trans_type": "category",
-            "dist_km": "dist_km",
-            "trans_cap_cost_per_mw": "trans_cap_cost_per_mw",
-            "lcot": "lcot",
-            "total_lcoe": "total_lcoe",
-        }
-        all_cols.update(essentials)
+        all_cols = list(columns)
+        essentials = [SupplyCurveField.TRANS_GID,
+                      SupplyCurveField.TRANS_CAPACITY,
+                      SupplyCurveField.TRANS_TYPE,
+                      SupplyCurveField.DIST_SPUR_KM,
+                      SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+                      SupplyCurveField.LCOT,
+                      SupplyCurveField.TOTAL_LCOE]
 
-        arrays = {
-            final_key: trans_table[source_key].values
-            for final_key, source_key in all_cols.items()
-        }
+        for col in essentials:
+            if col not in all_cols:
+                all_cols.append(col)
+
+        arrays = {col: trans_table[col].values for col in all_cols}
 
         sc_capacities = trans_table[self._sc_capacity_col].values
 
@@ -1173,7 +1210,7 @@ class SupplyCurve:
             sc_gid = trans_sc_gids[i]
             if self._mask[sc_gid]:
                 connect = trans_features.connect(
-                    arrays["trans_gid"][i], sc_capacities[i]
+                    arrays[SupplyCurveField.TRANS_GID][i], sc_capacities[i]
                 )
                 if connect:
                     connected += 1
@@ -1236,36 +1273,50 @@ class SupplyCurve:
         Add the transmission connection feature capacity to the trans table if
         needed
         """
-        if "avail_cap" not in self._trans_table:
+        if SupplyCurveField.TRANS_CAPACITY not in self._trans_table:
             kwargs = {"avail_cap_frac": avail_cap_frac}
             fc = TF.feature_capacity(self._trans_table, **kwargs)
-            self._trans_table = self._trans_table.merge(fc, on="trans_gid")
+            self._trans_table = self._trans_table.merge(
+                fc, on=SupplyCurveField.TRANS_GID)
 
     def _adjust_output_columns(self, columns, consider_friction):
         """Add extra output columns, if needed."""
-        # These are essentially should-be-defaults that are not
-        # backwards-compatible, so have to explicitly check for them
-        extra_cols = ['ba_str', 'poi_lat', 'poi_lon', 'reinforcement_poi_lat',
-                      'reinforcement_poi_lon', SupplyCurveField.EOS_MULT,
-                      SupplyCurveField.REG_MULT,
-                      'reinforcement_cost_per_mw', 'reinforcement_dist_km',
-                      'n_parallel_trans', SupplyCurveField.TOTAL_LCOE_FRICTION]
-        if not consider_friction:
-            extra_cols -= {SupplyCurveField.TOTAL_LCOE_FRICTION}
 
-        extra_cols = [
-            col
-            for col in extra_cols
-            if col in self._trans_table and col not in columns
-        ]
+        for col in _REQUIRED_COMPUTE_AND_OUTPUT_COLS:
+            if col not in columns:
+                columns.append(col)
 
-        return columns + extra_cols
+        for col in _REQUIRED_OUTPUT_COLS:
+            if col not in self._trans_table:
+                self._trans_table[col] = np.nan
+            if col not in columns:
+                columns.append(col)
+
+        missing_cols = [col for col in columns if col not in self._trans_table]
+        if missing_cols:
+            msg = (f"The following requested columns are not found in "
+                   f"transmission table: {missing_cols}.\nSkipping...")
+            logger.warning(msg)
+            warn(msg)
+
+        columns = [col for col in columns if col in self._trans_table]
+
+        fric_col = SupplyCurveField.TOTAL_LCOE_FRICTION
+        if consider_friction and fric_col in self._trans_table:
+            columns.append(fric_col)
+
+        return sorted(columns, key=_column_sort_key)
 
     def _determine_sort_on(self, sort_on):
         """Determine the `sort_on` column from user input and trans table"""
-        if "reinforcement_cost_per_mw" in self._trans_table:
+        r_cost_col = SupplyCurveField.REINFORCEMENT_COST_PER_MW
+        found_reinforcement_costs = (
+            r_cost_col in self._trans_table
+            and not self._trans_table[r_cost_col].isna().all()
+        )
+        if found_reinforcement_costs:
             sort_on = sort_on or "lcoe_no_reinforcement"
-        return sort_on or "total_lcoe"
+        return sort_on or SupplyCurveField.TOTAL_LCOE
 
     def full_sort(
         self,
@@ -1278,13 +1329,13 @@ class SupplyCurve:
         consider_friction=True,
         sort_on=None,
         columns=(
-            "trans_gid",
-            "trans_capacity",
-            "trans_type",
-            "trans_cap_cost_per_mw",
-            "dist_km",
-            "lcot",
-            "total_lcoe",
+            SupplyCurveField.TRANS_GID,
+            SupplyCurveField.TRANS_CAPACITY,
+            SupplyCurveField.TRANS_TYPE,
+            SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+            SupplyCurveField.DIST_SPUR_KM,
+            SupplyCurveField.LCOT,
+            SupplyCurveField.TOTAL_LCOE,
         ),
         wind_dirs=None,
         n_dirs=2,
@@ -1365,8 +1416,10 @@ class SupplyCurve:
         sort_on = self._determine_sort_on(sort_on)
 
         trans_table = self._trans_table.copy()
-        pos = trans_table["lcot"].isnull()
-        trans_table = trans_table.loc[~pos].sort_values([sort_on, "trans_gid"])
+        pos = trans_table[SupplyCurveField.LCOT].isnull()
+        trans_table = trans_table.loc[~pos].sort_values(
+            [sort_on, SupplyCurveField.TRANS_GID]
+        )
 
         total_lcoe_fric = None
         col_in_table = SupplyCurveField.MEAN_LCOE_FRICTION in trans_table
@@ -1414,14 +1467,7 @@ class SupplyCurve:
         max_workers=None,
         consider_friction=True,
         sort_on=None,
-        columns=(
-            "trans_gid",
-            "trans_type",
-            "lcot",
-            "total_lcoe",
-            "dist_km",
-            "trans_cap_cost_per_mw",
-        ),
+        columns=DEFAULT_COLUMNS,
         wind_dirs=None,
         n_dirs=2,
         downwind=False,
@@ -1460,9 +1506,8 @@ class SupplyCurve:
             will be built first, by default `None`, which will use
             total LCOE without any reinforcement costs as the sort value.
         columns : list | tuple, optional
-            Columns to preserve in output connections dataframe,
-            by default ('trans_gid', 'trans_capacity', 'trans_type',
-            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')
+            Columns to preserve in output connections dataframe.
+            By default, :obj:`DEFAULT_COLUMNS`.
         wind_dirs : pandas.DataFrame | str, optional
             path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
             the neighboring supply curve point gids and power-rose value at
@@ -1490,19 +1535,16 @@ class SupplyCurve:
             max_workers=max_workers,
             consider_friction=consider_friction,
         )
-        trans_table = self._trans_table.copy()
+        sort_on = self._determine_sort_on(sort_on)
 
         if isinstance(columns, tuple):
             columns = list(columns)
-
         columns = self._adjust_output_columns(columns, consider_friction)
-        sort_on = self._determine_sort_on(sort_on)
 
-        connections = trans_table.sort_values([sort_on, 'trans_gid'])
+        trans_table = self._trans_table.copy()
+        connections = trans_table.sort_values(
+            [sort_on, SupplyCurveField.TRANS_GID])
         connections = connections.groupby(SupplyCurveField.SC_GID).first()
-        rename = {'trans_gid': 'trans_gid',
-                  'category': 'trans_type'}
-        connections = connections.rename(columns=rename)
         connections = connections[columns].reset_index()
 
         supply_curve = self._sc_points.merge(connections,
@@ -1531,14 +1573,7 @@ class SupplyCurve:
         transmission_costs=None,
         consider_friction=True,
         sort_on=None,
-        columns=(
-            "trans_gid",
-            "trans_type",
-            "trans_cap_cost_per_mw",
-            "dist_km",
-            "lcot",
-            "total_lcoe",
-        ),
+        columns=DEFAULT_COLUMNS,
         max_workers=None,
         competition=None,
     ):
@@ -1606,8 +1641,7 @@ class SupplyCurve:
             By default ``None``.
         columns : list | tuple, optional
             Columns to preserve in output supply curve dataframe.
-            By default, ``('trans_gid', 'trans_type',
-            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')``.
+            By default, :obj:`DEFAULT_COLUMNS`.
         max_workers : int, optional
             Number of workers to use to compute LCOT. If > 1,
             computation is run in parallel. If ``None``, computation
@@ -1673,3 +1707,14 @@ def _format_sc_out_fpath(out_fpath):
     project_dir, out_fn = os.path.split(out_fpath)
     out_fn = out_fn.replace("supply_curve", "supply-curve")
     return os.path.join(project_dir, out_fn)
+
+
+def _column_sort_key(col):
+    """Determine the sort order of the input column. """
+    col_value = _REQUIRED_COMPUTE_AND_OUTPUT_COLS.get(col)
+    if col_value is None:
+        col_value = _REQUIRED_OUTPUT_COLS.get(col)
+    if col_value is None:
+        col_value = 1e6
+
+    return col_value, str(col)

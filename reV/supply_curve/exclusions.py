@@ -111,7 +111,7 @@ class LayerMask:
             specifications to create a boolean mask that defines the
             extent to which the original mask should be applied.
             For example, suppose you specify the input the following
-            way:
+            way::
 
                 input_dict = {
                     "viewsheds": {

@@ -18,6 +18,7 @@ from rex.utilities.utilities import (
     parse_year,
 )
 
+from reV.generation.base import LCOE_REQUIRED_OUTPUTS
 from reV.config.output_request import SAMOutputRequest
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName, log_versions
@@ -60,8 +61,12 @@ class MultiYearGroup:
             source files. This takes priority over `source_dir` and
             `source_prefix` but is not used if `source_files` are
             specified explicitly. By default, ``None``.
-        dsets : list | tuple, optional
-            List of datasets to collect. By default, ``('cf_mean',)``.
+        dsets : str | list | tuple, optional
+            List of datasets to collect. This can be set to
+            ``"PIPELINE"`` if running from the command line as part of a
+            reV pipeline. In this case, all the datasets from the
+            previous pipeline step will be collected.
+            By default, ``('cf_mean',)``.
         pass_through_dsets : list | tuple, optional
             Optional list of datasets that are identical in the
             multi-year files (e.g. input datasets that don't vary from
@@ -76,10 +81,37 @@ class MultiYearGroup:
         self._source_prefix = source_prefix
         self._source_pattern = source_pattern
         self._pass_through_dsets = None
-        if pass_through_dsets is not None:
-            self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
+        self._dsets = None
 
-        self._dsets = self._parse_dsets(dsets)
+        self._parse_pass_through_dsets(dsets, pass_through_dsets or [])
+        self._parse_dsets(dsets)
+
+    def _parse_pass_through_dsets(self, dsets, pass_through_dsets):
+        """Parse a multi-year pass-through dataset collection request.
+
+        Parameters
+        ----------
+        dsets : str | list
+            One or more datasets to collect, or "PIPELINE"
+        pass_through_dsets : list
+            List of pass through datasets.
+        """
+        with Resource(self.source_files[0]) as res:
+            all_dsets = res.datasets
+
+        if isinstance(dsets, str) and dsets == 'PIPELINE':
+            dsets = all_dsets
+
+        if "lcoe_fcr" in dsets:
+            for dset in LCOE_REQUIRED_OUTPUTS:
+                if dset not in pass_through_dsets and dset in all_dsets:
+                    pass_through_dsets.append(dset)
+
+        if "dc_ac_ratio" in dsets:
+            if "dc_ac_ratio" not in pass_through_dsets:
+                pass_through_dsets.append("dc_ac_ratio")
+
+        self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
 
     def _parse_dsets(self, dsets):
         """Parse a multi-year dataset collection request. Can handle PIPELINE
@@ -90,11 +122,6 @@ class MultiYearGroup:
         ----------
         dsets : str | list
             One or more datasets to collect, or "PIPELINE"
-
-        Returns
-        -------
-        dsets : SAMOutputRequest
-            Dataset list object.
         """
         if isinstance(dsets, str) and dsets == 'PIPELINE':
             files = parse_previous_status(self._dirout, ModuleName.MULTI_YEAR)
@@ -104,9 +131,7 @@ class MultiYearGroup:
                          and d != 'meta'
                          and d not in self.pass_through_dsets]
 
-        dsets = SAMOutputRequest(dsets)
-
-        return dsets
+        self._dsets = SAMOutputRequest(dsets)
 
     @property
     def name(self):
@@ -815,10 +840,10 @@ def my_collect_groups(out_fpath, groups, clobber=True):
                 MultiYear.collect_means(out_fpath, group['source_files'],
                                         dset, group=group['group'])
 
-        if group.get('pass_through_dsets', None) is not None:
-            for dset in group['pass_through_dsets']:
-                MultiYear.pass_through(out_fpath, group['source_files'],
-                                       dset, group=group['group'])
+        pass_through_dsets = group.get('pass_through_dsets') or []
+        for dset in pass_through_dsets:
+            MultiYear.pass_through(out_fpath, group['source_files'],
+                                   dset, group=group['group'])
 
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'

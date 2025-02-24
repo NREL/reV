@@ -24,6 +24,7 @@ from reV.utilities import SiteDataField, SupplyCurveField
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
 logger = logging.getLogger(__name__)
+_DEFAULT_CURTAIL_KEY = "default"
 
 
 class PointsControl:
@@ -246,7 +247,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         res_file : str | NoneType
@@ -269,6 +270,7 @@ class ProjectPoints:
         self._tech = str(tech)
         self._h = self._d = None
         self._curtailment = self._parse_curtailment(curtailment)
+        self._check_points_curtailment_mapping()
 
     def __getitem__(self, site):
         """Get the SAM config ID and dictionary for the requested site.
@@ -444,7 +446,7 @@ class ProjectPoints:
         -------
         _tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         """
         return "windpower" if "wind" in self._tech.lower() else self._tech
@@ -532,10 +534,9 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : int | str | pd.DataFrame | slice | list
-            Slice specifying project points, string pointing to a project
-            points csv, or a dataframe containing the effective csv contents.
-            Can also be a single integer site value.
+        points : int | str | slice | list
+            Slice specifying project points, string pointing to a
+            project points csv. Can also be a single integer site value.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -623,9 +624,11 @@ class ProjectPoints:
 
         # pylint: disable=no-member
         if SiteDataField.CONFIG not in df.columns:
-            df = cls._parse_sites(
-                df[SiteDataField.GID].values, res_file=res_file
-            )
+            df[SiteDataField.CONFIG] = None
+
+        # pylint: disable=no-member
+        if SiteDataField.CURTAILMENT not in df.columns:
+            df[SiteDataField.CURTAILMENT] = None
 
         gids = df[SiteDataField.GID].values
         if not np.array_equal(np.sort(gids), gids):
@@ -689,18 +692,29 @@ class ProjectPoints:
 
         Returns
         -------
-        curtailments : NoneType | reV.config.curtailment.Curtailment
-            None if no curtailment, reV curtailment config object if
-            curtailment is being assessed.
+        curtailments : NoneType | dict
+            None if no curtailment, dictionary of reV curtailment config
+            objects if curtailment is being assessed.
         """
-        if isinstance(curtailment_input, (str, dict)):
-            # pointer to config file or explicit input namespace,
-            # instantiate curtailment config object
-            curtailment = Curtailment(curtailment_input)
+        if curtailment_input is None:
+            return None
 
-        elif isinstance(curtailment_input, (Curtailment, type(None))):
-            # pre-initialized curtailment object or no curtailment (None)
-            curtailment = curtailment_input
+        if isinstance(curtailment_input, str):
+            # pointer to config file - instantiate curtailment config
+            # object under default key
+            curtailment = {
+                _DEFAULT_CURTAIL_KEY: Curtailment(curtailment_input)}
+
+        elif isinstance(curtailment_input, dict):
+            # pointer to dict of configs - instantiate all
+            # curtailment config objects
+            curtailment = {k: Curtailment(v)
+                           for k, v in curtailment_input.items()}
+
+        elif isinstance(curtailment_input, Curtailment):
+            # pre-initialized curtailment object - instantiate
+            # curtailment config object under default key
+            curtailment = {_DEFAULT_CURTAIL_KEY: curtailment_input}
 
         else:
             curtailment = None
@@ -792,6 +806,75 @@ class ProjectPoints:
             logger.error(msg)
             raise ConfigError(msg)
 
+    def _check_points_curtailment_mapping(self):
+        """
+        Check to ensure the project points (df) and curtailment configs
+        are compatible. Update as necessary or break
+        """
+        if not self.curtailment:
+            return
+
+        # Extract unique config references from project_points DataFrame
+        df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+        curtail_configs = self.curtailment
+
+        can_fill_null = (len(df_configs) == 1
+                         and df_configs[0] is None
+                         and len(curtail_configs) == 1)
+        if can_fill_null:
+            self._df[SiteDataField.CURTAILMENT] = list(curtail_configs)[0]
+            df_configs = self.df[SiteDataField.CURTAILMENT].unique()
+
+        # Checks to make sure that the same number of curtailment config
+        # files as references in project_points DataFrame
+        if len(set(df_configs) - {None}) > len(curtail_configs):
+            msg = (
+                "Points references {} curtailment configs while only "
+                "{} curtailment configs were provided!".format(
+                    len(df_configs), len(curtail_configs)
+                )
+            )
+            logger.error(msg)
+            raise ConfigError(msg)
+
+
+        unused_configs = set(curtail_configs) - set(df_configs)
+        if unused_configs:
+            msg = ("One or more curtailment configurations not found in "
+                   "project points and are thus ignored: {}"
+                   .format(unused_configs))
+            logger.warning(msg)
+            warn(msg, UserWarning)
+
+        # Check to see if config references in project_points DataFrame
+        # are valid file paths, if compare with curtailment configs
+        # and update as needed
+        configs = {}
+        for config in df_configs:
+            if config is None:
+                continue
+            if os.path.isfile(config):
+                configs[config] = config
+            elif config in curtail_configs:
+                configs[config] = curtail_configs[config]
+            else:
+                msg = ("Curtailment {} does not map to a valid "
+                       "configuration file".format(config))
+                logger.error(msg)
+                raise ConfigError(msg)
+
+        # If configs has any keys that are not in curtailment configs then
+        # something really weird happened so raise an error.
+        if any(set(configs) - set(curtail_configs)):
+            msg = (
+                "A wild config has appeared! Requested config keys for "
+                "ProjectPoints are {} and previous config keys are {}".format(
+                    list(configs), list(curtail_configs)
+                )
+            )
+            logger.error(msg)
+            raise ConfigError(msg)
+
     def join_df(self, df2, key=SiteDataField.GID):
         """Join new df2 to the _df attribute using the _df's gid as pkey.
 
@@ -838,6 +921,28 @@ class ProjectPoints:
         """
         sites = self.df.loc[
             (self.df[SiteDataField.CONFIG] == config), SiteDataField.GID
+        ].values
+
+        return list(sites)
+
+    def get_sites_from_curtailment(self, curtailment):
+        """Get a site list that corresponds to a curtailment key.
+
+        Parameters
+        ----------
+        curtailment : str
+            Curtailment configuration ID associated with sites.
+
+        Returns
+        -------
+        sites : list
+            List of sites associated with the requested curtailment ID.
+            If the curtailment ID is not recognized, an empty list is
+            returned.
+        """
+        sites = self.df.loc[
+            (self.df[SiteDataField.CURTAILMENT] == curtailment),
+            SiteDataField.GID
         ].values
 
         return list(sites)
@@ -938,7 +1043,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
@@ -1037,7 +1142,7 @@ class ProjectPoints:
             pre loaded SAMConfig object.
         tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed,
             by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment

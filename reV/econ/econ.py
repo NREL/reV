@@ -76,25 +76,36 @@ class Econ(BaseGen):
             (or slice) representing the GIDs of multiple sites can be
             specified to evaluate reV at multiple specific locations.
             A string pointing to a project points CSV file may also be
-            specified. Typically, the CSV contains two columns:
+            specified. Typically, the CSV contains the following
+            columns:
 
-                - ``gid``: Integer specifying the GID of each site.
+                - ``gid``: Integer specifying the generation GID of each
+                  site.
                 - ``config``: Key in the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
                   ``None`` (or left out completely) if you specify only
                   a single SAM configuration file as the `sam_files`
                   input.
+                - ``capital_cost_multiplier``: This is an *optional*
+                  multiplier input that, if included, will be used to
+                  regionally scale the ``capital_cost`` input in the SAM
+                  config. If you include this column in your CSV, you
+                  *do not* need to specify ``capital_cost``, unless you
+                  would like that value to vary regionally and
+                  independently of the multiplier (i.e. the multiplier
+                  will still be applied on top of the ``capital_cost``
+                  input).
 
-            The CSV file may also contain site-specific inputs by
+            The CSV file may also contain other site-specific inputs by
             including a column named after a config keyword (e.g. a
-            column called ``capital_cost`` may be included to specify a
-            site-specific capital cost value for each location). Columns
-            that do not correspond to a config key may also be included,
-            but they will be ignored. A DataFrame following the same
-            guidelines as the CSV input (or a dictionary that can be
-            used to initialize such a DataFrame) may be used for this
-            input as well.
+            column called ``wind_turbine_rotor_diameter`` may be
+            included to specify a site-specific turbine diameter for
+            each location). Columns that do not correspond to a config
+            key may also be included, but they will be ignored. A
+            DataFrame following the same guidelines as the CSV input
+            (or a dictionary that can be used to initialize such a
+            DataFrame) may be used for this input as well.
         sam_files : dict | str
             A dictionary mapping SAM input configuration ID(s) to SAM
             configuration(s). Keys are the SAM config ID(s) which
@@ -352,7 +363,7 @@ class Econ(BaseGen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
             Must have project_points with df property with all relevant
-            site-specific inputs and a `SupplyCurveField.GID` column.
+            site-specific inputs and a `SiteDataField.GID` column.
             By passing site-specific inputs in this dataframe, which
             was split using points_control, only the data relevant to
             the current sites is passed.
@@ -405,7 +416,7 @@ class Econ(BaseGen):
             Output variables requested from SAM.
         """
 
-        output_request = self._output_request_type_check(req)
+        output_request = super()._parse_output_request(req)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
