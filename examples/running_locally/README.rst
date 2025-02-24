@@ -5,10 +5,12 @@ Run reV locally
 and `reV Econ <https://nrel.github.io/reV/_autosummary/reV.econ.econ.Econ.html#reV.econ.econ.Econ>`_
 can be run locally using resource .h5 files stored locally.
 
+For users outside of NREL: you can now point reV directly to filepaths on S3! This will stream small amounts of data from S3 directly to your computer without having to setup an IO server like HSDS. See the example for reading data directly from S3 `here <https://nrel.github.io/rex/misc/examples.fsspec.html>`_ and try the example below with resource file paths from S3. You will need to do an extra install ``pip install NREL-reV[s3]``.
+
 reV Gen
 -------
 
-reV Generation uses `PySAM <https://pysam.readthedocs.io/en/latest/>`_ to
+reV Generation uses `PySAM <https://nrel-pysam.readthedocs.io/en/latest/>`_ to
 compute technologically specific capcity factor means and profiles. reV Gen
 uses ``SAM`` technology terms and input configuration files
 
@@ -21,17 +23,19 @@ coordinates:
 .. code-block:: python
 
     import os
+    import numpy as np
     from reV import TESTDATADIR
     from reV.config.project_points import ProjectPoints
     from reV.generation.generation import Gen
 
     lat_lons = np.array([[ 41.25, -71.66],
-                            [ 41.05, -71.74],
-                            [ 41.97, -71.78],
-                            [ 41.65, -71.74],
-                            [ 41.25, -71.7 ],
-                            [ 41.05, -71.78]])
+                         [ 41.05, -71.74],
+                         [ 41.97, -71.78],
+                         [ 41.65, -71.74],
+                         [ 41.25, -71.7 ],
+                         [ 41.05, -71.78]])
 
+    # res_file could also be 's3://nrel-pds-wtk/conus/v1.0.0/wtk_conus_2007.h5'
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_file = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
@@ -66,6 +70,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 
     regions = {'Rhode Island': 'state'}
 
+    # res_file could also be 's3://nrel-pds-nsrdb/current/nsrdb_2018.h5'
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 

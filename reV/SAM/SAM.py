@@ -52,7 +52,6 @@ class SamResourceRetriever:
         "pvsamv1": SolarResource,
         "tcsmoltensalt": SolarResource,
         "solarwaterheat": SolarResource,
-        "troughphysicalheat": SolarResource,
         "lineardirectsteam": SolarResource,
         "windpower": WindResource,
         "mhkwave": WaveResource,
@@ -190,10 +189,18 @@ class SamResourceRetriever:
             kwargs["icing"] = project_points.sam_config_obj.icing
             if (
                 project_points.curtailment is not None
-                and project_points.curtailment.precipitation
+                and any(
+                    config.precipitation
+                    for config in project_points.curtailment.values()
+                )
             ):
                 # make precip rate available for curtailment analysis
                 kwargs["precip_rate"] = True
+
+            sam_configs = project_points.sam_inputs.values()
+            needs_wd = any(_sam_config_contains_turbine_layout(sam_config)
+                           for sam_config in sam_configs)
+            kwargs["require_wind_dir"] = needs_wd
 
         elif res_handler == GeothermalResource:
             args += (project_points.d,)
@@ -397,6 +404,14 @@ class Sam:
             )
             logger.exception(msg)
             raise SAMInputError(msg)
+
+        if (key == "total_installed_cost" and isinstance(value, str)
+            and value.casefold() == "windbos"):
+            # "windbos" is a special reV key to tell reV to compute
+            # total installed costs using WindBOS module. If detected,
+            # don't try to set it as a PySAM attribute
+            return
+
         self.sam_sys_inputs[key] = value
         group = self._get_group(key, outputs=False)
         try:
@@ -514,6 +529,14 @@ class Sam:
             for a in dir(obj)
             if not a.startswith("__") and a not in self.IGNORE_ATTRS
         ]
+        try:
+            # adjustment factors are "dynamic" as of PySAM 5+
+            # Not found by dir() function, so must check for them
+            # explicitly
+            __ = obj.AdjustmentFactors
+            attrs.append("AdjustmentFactors")
+        except AttributeError:
+            pass
         return attrs
 
     def execute(self):
@@ -922,6 +945,9 @@ class RevPySam(Sam):
 
 def _add_cost_defaults(sam_inputs):
     """Add default values for required cost outputs if they are missing. """
+    if sam_inputs.get("__already_added_cost_defaults"):
+        return
+
     sam_inputs.setdefault("fixed_charge_rate", None)
 
     reg_mult = sam_inputs.setdefault("capital_cost_multiplier", 1)
@@ -937,6 +963,8 @@ def _add_cost_defaults(sam_inputs):
         sam_inputs["capital_cost"] = capital_cost * reg_mult
     else:
         sam_inputs["capital_cost"] = None
+
+    sam_inputs["__already_added_cost_defaults"] = True
 
 
 def _add_sys_capacity(sam_inputs):
@@ -954,3 +982,8 @@ def _add_sys_capacity(sam_inputs):
         cap = sam_inputs.get("nameplate")
 
     sam_inputs["system_capacity"] = cap
+
+
+def _sam_config_contains_turbine_layout(sam_config):
+    """Detect wether SAM config contains multiple turbines in layout. """
+    return len(sam_config.get("wind_farm_xCoordinates", ())) > 1

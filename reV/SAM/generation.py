@@ -23,7 +23,6 @@ import PySAM.Pvwattsv7 as PySamPv7
 import PySAM.Pvwattsv8 as PySamPv8
 import PySAM.Swh as PySamSwh
 import PySAM.TcsmoltenSalt as PySamCSP
-import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.Windpower as PySamWindPower
 
 from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
@@ -36,7 +35,6 @@ from reV.SAM.defaults import (
     DefaultPvWattsv8,
     DefaultSwh,
     DefaultTcsMoltenSalt,
-    DefaultTroughPhysicalProcessHeat,
     DefaultWindPower,
 )
 from reV.SAM.econ import LCOE, SingleOwner
@@ -524,12 +522,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         """
         # initialize output dictionary
         out = {}
+        points = points_control.project_points
 
         # Get the RevPySam resource object
         resources = RevPySam.get_sam_res(
             res_file,
-            points_control.project_points,
-            points_control.project_points.tech,
+            points,
+            points.tech,
             output_request=output_request,
             gid_map=gid_map,
             lr_res_file=lr_res_file,
@@ -538,14 +537,17 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         )
 
         # run resource through curtailment filter if applicable
-        curtailment = points_control.project_points.curtailment
+        curtailment = points.curtailment
         if curtailment is not None:
-            resources = curtail(
-                resources, curtailment, random_seed=curtailment.random_seed
-            )
+            for curtail_type, curtail_config in curtailment.items():
+                curtail_sites = points.get_sites_from_curtailment(curtail_type)
+                if not curtail_sites:
+                    continue
+                resources = curtail(resources, curtail_config, curtail_sites,
+                                    random_seed=curtail_config.random_seed)
 
         # iterate through project_points gen_gid values
-        for gen_gid in points_control.project_points.sites:
+        for gen_gid in points.sites:
             # Lookup the resource gid if there's a mapping and get the resource
             # data from the SAMResource object using the res_gid.
             res_gid = gen_gid if gid_map is None else gid_map[gen_gid]
@@ -555,7 +557,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             if drop_leap:
                 site_res_df = cls.drop_leap(site_res_df)
 
-            _, inputs = points_control.project_points[gen_gid]
+            _, inputs = points[gen_gid]
 
             # get resource data pass-throughs and resource means
             res_outs, out_req_cleaned = cls._get_res(
@@ -1422,42 +1424,6 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
         return DefaultLinearFresnelDsgIph.default()
 
 
-class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
-    """
-    Trough Physical Process Heat generation
-    """
-
-    MODULE = "troughphysicalheat"
-    PYSAM = PySamTpph
-    PYSAM_WEATHER_TAG = "file_name"
-
-    def cf_mean(self):
-        """Calculate mean capacity factor (fractional) from SAM.
-
-        Returns
-        -------
-        output : float
-            Mean capacity factor (fractional).
-        """
-        net_power = (
-            self["annual_gross_energy"] - self["annual_thermal_consumption"]
-        )  # kW-hr
-        # q_pb_des is in MW, convert to kW-hr
-        name_plate = self["q_pb_design"] * 8760 * 1000
-
-        return net_power / name_plate
-
-    @staticmethod
-    def default():
-        """Get the executed default pysam trough object.
-
-        Returns
-        -------
-        PySAM.TroughPhysicalProcessHeat
-        """
-        return DefaultTroughPhysicalProcessHeat.default()
-
-
 # pylint: disable=line-too-long
 class Geothermal(AbstractSamGenerationFromWeatherFile):
     """reV-SAM geothermal generation.
@@ -1546,23 +1512,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         - ``conversion_type`` : Integer flag representing the conversion
           plant type. Either Binary (0) or Flash (1). Only values of 0
           or 1 allowed.
-        - ``design_temp`` : EGS plant design temperature (in C). Only
-          affects EGS runs. This value may be adjusted internally by
-          ``reV under the following conditions:
-
-              - The design temperature is larger than the resource
-                temperature
-              - The design temperature is lower than the resource
-                temperature by a factor of ``MAX_RT_TO_EGS_RATIO``
-
-          If either of these conditions are true, the ``design_temp`` is
-          adjusted to match the resource temperature input in order to
-          avoid SAM errors.
-        - ``set_EGS_PDT_to_RT`` : Boolean flag to set EGS design
-          temperature to match the resource temperature input. If this
-          is ``True``, the ``design_temp`` input is ignored. This helps
-          avoid SAM/GETEM errors when the plant design temperature is
-          too high/low compared to the resource temperature.
         - ``geotherm.cost.inj_prod_well_ratio`` : Fraction representing
           the injection to production well ratio (0-1). SAM GUI defaults
           to 0.5 for this value, but it is recommended to set this to
@@ -1632,10 +1581,6 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
 
     """
 
-    # Per Matt Prilliman on 2/22/24, it's unclear where this ratio originates,
-    # but SAM errors out if it's exceeded.
-    MAX_RT_TO_EGS_RATIO = 1.134324
-    """Max value of ``resource_temperature``/``EGS_plan_design_temperature``"""
     MODULE = "geothermal"
     PYSAM = PySamGeothermal
     PYSAM_WEATHER_TAG = "file_name"
@@ -1738,52 +1683,14 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self.sam_sys_inputs["resource_temp"] = val
 
     def _set_egs_plant_design_temperature(self):
-        """Set the EGS plant temp to match resource, if necessary"""
+        """Set the EGS plant temp to match resource (avoids cf > 1)"""
         if self.sam_sys_inputs.get("resource_type") != 1:
             return  # Not EGS run
 
-        set_egs_pdt_to_rt = self.sam_sys_inputs.get("set_EGS_PDT_to_RT", False)
-        egs_plant_design_temp = self.sam_sys_inputs.get("design_temp", 0)
         resource_temp = self.sam_sys_inputs["resource_temp"]
-
-        if set_egs_pdt_to_rt:
-            msg = (
-                "Setting EGS plant design temperature ({}C) to match "
-                "resource temperature ({}C)".format(
-                    egs_plant_design_temp, resource_temp
-                )
-            )
-            logger.info(msg)
-            self.sam_sys_inputs["design_temp"] = resource_temp
-            return
-
-        if egs_plant_design_temp > resource_temp:
-            msg = (
-                "EGS plant design temperature ({}C) exceeds resource "
-                "temperature ({}C). Lowering EGS plant design temperature "
-                "to match resource temperature".format(
-                    egs_plant_design_temp, resource_temp
-                )
-            )
-            logger.warning(msg)
-            warn(msg)
-            self.sam_sys_inputs["design_temp"] = resource_temp
-            return
-
-        if resource_temp / egs_plant_design_temp > self.MAX_RT_TO_EGS_RATIO:
-            msg = (
-                "EGS plant design temperature ({}C) is lower than resource "
-                "temperature ({}C) by more than a factor of {}. Increasing "
-                "EGS plant design temperature to match resource "
-                "temperature".format(
-                    egs_plant_design_temp,
-                    resource_temp,
-                    self.MAX_RT_TO_EGS_RATIO,
-                )
-            )
-            logger.warning(msg)
-            warn(msg)
-            self.sam_sys_inputs["design_temp"] = resource_temp
+        logger.debug("Setting EGS plant design temperature to match "
+                     "resource temperature ({}C)".format(resource_temp))
+        self.sam_sys_inputs["design_temp"] = resource_temp
 
     def _set_nameplate_to_match_resource_potential(self, resource):
         """Set the nameplate capacity to match the resource potential."""
@@ -1864,11 +1771,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
-        """Set the costs based on gross plant generation."""
-        plant_size_kw = (
-            self.sam_sys_inputs["resource_potential"]
-            / self._RESOURCE_POTENTIAL_MULT
-        ) * 1000
+        """Set the costs based on plant size"""
+        plant_size_kw = self.sam_sys_inputs["nameplate"]
 
         cc_per_kw = self.sam_sys_inputs.pop("capital_cost_per_kw", None)
         if cc_per_kw is not None:

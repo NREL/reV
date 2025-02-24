@@ -368,7 +368,7 @@ class BaseGen(ABC):
         -------
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam, econ)
+            solarwaterheat, lineardirectsteam, geothermal, econ)
             The string should be lower-cased with spaces and _ removed.
         """
         return self.project_points.tech
@@ -540,7 +540,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -622,7 +622,7 @@ class BaseGen(ABC):
             pre loaded SAMConfig object.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
@@ -783,7 +783,7 @@ class BaseGen(ABC):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
@@ -1147,10 +1147,28 @@ class BaseGen(ABC):
                 if not isinstance(value, np.ndarray):
                     value = np.array(value)
 
+                value = self._patch_wave_gen_pysam_5(var, value)
                 self._out[var][:, i] = value.T
 
             elif value != 0:
                 self._out[var][i] = value
+
+    def _patch_wave_gen_pysam_5(self, var, value):
+        """Patch the "gen" output of wave generation for PySAm 5+
+
+        As of PySAM 5+, the "gen" array is of shape 8760, but only the
+        first 2920 entires are populated.
+        See this line: https://github.com/NREL/ssc/blob/2098300044a9be7745c2b93b911adb2d9dc3c282/ssc/cmod_mhk_wave.cpp#L687
+        """
+        if self.tech.casefold() != "mhkwave":
+            return value
+        if var.casefold() not in ("gen", "cf_profile", "gen_profile"):
+            return value
+
+        if any(value[2920:]):
+            msg = "Found non-zero values at end of gen array!"
+            raise ValueError(msg)
+        return value[:2920]
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.

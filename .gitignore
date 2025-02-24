@@ -22,6 +22,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pixi/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -116,3 +117,8 @@ tags
 # Scratch and temp work
 .tmp/
 .scratch/
+
+
+# pixi environments
+.pixi
+*.egg-info

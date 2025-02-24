@@ -38,8 +38,17 @@ def test_gen_swh_non_leap_year():
               scale_outputs=True)
     gen.run(max_workers=1)
 
+    # Some updates to SWH in this patch:
+    # https://github.com/NREL/ssc/commit/
+    # c2c1d28b7f8ba22a8f78f26e8bbd0cc404283816
+    # so we only check some of the datasets
+    to_check_dsets = ('T_amb', 'draw', 'beam', 'diffuse', 'I_incident',
+                      'I_transmitted', 'annual_Q_deliv', 'cf_mean',
+                      'solar_fraction')
+    non_matching_dsets = ('T_cold', 'T_deliv', 'T_hot', 'Q_deliv',
+                          'gen_profile')
     with Resource(BASELINE) as f:
-        for dset in output_request:
+        for dset in to_check_dsets:
             truth = f[dset]
             test = gen.out[dset]
             if len(test.shape) == 2:
@@ -49,6 +58,9 @@ def test_gen_swh_non_leap_year():
             msg = ('{} outputs do not match baseline value! Values differ '
                    'at most by: {}'.format(dset, np.max(np.abs(truth - test))))
             assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
+
+        for dset in non_matching_dsets:
+            assert not np.isclose(gen.out[dset], 0).all()
 
 
 def test_gen_swh_leap_year():

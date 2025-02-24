@@ -66,7 +66,7 @@ def real_power_curve():
     return PowerCurve(wind_speed, generation)
 
 
-@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('generic_losses', [0, 5])
 @pytest.mark.parametrize('target_losses', [0, 10, 50])
 @pytest.mark.parametrize('transformation', TRANSFORMATIONS)
 def test_power_curve_losses(generic_losses, target_losses, transformation):
@@ -86,10 +86,10 @@ def test_power_curve_losses(generic_losses, target_losses, transformation):
         assert np.allclose(gen_profiles, gen_profiles_with_losses)
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
+    assert abs((1 - annual_gen_ratio) * 100 - target_losses) < 0.1
 
 
-@pytest.mark.parametrize('generic_losses', [0, 0.2])
+@pytest.mark.parametrize('generic_losses', [0, 5])
 def test_power_curve_losses_site_specific(generic_losses):
     """Test full gen run with scheduled losses."""
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
@@ -106,7 +106,7 @@ def test_power_curve_losses_site_specific(generic_losses):
     assert (gen_profiles - gen_profiles_with_losses > 0).any()
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert ((1 - annual_gen_ratio) * 100 - target_losses) < 1
+    assert abs((1 - annual_gen_ratio) * 100 - target_losses) < 0.1
 
 
 def _run_gen_with_and_without_losses(
@@ -146,7 +146,7 @@ def _run_gen_with_and_without_losses(
         gen = Gen('windpower', REV_POINTS, sam_fp, RES_FILE,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
 
     # undo UTC array rolling
@@ -166,7 +166,7 @@ def _run_gen_with_and_without_losses(
 
     gen = Gen('windpower', pc, sam_file, RES_FILE,
               output_request=('gen_profile'), sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
 
     for ind, row in gen.meta.iterrows():
@@ -191,13 +191,13 @@ def _make_site_data_df(site_data):
 def test_power_curve_losses_witch_scheduled_outages():
     """Test full gen run with scheduled losses."""
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses=0.2,
+        generic_losses=5,
         target_losses=20, transformation='exponential_stretching',
         include_outages=True
     )
 
     annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
-    assert (1 - annual_gen_ratio) * 100 > 21  # 1% tolerance
+    assert abs(1 - annual_gen_ratio) * 100 > 20.1  # 0.1% tolerance
 
 
 @pytest.mark.parametrize('config', SAM_FILES)
@@ -561,6 +561,67 @@ def test_bad_transformation_implementation(real_power_curve):
     err_msg = str(excinfo.value)
     assert "Transformation implementation" in err_msg
     assert "did not set the `_transformed_generation` attribute" in err_msg
+
+
+@pytest.mark.parametrize('transformation', TRANSFORMATIONS)
+def test_power_curve_losses_with_generic_losses(transformation):
+    """Test haircut losses coupled with power curve losses"""
+    generic_losses = 5
+    target_losses = 20
+    sam_file = SAM_FILES[0]
+
+    with open(sam_file, encoding='utf-8') as fh:
+        sam_config = json.load(fh)
+
+    with tempfile.TemporaryDirectory() as td:
+        del sam_config['wind_farm_losses_percent']
+        sam_config['turb_generic_loss'] = generic_losses
+
+        sam_config[PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY] = {
+            'target_losses_percent': target_losses,
+            'transformation': transformation
+        }
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        site_data = _make_site_data_df(None)
+        gen = Gen('windpower', REV_POINTS, sam_fp, RES_FILE,
+                  output_request=('gen_profile'), site_data=site_data,
+                  sites_per_worker=3)
+        gen.run(max_workers=1)
+    gen_profiles_with_losses = gen.out['gen_profile']
+
+    # undo UTC array rolling
+    for ind, row in gen.meta.iterrows():
+        time_shift = row[ResourceMetaField.TIMEZONE]
+        gen_profiles_with_losses[:, ind] = np.roll(
+            gen_profiles_with_losses[:, ind], time_shift
+        )
+
+    pc = Gen.get_pc(REV_POINTS, None, sam_file, 'windpower',
+                    sites_per_worker=3, res_file=RES_FILE)
+
+    del pc.project_points.sam_inputs[sam_file]['wind_farm_losses_percent']
+    gen = Gen('windpower', pc, sam_file, RES_FILE,
+              output_request=('gen_profile'), sites_per_worker=3)
+    gen.run(max_workers=1)
+    gen_profiles = gen.out['gen_profile']
+
+    for ind, row in gen.meta.iterrows():
+        time_shift = row[ResourceMetaField.TIMEZONE]
+        gen_profiles[:, ind] = np.roll(gen_profiles[:, ind], time_shift)
+
+
+    assert np.isclose(gen_profiles, gen_profiles_with_losses).any()
+    assert gen_profiles.max() > gen_profiles_with_losses.max()
+
+    assert (gen_profiles - gen_profiles_with_losses > 0).any()
+
+    expected_final_loss = (generic_losses / 100 * (100 - target_losses)
+                           + target_losses)
+    annual_gen_ratio = (gen_profiles_with_losses.sum() / gen_profiles.sum())
+    assert abs((1 - annual_gen_ratio) * 100 - expected_final_loss) < 0.1
 
 
 def execute_pytest(capture='all', flags='-rapP'):

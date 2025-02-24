@@ -106,6 +106,8 @@ setup(
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["flake8", "pre-commit", "pylint"],
+        "s3": ['fsspec', 's3fs'],
+        "hsds": ["hsds>=0.8.4"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )

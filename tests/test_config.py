@@ -48,6 +48,28 @@ def test_clearsky():
         RevPySam.get_sam_res(res_file, pp, pp.tech)
 
 
+def test_no_wind_direction():
+    """Test getting resource without wind direction (no layout specified)"""
+
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(0, 1), sam_file, "windpower", res_file=res_file)
+    out = RevPySam.get_sam_res(res_file, pp, pp.tech)
+    assert "winddirection" not in out.var_list
+    assert (out._get_res_df(0)[0]["winddirection"] == 0).all()
+
+
+def test_wind_direction():
+    """Test getting resource with wind direction (layout was specified)"""
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/i_windpower_lcoe.json')
+    pp = ProjectPoints(slice(0, 1), sam_file, "windpower", res_file=res_file)
+
+    out = RevPySam.get_sam_res(res_file, pp, pp.tech)
+    assert "winddirection" in out.var_list
+    assert (out._get_res_df(0)[0]["winddirection"] != 0).any()
+
+
 @pytest.mark.parametrize(
     ("start", "interval"), [[0, 1], [13, 1], [10, 2], [13, 3]]
 )
