@@ -8,6 +8,8 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
+import json
+import tempfile
 
 import numpy as np
 import pytest
@@ -103,7 +105,7 @@ def test_wind_low_temp_cutoff(i):
 
 
 def test_wind_wake_loss_multiplier():
-    """Test varying wind turbine losses"""
+    """Test internal SAM wake loss multiplier"""
     pc = Gen.get_pc(REV2_POINTS, None, LAYOUT_SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
     output_request = ('cf_mean', 'annual_wake_loss_total_percent')
@@ -123,6 +125,34 @@ def test_wind_wake_loss_multiplier():
 
     assert (cf_baseline > cf_test).all()
     assert np.allclose(wl_baseline * 1.5, wl_test)
+
+
+def test_wind_gen_with_ct_curve():
+    """Test generation with CT curve"""
+
+    output_request = ("cf_mean", "cf_profile")
+    gen = Gen("windpower", (0,), LAYOUT_SAM_FILE, RES_FILE, sites_per_worker=3,
+              output_request=output_request)
+    gen.run(max_workers=1)
+    cf_baseline = gen.out["cf_mean"]
+
+    with open(LAYOUT_SAM_FILE, encoding='utf-8') as fh:
+        sam_config = json.load(fh)
+
+    with tempfile.TemporaryDirectory() as td:
+        ws_len = len(sam_config['wind_turbine_powercurve_windspeeds'])
+        sam_config['wind_turbine_ct_curve'] = [0.1] * ws_len
+
+        sam_fp = os.path.join(td, 'gen.json')
+        with open(sam_fp, 'w+') as fh:
+            fh.write(json.dumps(sam_config))
+
+        gen_ct = Gen("windpower", (0,), sam_fp, RES_FILE, sites_per_worker=3,
+                     output_request=output_request)
+        gen_ct.run(max_workers=1)
+        cf_with_ct = gen_ct.out["cf_mean"]
+
+    assert cf_with_ct > cf_baseline
 
 
 def execute_pytest(capture='all', flags='-rapP'):
