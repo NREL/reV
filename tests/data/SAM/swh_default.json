@@ -6,7 +6,7 @@
   "T_tank_max": 99,
   "U_tank": 1,
   "V_tank": 0.30000001192092896,
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "albedo": 0.20000000298023224,
   "area_coll": 2.9800000190734863,
   "azimuth": 180,

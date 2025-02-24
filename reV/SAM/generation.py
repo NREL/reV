@@ -53,6 +53,8 @@ logger = logging.getLogger(__name__)
 class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     """Base class for SAM generation simulations."""
 
+    _GEN_KEY = "gen"
+
     def __init__(
         self,
         resource,
@@ -363,7 +365,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             1D array of hourly power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return np.array(self["gen"], dtype=np.float32)
+        return np.array(self[self._GEN_KEY], dtype=np.float32)
 
     def collect_outputs(self, output_lookup=None):
         """Collect SAM output_request, convert timeseries outputs to UTC, and
@@ -1396,6 +1398,7 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
     MODULE = "lineardirectsteam"
     PYSAM = PySamLds
     PYSAM_WEATHER_TAG = "file_name"
+    _GEN_KEY = "gen_heat"
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.

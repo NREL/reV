@@ -12,7 +12,7 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
-import PySAM.GenericSystem as generic
+import PySAM.CustomGeneration as generic
 from rex.multi_file_resource import (
     MultiFileNSRDB,
     MultiFileResource,
@@ -439,9 +439,9 @@ class Sam:
 
         Returns
         -------
-        PySAM.GenericSystem
+        PySAM.CustomGeneration
         """
-        obj = cls.PYSAM.default("GenericSystemNone")
+        obj = cls.PYSAM.default("CustomGenerationProfileNone")
         obj.execute()
 
         return obj
@@ -570,8 +570,13 @@ class Sam:
         if "." in key:
             key = key.replace(".", "_")
 
-        if ":constant" in key and "adjust:" in key:
-            key = key.replace("adjust:", "")
+        if "adjust:" in key:
+            msg = ("The 'adjust:' syntax is deprecated in PySAm 6+. Please"
+                   "use 'adjust_' instead (e.g. 'adjust:hourly' -> "
+                   "'adjust_hourly')")
+            logger.warning(msg)
+            warn(msg)
+            key = key.replace(":", "_")
 
         if isinstance(value, str) and "[" in value and "]" in value:
             try:

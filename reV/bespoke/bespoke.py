@@ -1176,7 +1176,7 @@ class BespokeSinglePlant:
                           ignore=('wind_resource_model_choice',
                                   'wind_resource_data',
                                   'wind_turbine_powercurve_powerout',
-                                  'hourly',
+                                  'adjust_hourly',
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',

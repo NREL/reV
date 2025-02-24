@@ -1,6 +1,6 @@
 NREL-gaps>=0.6.11
 NREL-NRWAL>=0.0.7
-NREL-PySAM~=5.1.0
+NREL-PySAM~=6.0.1
 NREL-rex>=0.2.97
 numpy~=1.24.4
 packaging>=20.3
