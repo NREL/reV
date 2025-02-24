@@ -122,6 +122,11 @@ class BespokeMultiPlantData:
                 hh: res[f"pressure_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
             }
+            if self._pre_load_humidity:
+                self._relative_humidities = {
+                    hh: res["relativehumidity_2m", :, gids]
+                    for hh, gids in self.hh_to_res_gids.items()
+                }
             self._time_index = res.time_index
             if self._pre_load_humidity:
                 self._relative_humidities = {
@@ -153,15 +158,12 @@ class BespokeMultiPlantData:
 
         rh = (None if not self._pre_load_humidity
               else self._relative_humidities[hh][:, data_inds])
-        return BespokeSinglePlantData(
-            sc_point_res_gids,
-            self._wind_dirs[hh][:, data_inds],
-            self._wind_speeds[hh][:, data_inds],
-            self._temps[hh][:, data_inds],
-            self._pressures[hh][:, data_inds],
-            self._time_index,
-            rh,
-        )
+        return BespokeSinglePlantData(sc_point_res_gids,
+                                      self._wind_dirs[hh][:, data_inds],
+                                      self._wind_speeds[hh][:, data_inds],
+                                      self._temps[hh][:, data_inds],
+                                      self._pressures[hh][:, data_inds],
+                                      self._time_index, rh)
 
 
 class BespokeSinglePlantData:
@@ -172,10 +174,8 @@ class BespokeSinglePlantData:
     reads to a single HDF5 file.
     """
 
-    def __init__(
-        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index,
-        relative_humidities=None,
-    ):
+    def __init__(self, data_inds, wind_dirs, wind_speeds, temps, pressures,
+                 time_index, relative_humidities=None):
         """Initialize BespokeSinglePlantData
 
         Parameters
@@ -715,6 +715,9 @@ class BespokeSinglePlant:
         for i, gid in enumerate(gids):
             mask = self.sc_point._h5_gids == gid
             weights[i] = self.sc_point.include_mask_flat[mask].sum()
+
+        if "float" not in str(data.dtype):
+            data = data.astype("float32")
 
         weights /= weights.sum()
         data = data.astype(np.float32)
