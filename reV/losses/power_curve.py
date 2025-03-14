@@ -722,6 +722,9 @@ class PowerCurveLossesMixin:
         if isinstance(power_curve_losses_info, str):
             power_curve_losses_info = json.loads(power_curve_losses_info)
 
+        logger.info("Applying power curve losses using the following input:"
+                    "\n{}".format(power_curve_losses_info))
+
         loss_input = PowerCurveLossesInput(power_curve_losses_info)
         if loss_input.target <= 0:
             logger.debug("Power curve target loss is 0. Skipping power curve "
