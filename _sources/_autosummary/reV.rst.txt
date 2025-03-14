@@ -1,0 +1,44 @@
+﻿reV
+===
+
+.. automodule:: reV
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   reV.SAM
+   reV.bespoke
+   reV.cli
+   reV.config
+   reV.econ
+   reV.generation
+   reV.handlers
+   reV.hybrids
+   reV.losses
+   reV.nrwal
+   reV.qa_qc
+   reV.rep_profiles
+   reV.supply_curve
+   reV.utilities
+   reV.version
+

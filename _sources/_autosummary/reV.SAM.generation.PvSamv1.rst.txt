@@ -1,0 +1,71 @@
+reV.SAM.generation.PvSamv1
+==========================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: PvSamv1
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PvSamv1.ac
+      ~PvSamv1.add_scheduled_losses
+      ~PvSamv1.agg_albedo
+      ~PvSamv1.annual_energy
+      ~PvSamv1.assign_inputs
+      ~PvSamv1.cf_mean
+      ~PvSamv1.cf_mean_ac
+      ~PvSamv1.cf_profile
+      ~PvSamv1.cf_profile_ac
+      ~PvSamv1.check_resource_data
+      ~PvSamv1.clipped_power
+      ~PvSamv1.collect_outputs
+      ~PvSamv1.dc
+      ~PvSamv1.default
+      ~PvSamv1.drop_leap
+      ~PvSamv1.energy_yield
+      ~PvSamv1.ensure_res_len
+      ~PvSamv1.execute
+      ~PvSamv1.gen_profile
+      ~PvSamv1.get_sam_res
+      ~PvSamv1.get_time_interval
+      ~PvSamv1.make_datetime
+      ~PvSamv1.outputs_to_utc_arr
+      ~PvSamv1.reV_run
+      ~PvSamv1.run
+      ~PvSamv1.run_gen_and_econ
+      ~PvSamv1.set_latitude_tilt_az
+      ~PvSamv1.set_resource_data
+      ~PvSamv1.system_capacity_ac
+      ~PvSamv1.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PvSamv1.DIR
+      ~PvSamv1.IGNORE_ATTRS
+      ~PvSamv1.MODULE
+      ~PvSamv1.OUTAGE_CONFIG_KEY
+      ~PvSamv1.OUTAGE_SEED_CONFIG_KEY
+      ~PvSamv1.attr_dict
+      ~PvSamv1.has_timezone
+      ~PvSamv1.input_list
+      ~PvSamv1.meta
+      ~PvSamv1.module
+      ~PvSamv1.outage_seed
+      ~PvSamv1.pysam
+      ~PvSamv1.site
+   
+   
