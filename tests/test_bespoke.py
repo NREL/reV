@@ -1012,7 +1012,12 @@ def test_bespoke_run_with_icing_cutoff():
 
 def test_bespoke_run_with_power_curve_losses():
     """Test bespoke run with power curve losses."""
-    output_request = ("system_capacity", "cf_mean", "cf_profile")
+    output_request = ("system_capacity", "cf_mean", "cf_profile",
+                      "annual_energy", "annual_gross_energy",
+                      "annual_wake_loss_internal_percent",
+                      "annual_wake_loss_internal_kWh",
+                      "annual_wake_loss_total_percent")
+
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -1068,13 +1073,14 @@ def test_bespoke_run_with_power_curve_losses():
         bsp.close()
 
     ae_dsets = [
-        "annual_energy-2012",
-        "annual_energy-2013",
-        "annual_energy-means",
+        "annual_gross_energy-2012",
+        "annual_gross_energy-2013",
+        "annual_gross_energy-means",
     ]
     for dset in ae_dsets:
         assert not np.isclose(out[dset], out_losses[dset])
-        assert out[dset] > out_losses[dset]
+        err_msg = "{:0.3f} != 0.9".format(out_losses[dset] / out[dset])
+        assert np.isclose(out_losses[dset] / out[dset], 0.9), err_msg
 
 
 def test_bespoke_run_with_scheduled_losses():
