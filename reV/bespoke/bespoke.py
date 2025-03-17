@@ -819,7 +819,12 @@ class BespokeSinglePlant:
         if self._wind_plant_pd is None:
             return config
 
-        config.update(self._wind_plant_pd.sam_sys_inputs)
+        layout_config = copy.deepcopy(self._wind_plant_pd.sam_sys_inputs)
+        # `wind_plant_pd` PC may have PC losses applied, so keep the
+        # original PC as to not double count losses here
+        layout_config.pop("wind_turbine_powercurve_powerout", None)
+        config.update(layout_config)
+
         return config
 
     @property
