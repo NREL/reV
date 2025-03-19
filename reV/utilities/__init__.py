@@ -136,6 +136,7 @@ class SupplyCurveField(FieldEnum):
     GEN_GIDS = "gen_gids"
     GID_COUNTS = "gid_counts"
     N_GIDS = "n_gids"
+    ZONE_ID = "zone_id"
     MEAN_RES = "resource"
     MEAN_CF_AC = "capacity_factor_ac"
     MEAN_CF_DC = "capacity_factor_dc"

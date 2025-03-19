@@ -29,6 +29,7 @@ from reV.supply_curve.sc_aggregation import (
 from reV.supply_curve.cli_sc_aggregation import _format_res_fpath
 from reV.handlers.exclusions import LATITUDE
 from reV.utilities import ModuleName, SupplyCurveField
+from reV.supply_curve.extent import SupplyCurveExtent
 
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
@@ -711,6 +712,203 @@ def test_format_res_fpath_with_year_pattern():
         assert _format_res_fpath(config) == {"res_fpath": tf.format(2010)}
 
 
+@pytest.mark.parametrize("zone_config,max_workers,pre_extract_inclusions", [
+    ("one_full", None, False),
+    (1, None, False),
+    (2, None, False),
+    (3, None, False),
+    (1, 1, False),  # test with run_serial
+    (1, None, True),  # test with pre_extract_exclusions
+])
+def test_agg_zones(zone_config, max_workers, pre_extract_inclusions):
+    """Test sc aggregation with zones within each sc site."""
+
+    resolution = 64
+    gids = [1, 2, 3]
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp = os.path.join(td, "excl.h5")
+        shutil.copy(EXCL, excl_temp)
+        with SupplyCurveExtent(excl_temp, resolution=resolution) as sc:
+            slice_lookup = sc.get_slice_lookup(gids)
+
+        with h5py.File(excl_temp, 'a') as f:
+            shape = f[LATITUDE].shape
+            attrs = dict(f['ri_smod'].attrs)
+            profile = json.loads(attrs["profile"])
+            profile["dtype"] = "uint32"
+            profile["nodata"] = 0
+            attrs["profile"] = json.dumps(profile)
+            data = np.zeros(shape, dtype=np.uint32)
+            if zone_config == "one_full":
+                # each entire cell is one zone
+                for gid, gid_slice in slice_lookup.items():
+                    data[gid_slice] = gid + 10
+                # use the standard test dataset
+                baseline = AGG_BASELINE
+                excl_dict = EXCL_DICT.copy()
+                res_class_bins = RES_CLASS_BINS
+                apply_legacy_remap = True
+            else:
+                excl_dict = {
+                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm_slope"
+                }
+                res_class_bins = None
+                baseline = os.path.join(
+                    TESTDATADIR,
+                    f"sc_out/baseline_agg_summary_zones_{zone_config}.csv"
+                )
+                apply_legacy_remap = False
+                for gid, gid_slice in slice_lookup.items():
+                    gid_rows, gid_cols = gid_slice
+                    for z in range(0, zone_config):
+                        zone_rows = slice(
+                            gid_rows.stop - (z + 1) * 4,
+                            gid_rows.stop - z * 4
+                        )
+                        zone_cols = slice(gid_cols.stop - 4, gid_cols.stop)
+                        data[(zone_rows, zone_cols)] = gid + 10 * (z + 1)
+
+            test_dset = "parcels"
+            f.create_dataset(test_dset, shape, data=data)
+            for k, v in attrs.items():
+                f[test_dset].attrs[k] = v
+
+        sca = SupplyCurveAggregation(
+            excl_temp,
+            TM_DSET,
+            excl_dict=excl_dict,
+            res_class_dset=RES_CLASS_DSET,
+            res_class_bins=res_class_bins,
+            zones_dset=test_dset,
+            resolution=resolution,
+            power_density=36.0,
+            gids=gids,
+            pre_extract_inclusions=pre_extract_inclusions,
+        )
+        summary = sca.summarize(GEN, max_workers=max_workers)
+
+    s_baseline = pd.read_csv(baseline)
+    if apply_legacy_remap:
+        s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline = s_baseline.set_index(s_baseline.columns[0])
+    s_baseline_subset = s_baseline[
+        s_baseline["sc_point_gid"].isin(gids)
+    ].copy()
+    list_cols = ["res_gids", "gen_gids", "gid_counts"]
+    # convert columns containing lists of integers as strings to lists
+    # of integers
+    for list_col in list_cols:
+        s_baseline_subset[list_col] = s_baseline_subset[list_col].apply(
+            json.loads
+        )
+
+    summary = summary.fillna("None")
+    s_baseline_subset = s_baseline_subset.fillna("None")
+
+    compare_cols = list(
+        set(s_baseline_subset.columns).intersection(summary.columns)
+    )
+    assert_frame_equal(
+        summary[compare_cols],
+        s_baseline_subset[compare_cols], check_dtype=False, rtol=0.0001
+    )
+
+
+def test_cli_agg_zones(runner, clear_loggers):
+    """
+    Test SC aggregation with zones within each SC site via the CLI
+    """
+
+    resolution = 64
+    gids = [1, 2, 3]
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_temp = os.path.join(td, "excl.h5")
+        shutil.copy(EXCL, excl_temp)
+        with SupplyCurveExtent(excl_temp, resolution=resolution) as sc:
+            slice_lookup = sc.get_slice_lookup(gids)
+
+        with h5py.File(excl_temp, 'a') as f:
+            shape = f[LATITUDE].shape
+            attrs = dict(f['ri_smod'].attrs)
+            profile = json.loads(attrs["profile"])
+            profile["dtype"] = "uint32"
+            profile["nodata"] = 0
+            attrs["profile"] = json.dumps(profile)
+            data = np.zeros(shape, dtype=np.uint32)
+            # each entire cell is one zone
+            for gid, gid_slice in slice_lookup.items():
+                data[gid_slice] = gid + 10
+            test_dset = "parcels"
+            f.create_dataset(test_dset, shape, data=data)
+            for k, v in attrs.items():
+                f[test_dset].attrs[k] = v
+
+        config = {
+            "log_directory": td,
+            "execution_control": {
+                "option": "local",
+                "max_workers": 1,
+            },
+            "log_level": "INFO",
+            "excl_fpath": excl_temp,
+            "gen_fpath": GEN,
+            "econ_fpath": None,
+            "tm_dset": TM_DSET,
+            "res_fpath": None,
+            "res_class_dset": RES_CLASS_DSET,
+            "res_class_bins": RES_CLASS_BINS,
+            "excl_dict": EXCL_DICT,
+            "resolution": resolution,
+            "zones_dset": test_dset,
+            "pre_extract_inclusions": False,
+            "gids": gids,
+            "power_density": 36,
+        }
+
+        config_path = os.path.join(td, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(config, f)
+
+        result = runner.invoke(
+            main, [ModuleName.SUPPLY_CURVE_AGGREGATION, "-c", config_path]
+        )
+        clear_loggers()
+
+        if result.exit_code != 0:
+            msg = "Failed with error {}".format(
+                traceback.print_exception(*result.exc_info)
+            )
+            raise RuntimeError(msg)
+
+        fn_list = os.listdir(td)
+        dirname = os.path.basename(td)
+        out_csv_fn = "{}_{}.csv".format(
+            dirname, ModuleName.SUPPLY_CURVE_AGGREGATION
+        )
+        assert out_csv_fn in fn_list
+
+        summary = pd.read_csv(os.path.join(td, out_csv_fn))
+
+    s_baseline = pd.read_csv(AGG_BASELINE)
+    s_baseline = s_baseline.rename(columns=LEGACY_SC_COL_MAP)
+    s_baseline_subset = s_baseline[
+        s_baseline["sc_point_gid"].isin(gids)
+    ].copy()
+
+    summary = summary.fillna("None")
+    s_baseline_subset = s_baseline_subset.fillna("None")
+
+    compare_cols = list(
+        set(s_baseline_subset.columns).intersection(summary.columns)
+    )
+    assert_frame_equal(
+        summary[compare_cols],
+        s_baseline_subset[compare_cols], check_dtype=False, rtol=0.0001
+    )
+
+
 def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
 
@@ -723,7 +921,7 @@ def execute_pytest(capture="all", flags="-rapP"):
         Which tests to show logs and results for.
     """
 
-    fname = os.path.basename(__file__)
+    fname = __file__
     pytest.main(["-q", "--show-capture={}".format(capture), fname, flags])
 
 
