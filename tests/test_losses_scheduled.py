@@ -165,7 +165,8 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
             )
 
             if not outage.allow_outage_overlap or outage_percentage == 100:
-                min_num_expected_outage_hours = (
+                min_num_expected_outage_hours = max(
+                    0,
                     outage.count * outage.duration
                     - zero_gen_in_comparison_count
                 )
@@ -201,7 +202,10 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
                 <= num_outage_hours
                 <= max_num_expected_outage_hours
             )
-            assert num_outage_hours_meet_expectations
+            err_msg = (f"{min_num_expected_outage_hours=}, "
+                       f"{num_outage_hours=}, "
+                       f"{max_num_expected_outage_hours=}")
+            assert num_outage_hours_meet_expectations, err_msg
 
         total_expected_outage = sum(
             outage.count * outage.duration * outage.percentage_of_capacity_lost
@@ -332,7 +336,8 @@ def _run_gen_with_and_without_losses(
             sam_config['losses'] = generic_losses
 
         if haf is not None:
-            sam_config['hourly'] = haf.tolist()
+            sam_config['adjust_hourly'] = haf.tolist()
+            sam_config['adjust_en_hourly'] = 1
 
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
@@ -343,7 +348,7 @@ def _run_gen_with_and_without_losses(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -366,11 +371,12 @@ def _run_gen_with_and_without_losses(
         pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
 
     if haf is not None:
-        pc.project_points.sam_inputs[sam_file]['hourly'] = haf.tolist()
+        pc.project_points.sam_inputs[sam_file]['adjust_hourly'] = haf.tolist()
+        pc.project_points.sam_inputs[sam_file]['adjust_en_hourly'] = 1
 
     gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
               sites_per_worker=3)
-    gen.run(max_workers=None)
+    gen.run(max_workers=1)
     gen_profiles = gen.out['gen_profile']
     time_steps_in_hour = int(round(gen_profiles.shape[0] / 8760))
     gen_profiles = gen_profiles[::time_steps_in_hour]
@@ -425,7 +431,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         outages = copy.deepcopy(outages)
@@ -438,7 +444,7 @@ def test_scheduled_losses_repeatability(
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -473,7 +479,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_first_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -486,7 +492,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_second_run = gen.out['gen_profile']
 
         random.shuffle(outages)
@@ -499,7 +505,7 @@ def test_scheduled_losses_repeatability_with_seed(files):
         gen = Gen(tech, REV_POINTS, sam_fp, res_file,
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
-        gen.run(max_workers=None)
+        gen.run(max_workers=1)
         gen_profiles_third_run = gen.out['gen_profile']
 
     assert np.allclose(gen_profiles_first_run, gen_profiles_second_run)
@@ -517,7 +523,8 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
     mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert 'hourly' in mixin.sam_sys_inputs
+    assert 'adjust_hourly' in mixin.sam_sys_inputs
+    assert 'adjust_en_hourly' in mixin.sam_sys_inputs
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():
@@ -529,7 +536,7 @@ def test_scheduled_losses_mixin_class_no_losses_input():
     mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert 'hourly' not in mixin.sam_sys_inputs
+    assert 'adjust_hourly' not in mixin.sam_sys_inputs
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
@@ -800,7 +807,7 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         sam_config = json.load(fh)
 
     outages = NOMINAL_OUTAGES[0]
-    sam_config['hourly'] = [0] * 8760
+    sam_config['adjust_hourly'] = [0] * 8760
     sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
     sam_config.pop('wind_farm_losses_percent', None)
 
@@ -832,7 +839,7 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         config['resource_file'] = res_file
         config['sam_files'] = sam_files
         config['log_directory'] = td
-        config['output_request'] = config['output_request'] + ['hourly']
+        config['output_request'] = config['output_request'] + ['adjust_hourly']
         config['analysis_years'] = ['2012', '2013']
 
         config_path = os.path.join(td, 'config.json')
@@ -849,7 +856,7 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         scheduled_outages = []
         for file in glob.glob(os.path.join(td, '*.h5')):
             with Outputs(file, 'r') as out:
-                scheduled_outages.append(out['hourly'])
+                scheduled_outages.append(out['adjust_hourly'])
 
         # pylint: disable=unbalanced-tuple-unpacking
         outages_2012, outages_2013 = scheduled_outages

@@ -23,7 +23,6 @@ import PySAM.Pvwattsv7 as PySamPv7
 import PySAM.Pvwattsv8 as PySamPv8
 import PySAM.Swh as PySamSwh
 import PySAM.TcsmoltenSalt as PySamCSP
-import PySAM.TroughPhysicalProcessHeat as PySamTpph
 import PySAM.Windpower as PySamWindPower
 
 from reV.losses import PowerCurveLossesMixin, ScheduledLossesMixin
@@ -36,7 +35,6 @@ from reV.SAM.defaults import (
     DefaultPvWattsv8,
     DefaultSwh,
     DefaultTcsMoltenSalt,
-    DefaultTroughPhysicalProcessHeat,
     DefaultWindPower,
 )
 from reV.SAM.econ import LCOE, SingleOwner
@@ -54,6 +52,8 @@ logger = logging.getLogger(__name__)
 
 class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
     """Base class for SAM generation simulations."""
+
+    _GEN_KEY = "gen"
 
     def __init__(
         self,
@@ -365,7 +365,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             1D array of hourly power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return np.array(self["gen"], dtype=np.float32)
+        return np.array(self[self._GEN_KEY], dtype=np.float32)
 
     def collect_outputs(self, output_lookup=None):
         """Collect SAM output_request, convert timeseries outputs to UTC, and
@@ -524,12 +524,13 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         """
         # initialize output dictionary
         out = {}
+        points = points_control.project_points
 
         # Get the RevPySam resource object
         resources = RevPySam.get_sam_res(
             res_file,
-            points_control.project_points,
-            points_control.project_points.tech,
+            points,
+            points.tech,
             output_request=output_request,
             gid_map=gid_map,
             lr_res_file=lr_res_file,
@@ -538,14 +539,17 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
         )
 
         # run resource through curtailment filter if applicable
-        curtailment = points_control.project_points.curtailment
+        curtailment = points.curtailment
         if curtailment is not None:
-            resources = curtail(
-                resources, curtailment, random_seed=curtailment.random_seed
-            )
+            for curtail_type, curtail_config in curtailment.items():
+                curtail_sites = points.get_sites_from_curtailment(curtail_type)
+                if not curtail_sites:
+                    continue
+                resources = curtail(resources, curtail_config, curtail_sites,
+                                    random_seed=curtail_config.random_seed)
 
         # iterate through project_points gen_gid values
-        for gen_gid in points_control.project_points.sites:
+        for gen_gid in points.sites:
             # Lookup the resource gid if there's a mapping and get the resource
             # data from the SAMResource object using the res_gid.
             res_gid = gen_gid if gid_map is None else gid_map[gen_gid]
@@ -555,7 +559,7 @@ class AbstractSamGeneration(RevPySam, ScheduledLossesMixin, ABC):
             if drop_leap:
                 site_res_df = cls.drop_leap(site_res_df)
 
-            _, inputs = points_control.project_points[gen_gid]
+            _, inputs = points[gen_gid]
 
             # get resource data pass-throughs and resource means
             res_outs, out_req_cleaned = cls._get_res(
@@ -1394,6 +1398,7 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
     MODULE = "lineardirectsteam"
     PYSAM = PySamLds
     PYSAM_WEATHER_TAG = "file_name"
+    _GEN_KEY = "gen_heat"
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.
@@ -1420,42 +1425,6 @@ class LinearDirectSteam(AbstractSamGenerationFromWeatherFile):
         PySAM.LinearFresnelDsgIph
         """
         return DefaultLinearFresnelDsgIph.default()
-
-
-class TroughPhysicalHeat(AbstractSamGenerationFromWeatherFile):
-    """
-    Trough Physical Process Heat generation
-    """
-
-    MODULE = "troughphysicalheat"
-    PYSAM = PySamTpph
-    PYSAM_WEATHER_TAG = "file_name"
-
-    def cf_mean(self):
-        """Calculate mean capacity factor (fractional) from SAM.
-
-        Returns
-        -------
-        output : float
-            Mean capacity factor (fractional).
-        """
-        net_power = (
-            self["annual_gross_energy"] - self["annual_thermal_consumption"]
-        )  # kW-hr
-        # q_pb_des is in MW, convert to kW-hr
-        name_plate = self["q_pb_design"] * 8760 * 1000
-
-        return net_power / name_plate
-
-    @staticmethod
-    def default():
-        """Get the executed default pysam trough object.
-
-        Returns
-        -------
-        PySAM.TroughPhysicalProcessHeat
-        """
-        return DefaultTroughPhysicalProcessHeat.default()
 
 
 # pylint: disable=line-too-long
@@ -1805,11 +1774,8 @@ class Geothermal(AbstractSamGenerationFromWeatherFile):
         self["ui_calculations_only"] = 0
 
     def _set_costs(self):
-        """Set the costs based on gross plant generation."""
-        plant_size_kw = (
-            self.sam_sys_inputs["resource_potential"]
-            / self._RESOURCE_POTENTIAL_MULT
-        ) * 1000
+        """Set the costs based on plant size"""
+        plant_size_kw = self.sam_sys_inputs["nameplate"]
 
         cc_per_kw = self.sam_sys_inputs.pop("capital_cost_per_kw", None)
         if cc_per_kw is not None:

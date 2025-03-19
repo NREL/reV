@@ -122,6 +122,11 @@ class BespokeMultiPlantData:
                 hh: res[f"pressure_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
             }
+            if self._pre_load_humidity:
+                self._relative_humidities = {
+                    hh: res["relativehumidity_2m", :, gids]
+                    for hh, gids in self.hh_to_res_gids.items()
+                }
             self._time_index = res.time_index
             if self._pre_load_humidity:
                 self._relative_humidities = {
@@ -153,15 +158,12 @@ class BespokeMultiPlantData:
 
         rh = (None if not self._pre_load_humidity
               else self._relative_humidities[hh][:, data_inds])
-        return BespokeSinglePlantData(
-            sc_point_res_gids,
-            self._wind_dirs[hh][:, data_inds],
-            self._wind_speeds[hh][:, data_inds],
-            self._temps[hh][:, data_inds],
-            self._pressures[hh][:, data_inds],
-            self._time_index,
-            rh,
-        )
+        return BespokeSinglePlantData(sc_point_res_gids,
+                                      self._wind_dirs[hh][:, data_inds],
+                                      self._wind_speeds[hh][:, data_inds],
+                                      self._temps[hh][:, data_inds],
+                                      self._pressures[hh][:, data_inds],
+                                      self._time_index, rh)
 
 
 class BespokeSinglePlantData:
@@ -172,10 +174,8 @@ class BespokeSinglePlantData:
     reads to a single HDF5 file.
     """
 
-    def __init__(
-        self, data_inds, wind_dirs, wind_speeds, temps, pressures, time_index,
-        relative_humidities=None,
-    ):
+    def __init__(self, data_inds, wind_dirs, wind_speeds, temps, pressures,
+                 time_index, relative_humidities=None):
         """Initialize BespokeSinglePlantData
 
         Parameters
@@ -247,37 +247,17 @@ class BespokeSinglePlant:
     DEPENDENCIES = ("shapely",)
     OUT_ATTRS = copy.deepcopy(Gen.OUT_ATTRS)
 
-    def __init__(
-        self,
-        gid,
-        excl,
-        res,
-        tm_dset,
-        sam_sys_inputs,
-        objective_function,
-        capital_cost_function,
-        fixed_operating_cost_function,
-        variable_operating_cost_function,
-        balance_of_system_cost_function,
-        min_spacing="5x",
-        wake_loss_multiplier=1,
-        ga_kwargs=None,
-        output_request=("system_capacity", "cf_mean"),
-        ws_bins=(0.0, 20.0, 5.0),
-        wd_bins=(0.0, 360.0, 45.0),
-        excl_dict=None,
-        inclusion_mask=None,
-        data_layers=None,
-        resolution=64,
-        excl_area=None,
-        exclusion_shape=None,
-        eos_mult_baseline_cap_mw=200,
-        prior_meta=None,
-        gid_map=None,
-        bias_correct=None,
-        pre_loaded_data=None,
-        close=True,
-    ):
+    def __init__(self, gid, excl, res, tm_dset, sam_sys_inputs,
+                 objective_function, capital_cost_function,
+                 fixed_operating_cost_function,
+                 variable_operating_cost_function,
+                 balance_of_system_cost_function, min_spacing='5x',
+                 ga_kwargs=None, output_request=('system_capacity', 'cf_mean'),
+                 ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
+                 excl_dict=None, inclusion_mask=None, data_layers=None,
+                 resolution=64, excl_area=None, exclusion_shape=None,
+                 eos_mult_baseline_cap_mw=200, prior_meta=None, gid_map=None,
+                 bias_correct=None, pre_loaded_data=None, close=True):
         """
         Parameters
         ----------
@@ -353,13 +333,6 @@ class BespokeSinglePlant:
             Minimum spacing between turbines in meters. Can also be a string
             like "5x" (default) which is interpreted as 5 times the turbine
             rotor diameter.
-        wake_loss_multiplier : float, optional
-            A multiplier used to scale the annual energy lost due to
-            wake losses.
-            .. WARNING:: This multiplier will ONLY be applied during the
-            optimization process and will NOT be come through in output
-            values such as the hourly profiles,
-            aep, any of the cost functions, or even the output objective.
         ga_kwargs : dict | None
             Dictionary of keyword arguments to pass to GA initialization.
             If `None`, default initialization values are used.
@@ -460,9 +433,6 @@ class BespokeSinglePlant:
             "Bespoke objective function: {}".format(objective_function)
         )
         logger.debug("Bespoke cost function: {}".format(objective_function))
-        logger.debug(
-            "Bespoke wake loss multiplier: {}".format(wake_loss_multiplier)
-        )
         logger.debug("Bespoke GA initialization kwargs: {}".format(ga_kwargs))
         logger.debug(
             "Bespoke EOS multiplier baseline capacity: {:,} MW".format(
@@ -494,7 +464,6 @@ class BespokeSinglePlant:
         )
         self.balance_of_system_cost_function = balance_of_system_cost_function
         self.min_spacing = min_spacing
-        self.wake_loss_multiplier = wake_loss_multiplier
         self.ga_kwargs = ga_kwargs or {}
 
         self._sam_sys_inputs = sam_sys_inputs
@@ -747,6 +716,9 @@ class BespokeSinglePlant:
             mask = self.sc_point._h5_gids == gid
             weights[i] = self.sc_point.include_mask_flat[mask].sum()
 
+        if "float" not in str(data.dtype):
+            data = data.astype("float32")
+
         weights /= weights.sum()
         data = data.astype(np.float32)
         data *= weights
@@ -847,7 +819,12 @@ class BespokeSinglePlant:
         if self._wind_plant_pd is None:
             return config
 
-        config.update(self._wind_plant_pd.sam_sys_inputs)
+        layout_config = copy.deepcopy(self._wind_plant_pd.sam_sys_inputs)
+        # `wind_plant_pd` PC may have PC losses applied, so keep the
+        # original PC as to not double count losses here
+        layout_config.pop("wind_turbine_powercurve_powerout", None)
+        config.update(layout_config)
+
         return config
 
     @property
@@ -1089,9 +1066,7 @@ class BespokeSinglePlant:
                 self.balance_of_system_cost_function,
                 self.include_mask,
                 self.pixel_side_length,
-                self.min_spacing,
-                self.wake_loss_multiplier,
-            )
+                self.min_spacing)
 
         return self._plant_optm
 
@@ -1206,7 +1181,7 @@ class BespokeSinglePlant:
                           ignore=('wind_resource_model_choice',
                                   'wind_resource_data',
                                   'wind_turbine_powercurve_powerout',
-                                  'hourly',
+                                  'adjust_hourly',
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',
@@ -1513,8 +1488,8 @@ class BespokeWindPlants(BaseAggregation):
                  capital_cost_function, fixed_operating_cost_function,
                  variable_operating_cost_function,
                  balance_of_system_cost_function, project_points,
-                 sam_files, min_spacing='5x', wake_loss_multiplier=1,
-                 ga_kwargs=None, output_request=('system_capacity', 'cf_mean'),
+                 sam_files, min_spacing='5x', ga_kwargs=None,
+                 output_request=('system_capacity', 'cf_mean'),
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
@@ -1730,16 +1705,6 @@ class BespokeWindPlants(BaseAggregation):
             Minimum spacing between turbines (in meters). This input can
             also be a string like "5x", which is interpreted as 5 times
             the turbine rotor diameter. By default, ``"5x"``.
-        wake_loss_multiplier : float, optional
-            A multiplier used to scale the annual energy lost due to
-            wake losses.
-
-            .. WARNING:: This multiplier will ONLY be applied during the
-               optimization process and will NOT come through in output
-               values such as the hourly profiles, aep, any of the cost
-               functions, or even the output objective.
-
-            By default, ``1``.
         ga_kwargs : dict, optional
             Dictionary of keyword arguments to pass to GA
             initialization. If ``None``, default initialization values
@@ -1973,8 +1938,6 @@ class BespokeWindPlants(BaseAggregation):
                     .format(variable_operating_cost_function))
         logger.info('Bespoke balance of system cost function: {}'
                     .format(balance_of_system_cost_function))
-        logger.info('Bespoke wake loss multiplier: {}'
-                    .format(wake_loss_multiplier))
         logger.info('Bespoke GA initialization kwargs: {}'.format(ga_kwargs))
 
         logger.info(
@@ -2012,7 +1975,6 @@ class BespokeWindPlants(BaseAggregation):
         self._voc_fun = variable_operating_cost_function
         self._bos_fun = balance_of_system_cost_function
         self._min_spacing = min_spacing
-        self._wake_loss_multiplier = wake_loss_multiplier
         self._ga_kwargs = ga_kwargs or {}
         self._output_request = SAMOutputRequest(output_request)
         self._ws_bins = ws_bins
@@ -2486,8 +2448,8 @@ class BespokeWindPlants(BaseAggregation):
                    capital_cost_function,
                    fixed_operating_cost_function,
                    variable_operating_cost_function,
-                   balance_of_system_cost_function,
-                   min_spacing='5x', wake_loss_multiplier=1, ga_kwargs=None,
+                   balance_of_system_cost_function, min_spacing='5x',
+                   ga_kwargs=None,
                    output_request=('system_capacity', 'cf_mean'),
                    ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                    excl_dict=None, inclusion_mask=None,
@@ -2549,7 +2511,6 @@ class BespokeWindPlants(BaseAggregation):
                         variable_operating_cost_function,
                         balance_of_system_cost_function,
                         min_spacing=min_spacing,
-                        wake_loss_multiplier=wake_loss_multiplier,
                         ga_kwargs=ga_kwargs,
                         output_request=output_request,
                         ws_bins=ws_bins,
@@ -2638,7 +2599,6 @@ class BespokeWindPlants(BaseAggregation):
                     self._voc_fun,
                     self._bos_fun,
                     self._min_spacing,
-                    wake_loss_multiplier=self._wake_loss_multiplier,
                     ga_kwargs=self._ga_kwargs,
                     output_request=self._output_request,
                     ws_bins=self._ws_bins,
@@ -2716,7 +2676,6 @@ class BespokeWindPlants(BaseAggregation):
                 prior_meta = self._get_prior_meta(gid)
                 pre_loaded_data = self._pre_loaded_data_for_sc_gid(gid)
                 afk = self._area_filter_kernel
-                wlm = self._wake_loss_multiplier
                 i_bc = self._get_bc_for_gid(gid)
                 ebc = self._eos_mult_baseline_cap_mw
 
@@ -2730,7 +2689,6 @@ class BespokeWindPlants(BaseAggregation):
                                      self._voc_fun,
                                      self._bos_fun,
                                      min_spacing=self._min_spacing,
-                                     wake_loss_multiplier=wlm,
                                      ga_kwargs=self._ga_kwargs,
                                      output_request=self._output_request,
                                      ws_bins=self._ws_bins,

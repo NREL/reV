@@ -2,7 +2,7 @@
 name: Bug report
 about: Notify the developers of anomalous and incorrect software behavior
 title: ''
-labels: bug
+type: Bug
 assignees: ''
 
 ---

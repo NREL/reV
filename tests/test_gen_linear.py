@@ -38,7 +38,7 @@ def test_gen_linear():
     #     sequence: Heat sink pumping power [MWe]
     # m_dot_loop
     #     sequence: Receiver mass flow rate [kg/s]
-    output_request = ('q_dot_to_heat_sink', 'gen', 'm_dot_field',
+    output_request = ('q_dot_to_heat_sink', 'gen', 'gen_heat', 'm_dot_field',
                       'q_dot_sf_out', 'W_dot_heat_sink_pump', 'm_dot_loop',
                       'q_dot_rec_inc', 'cf_mean', 'gen_profile',
                       'annual_field_energy', 'annual_thermal_consumption',)
@@ -51,8 +51,13 @@ def test_gen_linear():
 
     with Resource(BASELINE) as f:
         for dset in output_request:
-            truth = f[dset]
             test = gen.out[dset]
+            if dset == "gen":
+                truth = np.zeros_like(test)
+            elif dset == "gen_heat":
+                truth = f["gen"]
+            else:
+                truth = f[dset]
             if len(test.shape) == 2:
                 truth = np.mean(truth, axis=0)
                 test = np.mean(test, axis=0)

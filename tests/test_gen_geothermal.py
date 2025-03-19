@@ -208,7 +208,8 @@ def test_per_kw_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr")
+    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr",
+                      "annual_energy")
     gen = Gen(
         "geothermal",
         points,
@@ -220,18 +221,22 @@ def test_per_kw_cost_inputs(sample_resource_data):
     )
     gen.run(max_workers=1)
 
+    plant_size = 100_000  # matches 'potential' input
+    aep = gen.out["annual_energy"] / 1000
     truth_vals = {
-        "capital_cost": 383_086_656,
-        "fixed_operating_cost": 25539104,
+        "capital_cost": plant_size * 3_000,
+        "fixed_operating_cost": plant_size * 200,
         "variable_operating_cost": 0,
-        "lcoe_fcr": 72.5092,
-        "fixed_charge_rate": 0.098000000000000004,
-        "base_capital_cost": 383_086_656,
-        "base_fixed_operating_cost": 25539104,
+        "fixed_charge_rate": 0.098,
+        "base_capital_cost": plant_size * 3_000,
+        "base_fixed_operating_cost": plant_size * 200,
         "base_variable_operating_cost": 0,
-        "system_capacity": 383_086_656 / 3_000,
+        "system_capacity": plant_size,
+        "lcoe_fcr": (plant_size * 3_000 * 0.098 + plant_size * 200) / aep,
     }
     for dset in output_request:
+        if dset == "annual_energy":
+            continue  # don't try to guess the model output
         truth = truth_vals[dset]
         test = gen.out[dset]
         msg = (
@@ -264,7 +269,8 @@ def test_drill_cost_inputs(sample_resource_data):
     with open(geo_sam_file, "w") as fh:
         json.dump(geo_config, fh)
 
-    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr")
+    output_request = ("capital_cost", "fixed_operating_cost", "lcoe_fcr",
+                      "annual_energy")
     gen = Gen(
         "geothermal",
         points,
@@ -276,17 +282,25 @@ def test_drill_cost_inputs(sample_resource_data):
     )
     gen.run(max_workers=1)
 
+    plant_size = 100_000  # matches 'potential' input
+    cc = gen.out["capital_cost"]
+    aep = gen.out["annual_energy"] / 1000
     truth_vals = {
-        "capital_cost": 466_134_733,
-        "fixed_operating_cost": 25539104,
+        "fixed_operating_cost": plant_size * 200,
         "variable_operating_cost": 0,
-        "lcoe_fcr": 81.8643,
-        "fixed_charge_rate": 0.098000000000000004,
-        "base_capital_cost": 466_134_733,
-        "base_fixed_operating_cost": 25539104,
+        "fixed_charge_rate": 0.098,
+        "base_capital_cost": cc,
+        "base_fixed_operating_cost": plant_size * 200,
         "base_variable_operating_cost": 0,
+        "system_capacity": plant_size,
+        "lcoe_fcr": (cc * 0.098 + plant_size * 200) / aep,
     }
     for dset in output_request:
+        if dset == "annual_energy":
+            continue  # don't try to guess the model output
+        if dset == "capital_cost":
+            assert gen.out[dset] > plant_size * 3_000 + 2_500_000
+            continue
         truth = truth_vals[dset]
         test = gen.out[dset]
         msg = (

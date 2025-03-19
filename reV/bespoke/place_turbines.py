@@ -49,8 +49,7 @@ class PlaceTurbines:
                  fixed_operating_cost_function,
                  variable_operating_cost_function,
                  balance_of_system_cost_function,
-                 include_mask, pixel_side_length, min_spacing,
-                 wake_loss_multiplier=1):
+                 include_mask, pixel_side_length, min_spacing):
         """
         Parameters
         ----------
@@ -118,12 +117,6 @@ class PlaceTurbines:
             Side length (m) of a single pixel of the `include_mask`.
         min_spacing : float
             The minimum spacing between turbines (in meters).
-        wake_loss_multiplier : float, optional
-            A multiplier used to scale the annual energy lost due to
-            wake losses. **IMPORTANT**: This multiplier will ONLY be
-            applied during the optimization process and will NOT be
-            come through in output values such as aep, any of the cost
-            functions, or even the output objective.
         """
 
         # inputs
@@ -139,7 +132,6 @@ class PlaceTurbines:
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
-        self.wake_loss_multiplier = wake_loss_multiplier
 
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
@@ -269,7 +261,7 @@ class PlaceTurbines:
 
             self.wind_plant.assign_inputs()
             self.wind_plant.execute()
-            aep = self._aep_after_scaled_wake_losses()
+            aep = self.wind_plant['annual_energy']
             avg_sl_dist_to_center_m = self._avg_sl_dist_to_cent(x_locs, y_locs)
             avg_sl_dist_to_medoid_m = self._avg_sl_dist_to_med(x_locs, y_locs)
             if "nn_conn_dist_m" in self.balance_of_system_cost_function:
@@ -300,21 +292,6 @@ class PlaceTurbines:
         objective = eval(self.objective_function, globals(), locals())
 
         return objective
-
-    def _aep_after_scaled_wake_losses(self):
-        """AEP after scaling the energy lost due to wake."""
-        wake_loss_pct = self.wind_plant['wake_losses']
-        aep = self.wind_plant['annual_energy']
-        agep = self.wind_plant['annual_gross_energy']
-
-        energy_lost_due_to_wake = wake_loss_pct / 100 * agep
-        aep_after_wake_losses = agep - energy_lost_due_to_wake
-        other_losses_multiplier = 1 - aep / aep_after_wake_losses
-
-        scaled_wake_losses = (self.wake_loss_multiplier
-                              * energy_lost_due_to_wake)
-        aep_after_scaled_wake_losses = max(0, agep - scaled_wake_losses)
-        return aep_after_scaled_wake_losses * (1 - other_losses_multiplier)
 
     def optimize(self, **kwargs):
         """Optimize wind farm layout.

@@ -40,7 +40,8 @@ def get_curtailment(year, curt_fn="curtailment.json"):
     resource = RevPySam.get_sam_res(res_file, pp, "windpower")
     non_curtailed_res = deepcopy(resource)
 
-    out = curtail(resource, pp.curtailment, random_seed=0)
+    curtailment_config = list(pp.curtailment.values())[0]
+    out = curtail(resource, curtailment_config, resource.sites, random_seed=0)
 
     return out, non_curtailed_res, pp
 
@@ -60,7 +61,8 @@ def test_cf_curtailment(year, site):
         TESTDATADIR, "SAM/wind_gen_standard_losses_0.json"
     )
 
-    curtailment = os.path.join(TESTDATADIR, "config/", "curtailment.json")
+    curt_fn = "curtailment.json"
+    curtailment = os.path.join(TESTDATADIR, "config", curt_fn)
     points = slice(site, site + 1)
 
     # run reV 2.0 generation
@@ -75,7 +77,8 @@ def test_cf_curtailment(year, site):
         scale_outputs=True,
     )
     gen.run(max_workers=1)
-    results, check_curtailment = test_res_curtailment(year, site=site)
+    results, check_curtailment = test_res_curtailment(year, site=site,
+                                                      curt_fn=curt_fn)
     results["cf_profile"] = gen.out["cf_profile"].flatten()
 
     # was capacity factor NOT curtailed?
@@ -178,7 +181,7 @@ def test_random(year, site):
             sam_files,
             res_file,
             output_request=("cf_profile",),
-            curtailment=c,
+            curtailment=None if c is None else {"test": c},
             sites_per_worker=50,
             scale_outputs=True,
         )
@@ -198,10 +201,13 @@ def test_random(year, site):
     assert diff <= 2, msg
 
 
-@pytest.mark.parametrize(("year", "site"), [("2012", 50), ("2013", 50)])
-def test_res_curtailment(year, site):
+@pytest.mark.parametrize("year", ["2012", "2013"])
+@pytest.mark.parametrize("site", [50])
+@pytest.mark.parametrize("curt_fn", ["curtailment.json"])
+def test_res_curtailment(year, site, curt_fn):
     """Test wind resource curtailment."""
-    out, non_curtailed_res, pp = get_curtailment(year)
+    out, non_curtailed_res, pp = get_curtailment(year, curt_fn=curt_fn)
+    curtailment_config = list(pp.curtailment.values())[0]
 
     sza = SolarPosition(
         non_curtailed_res.time_index,
@@ -213,21 +219,23 @@ def test_res_curtailment(year, site):
     ti = non_curtailed_res.time_index
 
     # was it in a curtailment month?
-    check1 = np.isin(non_curtailed_res.time_index.month, pp.curtailment.months)
+    check1 = np.isin(non_curtailed_res.time_index.month,
+                     curtailment_config.months)
     check1 = np.tile(
         np.expand_dims(check1, axis=1), non_curtailed_res.shape[1]
     )
 
     # was the non-curtailed wind speed threshold met?
     check2 = (
-        non_curtailed_res._res_arrays["windspeed"] < pp.curtailment.wind_speed
+        non_curtailed_res._res_arrays["windspeed"]
+        < curtailment_config.wind_speed
     )
 
     # was it nighttime?
-    check3 = sza > pp.curtailment.dawn_dusk
+    check3 = sza > curtailment_config.dawn_dusk
 
     # was the temperature threshold met?
-    check4 = out._res_arrays["temperature"] > pp.curtailment.temperature
+    check4 = out._res_arrays["temperature"] > curtailment_config.temperature
 
     # thresholds for curtailment
     check_curtailment = check1 & check2 & check3 & check4
@@ -313,6 +321,140 @@ def test_eqn_curtailment(plot=False):
         ax.set_ylim([0, 30])
         ax.set_legend(["Curtailed"])
         plt.savefig("equation_based_curtailment.png")
+
+
+def test_points_missing_curtailment():
+    """Test that points with missing curtailment values throw a warning"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    curt_fn = "curtailment.json"
+    curtail_config = os.path.join(TESTDATADIR, "config", curt_fn)
+
+    curtailment = {"test_c1": curtail_config, "test_c2": curtail_config}
+    points = slice(0, 1)
+    # run reV 2.0 generation
+    gen = Gen("windpower", points, sam_files, res_file,
+              output_request=("cf_profile", "windspeed"),
+              curtailment=curtailment,
+              sites_per_worker=50, scale_outputs=True)
+
+    with pytest.warns(UserWarning) as warn:
+        gen.run(max_workers=1)
+
+    expected_msgs = ("One or more curtailment configurations not found "
+                     "in project points and are thus ignored",
+                     "test_c1", "test_c2")
+    for msg in expected_msgs:
+        assert any(msg in str(record) for record in warn)
+
+    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    assert np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
+
+
+def test_basic_spatial_curtailment():
+    """Test basic execution of spatial curtailment"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    curt_fn = "curtailment.json"
+    curtail_config = os.path.join(TESTDATADIR, "config", curt_fn)
+
+    points = pd.DataFrame({"gid": [0, 1], "curtailment": ["default", None]})
+    out_req = ("cf_profile", "windspeed", "cf_mean")
+    # run reV 2.0 generation
+    gen = Gen("windpower", points, sam_files, res_file, output_request=out_req,
+              curtailment=curtail_config, sites_per_worker=50,
+              scale_outputs=True)
+
+    gen.run(max_workers=1)
+
+    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    assert not np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
+    assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
+
+    df, __ = test_res_curtailment(2012, 1, curt_fn=curt_fn)
+    assert np.allclose(gen.out["windspeed"][:, 1], df["original_wind"])
+    assert not np.allclose(gen.out["windspeed"][:, 1], df["curtailed_wind"])
+
+    non_curtailed_gen = Gen("windpower", points, sam_files, res_file,
+                            output_request=out_req, sites_per_worker=50,
+                            scale_outputs=True)
+
+    non_curtailed_gen.run(max_workers=1)
+
+    assert non_curtailed_gen.out["cf_mean"][0] > gen.out["cf_mean"][0]
+    assert non_curtailed_gen.out["cf_mean"][1] == gen.out["cf_mean"][1]
+
+
+def test_multiple_spatial_curtailment():
+    """Test execution with multiple spatial curtailments"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    curtail_config = {"c1": os.path.join(TESTDATADIR, "config",
+                                         "curtailment.json"),
+                      "c2": os.path.join(TESTDATADIR, "config",
+                                         "curtailment_date_range.json")}
+
+    points = pd.DataFrame({"gid": [0, 10, 25, 33, 49],
+                           "curtailment": ["c1", None, "c2", "c1", None]})
+    # run reV 2.0 generation
+    gen = Gen("windpower", points, sam_files, res_file,
+              output_request=("cf_profile", "windspeed"),
+              curtailment=curtail_config,
+              sites_per_worker=50, scale_outputs=True)
+
+    gen.run(max_workers=1)
+
+    for (gid, g_ind) in [(10, 1), (49, 4)]:
+        df, __ = test_res_curtailment(2012, gid, curt_fn="curtailment.json")
+        assert np.allclose(gen.out["windspeed"][:, g_ind], df["original_wind"])
+        assert not np.allclose(gen.out["windspeed"][:, g_ind],
+                               df["curtailed_wind"])
+
+    for (gid, g_ind) in [(0, 0), (33, 3)]:
+        df, __ = test_res_curtailment(2012, gid, curt_fn="curtailment.json")
+        assert not np.allclose(gen.out["windspeed"][:, g_ind],
+                               df["original_wind"])
+        assert np.allclose(gen.out["windspeed"][:, g_ind],
+                           df["curtailed_wind"])
+
+    df, __ = test_res_curtailment(2012, 25,
+                                  curt_fn="curtailment_date_range.json")
+    assert not np.allclose(gen.out["windspeed"][:, 2], df["original_wind"])
+    assert np.allclose(gen.out["windspeed"][:, 2], df["curtailed_wind"])
+
+
+@pytest.mark.parametrize("points", [pd.DataFrame({"gid": [0]}),
+                                    pd.DataFrame({"gid": [0],
+                                                  "curtailment": [None]}),
+                                    pd.DataFrame({"gid": [0],
+                                                  "curtailment": ["default"]
+                                                  })])
+def test_default_curtailment(points):
+    """Test basic execution of spatial curtailment"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    curt_fn = "curtailment.json"
+    curtail_config = os.path.join(TESTDATADIR, "config", curt_fn)
+
+    # run reV 2.0 generation
+    gen = Gen("windpower", points, sam_files, res_file,
+              output_request=("cf_profile", "windspeed"),
+              curtailment=curtail_config,
+              sites_per_worker=50, scale_outputs=True)
+
+    gen.run(max_workers=1)
+
+    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    assert not np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
+    assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
 
 
 def execute_pytest(capture="all", flags="-rapP"):

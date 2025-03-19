@@ -27,7 +27,6 @@ from reV.SAM.generation import (
     PvWattsv8,
     SolarWaterHeat,
     TcsMoltenSalt,
-    TroughPhysicalHeat,
     WindPower,
 )
 from reV.utilities import ModuleName, ResourceMetaField, SupplyCurveField
@@ -68,7 +67,6 @@ class Gen(BaseGen):
         "pvwattsv8": PvWattsv8,
         "solarwaterheat": SolarWaterHeat,
         "tcsmoltensalt": TcsMoltenSalt,
-        "troughphysicalheat": TroughPhysicalHeat,
         "windpower": WindPower,
     }
 
@@ -175,12 +173,20 @@ class Gen(BaseGen):
 
                 - ``gid``: Integer specifying the generation GID of each
                   site.
-                - ``config``: Key in the `sam_files` input dictionary
+                - ``config``: This is an *optional* column that contains
+                  a key from the `sam_files` input dictionary
                   (see below) corresponding to the SAM configuration to
                   use for each particular site. This value can also be
-                  ``None`` (or left out completely) if you specify only
-                  a single SAM configuration file as the `sam_files`
-                  input.
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single SAM configuration file as the
+                  `sam_files` input.
+                - ``curtailment``: This is an *optional* column that
+                  contains a key from the `curtailment` input dictionary
+                  (see below) corresponding to the curtailment to apply
+                  at that particular site. This value can also be
+                  ``None``, ``"default"``, or left out completely if you
+                  specify only a single curtailment configuration file
+                  as the `curtailment` input.
                 - ``capital_cost_multiplier``: This is an *optional*
                   multiplier input that, if included, will be used to
                   regionally scale the ``capital_cost`` input in the SAM
@@ -238,9 +244,9 @@ class Gen(BaseGen):
             Filepath to resource data. This input can be path to a
             single resource HDF5 file or a path including a wildcard
             input like ``/h5_dir/prefix*suffix`` (i.e. if your datasets
-            for a single year are spread out over multiple files). In
-            all cases, the resource data must be readable by
-            :py:class:`rex.resource.Resource`
+            like wind speed, wind direction, pressure, and so on are
+            spread out over multiple files). In all cases, the resource
+            data must be readable by :py:class:`rex.resource.Resource`
             or :py:class:`rex.multi_file_resource.MultiFileResource`.
             (i.e. the resource data conform to the
             `rex data format <https://tinyurl.com/3fy7v5kx>`_). This
@@ -254,13 +260,19 @@ class Gen(BaseGen):
 
             .. Note:: If executing ``reV`` from the command line, this
               input string can contain brackets ``{}`` that will be
-              filled in by the `analysis_years` input. Alternatively,
-              this input can be a list of explicit files to process. In
-              this case, the length of the list must match the length of
-              the `analysis_years` input exactly, and the path are
-              assumed to align with the `analysis_years` (i.e. the first
-              path corresponds to the first analysis year, the second
-              path corresponds to the second analysis year, and so on).
+              filled in by the `analysis_years` input. If your datasets
+              span multiple files (e.g. "wtk_wind_speed_2012.h5",
+              "wtk_pressure_2012.h5", "wtk_wind_direction_2012.h5"), you
+              may use a wildcard input along with brackets, like so:
+              ``"wtk_*_{}.h5"``. Alternatively, this input can be a list
+              of explicit files to process. In this case, the length of
+              the list must match the length of the `analysis_years`
+              input exactly, and the paths are assumed to align with the
+              `analysis_years` (i.e. the first path corresponds to the
+              first analysis year, the second path corresponds to the
+              second analysis year, and so on). Wild cards are allowed,
+              even if you list out the years explicitly (i.e.
+              ``["wtk_*_2012.h5", "wtk_*_2013.h5", ...]``)
 
             .. Important:: If you are using custom resource data (i.e.
               not NSRDB/WTK/Sup3rCC, etc.), ensure the following:
@@ -336,15 +348,26 @@ class Gen(BaseGen):
 
             By default, ``None``.
         curtailment : dict | str, optional
-            Inputs for curtailment parameters, which can be:
+            Input for curtailment parameters, which can be one of:
 
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config file with path (str)
+                - Single string representing path to curtailment config
+                  file. In this case, the curtailment config is given
+                  the name "default" and applied everywhere (if the
+                  project points "curtailment" column is missing or all
+                  ``None``) or only where the project points
+                  "curtailment" column contains a value of "default"
+                - Dictionary mapping user-defined curtailment "names" to
+                  either A) strings (paths) or B) explicit namespaces of
+                  curtailment configurations (dicts). Mixing these two
+                  _is_ allowed.
 
             The allowed key-value input pairs in the curtailment
             configuration are documented as properties of the
             :class:`reV.config.curtailment.Curtailment` class. If
-            ``None``, no curtailment is modeled. By default, ``None``.
+            ``None``, no curtailment is modeled. You can select which
+            curtailment gets applied to which site using the
+            "curtailment" column key in the project points input.
+            By default, ``None``.
         gid_map : dict | str, optional
             Mapping of unique integer generation gids (keys) to single
             integer resource gids (values). This enables unique
@@ -650,7 +673,7 @@ class Gen(BaseGen):
             A PointsControl instance dictating what sites and configs are run.
         tech : str
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            solarwaterheat, lineardirectsteam, geothermal)
             The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,

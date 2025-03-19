@@ -982,7 +982,7 @@
   "accept_init": 0,
   "accept_loc": 1,
   "accept_mode": 0,
-  "adjust:constant": 4,
+  "adjust_constant": 4,
   "alpha_abs": [
     [
       0.963,

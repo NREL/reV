@@ -1,5 +1,5 @@
 {
-  "adjust:constant": 0,
+  "adjust_constant": 0,
   "analysis_period": 20,
   "cbi_fed_amount": 0,
   "cbi_fed_deprbas_fed": 0,
@@ -86,15 +86,7 @@
   "depr_itc_sta_sl_39": 0,
   "depr_itc_sta_sl_5": 0,
   "depr_stabas_method": 1,
-  "dispatch_factor1": 1,
-  "dispatch_factor2": 1,
-  "dispatch_factor3": 1,
-  "dispatch_factor4": 1,
-  "dispatch_factor5": 1,
-  "dispatch_factor6": 1,
-  "dispatch_factor7": 1,
-  "dispatch_factor8": 1,
-  "dispatch_factor9": 1,
+  "dispatch_tod_factors": [1, 1, 1, 1, 1, 1, 1, 1, 1],
   "dispatch_factors_ts": [
     0.699999988079071,
     0.699999988079071,
