@@ -1,0 +1,42 @@
+reV.supply\_curve.exclusions.ExclusionMaskFromDict
+==================================================
+
+.. currentmodule:: reV.supply_curve.exclusions
+
+.. autoclass:: ExclusionMaskFromDict
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ExclusionMaskFromDict.add_layer
+      ~ExclusionMaskFromDict.close
+      ~ExclusionMaskFromDict.extract_inclusion_mask
+      ~ExclusionMaskFromDict.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ExclusionMaskFromDict.FILTER_KERNELS
+      ~ExclusionMaskFromDict.excl_h5
+      ~ExclusionMaskFromDict.excl_layers
+      ~ExclusionMaskFromDict.latitude
+      ~ExclusionMaskFromDict.layer_names
+      ~ExclusionMaskFromDict.layers
+      ~ExclusionMaskFromDict.longitude
+      ~ExclusionMaskFromDict.mask
+      ~ExclusionMaskFromDict.nodata_lookup
+      ~ExclusionMaskFromDict.shape
+   
+   

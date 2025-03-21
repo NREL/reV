@@ -1,0 +1,6 @@
+reV.utilities.curtailment.curtail
+=================================
+
+.. currentmodule:: reV.utilities.curtailment
+
+.. autofunction:: curtail

@@ -1,0 +1,6 @@
+reV.losses.utils.hourly\_indices\_for\_months
+=============================================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: hourly_indices_for_months

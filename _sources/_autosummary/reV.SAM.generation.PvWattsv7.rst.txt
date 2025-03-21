@@ -1,0 +1,71 @@
+reV.SAM.generation.PvWattsv7
+============================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: PvWattsv7
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PvWattsv7.ac
+      ~PvWattsv7.add_scheduled_losses
+      ~PvWattsv7.agg_albedo
+      ~PvWattsv7.annual_energy
+      ~PvWattsv7.assign_inputs
+      ~PvWattsv7.cf_mean
+      ~PvWattsv7.cf_mean_ac
+      ~PvWattsv7.cf_profile
+      ~PvWattsv7.cf_profile_ac
+      ~PvWattsv7.check_resource_data
+      ~PvWattsv7.clipped_power
+      ~PvWattsv7.collect_outputs
+      ~PvWattsv7.dc
+      ~PvWattsv7.default
+      ~PvWattsv7.drop_leap
+      ~PvWattsv7.energy_yield
+      ~PvWattsv7.ensure_res_len
+      ~PvWattsv7.execute
+      ~PvWattsv7.gen_profile
+      ~PvWattsv7.get_sam_res
+      ~PvWattsv7.get_time_interval
+      ~PvWattsv7.make_datetime
+      ~PvWattsv7.outputs_to_utc_arr
+      ~PvWattsv7.reV_run
+      ~PvWattsv7.run
+      ~PvWattsv7.run_gen_and_econ
+      ~PvWattsv7.set_latitude_tilt_az
+      ~PvWattsv7.set_resource_data
+      ~PvWattsv7.system_capacity_ac
+      ~PvWattsv7.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PvWattsv7.DIR
+      ~PvWattsv7.IGNORE_ATTRS
+      ~PvWattsv7.MODULE
+      ~PvWattsv7.OUTAGE_CONFIG_KEY
+      ~PvWattsv7.OUTAGE_SEED_CONFIG_KEY
+      ~PvWattsv7.attr_dict
+      ~PvWattsv7.has_timezone
+      ~PvWattsv7.input_list
+      ~PvWattsv7.meta
+      ~PvWattsv7.module
+      ~PvWattsv7.outage_seed
+      ~PvWattsv7.pysam
+      ~PvWattsv7.site
+   
+   

@@ -1,0 +1,31 @@
+reV.SAM.defaults.DefaultPvWattsv5
+=================================
+
+.. currentmodule:: reV.SAM.defaults
+
+.. autoclass:: DefaultPvWattsv5
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultPvWattsv5.default
+      ~DefaultPvWattsv5.init_default_pysam_obj
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DefaultPvWattsv5.CONFIG_FILE_NAME
+   
+   

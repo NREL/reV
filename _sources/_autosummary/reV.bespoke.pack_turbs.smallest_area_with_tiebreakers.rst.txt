@@ -1,0 +1,6 @@
+reV.bespoke.pack\_turbs.smallest\_area\_with\_tiebreakers
+=========================================================
+
+.. currentmodule:: reV.bespoke.pack_turbs
+
+.. autofunction:: smallest_area_with_tiebreakers

@@ -1,0 +1,34 @@
+reV.supply\_curve.aggregation
+=============================
+
+.. automodule:: reV.supply_curve.aggregation
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      AbstractAggFileHandler
+      AggFileHandler
+      Aggregation
+      BaseAggregation
+   
+   
+
+   
+   
+   
+
+
+
