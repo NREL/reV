@@ -1,0 +1,75 @@
+name: Bug Report
+description: Notify the developers of anomalous or incorrect reV behavior
+type: Bug
+
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: reV version checks
+      options:
+        - label: >
+            I have confirmed this bug has not already been reported.
+          required: true
+        - label: >
+            I have confirmed this bug exists on the
+            [latest version](https://github.com/NREL/reV/releases/latest) of reV.
+          required: true
+        - label: >
+            I have confirmed this bug exists on the main branch of reV.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Bug Description
+      description: >
+        Please provide a clear and concise description of the issue/bug. If applicable, add screenshots to help explain your problem.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Reproducible Example
+      description: >
+        Please follow [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports) on how to
+        provide a minimal, copy-pastable example.
+      placeholder: >
+        $ reV generation -c config.json5
+        ...
+    validations:
+      required: true
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Full Traceback
+      description: >
+        Please provide a *full* traceback of any errors received, if applicable.
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: >
+        Please describe or show a code example of the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: System and installed versions
+      description: >
+        Please provide all applicable system and library versions.
+      value: |
+        - OS: [e.g. OSX, Windows, Linux]
+        - Compute hardware: [e.g. Kestrel, AWS]
+        - reV Version: [e.g. 0.12.1]
+        - Python Version: [e.g. 3.13]
+        - Pandas Version: [e.g. 2.1.0]
+        ...
+
+    validations:
+      required: true
+  - type: input
+    id: charge-code
+    attributes:
+      label: Charge code
+      placeholder: >
+        If you are at NREL and fixing this bug is urgent, please provide a charge code

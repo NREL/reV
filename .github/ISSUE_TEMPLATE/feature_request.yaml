@@ -1,0 +1,62 @@
+name: Feature Request
+description: Request a new reV feature
+type: Feature
+
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Feature Type
+      description: Please check what type of feature request you would like to propose.
+      options:
+        - label: >
+            Adding new functionality to reV
+        - label: >
+            Changing existing functionality in reV
+        - label: >
+            Removing existing functionality in reV
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: >
+        Is your feature request related to a problem? Please describe.
+      placeholder: |
+        I'm always frustrated when [...]
+        I wish I could use reV to [...]
+
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature Description
+      description: >
+        Please provide a clear and concise description of the feature (i.e. what you want to happen).
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Alternative Solutions
+      description: >
+        Please describe any alternative solution (existing functionality, 3rd party package, etc.)
+        that you've considered.
+      placeholder: |
+        ```python
+        # Your code here, if applicable
+
+        ```
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: >
+        Please provide any relevant GitHub issues, code examples, references, screenshots, or other material
+        that help describe and support the feature request.
+  - type: input
+    id: charge-code
+    attributes:
+      label: Charge code
+      placeholder: >
+        If you are at NREL and implementing this feature is urgent, please provide a charge code
