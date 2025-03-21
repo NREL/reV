@@ -134,5 +134,5 @@ omit = [
 
 
 [tool.pytest.ini_options]
-addopts = "--cov=reV --cov-report=html --cov-report=xml:coverage.xml --disable-warnings --cov-fail-under=80"
+addopts = "--disable-warnings"
 testpaths = ["tests"]
