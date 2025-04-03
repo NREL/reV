@@ -439,6 +439,53 @@ class BaseAggregation(ABC):
         return gid_inclusions
 
     @staticmethod
+    def _get_gid_zones(excl_fpath, zones_dset, gid, slice_lookup):
+        """
+        Get zones 2D array for desired gid.
+
+        Parameters
+        ----------
+        excl_fpath : str | None, optional
+            Filepath to HDF5 file containing `zones_dset`. If not specified,
+            output of function will be an array containing all values equal to
+            1.
+        zones_dset : str | None, optional
+            Dataset name in the `excl_fpath` file containing the zones to be
+            loaded. If not specified, output of function will be an array
+            containing all values equal to 1.
+        gid : int
+            sc_point_gid value, used to extract the applicable subset of zones.
+        slice_lookup : dict
+            Mapping of sc_point_gids to exclusion/inclusion row and column
+            slices
+
+        Returns
+        -------
+        zones : ndarray | None
+            2D array of zones for desired gid.
+        """
+
+        row_slice, col_slice = slice_lookup[gid]
+        if excl_fpath is not None and zones_dset is not None:
+            with ExclusionLayers(excl_fpath) as fh:
+                if zones_dset not in fh:
+                    msg = (
+                        f"Could not find zones_dset {zones_dset} in "
+                        f"excl_fpath {excl_fpath}."
+                    )
+                    logger.error(msg)
+                    raise FileInputError(msg)
+                zones = fh[zones_dset, row_slice, col_slice]
+        else:
+            shape = (
+                row_slice.stop - row_slice.start,
+                col_slice.stop - col_slice.start
+            )
+            zones = np.ones(shape, dtype="uint8")
+
+        return zones
+
+    @staticmethod
     def _parse_gen_index(gen_fpath):
         """Parse gen outputs for an array of generation gids corresponding to
         the resource gids.

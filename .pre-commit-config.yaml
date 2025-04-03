@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v5.0.0
     hooks:
     -   id: check-json
     -   id: check-yaml
@@ -13,11 +13,11 @@ repos:
     -   id: requirements-txt-fixer
     -   id: pretty-format-json
         args: [--autofix]
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+-   repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
     hooks:
     -   id: flake8
 -   repo: https://github.com/PyCQA/pylint
-    rev: pylint-2.6.0
+    rev: v3.3.3
     hooks:
     -   id: pylint
