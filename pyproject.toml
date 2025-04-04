@@ -17,13 +17,12 @@ maintainers = [
   {name = "Grant Buster", email = "gbuster@nrel.gov"},
   {name = "Paul Pinchuk", email = "ppinchuk@nrel.gov"},
 ]
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
 keywords = ["reV", "NREL"]
 requires-python = ">= 3.8"
 classifiers=[
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
   "Natural Language :: English",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
