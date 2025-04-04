@@ -53,6 +53,11 @@ dev = [
 hsds = [
   "hsds>=0.8.4,<1",
 ]
+build = [
+  "build>=0.10,<1",
+  "pkginfo>=1.10.0,<2",
+  "twine>=6.1.0,<7",
+]
 
 [project.urls]
 homepage = "https://www2.nrel.gov/gis/renewable-energy-potential"
