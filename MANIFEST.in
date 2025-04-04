@@ -10,4 +10,3 @@ exclude .*
 exclude *.git
 exclude Dockerfile
 exclude docker-compose.yml
-exclude pyproject.toml
