@@ -23,6 +23,7 @@ jobs:
         pip install .[build]
     - name: Build a binary wheel
       run:
+        python reV/utilities/_clean_readme.py README.rst
         python -m build --sdist --wheel --outdir dist/ .
     - name: Check distribution files
       run: |
