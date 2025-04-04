@@ -53,10 +53,6 @@ dev = [
 hsds = [
   "hsds>=0.8.4,<1",
 ]
-s3 = [
-  "fsspec",
-  "s3fs",
-]
 
 [project.urls]
 homepage = "https://www2.nrel.gov/gis/renewable-energy-potential"
