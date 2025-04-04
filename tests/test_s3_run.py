@@ -4,10 +4,6 @@ PyTest file wind generation directly from s3 file
 
 Note that this directly tests the example here:
     https://nrel.github.io/reV/misc/examples.running_locally.html
-
-Note that this file cannot be named "test_*.py" because it is run with a
-separate github action that sets up a local hsds server before running the
-test.
 """
 
 import os
