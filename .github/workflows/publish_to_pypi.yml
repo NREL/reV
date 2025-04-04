@@ -17,15 +17,15 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.11
-    - name: Install dependencies and Build
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools build
-        python reV/utilities/_clean_readme.py README.rst
+        pip install .[build]
+    - name: Build a binary wheel
+      run:
         python -m build --sdist --wheel --outdir dist/ .
     - name: Check distribution files
       run: |
-        pip install twine
         twine check dist/*
     - name: Publish
       uses: pypa/gh-action-pypi-publish@release/v1
