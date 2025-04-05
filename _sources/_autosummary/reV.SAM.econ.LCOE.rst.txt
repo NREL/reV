@@ -1,0 +1,55 @@
+reV.SAM.econ.LCOE
+=================
+
+.. currentmodule:: reV.SAM.econ
+
+.. autoclass:: LCOE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LCOE.assign_inputs
+      ~LCOE.collect_outputs
+      ~LCOE.default
+      ~LCOE.drop_leap
+      ~LCOE.ensure_res_len
+      ~LCOE.execute
+      ~LCOE.flip_actual_irr
+      ~LCOE.get_sam_res
+      ~LCOE.get_time_interval
+      ~LCOE.gross_revenue
+      ~LCOE.lcoe_fcr
+      ~LCOE.lcoe_nom
+      ~LCOE.lcoe_real
+      ~LCOE.make_datetime
+      ~LCOE.npv
+      ~LCOE.outputs_to_utc_arr
+      ~LCOE.ppa_price
+      ~LCOE.reV_run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LCOE.DIR
+      ~LCOE.IGNORE_ATTRS
+      ~LCOE.MODULE
+      ~LCOE.attr_dict
+      ~LCOE.input_list
+      ~LCOE.meta
+      ~LCOE.module
+      ~LCOE.pysam
+      ~LCOE.site
+   
+   

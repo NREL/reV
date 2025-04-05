@@ -1,0 +1,33 @@
+reV.econ
+========
+
+.. automodule:: reV.econ
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   cli_econ
+   econ
+   economies_of_scale
+   utilities
+

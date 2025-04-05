@@ -1,0 +1,65 @@
+reV.SAM.generation.SolarWaterHeat
+=================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: SolarWaterHeat
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SolarWaterHeat.add_scheduled_losses
+      ~SolarWaterHeat.annual_energy
+      ~SolarWaterHeat.assign_inputs
+      ~SolarWaterHeat.cf_mean
+      ~SolarWaterHeat.cf_profile
+      ~SolarWaterHeat.check_resource_data
+      ~SolarWaterHeat.collect_outputs
+      ~SolarWaterHeat.default
+      ~SolarWaterHeat.drop_leap
+      ~SolarWaterHeat.energy_yield
+      ~SolarWaterHeat.ensure_res_len
+      ~SolarWaterHeat.execute
+      ~SolarWaterHeat.gen_profile
+      ~SolarWaterHeat.get_sam_res
+      ~SolarWaterHeat.get_time_interval
+      ~SolarWaterHeat.make_datetime
+      ~SolarWaterHeat.outputs_to_utc_arr
+      ~SolarWaterHeat.reV_run
+      ~SolarWaterHeat.run
+      ~SolarWaterHeat.run_gen_and_econ
+      ~SolarWaterHeat.set_resource_data
+      ~SolarWaterHeat.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SolarWaterHeat.DIR
+      ~SolarWaterHeat.IGNORE_ATTRS
+      ~SolarWaterHeat.MODULE
+      ~SolarWaterHeat.OUTAGE_CONFIG_KEY
+      ~SolarWaterHeat.OUTAGE_SEED_CONFIG_KEY
+      ~SolarWaterHeat.PYSAM_WEATHER_TAG
+      ~SolarWaterHeat.WF_META_DROP_COLS
+      ~SolarWaterHeat.attr_dict
+      ~SolarWaterHeat.has_timezone
+      ~SolarWaterHeat.input_list
+      ~SolarWaterHeat.meta
+      ~SolarWaterHeat.module
+      ~SolarWaterHeat.outage_seed
+      ~SolarWaterHeat.pysam
+      ~SolarWaterHeat.site
+   
+   

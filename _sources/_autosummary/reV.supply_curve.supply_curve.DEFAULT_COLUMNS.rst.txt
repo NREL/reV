@@ -1,0 +1,6 @@
+reV.supply\_curve.supply\_curve.DEFAULT\_COLUMNS
+================================================
+
+.. currentmodule:: reV.supply_curve.supply_curve
+
+.. autodata:: DEFAULT_COLUMNS

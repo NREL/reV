@@ -1,0 +1,56 @@
+reV.config.execution.BaseExecutionConfig
+========================================
+
+.. currentmodule:: reV.config.execution
+
+.. autoclass:: BaseExecutionConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BaseExecutionConfig.check_files
+      ~BaseExecutionConfig.check_overwrite_keys
+      ~BaseExecutionConfig.clear
+      ~BaseExecutionConfig.copy
+      ~BaseExecutionConfig.fromkeys
+      ~BaseExecutionConfig.get
+      ~BaseExecutionConfig.items
+      ~BaseExecutionConfig.keys
+      ~BaseExecutionConfig.pop
+      ~BaseExecutionConfig.popitem
+      ~BaseExecutionConfig.resolve_path
+      ~BaseExecutionConfig.set_self_dict
+      ~BaseExecutionConfig.setdefault
+      ~BaseExecutionConfig.str_replace_and_resolve
+      ~BaseExecutionConfig.update
+      ~BaseExecutionConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BaseExecutionConfig.REQUIREMENTS
+      ~BaseExecutionConfig.STR_REP
+      ~BaseExecutionConfig.config_dir
+      ~BaseExecutionConfig.config_keys
+      ~BaseExecutionConfig.log_level
+      ~BaseExecutionConfig.max_workers
+      ~BaseExecutionConfig.memory_utilization_limit
+      ~BaseExecutionConfig.name
+      ~BaseExecutionConfig.nodes
+      ~BaseExecutionConfig.option
+      ~BaseExecutionConfig.sh_script
+      ~BaseExecutionConfig.sites_per_worker
+   
+   

@@ -1,0 +1,65 @@
+reV.supply\_curve.points.AggregationSupplyCurvePoint
+====================================================
+
+.. currentmodule:: reV.supply_curve.points
+
+.. autoclass:: AggregationSupplyCurvePoint
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AggregationSupplyCurvePoint.agg_data_layers
+      ~AggregationSupplyCurvePoint.aggregate
+      ~AggregationSupplyCurvePoint.close
+      ~AggregationSupplyCurvePoint.exclusion_weighted_mean
+      ~AggregationSupplyCurvePoint.get_agg_slices
+      ~AggregationSupplyCurvePoint.mean_wind_dirs
+      ~AggregationSupplyCurvePoint.run
+      ~AggregationSupplyCurvePoint.sc_mean
+      ~AggregationSupplyCurvePoint.sc_sum
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AggregationSupplyCurvePoint.area
+      ~AggregationSupplyCurvePoint.bool_mask
+      ~AggregationSupplyCurvePoint.centroid
+      ~AggregationSupplyCurvePoint.cols
+      ~AggregationSupplyCurvePoint.country
+      ~AggregationSupplyCurvePoint.county
+      ~AggregationSupplyCurvePoint.elevation
+      ~AggregationSupplyCurvePoint.exclusions
+      ~AggregationSupplyCurvePoint.gid
+      ~AggregationSupplyCurvePoint.gid_counts
+      ~AggregationSupplyCurvePoint.h5
+      ~AggregationSupplyCurvePoint.h5_gid_set
+      ~AggregationSupplyCurvePoint.include_mask
+      ~AggregationSupplyCurvePoint.include_mask_flat
+      ~AggregationSupplyCurvePoint.latitude
+      ~AggregationSupplyCurvePoint.longitude
+      ~AggregationSupplyCurvePoint.n_gids
+      ~AggregationSupplyCurvePoint.offshore
+      ~AggregationSupplyCurvePoint.pixel_area
+      ~AggregationSupplyCurvePoint.resolution
+      ~AggregationSupplyCurvePoint.rows
+      ~AggregationSupplyCurvePoint.sc_col_ind
+      ~AggregationSupplyCurvePoint.sc_point_gid
+      ~AggregationSupplyCurvePoint.sc_row_ind
+      ~AggregationSupplyCurvePoint.state
+      ~AggregationSupplyCurvePoint.summary
+      ~AggregationSupplyCurvePoint.timezone
+      ~AggregationSupplyCurvePoint.zone_mask
+   
+   

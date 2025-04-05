@@ -1,0 +1,42 @@
+reV.nrwal.nrwal.RevNrwal
+========================
+
+.. currentmodule:: reV.nrwal.nrwal
+
+.. autoclass:: RevNrwal
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RevNrwal.check_outputs
+      ~RevNrwal.run
+      ~RevNrwal.run_nrwal
+      ~RevNrwal.save_raw_dsets
+      ~RevNrwal.write_meta_to_csv
+      ~RevNrwal.write_to_gen_fpath
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RevNrwal.DEFAULT_META_COLS
+      ~RevNrwal.analysis_gids
+      ~RevNrwal.analysis_mask
+      ~RevNrwal.gen_dsets
+      ~RevNrwal.meta_out
+      ~RevNrwal.meta_source
+      ~RevNrwal.outputs
+      ~RevNrwal.time_index
+   
+   
