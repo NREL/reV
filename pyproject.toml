@@ -45,7 +45,6 @@ test = [
   "pytest>=8.3.3,<9",
 ]
 dev = [
-  "pytest>=8.3.3,<9",
   "flake8",
   "pre-commit",
   "pylint",
@@ -54,7 +53,7 @@ hsds = [
   "hsds>=0.8.4,<1",
 ]
 build = [
-  "build>=0.10,<1",
+  "build>=1.2.2,<2",
   "pkginfo>=1.10.0,<2",
   "twine>=6.1.0,<7",
 ]
@@ -79,11 +78,18 @@ reV-QA-QC = "reV.qa_qc.cli_qa_qc:main"
 reV-hybrids = "reV.hybrids.cli_hybrids:main"
 reV-project-points = "reV.config.cli_project_points:project_points"
 
+
 [tool.setuptools.packages]
 find = { include = ["reV*"] }
 
 [tool.setuptools.dynamic]
 version = {attr = "reV.version.__version__"}
+
+[tool.setuptools_scm]
+# Don't try to guess anything from Git. Only use what is in the version file.
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
+
 
 [tool.coverage.run]
 branch = true
