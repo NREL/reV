@@ -5,26 +5,7 @@ functions to plot turbine layouts and boundary polygons
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def get_xy(A):
-    """separate polygon exterior coordinates to x and y
-
-    Parameters
-    ----------
-    A : Polygon.exteroir.coords
-        Exterior coordinates from a shapely Polygon
-
-    Outputs
-    ----------
-    x, y : array
-        Boundary polygon x and y coordinates
-    """
-    x = np.zeros(len(A))
-    y = np.zeros(len(A))
-    for i, _ in enumerate(A):
-        x[i] = A[i][0]
-        y[i] = A[i][1]
-    return x, y
+from reV.bespoke.pack_turbs import get_xy
 
 
 def plot_poly(geom, ax=None, color="black", linestyle="--", linewidth=0.5):

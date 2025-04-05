@@ -4,8 +4,8 @@ turbine packing module.
 """
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon, Point
-from reV.bespoke.plotting_functions import get_xy
 from reV.utilities.exceptions import WhileLoopPackingError
+
 
 
 class PackTurbines():
@@ -81,24 +81,22 @@ class PackTurbines():
         self.turbine_y = np.array([])
 
 
-def smallest_area_with_tiebreakers(g):
-    """_summary_
-
-    This function helps break ties in the area of two different
-    geometries using their exterior coordinate values.
+def get_xy(A):
+    """separate polygon exterior coordinates to x and y
 
     Parameters
     ----------
-    g : _type_
-        A geometry object with an `area` and an
-        `exterior.coords` coords attribute.
+    A : Polygon.exteroir.coords
+        Exterior coordinates from a shapely Polygon
 
-    Returns
-    -------
-    tuple
-        Tuple with the following elements:
-            - area of the geometry
-            - minimum exterior coordinate (southwest)
-            - maximum exterior coordinate (northeast)
+    Outputs
+    ----------
+    x, y : array
+        Boundary polygon x and y coordinates
     """
-    return g.area, min(g.exterior.coords), max(g.exterior.coords)
+    x = np.zeros(len(A))
+    y = np.zeros(len(A))
+    for i, _ in enumerate(A):
+        x[i] = A[i][0]
+        y[i] = A[i][1]
+    return x, y
