@@ -27,17 +27,19 @@ classifiers=[
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "NREL-gaps>=0.7.0,<0.8",
+  "NREL-gaps>=0.8.0,<0.9",
   "NREL-NRWAL>=0.0.7,<1",
   "NREL-PySAM~=6.0.1,<7",
-  "NREL-rex>=0.2.99,<0.3",
-  "numpy~=1.24.4",
+  "NREL-rex>=0.3.0,<0.4",
+  "numpy>=2.0.2,<3",
   "packaging>=20.3,<25",
   "plotly>=4.7.1,<6",
   "plotting>=0.0.6,<0.0.8",
-  "shapely<2",
+  "shapely",
 ]
 
 [project.optional-dependencies]
@@ -54,8 +56,8 @@ hsds = [
   "hsds>=0.8.4,<1",
 ]
 build = [
-  "build>=0.10,<1",
-  "pkginfo>=1.10.0,<2",
+  "build>=0.10,<0.11",
+  "pkginfo>=1.12.1.2,<2",
   "twine>=6.1.0,<7",
 ]
 
