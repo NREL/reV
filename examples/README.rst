@@ -12,3 +12,6 @@ reV Examples
 - `Running reV locally <https://nrel.github.io/reV/misc/examples.running_locally.html>`_
 - `Running reV on AWS Parallel Cluster HPC Infrastructure <https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_
 - `Using HSDS <https://nrel.github.io/reV/misc/examples.running_with_hsds.html>`_
+
+
+.. NOTE:: Many of these examples require a matplotlib dependency to generate figures. Simply ``pip install matplotlib`` in your environment.
