@@ -29,18 +29,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest
-        python -m pip install pytest-cov
         python -m pip install .
     - name: Run pytest and Generate coverage report
       run: |
-        python -m pytest -v --disable-warnings --cov=./ --cov-report=xml:coverage.xml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
-        fail_ci_if_error: false
-        verbose: true
+        python -m pytest -v
