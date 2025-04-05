@@ -45,7 +45,6 @@ test = [
   "pytest>=8.3.3,<9",
 ]
 dev = [
-  "pytest>=8.3.3,<9",
   "flake8",
   "pre-commit",
   "pylint",
