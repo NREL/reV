@@ -3,6 +3,8 @@
 """
 place turbines for bespoke wind plants
 """
+from functools import wraps
+
 import numpy as np
 from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon
 
@@ -31,11 +33,13 @@ def none_until_optimized(func):
         optimized.
     """
 
+    @wraps(func)
     def _func(pt):
         """Wrapper to return `None` if `PlaceTurbines` is not optimized"""
         if pt.optimized_design_variables is None:
-            return
+            return None
         return func(pt)
+
     return _func
 
 
