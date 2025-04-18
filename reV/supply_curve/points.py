@@ -1306,7 +1306,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         gid_counts : list
         """
         gid_counts = [
-            self.include_mask_flat[(self._h5_gids == gid)].sum()
+            float(self.include_mask_flat[(self._h5_gids == gid)].sum())
             for gid in self.h5_gid_set
         ]
 
@@ -1702,7 +1702,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             List of exclusion pixels in each resource/generation gid.
         """
         gid_counts = [
-            self.include_mask_flat[(self._res_gids == gid)].sum()
+            float(self.include_mask_flat[(self._res_gids == gid)].sum())
             for gid in self.res_gid_set
         ]
 
