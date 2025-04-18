@@ -111,7 +111,7 @@ class RepresentativeMethods:
         i : int
             Location of the Nth min value in arr.
         """
-        return arr.argsort()[: (n + 1)][-1]
+        return int(arr.argsort()[: (n + 1)][-1])
 
     @staticmethod
     def meanoid(profiles, weights=None):
