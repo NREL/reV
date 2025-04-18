@@ -507,8 +507,8 @@ class SupplyCurve:
             Table mapping supply curve points to transmission features
             (should already be merged with SC points).
         """
-        sc_gids = set(sc_points[SupplyCurveField.SC_GID].unique())
-        trans_sc_gids = set(trans_table[SupplyCurveField.SC_GID].unique())
+        sc_gids = set(sc_points[SupplyCurveField.SC_GID].tolist())
+        trans_sc_gids = set(trans_table[SupplyCurveField.SC_GID].tolist())
         missing = sorted(list(sc_gids - trans_sc_gids))
         if any(missing):
             msg = (
