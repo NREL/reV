@@ -280,8 +280,8 @@ class BespokeSinglePlant:
             Variables available are:
 
                 - ``n_turbines``: the number of turbines
-                - ``system_capacity``: wind plant capacity
-                - ``aep``: annual energy production
+                - ``system_capacity``: wind plant capacity (kW)
+                - ``aep``: annual energy production (kWh)
                 - ``avg_sl_dist_to_center_m``: Average straight-line
                   distance to the supply curve point center from all
                   turbine locations (in m). Useful for computing plant
@@ -290,20 +290,22 @@ class BespokeSinglePlant:
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
                 - ``nn_conn_dist_m``: Total BOS connection distance
-                  using nearest-neighbor connections. This variable is
-                  only available for the
+                  using nearest-neighbor connections (in m). This
+                  variable is only available for the
                   ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
-                - ``capital_cost``: plant capital cost as evaluated
+                - ``capital_cost``: plant capital cost ($) as evaluated
                   by `capital_cost_function`
                 - ``fixed_operating_cost``: plant fixed annual operating
-                  cost as evaluated by `fixed_operating_cost_function`
+                  cost ($/year) as evaluated by
+                  `fixed_operating_cost_function`
                 - ``variable_operating_cost``: plant variable annual
-                  operating cost as evaluated by
+                  operating cost ($/kWh) as evaluated by
                   `variable_operating_cost_function`
                 - ``balance_of_system_cost``: plant balance of system
-                  cost as evaluated by `balance_of_system_cost_function`
+                  cost ($) as evaluated by
+                  `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
                   through which all SAM variables can be accessed
 
@@ -1567,8 +1569,8 @@ class BespokeWindPlants(BaseAggregation):
             for computation are:
 
                 - ``n_turbines``: the number of turbines
-                - ``system_capacity``: wind plant capacity
-                - ``aep``: annual energy production
+                - ``system_capacity``: wind plant capacity (kW)
+                - ``aep``: annual energy production (kWh)
                 - ``avg_sl_dist_to_center_m``: Average straight-line
                   distance to the supply curve point center from all
                   turbine locations (in m). Useful for computing plant
@@ -1577,20 +1579,22 @@ class BespokeWindPlants(BaseAggregation):
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
                 - ``nn_conn_dist_m``: Total BOS connection distance
-                  using nearest-neighbor connections. This variable is
-                  only available for the
+                  using nearest-neighbor connections (in m). This
+                  variable is only available for the
                   ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
-                - ``capital_cost``: plant capital cost as evaluated
+                - ``capital_cost``: plant capital cost ($) as evaluated
                   by `capital_cost_function`
                 - ``fixed_operating_cost``: plant fixed annual operating
-                  cost as evaluated by `fixed_operating_cost_function`
+                  cost ($/year) as evaluated by
+                  `fixed_operating_cost_function`
                 - ``variable_operating_cost``: plant variable annual
-                  operating cost as evaluated by
+                  operating cost ($/kWh) as evaluated by
                   `variable_operating_cost_function`
                 - ``balance_of_system_cost``: plant balance of system
-                  cost as evaluated by `balance_of_system_cost_function`
+                  cost ($) as evaluated by
+                  `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
                   through which all SAM variables can be accessed
 
