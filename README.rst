@@ -118,7 +118,7 @@ Option 1: Install from PIP (recommended for analysts):
 ---------------------------------------------------------------
 
 1. Create a new environment:
-    ``conda create --name rev python=3.9``
+    ``conda create --name rev python=3.11``
 
 2. Activate directory:
     ``conda activate rev``
