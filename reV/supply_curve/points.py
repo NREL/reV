@@ -56,13 +56,13 @@ class AbstractSupplyCurvePoint(ABC):
         self._parse_slices(resolution, exclusion_shape)
 
     @staticmethod
-    def _ordered_unique(seq):
+    def _ordered_unique_from_np(seq):
         """Get a list of unique values in the same order as the input sequence.
 
         Parameters
         ----------
-        seq : list | tuple
-            Sequence of values.
+        seq : np.array
+            Numpy array containing a sequence of values.
 
         Returns
         -------
@@ -72,7 +72,7 @@ class AbstractSupplyCurvePoint(ABC):
 
         seen = set()
 
-        return [x for x in seq if not (x in seen or seen.add(x))]
+        return [x for x in seq.tolist() if not (x in seen or seen.add(x))]
 
     def _parse_sc_row_col_ind(self, resolution, exclusion_shape):
         """Parse SC row and column index.
@@ -558,7 +558,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             List of h5 gids.
         """
         if self._h5_gid_set is None:
-            self._h5_gid_set = self._ordered_unique(self._h5_gids)
+            self._h5_gid_set = self._ordered_unique_from_np(self._h5_gids)
             if -1 in self._h5_gid_set:
                 self._h5_gid_set.remove(-1)
 
@@ -1657,7 +1657,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             List of resource gids.
         """
         if self._res_gid_set is None:
-            self._res_gid_set = self._ordered_unique(self._res_gids)
+            self._res_gid_set = self._ordered_unique_from_np(self._res_gids)
             if -1 in self._res_gid_set:
                 self._res_gid_set.remove(-1)
 
@@ -1673,7 +1673,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             List of generation gids.
         """
         if self._gen_gid_set is None:
-            self._gen_gid_set = self._ordered_unique(self._gen_gids)
+            self._gen_gid_set = self._ordered_unique_from_np(self._gen_gids)
             if -1 in self._gen_gid_set:
                 self._gen_gid_set.remove(-1)
 
