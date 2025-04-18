@@ -62,7 +62,7 @@ class TechMapping:
             self._sc_resolution = sc.resolution
             self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
-            self._n_excl = np.product(self._excl_shape)
+            self._n_excl = np.prod(self._excl_shape)
             self._sc_row_indices = sc.row_indices
             self._sc_col_indices = sc.col_indices
             self._excl_row_slices = sc.excl_row_slices
@@ -137,7 +137,7 @@ class TechMapping:
         iarr : ndarray
             2D array of 1D index values for the flattened h5 excl extent
         """
-        iarr = np.arange(np.product(shape), dtype=np.uint32)
+        iarr = np.arange(np.prod(shape), dtype=np.uint32)
 
         return iarr.reshape(shape)
 
