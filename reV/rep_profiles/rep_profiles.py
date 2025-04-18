@@ -384,8 +384,8 @@ class RegionRepProfile:
             }
         )
         df = df.sort_values(self.RES_GID_COL)
-        self._gen_gids = df[self.GEN_GID_COL].values
-        self._res_gids = df[self.RES_GID_COL].values
+        self._gen_gids = df[self.GEN_GID_COL].to_list()
+        self._res_gids = df[self.RES_GID_COL].to_list()
         if self._weight is not None:
             self._weights = df["weights"].values
         else:
@@ -395,7 +395,7 @@ class RegionRepProfile:
             meta = res.meta
 
             assert ResourceMetaField.GID in meta
-            source_res_gids = meta[ResourceMetaField.GID].values
+            source_res_gids = meta[ResourceMetaField.GID].to_list()
             msg = ('Resource gids from "gid" column in meta data from "{}" '
                    'must be sorted! reV generation should always be run with '
                    'sequential project points.'.format(self._gen_fpath))
