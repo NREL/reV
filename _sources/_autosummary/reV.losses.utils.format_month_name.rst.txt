@@ -1,0 +1,6 @@
+reV.losses.utils.format\_month\_name
+====================================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: format_month_name
