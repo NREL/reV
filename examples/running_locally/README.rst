@@ -56,6 +56,14 @@ coordinates:
      [0.782 0.833 0.833 ... 0.833 0.833 0.833]
      [0.756 0.801 0.833 ... 0.833 0.833 0.833]]
 
+
+.. NOTE::
+    If you get an error saying the resource or SAM file doesn't exist, then you likely
+    installed from PyPi and did not get the test data bundled with your download. To
+    fix this, simply download the missing files from our
+    `online repository <https://github.com/NREL/reV/tree/main/tests/data>`_.
+
+
 pvwatts
 +++++++
 
