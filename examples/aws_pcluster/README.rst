@@ -38,7 +38,7 @@ Setting up an AWS Parallel Cluster
     #. ``cd /shared/``
     #. ``git clone git@github.com:NREL/reV.git``
     #. ``cd /shared/reV/``
-    #. ``pip install -e .[s3]`` if you're using s3 filepaths or ``pip install -e .[hsds]`` if you're setting up an HSDS local server
+    #. ``pip install -e .[hsds]`` if you're setting up an HSDS local server
 
 #. Try running the reV ``aws_pcluster`` example:
 
