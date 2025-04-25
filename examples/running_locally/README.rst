@@ -5,7 +5,9 @@ Run reV locally
 and `reV Econ <https://nrel.github.io/reV/_autosummary/reV.econ.econ.Econ.html#reV.econ.econ.Econ>`_
 can be run locally using resource .h5 files stored locally.
 
-For users outside of NREL: you can now point reV directly to filepaths on S3! This will stream small amounts of data from S3 directly to your computer without having to setup an IO server like HSDS. See the example for reading data directly from S3 `here <https://nrel.github.io/rex/misc/examples.fsspec.html>`_ and try the example below with resource file paths from S3. You will need to do an extra install ``pip install NREL-reV[s3]``.
+For users outside of NREL: you can now point reV directly to filepaths on S3! This will stream small amounts of data from S3 directly
+to your computer without having to setup an IO server like HSDS. See the example for reading data directly from S3
+`here <https://nrel.github.io/rex/misc/examples.fsspec.html>`_ and try the example below with resource file paths from S3.
 
 reV Gen
 -------
@@ -53,6 +55,14 @@ coordinates:
      [0.833 0.833 0.823 ... 0.833 0.833 0.833]
      [0.782 0.833 0.833 ... 0.833 0.833 0.833]
      [0.756 0.801 0.833 ... 0.833 0.833 0.833]]
+
+
+.. NOTE::
+    If you get an error saying the resource or SAM file doesn't exist, then you likely
+    installed from PyPi and did not get the test data bundled with your download. To
+    fix this, simply download the missing files from our
+    `online repository <https://github.com/NREL/reV/tree/main/tests/data>`_.
+
 
 pvwatts
 +++++++
