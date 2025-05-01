@@ -137,8 +137,8 @@ def test_turbine_placement(gid=33):
         sam_sys_inputs["variable_operating_cost_multiplier"] = 5
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  sam_sys_inputs,
@@ -234,8 +234,8 @@ def test_zero_area(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -281,8 +281,8 @@ def test_correct_turb_location(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -328,8 +328,8 @@ def test_packing_algorithm(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(
             gid,
@@ -394,8 +394,8 @@ def test_single(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -486,8 +486,8 @@ def test_extra_outputs(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
 
         with pytest.raises(KeyError):
@@ -627,8 +627,8 @@ def test_bespoke():
         )
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         sam_configs = copy.deepcopy(SAM_CONFIGS)
         sam_configs["default"]["fixed_charge_rate"] = 0.0975
@@ -814,8 +814,8 @@ def test_consistent_eval_namespace(gid=33):
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(
             gid,
@@ -913,8 +913,8 @@ def test_bespoke_wind_plant_with_power_curve_losses():
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -980,7 +980,10 @@ def test_bespoke_run_with_icing_cutoff():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(
             33,
             excl_fp,
@@ -1054,8 +1057,8 @@ def test_bespoke_run_with_power_curve_losses():
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(
             33,
@@ -1125,8 +1128,8 @@ def test_bespoke_run_with_scheduled_losses():
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -1206,8 +1209,8 @@ def test_bespoke_aep_is_zero_if_no_turbines_placed():
         res_fp = res_fp.format("*")
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
@@ -1279,8 +1282,8 @@ def test_bespoke_prior_run():
         )
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
 
         assert not os.path.exists(out_fpath1)
@@ -1398,8 +1401,8 @@ def test_gid_map():
         gid_map.to_csv(fp_gid_map)
 
         TechMapping.run(
-            excl_fp, RES.format(2013), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
 
         assert not os.path.exists(out_fpath1)
@@ -1502,8 +1505,8 @@ def test_bespoke_bias_correct():
         bias_correct.to_csv(fp_bc)
 
         TechMapping.run(
-            excl_fp, RES.format(2013), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
 
         assert not os.path.exists(out_fpath1)
@@ -1572,8 +1575,8 @@ def test_cli(runner, clear_loggers):
         res_fp = [res_fp_1.format(2012), res_fp_2.format("*")]
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
         )
 
         config = {

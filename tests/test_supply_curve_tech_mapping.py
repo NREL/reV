@@ -37,7 +37,7 @@ def test_resource_tech_mapping(tmp_path):
 
     dset = "tm"
     TechMapping.run(
-        excl_fpath, RES, tm_dset=dset, max_workers=2, resolution=2560
+        excl_fpath, RES, dset=dset, max_workers=2, sc_resolution=2560
     )
 
     with ExclusionLayers(EXCL) as ex:
@@ -70,9 +70,9 @@ def test_tech_mapping_cli(runner, clear_loggers, tmp_path):
         },
         "log_level": "INFO",
         "excl_fpath": excl_fpath,
-        "tm_dset": "tm",
+        "dset": "tm",
         "res_fpath": RES,
-        "resolution": 2560,
+        "sc_resolution": 2560,
     }
 
     config_path = tmp_path.joinpath("config.json")
@@ -120,7 +120,7 @@ def plot_tech_mapping(dist_margin=1.05):
         gen_meta = fgen.meta
 
     ind_test = TechMapping.run(EXCL, RES, dset=None, max_workers=2,
-                               dist_margin=dist_margin, resolution=2560)
+                               dist_margin=dist_margin, sc_resolution=2560)
 
     df = pd.DataFrame({LATITUDE: lats,
                        LONGITUDE: lons,

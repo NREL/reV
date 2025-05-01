@@ -29,7 +29,7 @@ def _preprocessor(config):
     """
     _validate_excl_fpath(config)
     config = _format_res_fpath(config)
-    _validate_tm_dset(config)
+    _validate_dset(config)
 
     return config
 
@@ -44,10 +44,10 @@ def _validate_excl_fpath(config):
         )
 
 
-def _validate_tm_dset(config):
-    if config.get("tm_dset") is None:
+def _validate_dset(config):
+    if config.get("dset") is None:
         raise ConfigError(
-            "tm_dset must be specified to run tech mapping."
+            "dset must be specified to run tech mapping."
         )
 
 

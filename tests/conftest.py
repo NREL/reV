@@ -19,6 +19,7 @@ def runner():
 
 @pytest.fixture
 def clear_loggers():
+    pass
     """Fixture to clear loggers when called.
 
     This is mostly helpful for tests that initialize loggers, since

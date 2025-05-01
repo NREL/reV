@@ -218,7 +218,7 @@ if __name__ == "__main__":
         res_fp = res_fp.format('*')
 
         TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1
         )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,

@@ -31,7 +31,7 @@ class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
     def __init__(
-        self, excl_fpath, res_fpath, resolution=2560, dist_margin=1.05
+        self, excl_fpath, res_fpath, sc_resolution=64, dist_margin=1.05
     ):
         """
         Parameters
@@ -41,10 +41,12 @@ class TechMapping:
             arrays to allow for mapping to resource points
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
-        resolution : int | None, optional
-            Supply curve resolution, does not affect the exclusion to resource
-            (tech) mapping, but defines how many exclusion pixels are mapped
-            at a time, by default 2560
+        sc_resolution : int | None, optional
+            Supply Curve resolution. This value defines how many pixels
+            are in a single side of a supply curve cell. For example,
+            a value of ``64`` would generate a supply curve where the
+            side of each supply curve cell is ``64x64`` exclusion
+            pixels. By default, ``64``.
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between
             neighboring resource points, by default 1.05
@@ -58,9 +60,9 @@ class TechMapping:
         )
 
         with SupplyCurveExtent(
-            self._excl_fpath, resolution=resolution
+            self._excl_fpath, resolution=sc_resolution
         ) as sc:
-            self._resolution = sc.resolution
+            self._sc_resolution = sc.resolution
             self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
             self._n_excl = np.prod(self._excl_shape)
@@ -296,36 +298,36 @@ class TechMapping:
 
         return ind_out
 
-    def initialize_dataset(self, tm_dset, chunks=(128, 128)):
+    def initialize_dataset(self, dset, chunks=(128, 128)):
         """
         Initialize output dataset in exclusions h5 file. If dataset already
         exists, a warning will be issued.
 
         Parameters
         ----------
-        tm_dset : str
+        dset : str
             Name of the dataset in the exclusions H5 file to create.
         chunks : tuple, optional
             Chunk size for the dataset, by default (128, 128).
         """
 
         with h5py.File(self._excl_fpath, "a") as f:
-            if tm_dset in list(f):
+            if dset in list(f):
                 wmsg = (
                     'TechMap results dataset "{}" already exists '
                     'in pre-existing Exclusions TechMapping file "{}"'.format(
-                        tm_dset, self._excl_fpath
+                        dset, self._excl_fpath
                     )
                 )
                 logger.warning(wmsg)
                 warn(wmsg, FileInputWarning)
             else:
                 logger.info(
-                    f"Initializing tech map dataset {tm_dset} in "
+                    f"Initializing tech map dataset {dset} in "
                     f"{self._excl_fpath}"
                 )
                 f.create_dataset(
-                    tm_dset,
+                    dset,
                     shape=self._excl_shape,
                     dtype=np.int32,
                     chunks=chunks,
@@ -333,10 +335,10 @@ class TechMapping:
                 )
 
             if self._dist_thresh:
-                f[tm_dset].attrs["distance_threshold"] = self._dist_thresh
+                f[dset].attrs["distance_threshold"] = self._dist_thresh
 
             if self._res_fpath:
-                f[tm_dset].attrs["src_res_fpath"] = self._res_fpath
+                f[dset].attrs["src_res_fpath"] = self._res_fpath
 
     def _check_fout(self):
         """Check the TechMapping output file for cached data."""
@@ -349,14 +351,14 @@ class TechMapping:
                 logger.exception(emsg)
                 raise FileInputError(emsg)
 
-    def map_resource(self, tm_dset, max_workers=None, points_per_worker=10):
+    def map_resource(self, dset, max_workers=None, points_per_worker=10):
         """
         Map all resource gids to exclusion gids. Save results to dset in
         exclusions h5 file.
 
         Parameters
         ----------
-        tm_dset : str, optional
+        dset : str, optional
             Name of the output dataset in the exclusions H5 file to which the
             tech map will be saved.
         max_workers : int, optional
@@ -408,7 +410,7 @@ class TechMapping:
                 n_submitted += batch_size
 
                 with h5py.File(self._excl_fpath, "a") as f:
-                    indices = f[tm_dset]
+                    indices = f[dset]
                     for future in as_completed(futures):
                         i = futures[future]
                         result = future.result()
@@ -438,8 +440,8 @@ class TechMapping:
         cls,
         excl_fpath,
         res_fpath,
-        tm_dset,
-        resolution=64,
+        dset,
+        sc_resolution=64,
         dist_margin=1.05,
         max_workers=None,
         points_per_worker=10,
@@ -456,13 +458,13 @@ class TechMapping:
             the exclusions will be mapped. Can refer to a single file (e.g.,
             "/path/to/nsrdb_2024.h5" or a wild-card e.g.,
             "/path/to/nsrdb_{}.h5")
-        tm_dset : str
+        dset : str
             Dataset name in the `excl_fpath` file to which the the
             techmap (exclusions-to-resource mapping data) will be saved.
 
             .. Important:: If this dataset already exists in the h5 file,
               it will be overwritten.
-        resolution : int | None, optional
+        sc_resolution : int | None, optional
             Supply Curve resolution. This value defines how many pixels
             are in a single side of a supply curve cell. For example,
             a value of ``64`` would generate a supply curve where the
@@ -478,11 +480,11 @@ class TechMapping:
             Number of supply curve points to map to resource gids on each
             worker, by default 10
         """
-        kwargs = {"dist_margin": dist_margin, "resolution": resolution}
+        kwargs = {"dist_margin": dist_margin, "sc_resolution": sc_resolution}
         mapper = cls(excl_fpath, res_fpath, **kwargs)
-        mapper.initialize_dataset(tm_dset)
+        mapper.initialize_dataset(dset)
         mapper.map_resource(
             max_workers=max_workers,
             points_per_worker=points_per_worker,
-            tm_dset=tm_dset
+            dset=dset
         )
