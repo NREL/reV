@@ -351,7 +351,9 @@ class TechMapping:
                 logger.exception(emsg)
                 raise FileInputError(emsg)
 
-    def map_resource(self, dset, max_workers=None, points_per_worker=10):
+    def map_resource(
+        self, dset, max_workers=None, points_per_worker=10, batch_size=100
+    ):
         """
         Map all resource gids to exclusion gids. Save results to dset in
         exclusions h5 file.
@@ -367,13 +369,19 @@ class TechMapping:
         points_per_worker : int, optional
             Number of supply curve points to map to resource gids on each
             worker, by default 10
+        batch_size : int, optional
+            Number of jobs to be submitted to parallel worker pool at one time,
+            by default 100. Higher values may speed up processing, but could
+            also lead to a critical bottleneck in job submission that will
+            effectively stop processing from occurring. Lower values will
+            slow down processing, but should ensure that the bottleneck
+            in job submission does not occur.
         """
         gid_chunks = ceil(len(self._gids) / points_per_worker)
         gid_chunks = np.array_split(self._gids, gid_chunks)
 
         loggers = [__name__, "reV"]
         n_jobs = len(gid_chunks)
-        batch_size = 100
         n_submitted = 0
         n_batches = ceil(n_jobs / batch_size)
         n_finished = 0
@@ -445,6 +453,7 @@ class TechMapping:
         dist_margin=1.05,
         max_workers=None,
         points_per_worker=10,
+        batch_size=100,
     ):
         """Run parallel mapping and save to h5 file.
 
@@ -479,6 +488,13 @@ class TechMapping:
         points_per_worker : int, optional
             Number of supply curve points to map to resource gids on each
             worker, by default 10
+        batch_size : int, optional
+            Number of jobs to be submitted to parallel worker pool at one time,
+            by default 100. Higher values may speed up processing, but could
+            also lead to a critical bottleneck in job submission that will
+            effectively stop processing from occurring. Lower values will
+            slow down processing, but should ensure that the bottleneck
+            in job submission does not occur.
         """
         kwargs = {"dist_margin": dist_margin, "sc_resolution": sc_resolution}
         mapper = cls(excl_fpath, res_fpath, **kwargs)
@@ -486,5 +502,6 @@ class TechMapping:
         mapper.map_resource(
             max_workers=max_workers,
             points_per_worker=points_per_worker,
-            dset=dset
+            dset=dset,
+            batch_size=batch_size,
         )
