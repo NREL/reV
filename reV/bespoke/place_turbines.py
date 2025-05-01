@@ -3,6 +3,8 @@
 """
 place turbines for bespoke wind plants
 """
+from functools import wraps
+
 import numpy as np
 from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon
 
@@ -31,11 +33,13 @@ def none_until_optimized(func):
         optimized.
     """
 
+    @wraps(func)
     def _func(pt):
         """Wrapper to return `None` if `PlaceTurbines` is not optimized"""
         if pt.optimized_design_variables is None:
-            return
+            return None
         return func(pt)
+
     return _func
 
 
@@ -49,8 +53,7 @@ class PlaceTurbines:
                  fixed_operating_cost_function,
                  variable_operating_cost_function,
                  balance_of_system_cost_function,
-                 include_mask, pixel_side_length, min_spacing,
-                 wake_loss_multiplier=1):
+                 include_mask, pixel_side_length, min_spacing):
         """
         Parameters
         ----------
@@ -65,8 +68,8 @@ class PlaceTurbines:
             optimization. Variables available are:
 
                 - ``n_turbines``: the number of turbines
-                - ``system_capacity``: wind plant capacity
-                - ``aep``: annual energy production
+                - ``system_capacity``: wind plant capacity (kW)
+                - ``aep``: annual energy production (kWh)
                 - ``avg_sl_dist_to_center_m``: Average straight-line
                   distance to the supply curve point center from all
                   turbine locations (in m). Useful for computing plant
@@ -75,20 +78,22 @@ class PlaceTurbines:
                   distance to the medoid of all turbine locations
                   (in m). Useful for computing plant BOS costs.
                 - ``nn_conn_dist_m``: Total BOS connection distance
-                  using nearest-neighbor connections. This variable is
-                  only available for the
+                  using nearest-neighbor connections (in m). This
+                  variable is only available for the
                   ``balance_of_system_cost_function`` equation.
                 - ``fixed_charge_rate``: user input fixed_charge_rate if
                   included as part of the sam system config.
-                - ``capital_cost``: plant capital cost as evaluated
+                - ``capital_cost``: plant capital cost ($) as evaluated
                   by `capital_cost_function`
                 - ``fixed_operating_cost``: plant fixed annual operating
-                  cost as evaluated by `fixed_operating_cost_function`
+                  cost ($/year) as evaluated by
+                  `fixed_operating_cost_function`
                 - ``variable_operating_cost``: plant variable annual
-                  operating cost as evaluated by
+                  operating cost ($/kWh) as evaluated by
                   `variable_operating_cost_function`
                 - ``balance_of_system_cost``: plant balance of system
-                  cost as evaluated by `balance_of_system_cost_function`
+                  cost ($) as evaluated by
+                  `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
                   through which all SAM variables can be accessed
 
@@ -118,12 +123,6 @@ class PlaceTurbines:
             Side length (m) of a single pixel of the `include_mask`.
         min_spacing : float
             The minimum spacing between turbines (in meters).
-        wake_loss_multiplier : float, optional
-            A multiplier used to scale the annual energy lost due to
-            wake losses. **IMPORTANT**: This multiplier will ONLY be
-            applied during the optimization process and will NOT be
-            come through in output values such as aep, any of the cost
-            functions, or even the output objective.
         """
 
         # inputs
@@ -139,7 +138,6 @@ class PlaceTurbines:
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
-        self.wake_loss_multiplier = wake_loss_multiplier
 
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
@@ -269,7 +267,7 @@ class PlaceTurbines:
 
             self.wind_plant.assign_inputs()
             self.wind_plant.execute()
-            aep = self._aep_after_scaled_wake_losses()
+            aep = self.wind_plant['annual_energy']
             avg_sl_dist_to_center_m = self._avg_sl_dist_to_cent(x_locs, y_locs)
             avg_sl_dist_to_medoid_m = self._avg_sl_dist_to_med(x_locs, y_locs)
             if "nn_conn_dist_m" in self.balance_of_system_cost_function:
@@ -300,21 +298,6 @@ class PlaceTurbines:
         objective = eval(self.objective_function, globals(), locals())
 
         return objective
-
-    def _aep_after_scaled_wake_losses(self):
-        """AEP after scaling the energy lost due to wake."""
-        wake_loss_pct = self.wind_plant['wake_losses']
-        aep = self.wind_plant['annual_energy']
-        agep = self.wind_plant['annual_gross_energy']
-
-        energy_lost_due_to_wake = wake_loss_pct / 100 * agep
-        aep_after_wake_losses = agep - energy_lost_due_to_wake
-        other_losses_multiplier = 1 - aep / aep_after_wake_losses
-
-        scaled_wake_losses = (self.wake_loss_multiplier
-                              * energy_lost_due_to_wake)
-        aep_after_scaled_wake_losses = max(0, agep - scaled_wake_losses)
-        return aep_after_scaled_wake_losses * (1 - other_losses_multiplier)
 
     def optimize(self, **kwargs):
         """Optimize wind farm layout.

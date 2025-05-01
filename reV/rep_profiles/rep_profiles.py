@@ -111,7 +111,7 @@ class RepresentativeMethods:
         i : int
             Location of the Nth min value in arr.
         """
-        return arr.argsort()[: (n + 1)][-1]
+        return int(arr.argsort()[: (n + 1)][-1])
 
     @staticmethod
     def meanoid(profiles, weights=None):
@@ -384,8 +384,8 @@ class RegionRepProfile:
             }
         )
         df = df.sort_values(self.RES_GID_COL)
-        self._gen_gids = df[self.GEN_GID_COL].values
-        self._res_gids = df[self.RES_GID_COL].values
+        self._gen_gids = df[self.GEN_GID_COL].to_list()
+        self._res_gids = df[self.RES_GID_COL].to_list()
         if self._weight is not None:
             self._weights = df["weights"].values
         else:
@@ -395,7 +395,7 @@ class RegionRepProfile:
             meta = res.meta
 
             assert ResourceMetaField.GID in meta
-            source_res_gids = meta[ResourceMetaField.GID].values
+            source_res_gids = meta[ResourceMetaField.GID].to_list()
             msg = ('Resource gids from "gid" column in meta data from "{}" '
                    'must be sorted! reV generation should always be run with '
                    'sequential project points.'.format(self._gen_fpath))
@@ -503,7 +503,7 @@ class RegionRepProfile:
             n_profiles=self._n_profiles,
         )
 
-    @ property
+    @property
     def rep_profiles(self):
         """Get the representative profiles of this region."""
         if self._profiles is None:
@@ -511,7 +511,7 @@ class RegionRepProfile:
 
         return self._profiles
 
-    @ property
+    @property
     def i_reps(self):
         """Get the representative profile index(es) of this region."""
         if self._i_reps is None:
@@ -519,7 +519,7 @@ class RegionRepProfile:
 
         return self._i_reps
 
-    @ property
+    @property
     def rep_gen_gids(self):
         """Get the representative profile gen gids of this region."""
         gids = self._gen_gids
@@ -530,7 +530,7 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @ property
+    @property
     def rep_res_gids(self):
         """Get the representative profile resource gids of this region."""
         gids = self._res_gids
@@ -541,7 +541,7 @@ class RegionRepProfile:
 
         return rep_gids
 
-    @ classmethod
+    @classmethod
     def get_region_rep_profile(cls, gen_fpath, rev_summary,
                                cf_dset='cf_profile',
                                rep_method='meanoid',
@@ -677,7 +677,7 @@ class RepProfilesBase(ABC):
         self._rep_method = rep_method
         self._err_method = err_method
 
-    @ staticmethod
+    @staticmethod
     def _parse_rev_summary(rev_summary):
         """Extract, parse, and check the rev summary table.
 
@@ -714,7 +714,7 @@ class RepProfilesBase(ABC):
 
         return rev_summary
 
-    @ staticmethod
+    @staticmethod
     def _check_req_cols(df, cols):
         """Check a dataframe for required columns.
 
@@ -738,7 +738,7 @@ class RepProfilesBase(ABC):
                 logger.error(e)
                 raise KeyError(e)
 
-    @ staticmethod
+    @staticmethod
     def _check_rev_gen(gen_fpath, cf_dset, rev_summary):
         """Check rev gen file for requisite datasets.
 
@@ -791,7 +791,7 @@ class RepProfilesBase(ABC):
             for k in range(self._n_profiles)
         }
 
-    @ property
+    @property
     def time_index(self):
         """Get the time index for the rep profiles.
 
@@ -811,7 +811,7 @@ class RepProfilesBase(ABC):
 
         return self._time_index
 
-    @ property
+    @property
     def meta(self):
         """Meta data for the representative profiles.
 
@@ -823,7 +823,7 @@ class RepProfilesBase(ABC):
         """
         return self._meta
 
-    @ property
+    @property
     def profiles(self):
         """Get the arrays of representative CF profiles corresponding to meta.
 
@@ -934,15 +934,15 @@ class RepProfilesBase(ABC):
         )
         self._write_h5_out(fout, save_rev_summary=save_rev_summary)
 
-    @ abstractmethod
+    @abstractmethod
     def _run_serial(self):
         """Abstract method for serial run method."""
 
-    @ abstractmethod
+    @abstractmethod
     def _run_parallel(self):
         """Abstract method for parallel run method."""
 
-    @ abstractmethod
+    @abstractmethod
     def run(self):
         """Abstract method for generic run method."""
 

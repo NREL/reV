@@ -51,12 +51,12 @@ DATA_LAYERS = {
     "padus": {"dset": "ri_padus", "method": "mode", "fpath": EXCL},
 }
 
-# note that this differs from the
+# Note that this differs from the
 EXCL_DICT = {
-    "ri_srtm_slope": {"inclusion_range": (None, 5), "exclude_nodata": False},
+    "ri_srtm_slope": {"include_range": (None, 5), "exclude_nodata": False},
     "ri_padus": {"exclude_values": [1], "exclude_nodata": False},
     "ri_reeds_regions": {
-        "inclusion_range": (None, 400),
+        "include_range": (None, 400),
         "exclude_nodata": False,
     },
 }
@@ -901,79 +901,6 @@ def test_bespoke_supply_curve():
                        sc_full[SupplyCurveField.TOTAL_LCOE])
 
 
-@pytest.mark.parametrize("wlm", [2, 100])
-def test_wake_loss_multiplier(wlm):
-    """Test wake loss multiplier."""
-    output_request = ("system_capacity", "cf_mean", "cf_profile")
-    with tempfile.TemporaryDirectory() as td:
-        res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
-        excl_fp = os.path.join(td, "ri_exclusions.h5")
-        shutil.copy(EXCL, excl_fp)
-        shutil.copy(RES.format(2012), res_fp.format(2012))
-        shutil.copy(RES.format(2013), res_fp.format(2013))
-        res_fp = res_fp.format("*")
-
-        TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
-        )
-        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
-                                 OBJECTIVE_FUNCTION,
-                                 CAP_COST_FUN,
-                                 FOC_FUN,
-                                 VOC_FUN,
-                                 BOS_FUN,
-                                 excl_dict=EXCL_DICT,
-                                 output_request=output_request,
-                                 )
-
-        optimizer = bsp.plant_optimizer
-        optimizer.define_exclusions()
-        optimizer.initialize_packing()
-
-        optimizer.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
-        optimizer.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
-
-        system_capacity = (
-            len(optimizer.x_locations) * optimizer.turbine_capacity
-        )
-        optimizer.wind_plant["system_capacity"] = system_capacity
-
-        optimizer.wind_plant.assign_inputs()
-        optimizer.wind_plant.execute()
-        aep = optimizer._aep_after_scaled_wake_losses()
-        bsp.close()
-
-        bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
-                                 SAM_SYS_INPUTS,
-                                 OBJECTIVE_FUNCTION,
-                                 CAP_COST_FUN,
-                                 FOC_FUN,
-                                 VOC_FUN,
-                                 BOS_FUN,
-                                 excl_dict=EXCL_DICT,
-                                 output_request=output_request,
-                                 wake_loss_multiplier=wlm)
-
-        optimizer2 = bsp.plant_optimizer
-        optimizer2.wind_plant["wind_farm_xCoordinates"] = optimizer.x_locations
-        optimizer2.wind_plant["wind_farm_yCoordinates"] = optimizer.y_locations
-
-        system_capacity = (
-            len(optimizer.x_locations) * optimizer.turbine_capacity
-        )
-        optimizer2.wind_plant["system_capacity"] = system_capacity
-
-        optimizer2.wind_plant.assign_inputs()
-        optimizer2.wind_plant.execute()
-        aep_wlm = optimizer2._aep_after_scaled_wake_losses()
-        bsp.close()
-
-    assert aep > aep_wlm
-    assert aep_wlm >= 0
-
-
 def test_bespoke_wind_plant_with_power_curve_losses():
     """Test bespoke ``wind_plant`` with power curve losses."""
     output_request = ("system_capacity", "cf_mean", "cf_profile")
@@ -1008,8 +935,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer.wind_plant.assign_inputs()
         optimizer.wind_plant.execute()
-        # pylint: disable=W0612
-        aep = optimizer._aep_after_scaled_wake_losses()
+        aep = optimizer.wind_plant["annual_energy"]
         bsp.close()
 
         sam_inputs = copy.deepcopy(SAM_SYS_INPUTS)
@@ -1034,7 +960,7 @@ def test_bespoke_wind_plant_with_power_curve_losses():
 
         optimizer2.wind_plant.assign_inputs()
         optimizer2.wind_plant.execute()
-        aep_losses = optimizer2._aep_after_scaled_wake_losses()
+        aep_losses = optimizer2.wind_plant["annual_energy"]
         bsp.close()
 
     assert aep > aep_losses, f"{aep}, {aep_losses}"
@@ -1043,9 +969,82 @@ def test_bespoke_wind_plant_with_power_curve_losses():
     assert np.isclose(aep_losses / aep, 0.9), err_msg
 
 
+def test_bespoke_run_with_icing_cutoff():
+    """Test bespoke run with icing cutoff enabled."""
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
+        excl_fp = os.path.join(td, "ri_exclusions.h5")
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format("*")
+
+        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        bsp = BespokeSinglePlant(
+            33,
+            excl_fp,
+            res_fp,
+            TM_DSET,
+            SAM_SYS_INPUTS,
+            OBJECTIVE_FUNCTION,
+            CAP_COST_FUN,
+            FOC_FUN,
+            VOC_FUN,
+            BOS_FUN,
+            ga_kwargs={"max_time": 5},
+            excl_dict=EXCL_DICT,
+            output_request=output_request,
+        )
+
+        out = bsp.run_plant_optimization()
+        out = bsp.run_wind_plant_ts()
+        bsp.close()
+
+        sam_inputs_ice = copy.deepcopy(SAM_SYS_INPUTS)
+        sam_inputs_ice["en_icing_cutoff"] = 1
+        sam_inputs_ice["en_low_temp_cutoff"] = 1
+        sam_inputs_ice["icing_cutoff_rh"] = 90  # High values to ensure diff
+        sam_inputs_ice["icing_cutoff_temp"] = 10
+        sam_inputs_ice["low_temp_cutoff"] = 0
+        bsp = BespokeSinglePlant(
+            33,
+            excl_fp,
+            res_fp,
+            TM_DSET,
+            sam_inputs_ice,
+            OBJECTIVE_FUNCTION,
+            CAP_COST_FUN,
+            FOC_FUN,
+            VOC_FUN,
+            BOS_FUN,
+            ga_kwargs={"max_time": 5},
+            excl_dict=EXCL_DICT,
+            output_request=output_request,
+        )
+
+        out_ice = bsp.run_plant_optimization()
+        out_ice = bsp.run_wind_plant_ts()
+        bsp.close()
+
+    ae_dsets = [
+        "annual_energy-2012",
+        "annual_energy-2013",
+        "annual_energy-means",
+    ]
+    for dset in ae_dsets:
+        assert not np.isclose(out[dset], out_ice[dset])
+        assert out[dset] > out_ice[dset]
+
+
 def test_bespoke_run_with_power_curve_losses():
     """Test bespoke run with power curve losses."""
-    output_request = ("system_capacity", "cf_mean", "cf_profile")
+    output_request = ("system_capacity", "cf_mean", "cf_profile",
+                      "annual_energy", "annual_gross_energy",
+                      "annual_wake_loss_internal_percent",
+                      "annual_wake_loss_internal_kWh",
+                      "annual_wake_loss_total_percent")
+
     with tempfile.TemporaryDirectory() as td:
         res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
         excl_fp = os.path.join(td, "ri_exclusions.h5")
@@ -1104,13 +1103,14 @@ def test_bespoke_run_with_power_curve_losses():
         bsp.close()
 
     ae_dsets = [
-        "annual_energy-2012",
-        "annual_energy-2013",
-        "annual_energy-means",
+        "annual_gross_energy-2012",
+        "annual_gross_energy-2013",
+        "annual_gross_energy-means",
     ]
     for dset in ae_dsets:
         assert not np.isclose(out[dset], out_losses[dset])
-        assert out[dset] > out_losses[dset]
+        err_msg = "{:0.3f} != 0.9".format(out_losses[dset] / out[dset])
+        assert np.isclose(out_losses[dset] / out[dset], 0.9), err_msg
 
 
 def test_bespoke_run_with_scheduled_losses():
@@ -1158,8 +1158,9 @@ def test_bespoke_run_with_scheduled_losses():
                 ],
             }
         ]
-        sam_inputs["hourly"] = [0] * 8760  # only needed for testing
-        output_request = ("system_capacity", "cf_mean", "cf_profile", "hourly")
+        sam_inputs["adjust_hourly"] = [0] * 8760  # only needed for testing
+        output_request = ("system_capacity", "cf_mean", "cf_profile",
+                          "adjust_hourly")
 
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  sam_inputs,
@@ -1186,7 +1187,7 @@ def test_bespoke_run_with_scheduled_losses():
         assert out[dset] > out_losses[dset]
 
     assert not np.allclose(
-        out_losses["hourly-2012"], out_losses["hourly-2013"]
+        out_losses["adjust_hourly-2012"], out_losses["adjust_hourly-2013"]
     )
 
 
@@ -1592,9 +1593,8 @@ def test_cli(runner, clear_loggers):
             "balance_of_system_cost_function": "0",
             "project_points": [33, 35],
             "sam_files": SAM_CONFIGS,
-            "min_spacing": "5x",
-            "wake_loss_multiplier": 1,
-            "ga_kwargs": {"max_time": 5},
+            "min_spacing": '5x',
+            "ga_kwargs": {'max_time': 5},
             "output_request": output_request,
             "ws_bins": (0, 20, 5),
             "wd_bins": (0, 360, 45),
@@ -1714,74 +1714,3 @@ def test_bespoke_5min_sample():
             assert len(f["time_index-2010"]) == 8760
             assert len(f["windspeed-2010"]) == 8760
             assert len(f["winddirection-2010"]) == 8760
-
-
-def test_bespoke_run_with_icing_cutoff():
-    """Test bespoke run with icing cutoff enabled."""
-    output_request = ("system_capacity", "cf_mean", "cf_profile")
-    with tempfile.TemporaryDirectory() as td:
-        res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
-        excl_fp = os.path.join(td, "ri_exclusions.h5")
-        shutil.copy(EXCL, excl_fp)
-        shutil.copy(RES.format(2012), res_fp.format(2012))
-        shutil.copy(RES.format(2013), res_fp.format(2013))
-        res_fp = res_fp.format("*")
-
-        TechMapping.run(
-            excl_fp, RES.format(2012), tm_dset=TM_DSET, max_workers=1,
-            resolution=2560
-        )
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            SAM_SYS_INPUTS,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            BOS_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
-
-        out = bsp.run_plant_optimization()
-        out = bsp.run_wind_plant_ts()
-        bsp.close()
-
-        sam_inputs_ice = copy.deepcopy(SAM_SYS_INPUTS)
-        sam_inputs_ice["en_icing_cutoff"] = 1
-        sam_inputs_ice["en_low_temp_cutoff"] = 1
-        sam_inputs_ice["icing_cutoff_rh"] = 90  # High values to ensure diff
-        sam_inputs_ice["icing_cutoff_temp"] = 10
-        sam_inputs_ice["low_temp_cutoff"] = 0
-        bsp = BespokeSinglePlant(
-            33,
-            excl_fp,
-            res_fp,
-            TM_DSET,
-            sam_inputs_ice,
-            OBJECTIVE_FUNCTION,
-            CAP_COST_FUN,
-            FOC_FUN,
-            VOC_FUN,
-            BOS_FUN,
-            ga_kwargs={"max_time": 5},
-            excl_dict=EXCL_DICT,
-            output_request=output_request,
-        )
-
-        out_ice = bsp.run_plant_optimization()
-        out_ice = bsp.run_wind_plant_ts()
-        bsp.close()
-
-    ae_dsets = [
-        "annual_energy-2012",
-        "annual_energy-2013",
-        "annual_energy-means",
-    ]
-    for dset in ae_dsets:
-        assert not np.isclose(out[dset], out_ice[dset])
-        assert out[dset] > out_ice[dset]

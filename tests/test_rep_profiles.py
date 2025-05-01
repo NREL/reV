@@ -267,13 +267,10 @@ def test_many_regions(use_weights):
 
 def test_many_regions_with_list_weights():
     """Test multiple complicated regions with multiple weights per row."""
-    sites = [
-        list(np.random.choice(np.arange(100), np.random.randint(10) + 10))
-        for __ in np.arange(100)
-    ]
-    weights = [
-        str(list(np.random.choice(np.arange(100), len(row)))) for row in sites
-    ]
+    sites = [np.random.choice(np.arange(100), np.random.randint(10) + 10)
+             .tolist() for __ in np.arange(100)]
+    weights = [str(np.random.choice(np.arange(100), len(row)).tolist())
+               for row in sites]
     sites = [str(row) for row in sites]
     zeros = np.zeros((100,))
     region1 = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)

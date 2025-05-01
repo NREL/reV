@@ -1118,7 +1118,7 @@ class SupplyCurveAggregation(BaseAggregation):
                 zone_ids = np.unique(zones[zones != 0]).tolist()
 
                 for ri, res_bin in enumerate(res_class_bins):
-                    for zone_id in zone_ids:
+                    for zi, zone_id in enumerate(zone_ids, start=1):
                         zone_mask = zones == zone_id
                         try:
                             pointsum = GenerationSupplyCurvePoint.summarize(
@@ -1148,22 +1148,28 @@ class SupplyCurveAggregation(BaseAggregation):
                             )
 
                         except EmptySupplyCurvePointError:
-                            logger.debug("SC point {} is empty".format(gid))
+                            logger.debug("SC point {}, zone ID {} is empty"
+                                         .format(gid, zone_id))
                         else:
                             pointsum['res_class'] = ri
                             pointsum['zone_id'] = zone_id
 
                             summary.append(pointsum)
                             logger.debug(
-                                "Serial aggregation completed gid {}, "
+                                "Serial aggregation completed for"
                                 "resource class {}, zone ID {}: "
-                                "{} out of {} points complete".format(
-                                    gid, ri, zone_id, n_finished,
-                                    len(gids)
+                                "{:,d} out of {:,d} zones complete".format(
+                                    ri, zone_id, zi, len(zone_ids)
                                 )
                             )
 
                 n_finished += 1
+                logger.debug(
+                    "Serial aggregation completed for gid {}: "
+                    "{:,d} out of {:,d} points complete".format(
+                        gid, n_finished, len(gids)
+                    )
+                )
 
         return summary
 

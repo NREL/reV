@@ -56,8 +56,6 @@ def _log_bespoke_cli_inputs(config):
                 .format(config.get("variable_operating_cost_function")))
     logger.info('Bespoke balance of system cost function: "{}"'
                 .format(config.get("balance_of_system_cost_function")))
-    logger.info('Bespoke wake loss multiplier: "{}"'
-                .format(config.get("wake_loss_multiplier", 1)))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'

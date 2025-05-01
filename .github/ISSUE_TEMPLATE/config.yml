@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question
+    url: https://github.com/NREL/reV/discussions
+    about: |
+      Ask questions about the reV suite and discuss with the developers and other users
+      here. If you have a question like "How do I run reV generation for Colorado?", please
+      include a self-contained reproducible example of what you have tried already, if possible.

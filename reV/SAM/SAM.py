@@ -12,7 +12,7 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
-import PySAM.GenericSystem as generic
+import PySAM.CustomGeneration as generic
 from rex.multi_file_resource import (
     MultiFileNSRDB,
     MultiFileResource,
@@ -52,7 +52,6 @@ class SamResourceRetriever:
         "pvsamv1": SolarResource,
         "tcsmoltensalt": SolarResource,
         "solarwaterheat": SolarResource,
-        "troughphysicalheat": SolarResource,
         "lineardirectsteam": SolarResource,
         "windpower": WindResource,
         "mhkwave": WaveResource,
@@ -190,7 +189,10 @@ class SamResourceRetriever:
             kwargs["icing"] = project_points.sam_config_obj.icing
             if (
                 project_points.curtailment is not None
-                and project_points.curtailment.precipitation
+                and any(
+                    config.precipitation
+                    for config in project_points.curtailment.values()
+                )
             ):
                 # make precip rate available for curtailment analysis
                 kwargs["precip_rate"] = True
@@ -402,6 +404,14 @@ class Sam:
             )
             logger.exception(msg)
             raise SAMInputError(msg)
+
+        if (key == "total_installed_cost" and isinstance(value, str)
+            and value.casefold() == "windbos"):
+            # "windbos" is a special reV key to tell reV to compute
+            # total installed costs using WindBOS module. If detected,
+            # don't try to set it as a PySAM attribute
+            return
+
         self.sam_sys_inputs[key] = value
         group = self._get_group(key, outputs=False)
         try:
@@ -429,9 +439,9 @@ class Sam:
 
         Returns
         -------
-        PySAM.GenericSystem
+        PySAM.CustomGeneration
         """
-        obj = cls.PYSAM.default("GenericSystemNone")
+        obj = cls.PYSAM.default("CustomGenerationProfileNone")
         obj.execute()
 
         return obj
@@ -519,6 +529,14 @@ class Sam:
             for a in dir(obj)
             if not a.startswith("__") and a not in self.IGNORE_ATTRS
         ]
+        try:
+            # adjustment factors are "dynamic" as of PySAM 5+
+            # Not found by dir() function, so must check for them
+            # explicitly
+            __ = obj.AdjustmentFactors
+            attrs.append("AdjustmentFactors")
+        except AttributeError:
+            pass
         return attrs
 
     def execute(self):
@@ -552,8 +570,13 @@ class Sam:
         if "." in key:
             key = key.replace(".", "_")
 
-        if ":constant" in key and "adjust:" in key:
-            key = key.replace("adjust:", "")
+        if "adjust:" in key:
+            msg = ("The 'adjust:' syntax is deprecated in PySAm 6+. Please"
+                   "use 'adjust_' instead (e.g. 'adjust:hourly' -> "
+                   "'adjust_hourly')")
+            logger.warning(msg)
+            warn(msg)
+            key = key.replace(":", "_")
 
         if isinstance(value, str) and "[" in value and "]" in value:
             try:

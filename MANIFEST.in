@@ -1,0 +1,12 @@
+exclude tests/**
+exclude examples/**
+exclude docs/**
+exclude build/**
+exclude dist/**
+exclude .github/**
+exclude .git/**
+exclude conda.recipe/**
+exclude .*
+exclude *.git
+exclude Dockerfile
+exclude docker-compose.yml

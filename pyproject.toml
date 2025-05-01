@@ -1,0 +1,145 @@
+[build-system]
+requires = [
+  "setuptools >= 61",
+  "setuptools_scm[toml] >= 8",
+]
+build-backend = 'setuptools.build_meta'
+
+[project]
+name="NREL-reV"
+dynamic = ["version"]
+description = "National Renewable Energy Laboratory's (NREL's) Renewable Energy Potential(V) Model: reV"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+authors = [
+  {name = "Galen Maclaurin", email = "galen.maclaurin@nrel.gov"},
+]
+maintainers = [
+  {name = "Grant Buster", email = "gbuster@nrel.gov"},
+  {name = "Paul Pinchuk", email = "ppinchuk@nrel.gov"},
+]
+license = "BSD-3-Clause"
+keywords = ["reV", "NREL"]
+requires-python = ">= 3.9"
+classifiers=[
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "NREL-gaps>=0.8.0,<0.9",
+  "NREL-NRWAL>=0.0.11,<0.1",
+  "NREL-PySAM~=6.0.1",
+  "NREL-rex>=0.3.2,<0.4",
+  "numpy>=2.0.2,<3",
+  "packaging>=24.2,<25",
+  "plotly>=6.0.1,<7",
+  "plotting>=0.0.7,<0.1",
+  "shapely>=2.0.7,<3",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.3,<9",
+]
+dev = [
+  "flake8",
+  "pre-commit",
+  "pylint",
+]
+hsds = [
+  "hsds>=0.8.4,<1",
+]
+build = [
+  "build>=1.2.2,<2",
+  "pkginfo>=1.10.0,<2",
+  "twine>=6.1.0,<7",
+]
+
+[project.urls]
+homepage = "https://www2.nrel.gov/gis/renewable-energy-potential"
+documentation = "https://nrel.github.io/reV/"
+repository = "https://github.com/NREL/reV"
+
+[project.scripts]
+reV = "reV.cli:main"
+reV-bespoke = "reV.bespoke.cli_bespoke:main"
+reV-collect = "reV.handlers.cli_collect:main"
+reV-econ = "reV.econ.cli_econ:main"
+reV-gen = "reV.generation.cli_gen:main"
+reV-multiyear = "reV.handlers.cli_multi_year:main"
+reV-supply-curve-aggregation = "reV.supply_curve.cli_sc_aggregation:main"
+reV-supply-curve = "reV.supply_curve.cli_supply_curve:main"
+reV-nrwal = "reV.nrwal.cli_nrwal:main"
+reV-rep-profiles = "reV.rep_profiles.cli_rep_profiles:main"
+reV-QA-QC = "reV.qa_qc.cli_qa_qc:main"
+reV-hybrids = "reV.hybrids.cli_hybrids:main"
+reV-project-points = "reV.config.cli_project_points:project_points"
+
+
+[tool.setuptools.packages]
+find = { include = ["reV*"] }
+
+[tool.setuptools.dynamic]
+version = {attr = "reV.version.__version__"}
+
+[tool.setuptools_scm]
+# Don't try to guess anything from Git. Only use what is in the version file.
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
+
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+  # Have to re-enable the standard pragma
+  "pragma: no cover",
+
+  # Don't complain about missing debug-only code:
+  "if self\\.debug",
+
+  # Don't complain about repr methods
+  "def __repr__",
+  "def _repr_markdown_",
+
+  # Don't complain about data I/O code
+  "def load*",
+  "def _load*",
+
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError",
+
+  # Don't complain if non-runnable code isn't run:
+  "if __name__ == .__main__.:",
+
+  # Don't complain about abstract methods, they aren't run:
+  "@(abc\\.)?abstractmethod",
+
+  # Don't complain about logging debugging functions
+  "def print_logging_info*",
+  "def __cls_name",
+]
+
+omit = [
+  # omit test files
+  "tests/*",
+  # omit init files
+  "__init__.py",
+  # omit version file
+  "version.py",
+  # omit pixi files
+  ".pixi/*",
+]
+
+
+[tool.pytest.ini_options]
+addopts = "--disable-warnings"
+testpaths = ["tests"]

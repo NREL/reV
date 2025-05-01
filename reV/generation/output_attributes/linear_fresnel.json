@@ -27,6 +27,13 @@
     "type": "array",
     "units": "kW"
   },
+  "gen_heat": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
   "m_dot_field": {
     "chunks": null,
     "dtype": "float32",

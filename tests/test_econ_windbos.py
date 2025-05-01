@@ -226,9 +226,19 @@ def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
         )
         e.run(max_workers=max_workers)
 
-        for k in econ_outs:
+        check_vals = ("flip_actual_irr", "total_installed_cost",
+                      "turbine_cost", "sales_tax_cost", "bos_cost")
+        for k in check_vals:
             msg = "Failed for {}".format(k)
             test = np.allclose(e.out[k], BASELINE[k], atol=ATOL, rtol=RTOL)
+            assert test, msg
+
+        # These outputs are affected by minor changes to wake loss
+        # generation in PySAM 6+, so we use higher RTOL
+        check_vals = ("lcoe_nom", "lcoe_real", "project_return_aftertax_npv")
+        for k in check_vals:
+            msg = "Failed for {}".format(k)
+            test = np.allclose(e.out[k], BASELINE[k], atol=ATOL, rtol=0.02)
             assert test, msg
 
         return e
