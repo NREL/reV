@@ -176,8 +176,7 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Evaluated output of the EconomiesOfScale equation. Should be
-            numeric scalars to apply directly to the capital cost.
+            Evaluated output of the EconomiesOfScale equation.
         """
         if eqn is None:
             return 1
@@ -224,8 +223,8 @@ class EconomiesOfScale:
 
     @property
     def capital_cost_scalar(self):
-        """Evaluated output of the EconomiesOfScale equation. Should be
-        numeric scalars to apply directly to the capital cost.
+        """Evaluated output of the EconomiesOfScale capital cost equation.
+        Should be numeric scalars to apply directly to the capital cost.
 
         Returns
         -------
@@ -234,6 +233,34 @@ class EconomiesOfScale:
             numeric scalars to apply directly to the capital cost.
         """
         return self._evaluate(self._cap_eqn)
+
+    @property
+    def fixed_operating_cost_scalar(self):
+        """Evaluated output of the EconomiesOfScale fixed operating cost
+        equation. Should be numeric scalars to apply directly to the fixed
+        operating cost.
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Evaluated output of the EconomiesOfScale equation. Should be
+            numeric scalars to apply directly to the fixed operating cost.
+        """
+        return self._evaluate(self._fixed_eqn)
+
+    @property
+    def variable_operating_cost_scalar(self):
+        """Evaluated output of the EconomiesOfScale equation variable
+        operating cost. Should be numeric scalars to apply directly to the
+        variable operating cost.
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Evaluated output of the EconomiesOfScale equation. Should be
+            numeric scalars to apply directly to the variable operating cost.
+        """
+        return self._evaluate(self._var_eqn)
 
     def _cost_from_cap(self, col_name):
         """Get full cost value from cost per mw in data.
