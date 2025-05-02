@@ -34,31 +34,54 @@ class EconomiesOfScale:
     lcoe : $/MWh
     """
 
-    def __init__(self, eqn, data):
+    def __init__(self, data, cap_eqn=None, fixed_eqn=None, var_eqn=None):
         """
+
         Parameters
         ----------
-        eqn : str
-            LCOE scaling equation to implement "economies of scale".
-            Equation must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the keys in the data input arg. This
-            equation may use numpy functions with the package prefix "np".
         data : dict | pd.DataFrame
             Namespace of econ data to use to calculate economies of scale. Keys
             in dict or column labels in dataframe should match the Independent
             variables in the eqn input. Should also include variables required
             to calculate LCOE.
+        cap_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the keys in the data input arg. This
+            equation may use numpy functions with the package prefix "np". If
+            ``None``, no economies of scale are applied to the capital cost.
+            By default, ``None``.
+        fixed_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the fixed operating cost by. Independent
+            variables in the equation should match the keys in the data input
+            arg. This equation may use numpy functions with the package prefix
+            "np". If ``None``, no economies of scale are applied to the
+            fixed operating cost. By default, ``None``.
+        var_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the variable operating cost by. Independent
+            variables in the equation should match the keys in the data input
+            arg. This equation may use numpy functions with the package prefix
+            "np". If ``None``, no economies of scale are applied to the
+            variable operating cost. By default, ``None``.
         """
-        self._eqn = eqn
         self._data = data
+        self._cap_eqn = cap_eqn
+        self._fixed_eqn = fixed_eqn
+        self._var_eqn = var_eqn
+        self._vars = None
         self._preflight()
 
     def _preflight(self):
         """Run checks to validate EconomiesOfScale equation and input data."""
 
-        if self._eqn is not None:
-            check_eval_str(str(self._eqn))
+        for eq in self._all_equations:
+            if eq is not None:
+                check_eval_str(str(eq))
 
         if isinstance(self._data, pd.DataFrame):
             self._data = {
@@ -79,10 +102,15 @@ class EconomiesOfScale:
         if any(missing):
             e = (
                 "Cannot evaluate EconomiesOfScale, missing data for variables"
-                ": {} for equation: {}".format(missing, self._eqn)
+                ": {} for equation: {}".format(missing, self._cap_eqn)
             )
             logger.error(e)
             raise KeyError(e)
+
+    @property
+    def _all_equations(self):
+        """gen: All EOS equations"""
+        yield from (self._cap_eqn, self._fixed_eqn, self._var_eqn)
 
     @staticmethod
     def is_num(s):
@@ -111,22 +139,39 @@ class EconomiesOfScale:
             the equation string. This will return an empty list if the equation
             has no variables.
         """
-        var_names = []
-        if self._eqn is not None:
-            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+", "-",
-                          " ", "(", ")", "[", "]")
+        if self._vars is not None:
+            return self._vars
+
+        self._vars = []
+        for eq in self._all_equations:
+            if eq is None:
+                continue
+
+            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+",
+                            "-", " ", "(", ")", "[", "]")
             regex_pattern = "|".join(map(re.escape, delimiters))
-            var_names = []
-            for sub in re.split(regex_pattern, str(self._eqn)):
-                if sub and not self.is_num(sub) and not self.is_method(sub):
-                    var_names.append(sub)
-            var_names = sorted(set(var_names))
+            for sub_str in re.split(regex_pattern, str(eq)):
+                is_valid_var_name = (sub_str and not self.is_num(sub_str)
+                                     and not self.is_method(sub_str))
+                if is_valid_var_name:
+                    self._vars.append(sub_str)
 
-        return var_names
+        self._vars = sorted(set(self._vars))
+        return self._vars
 
-    def _evaluate(self):
+    def _evaluate(self, eqn):
         """Evaluate the EconomiesOfScale equation with Independent variables
         parsed into a kwargs dictionary input.
+
+        Parameters
+        ----------
+        eqn : str
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            multiplier. Independent variables in the equation should match the
+            keys in the data input arg. This equation may use numpy functions
+            with the package prefix "np". If ``None``, this function returns
+            ``1``.
 
         Returns
         -------
@@ -134,13 +179,12 @@ class EconomiesOfScale:
             Evaluated output of the EconomiesOfScale equation. Should be
             numeric scalars to apply directly to the capital cost.
         """
-        out = 1
-        if self._eqn is not None:
-            kwargs = {k: self._data[k] for k in self.vars}
-            # pylint: disable=eval-used
-            out = eval(str(self._eqn), globals(), kwargs)
+        if eqn is None:
+            return 1
 
-        return out
+        kwargs = {k: self._data[k] for k in self.vars}
+        # pylint: disable=eval-used
+        return eval(str(eqn), globals(), kwargs)
 
     @staticmethod
     def _get_prioritized_keys(input_dict, key_list):
@@ -189,7 +233,7 @@ class EconomiesOfScale:
             Evaluated output of the EconomiesOfScale equation. Should be
             numeric scalars to apply directly to the capital cost.
         """
-        return self._evaluate()
+        return self._evaluate(self._cap_eqn)
 
     def _cost_from_cap(self, col_name):
         """Get full cost value from cost per mw in data.
