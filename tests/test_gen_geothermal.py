@@ -554,6 +554,39 @@ def test_gen_with_time_index_step_input(sample_resource_data):
         assert output in gen.out
 
 
+@pytest.mark.parametrize(
+    "sample_resource_data", [{"temp": 300, "potential": 200}], indirect=True
+)
+def test_egs_binary_high_temp(sample_resource_data):
+    """Test generation for geothermal module with high temp for egs binary"""
+    points = slice(0, 1)
+    geo_sam_file, geo_res_file = sample_resource_data
+
+    with open(DEFAULT_GEO_SAM_FILE) as fh:
+        geo_config = json.load(fh)
+
+    geo_config["resource_depth"] = 6000
+    geo_config["resource_type"] = 1
+    geo_config["conversion_type"] = 0
+    with open(geo_sam_file, "w") as fh:
+        json.dump(geo_config, fh)
+
+    output_request = ("annual_energy", "cf_mean")
+    gen = Gen(
+        "geothermal",
+        points,
+        geo_sam_file,
+        geo_res_file,
+        output_request=output_request,
+        sites_per_worker=1,
+        scale_outputs=True,
+    )
+    gen.run(max_workers=1)
+
+    assert (gen.out["annual_energy"] > 0).all()
+    assert (gen.out["cf_mean"] > 0).all()
+
+
 def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
 
