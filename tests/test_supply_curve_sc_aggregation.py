@@ -481,14 +481,15 @@ def test_data_layer_methods():
     "cap_cost_scale",
     ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
 )
-def test_recalc_lcoe(cap_cost_scale):
+@pytest.mark.parametrize("voc", [0, 0.1])
+def test_recalc_lcoe(cap_cost_scale, voc):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
     data = {"capital_cost": 34900000,
             "fixed_operating_cost": 280000,
             "fixed_charge_rate": 0.09606382995843887,
-            "variable_operating_cost": 0,
+            "variable_operating_cost": voc,
             'system_capacity': 20000}
     annual_cf = [0.24, 0.26, 0.37, 0.15]
     annual_lcoe = []
@@ -617,7 +618,7 @@ def test_recalc_lcoe(cap_cost_scale):
                 * summary[SupplyCurveField.EOS_MULT])
     foc = (summary[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    voc = summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH]
+    voc = summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH] / 1000
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
