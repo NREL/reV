@@ -2249,6 +2249,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                   else self.capacity_ac)
         return sc_point_cost / ac_cap
 
+    def _compute_voc_per_ac_mwh(self, dset):
+        """Compute variable operating cost per MWh """
+        if dset not in self.gen.datasets:
+            return None
+
+        return self.exclusion_weighted_mean(self.gen[dset]) * 1000  # to $/MWh
+
     @property
     def mean_h5_dsets_data(self):
         """Get the mean supplemental h5 datasets data (optional)
@@ -2380,11 +2387,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("base_fixed_operating_cost")
             ),
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW: (
-                self._compute_cost_per_ac_mw("variable_operating_cost")
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH: (
+                self._compute_voc_per_ac_mwh("variable_operating_cost")
             ),
-            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW: (
-                self._compute_cost_per_ac_mw("base_variable_operating_cost")
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH: (
+                self._compute_voc_per_ac_mwh("base_variable_operating_cost")
             ),
             SupplyCurveField.FIXED_CHARGE_RATE: self.fixed_charge_rate,
         }
