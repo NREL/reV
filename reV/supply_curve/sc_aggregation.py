@@ -252,7 +252,8 @@ class SupplyCurveAggregation(BaseAggregation):
                  res_class_bins=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                  power_density=None, friction_fpath=None, friction_dset=None,
-                 cap_cost_scale=None, recalc_lcoe=True, zones_dset=None):
+                 cap_cost_scale=None, fixed_cost_scale=None,
+                 var_cost_scale=None, recalc_lcoe=True, zones_dset=None):
         r"""ReV supply curve points aggregation framework.
 
         ``reV`` supply curve aggregation combines a high-resolution
@@ -518,15 +519,40 @@ class SupplyCurveAggregation(BaseAggregation):
             ``None``, no friction data is aggregated.
             By default, ``None``.
         cap_cost_scale : str, optional
-            Optional LCOE scaling equation to implement "economies of
-            scale". Equations must be in python string format and must
-            return a scalar value to multiply the capital cost by.
-            Independent variables in the equation should match the names
-            of the columns in the ``reV`` supply curve aggregation
-            output table (see the documentation of
+            Optional capital cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            capital cost by. Independent variables in the equation
+            should match the names of the columns in the ``reV`` supply
+            curve aggregation output table (see the documentation of
             :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
             for details on available outputs). If ``None``, no economies
-            of scale are applied. By default, ``None``.
+            of scale are applied to the capital cost.
+            By default, ``None``.
+        fixed_cost_scale : str, optional
+            Optional fixed operating cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            fixed operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the fixed operating cost.
+            By default, ``None``.
+        var_cost_scale : str, optional
+            Optional variable operating cost scaling equation to
+            implement "economies of scale". Equations must be in python
+            string format and must return a scalar value to multiply the
+            variable operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the variable operating cost.
+            By default, ``None``.
         recalc_lcoe : bool, optional
             Flag to re-calculate the LCOE from the multi-year mean
             capacity factor and annual energy production data. This
@@ -711,6 +737,8 @@ class SupplyCurveAggregation(BaseAggregation):
         self._lcoe_dset = lcoe_dset
         self._h5_dsets = h5_dsets
         self._cap_cost_scale = cap_cost_scale
+        self._fixed_cost_scale = fixed_cost_scale
+        self._var_cost_scale = var_cost_scale
         self._power_density = power_density
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
@@ -958,6 +986,8 @@ class SupplyCurveAggregation(BaseAggregation):
         friction_dset=None,
         excl_area=None,
         cap_cost_scale=None,
+        fixed_cost_scale=None,
+        var_cost_scale=None,
         recalc_lcoe=True,
         zones_dset=None,
     ):
@@ -1041,12 +1071,41 @@ class SupplyCurveAggregation(BaseAggregation):
         excl_area : float | None, optional
             Area of an exclusion pixel in km2. None will try to infer the area
             from the profile transform attribute in excl_fpath, by default None
-        cap_cost_scale : str | None
-            Optional LCOE scaling equation to implement "economies of scale".
-            Equations must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the names of the columns in the reV
-            supply curve aggregation table.
+        cap_cost_scale : str, optional
+            Optional capital cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            capital cost by. Independent variables in the equation
+            should match the names of the columns in the ``reV`` supply
+            curve aggregation output table (see the documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the capital cost.
+            By default, ``None``.
+        fixed_cost_scale : str, optional
+            Optional fixed operating cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            fixed operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the fixed operating cost.
+            By default, ``None``.
+        var_cost_scale : str, optional
+            Optional variable operating cost scaling equation to
+            implement "economies of scale". Equations must be in python
+            string format and must return a scalar value to multiply the
+            variable operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the variable operating cost.
+            By default, ``None``.
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
@@ -1143,6 +1202,8 @@ class SupplyCurveAggregation(BaseAggregation):
                                 close=False,
                                 friction_layer=fh.friction_layer,
                                 cap_cost_scale=cap_cost_scale,
+                                fixed_cost_scale=fixed_cost_scale,
+                                var_cost_scale=var_cost_scale,
                                 recalc_lcoe=recalc_lcoe,
                                 zone_mask=zone_mask,
                             )
@@ -1262,6 +1323,8 @@ class SupplyCurveAggregation(BaseAggregation):
                         args=args,
                         excl_area=self._excl_area,
                         cap_cost_scale=self._cap_cost_scale,
+                        fixed_cost_scale=self._fixed_cost_scale,
+                        var_cost_scale=self._var_cost_scale,
                         recalc_lcoe=self._recalc_lcoe,
                         zones_dset=self._zones_dset,
                     )
@@ -1401,6 +1464,8 @@ class SupplyCurveAggregation(BaseAggregation):
                 args=args,
                 excl_area=self._excl_area,
                 cap_cost_scale=self._cap_cost_scale,
+                fixed_cost_scale=self._fixed_cost_scale,
+                var_cost_scale=self._var_cost_scale,
                 recalc_lcoe=self._recalc_lcoe,
                 zones_dset=self._zones_dset,
             )
