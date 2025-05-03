@@ -605,8 +605,7 @@ def test_recalc_lcoe(cap_cost_scale):
                 * summary[SupplyCurveField.CAPACITY_AC_MW])
     foc = (summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    voc = (summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
-           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH] / 1000
     aep_kwh = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] * 1000
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
@@ -618,8 +617,7 @@ def test_recalc_lcoe(cap_cost_scale):
                 * summary[SupplyCurveField.EOS_MULT])
     foc = (summary[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    voc = (summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
-           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH]
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
