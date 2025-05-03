@@ -155,8 +155,8 @@ class SupplyCurveField(FieldEnum):
     COST_SITE_OCC_USD_PER_AC_MW = "cost_site_occ_usd_per_ac_mw"
     COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
     COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
-    COST_BASE_VOC_USD_PER_AC_MW = "cost_base_voc_usd_per_ac_mw"
-    COST_SITE_VOC_USD_PER_AC_MW = "cost_site_voc_usd_per_ac_mw"
+    COST_BASE_VOC_USD_PER_AC_MWH = "cost_base_voc_usd_per_ac_mwh"
+    COST_SITE_VOC_USD_PER_AC_MWH = "cost_site_voc_usd_per_ac_mwh"
     FIXED_CHARGE_RATE = "fixed_charge_rate"
 
     # Bespoke outputs
