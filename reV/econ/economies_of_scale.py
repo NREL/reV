@@ -292,7 +292,7 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Unscaled (raw) capital_cost found in the data input arg.
+            Unscaled (raw) capital_cost ($) found in the data input arg.
         """
         raw_capital_cost_from_cap = self._cost_from_cap(
             SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
@@ -311,8 +311,8 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Capital cost found in the data input arg scaled by the evaluated
-            EconomiesOfScale equation.
+            Capital cost ($) found in the data input arg scaled by the
+            evaluated EconomiesOfScale equation.
         """
         cc = copy.deepcopy(self.raw_capital_cost)
         cc *= self.capital_cost_scalar
@@ -336,13 +336,13 @@ class EconomiesOfScale:
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
-    def foc(self):
-        """Fixed operating cost from input data arg
+    def raw_fixed_operating_cost(self):
+        """Unscaled (raw) fixed operating cost from input data arg
 
         Returns
         -------
         out : float | np.ndarray
-            Fixed operating cost from input data arg
+            Unscaled (raw) fixed operating cost ($/year) from input data arg
         """
         foc_from_cap = self._cost_from_cap(
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW
@@ -355,38 +355,68 @@ class EconomiesOfScale:
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
-    def voc(self):
-        """Variable operating cost from input data arg
+    def scaled_fixed_operating_cost(self):
+        """Fixed operating cost found in the data input arg scaled by the
+        evaluated EconomiesOfScale input equation.
 
         Returns
         -------
         out : float | np.ndarray
-            Variable operating cost from input data arg
+            Fixed operating cost ($/year) found in the data input arg scaled
+            by the evaluated EconomiesOfScale equation.
         """
-        voc_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW
+        foc = copy.deepcopy(self.raw_fixed_operating_cost)
+        foc *= self.fixed_operating_cost_scalar
+        return foc
+
+    @property
+    def raw_variable_operating_cost(self):
+        """Unscaled (raw) variable operating cost from input data arg
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Unscaled (raw) variable operating cost ($/MWh) from input
+            data arg
+        """
+        voc_from_cap = self._data.get(
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH
         )
         if voc_from_cap is not None:
             return voc_from_cap
 
         key_list = ["variable_operating_cost", "mean_variable_operating_cost",
                     "voc", "mean_voc"]
-        return self._get_prioritized_keys(self._data, key_list)
+        return self._get_prioritized_keys(self._data, key_list) * 1000
+
+    @property
+    def scaled_variable_operating_cost(self):
+        """Variable operating cost found in the data input arg scaled by the
+        evaluated EconomiesOfScale input equation.
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Variable operating cost ($/MWh) found in the data input arg
+            scaled by the evaluated EconomiesOfScale equation.
+        """
+        voc = copy.deepcopy(self.raw_variable_operating_cost)
+        voc *= self.variable_operating_cost_scalar
+        return voc
 
     @property
     def aep(self):
         """Annual energy production back-calculated from the raw LCOE:
 
-        AEP = (fcr * raw_cap_cost + foc) / raw_lcoe
+        AEP = (fcr * raw_cap_cost + raw_foc) / (raw_lcoe - raw_voc)
 
         Returns
         -------
         out : float | np.ndarray
         """
-
-        aep = (self.fcr * self.raw_capital_cost + self.foc) / self.raw_lcoe
-        aep *= 1000  # convert MWh to KWh
-        return aep
+        num = self.fcr * self.raw_capital_cost + self.raw_fixed_operating_cost
+        denom = self.raw_lcoe - self.raw_variable_operating_cost
+        return num / denom * 1000  # convert MWh to KWh
 
     @property
     def raw_lcoe(self):
@@ -401,17 +431,17 @@ class EconomiesOfScale:
 
     @property
     def scaled_lcoe(self):
-        """LCOE calculated with the scaled capital cost based on the
+        """LCOE calculated with the scaled costs based on the
         EconomiesOfScale input equation.
 
-        LCOE = (FCR * scaled_capital_cost + FOC) / AEP + VOC
+        LCOE = (FCR * scaled_capital_cost + scaled_FOC) / AEP + scaled_VOC
 
         Returns
         -------
         lcoe : float | np.ndarray
-            LCOE calculated with the scaled capital cost based on the
+            LCOE calculated with the scaled costs based on the
             EconomiesOfScale input equation.
         """
-        return lcoe_fcr(
-            self.fcr, self.scaled_capital_cost, self.foc, self.aep, self.voc
-        )
+        return lcoe_fcr(self.fcr, self.scaled_capital_cost,
+                        self.scaled_fixed_operating_cost, self.aep,
+                        self.scaled_variable_operating_cost / 1000)
