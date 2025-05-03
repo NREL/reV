@@ -216,7 +216,9 @@ def test_econ_of_scale_baseline(request_h5):
 
 
 @pytest.mark.parametrize("voc", [0, 0.1])
-def test_sc_agg_econ_scale(voc):
+@pytest.mark.parametrize("fixed_eqn", [None, 0.5])
+@pytest.mark.parametrize("voc_eqn", [None, 0.1])
+def test_sc_agg_econ_scale(voc, fixed_eqn, voc_eqn):
     """Test supply curve agg with LCOE scaling based on plant capacity."""
     data = {
         "capital_cost": 53455000,
@@ -235,7 +237,7 @@ def test_sc_agg_econ_scale(voc):
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
 
-        eqn = (
+        cap_eqn = (
             f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"
             f" * np.where(np.array([2, 5]) > 3)[0][0]"
             f" * np.where(np.array([2, 1]) == 1)[0][0]"
@@ -267,7 +269,9 @@ def test_sc_agg_econ_scale(voc):
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
-            cap_cost_scale=eqn,
+            cap_cost_scale=cap_eqn,
+            fixed_cost_scale=fixed_eqn,
+            var_cost_scale=voc_eqn,
             h5_dsets=[
                 "capital_cost",
                 "fixed_operating_cost",
@@ -298,14 +302,27 @@ def test_sc_agg_econ_scale(voc):
 
         eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used
-        scalars = eval(str(eqn), globals(), eval_inputs)
-        sc_df["scalars"] = scalars
+        cc_scalars = eval(str(cap_eqn), globals(), eval_inputs)
+        foc_scalar = fixed_eqn or 1
+        voc_scalar = voc_eqn or 1
+        sc_df["scalars"] = cc_scalars
         true_scaled_lcoe = (
-            data["fixed_charge_rate"] * scalars * data["capital_cost"]
-            + data["fixed_operating_cost"]
-        ) / aep + data["variable_operating_cost"] * 1000
+            data["fixed_charge_rate"]
+            * data["capital_cost"] * cc_scalars
+            + data["fixed_operating_cost"] * foc_scalar
+        ) / aep + data["variable_operating_cost"] * voc_scalar * 1000
 
-        assert np.allclose(scalars, sc_df[SupplyCurveField.EOS_MULT])
+        assert np.allclose(base_df[SupplyCurveField.EOS_MULT], 1)
+        assert SupplyCurveField.FIXED_EOS_MULT not in base_df
+        assert SupplyCurveField.VAR_EOS_MULT not in base_df
+
+        assert np.allclose(cc_scalars, sc_df[SupplyCurveField.EOS_MULT])
+        if fixed_eqn:
+            assert np.allclose(foc_scalar,
+                               sc_df[SupplyCurveField.FIXED_EOS_MULT])
+        if voc_eqn:
+            assert np.allclose(voc_scalar,
+                               sc_df[SupplyCurveField.VAR_EOS_MULT])
 
         assert np.allclose(true_scaled_lcoe, sc_df[SupplyCurveField.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[SupplyCurveField.RAW_LCOE])
