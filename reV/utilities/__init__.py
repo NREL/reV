@@ -149,6 +149,8 @@ class SupplyCurveField(FieldEnum):
     MEAN_LCOE_FRICTION = "lcoe_friction_usd_per_mwh"
     RAW_LCOE = "lcoe_raw_usd_per_mwh"
     EOS_MULT = "multiplier_cc_eos"
+    FIXED_EOS_MULT = "multiplier_foc_eos"
+    VAR_EOS_MULT = "multiplier_voc_eos"
     REG_MULT = "multiplier_cc_regional"
     SC_POINT_ANNUAL_ENERGY_MWH = "annual_energy_site_mwh"
     COST_BASE_OCC_USD_PER_AC_MW = "cost_base_occ_usd_per_ac_mw"
