@@ -147,7 +147,6 @@ def test_econ_of_scale_baseline(request_h5):
         h5_dsets = ["capital_cost", "fixed_operating_cost",
                     "fixed_charge_rate", "variable_operating_cost"]
 
-
     with tempfile.TemporaryDirectory() as td:
         gen_temp = os.path.join(td, "ri_my_pv_gen.h5")
         shutil.copy(GEN, gen_temp)
