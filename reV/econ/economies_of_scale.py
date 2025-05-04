@@ -429,7 +429,7 @@ class EconomiesOfScale:
 
     @property
     def scaled_lcoe(self):
-        """LCOE calculated with the scaled costs based on the
+        """LCOE ($/MWh) calculated with the scaled costs based on the
         EconomiesOfScale input equation.
 
         LCOE = (FCR * scaled_capital_cost + scaled_FOC) / AEP + scaled_VOC
