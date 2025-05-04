@@ -34,31 +34,54 @@ class EconomiesOfScale:
     lcoe : $/MWh
     """
 
-    def __init__(self, eqn, data):
+    def __init__(self, data, cap_eqn=None, fixed_eqn=None, var_eqn=None):
         """
+
         Parameters
         ----------
-        eqn : str
-            LCOE scaling equation to implement "economies of scale".
-            Equation must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the keys in the data input arg. This
-            equation may use numpy functions with the package prefix "np".
         data : dict | pd.DataFrame
             Namespace of econ data to use to calculate economies of scale. Keys
             in dict or column labels in dataframe should match the Independent
             variables in the eqn input. Should also include variables required
             to calculate LCOE.
+        cap_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the keys in the data input arg. This
+            equation may use numpy functions with the package prefix "np". If
+            ``None``, no economies of scale are applied to the capital cost.
+            By default, ``None``.
+        fixed_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the fixed operating cost by. Independent
+            variables in the equation should match the keys in the data input
+            arg. This equation may use numpy functions with the package prefix
+            "np". If ``None``, no economies of scale are applied to the
+            fixed operating cost. By default, ``None``.
+        var_eqn : str, optional
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the variable operating cost by. Independent
+            variables in the equation should match the keys in the data input
+            arg. This equation may use numpy functions with the package prefix
+            "np". If ``None``, no economies of scale are applied to the
+            variable operating cost. By default, ``None``.
         """
-        self._eqn = eqn
         self._data = data
+        self._cap_eqn = cap_eqn
+        self._fixed_eqn = fixed_eqn
+        self._var_eqn = var_eqn
+        self._vars = None
         self._preflight()
 
     def _preflight(self):
         """Run checks to validate EconomiesOfScale equation and input data."""
 
-        if self._eqn is not None:
-            check_eval_str(str(self._eqn))
+        for eq in self._all_equations:
+            if eq is not None:
+                check_eval_str(str(eq))
 
         if isinstance(self._data, pd.DataFrame):
             self._data = {
@@ -79,10 +102,15 @@ class EconomiesOfScale:
         if any(missing):
             e = (
                 "Cannot evaluate EconomiesOfScale, missing data for variables"
-                ": {} for equation: {}".format(missing, self._eqn)
+                ": {} for equation: {}".format(missing, self._cap_eqn)
             )
             logger.error(e)
             raise KeyError(e)
+
+    @property
+    def _all_equations(self):
+        """gen: All EOS equations"""
+        yield from (self._cap_eqn, self._fixed_eqn, self._var_eqn)
 
     @staticmethod
     def is_num(s):
@@ -111,36 +139,51 @@ class EconomiesOfScale:
             the equation string. This will return an empty list if the equation
             has no variables.
         """
-        var_names = []
-        if self._eqn is not None:
-            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+", "-",
-                          " ", "(", ")", "[", "]")
+        if self._vars is not None:
+            return self._vars
+
+        self._vars = []
+        for eq in self._all_equations:
+            if eq is None:
+                continue
+
+            delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+",
+                            "-", " ", "(", ")", "[", "]")
             regex_pattern = "|".join(map(re.escape, delimiters))
-            var_names = []
-            for sub in re.split(regex_pattern, str(self._eqn)):
-                if sub and not self.is_num(sub) and not self.is_method(sub):
-                    var_names.append(sub)
-            var_names = sorted(set(var_names))
+            for sub_str in re.split(regex_pattern, str(eq)):
+                is_valid_var_name = (sub_str and not self.is_num(sub_str)
+                                     and not self.is_method(sub_str))
+                if is_valid_var_name:
+                    self._vars.append(sub_str)
 
-        return var_names
+        self._vars = sorted(set(self._vars))
+        return self._vars
 
-    def _evaluate(self):
+    def _evaluate(self, eqn):
         """Evaluate the EconomiesOfScale equation with Independent variables
         parsed into a kwargs dictionary input.
+
+        Parameters
+        ----------
+        eqn : str
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            multiplier. Independent variables in the equation should match the
+            keys in the data input arg. This equation may use numpy functions
+            with the package prefix "np". If ``None``, this function returns
+            ``1``.
 
         Returns
         -------
         out : float | np.ndarray
-            Evaluated output of the EconomiesOfScale equation. Should be
-            numeric scalars to apply directly to the capital cost.
+            Evaluated output of the EconomiesOfScale equation.
         """
-        out = 1
-        if self._eqn is not None:
-            kwargs = {k: self._data[k] for k in self.vars}
-            # pylint: disable=eval-used
-            out = eval(str(self._eqn), globals(), kwargs)
+        if eqn is None:
+            return 1
 
-        return out
+        kwargs = {k: self._data[k] for k in self.vars}
+        # pylint: disable=eval-used
+        return eval(str(eqn), globals(), kwargs)
 
     @staticmethod
     def _get_prioritized_keys(input_dict, key_list):
@@ -180,8 +223,8 @@ class EconomiesOfScale:
 
     @property
     def capital_cost_scalar(self):
-        """Evaluated output of the EconomiesOfScale equation. Should be
-        numeric scalars to apply directly to the capital cost.
+        """Evaluated output of the EconomiesOfScale capital cost equation.
+        Should be numeric scalars to apply directly to the capital cost.
 
         Returns
         -------
@@ -189,7 +232,35 @@ class EconomiesOfScale:
             Evaluated output of the EconomiesOfScale equation. Should be
             numeric scalars to apply directly to the capital cost.
         """
-        return self._evaluate()
+        return self._evaluate(self._cap_eqn)
+
+    @property
+    def fixed_operating_cost_scalar(self):
+        """Evaluated output of the EconomiesOfScale fixed operating cost
+        equation. Should be numeric scalars to apply directly to the fixed
+        operating cost.
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Evaluated output of the EconomiesOfScale equation. Should be
+            numeric scalars to apply directly to the fixed operating cost.
+        """
+        return self._evaluate(self._fixed_eqn)
+
+    @property
+    def variable_operating_cost_scalar(self):
+        """Evaluated output of the EconomiesOfScale equation variable
+        operating cost. Should be numeric scalars to apply directly to the
+        variable operating cost.
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Evaluated output of the EconomiesOfScale equation. Should be
+            numeric scalars to apply directly to the variable operating cost.
+        """
+        return self._evaluate(self._var_eqn)
 
     def _cost_from_cap(self, col_name):
         """Get full cost value from cost per mw in data.
@@ -221,7 +292,7 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Unscaled (raw) capital_cost found in the data input arg.
+            Unscaled (raw) capital_cost ($) found in the data input arg.
         """
         raw_capital_cost_from_cap = self._cost_from_cap(
             SupplyCurveField.COST_SITE__USD_PER_AC_MW
@@ -240,8 +311,8 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Capital cost found in the data input arg scaled by the evaluated
-            EconomiesOfScale equation.
+            Capital cost ($) found in the data input arg scaled by the
+            evaluated EconomiesOfScale equation.
         """
         cc = copy.deepcopy(self.raw_capital_cost)
         cc *= self.capital_cost_scalar
@@ -265,13 +336,13 @@ class EconomiesOfScale:
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
-    def foc(self):
-        """Fixed operating cost from input data arg
+    def raw_fixed_operating_cost(self):
+        """Unscaled (raw) fixed operating cost from input data arg
 
         Returns
         -------
         out : float | np.ndarray
-            Fixed operating cost from input data arg
+            Unscaled (raw) fixed operating cost ($/year) from input data arg
         """
         foc_from_cap = self._cost_from_cap(
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW
@@ -284,42 +355,70 @@ class EconomiesOfScale:
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
-    def voc(self):
-        """Variable operating cost from input data arg
+    def scaled_fixed_operating_cost(self):
+        """Fixed operating cost found in the data input arg scaled by the
+        evaluated EconomiesOfScale input equation.
 
         Returns
         -------
         out : float | np.ndarray
-            Variable operating cost from input data arg
+            Fixed operating cost ($/year) found in the data input arg scaled
+            by the evaluated EconomiesOfScale equation.
         """
-        voc_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW
-        )
-        if voc_from_cap is not None:
-            return voc_from_cap
+        foc = copy.deepcopy(self.raw_fixed_operating_cost)
+        foc *= self.fixed_operating_cost_scalar
+        return foc
+
+    @property
+    def raw_variable_operating_cost(self):
+        """Unscaled (raw) variable operating cost from input data arg
+
+        Returns
+        -------
+        out : float | np.ndarray
+            Unscaled (raw) variable operating cost ($/kWh) from input
+            data arg
+        """
+        voc_mwh = self._data.get(SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH)
+        if voc_mwh is not None:
+            return voc_mwh / 1000  # convert to $/kWh
 
         key_list = ["variable_operating_cost", "mean_variable_operating_cost",
                     "voc", "mean_voc"]
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
-    def aep(self):
-        """Annual energy production back-calculated from the raw LCOE:
+    def scaled_variable_operating_cost(self):
+        """Variable operating cost found in the data input arg scaled by the
+        evaluated EconomiesOfScale input equation.
 
-        AEP = (fcr * raw_cap_cost + foc) / raw_lcoe
+        Returns
+        -------
+        out : float | np.ndarray
+            Variable operating cost ($/kWh) found in the data input arg
+            scaled by the evaluated EconomiesOfScale equation.
+        """
+        voc = copy.deepcopy(self.raw_variable_operating_cost)
+        voc *= self.variable_operating_cost_scalar
+        return voc
+
+    @property
+    def aep(self):
+        """Annual energy production (kWh) back-calculated from the raw LCOE:
+
+        AEP = (fcr * raw_cap_cost + raw_foc) / (raw_lcoe - raw_voc)
 
         Returns
         -------
         out : float | np.ndarray
         """
-
-        aep = (self.fcr * self.raw_capital_cost + self.foc) / self.raw_lcoe
-        aep *= 1000  # convert MWh to KWh
-        return aep
+        num = self.fcr * self.raw_capital_cost + self.raw_fixed_operating_cost
+        denom = self.raw_lcoe - (self.raw_variable_operating_cost * 1000)
+        return num / denom * 1000  # convert MWh to KWh
 
     @property
     def raw_lcoe(self):
-        """Raw LCOE taken from the input data
+        """Raw LCOE ($/MWh) taken from the input data
 
         Returns
         -------
@@ -330,17 +429,17 @@ class EconomiesOfScale:
 
     @property
     def scaled_lcoe(self):
-        """LCOE calculated with the scaled capital cost based on the
+        """LCOE ($/MWh) calculated with the scaled costs based on the
         EconomiesOfScale input equation.
 
-        LCOE = (FCR * scaled_capital_cost + FOC) / AEP + VOC
+        LCOE = (FCR * scaled_capital_cost + scaled_FOC) / AEP + scaled_VOC
 
         Returns
         -------
         lcoe : float | np.ndarray
-            LCOE calculated with the scaled capital cost based on the
+            LCOE calculated with the scaled costs based on the
             EconomiesOfScale input equation.
         """
-        return lcoe_fcr(
-            self.fcr, self.scaled_capital_cost, self.foc, self.aep, self.voc
-        )
+        return lcoe_fcr(self.fcr, self.scaled_capital_cost,
+                        self.scaled_fixed_operating_cost, self.aep,
+                        self.scaled_variable_operating_cost)

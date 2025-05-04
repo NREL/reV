@@ -75,52 +75,56 @@ def test_pass_through_lcoe_args():
     assert "cf_mean" in gen.out
 
 
-def test_lcoe_calc_simple():
+@pytest.mark.parametrize("cap_eqn", [None, 1, 2, '1 / some_sc_output'])
+@pytest.mark.parametrize("fixed_eqn", [None, 1, 2, '1 / some_sc_output'])
+@pytest.mark.parametrize("var_eqn", [None, 1, 2, '1 / some_sc_output'])
+def test_lcoe_calc_simple(cap_eqn, fixed_eqn, var_eqn):
     """Test the EconomiesOfScale LCOE calculator without cap cost scalar"""
-    eqn = None
     # from pvwattsv7 defaults
     data = {
-        "aep": 35188456.00,
-        "capital_cost": 53455000.00,
-        "foc": 360000.00,
-        "voc": 0,
+        "aep": 35188456.00,  # kW
+        "capital_cost": 53455000.00,  # $
+        "foc": 360000.00,  # $
+        "voc": 0.006,  # $/kWh
         "fcr": 0.096,
+        "some_sc_output": 2,
     }
 
-    true_lcoe = (data["fcr"] * data["capital_cost"]
-                 + data["foc"]) / (data["aep"] / 1000)
+    if cap_eqn is None:
+        cap_scalar = 1
+    elif cap_eqn == '1 / some_sc_output':
+        cap_scalar = 0.5
+    else:
+        cap_scalar = cap_eqn
+
+    if fixed_eqn is None:
+        fixed_scalar = 1
+    elif fixed_eqn == '1 / some_sc_output':
+        fixed_scalar = 0.5
+    else:
+        fixed_scalar = fixed_eqn
+
+    if var_eqn is None:
+        var_scalar = 1
+    elif var_eqn == '1 / some_sc_output':
+        var_scalar = 0.5
+    else:
+        var_scalar = var_eqn
+
+    true_lcoe = ((data["fcr"]
+                 * data["capital_cost"]
+                 + data["foc"])
+                 / (data["aep"] / 1000)) + data["voc"] * 1000
+    true_scaled = ((data['fcr']
+                    * data["capital_cost"] * cap_scalar
+                    + data['foc'] * fixed_scalar)
+                   / (data['aep'] / 1000)) + data["voc"] * var_scalar * 1000
+
     data[SupplyCurveField.MEAN_LCOE] = true_lcoe
 
-    eos = EconomiesOfScale(eqn, data)
-    assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data["capital_cost"]
-    assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
-    assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
-
-    eqn = 1
-    eos = EconomiesOfScale(eqn, data)
-    assert eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data["capital_cost"]
-    assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
-    assert np.allclose(eos.scaled_lcoe, true_lcoe, rtol=0.001)
-
-    eqn = 2
-    true_scaled = ((data['fcr'] * eqn * data["capital_cost"]
-                    + data['foc'])
-                   / (data['aep'] / 1000))
-    eos = EconomiesOfScale(eqn, data)
-    assert eqn * eos.raw_capital_cost == eos.scaled_capital_cost
-    assert eos.raw_capital_cost == data["capital_cost"]
-    assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
-    assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
-
-    data['system_capacity'] = 2
-    eqn = '1 / system_capacity'
-    true_scaled = ((data['fcr'] * 0.5 * data["capital_cost"]
-                    + data['foc'])
-                   / (data['aep'] / 1000))
-    eos = EconomiesOfScale(eqn, data)
-    assert 0.5 * eos.raw_capital_cost == eos.scaled_capital_cost
+    eos = EconomiesOfScale(data, cap_eqn=cap_eqn, fixed_eqn=fixed_eqn,
+                           var_eqn=var_eqn)
+    assert cap_scalar * eos.raw_capital_cost == eos.scaled_capital_cost
     assert eos.raw_capital_cost == data["capital_cost"]
     assert np.allclose(eos.raw_lcoe, true_lcoe, rtol=0.001)
     assert np.allclose(eos.scaled_lcoe, true_scaled, rtol=0.001)
@@ -136,7 +140,7 @@ def test_econ_of_scale_baseline(request_h5):
         "fixed_operating_cost": 260000,
         "fixed_charge_rate": 0.096,
         "system_capacity": 20000,
-        "variable_operating_cost": 0,
+        "variable_operating_cost": 0.4,
     }
     h5_dsets = None
     if request_h5:
@@ -155,7 +159,8 @@ def test_econ_of_scale_baseline(request_h5):
         lcoe = (1000
                 * (data['fixed_charge_rate'] * data['capital_cost']
                    + data['fixed_operating_cost'])
-                / (cf * data['system_capacity'] * 8760))
+                / (cf * data['system_capacity'] * 8760)
+                + data['variable_operating_cost'])
 
         with h5py.File(gen_temp, "a") as res:
             res["lcoe_fcr-means"][...] = lcoe
@@ -209,13 +214,16 @@ def test_econ_of_scale_baseline(request_h5):
                            sc_df[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW])
 
 
-def test_sc_agg_econ_scale():
+@pytest.mark.parametrize("voc", [0, 0.1])
+@pytest.mark.parametrize("fixed_eqn", [None, 0.5])
+@pytest.mark.parametrize("voc_eqn", [None, 0.1])
+def test_sc_agg_econ_scale(voc, fixed_eqn, voc_eqn):
     """Test supply curve agg with LCOE scaling based on plant capacity."""
     data = {
         "capital_cost": 53455000,
         "fixed_operating_cost": 360000,
         "fixed_charge_rate": 0.096,
-        "variable_operating_cost": 0,
+        "variable_operating_cost": voc,
     }
 
     with tempfile.TemporaryDirectory() as td:
@@ -228,7 +236,7 @@ def test_sc_agg_econ_scale():
                 res.create_dataset(k, res["meta"].shape, data=arr)
                 res[k].attrs["scale_factor"] = 1.0
 
-        eqn = (
+        cap_eqn = (
             f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"
             f" * np.where(np.array([2, 5]) > 3)[0][0]"
             f" * np.where(np.array([2, 1]) == 1)[0][0]"
@@ -260,7 +268,9 @@ def test_sc_agg_econ_scale():
             res_class_bins=RES_CLASS_BINS,
             data_layers=DATA_LAYERS,
             gids=list(np.arange(10)),
-            cap_cost_scale=eqn,
+            cap_cost_scale=cap_eqn,
+            fixed_cost_scale=fixed_eqn,
+            var_cost_scale=voc_eqn,
             h5_dsets=[
                 "capital_cost",
                 "fixed_operating_cost",
@@ -282,27 +292,42 @@ def test_sc_agg_econ_scale():
 
         aep = ((sc_df['mean_fixed_charge_rate'] * sc_df['mean_capital_cost']
                 + sc_df['mean_fixed_operating_cost'])
-               / sc_df[SupplyCurveField.RAW_LCOE])
+               / (sc_df[SupplyCurveField.RAW_LCOE]
+                  - data['variable_operating_cost'] * 1000))
 
         true_raw_lcoe = ((data['fixed_charge_rate'] * data['capital_cost']
                           + data['fixed_operating_cost'])
-                         / aep + data['variable_operating_cost'])
+                         / aep + data['variable_operating_cost'] * 1000)
 
         eval_inputs = {k: sc_df[k].values.flatten() for k in sc_df.columns}
         # pylint: disable=eval-used
-        scalars = eval(str(eqn), globals(), eval_inputs)
-        sc_df["scalars"] = scalars
+        cc_scalars = eval(str(cap_eqn), globals(), eval_inputs)
+        foc_scalar = fixed_eqn or 1
+        voc_scalar = voc_eqn or 1
+        sc_df["scalars"] = cc_scalars
         true_scaled_lcoe = (
-            data["fixed_charge_rate"] * scalars * data["capital_cost"]
-            + data["fixed_operating_cost"]
-        ) / aep + data["variable_operating_cost"]
+            data["fixed_charge_rate"]
+            * data["capital_cost"] * cc_scalars
+            + data["fixed_operating_cost"] * foc_scalar
+        ) / aep + data["variable_operating_cost"] * voc_scalar * 1000
 
-        assert np.allclose(scalars, sc_df[SupplyCurveField.EOS_MULT])
+        assert np.allclose(base_df[SupplyCurveField.EOS_MULT], 1)
+        assert SupplyCurveField.FIXED_EOS_MULT not in base_df
+        assert SupplyCurveField.VAR_EOS_MULT not in base_df
+
+        assert np.allclose(cc_scalars, sc_df[SupplyCurveField.EOS_MULT])
+        if fixed_eqn:
+            assert np.allclose(foc_scalar,
+                               sc_df[SupplyCurveField.FIXED_EOS_MULT])
+        if voc_eqn:
+            assert np.allclose(voc_scalar,
+                               sc_df[SupplyCurveField.VAR_EOS_MULT])
 
         assert np.allclose(true_scaled_lcoe, sc_df[SupplyCurveField.MEAN_LCOE])
         assert np.allclose(true_raw_lcoe, sc_df[SupplyCurveField.RAW_LCOE])
         sc_df = sc_df.sort_values(SupplyCurveField.CAPACITY_AC_MW)
-        assert all(sc_df[SupplyCurveField.MEAN_LCOE].diff()[1:] < 0)
+        if voc == 0:
+            assert all(sc_df[SupplyCurveField.MEAN_LCOE].diff()[1:] < 0)
         for i in sc_df.index.values:
             if sc_df.loc[i, 'scalars'] < 1:
                 assert (sc_df.loc[i, SupplyCurveField.MEAN_LCOE]
