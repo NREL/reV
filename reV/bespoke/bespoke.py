@@ -1087,8 +1087,8 @@ class BespokeSinglePlant:
             fcr = lcoe_kwargs['fixed_charge_rate']
             cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
-            voc = lcoe_kwargs['variable_operating_cost']
-            aep = self.outputs['annual_energy-means']
+            voc = lcoe_kwargs['variable_operating_cost']  # $/kWh
+            aep = self.outputs['annual_energy-means']  # kWh
 
             my_mean_lcoe = lcoe_fcr(fcr, cc, foc, aep, voc)
 
