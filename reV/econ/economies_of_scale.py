@@ -376,18 +376,16 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Unscaled (raw) variable operating cost ($/MWh) from input
+            Unscaled (raw) variable operating cost ($/kWh) from input
             data arg
         """
-        voc_from_cap = self._data.get(
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH
-        )
-        if voc_from_cap is not None:
-            return voc_from_cap
+        voc_mwh = self._data.get(SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH)
+        if voc_mwh is not None:
+            return voc_mwh / 1000  # convert to $/kWh
 
         key_list = ["variable_operating_cost", "mean_variable_operating_cost",
                     "voc", "mean_voc"]
-        return self._get_prioritized_keys(self._data, key_list) * 1000
+        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def scaled_variable_operating_cost(self):
@@ -397,7 +395,7 @@ class EconomiesOfScale:
         Returns
         -------
         out : float | np.ndarray
-            Variable operating cost ($/MWh) found in the data input arg
+            Variable operating cost ($/kWh) found in the data input arg
             scaled by the evaluated EconomiesOfScale equation.
         """
         voc = copy.deepcopy(self.raw_variable_operating_cost)
@@ -406,7 +404,7 @@ class EconomiesOfScale:
 
     @property
     def aep(self):
-        """Annual energy production back-calculated from the raw LCOE:
+        """Annual energy production (kWh) back-calculated from the raw LCOE:
 
         AEP = (fcr * raw_cap_cost + raw_foc) / (raw_lcoe - raw_voc)
 
@@ -415,12 +413,12 @@ class EconomiesOfScale:
         out : float | np.ndarray
         """
         num = self.fcr * self.raw_capital_cost + self.raw_fixed_operating_cost
-        denom = self.raw_lcoe - self.raw_variable_operating_cost
+        denom = self.raw_lcoe - (self.raw_variable_operating_cost * 1000)
         return num / denom * 1000  # convert MWh to KWh
 
     @property
     def raw_lcoe(self):
-        """Raw LCOE taken from the input data
+        """Raw LCOE ($/MWh) taken from the input data
 
         Returns
         -------
@@ -444,4 +442,4 @@ class EconomiesOfScale:
         """
         return lcoe_fcr(self.fcr, self.scaled_capital_cost,
                         self.scaled_fixed_operating_cost, self.aep,
-                        self.scaled_variable_operating_cost / 1000)
+                        self.scaled_variable_operating_cost)
