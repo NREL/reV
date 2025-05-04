@@ -1087,8 +1087,8 @@ class BespokeSinglePlant:
             fcr = lcoe_kwargs['fixed_charge_rate']
             cc = lcoe_kwargs['capital_cost']
             foc = lcoe_kwargs['fixed_operating_cost']
-            voc = lcoe_kwargs['variable_operating_cost']
-            aep = self.outputs['annual_energy-means']
+            voc = lcoe_kwargs['variable_operating_cost']  # $/kWh
+            aep = self.outputs['annual_energy-means']  # kWh
 
             my_mean_lcoe = lcoe_fcr(fcr, cc, foc, aep, voc)
 
@@ -1406,14 +1406,13 @@ class BespokeSinglePlant:
             / reg_mult_foc
             / capacity_ac_mw
         )
-        self._meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW] = (
-            self.plant_optimizer.variable_operating_cost
-            / capacity_ac_mw
+        self._meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH] = (
+            self.plant_optimizer.variable_operating_cost * 1000  # to $/MWh
         )
-        self._meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW] = (
+        self._meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH] = (
             self.plant_optimizer.variable_operating_cost
             / reg_mult_voc
-            / capacity_ac_mw
+            * 1000  # to $/MWh
         )
         self._meta[SupplyCurveField.FIXED_CHARGE_RATE] = (
             self.plant_optimizer.fixed_charge_rate

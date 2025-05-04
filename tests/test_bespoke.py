@@ -105,8 +105,8 @@ EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
                          SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
                          SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
-                         SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
-                         SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH,
+                         SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH,
                          SupplyCurveField.FIXED_CHARGE_RATE,
                          SupplyCurveField.INCLUDED_AREA,
                          SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY,
@@ -684,16 +684,15 @@ def test_bespoke():
             meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW],
             meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW])
         assert not np.allclose(
-            meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW],
-            meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW])
+            meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH],
+            meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH])
 
         fcr = meta[SupplyCurveField.FIXED_CHARGE_RATE]
         cap_cost = (meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
                     * meta[SupplyCurveField.CAPACITY_AC_MW])
         foc = (meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW])
-        voc = (meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
-               * meta[SupplyCurveField.CAPACITY_AC_MW])
+        voc = meta[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH]
         aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH]
         lcoe_site = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
@@ -704,8 +703,7 @@ def test_bespoke():
         foc = (meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW]
                * np.array([3, 4]))
-        voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
-               * meta[SupplyCurveField.CAPACITY_AC_MW]
+        voc = (meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH]
                * np.array([5, 6]))
         lcoe_base = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
@@ -1293,8 +1291,8 @@ def test_bespoke_prior_run():
             SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
             SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
-            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW,
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH,
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH,
             SupplyCurveField.FIXED_CHARGE_RATE,
             SupplyCurveField.BESPOKE_AEP,
             SupplyCurveField.BESPOKE_OBJECTIVE,
