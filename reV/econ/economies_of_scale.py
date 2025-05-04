@@ -224,7 +224,7 @@ class EconomiesOfScale:
             Unscaled (raw) capital_cost found in the data input arg.
         """
         raw_capital_cost_from_cap = self._cost_from_cap(
-            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW
+            SupplyCurveField.COST_SITE__USD_PER_AC_MW
         )
         if raw_capital_cost_from_cap is not None:
             return raw_capital_cost_from_cap

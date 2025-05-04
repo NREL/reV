@@ -1387,12 +1387,12 @@ class BespokeSinglePlant:
         self._meta[SupplyCurveField.EOS_MULT] = eos_mult
         self._meta[SupplyCurveField.REG_MULT] = reg_mult_cc
 
-        self._meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+        self._meta[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW] = (
             (self.plant_optimizer.capital_cost
              + self.plant_optimizer.balance_of_system_cost)
             / capacity_ac_mw
         )
-        self._meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW] = (
+        self._meta[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW] = (
             (self.plant_optimizer.capital_cost / eos_mult / reg_mult_cc
              + self.plant_optimizer.balance_of_system_cost / reg_mult_bos)
             / capacity_ac_mw

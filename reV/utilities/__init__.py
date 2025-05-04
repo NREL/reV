@@ -151,8 +151,8 @@ class SupplyCurveField(FieldEnum):
     EOS_MULT = "multiplier_cc_eos"
     REG_MULT = "multiplier_cc_regional"
     SC_POINT_ANNUAL_ENERGY_MWH = "annual_energy_site_mwh"
-    COST_BASE_OCC_USD_PER_AC_MW = "cost_base_cc_usd_per_ac_mw"
-    COST_SITE_OCC_USD_PER_AC_MW = "cost_site_cc_usd_per_ac_mw"
+    COST_BASE_CC_USD_PER_AC_MW = "cost_base_cc_usd_per_ac_mw"
+    COST_SITE_CC_USD_PER_AC_MW = "cost_site_cc_usd_per_ac_mw"
     COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
     COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
     COST_BASE_VOC_USD_PER_AC_MW = "cost_base_voc_usd_per_ac_mw"
@@ -266,8 +266,8 @@ class _LegacySCAliases(Enum):
     CONVEX_HULL_AREA = "convex_hull_area"
     CONVEX_HULL_CAPACITY_DENSITY = "convex_hull_capacity_density"
     FULL_CELL_CAPACITY_DENSITY = "full_cell_capacity_density"
-    COST_BASE_OCC_USD_PER_AC_MW = "cost_base_occ_usd_per_ac_mw"
-    COST_SITE_OCC_USD_PER_AC_MW = "cost_site_occ_usd_per_ac_mw"
+    COST_BASE_CC_USD_PER_AC_MW = "cost_base_occ_usd_per_ac_mw"
+    COST_SITE_CC_USD_PER_AC_MW = "cost_site_occ_usd_per_ac_mw"
 
 
 class ModuleName(str, Enum):
