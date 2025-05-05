@@ -601,11 +601,16 @@ class ScheduledLossesMixin:
     def _add_outages_to_sam_inputs(self, outages):
         """Add the hourly adjustment factors to config, checking user input."""
 
+        if self.time_interval > 1:
+            outages = np.array([outage
+                                for _ in range(self.time_interval)
+                                for outage in outages])
         hourly_mult = 1 - outages / 100
         hourly_mult = self._fix_pysam_bug(hourly_mult)
 
-        user_hourly_input = self.sam_sys_inputs.pop('adjust_hourly',
-                                                    [0] * 8760)
+        default_user_input = [0] * 8760 * self.time_interval
+        user_hourly_input = self.sam_sys_inputs.pop('adjust_timeindex',
+                                                    default_user_input)
         user_hourly_mult = 1 - np.array(user_hourly_input) / 100
 
         final_hourly_mult = hourly_mult * user_hourly_mult
