@@ -126,17 +126,17 @@ def so_scheduler(basic_outage_dict):
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
 @pytest.mark.parametrize('outages', NOMINAL_OUTAGES)
-@pytest.mark.parametrize('haf', [None, np.random.randint(0, 100, 8760)])
+@pytest.mark.parametrize('af', [False, True])
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
-def test_scheduled_losses(generic_losses, outages, haf, files):
+def test_scheduled_losses(generic_losses, outages, af, files):
     """Test full gen run with scheduled losses."""
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, outages, None, haf, files
+        generic_losses, outages, None, af, files
     )
 
     outages = [Outage(outage) for outage in outages]
@@ -235,17 +235,17 @@ def test_scheduled_losses(generic_losses, outages, haf, files):
 
 
 @pytest.mark.parametrize('generic_losses', [0, 0.2])
-@pytest.mark.parametrize('haf', [None, np.random.randint(0, 100, 8760)])
+@pytest.mark.parametrize('af', [False, True])
 @pytest.mark.parametrize('files', [
     (WIND_SAM_FILE, WIND_RES_FILE, 'windpower'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv5'),
     (PV_SAM_FILE, PV_RES_FILE, 'pvwattsv7')
 ])
-def test_scheduled_losses_site_specific(generic_losses, haf, files):
+def test_scheduled_losses_site_specific(generic_losses, af, files):
     """Test full gen run with scheduled losses."""
 
     gen_profiles, gen_profiles_with_losses = _run_gen_with_and_without_losses(
-        generic_losses, NOMINAL_OUTAGES[0], SINGLE_SITE_OUTAGE, haf, files
+        generic_losses, NOMINAL_OUTAGES[0], SINGLE_SITE_OUTAGE, af, files
     )
 
     outages = [Outage(outage) for outage in SINGLE_SITE_OUTAGE]
@@ -321,12 +321,16 @@ def test_scheduled_losses_site_specific(generic_losses, haf, files):
 
 
 def _run_gen_with_and_without_losses(
-    generic_losses, outages, site_outages, haf, files
+    generic_losses, outages, site_outages, af, files
 ):
     """Run generation with and without losses for testing."""
     sam_file, res_file, tech = files
     with open(sam_file) as fh:
         sam_config = json.load(fh)
+
+    if af:
+        ts_len = 17520 if "pv" in tech else 8760
+        af = np.random.randint(0, 100, ts_len).tolist()
 
     with tempfile.TemporaryDirectory() as td:
         if tech == 'windpower':
@@ -335,9 +339,9 @@ def _run_gen_with_and_without_losses(
         else:
             sam_config['losses'] = generic_losses
 
-        if haf is not None:
-            sam_config['adjust_hourly'] = haf.tolist()
-            sam_config['adjust_en_hourly'] = 1
+        if af:
+            sam_config['adjust_timeindex'] = af
+            sam_config['adjust_en_timeindex'] = 1
 
         sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
         sam_fp = os.path.join(td, 'gen.json')
@@ -349,6 +353,7 @@ def _run_gen_with_and_without_losses(
                   output_request=('gen_profile'), site_data=site_data,
                   sites_per_worker=3)
         gen.run(max_workers=1)
+
     gen_profiles_with_losses = gen.out['gen_profile']
     # subsample to hourly generation
     time_steps_in_hour = int(round(gen_profiles_with_losses.shape[0] / 8760))
@@ -370,9 +375,9 @@ def _run_gen_with_and_without_losses(
     else:
         pc.project_points.sam_inputs[sam_file]['losses'] = generic_losses
 
-    if haf is not None:
-        pc.project_points.sam_inputs[sam_file]['adjust_hourly'] = haf.tolist()
-        pc.project_points.sam_inputs[sam_file]['adjust_en_hourly'] = 1
+    if af:
+        pc.project_points.sam_inputs[sam_file]['adjust_timeindex'] = af
+        pc.project_points.sam_inputs[sam_file]['adjust_en_timeindex'] = 1
 
     gen = Gen(tech, pc, sam_file, res_file, output_request=('gen_profile'),
               sites_per_worker=3)
@@ -518,25 +523,27 @@ def test_scheduled_losses_mixin_class_add_scheduled_losses(outages):
     """Test mixin class behavior when adding losses."""
 
     mixin = ScheduledLossesMixin()
+    mixin.time_interval = 1
     mixin.sam_sys_inputs = {mixin.OUTAGE_CONFIG_KEY: outages}
     sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
     mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert 'adjust_hourly' in mixin.sam_sys_inputs
-    assert 'adjust_en_hourly' in mixin.sam_sys_inputs
+    assert 'adjust_timeindex' in mixin.sam_sys_inputs
+    assert 'adjust_en_timeindex' in mixin.sam_sys_inputs
 
 
 def test_scheduled_losses_mixin_class_no_losses_input():
     """Test mixin class behavior when adding losses."""
 
     mixin = ScheduledLossesMixin()
+    mixin.time_interval = 1
     mixin.sam_sys_inputs = {}
     sample_df_with_dt = pd.DataFrame(index=pd.to_datetime(["2020-01-01"]))
     mixin.add_scheduled_losses(sample_df_with_dt)
 
     assert mixin.OUTAGE_CONFIG_KEY not in mixin.sam_sys_inputs
-    assert 'adjust_hourly' not in mixin.sam_sys_inputs
+    assert 'adjust_timeindex' not in mixin.sam_sys_inputs
 
 
 @pytest.mark.parametrize('allow_outage_overlap', [True, False])
@@ -806,8 +813,10 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
     with open(sam_file) as fh:
         sam_config = json.load(fh)
 
+    ts_len = 17520 if "pv" in tech else 8760
+
     outages = NOMINAL_OUTAGES[0]
-    sam_config['adjust_hourly'] = [0] * 8760
+    sam_config['adjust_timeindex'] = [0] * ts_len
     sam_config[ScheduledLossesMixin.OUTAGE_CONFIG_KEY] = outages
     sam_config.pop('wind_farm_losses_percent', None)
 
@@ -839,7 +848,8 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         config['resource_file'] = res_file
         config['sam_files'] = sam_files
         config['log_directory'] = td
-        config['output_request'] = config['output_request'] + ['adjust_hourly']
+        config['output_request'] = (config['output_request']
+                                    + ['adjust_timeindex'])
         config['analysis_years'] = ['2012', '2013']
 
         config_path = os.path.join(td, 'config.json')
@@ -856,13 +866,13 @@ def test_scheduled_outages_multi_year(runner, files, clear_loggers):
         scheduled_outages = []
         for file in glob.glob(os.path.join(td, '*.h5')):
             with Outputs(file, 'r') as out:
-                scheduled_outages.append(out['adjust_hourly'])
+                scheduled_outages.append(out['adjust_timeindex'])
 
         # pylint: disable=unbalanced-tuple-unpacking
         outages_2012, outages_2013 = scheduled_outages
         for o1, o2 in zip(outages_2012.T, outages_2013.T):
-            assert len(o1) == 8760
-            assert len(o2) == 8760
+            assert len(o1) == ts_len
+            assert len(o2) == ts_len
             assert not np.allclose(o1, o2)
 
 

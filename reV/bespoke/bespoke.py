@@ -1184,6 +1184,7 @@ class BespokeSinglePlant:
                                   'wind_resource_data',
                                   'wind_turbine_powercurve_powerout',
                                   'adjust_hourly',
+                                  'adjust_timeindex',
                                   'capital_cost',
                                   'fixed_operating_cost',
                                   'variable_operating_cost',
