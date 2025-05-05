@@ -606,7 +606,6 @@ class ScheduledLossesMixin:
                                 for _ in range(self.time_interval)
                                 for outage in outages])
         hourly_mult = 1 - outages / 100
-        hourly_mult = self._fix_pysam_bug(hourly_mult)
 
         default_user_input = [0] * 8760 * self.time_interval
         user_hourly_input = self.sam_sys_inputs.pop('adjust_timeindex',
@@ -636,19 +635,3 @@ class ScheduledLossesMixin:
             pass
 
         return self.__base_seed
-
-    def _fix_pysam_bug(self, hourly_mult):
-        """Fix PySAM bug that squares HAF user input"""
-        if getattr(self, "MODULE", "").casefold() != "windpower":
-            return hourly_mult
-
-        bugged_pysam_version = (PySAM.__version__.startswith("5")
-                                or PySAM.__version__.startswith("6"))
-        if not bugged_pysam_version:
-            return hourly_mult
-
-        # Bug in PySAM windpower module that applies HAF twice (i.e.
-        # squares the input values), so we sqrt the desired loss value
-        return np.sqrt(hourly_mult)
-
-
