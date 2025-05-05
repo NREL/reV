@@ -2249,6 +2249,13 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                   else self.capacity_ac)
         return sc_point_cost / ac_cap
 
+    def _compute_voc_per_ac_mwh(self, dset):
+        """Compute variable operating cost per MWh """
+        if dset not in self.gen.datasets:
+            return None
+
+        return self.exclusion_weighted_mean(self.gen[dset]) * 1000  # to $/MWh
+
     @property
     def mean_h5_dsets_data(self):
         """Get the mean supplemental h5 datasets data (optional)
@@ -2368,10 +2375,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH: (
                 self.sc_point_annual_energy
             ),
-            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW: (
+            SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("capital_cost")
             ),
-            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW: (
+            SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("base_capital_cost")
             ),
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW: (
@@ -2380,11 +2387,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("base_fixed_operating_cost")
             ),
-            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW: (
-                self._compute_cost_per_ac_mw("variable_operating_cost")
+            SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH: (
+                self._compute_voc_per_ac_mwh("variable_operating_cost")
             ),
-            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW: (
-                self._compute_cost_per_ac_mw("base_variable_operating_cost")
+            SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH: (
+                self._compute_voc_per_ac_mwh("base_variable_operating_cost")
             ),
             SupplyCurveField.FIXED_CHARGE_RATE: self.fixed_charge_rate,
         }
@@ -2414,19 +2421,46 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return summary
 
     @staticmethod
-    def economies_of_scale(cap_cost_scale, summary):
+    def economies_of_scale(summary, cap_cost_scale=None, fixed_cost_scale=None,
+                           var_cost_scale=None):
         """Apply economies of scale to this point summary
 
         Parameters
         ----------
-        cap_cost_scale : str
-            LCOE scaling equation to implement "economies of scale".
-            Equation must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the names of the columns in the reV
-            supply curve aggregation table.
         summary : dict
             Dictionary of summary outputs for this sc point.
+        cap_cost_scale : str, optional
+            Optional capital cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            capital cost by. Independent variables in the equation
+            should match the names of the columns in the ``reV`` supply
+            curve aggregation output table (see the documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the capital cost.
+        fixed_cost_scale : str, optional
+            Optional fixed operating cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            fixed operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the fixed operating cost.
+        var_cost_scale : str, optional
+            Optional variable operating cost scaling equation to
+            implement "economies of scale". Equations must be in python
+            string format and must return a scalar value to multiply the
+            variable operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the variable operating cost.
 
         Returns
         -------
@@ -2434,15 +2468,35 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        eos = EconomiesOfScale(cap_cost_scale, summary)
+        eos = EconomiesOfScale(data=summary, cap_eqn=cap_cost_scale,
+                               fixed_eqn=fixed_cost_scale,
+                               var_eqn=var_cost_scale)
         summary[SupplyCurveField.RAW_LCOE] = eos.raw_lcoe
         summary[SupplyCurveField.MEAN_LCOE] = eos.scaled_lcoe
         summary[SupplyCurveField.EOS_MULT] = eos.capital_cost_scalar
-        cost = summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+        summary[SupplyCurveField.FIXED_EOS_MULT] = (
+            eos.fixed_operating_cost_scalar)
+        summary[SupplyCurveField.VAR_EOS_MULT] = (
+            eos.variable_operating_cost_scalar)
+
+        cost = summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW]
         if cost is not None:
-            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW] = (
                 cost * summary[SupplyCurveField.EOS_MULT]
             )
+
+        cost = summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
+        if cost is not None:
+            summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW] = (
+                cost * summary[SupplyCurveField.FIXED_EOS_MULT]
+            )
+
+        cost = summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH]
+        if cost is not None:
+            summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH] = (
+                cost * summary[SupplyCurveField.VAR_EOS_MULT]
+            )
+
         return summary
 
     @classmethod
@@ -2469,6 +2523,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         args=None,
         data_layers=None,
         cap_cost_scale=None,
+        fixed_cost_scale=None,
+        var_cost_scale=None,
         recalc_lcoe=True,
         zone_mask=None,
     ):
@@ -2540,12 +2596,41 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath", by default None
-        cap_cost_scale : str | None
-            Optional LCOE scaling equation to implement "economies of scale".
-            Equations must be in python string format and return a scalar
-            value to multiply the capital cost by. Independent variables in
-            the equation should match the names of the columns in the reV
-            supply curve aggregation table.
+        cap_cost_scale : str, optional
+            Optional capital cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            capital cost by. Independent variables in the equation
+            should match the names of the columns in the ``reV`` supply
+            curve aggregation output table (see the documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the capital cost.
+            By default, ``None``.
+        fixed_cost_scale : str, optional
+            Optional fixed operating cost scaling equation to implement
+            "economies of scale". Equations must be in python string
+            format and must return a scalar value to multiply the
+            fixed operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the fixed operating cost.
+            By default, ``None``.
+        var_cost_scale : str, optional
+            Optional variable operating cost scaling equation to
+            implement "economies of scale". Equations must be in python
+            string format and must return a scalar value to multiply the
+            variable operating cost by. Independent variables in the
+            equation should match the names of the columns in the
+            ``reV`` supply curve aggregation output table (see the
+            documentation of
+            :class:`~reV.supply_curve.sc_aggregation.SupplyCurveAggregation`
+            for details on available outputs). If ``None``, no economies
+            of scale are applied to the variable operating cost.
+            By default, ``None``.
         recalc_lcoe : bool
             Flag to re-calculate the LCOE from the multi-year mean capacity
             factor and annual energy production data. This requires several
@@ -2589,8 +2674,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             if data_layers is not None:
                 summary = point.agg_data_layers(summary, data_layers)
 
-            if cap_cost_scale is not None:
-                summary = point.economies_of_scale(cap_cost_scale, summary)
+            if any((cap_cost_scale, fixed_cost_scale, var_cost_scale)):
+                summary = point.economies_of_scale(summary, cap_cost_scale,
+                                                   fixed_cost_scale,
+                                                   var_cost_scale)
 
         for arg, val in summary.items():
             if val is None:

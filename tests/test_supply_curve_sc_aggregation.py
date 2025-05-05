@@ -481,14 +481,15 @@ def test_data_layer_methods():
     "cap_cost_scale",
     ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
 )
-def test_recalc_lcoe(cap_cost_scale):
+@pytest.mark.parametrize("voc", [0, 0.1])
+def test_recalc_lcoe(cap_cost_scale, voc):
     """Test supply curve aggregation with the re-calculation of lcoe using the
     multi-year mean capacity factor"""
 
     data = {"capital_cost": 34900000,
             "fixed_operating_cost": 280000,
             "fixed_charge_rate": 0.09606382995843887,
-            "variable_operating_cost": 0,
+            "variable_operating_cost": voc,
             'system_capacity': 20000}
     annual_cf = [0.24, 0.26, 0.37, 0.15]
     annual_lcoe = []
@@ -581,10 +582,10 @@ def test_recalc_lcoe(cap_cost_scale):
                            summary[SupplyCurveField.MEAN_LCOE])
 
     assert np.allclose(summary[SupplyCurveField.EOS_MULT],
-                       summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
-                       / summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+                       summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW]
+                       / summary[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW])
     assert np.allclose(data['capital_cost'] / data['system_capacity'] * 1000,
-                       summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+                       summary[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW])
 
     expected_recalc_lcoe = lcoe_fcr(data["fixed_charge_rate"],
                                     data["capital_cost"],
@@ -601,25 +602,23 @@ def test_recalc_lcoe(cap_cost_scale):
                                expected_recalc_lcoe)
 
     fcr = summary[SupplyCurveField.FIXED_CHARGE_RATE]
-    cap_cost = (summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+    cap_cost = (summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW]
                 * summary[SupplyCurveField.CAPACITY_AC_MW])
     foc = (summary[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    voc = (summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MW]
-           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = summary[SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH] / 1000
     aep_kwh = summary[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] * 1000
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
 
-    cap_cost = (summary[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+    cap_cost = (summary[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW]
                 * summary[SupplyCurveField.CAPACITY_AC_MW]
                 * summary[SupplyCurveField.REG_MULT]
                 * summary[SupplyCurveField.EOS_MULT])
     foc = (summary[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW]
            * summary[SupplyCurveField.CAPACITY_AC_MW])
-    voc = (summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MW]
-           * summary[SupplyCurveField.CAPACITY_AC_MW])
+    voc = summary[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH] / 1000
 
     lcoe = lcoe_fcr(fcr, cap_cost, foc, aep_kwh, voc)
     assert np.allclose(lcoe, summary[SupplyCurveField.MEAN_LCOE])
