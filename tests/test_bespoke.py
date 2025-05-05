@@ -101,8 +101,8 @@ EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH,
                          SupplyCurveField.EOS_MULT,
                          SupplyCurveField.REG_MULT,
-                         SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
-                         SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW,
+                         SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW,
                          SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
                          SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
                          SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH,
@@ -678,8 +678,8 @@ def test_bespoke():
                 assert f[dset].any()  # not all zeros
 
         assert not np.allclose(
-            meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW],
-            meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW])
+            meta[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW],
+            meta[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW])
         assert not np.allclose(
             meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW],
             meta[SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW])
@@ -688,7 +688,7 @@ def test_bespoke():
             meta[SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH])
 
         fcr = meta[SupplyCurveField.FIXED_CHARGE_RATE]
-        cap_cost = (meta[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+        cap_cost = (meta[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW]
                     * meta[SupplyCurveField.CAPACITY_AC_MW])
         foc = (meta[SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW]
                * meta[SupplyCurveField.CAPACITY_AC_MW])
@@ -696,7 +696,7 @@ def test_bespoke():
         aep = meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH]
         lcoe_site = lcoe_fcr(fcr, cap_cost, foc, aep, voc)
 
-        cap_cost = (meta[SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW]
+        cap_cost = (meta[SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW]
                     * meta[SupplyCurveField.CAPACITY_AC_MW]
                     * meta[SupplyCurveField.REG_MULT]
                     * meta[SupplyCurveField.EOS_MULT])
@@ -1287,8 +1287,8 @@ def test_bespoke_prior_run():
             SupplyCurveField.CONVEX_HULL_AREA,
             SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY,
             SupplyCurveField.FULL_CELL_CAPACITY_DENSITY,
-            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW,
-            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW,
+            SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW,
+            SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW,
             SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW,
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW,
             SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH,

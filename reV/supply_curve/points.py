@@ -2375,10 +2375,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH: (
                 self.sc_point_annual_energy
             ),
-            SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW: (
+            SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("capital_cost")
             ),
-            SupplyCurveField.COST_BASE_OCC_USD_PER_AC_MW: (
+            SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW: (
                 self._compute_cost_per_ac_mw("base_capital_cost")
             ),
             SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW: (
@@ -2479,9 +2479,9 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         summary[SupplyCurveField.VAR_EOS_MULT] = (
             eos.variable_operating_cost_scalar)
 
-        cost = summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW]
+        cost = summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW]
         if cost is not None:
-            summary[SupplyCurveField.COST_SITE_OCC_USD_PER_AC_MW] = (
+            summary[SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW] = (
                 cost * summary[SupplyCurveField.EOS_MULT]
             )
 
