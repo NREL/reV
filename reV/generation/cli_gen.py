@@ -67,8 +67,10 @@ def _parse_res_files(res_fps, analysis_years):
 
     # get base filename, may have {} for year format
     if isinstance(res_fps, str) and '{}' in res_fps:
-        # need to make list of res files for each year
-        res_fps = [res_fps.format(year) for year in analysis_years]
+        # make list of res files for each year
+        # .replace("{}", "{0}") used for multiple "{}" in path
+        res_fps = [res_fps.replace("{}", "{0}").format(year)
+                   for year in analysis_years]
     elif isinstance(res_fps, str):
         # only one resource file request, still put in list
         res_fps = [res_fps]
