@@ -49,8 +49,8 @@ def test_resource_tech_mapping(tmp_path, batch_size):
         assert dset in out, "Techmap dataset was not written to H5"
         ind = out[dset]
 
-    msg = 'Tech mapping failed for {} vs. baseline results.'
-    assert np.allclose(ind, ind_truth), msg.format('index mappings')
+    msg = 'Tech mapping failed for index mappings vs. baseline results.'
+    assert np.allclose(ind, ind_truth), msg
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
@@ -100,8 +100,8 @@ def test_tech_mapping_cli(runner, clear_loggers, tmp_path):
         assert dset in out, "Techmap dataset was not written to H5"
         ind = out[dset]
 
-    msg = 'Tech mapping failed for {} vs. baseline results.'
-    assert np.allclose(ind, ind_truth), msg.format('index mappings')
+    msg = 'Tech mapping failed for index mappings vs. baseline results.'
+    assert np.allclose(ind, ind_truth), msg
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
