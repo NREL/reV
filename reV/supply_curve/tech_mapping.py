@@ -280,12 +280,6 @@ class TechMapping:
             to input gids.
         """
         ind_out = []
-
-        logger.debug(
-            "Running tech mapping for chunks {} through {}".format(
-                gids[0], gids[-1]
-            )
-        )
         for i, _ in enumerate(gids):
             dist, ind = tree.query(excl_coords[i])
             ind[(dist >= dist_thresh)] = -1
@@ -468,6 +462,7 @@ class TechMapping:
 
             .. Important:: If this dataset already exists in the h5 file,
               it will be overwritten.
+
         sc_resolution : int | None, optional
             Supply Curve resolution. This value defines how many pixels
             are in a single side of a supply curve cell. For example,
