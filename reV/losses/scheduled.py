@@ -7,7 +7,6 @@ import warnings
 import json
 
 import numpy as np
-import PySAM
 
 from reV.losses.utils import (convert_to_full_month_names,
                               filter_unknown_month_names,
