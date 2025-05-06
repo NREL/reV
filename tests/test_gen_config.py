@@ -9,6 +9,7 @@ Created on Thu Nov 29 09:54:51 2018
 """
 import json
 import os
+import shutil
 import tempfile
 import traceback
 
@@ -263,6 +264,55 @@ def test_year_in_dir_name(runner, clear_loggers):
 
         h5_files = [fn for fn in os.listdir(run_dir)
                     if "generation_2012_2013" in fn and ".h5" in fn]
+        assert len(h5_files) == 2
+        clear_loggers()
+
+
+def test_year_in_path(runner, clear_loggers):
+    """Test generation run with year in multiple places in resource path"""
+    with tempfile.TemporaryDirectory() as td:
+
+        run_dir = os.path.join(td, 'generation')
+        os.mkdir(run_dir)
+
+        data_dir_2012 = os.path.join(run_dir, '2012')
+        data_dir_2013 = os.path.join(run_dir, '2013')
+        os.mkdir(data_dir_2012)
+        os.mkdir(data_dir_2013)
+
+        resource_fp = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
+        shutil.copy(resource_fp.format(2012),
+                    os.path.join(data_dir_2012, 'ri_100_wtk_2012.h5'))
+        shutil.copy(resource_fp.format(2013),
+                    os.path.join(data_dir_2013, 'ri_100_wtk_2013.h5'))
+
+        project_points = os.path.join(TESTDATADIR, 'config', '..',
+                                      'config', "wtk_pp_2012_10.csv")
+        resource_file = os.path.join(run_dir, '{}/ri_100_wtk_{}.h5')
+        sam_files = {"wind0":
+                     os.path.join(TESTDATADIR,
+                                  "SAM/wind_gen_standard_losses_0.json")}
+
+        config = os.path.join(TESTDATADIR, 'config', 'local_wind.json')
+        config = safe_json_load(config)
+
+        config['project_points'] = project_points
+        config['resource_file'] = resource_file
+        config['sam_files'] = sam_files
+        config['log_directory'] = run_dir
+        config["analysis_years"] = [2012, 2013]
+
+        config_path = os.path.join(run_dir, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['generation', '-c', config_path])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        h5_files = [fn for fn in os.listdir(run_dir)
+                    if "generation" in fn and ".h5" in fn]
         assert len(h5_files) == 2
         clear_loggers()
 

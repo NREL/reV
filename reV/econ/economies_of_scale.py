@@ -148,7 +148,7 @@ class EconomiesOfScale:
                 continue
 
             delimiters = (">", "<", ">=", "<=", "==", ",", "*", "/", "+",
-                            "-", " ", "(", ")", "[", "]")
+                          "-", " ", "(", ")", "[", "]")
             regex_pattern = "|".join(map(re.escape, delimiters))
             for sub_str in re.split(regex_pattern, str(eq)):
                 is_valid_var_name = (sub_str and not self.is_num(sub_str)
