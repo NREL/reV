@@ -7,7 +7,6 @@ import warnings
 import json
 
 import numpy as np
-import PySAM
 
 from reV.losses.utils import (convert_to_full_month_names,
                               filter_unknown_month_names,
@@ -524,8 +523,8 @@ class ScheduledLossesMixin:
         information is expected to be a list of dictionaries containing
         outage specifications. See :class:`Outage` for a description of
         the specifications allowed for each outage. The scheduled losses
-        are passed to SAM via the ``adjust_hourly`` key to signify which
-        hourly capacity factors should be adjusted with outage losses.
+        are passed to SAM via the ``adjust_timeindex`` key to signify
+        which capacity factors should be adjusted with outage losses.
         If no outage info is specified in ``sam_sys_inputs``, no
         scheduled losses are added.
 
@@ -543,13 +542,13 @@ class ScheduledLossesMixin:
 
         Notes
         -----
-        The scheduled losses are passed to SAM via the ``adjust_hourly``
-        key to signify which hourly capacity factors should be adjusted
-        with outage losses. If the user specifies other hourly
-        adjustment factors via the ``adjust_hourly`` key, the effect is
-        combined. For example, if the user inputs a 33% hourly
+        The scheduled losses are passed to SAM via the
+        ``adjust_timeindex`` key to signify which capacity factors
+        should be adjusted with outage losses. If the user specifies
+        other adjustment factors via the ``adjust_timeindex`` key, the
+        effect is combined. For example, if the user inputs a 33%
         adjustment factor and reV schedules an outage for 70% of the
-        farm down for the same hour, then the resulting adjustment
+        farm down for the same time step, then the resulting adjustment
         factor is
 
             .. math: 1 - [(1 - 70/100) * (1 - 33/100)] = 0.799
@@ -575,7 +574,7 @@ class ScheduledLossesMixin:
         self._add_outages_to_sam_inputs(hourly_outages)
 
         logger.debug("Hourly adjustment factors after scheduled outages: {}"
-                     .format(list(self.sam_sys_inputs['adjust_hourly'])))
+                     .format(list(self.sam_sys_inputs['adjust_timeindex'])))
 
     def _user_outage_input(self):
         """Get outage and seed info from config. """
@@ -601,16 +600,20 @@ class ScheduledLossesMixin:
     def _add_outages_to_sam_inputs(self, outages):
         """Add the hourly adjustment factors to config, checking user input."""
 
+        if self.time_interval > 1:
+            outages = np.array([outage
+                                for _ in range(self.time_interval)
+                                for outage in outages])
         hourly_mult = 1 - outages / 100
-        hourly_mult = self._fix_pysam_bug(hourly_mult)
 
-        user_hourly_input = self.sam_sys_inputs.pop('adjust_hourly',
-                                                    [0] * 8760)
+        default_user_input = [0] * 8760 * self.time_interval
+        user_hourly_input = self.sam_sys_inputs.pop('adjust_timeindex',
+                                                    default_user_input)
         user_hourly_mult = 1 - np.array(user_hourly_input) / 100
 
         final_hourly_mult = hourly_mult * user_hourly_mult
-        self.sam_sys_inputs['adjust_hourly'] = (1 - final_hourly_mult) * 100
-        self.sam_sys_inputs['adjust_en_hourly'] = 1
+        self.sam_sys_inputs['adjust_timeindex'] = (1 - final_hourly_mult) * 100
+        self.sam_sys_inputs['adjust_en_timeindex'] = 1
 
     @property
     def outage_seed(self):
@@ -631,19 +634,3 @@ class ScheduledLossesMixin:
             pass
 
         return self.__base_seed
-
-    def _fix_pysam_bug(self, hourly_mult):
-        """Fix PySAM bug that squares HAF user input"""
-        if getattr(self, "MODULE", "").casefold() != "windpower":
-            return hourly_mult
-
-        bugged_pysam_version = (PySAM.__version__.startswith("5")
-                                or PySAM.__version__.startswith("6"))
-        if not bugged_pysam_version:
-            return hourly_mult
-
-        # Bug in PySAM windpower module that applies HAF twice (i.e.
-        # squares the input values), so we sqrt the desired loss value
-        return np.sqrt(hourly_mult)
-
-
