@@ -279,11 +279,6 @@ class TechMapping:
             List of arrays of index values from the NN. List entries correspond
             to input gids.
         """
-        logger.debug(
-            "Getting tech map coordinates for chunks {} through {}".format(
-                gids[0], gids[-1]
-            )
-        )
         ind_out = []
 
         logger.debug(
