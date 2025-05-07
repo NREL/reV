@@ -1,0 +1,30 @@
+reV.SAM.SAM.SamResourceRetriever
+================================
+
+.. currentmodule:: reV.SAM.SAM
+
+.. autoclass:: SamResourceRetriever
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SamResourceRetriever.get
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SamResourceRetriever.RESOURCE_TYPES
+   
+   

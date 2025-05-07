@@ -1,0 +1,32 @@
+reV.losses.power\_curve.PowerCurveLossesMixin
+=============================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autoclass:: PowerCurveLossesMixin
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PowerCurveLossesMixin.add_power_curve_losses
+      ~PowerCurveLossesMixin.wind_resource_from_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PowerCurveLossesMixin.POWER_CURVE_CONFIG_KEY
+      ~PowerCurveLossesMixin.input_power_curve
+   
+   

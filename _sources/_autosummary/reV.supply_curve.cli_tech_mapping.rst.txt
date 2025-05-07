@@ -1,0 +1,23 @@
+reV.supply\_curve.cli\_tech\_mapping
+====================================
+
+.. automodule:: reV.supply_curve.cli_tech_mapping
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
