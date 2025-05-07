@@ -217,7 +217,9 @@ if __name__ == "__main__":
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format('*')
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1
+        )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, cost_function,

@@ -136,7 +136,10 @@ def test_turbine_placement(gid=33):
         sam_sys_inputs["fixed_operating_cost_multiplier"] = 2
         sam_sys_inputs["variable_operating_cost_multiplier"] = 5
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  sam_sys_inputs,
                                  OBJECTIVE_FUNCTION,
@@ -230,7 +233,10 @@ def test_zero_area(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, CAP_COST_FUN,
@@ -274,7 +280,10 @@ def test_correct_turb_location(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function, CAP_COST_FUN,
@@ -318,7 +327,10 @@ def test_packing_algorithm(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(
             gid,
             excl_fp,
@@ -381,7 +393,10 @@ def test_single(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
@@ -470,7 +485,10 @@ def test_extra_outputs(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
 
         with pytest.raises(KeyError):
             bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
@@ -608,7 +626,10 @@ def test_bespoke():
             }
         )
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         sam_configs = copy.deepcopy(SAM_CONFIGS)
         sam_configs["default"]["fixed_charge_rate"] = 0.0975
 
@@ -790,7 +811,10 @@ def test_consistent_eval_namespace(gid=33):
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(
             gid,
             excl_fp,
@@ -886,7 +910,10 @@ def test_bespoke_wind_plant_with_power_curve_losses():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  OBJECTIVE_FUNCTION,
@@ -951,7 +978,10 @@ def test_bespoke_run_with_icing_cutoff():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(
             33,
             excl_fp,
@@ -1024,7 +1054,10 @@ def test_bespoke_run_with_power_curve_losses():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(
             33,
             excl_fp,
@@ -1092,7 +1125,10 @@ def test_bespoke_run_with_scheduled_losses():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  OBJECTIVE_FUNCTION, CAP_COST_FUN,
@@ -1171,7 +1207,10 @@ def test_bespoke_aep_is_zero_if_no_turbines_placed():
         shutil.copy(RES.format(2013), res_fp.format(2013))
         res_fp = res_fp.format("*")
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
         bsp = BespokeSinglePlant(33, excl_fp, res_fp, TM_DSET,
                                  SAM_SYS_INPUTS,
                                  objective_function,
@@ -1241,7 +1280,10 @@ def test_bespoke_prior_run():
             }
         )
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
 
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
@@ -1357,7 +1399,10 @@ def test_gid_map():
         fp_gid_map = os.path.join(td, "gid_map.csv")
         gid_map.to_csv(fp_gid_map)
 
-        TechMapping.run(excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
 
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
@@ -1458,7 +1503,10 @@ def test_bespoke_bias_correct():
         fp_bc = os.path.join(td, "bc.csv")
         bias_correct.to_csv(fp_bc)
 
-        TechMapping.run(excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2013), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
 
         assert not os.path.exists(out_fpath1)
         assert not os.path.exists(out_fpath2)
@@ -1525,7 +1573,10 @@ def test_cli(runner, clear_loggers):
         shutil.copy(RES.format(2013), res_fp_2.format(2013))
         res_fp = [res_fp_1.format(2012), res_fp_2.format("*")]
 
-        TechMapping.run(excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1)
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
 
         config = {
             "log_directory": td,
