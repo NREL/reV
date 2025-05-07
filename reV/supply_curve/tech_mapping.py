@@ -366,26 +366,24 @@ class TechMapping:
             slow down processing, but should ensure that the bottleneck
             in job submission does not occur.
         """
-        gid_chunks = ceil(len(self._gids) / points_per_worker)
-        gid_chunks = np.array_split(self._gids, gid_chunks)
-
         loggers = [__name__, "reV"]
-        n_jobs = len(gid_chunks)
-        n_submitted = 0
+
+        n_jobs = ceil(len(self._gids) / points_per_worker)
+        gid_chunks = np.array_split(self._gids, n_jobs)
         n_batches = ceil(n_jobs / batch_size)
-        n_finished = 0
         logger.info(
             f"Kicking off {n_jobs} resource mapping jobs in {n_batches} "
             "batches."
         )
+        n_finished = 0
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
-            while n_submitted < n_jobs:
+            for b in range(0, n_batches):
                 futures = {}
-                batch_gid_chunks = gid_chunks[
-                    n_submitted:min(n_submitted + batch_size, n_jobs)
-                ]
+                chunk_start = b * batch_size
+                chunk_end = chunk_start + batch_size
+                gid_chunk_batch = gid_chunks[chunk_start:chunk_end]
                 # iterate through split executions, submitting each to worker
-                for i, gid_set in enumerate(batch_gid_chunks):
+                for i, gid_set in enumerate(gid_chunk_batch):
                     # submit executions and append to futures list
                     excl_coords = self._get_excl_coords(
                         self._excl_fpath,
@@ -404,7 +402,6 @@ class TechMapping:
                             self.distance_threshold,
                         )
                     ] = i
-                n_submitted += batch_size
 
                 with h5py.File(self._excl_fpath, "a") as f:
                     indices = f[dset]
@@ -412,7 +409,7 @@ class TechMapping:
                         i = futures[future]
                         result = future.result()
 
-                        for j, gid in enumerate(batch_gid_chunks[i]):
+                        for j, gid in enumerate(gid_chunk_batch[i]):
                             row_slice, col_slice = self._get_excl_slices(
                                 gid,
                                 self._sc_row_indices,

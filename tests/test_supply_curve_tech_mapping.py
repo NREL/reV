@@ -28,8 +28,15 @@ GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 TM_DSET = 'techmap_nsrdb_ri_truth'
 
 
-@pytest.mark.parametrize("batch_size", [100, 50])
-def test_resource_tech_mapping(tmp_path, batch_size):
+@pytest.mark.parametrize("batch_size,sc_resolution,points_per_worker", [
+    (100, 2560, 10),
+    (5, 64, 10),
+    (2, 64, 100),
+    (5, 64, 1),
+])
+def test_resource_tech_mapping(
+    tmp_path, batch_size, sc_resolution, points_per_worker
+):
     """Run the supply curve technology mapping and compare to baseline file"""
 
     excl_fpath = EXCL
@@ -38,8 +45,8 @@ def test_resource_tech_mapping(tmp_path, batch_size):
 
     dset = "tm"
     TechMapping.run(
-        excl_fpath, RES, dset=dset, max_workers=2, sc_resolution=2560,
-        batch_size=batch_size
+        excl_fpath, RES, dset=dset, max_workers=2, sc_resolution=sc_resolution,
+        batch_size=batch_size, points_per_worker=points_per_worker
     )
 
     with ExclusionLayers(EXCL) as ex:
