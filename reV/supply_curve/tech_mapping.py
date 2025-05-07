@@ -31,7 +31,7 @@ class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
     def __init__(
-        self, excl_fpath, res_fpath, sc_resolution=64, dist_margin=1.05
+        self, excl_fpath, res_fpath, sc_resolution=1200, dist_margin=1.05
     ):
         """
         Parameters
@@ -42,11 +42,16 @@ class TechMapping:
         res_fpath : str
             Filepath to .h5 resource file that we're mapping to.
         sc_resolution : int | None, optional
-            Supply Curve resolution. This value defines how many pixels
-            are in a single side of a supply curve cell. For example,
-            a value of ``64`` would generate a supply curve where the
-            side of each supply curve cell is ``64x64`` exclusion
-            pixels. By default, ``64``.
+            Defines how many exclusion pixels are mapped at a time. Units
+            indicate the length of one dimension, in pixels, of each square
+            chunk to be mapped. By default, this value is 1200, which will
+            map the exclusion pixels in 1200x1200 pixel chunks.
+
+            .. Note:: This parameter does not affect the exclusion to resource
+            (tech) mapping, which deviates from how the effect of the
+            ``sc_resolution`` parameter works in other functionality within
+            ``reV``.
+
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between
             neighboring resource points, by default 1.05
@@ -184,16 +189,17 @@ class TechMapping:
         return row_slice, col_slice
 
     @classmethod
-    def _get_excl_coords(cls, excl_fpath, gids, sc_row_indices, sc_col_indices,
+    def _get_excl_coords(cls, excl_fpath, gid, sc_row_indices, sc_col_indices,
                          excl_row_slices, excl_col_slices,
                          coord_labels=(LATITUDE, LONGITUDE)):
         """
-        Extract the exclusion coordinates for the desired gids for TechMapping.
+        Extract the exclusion coordinates for the desired supply curve point
+        gid for TechMapping.
 
         Parameters
         ----------
-        gids : np.ndarray
-            Supply curve gids with tech exclusion points to map to the
+        gid : int
+            Supply curve gid with tech exclusion points to map to the
             resource meta points.
         excl_fpath : str
             Filepath to exclusions h5 file, must contain latitude and longitude
@@ -216,56 +222,50 @@ class TechMapping:
 
         Returns
         -------
-        coords_out : list
-            List of arrays of the un-projected latitude, longitude array of
-            tech exclusion points. List entries correspond to input gids.
+        coords_out : ndarray
+            2D array (Nx2) of the un-projected latitude, longitude of
+            tech exclusion pixels within the specified gid point. Rows
+            correspond to exclusion pixels of the specified gid, columns
+            correspond to latitude and longitude, respectively.
         """
-        coords_out = []
         with h5py.File(excl_fpath, "r") as f:
-            for gid in gids:
-                row_slice, col_slice = cls._get_excl_slices(
-                    gid,
-                    sc_row_indices,
-                    sc_col_indices,
-                    excl_row_slices,
-                    excl_col_slices,
+            row_slice, col_slice = cls._get_excl_slices(
+                gid,
+                sc_row_indices,
+                sc_col_indices,
+                excl_row_slices,
+                excl_col_slices,
+            )
+            try:
+                lats = f[coord_labels[0]][row_slice, col_slice]
+                lons = f[coord_labels[1]][row_slice, col_slice]
+                coords_out = np.vstack((lats.flatten(), lons.flatten())).T
+            except Exception as e:
+                m = (
+                    "Could not unpack coordinates for gid {} with "
+                    "row/col slice {}/{}. Received the following "
+                    "error:\n{}".format(gid, row_slice, col_slice, e)
                 )
-                try:
-                    lats = f[coord_labels[0]][row_slice, col_slice]
-                    lons = f[coord_labels[1]][row_slice, col_slice]
-                    emeta = np.vstack((lats.flatten(), lons.flatten())).T
-                except Exception as e:
-                    m = (
-                        "Could not unpack coordinates for gid {} with "
-                        "row/col slice {}/{}. Received the following "
-                        "error:\n{}".format(gid, row_slice, col_slice, e)
-                    )
-                    logger.error(m)
-                    raise e
-
-                coords_out.append(emeta)
+                logger.error(m)
+                raise e
 
         return coords_out
 
     @classmethod
     def map_resource_gids(
         cls,
-        gids,
         excl_coords,
         tree,
         dist_thresh,
     ):
-        """Map exclusion gids to the resource meta.
+        """Map exclusion pixels to the resource meta.
 
         Parameters
         ----------
-        gids : np.ndarray
-            Supply curve gids with tech exclusion points to map to the
-            resource meta points.
-        excl_coords : list
-            List of arrays of the un-projected latitude, longitude array of
-            tech exclusion points. List entries correspond should correspond to
-            input gids.
+        excl_coords : ndarray
+            2D Array of the un-projected latitude, longitude array of
+            tech exclusion pixels.  Rows correspond to exclusion pixels,
+            columns correspond to latitude and longitude, respectively.
         tree : cKDTree
             cKDTree built from resource lat, lon coordinates
         dist_tresh : float
@@ -275,17 +275,14 @@ class TechMapping:
 
         Returns
         -------
-        ind : list
-            List of arrays of index values from the NN. List entries correspond
-            to input gids.
+        ind : ndarray
+            1D arrays of index values from the NN. Entries correspond
+            to input exclusion pixels.
         """
-        ind_out = []
-        for i, _ in enumerate(gids):
-            dist, ind = tree.query(excl_coords[i])
-            ind[(dist >= dist_thresh)] = -1
-            ind_out.append(ind)
+        dist, ind = tree.query(excl_coords)
+        ind[(dist >= dist_thresh)] = -1
 
-        return ind_out
+        return ind
 
     def initialize_dataset(self, dset, chunks=(128, 128)):
         """
@@ -341,7 +338,7 @@ class TechMapping:
                 raise FileInputError(emsg)
 
     def map_resource(
-        self, dset, max_workers=None, points_per_worker=10, batch_size=100
+        self, dset, max_workers=None, batch_size=100
     ):
         """
         Map all resource gids to exclusion gids. Save results to dset in
@@ -355,39 +352,34 @@ class TechMapping:
         max_workers : int, optional
             Number of cores to run mapping on. None uses all available cpus,
             by default None
-        points_per_worker : int, optional
-            Number of supply curve points to map to resource gids on each
-            worker, by default 10
         batch_size : int, optional
-            Number of jobs to be submitted to parallel worker pool at one time,
-            by default 100. Higher values may speed up processing, but could
-            also lead to a critical bottleneck in job submission that will
-            effectively stop processing from occurring. Lower values will
-            slow down processing, but should ensure that the bottleneck
-            in job submission does not occur.
+            Number of tasks to be submitted to parallel worker pool at one
+            time, by default 1000. As a rule of thumb, this number should be
+            set to ~10x the number of max_workers. Higher values are not
+            necessarily better, and may slow down processing and/or result in
+            out-of-memory errors. Values less than the number of workers can
+            also lead to slower processing, due to poor load balancing.
         """
         loggers = [__name__, "reV"]
 
-        n_jobs = ceil(len(self._gids) / points_per_worker)
-        gid_chunks = np.array_split(self._gids, n_jobs)
+        n_jobs = len(self._gids)
         n_batches = ceil(n_jobs / batch_size)
+        gid_batches = np.array_split(self._gids, n_batches)
+
         logger.info(
             f"Kicking off {n_jobs} resource mapping jobs in {n_batches} "
             "batches."
         )
         n_finished = 0
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
-            for b in range(0, n_batches):
+            for gid_batch in gid_batches:
                 futures = {}
-                chunk_start = b * batch_size
-                chunk_end = chunk_start + batch_size
-                gid_chunk_batch = gid_chunks[chunk_start:chunk_end]
                 # iterate through split executions, submitting each to worker
-                for i, gid_set in enumerate(gid_chunk_batch):
+                for i, gid in enumerate(gid_batch):
                     # submit executions and append to futures list
                     excl_coords = self._get_excl_coords(
                         self._excl_fpath,
-                        gid_set,
+                        gid,
                         self._sc_row_indices,
                         self._sc_col_indices,
                         self._excl_row_slices,
@@ -396,7 +388,6 @@ class TechMapping:
                     futures[
                         exe.submit(
                             self.map_resource_gids,
-                            gid_set,
                             excl_coords,
                             self._tree,
                             self.distance_threshold,
@@ -409,20 +400,21 @@ class TechMapping:
                         i = futures[future]
                         result = future.result()
 
-                        for j, gid in enumerate(gid_chunk_batch[i]):
-                            row_slice, col_slice = self._get_excl_slices(
-                                gid,
-                                self._sc_row_indices,
-                                self._sc_col_indices,
-                                self._excl_row_slices,
-                                self._excl_col_slices,
-                            )
-                            n_rows = row_slice.stop - row_slice.start
-                            n_cols = col_slice.stop - col_slice.start
-                            result_shape = (n_rows, n_cols)
-                            indices[row_slice, col_slice] = result[j].reshape(
-                                result_shape
-                            )
+                        gid = gid_batch[i]
+                        row_slice, col_slice = self._get_excl_slices(
+                            gid,
+                            self._sc_row_indices,
+                            self._sc_col_indices,
+                            self._excl_row_slices,
+                            self._excl_col_slices,
+                        )
+                        n_rows = row_slice.stop - row_slice.start
+                        n_cols = col_slice.stop - col_slice.start
+                        result_shape = (n_rows, n_cols)
+                        indices[row_slice, col_slice] = result.reshape(
+                            result_shape
+                        )
+
                 n_finished += 1
                 logger.info(
                     "Parallel TechMapping batches completed: "
@@ -435,11 +427,10 @@ class TechMapping:
         excl_fpath,
         res_fpath,
         dset,
-        sc_resolution=64,
+        sc_resolution=1200,
         dist_margin=1.05,
         max_workers=None,
-        points_per_worker=10,
-        batch_size=100,
+        batch_size=1000,
     ):
         """Run parallel mapping and save to h5 file.
 
@@ -461,34 +452,35 @@ class TechMapping:
               it will be overwritten.
 
         sc_resolution : int | None, optional
-            Supply Curve resolution. This value defines how many pixels
-            are in a single side of a supply curve cell. For example,
-            a value of ``64`` would generate a supply curve where the
-            side of each supply curve cell is ``64x64`` exclusion
-            pixels. By default, ``64``.
+            Defines how many exclusion pixels are mapped at a time. Units
+            indicate the length of one dimension, in pixels, of each square
+            chunk to be mapped. By default, this value is 1200, which will
+            map the exclusion pixels in 1200x1200 pixel chunks.
+
+            .. Note:: This parameter does not affect the exclusion to resource
+            (tech) mapping, which deviates from how the effect of the
+            ``sc_resolution`` parameter works in other functionality within
+            ``reV``.
+
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between
             neighboring resource points, by default 1.05
         max_workers : int, optional
             Number of cores to run mapping on. None uses all available cpus,
             by default None
-        points_per_worker : int, optional
-            Number of supply curve points to map to resource gids on each
-            worker, by default 10
         batch_size : int, optional
-            Number of jobs to be submitted to parallel worker pool at one time,
-            by default 100. Higher values may speed up processing, but could
-            also lead to a critical bottleneck in job submission that will
-            effectively stop processing from occurring. Lower values will
-            slow down processing, but should ensure that the bottleneck
-            in job submission does not occur.
+            Number of tasks to be submitted to parallel worker pool at one
+            time, by default 1000. As a rule of thumb, this number should be
+            set to ~10x the number of max_workers. Higher values are not
+            necessarily better, and may slow down processing and/or result in
+            out-of-memory errors. Values less than the number of workers can
+            also lead to slower processing, due to poor load balancing.
         """
         kwargs = {"dist_margin": dist_margin, "sc_resolution": sc_resolution}
         mapper = cls(excl_fpath, res_fpath, **kwargs)
         mapper.initialize_dataset(dset)
         mapper.map_resource(
             max_workers=max_workers,
-            points_per_worker=points_per_worker,
             dset=dset,
             batch_size=batch_size,
         )
