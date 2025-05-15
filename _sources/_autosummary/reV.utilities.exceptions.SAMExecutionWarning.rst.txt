@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SAMExecutionWarning
+============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SAMExecutionWarning

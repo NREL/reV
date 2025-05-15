@@ -1,0 +1,6 @@
+reV.losses.power\_curve.adjust\_power\_curve
+============================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autofunction:: adjust_power_curve

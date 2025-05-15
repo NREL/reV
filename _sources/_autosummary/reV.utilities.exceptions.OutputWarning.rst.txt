@@ -1,0 +1,6 @@
+reV.utilities.exceptions.OutputWarning
+======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: OutputWarning

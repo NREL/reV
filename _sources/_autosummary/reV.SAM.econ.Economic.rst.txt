@@ -1,0 +1,55 @@
+reV.SAM.econ.Economic
+=====================
+
+.. currentmodule:: reV.SAM.econ
+
+.. autoclass:: Economic
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Economic.assign_inputs
+      ~Economic.collect_outputs
+      ~Economic.default
+      ~Economic.drop_leap
+      ~Economic.ensure_res_len
+      ~Economic.execute
+      ~Economic.flip_actual_irr
+      ~Economic.get_sam_res
+      ~Economic.get_time_interval
+      ~Economic.gross_revenue
+      ~Economic.lcoe_fcr
+      ~Economic.lcoe_nom
+      ~Economic.lcoe_real
+      ~Economic.make_datetime
+      ~Economic.npv
+      ~Economic.outputs_to_utc_arr
+      ~Economic.ppa_price
+      ~Economic.reV_run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Economic.DIR
+      ~Economic.IGNORE_ATTRS
+      ~Economic.MODULE
+      ~Economic.attr_dict
+      ~Economic.input_list
+      ~Economic.meta
+      ~Economic.module
+      ~Economic.pysam
+      ~Economic.site
+   
+   

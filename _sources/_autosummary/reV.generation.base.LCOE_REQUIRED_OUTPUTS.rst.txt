@@ -1,0 +1,6 @@
+reV.generation.base.LCOE\_REQUIRED\_OUTPUTS
+===========================================
+
+.. currentmodule:: reV.generation.base
+
+.. autodata:: LCOE_REQUIRED_OUTPUTS
