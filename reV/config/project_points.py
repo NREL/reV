@@ -464,8 +464,10 @@ class ProjectPoints:
         h_var = "wind_turbine_hub_ht"
         if self._h is None:
             if "wind" in self.tech:
-                # wind technology, get a list of h values
-                self._h = [self[site][1][h_var] for site in self.sites]
+                if h_var in self.df.columns:
+                    self._h = self.df[h_var].values.tolist()
+                else:
+                    self._h = [self[site][1][h_var] for site in self.sites]
 
         return self._h
 
@@ -836,7 +838,6 @@ class ProjectPoints:
             )
             logger.error(msg)
             raise ConfigError(msg)
-
 
         unused_configs = set(curtail_configs) - set(df_configs)
         if unused_configs:

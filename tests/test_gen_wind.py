@@ -345,11 +345,6 @@ def test_wind_gen_site_heights(points=slice(0, 2), year=2012, max_workers=1):
     """Test site specific hub heights in site data"""
     sam_files = TESTDATADIR + "/SAM/wind_gen_standard_losses_0.json"
     res_file = TESTDATADIR + "/wtk/ri_100_wtk_{}.h5".format(year)
-
-    with Resource(res_file) as res:
-        dsets = res.dsets
-        print(res.dsets)
-
     output_request = ("cf_mean", "turb_generic_loss", 'ws_mean')
 
     baseline = Gen(
@@ -365,7 +360,7 @@ def test_wind_gen_site_heights(points=slice(0, 2), year=2012, max_workers=1):
     site_data = pd.DataFrame(
         {
             ResourceMetaField.GID: np.arange(2),
-            "wind_turbine_hub_ht": [100, 100]
+            "wind_turbine_hub_ht": [95, 100]
         }
     )
     test = Gen(
@@ -383,7 +378,8 @@ def test_wind_gen_site_heights(points=slice(0, 2), year=2012, max_workers=1):
     ws0 = baseline.out['ws_mean']
     cf1 = test.out['cf_mean']
     ws1 = test.out['ws_mean']
-    assert (ws1 != ws0).all()
+    assert (ws1 > ws0).all()
+    assert (cf1 > cf0).all()
 
 
 def test_multi_resolution_wtk():
