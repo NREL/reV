@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools >= 61",
+  "setuptools >= 80",
   "setuptools_scm[toml] >= 8",
 ]
 build-backend = 'setuptools.build_meta'
@@ -39,6 +39,7 @@ dependencies = [
   "packaging>=24.2,<25",
   "plotly>=6.0.1,<7",
   "plotting>=0.0.7,<0.1",
+  "setuptools>=80.1.0,<81",
   "shapely>=2.0.7,<3",
 ]
 

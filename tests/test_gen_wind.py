@@ -341,6 +341,47 @@ def test_wind_gen_site_data(points=slice(0, 5), year=2012, max_workers=1):
     assert np.allclose(test.out["turb_generic_loss"][2:], 16.7 * np.ones(3))
 
 
+def test_wind_gen_site_heights(points=slice(0, 2), year=2012, max_workers=1):
+    """Test site specific hub heights in site data"""
+    sam_files = TESTDATADIR + "/SAM/wind_gen_standard_losses_0.json"
+    res_file = TESTDATADIR + "/wtk/ri_100_wtk_{}.h5".format(year)
+    output_request = ("cf_mean", "turb_generic_loss", 'ws_mean')
+
+    baseline = Gen(
+        "windpower",
+        points,
+        sam_files,
+        res_file,
+        sites_per_worker=3,
+        output_request=output_request,
+    )
+    baseline.run(max_workers=max_workers)
+
+    site_data = pd.DataFrame(
+        {
+            ResourceMetaField.GID: np.arange(2),
+            "wind_turbine_hub_ht": [95, 100]
+        }
+    )
+    test = Gen(
+        "windpower",
+        points,
+        sam_files,
+        res_file,
+        sites_per_worker=3,
+        output_request=output_request,
+        site_data=site_data,
+    )
+    test.run(max_workers=max_workers)
+
+    cf0 = baseline.out['cf_mean']
+    ws0 = baseline.out['ws_mean']
+    cf1 = test.out['cf_mean']
+    ws1 = test.out['ws_mean']
+    assert (ws1 > ws0).all()
+    assert (cf1 > cf0).all()
+
+
 def test_multi_resolution_wtk():
     """Test windpower analysis with wind at 5min and t+p at hourly"""
     with tempfile.TemporaryDirectory() as td:
