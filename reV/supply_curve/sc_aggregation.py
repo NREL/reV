@@ -569,7 +569,7 @@ class SupplyCurveAggregation(BaseAggregation):
             generation HDF5 output, or if `recalc_lcoe` is set to
             ``False``, the mean LCOE will be computed from the data
             stored under the `lcoe_dset` instead. By default, ``True``.
-        zones_dset: str, optional
+        zones_dset : str, optional
             Dataset name in `excl_fpath` containing the zones to be applied.
             If specified, supply curve aggregation will be performed separately
             for each discrete zone within each supply curve site. This option
