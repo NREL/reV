@@ -4,11 +4,12 @@
 """
 import os
 import warnings
+import importlib
 
 import numpy as np
 import pytest
 from packaging import version
-from pkg_resources import get_distribution
+
 from rex.renewable_resource import NSRDB
 from rex.utilities.utilities import pd_date_range
 
@@ -139,7 +140,7 @@ def test_pysam_version_checker_wind():
     """
     wind_config = {'wind_farm_losses_percent': 10, 'system_capacity': 1}
 
-    pysam_version = str(get_distribution('nrel-pysam')).split(' ')[1]
+    pysam_version = importlib.metadata.version("nrel-pysam")
     pysam_version = version.parse(pysam_version)
 
     if pysam_version > version.parse('2.1.0'):
