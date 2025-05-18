@@ -6,8 +6,9 @@ Created on Mon Feb  3 14:40:42 2020
 @author: gbuster
 """
 import logging
+import importlib
 from warnings import warn
-from pkg_resources import get_distribution
+
 from packaging import version
 from reV.utilities.exceptions import PySAMVersionError, PySAMVersionWarning
 
@@ -105,7 +106,7 @@ class PySamVersionChecker:
     @property
     def pysam_version(self):
         """Get the PySAM distribution version"""
-        return str(get_distribution('nrel-pysam')).split(' ')[1]
+        return importlib.metadata.version("nrel-pysam")
 
     @classmethod
     def run(cls, tech, parameters):
