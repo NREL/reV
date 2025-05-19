@@ -30,17 +30,13 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
-    def __init__(
-        self, excl_fpath, res_fpath, sc_resolution=1200, dist_margin=1.05
-    ):
+    def __init__(self, excl_fpath, sc_resolution=1200):
         """
         Parameters
         ----------
         excl_fpath : str
             Filepath to exclusions h5 file, must contain latitude and longitude
             arrays to allow for mapping to resource points
-        res_fpath : str
-            Filepath to .h5 resource file that we're mapping to.
         sc_resolution : int | None, optional
             Defines how many exclusion pixels are mapped at a time. Units
             indicate the length of one dimension, in pixels, of each square
@@ -52,22 +48,13 @@ class TechMapping:
             ``sc_resolution`` parameter works in other functionality within
             ``reV``.
 
-        dist_margin : float, optional
-            Extra margin to multiply times the computed distance between
-            neighboring resource points, by default 1.05
         """
         self._excl_fpath = excl_fpath
-        self._res_fpath = res_fpath
         self._check_fout()
-
-        self._tree, self._dist_thresh = self._build_tree(
-            self._res_fpath, dist_margin=dist_margin
-        )
 
         with SupplyCurveExtent(
             self._excl_fpath, resolution=sc_resolution
         ) as sc:
-            self._sc_resolution = sc.resolution
             self._gids = np.array(list(range(len(sc))), dtype=np.uint32)
             self._excl_shape = sc.exclusions.shape
             self._n_excl = np.prod(self._excl_shape)
@@ -81,19 +68,6 @@ class TechMapping:
                     len(self._gids), self._n_excl
                 )
             )
-
-    @property
-    def distance_threshold(self):
-        """Get the upper bound on NN distance between excl and res points.
-
-        Returns
-        -------
-        float
-            Estimate the distance between resource points. Calculated as half
-            of the diagonal between closest resource points, with desired
-            extra margin
-        """
-        return self._dist_thresh
 
     @staticmethod
     def _build_tree(res_fpath, dist_margin=1.05):
@@ -320,12 +294,6 @@ class TechMapping:
                     fillvalue=-1
                 )
 
-            if self._dist_thresh:
-                f[dset].attrs["distance_threshold"] = self._dist_thresh
-
-            if self._res_fpath:
-                f[dset].attrs["src_res_fpath"] = self._res_fpath
-
     def _check_fout(self):
         """Check the TechMapping output file for cached data."""
         with h5py.File(self._excl_fpath, 'r') as f:
@@ -337,9 +305,8 @@ class TechMapping:
                 logger.exception(emsg)
                 raise FileInputError(emsg)
 
-    def map_resource(
-        self, dset, max_workers=None, batch_size=100
-    ):
+    def map_resource(self, dset, res_fpath, dist_margin=1.05,
+                     max_workers=None, batch_size=100):
         """
         Map all resource gids to exclusion gids. Save results to dset in
         exclusions h5 file.
@@ -349,6 +316,11 @@ class TechMapping:
         dset : str, optional
             Name of the output dataset in the exclusions H5 file to which the
             tech map will be saved.
+        res_fpath : str
+            Filepath to .h5 resource file that we're mapping to.
+        dist_margin : float, optional
+            Extra margin to multiply times the computed distance between
+            neighboring resource points, by default 1.05
         max_workers : int, optional
             Number of cores to run mapping on. None uses all available cpus,
             by default None
@@ -361,6 +333,17 @@ class TechMapping:
             also lead to slower processing, due to poor load balancing.
         """
         loggers = [__name__, "reV"]
+
+        logger.info(
+            f"Computing cKDtree for tech mapping using {res_fpath=!r} "
+            f"and {dist_margin=!r}"
+        )
+        tree, dist_thresh = self._build_tree(
+            res_fpath, dist_margin=dist_margin
+        )
+        with h5py.File(self._excl_fpath, "a") as f:
+            f[dset].attrs["distance_threshold"] = dist_thresh
+            f[dset].attrs["src_res_fpath"] = res_fpath
 
         n_jobs = len(self._gids)
         n_batches = ceil(n_jobs / batch_size)
@@ -389,8 +372,8 @@ class TechMapping:
                         exe.submit(
                             self.map_resource_gids,
                             excl_coords,
-                            self._tree,
-                            self.distance_threshold,
+                            tree,
+                            dist_thresh,
                         )
                     ] = i
 
@@ -476,11 +459,12 @@ class TechMapping:
             out-of-memory errors. Values less than the number of workers can
             also lead to slower processing, due to poor load balancing.
         """
-        kwargs = {"dist_margin": dist_margin, "sc_resolution": sc_resolution}
-        mapper = cls(excl_fpath, res_fpath, **kwargs)
+        mapper = cls(excl_fpath, sc_resolution=sc_resolution)
         mapper.initialize_dataset(dset)
         mapper.map_resource(
-            max_workers=max_workers,
             dset=dset,
+            res_fpath=res_fpath,
+            dist_margin=dist_margin,
+            max_workers=max_workers,
             batch_size=batch_size,
         )
