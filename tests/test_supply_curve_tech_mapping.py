@@ -57,12 +57,16 @@ def test_resource_tech_mapping(tmp_path, batch_size, sc_resolution):
     with ExclusionLayers(excl_fpath) as out:
         assert dset in out, "Techmap dataset was not written to H5"
         ind = out[dset]
+        attrs = out.h5.attrs[dset]
 
     msg = 'Tech mapping failed for index mappings vs. baseline results.'
     assert np.allclose(ind, ind_truth), msg
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
+
+    assert attrs["src_res_fpath"] == RES
+    assert np.isclose(attrs["distance_threshold"], 0.029, atol=0.001)
 
 
 def test_tech_mapping_cli(runner, clear_loggers, tmp_path):
