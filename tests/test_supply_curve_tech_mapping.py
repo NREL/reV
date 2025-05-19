@@ -37,11 +37,15 @@ TM_DSET = 'techmap_nsrdb_ri_truth'
 def test_resource_tech_mapping(tmp_path, batch_size, sc_resolution):
     """Run the supply curve technology mapping and compare to baseline file"""
 
+    dset = "tm"
+
     excl_fpath = EXCL
     excl_fpath = tmp_path.joinpath("excl.h5").as_posix()
     shutil.copy(EXCL, excl_fpath)
 
-    dset = "tm"
+    with ExclusionLayers(excl_fpath) as out:
+        assert dset not in out, "Techmap dataset already exists in H5"
+
     TechMapping.run(
         excl_fpath, RES, dset=dset, max_workers=2, sc_resolution=sc_resolution,
         batch_size=batch_size,
