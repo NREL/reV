@@ -16,10 +16,10 @@ from warnings import warn
 
 import h5py
 import numpy as np
+from scipy.spatial import cKDTree
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
-from rex.utilities.utilities import res_dist_threshold
-from scipy.spatial import cKDTree
+from rex.utilities.utilities import check_res_file, res_dist_threshold
 
 from reV.supply_curve.extent import SupplyCurveExtent, LATITUDE, LONGITUDE
 from reV.utilities.exceptions import FileInputError, FileInputWarning
@@ -92,7 +92,8 @@ class TechMapping:
             of the diagonal between closest resource points, with desired
             extra margin
         """
-        with Resource(res_fpath) as f:
+        __, hsds = check_res_file(res_fpath)
+        with Resource(res_fpath, hsds=hsds) as f:
             lat_lons = f.lat_lon
 
         # pylint: disable=not-callable
