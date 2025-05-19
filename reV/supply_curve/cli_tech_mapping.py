@@ -4,7 +4,7 @@ reV Tech Mapping CLI utility functions.
 """
 import logging
 
-from gaps.cli import as_click_command, CLICommandFromClass
+from gaps.cli import as_click_command, CLICommandFromFunction
 
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities import ModuleName
@@ -51,10 +51,10 @@ def _validate_dset(config):
         )
 
 
-tm_command = CLICommandFromClass(TechMapping, method="run",
-                                 name=str(ModuleName.TECH_MAPPING),
-                                 add_collect=False, split_keys=None,
-                                 config_preprocessor=_preprocessor)
+tm_command = CLICommandFromFunction(TechMapping, method="run",
+                                    name=str(ModuleName.TECH_MAPPING),
+                                    add_collect=False, split_keys=None,
+                                    config_preprocessor=_preprocessor)
 main = as_click_command(tm_command)
 
 
