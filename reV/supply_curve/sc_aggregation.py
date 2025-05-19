@@ -570,14 +570,19 @@ class SupplyCurveAggregation(BaseAggregation):
             ``False``, the mean LCOE will be computed from the data
             stored under the `lcoe_dset` instead. By default, ``True``.
         zones_dset : str, optional
-            Dataset name in `excl_fpath` containing the zones to be applied.
-            If specified, supply curve aggregation will be performed separately
-            for each discrete zone within each supply curve site. This option
-            can be used for uses cases such as subdividing sites by parcel,
-            such that each parcel within each site is output to a separate
-            sc_gid. The input data layer should consist of unique integer
-            values for each zone. Values of zero will be treated as excluded
-            areas.
+            Dataset name in `excl_fpath` containing the zones to be
+            applied. If specified, supply curve aggregation will be
+            performed separately for each discrete zone within each
+            supply curve site. This option can be used for uses cases
+            such as subdividing sites by parcel, such that each parcel
+            within each site is output to a separate ``sc_gid``. The
+            input data layer should consist of unique integer values for
+            each zone. Values of zero will be treated as excluded areas.
+            This functionality works best of you have on the order of
+            ~100,000 zones or less. If you have significantly more zones
+            than that, the supply curve aggregation computation may take
+            too long to run; consider performing an alternative
+            analysis. By default, ``None``.
 
         Examples
         --------
