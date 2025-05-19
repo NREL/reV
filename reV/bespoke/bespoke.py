@@ -2500,9 +2500,10 @@ class BespokeWindPlants(BaseAggregation):
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
             "h5_handler": MultiYearWindResource,
+            "hsds": all(check_res_file(fp)[1] for fp in res_fpath),
         }
 
-        with AggFileHandler(excl_fpath, res_fpath[0], **file_kwargs) as fh:
+        with AggFileHandler(excl_fpath, res_fpath, **file_kwargs) as fh:
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(

@@ -114,6 +114,7 @@ class AggFileHandler(AbstractAggFileHandler):
         area_filter_kernel="queen",
         min_area=None,
         h5_handler=None,
+        **h5_handler_kwargs,
     ):
         """
         Parameters
@@ -137,6 +138,8 @@ class AggFileHandler(AbstractAggFileHandler):
         h5_handler : rex.Resource | None
             Optional special handler similar to the rex.Resource handler which
             is default.
+        **h5_handler_kwargs
+            Optional keyword-value pairs to pass to the h5 handler.
         """
         super().__init__(
             excl_fpath,
@@ -145,11 +148,10 @@ class AggFileHandler(AbstractAggFileHandler):
             min_area=min_area,
         )
 
-        __, hsds = check_res_file(h5_fpath)
         if h5_handler is None:
-            self._h5 = Resource(h5_fpath, hsds=hsds)
+            self._h5 = Resource(h5_fpath, **h5_handler_kwargs)
         else:
-            self._h5 = h5_handler(h5_fpath, hsds=hsds)
+            self._h5 = h5_handler(h5_fpath, **h5_handler_kwargs)
 
     @property
     def h5(self):
@@ -748,6 +750,7 @@ class Aggregation(BaseAggregation):
             "excl_dict": excl_dict,
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
+            "hsds": check_res_file(h5_fpath)[1],
         }
         dsets = (
             *agg_dset,
