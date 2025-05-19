@@ -23,7 +23,7 @@ from rex.multi_year_resource import MultiYearWindResource
 from rex.utilities.bc_parse_table import parse_bc_table
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import create_dirs, log_mem
-from rex.utilities.utilities import parse_year
+from rex.utilities.utilities import parse_year, check_res_file
 
 from reV.config.output_request import SAMOutputRequest
 from reV.econ.utilities import lcoe_fcr
@@ -80,7 +80,8 @@ class BespokeMultiPlantData:
             Option to pre-load relative humidity data (useful for icing
             runs). If ``False``, relative humidities are not loaded.
         """
-        self.res_fpath = res_fpath
+        self.res_fpath = ([res_fpath]
+                          if isinstance(res_fpath, str) else res_fpath)
         self.sc_gid_to_hh = sc_gid_to_hh
         self.sc_gid_to_res_gid = sc_gid_to_res_gid
         self.hh_to_res_gids = {}
@@ -104,8 +105,9 @@ class BespokeMultiPlantData:
             hh: sorted(gids) for hh, gids in self.hh_to_res_gids.items()
         }
 
+        hsds = all(check_res_file(fp)[1] for fp in self.res_fpath)
         start_time = time.time()
-        with MultiYearWindResource(self.res_fpath) as res:
+        with MultiYearWindResource(self.res_fpath, hsds=hsds) as res:
             self._wind_dirs = {
                 hh: res[f"winddirection_{hh}m", :, gids]
                 for hh, gids in self.hh_to_res_gids.items()
@@ -488,7 +490,9 @@ class BespokeSinglePlant:
         self._pre_loaded_data = pre_loaded_data
         self._outputs = {}
 
-        res = res if not isinstance(res, str) else MultiYearWindResource(res)
+        if isinstance(res, str):
+            __, hsds = check_res_file(res)
+            res = MultiYearWindResource(res, hsds=hsds)
 
         self._sc_point = AggSCPoint(
             gid,
@@ -1972,7 +1976,8 @@ class BespokeWindPlants(BaseAggregation):
             pre_extract_inclusions=pre_extract_inclusions,
         )
 
-        self._res_fpath = res_fpath
+        self._res_fpath = ([res_fpath]
+                           if isinstance(res_fpath, str) else res_fpath)
         self._obj_fun = objective_function
         self._cap_cost_fun = capital_cost_function
         self._foc_fun = fixed_operating_cost_function
@@ -2123,8 +2128,9 @@ class BespokeWindPlants(BaseAggregation):
                     )
                 )
 
+        hsds = all(check_res_file(fp)[1] for fp in self._res_fpath)
         # just check that this file exists, cannot check res_fpath if *glob
-        with MultiYearWindResource(self._res_fpath) as f:
+        with MultiYearWindResource(self._res_fpath, hsds=hsds) as f:
             assert any(f.dsets)
 
     def _pre_load_data(self, pre_load_data):
@@ -2496,7 +2502,7 @@ class BespokeWindPlants(BaseAggregation):
             "h5_handler": MultiYearWindResource,
         }
 
-        with AggFileHandler(excl_fpath, res_fpath, **file_kwargs) as fh:
+        with AggFileHandler(excl_fpath, res_fpath[0], **file_kwargs) as fh:
             n_finished = 0
             for gid in gids:
                 gid_inclusions = cls._get_gid_inclusion_mask(
