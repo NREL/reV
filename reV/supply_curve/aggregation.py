@@ -9,6 +9,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from rex.resource import Resource
+from rex.utilities import check_res_file
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
 
@@ -144,10 +145,11 @@ class AggFileHandler(AbstractAggFileHandler):
             min_area=min_area,
         )
 
+        __, hsds = check_res_file(h5_fpath)
         if h5_handler is None:
-            self._h5 = Resource(h5_fpath)
+            self._h5 = Resource(h5_fpath, hsds=hsds)
         else:
-            self._h5 = h5_handler(h5_fpath)
+            self._h5 = h5_handler(h5_fpath, hsds=hsds)
 
     @property
     def h5(self):
@@ -504,8 +506,9 @@ class BaseAggregation(ABC):
             generation run.
         """
 
+        __, hsds = check_res_file(gen_fpath)
         if gen_fpath.endswith(".h5"):
-            with Resource(gen_fpath) as f:
+            with Resource(gen_fpath, hsds=hsds) as f:
                 gen_index = f.meta
         elif gen_fpath.endswith(".csv"):
             gen_index = pd.read_csv(gen_fpath)
@@ -631,7 +634,8 @@ class Aggregation(BaseAggregation):
                 )
             )
 
-        if not os.path.exists(h5_fpath):
+        __, hsds = check_res_file(h5_fpath)
+        if not hsds and not os.path.exists(h5_fpath):
             raise FileNotFoundError(
                 "Could not find required h5 file: " "{}".format(h5_fpath)
             )
@@ -645,7 +649,7 @@ class Aggregation(BaseAggregation):
                     )
                 )
 
-        with Resource(h5_fpath) as f:
+        with Resource(h5_fpath, hsds=hsds) as f:
             for dset in self._agg_dsets:
                 if dset not in f:
                     raise FileInputError(
@@ -1011,7 +1015,9 @@ class Aggregation(BaseAggregation):
         chunks = {}
         dtypes = {}
         time_index = None
-        with Resource(h5_fpath) as f:
+
+        __, hsds = check_res_file(h5_fpath)
+        with Resource(h5_fpath, hsds=hsds) as f:
             for dset, data in agg_out.items():
                 dsets.append(dset)
                 shape = data.shape

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from rex.multi_time_resource import MultiTimeResource
 from rex.resource import BaseResource, Resource
-from rex.utilities.utilities import jsonify_dict
+from rex.utilities.utilities import jsonify_dict, check_res_file
 
 from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.econ.utilities import lcoe_fcr
@@ -1169,9 +1169,11 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             Resource h5 handler object.
         """
         if self._h5 is None and "*" in self._h5_fpath:
-            self._h5 = MultiTimeResource(self._h5_fpath)
+            __, hsds = check_res_file(self._h5_fpath)
+            self._h5 = MultiTimeResource(self._h5_fpath, hsds=hsds)
         elif self._h5 is None:
-            self._h5 = Resource(self._h5_fpath)
+            __, hsds = check_res_file(self._h5_fpath)
+            self._h5 = Resource(self._h5_fpath, hsds=hsds)
 
         return self._h5
 
@@ -1643,7 +1645,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             reV generation Resource object
         """
         if self._gen is None:
-            self._gen = Resource(self._gen_fpath, str_decode=False)
+            __, hsds = check_res_file(self._gen_fpath)
+            self._gen = Resource(self._gen_fpath, str_decode=False, hsds=hsds)
 
         return self._gen
 
