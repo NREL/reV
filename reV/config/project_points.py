@@ -1165,12 +1165,14 @@ class ProjectPoints:
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
             res_cls = MultiFileResourceX
+            res_kwargs = {}
         else:
             res_cls = ResourceX
+            res_kwargs = {"hsds": hsds}
 
         logger.info("Extracting ProjectPoints for desired regions")
         points = []
-        with res_cls(res_file, hsds=hsds) as f:
+        with res_cls(res_file, **res_kwargs) as f:
             meta = f.meta
             for region, region_col in regions.items():
                 logger.debug("- {}: {}".format(region_col, region))
@@ -1182,7 +1184,7 @@ class ProjectPoints:
                     if duplicates:
                         msg = (
                             "reV Cannot currently handle duplicate "
-                            "Resource gids! The given regions containg the "
+                            "Resource gids! The given regions containing the "
                             "same gids:\n{}".format(duplicates)
                         )
                         logger.error(msg)
