@@ -51,7 +51,7 @@ def _validate_dset(config):
         )
 
 
-tm_command = CLICommandFromFunction(TechMapping, method="run",
+tm_command = CLICommandFromFunction(TechMapping.run,
                                     name=str(ModuleName.TECH_MAPPING),
                                     add_collect=False, split_keys=None,
                                     config_preprocessor=_preprocessor)
