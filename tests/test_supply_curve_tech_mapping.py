@@ -37,11 +37,15 @@ TM_DSET = 'techmap_nsrdb_ri_truth'
 def test_resource_tech_mapping(tmp_path, batch_size, sc_resolution):
     """Run the supply curve technology mapping and compare to baseline file"""
 
+    dset = "tm"
+
     excl_fpath = EXCL
     excl_fpath = tmp_path.joinpath("excl.h5").as_posix()
     shutil.copy(EXCL, excl_fpath)
 
-    dset = "tm"
+    with ExclusionLayers(excl_fpath) as out:
+        assert dset not in out, "Techmap dataset already exists in H5"
+
     TechMapping.run(
         excl_fpath, RES, dset=dset, max_workers=2, sc_resolution=sc_resolution,
         batch_size=batch_size,
@@ -53,12 +57,16 @@ def test_resource_tech_mapping(tmp_path, batch_size, sc_resolution):
     with ExclusionLayers(excl_fpath) as out:
         assert dset in out, "Techmap dataset was not written to H5"
         ind = out[dset]
+        attrs = out.h5.attrs[dset]
 
     msg = 'Tech mapping failed for index mappings vs. baseline results.'
     assert np.allclose(ind, ind_truth), msg
 
     msg = 'Tech mapping didnt find all 100 generation points!'
     assert len(set(ind.flatten())) == 101, msg
+
+    assert attrs["src_res_fpath"] == RES
+    assert np.isclose(attrs["distance_threshold"], 0.029, atol=0.001)
 
 
 def test_tech_mapping_cli(runner, clear_loggers, tmp_path):

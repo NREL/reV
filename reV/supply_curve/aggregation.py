@@ -9,6 +9,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from rex.resource import Resource
+from rex.utilities import check_res_file
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.loggers import log_mem
 
@@ -113,6 +114,7 @@ class AggFileHandler(AbstractAggFileHandler):
         area_filter_kernel="queen",
         min_area=None,
         h5_handler=None,
+        **h5_handler_kwargs,
     ):
         """
         Parameters
@@ -136,6 +138,8 @@ class AggFileHandler(AbstractAggFileHandler):
         h5_handler : rex.Resource | None
             Optional special handler similar to the rex.Resource handler which
             is default.
+        **h5_handler_kwargs
+            Optional keyword-value pairs to pass to the h5 handler.
         """
         super().__init__(
             excl_fpath,
@@ -145,9 +149,9 @@ class AggFileHandler(AbstractAggFileHandler):
         )
 
         if h5_handler is None:
-            self._h5 = Resource(h5_fpath)
+            self._h5 = Resource(h5_fpath, **h5_handler_kwargs)
         else:
-            self._h5 = h5_handler(h5_fpath)
+            self._h5 = h5_handler(h5_fpath, **h5_handler_kwargs)
 
     @property
     def h5(self):
@@ -504,8 +508,9 @@ class BaseAggregation(ABC):
             generation run.
         """
 
+        __, hsds = check_res_file(gen_fpath)
         if gen_fpath.endswith(".h5"):
-            with Resource(gen_fpath) as f:
+            with Resource(gen_fpath, hsds=hsds) as f:
                 gen_index = f.meta
         elif gen_fpath.endswith(".csv"):
             gen_index = pd.read_csv(gen_fpath)
@@ -631,7 +636,8 @@ class Aggregation(BaseAggregation):
                 )
             )
 
-        if not os.path.exists(h5_fpath):
+        __, hsds = check_res_file(h5_fpath)
+        if not hsds and not os.path.exists(h5_fpath):
             raise FileNotFoundError(
                 "Could not find required h5 file: " "{}".format(h5_fpath)
             )
@@ -645,7 +651,7 @@ class Aggregation(BaseAggregation):
                     )
                 )
 
-        with Resource(h5_fpath) as f:
+        with Resource(h5_fpath, hsds=hsds) as f:
             for dset in self._agg_dsets:
                 if dset not in f:
                     raise FileInputError(
@@ -744,6 +750,7 @@ class Aggregation(BaseAggregation):
             "excl_dict": excl_dict,
             "area_filter_kernel": area_filter_kernel,
             "min_area": min_area,
+            "hsds": check_res_file(h5_fpath)[1],
         }
         dsets = (
             *agg_dset,
@@ -1011,7 +1018,9 @@ class Aggregation(BaseAggregation):
         chunks = {}
         dtypes = {}
         time_index = None
-        with Resource(h5_fpath) as f:
+
+        __, hsds = check_res_file(h5_fpath)
+        with Resource(h5_fpath, hsds=hsds) as f:
             for dset, data in agg_out.items():
                 dsets.append(dset)
                 shape = data.shape
