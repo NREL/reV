@@ -667,7 +667,7 @@ class BaseGen(ABC):
         )
 
         if isinstance(points, PointsControl):
-            # received a pre-intialized instance of pointscontrol
+            # received a pre-initialized instance of pointscontrol
             pc = points
         else:
             pc = cls._pp_to_pc(

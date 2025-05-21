@@ -462,7 +462,7 @@ class MetaHybridizer:
 
     @staticmethod
     def __validate_col_prefix(col, prefixes, input_name):
-        """Validate the the col starts with the correct prefix."""
+        """Validate the col starts with the correct prefix."""
 
         missing = [not col.startswith(p) for p in prefixes]
         if all(missing):

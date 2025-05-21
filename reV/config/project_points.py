@@ -1009,7 +1009,7 @@ class ProjectPoints:
         elif isinstance(lat_lons, (list, tuple)):
             lat_lons = np.array(lat_lons)
         elif isinstance(lat_lons, (int, float)):
-            msg += " Recieved a single coordinate value!"
+            msg += " Received a single coordinate value!"
             logger.error(msg)
             raise ValueError(msg)
 

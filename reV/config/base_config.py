@@ -214,7 +214,7 @@ class BaseConfig(dict):
         Parameters
         ----------
         flist : list
-            List of files (with paths) to check existance of.
+            List of files (with paths) to check existence of.
         """
         for f in flist:
             # ignore files that are to be specified using pipeline utils

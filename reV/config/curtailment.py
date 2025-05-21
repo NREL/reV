@@ -31,7 +31,7 @@ class Curtailment(BaseConfig):
             # received json, extract to dictionary
             curtailment_parameters = load_config(curtailment_parameters)
 
-        # intialize config object with curtailment parameters
+        # initialize config object with curtailment parameters
         super().__init__(curtailment_parameters)
 
     @property

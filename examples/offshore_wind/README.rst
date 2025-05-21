@@ -32,7 +32,7 @@ Offshore points are treated identically to onshore points in the supply curve
 the 2km WTK resolution) until the reV aggregation step, where exclusions are
 applied and the data is aggregated up to the supply curve grid. Supply curve
 tranmission cost tables must include transmission costs for offshore supply
-curve points. There is no seperate or special handling of offshore supply curve
+curve points. There is no separate or special handling of offshore supply curve
 transmission connection.
 
 Plots of the Example Offshore Output

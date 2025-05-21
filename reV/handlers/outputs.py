@@ -109,7 +109,7 @@ class Outputs(rexOutputs):
     int32
 
     Note that the reV Outputs handler is specifically designed to read and
-    write spatiotemporal data. It is therefore important to intialize the meta
+    write spatiotemporal data. It is therefore important to initialize the meta
     data and time index objects even if your data is only spatial or only
     temporal. Furthermore, the Outputs handler will always assume that 1D
     datasets represent scalar data (non-timeseries) that corresponds to the

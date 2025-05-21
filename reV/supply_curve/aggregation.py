@@ -210,7 +210,7 @@ class BaseAggregation(ABC):
             Minimum required contiguous area filter in sq-km,
             by default None
         resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
+            SC resolution, must be input in combination with gid. Preferred
             option is to use the row/col slices to define the SC point instead,
             by default None
         excl_area : float, optional
@@ -588,7 +588,7 @@ class Aggregation(BaseAggregation):
             Minimum required contiguous area filter in sq-km,
             by default None
         resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
+            SC resolution, must be input in combination with gid. Preferred
             option is to use the row/col slices to define the SC point instead,
             by default None
         excl_area : float, optional
@@ -713,7 +713,7 @@ class Aggregation(BaseAggregation):
             Minimum required contiguous area filter in sq-km,
             by default None
         resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
+            SC resolution, must be input in combination with gid. Preferred
             option is to use the row/col slices to define the SC point instead,
             by default 0.0081
         excl_area : float, optional
@@ -1098,7 +1098,7 @@ class Aggregation(BaseAggregation):
             Minimum required contiguous area filter in sq-km,
             by default None
         resolution : int, optional
-            SC resolution, must be input in combination with gid. Prefered
+            SC resolution, must be input in combination with gid. Preferred
             option is to use the row/col slices to define the SC point instead,
             by default None
         excl_area : float, optional

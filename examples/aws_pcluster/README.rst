@@ -94,7 +94,7 @@ Note that these instructions were originally developed and tested in February 20
     #. Run the start script: ``sh ~/start_hsds.sh``
     #. Run ``docker ps`` and verify that there are 4 or more HSDS services active (hsds_rangeget_1, hsds_sn_1, hsds_head_1, and an hsds_dn_* node for every available core)
     #. Run ``hsinfo`` and verify that this doesn't throw an error
-    #. Try running ``pip install h5pyd`` and then run the the h5pyd test (either the .py in this example or the h5pyd test snippet below).
+    #. Try running ``pip install h5pyd`` and then run the h5pyd test (either the .py in this example or the h5pyd test snippet below).
 
 #. Make sure this key-value pair is set in the ``execution_control`` block of the ``config_gen.json`` file: ``"sh_script": "sh ~/start_hsds.sh"``
 #. Optional, copy the config override file: ``cp ~/hsds/admin/config/config.yml ~/hsds/admin/config/override.yml``, update any config lines in the ``override.yml`` file that you wish to change, and remove all other lines (see notes on ``max_task_count`` and ``dn_ram``).

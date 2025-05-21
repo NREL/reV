@@ -34,7 +34,7 @@ class PackTurbines():
 
     def pack_turbines_poly(self):
         """Fast packing algorithm that maximizes plant capacity in a
-        provided wind plant area. Sets the the optimal locations to
+        provided wind plant area. Sets the optimal locations to
         self.turbine_x and self.turbine_y
         """
 
