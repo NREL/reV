@@ -9,7 +9,7 @@ from gaps.cli import as_click_command, CLICommandFromClass
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities import ModuleName
 from reV.utilities.exceptions import ConfigError
-from reV.supply_curve.cli_sc_aggregation import _format_res_fpath
+from reV.supply_curve.cli_sc_aggregation import _validate_res_fpath
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def _preprocessor(config):
         Updated config file.
     """
     _validate_excl_fpath(config)
-    config = _format_res_fpath(config)
+    config = _validate_res_fpath(config)
     _validate_dset(config)
 
     return config
