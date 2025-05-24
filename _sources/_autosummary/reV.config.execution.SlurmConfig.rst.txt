@@ -1,0 +1,62 @@
+reV.config.execution.SlurmConfig
+================================
+
+.. currentmodule:: reV.config.execution
+
+.. autoclass:: SlurmConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SlurmConfig.check_files
+      ~SlurmConfig.check_overwrite_keys
+      ~SlurmConfig.clear
+      ~SlurmConfig.copy
+      ~SlurmConfig.fromkeys
+      ~SlurmConfig.get
+      ~SlurmConfig.items
+      ~SlurmConfig.keys
+      ~SlurmConfig.pop
+      ~SlurmConfig.popitem
+      ~SlurmConfig.resolve_path
+      ~SlurmConfig.set_self_dict
+      ~SlurmConfig.setdefault
+      ~SlurmConfig.str_replace_and_resolve
+      ~SlurmConfig.update
+      ~SlurmConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SlurmConfig.REQUIREMENTS
+      ~SlurmConfig.STR_REP
+      ~SlurmConfig.allocation
+      ~SlurmConfig.conda_env
+      ~SlurmConfig.config_dir
+      ~SlurmConfig.config_keys
+      ~SlurmConfig.feature
+      ~SlurmConfig.log_level
+      ~SlurmConfig.max_workers
+      ~SlurmConfig.memory
+      ~SlurmConfig.memory_utilization_limit
+      ~SlurmConfig.module
+      ~SlurmConfig.name
+      ~SlurmConfig.nodes
+      ~SlurmConfig.option
+      ~SlurmConfig.sh_script
+      ~SlurmConfig.sites_per_worker
+      ~SlurmConfig.walltime
+   
+   

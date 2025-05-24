@@ -1,0 +1,78 @@
+reV.handlers.outputs.Outputs
+============================
+
+.. currentmodule:: reV.handlers.outputs
+
+.. autoclass:: Outputs
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Outputs.add_dataset
+      ~Outputs.close
+      ~Outputs.df_str_decode
+      ~Outputs.get_SAM_df
+      ~Outputs.get_attrs
+      ~Outputs.get_config
+      ~Outputs.get_dset_properties
+      ~Outputs.get_meta_arr
+      ~Outputs.get_scale_factor
+      ~Outputs.get_units
+      ~Outputs.init_h5
+      ~Outputs.open_dataset
+      ~Outputs.open_file
+      ~Outputs.preload_SAM
+      ~Outputs.set_configs
+      ~Outputs.set_version_attr
+      ~Outputs.update_dset
+      ~Outputs.write_dataset
+      ~Outputs.write_means
+      ~Outputs.write_profiles
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Outputs.ADD_ATTR
+      ~Outputs.SAM_configs
+      ~Outputs.SCALE_ATTR
+      ~Outputs.UNIT_ATTR
+      ~Outputs.adders
+      ~Outputs.attrs
+      ~Outputs.chunks
+      ~Outputs.coordinates
+      ~Outputs.data_version
+      ~Outputs.datasets
+      ~Outputs.dsets
+      ~Outputs.dtypes
+      ~Outputs.full_version_record
+      ~Outputs.global_attrs
+      ~Outputs.groups
+      ~Outputs.h5
+      ~Outputs.lat_lon
+      ~Outputs.meta
+      ~Outputs.package
+      ~Outputs.res_dsets
+      ~Outputs.resource_datasets
+      ~Outputs.run_attrs
+      ~Outputs.scale_factors
+      ~Outputs.shape
+      ~Outputs.shapes
+      ~Outputs.source
+      ~Outputs.time_index
+      ~Outputs.units
+      ~Outputs.version
+      ~Outputs.writable
+   
+   

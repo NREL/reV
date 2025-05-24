@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ProjectPointsValueError
+================================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ProjectPointsValueError

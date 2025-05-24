@@ -1,0 +1,60 @@
+reV.generation.generation.Gen
+=============================
+
+.. currentmodule:: reV.generation.generation
+
+.. autoclass:: Gen
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Gen.add_site_data_to_pp
+      ~Gen.flush
+      ~Gen.get_pc
+      ~Gen.get_sites_per_worker
+      ~Gen.handle_leap_ti
+      ~Gen.handle_lifetime_index
+      ~Gen.run
+      ~Gen.site_index
+      ~Gen.unpack_futures
+      ~Gen.unpack_output
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Gen.ECON_ATTRS
+      ~Gen.LCOE_ARGS
+      ~Gen.OPTIONS
+      ~Gen.OUT_ATTRS
+      ~Gen.lr_res_file
+      ~Gen.meta
+      ~Gen.out
+      ~Gen.out_chunk
+      ~Gen.output_request
+      ~Gen.points_control
+      ~Gen.project_points
+      ~Gen.res_file
+      ~Gen.run_attrs
+      ~Gen.sam_configs
+      ~Gen.sam_metas
+      ~Gen.sam_module
+      ~Gen.site_data
+      ~Gen.site_limit
+      ~Gen.site_mem
+      ~Gen.tech
+      ~Gen.time_index
+      ~Gen.year
+   
+   

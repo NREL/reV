@@ -1,0 +1,30 @@
+reV.qa\_qc.cli\_qa\_qc
+======================
+
+.. automodule:: reV.qa_qc.cli_qa_qc
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      cli_qa_qc
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
