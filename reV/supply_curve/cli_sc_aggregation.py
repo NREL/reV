@@ -6,6 +6,7 @@ import os
 import logging
 
 from rex.multi_file_resource import MultiFileResource
+from rex.utilities.utilities import check_res_file
 from gaps.cli import as_click_command, CLICommandFromClass
 
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
@@ -32,7 +33,7 @@ def _preprocessor(config, out_dir):
     dict
         Updated config file.
     """
-    config = _format_res_fpath(config)
+    config = _validate_res_fpath(config)
     _validate_tm(config)
 
     key_to_modules = {"gen_fpath": [ModuleName.MULTI_YEAR,
@@ -47,30 +48,35 @@ def _preprocessor(config, out_dir):
     return config
 
 
-def _format_res_fpath(config):
-    """Format res_fpath with year, if need be. """
+def _validate_res_fpath(config):
+    """Format res_fpath with year (if needed) and check for file existence"""
     res_fpath = config.setdefault("res_fpath", None)
-    if isinstance(res_fpath, str):
-        if '{}' in res_fpath:
-            for year in range(1950, 2100):
-                if os.path.exists(res_fpath.format(year)):
-                    break
-            else:
-                msg = ("Could not find any files that match the pattern"
-                       "{!r}".format(res_fpath.format("<year>")))
-                logger.error(msg)
-                raise FileNotFoundError(msg)
+    if not isinstance(res_fpath, str):
+        return config
 
-            res_fpath = res_fpath.format(year)
-
-        elif not os.path.exists(res_fpath):
-            msg = "Could not find resource file: {!r}".format(res_fpath)
-            logger.error(msg)
-            raise FileNotFoundError(msg)
-
-        config["res_fpath"] = res_fpath
+    if '{}' in res_fpath:
+        config["res_fpath"] = _get_filepath_with_year(res_fpath)
+    else:
+        check_res_file(res_fpath)
 
     return config
+
+
+def _get_filepath_with_year(res_fpath):
+    """Find first file that exists on disk with year filled in"""
+
+    for year in range(1950, 2100):
+        fp = res_fpath.format(year)
+        try:
+            check_res_file(fp)
+        except FileNotFoundError:
+            continue
+        return fp
+
+    msg = ("Could not find any files that match the pattern"
+           "{!r}".format(res_fpath.format("<year>")))
+    logger.error(msg)
+    raise FileNotFoundError(msg)
 
 
 def _validate_tm(config):
