@@ -44,7 +44,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "pytest>=8.3.3,<9",
+  "pytest>=8.4.0,<9",
 ]
 dev = [
   "flake8",
