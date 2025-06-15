@@ -1,0 +1,58 @@
+reV.bespoke.bespoke.BespokeSinglePlant
+======================================
+
+.. currentmodule:: reV.bespoke.bespoke
+
+.. autoclass:: BespokeSinglePlant
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BespokeSinglePlant.agg_data_layers
+      ~BespokeSinglePlant.bias_correct_ws
+      ~BespokeSinglePlant.check_dependencies
+      ~BespokeSinglePlant.close
+      ~BespokeSinglePlant.get_lcoe_kwargs
+      ~BespokeSinglePlant.get_weighted_res_dir
+      ~BespokeSinglePlant.get_weighted_res_ts
+      ~BespokeSinglePlant.initialize_wind_plant_ts
+      ~BespokeSinglePlant.recalc_lcoe
+      ~BespokeSinglePlant.run
+      ~BespokeSinglePlant.run_plant_optimization
+      ~BespokeSinglePlant.run_wind_plant_ts
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BespokeSinglePlant.DEPENDENCIES
+      ~BespokeSinglePlant.OUT_ATTRS
+      ~BespokeSinglePlant.annual_time_indexes
+      ~BespokeSinglePlant.gid
+      ~BespokeSinglePlant.hub_height
+      ~BespokeSinglePlant.include_mask
+      ~BespokeSinglePlant.meta
+      ~BespokeSinglePlant.original_sam_sys_inputs
+      ~BespokeSinglePlant.outputs
+      ~BespokeSinglePlant.pixel_side_length
+      ~BespokeSinglePlant.plant_optimizer
+      ~BespokeSinglePlant.res_df
+      ~BespokeSinglePlant.sam_sys_inputs
+      ~BespokeSinglePlant.sc_point
+      ~BespokeSinglePlant.wind_dist
+      ~BespokeSinglePlant.wind_plant_pd
+      ~BespokeSinglePlant.wind_plant_ts
+      ~BespokeSinglePlant.years
+   
+   

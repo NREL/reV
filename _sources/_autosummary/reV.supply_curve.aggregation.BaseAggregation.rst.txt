@@ -1,0 +1,30 @@
+reV.supply\_curve.aggregation.BaseAggregation
+=============================================
+
+.. currentmodule:: reV.supply_curve.aggregation
+
+.. autoclass:: BaseAggregation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BaseAggregation.gids
+      ~BaseAggregation.shape
+   
+   

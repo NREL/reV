@@ -1,0 +1,32 @@
+reV.SAM.version\_checker.PySamVersionChecker
+============================================
+
+.. currentmodule:: reV.SAM.version_checker
+
+.. autoclass:: PySamVersionChecker
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PySamVersionChecker.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PySamVersionChecker.V2_CORRECTION_KEYS
+      ~PySamVersionChecker.WIND
+      ~PySamVersionChecker.pysam_version
+   
+   
