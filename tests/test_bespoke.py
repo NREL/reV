@@ -311,6 +311,67 @@ def test_correct_turb_location(gid=33):
         bsp.close()
 
 
+def test_correct_turb_chb(gid=33):
+    """Test turbine convex hull buffered correctly"""
+    output_request = ("system_capacity", "cf_mean", "cf_profile")
+
+    objective_function = (
+        "(0.0975 * capital_cost + fixed_operating_cost) "
+        "/ (aep + 1E-6) + variable_operating_cost"
+    )
+
+    with tempfile.TemporaryDirectory() as td:
+        res_fp = os.path.join(td, "ri_100_wtk_{}.h5")
+        excl_fp = os.path.join(td, "ri_exclusions.h5")
+        shutil.copy(EXCL, excl_fp)
+        shutil.copy(RES.format(2012), res_fp.format(2012))
+        shutil.copy(RES.format(2013), res_fp.format(2013))
+        res_fp = res_fp.format("*")
+
+        TechMapping.run(
+            excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
+            sc_resolution=2560
+        )
+        bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
+                                 SAM_SYS_INPUTS,
+                                 objective_function, CAP_COST_FUN,
+                                 FOC_FUN, VOC_FUN, BOS_FUN,
+                                 excl_dict=EXCL_DICT,
+                                 output_request=output_request,
+                                 )
+
+        include_mask = np.zeros_like(bsp.include_mask)
+        include_mask[1, -2] = 1
+        pt = PlaceTurbines(bsp.wind_plant_pd, bsp.objective_function,
+                           bsp.capital_cost_function,
+                           bsp.fixed_operating_cost_function,
+                           bsp.variable_operating_cost_function,
+                           bsp.balance_of_system_cost_function,
+                           include_mask, pixel_side_length=90,
+                           min_spacing=45)
+
+        pt.define_exclusions()
+        pt.initialize_packing()
+        pt.optimized_design_variables = pt.x_locations >= 0
+
+        pt_buffered = PlaceTurbines(bsp.wind_plant_pd, bsp.objective_function,
+                                    bsp.capital_cost_function,
+                                    bsp.fixed_operating_cost_function,
+                                    bsp.variable_operating_cost_function,
+                                    bsp.balance_of_system_cost_function,
+                                    include_mask, pixel_side_length=90,
+                                    min_spacing=45, convex_hull_buffer=100)
+
+        pt_buffered.define_exclusions()
+        pt_buffered.initialize_packing()
+        pt_buffered.optimized_design_variables = pt.x_locations >= 0
+
+        assert pt.convex_hull_area > 0
+        assert pt_buffered.convex_hull_area > pt.convex_hull_area
+
+        bsp.close()
+
+
 def test_packing_algorithm(gid=33):
     """Test turbine placement with zero available area."""
     output_request = ()
