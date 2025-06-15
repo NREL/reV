@@ -829,8 +829,12 @@ class BespokeSinglePlant:
         # `wind_plant_pd` PC may have PC losses applied, so keep the
         # original PC as to not double count losses here
         layout_config.pop("wind_turbine_powercurve_powerout", None)
-        config.update(layout_config)
 
+        # Don't bring over wind resource choice from `wind_plant_pd`
+        layout_config.pop("wind_resource_model_choice", None)
+        layout_config.pop("wind_resource_distribution", None)
+
+        config.update(layout_config)
         return config
 
     @property
