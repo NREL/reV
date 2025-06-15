@@ -537,7 +537,8 @@ class BespokeSinglePlant:
         (ws_mean, *_mean) if requested.
         """
 
-        required = ("cf_mean", "annual_energy")
+        required = ("cf_mean", "annual_energy",
+                    "annual_wake_loss_internal_percent")
         for req in required:
             if req not in self._out_req:
                 self._out_req.append(req)
@@ -1269,6 +1270,7 @@ class BespokeSinglePlant:
         self._meta[SupplyCurveField.MEAN_CF_AC] = np.nan
         self._meta[SupplyCurveField.MEAN_LCOE] = np.nan
         self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] = np.nan
+        self._meta[SupplyCurveField.WAKE_LOSSES] = np.nan
         # copy dataset outputs to meta data for supply curve table summary
         if "cf_mean-means" in self.outputs:
             self._meta.loc[:, SupplyCurveField.MEAN_CF_AC] = self.outputs[
@@ -1282,6 +1284,10 @@ class BespokeSinglePlant:
         if "annual_energy-means" in self.outputs:
             self._meta[SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH] = (
                 self.outputs["annual_energy-means"] / 1000
+            )
+        if "annual_wake_loss_internal_percent-means" in self.outputs:
+            self._meta[SupplyCurveField.WAKE_LOSSES] = (
+                self.outputs["annual_wake_loss_internal_percent-means"]
             )
 
         logger.debug("Timeseries analysis complete!")
@@ -1318,10 +1324,14 @@ class BespokeSinglePlant:
         system_capacity_kw = self.plant_optimizer.capacity
         self._outputs["system_capacity"] = system_capacity_kw
 
-        txc = [int(np.round(c)) for c in self.plant_optimizer.turbine_x]
-        tyc = [int(np.round(c)) for c in self.plant_optimizer.turbine_y]
-        pxc = [int(np.round(c)) for c in self.plant_optimizer.x_locations]
-        pyc = [int(np.round(c)) for c in self.plant_optimizer.y_locations]
+        txc = [float(np.round(c, decimals=2))
+               for c in self.plant_optimizer.turbine_x]
+        tyc = [float(np.round(c, decimals=2))
+               for c in self.plant_optimizer.turbine_y]
+        pxc = [float(np.round(c, decimals=2))
+               for c in self.plant_optimizer.x_locations]
+        pyc = [float(np.round(c, decimals=2))
+               for c in self.plant_optimizer.y_locations]
 
         txc = json.dumps(txc)
         tyc = json.dumps(tyc)
