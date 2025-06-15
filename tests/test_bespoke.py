@@ -366,6 +366,7 @@ def test_correct_turb_chb(gid=33):
         pt_buffered.initialize_packing()
         pt_buffered.optimized_design_variables = pt.x_locations >= 0
 
+        assert pt.convex_hull_area > 0
         assert pt_buffered.convex_hull_area > pt.convex_hull_area
 
         bsp.close()
