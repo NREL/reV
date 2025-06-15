@@ -10,7 +10,6 @@ import pandas as pd
 from rex.utilities.utilities import get_chunk_ranges
 
 from reV.handlers.exclusions import LATITUDE, LONGITUDE, ExclusionLayers
-from reV.utilities import SupplyCurveField
 from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
@@ -297,14 +296,19 @@ class SupplyCurveExtent:
             lats = []
             lons = []
 
+            max_center = self.resolution // 2 + 1
+            min_center = max_center - 2 + self.resolution % 2
+
             sc_cols, sc_rows = np.meshgrid(
                 np.arange(self.n_cols), np.arange(self.n_rows)
             )
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
-                r = self.excl_row_slices[r]
-                c = self.excl_col_slices[c]
-                lats.append(self.exclusions[LATITUDE, r, c].mean())
-                lons.append(self.exclusions[LONGITUDE, r, c].mean())
+                r = slice(r * self.resolution + min_center,
+                          r * self.resolution + max_center)
+                c = slice(c * self.resolution + min_center,
+                          c * self.resolution + max_center)
+                lats.append(np.median(self.exclusions[LATITUDE, r, c]))
+                lons.append(np.median(self.exclusions[LONGITUDE, r, c]))
 
             self._latitude = np.array(lats, dtype="float32")
             self._longitude = np.array(lons, dtype="float32")
@@ -324,14 +328,19 @@ class SupplyCurveExtent:
             lats = []
             lons = []
 
+            max_center = self.resolution // 2 + 1
+            min_center = max_center - 2 + self.resolution % 2
+
             sc_cols, sc_rows = np.meshgrid(
                 np.arange(self.n_cols), np.arange(self.n_rows)
             )
             for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
-                r = self.excl_row_slices[r]
-                c = self.excl_col_slices[c]
-                lats.append(self.exclusions[LATITUDE, r, c].mean())
-                lons.append(self.exclusions[LONGITUDE, r, c].mean())
+                r = slice(r * self.resolution + min_center,
+                          r * self.resolution + max_center)
+                c = slice(c * self.resolution + min_center,
+                          c * self.resolution + max_center)
+                lats.append(np.median(self.exclusions[LATITUDE, r, c]))
+                lons.append(np.median(self.exclusions[LONGITUDE, r, c]))
 
             self._latitude = np.array(lats, dtype="float32")
             self._longitude = np.array(lons, dtype="float32")

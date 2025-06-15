@@ -31,10 +31,10 @@ classifiers=[
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "NREL-gaps>=0.8.0,<0.9",
-  "NREL-NRWAL>=0.0.11,<0.1",
+  "NREL-gaps>=0.8.0",
+  "NREL-NRWAL>=0.0.11",
   "NREL-PySAM~=7.0.0",
-  "NREL-rex>=0.3.5,<0.4",
+  "NREL-rex>=0.4.0",
   "numpy>=2.0.2,<3",
   "packaging>=24.2,<25",
   "plotly>=6.0.1,<7",
@@ -44,7 +44,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-  "pytest>=8.3.3,<9",
+  "pytest>=8.4.0,<9",
 ]
 dev = [
   "flake8",

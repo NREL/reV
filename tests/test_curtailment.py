@@ -46,6 +46,79 @@ def get_curtailment(year, curt_fn="curtailment.json"):
     return out, non_curtailed_res, pp
 
 
+def _compute_res_curtailment_df(year, site, curt_fn):
+    """Compute curtailment df for easy testing"""
+    out, non_curtailed_res, __ = get_curtailment(year, curt_fn=curt_fn)
+    ti = non_curtailed_res.time_index
+
+    sza = SolarPosition(
+        non_curtailed_res.time_index,
+        non_curtailed_res.meta[
+            [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
+        ].values,
+    ).zenith
+
+    # optional output df to help check results
+    i = site
+    df = pd.DataFrame(
+        {
+            "i": range(len(sza)),
+            "curtailed_wind": out._res_arrays["windspeed"][:, i],
+            "original_wind": non_curtailed_res._res_arrays["windspeed"][:, i],
+            "temperature": out._res_arrays["temperature"][:, i],
+        },
+        index=ti,
+    )
+
+    if str(year) == "2012":
+        drop_day = (ti.month == 12) & (ti.day == 31)
+        df = df.drop(df.index[drop_day])
+
+    return df
+
+
+def _compute_res_curtailment_check(year, curt_fn, drop_leap=True):
+    """Compute wind resource curtailment check array"""
+    out, non_curtailed_res, pp = get_curtailment(year, curt_fn=curt_fn)
+    curtailment_config = list(pp.curtailment.values())[0]
+    ti = non_curtailed_res.time_index
+
+    sza = SolarPosition(
+        non_curtailed_res.time_index,
+        non_curtailed_res.meta[
+            [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
+        ].values,
+    ).zenith
+
+    # was it in a curtailment month?
+    check1 = np.isin(non_curtailed_res.time_index.month,
+                     curtailment_config.months)
+    check1 = np.tile(
+        np.expand_dims(check1, axis=1), non_curtailed_res.shape[1]
+    )
+
+    # was the non-curtailed wind speed threshold met?
+    check2 = (
+        non_curtailed_res._res_arrays["windspeed"]
+        < curtailment_config.wind_speed
+    )
+
+    # was it nighttime?
+    check3 = sza > curtailment_config.dawn_dusk
+
+    # was the temperature threshold met?
+    check4 = out._res_arrays["temperature"] > curtailment_config.temperature
+
+    # thresholds for curtailment
+    check_curtailment = check1 & check2 & check3 & check4
+
+    if str(year) == "2012" and drop_leap:
+        drop_day = (ti.month == 12) & (ti.day == 31)
+        check_curtailment = check_curtailment[~drop_day, :]
+
+    return check_curtailment, out
+
+
 @pytest.mark.parametrize(
     ("year", "site"), [("2012", 0), ("2012", 10), ("2013", 0), ("2013", 10)]
 )
@@ -77,15 +150,14 @@ def test_cf_curtailment(year, site):
         scale_outputs=True,
     )
     gen.run(max_workers=1)
-    results, check_curtailment = test_res_curtailment(year, site=site,
-                                                      curt_fn=curt_fn)
-    results["cf_profile"] = gen.out["cf_profile"].flatten()
+    check_curtailment, __ = _compute_res_curtailment_check(year,
+                                                           curt_fn=curt_fn)
 
     # was capacity factor NOT curtailed?
     check_cf = gen.out["cf_profile"].flatten() != 0
 
     # Were all thresholds met and windspeed NOT curtailed?
-    check = check_curtailment & check_cf
+    check = check_curtailment[:, site] & check_cf
 
     msg = (
         "All curtailment thresholds were met and cf_profile "
@@ -206,39 +278,9 @@ def test_random(year, site):
 @pytest.mark.parametrize("curt_fn", ["curtailment.json"])
 def test_res_curtailment(year, site, curt_fn):
     """Test wind resource curtailment."""
-    out, non_curtailed_res, pp = get_curtailment(year, curt_fn=curt_fn)
-    curtailment_config = list(pp.curtailment.values())[0]
-
-    sza = SolarPosition(
-        non_curtailed_res.time_index,
-        non_curtailed_res.meta[
-            [ResourceMetaField.LATITUDE, ResourceMetaField.LONGITUDE]
-        ].values,
-    ).zenith
-
-    ti = non_curtailed_res.time_index
-
-    # was it in a curtailment month?
-    check1 = np.isin(non_curtailed_res.time_index.month,
-                     curtailment_config.months)
-    check1 = np.tile(
-        np.expand_dims(check1, axis=1), non_curtailed_res.shape[1]
-    )
-
-    # was the non-curtailed wind speed threshold met?
-    check2 = (
-        non_curtailed_res._res_arrays["windspeed"]
-        < curtailment_config.wind_speed
-    )
-
-    # was it nighttime?
-    check3 = sza > curtailment_config.dawn_dusk
-
-    # was the temperature threshold met?
-    check4 = out._res_arrays["temperature"] > curtailment_config.temperature
-
-    # thresholds for curtailment
-    check_curtailment = check1 & check2 & check3 & check4
+    check_curtailment, out = _compute_res_curtailment_check(year,
+                                                            curt_fn=curt_fn,
+                                                            drop_leap=False)
 
     # was windspeed NOT curtailed?
     check5 = out._res_arrays["windspeed"] != 0
@@ -252,31 +294,6 @@ def test_res_curtailment(year, site, curt_fn):
     )
 
     assert np.sum(check) == 0, msg
-
-    # optional output df to help check results
-    i = site
-    df = pd.DataFrame(
-        {
-            "i": range(len(sza)),
-            "curtailed_wind": out._res_arrays["windspeed"][:, i],
-            "original_wind": non_curtailed_res._res_arrays["windspeed"][:, i],
-            "temperature": out._res_arrays["temperature"][:, i],
-            "sza": sza[:, i],
-            "wind_curtail": check2[:, i],
-            "month_curtail": check1[:, i],
-            "sza_curtail": check3[:, i],
-            "temp_curtail": check4[:, i],
-        },
-        index=ti,
-    )
-
-    if str(year) == "2012":
-        drop_day = (ti.month == 12) & (ti.day == 31)
-        df = df.drop(df.index[drop_day])
-        check_curtailment = check_curtailment[~drop_day, :]
-
-    return df, check_curtailment[:, site]
-
 
 def test_date_range():
     """Test curtailment based on a date range vs. months list"""
@@ -349,7 +366,7 @@ def test_points_missing_curtailment():
     for msg in expected_msgs:
         assert any(msg in str(record) for record in warn)
 
-    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    df = _compute_res_curtailment_df(2012, 0, curt_fn=curt_fn)
     assert np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
 
 
@@ -371,11 +388,11 @@ def test_basic_spatial_curtailment():
 
     gen.run(max_workers=1)
 
-    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    df = _compute_res_curtailment_df(2012, 0, curt_fn=curt_fn)
     assert not np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
     assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
 
-    df, __ = test_res_curtailment(2012, 1, curt_fn=curt_fn)
+    df = _compute_res_curtailment_df(2012, 1, curt_fn=curt_fn)
     assert np.allclose(gen.out["windspeed"][:, 1], df["original_wind"])
     assert not np.allclose(gen.out["windspeed"][:, 1], df["curtailed_wind"])
 
@@ -411,20 +428,20 @@ def test_multiple_spatial_curtailment():
     gen.run(max_workers=1)
 
     for (gid, g_ind) in [(10, 1), (49, 4)]:
-        df, __ = test_res_curtailment(2012, gid, curt_fn="curtailment.json")
+        df = _compute_res_curtailment_df(2012, gid, curt_fn="curtailment.json")
         assert np.allclose(gen.out["windspeed"][:, g_ind], df["original_wind"])
         assert not np.allclose(gen.out["windspeed"][:, g_ind],
                                df["curtailed_wind"])
 
     for (gid, g_ind) in [(0, 0), (33, 3)]:
-        df, __ = test_res_curtailment(2012, gid, curt_fn="curtailment.json")
+        df = _compute_res_curtailment_df(2012, gid, curt_fn="curtailment.json")
         assert not np.allclose(gen.out["windspeed"][:, g_ind],
                                df["original_wind"])
         assert np.allclose(gen.out["windspeed"][:, g_ind],
                            df["curtailed_wind"])
 
-    df, __ = test_res_curtailment(2012, 25,
-                                  curt_fn="curtailment_date_range.json")
+    df = _compute_res_curtailment_df(2012, 25,
+                                     curt_fn="curtailment_date_range.json")
     assert not np.allclose(gen.out["windspeed"][:, 2], df["original_wind"])
     assert np.allclose(gen.out["windspeed"][:, 2], df["curtailed_wind"])
 
@@ -452,7 +469,7 @@ def test_default_curtailment(points):
 
     gen.run(max_workers=1)
 
-    df, __ = test_res_curtailment(2012, 0, curt_fn=curt_fn)
+    df = _compute_res_curtailment_df(2012, 0, curt_fn=curt_fn)
     assert not np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
     assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
 

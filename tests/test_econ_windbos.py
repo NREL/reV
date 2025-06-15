@@ -241,8 +241,6 @@ def test_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
             test = np.allclose(e.out[k], BASELINE[k], atol=ATOL, rtol=0.02)
             assert test, msg
 
-        return e
-
 
 def test_run_bos(points=slice(0, 5), max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
@@ -276,8 +274,6 @@ def test_run_bos(points=slice(0, 5), max_workers=1):
         )
         msg = "Failed for {}".format(k)
         assert check, msg
-
-    return e
 
 
 def execute_pytest(capture="all", flags="-rapP"):
