@@ -53,7 +53,8 @@ class PlaceTurbines:
                  fixed_operating_cost_function,
                  variable_operating_cost_function,
                  balance_of_system_cost_function,
-                 include_mask, pixel_side_length, min_spacing):
+                 include_mask, pixel_side_length, min_spacing,
+                 convex_hull_buffer=0):
         """
         Parameters
         ----------
@@ -123,6 +124,10 @@ class PlaceTurbines:
             Side length (m) of a single pixel of the `include_mask`.
         min_spacing : float
             The minimum spacing between turbines (in meters).
+        convex_hull_buffer : float, default=0
+            Buffer (in m) to apply to turbine location convex hull
+            before computing the convex hull area and capacity density.
+            By default, ``0``.
         """
 
         # inputs
@@ -138,6 +143,7 @@ class PlaceTurbines:
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
+        self.convex_hull_buffer = convex_hull_buffer
 
         # internal variables
         self.nrows, self.ncols = np.shape(include_mask)
@@ -455,7 +461,7 @@ class PlaceTurbines:
         turbines = MultiPoint([Point(x, y)
                                for x, y in zip(self.turbine_x,
                                                self.turbine_y)])
-        return turbines.convex_hull
+        return turbines.convex_hull.buffer(self.convex_hull_buffer)
 
     @property
     @none_until_optimized
