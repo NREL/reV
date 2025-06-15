@@ -140,6 +140,7 @@ class SupplyCurveField(FieldEnum):
     MEAN_RES = "resource"
     MEAN_CF_AC = "capacity_factor_ac"
     MEAN_CF_DC = "capacity_factor_dc"
+    WAKE_LOSSES = "losses_wakes_pct"
     MEAN_LCOE = "lcoe_site_usd_per_mwh"
     CAPACITY_AC_MW = "capacity_ac_mw"
     CAPACITY_DC_MW = "capacity_dc_mw"
