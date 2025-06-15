@@ -98,6 +98,7 @@ EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.CAPACITY_DC_MW,
                          SupplyCurveField.MEAN_CF_AC,
                          SupplyCurveField.MEAN_CF_DC,
+                         SupplyCurveField.WAKE_LOSSES,
                          SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH,
                          SupplyCurveField.EOS_MULT,
                          SupplyCurveField.REG_MULT,
@@ -669,6 +670,7 @@ def test_bespoke():
                 "cf_mean-means",
                 "extra_unused_data-2012",
                 "ws_mean",
+                "annual_wake_loss_internal_percent-means"
             )
             for dset in dsets_1d:
                 assert dset in list(f)
@@ -1349,14 +1351,21 @@ def test_bespoke_prior_run():
         # multi-year means should not match the 2nd run with 2013 only.
         # 2013 values should match exactly
         assert not np.allclose(data1["cf_mean-means"], data2["cf_mean-means"])
-        assert np.allclose(data1["cf_mean-2013"], data2["cf_mean-2013"])
+        assert np.allclose(data1["cf_mean-2013"], data2["cf_mean-2013"],
+                           rtol=1e-6, atol=1e-9)
+
+        assert not np.allclose(data1["annual_energy-means"],
+                               data2["annual_energy-means"])
+        assert np.allclose(data1["annual_energy-2013"],
+                           data2["annual_energy-2013"],rtol=1e-6, atol=1e-9)
 
         assert not np.allclose(
-            data1["annual_energy-means"], data2["annual_energy-means"]
+            data1["annual_wake_loss_internal_percent-means"],
+            data2["annual_wake_loss_internal_percent-means"]
         )
-        assert np.allclose(
-            data1["annual_energy-2013"], data2["annual_energy-2013"]
-        )
+        assert np.allclose(data1["annual_wake_loss_internal_percent-2013"],
+                           data2["annual_wake_loss_internal_percent-2013"],
+                           rtol=1e-6, atol=1e-9)
 
 
 def test_gid_map():
