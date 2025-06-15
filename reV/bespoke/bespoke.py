@@ -258,8 +258,9 @@ class BespokeSinglePlant:
                  ws_bins=(0.0, 20.0, 5.0), wd_bins=(0.0, 360.0, 45.0),
                  excl_dict=None, inclusion_mask=None, data_layers=None,
                  resolution=64, excl_area=None, exclusion_shape=None,
-                 eos_mult_baseline_cap_mw=200, prior_meta=None, gid_map=None,
-                 bias_correct=None, pre_loaded_data=None, close=True):
+                 eos_mult_baseline_cap_mw=200, convex_hull_buffer=0,
+                 prior_meta=None, gid_map=None, bias_correct=None,
+                 pre_loaded_data=None, close=True):
         """
         Parameters
         ----------
@@ -387,6 +388,10 @@ class BespokeSinglePlant:
             divided by the $-per-kW of a plant with this baseline
             capacity. By default, `200` (MW), which aligns the baseline
             with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
+        convex_hull_buffer : float, default=0
+            Buffer (in m) to apply to turbine location convex hull
+            before computing the convex hull area and capacity density.
+            By default, ``0``.
         prior_meta : pd.DataFrame | None
             Optional meta dataframe belonging to a prior run. This will only
             run the timeseries power generation step and assume that all of the
@@ -443,6 +448,11 @@ class BespokeSinglePlant:
                 eos_mult_baseline_cap_mw
             )
         )
+        logger.debug(
+            "Bespoke convex hull buffer: {:,} m".format(
+                convex_hull_buffer
+            )
+        )
 
         if isinstance(min_spacing, str) and min_spacing.endswith("x"):
             rotor_diameter = sam_sys_inputs["wind_turbine_rotor_diameter"]
@@ -475,6 +485,7 @@ class BespokeSinglePlant:
         self._ws_bins = ws_bins
         self._wd_bins = wd_bins
         self._baseline_cap_mw = eos_mult_baseline_cap_mw
+        self.convex_hull_buffer = convex_hull_buffer
 
         self._res_df = None
         self._prior_meta = prior_meta is not None
@@ -1072,7 +1083,8 @@ class BespokeSinglePlant:
                 self.balance_of_system_cost_function,
                 self.include_mask,
                 self.pixel_side_length,
-                self.min_spacing)
+                self.min_spacing,
+                self.convex_hull_buffer)
 
         return self._plant_optm
 
@@ -1500,8 +1512,8 @@ class BespokeWindPlants(BaseAggregation):
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, data_layers=None,
                  pre_extract_inclusions=False, eos_mult_baseline_cap_mw=200,
-                 prior_run=None, gid_map=None, bias_correct=None,
-                 pre_load_data=False):
+                 convex_hull_buffer=0, prior_run=None, gid_map=None,
+                 bias_correct=None, pre_load_data=False):
         """reV bespoke analysis class.
 
         Much like generation, ``reV`` bespoke analysis runs SAM
@@ -1866,6 +1878,10 @@ class BespokeWindPlants(BaseAggregation):
             divided by the $-per-kW of a plant with this baseline
             capacity. By default, `200` (MW), which aligns the baseline
             with ATB assumptions. See here: https://tinyurl.com/y85hnu6h.
+        convex_hull_buffer : float, default=0
+            Buffer (in m) to apply to turbine location convex hull
+            before computing the convex hull area and capacity density.
+            By default, ``0``.
         prior_run : str, optional
             Optional filepath to a bespoke output HDF5 file belonging to
             a prior run. If specified, this module will only run the
@@ -1990,6 +2006,7 @@ class BespokeWindPlants(BaseAggregation):
         self._wd_bins = wd_bins
         self._data_layers = data_layers
         self._eos_mult_baseline_cap_mw = eos_mult_baseline_cap_mw
+        self._convex_hull_buffer = convex_hull_buffer
         self._prior_meta = self._parse_prior_run(prior_run)
         self._gid_map = BespokeSinglePlant._parse_gid_map(gid_map)
         self._bias_correct = Gen._parse_bc(bias_correct)
@@ -2466,8 +2483,9 @@ class BespokeWindPlants(BaseAggregation):
                    area_filter_kernel='queen', min_area=None,
                    resolution=64, excl_area=0.0081, data_layers=None,
                    gids=None, exclusion_shape=None, slice_lookup=None,
-                   eos_mult_baseline_cap_mw=200, prior_meta=None,
-                   gid_map=None, bias_correct=None, pre_loaded_data=None):
+                   eos_mult_baseline_cap_mw=200, convex_hull_buffer=0,
+                   prior_meta=None, gid_map=None, bias_correct=None,
+                   pre_loaded_data=None):
         """
         Standalone serial method to run bespoke optimization.
         See BespokeWindPlants docstring for parameter description.
@@ -2533,6 +2551,7 @@ class BespokeWindPlants(BaseAggregation):
                         data_layers=data_layers,
                         exclusion_shape=exclusion_shape,
                         eos_mult_baseline_cap_mw=eos_mult_baseline_cap_mw,
+                        convex_hull_buffer=convex_hull_buffer,
                         prior_meta=prior_meta,
                         gid_map=gid_map,
                         bias_correct=bias_correct,
@@ -2625,6 +2644,7 @@ class BespokeWindPlants(BaseAggregation):
                     exclusion_shape=self.shape,
                     slice_lookup=copy.deepcopy(self.slice_lookup),
                     eos_mult_baseline_cap_mw=self._eos_mult_baseline_cap_mw,
+                    convex_hull_buffer=self._convex_hull_buffer,
                     prior_meta=self._get_prior_meta(gid),
                     gid_map=self._gid_map,
                     bias_correct=self._get_bc_for_gid(gid),
@@ -2689,6 +2709,7 @@ class BespokeWindPlants(BaseAggregation):
                 afk = self._area_filter_kernel
                 i_bc = self._get_bc_for_gid(gid)
                 ebc = self._eos_mult_baseline_cap_mw
+                chb = self._convex_hull_buffer
 
                 si = self.run_serial(self._excl_fpath,
                                      self._res_fpath,
@@ -2713,6 +2734,7 @@ class BespokeWindPlants(BaseAggregation):
                                      data_layers=self._data_layers,
                                      slice_lookup=slice_lookup,
                                      eos_mult_baseline_cap_mw=ebc,
+                                     convex_hull_buffer=chb,
                                      prior_meta=prior_meta,
                                      gid_map=self._gid_map,
                                      bias_correct=i_bc,
