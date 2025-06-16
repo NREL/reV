@@ -1857,6 +1857,15 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
         return None
 
     @property
+    def mean_wake_losses(self):
+        """float: Mean wake losses, if applicable."""
+        if "annual_wake_loss_internal_percent-means" not in self.gen.datasets:
+            return None
+
+        wakes = self.gen["annual_wake_loss_internal_percent-means"]
+        return self.exclusion_weighted_mean(wakes)
+
+    @property
     def mean_lcoe(self):
         """Get the mean LCOE for the non-excluded data.
 
@@ -2368,6 +2377,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             SupplyCurveField.MEAN_CF_DC: self.mean_cf_dc,
             SupplyCurveField.MEAN_LCOE: self.mean_lcoe,
             SupplyCurveField.MEAN_RES: self.mean_res,
+            SupplyCurveField.WAKE_LOSSES: self.mean_wake_losses,
             SupplyCurveField.AREA_SQ_KM: self.area,
             SupplyCurveField.CAPACITY_AC_MW: (
                 self.capacity if self.capacity_ac is None else self.capacity_ac
