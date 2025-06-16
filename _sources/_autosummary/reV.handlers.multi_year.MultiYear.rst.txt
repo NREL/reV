@@ -1,0 +1,87 @@
+reV.handlers.multi\_year.MultiYear
+==================================
+
+.. currentmodule:: reV.handlers.multi_year
+
+.. autoclass:: MultiYear
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiYear.CV
+      ~MultiYear.add_dataset
+      ~MultiYear.close
+      ~MultiYear.collect
+      ~MultiYear.collect_means
+      ~MultiYear.collect_profiles
+      ~MultiYear.df_str_decode
+      ~MultiYear.get_SAM_df
+      ~MultiYear.get_attrs
+      ~MultiYear.get_config
+      ~MultiYear.get_dset_properties
+      ~MultiYear.get_meta_arr
+      ~MultiYear.get_scale_factor
+      ~MultiYear.get_units
+      ~MultiYear.init_h5
+      ~MultiYear.is_profile
+      ~MultiYear.means
+      ~MultiYear.open_dataset
+      ~MultiYear.open_file
+      ~MultiYear.parse_source_files_pattern
+      ~MultiYear.pass_through
+      ~MultiYear.preload_SAM
+      ~MultiYear.set_configs
+      ~MultiYear.set_version_attr
+      ~MultiYear.stdev
+      ~MultiYear.update_dset
+      ~MultiYear.write_dataset
+      ~MultiYear.write_means
+      ~MultiYear.write_profiles
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiYear.ADD_ATTR
+      ~MultiYear.SAM_configs
+      ~MultiYear.SCALE_ATTR
+      ~MultiYear.UNIT_ATTR
+      ~MultiYear.adders
+      ~MultiYear.attrs
+      ~MultiYear.chunks
+      ~MultiYear.coordinates
+      ~MultiYear.data_version
+      ~MultiYear.datasets
+      ~MultiYear.dsets
+      ~MultiYear.dtypes
+      ~MultiYear.full_version_record
+      ~MultiYear.global_attrs
+      ~MultiYear.groups
+      ~MultiYear.h5
+      ~MultiYear.lat_lon
+      ~MultiYear.meta
+      ~MultiYear.package
+      ~MultiYear.res_dsets
+      ~MultiYear.resource_datasets
+      ~MultiYear.run_attrs
+      ~MultiYear.scale_factors
+      ~MultiYear.shape
+      ~MultiYear.shapes
+      ~MultiYear.source
+      ~MultiYear.time_index
+      ~MultiYear.units
+      ~MultiYear.version
+      ~MultiYear.writable
+   
+   

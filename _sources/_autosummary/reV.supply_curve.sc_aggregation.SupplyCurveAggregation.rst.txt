@@ -1,0 +1,34 @@
+reV.supply\_curve.sc\_aggregation.SupplyCurveAggregation
+========================================================
+
+.. currentmodule:: reV.supply_curve.sc_aggregation
+
+.. autoclass:: SupplyCurveAggregation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupplyCurveAggregation.run
+      ~SupplyCurveAggregation.run_parallel
+      ~SupplyCurveAggregation.run_serial
+      ~SupplyCurveAggregation.summarize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SupplyCurveAggregation.gids
+      ~SupplyCurveAggregation.shape
+   
+   

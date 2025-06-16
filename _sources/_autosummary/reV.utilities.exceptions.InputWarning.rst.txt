@@ -1,0 +1,6 @@
+reV.utilities.exceptions.InputWarning
+=====================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: InputWarning

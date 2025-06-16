@@ -1,0 +1,6 @@
+reV.hybrids.hybrid\_methods.aggregate\_capacity\_factor
+=======================================================
+
+.. currentmodule:: reV.hybrids.hybrid_methods
+
+.. autofunction:: aggregate_capacity_factor

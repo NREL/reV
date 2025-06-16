@@ -1,0 +1,65 @@
+reV.SAM.generation.LinearDirectSteam
+====================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: LinearDirectSteam
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LinearDirectSteam.add_scheduled_losses
+      ~LinearDirectSteam.annual_energy
+      ~LinearDirectSteam.assign_inputs
+      ~LinearDirectSteam.cf_mean
+      ~LinearDirectSteam.cf_profile
+      ~LinearDirectSteam.check_resource_data
+      ~LinearDirectSteam.collect_outputs
+      ~LinearDirectSteam.default
+      ~LinearDirectSteam.drop_leap
+      ~LinearDirectSteam.energy_yield
+      ~LinearDirectSteam.ensure_res_len
+      ~LinearDirectSteam.execute
+      ~LinearDirectSteam.gen_profile
+      ~LinearDirectSteam.get_sam_res
+      ~LinearDirectSteam.get_time_interval
+      ~LinearDirectSteam.make_datetime
+      ~LinearDirectSteam.outputs_to_utc_arr
+      ~LinearDirectSteam.reV_run
+      ~LinearDirectSteam.run
+      ~LinearDirectSteam.run_gen_and_econ
+      ~LinearDirectSteam.set_resource_data
+      ~LinearDirectSteam.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LinearDirectSteam.DIR
+      ~LinearDirectSteam.IGNORE_ATTRS
+      ~LinearDirectSteam.MODULE
+      ~LinearDirectSteam.OUTAGE_CONFIG_KEY
+      ~LinearDirectSteam.OUTAGE_SEED_CONFIG_KEY
+      ~LinearDirectSteam.PYSAM_WEATHER_TAG
+      ~LinearDirectSteam.WF_META_DROP_COLS
+      ~LinearDirectSteam.attr_dict
+      ~LinearDirectSteam.has_timezone
+      ~LinearDirectSteam.input_list
+      ~LinearDirectSteam.meta
+      ~LinearDirectSteam.module
+      ~LinearDirectSteam.outage_seed
+      ~LinearDirectSteam.pysam
+      ~LinearDirectSteam.site
+   
+   

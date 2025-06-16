@@ -1,0 +1,34 @@
+reV.losses.scheduled
+====================
+
+.. automodule:: reV.losses.scheduled
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      Outage
+      OutageScheduler
+      ScheduledLossesMixin
+      SingleOutageScheduler
+   
+   
+
+   
+   
+   
+
+
+

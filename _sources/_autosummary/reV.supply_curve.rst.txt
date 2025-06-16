@@ -1,0 +1,40 @@
+reV.supply\_curve
+=================
+
+.. automodule:: reV.supply_curve
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   aggregation
+   cli_sc_aggregation
+   cli_supply_curve
+   cli_tech_mapping
+   competitive_wind_farms
+   exclusions
+   extent
+   points
+   sc_aggregation
+   supply_curve
+   tech_mapping
+
