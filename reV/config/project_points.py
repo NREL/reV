@@ -627,10 +627,14 @@ class ProjectPoints:
         # pylint: disable=no-member
         if SiteDataField.CONFIG not in df.columns:
             df[SiteDataField.CONFIG] = None
+        df[SiteDataField.CONFIG] = (df[SiteDataField.CONFIG]
+                                    .replace({np.nan: None}))
 
         # pylint: disable=no-member
         if SiteDataField.CURTAILMENT not in df.columns:
             df[SiteDataField.CURTAILMENT] = None
+        df[SiteDataField.CURTAILMENT] = (df[SiteDataField.CURTAILMENT]
+                                         .replace({np.nan: None}))
 
         gids = df[SiteDataField.GID].values
         if not np.array_equal(np.sort(gids), gids):

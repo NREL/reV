@@ -1434,7 +1434,7 @@ def test_bespoke_prior_run():
         assert not np.allclose(data1["annual_energy-means"],
                                data2["annual_energy-means"])
         assert np.allclose(data1["annual_energy-2013"],
-                           data2["annual_energy-2013"],rtol=1e-6, atol=1e-9)
+                           data2["annual_energy-2013"], rtol=1e-6, atol=1e-9)
 
         assert not np.allclose(
             data1["annual_wake_loss_internal_percent-means"],

@@ -188,6 +188,82 @@ def test_sam_config(tech):
                            gen_dict.out['cf_profile']), msg
 
 
+def test_cli_run_spaces_in_config(runner, clear_loggers):
+    """
+    Test running generation from CLI with spaces in SAM config keys
+    """
+    wind_key = "My wind SAM config_"
+    with tempfile.TemporaryDirectory() as td:
+
+        run_dir = os.path.join(td, 'generation')
+        os.mkdir(run_dir)
+
+        fconfig = 'local_wind.json'
+        project_points = os.path.join(TESTDATADIR, 'config', '..',
+                                      'config', "wtk_pp_2012_10_spaces.csv")
+        resource_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5')
+        sam_files = {wind_key: os.path.join(TESTDATADIR, "SAM",
+                                            "wind_gen_standard_losses_0.json")}
+
+        config = os.path.join(TESTDATADIR,
+                              'config/{}'.format(fconfig)).replace('\\', '/')
+        config = safe_json_load(config)
+        config['project_points'] = project_points
+        config['resource_file'] = resource_file
+        config['sam_files'] = sam_files
+        config['log_directory'] = run_dir
+
+        config_path = os.path.join(run_dir, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['generation', '-c', config_path])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        assert len(os.listdir(td)) == 1
+
+        # get reV 2.0 generation profiles from disk
+        rev2_profiles = None
+        flist = os.listdir(run_dir)
+        for fname in flist:
+            if fname.endswith('.h5'):
+                path = os.path.join(run_dir, fname)
+                with Outputs(path, 'r') as cf:
+
+                    msg = 'cf_profile not written to disk'
+                    assert 'cf_profile' in cf.datasets, msg
+                    rev2_profiles = cf['cf_profile']
+
+                    msg = 'monthly_energy not written to disk'
+                    assert 'monthly_energy' in cf.datasets, msg
+                    monthly = cf['monthly_energy']
+                    assert monthly.shape == (12, 10)
+
+                    for output in LCOE_REQUIRED_OUTPUTS:
+                        assert output not in cf.datasets
+
+                break
+
+        if rev2_profiles is None:
+            msg = ('reV gen from config failed for "wind"! Could not find '
+                   'output file in flist: {}'.format(flist))
+            raise RuntimeError(msg)
+
+        # get reV 1.0 generation profiles
+        points = ProjectPoints(project_points, sam_files, tech='wind')
+        rev1_profiles = get_r1_profiles(year=2012, tech='wind')
+        rev1_profiles = rev1_profiles[:, points.sites]
+
+        result = np.allclose(rev1_profiles, rev2_profiles,
+                             rtol=RTOL, atol=ATOL)
+
+        clear_loggers()
+        msg = 'reV generation from config input failed for "wind" module!'
+        assert result is True, msg
+
+
 @pytest.mark.parametrize('expected_log_message',
                          ["Running serial generation for",
                           "Running parallel generation for"])
