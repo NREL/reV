@@ -627,6 +627,7 @@ def test_recalc_lcoe(cap_cost_scale, voc):
 @pytest.mark.parametrize("tm_dset", ("techmap_ri", "techmap_ri_new"))
 @pytest.mark.parametrize("pre_extract", (True, False))
 def test_cli_basic_agg(runner, clear_loggers, tm_dset, pre_extract):
+    """Test basic sc agg cli invocation"""
     with tempfile.TemporaryDirectory() as td:
         excl_fp = os.path.join(td, "excl.h5")
         shutil.copy(EXCL, excl_fp)
@@ -908,6 +909,51 @@ def test_cli_agg_zones(runner, clear_loggers):
         summary[compare_cols],
         s_baseline_subset[compare_cols], check_dtype=False, rtol=0.0001
     )
+
+
+def test_basic_col_desc_cli(runner, clear_loggers):
+    """Test basic sc-col-descriptions cli invocation"""
+    with tempfile.TemporaryDirectory() as td:
+        out_fp = os.path.join(td, "test.csv")
+        result = runner.invoke(main, ["sc-col-descriptions", "-of", out_fp])
+        clear_loggers()
+
+        if result.exit_code != 0:
+            msg = "Failed with error {}".format(
+                traceback.print_exception(*result.exc_info)
+            )
+            raise RuntimeError(msg)
+
+        assert os.path.exists(out_fp)
+
+        desc = pd.read_csv(out_fp)
+        assert len(desc) > 0
+
+
+def test_col_desc_cli_for_sc(runner, clear_loggers):
+    """Test sc-col-descriptions for an input SC file via the CLI"""
+    test_sc = os.path.join(TESTDATADIR, "sc_out", "ri_sc_simple_lc.csv")
+    with tempfile.TemporaryDirectory() as td:
+        to_run_sc = os.path.join(td, "ri_sc_simple_lc.csv")
+        shutil.copy(test_sc, to_run_sc)
+
+        result = runner.invoke(main, ["sc-col-descriptions", "-sc", to_run_sc])
+        clear_loggers()
+
+        if result.exit_code != 0:
+            msg = "Failed with error {}".format(
+                traceback.print_exception(*result.exc_info)
+            )
+            raise RuntimeError(msg)
+
+        expected_fp = os.path.join(td, "ri_sc_simple_lc_column_lookup.csv")
+        assert os.path.exists(expected_fp)
+
+        desc = pd.read_csv(expected_fp)
+        sc = pd.read_csv(to_run_sc)
+
+        assert len(desc) > 0
+        assert all(col in sc.columns for col in desc["reV Column"])
 
 
 def execute_pytest(capture="all", flags="-rapP"):

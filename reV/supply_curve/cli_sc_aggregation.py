@@ -4,14 +4,20 @@ reV Supply Curve Aggregation CLI utility functions.
 """
 import os
 import logging
+from pathlib import Path
 
+import click
+import pandas as pd
+from rex import init_logger
 from rex.multi_file_resource import MultiFileResource
 from rex.utilities.utilities import check_res_file
 from gaps.cli import as_click_command, CLICommandFromClass
 
+from reV import __version__
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.utilities import ModuleName
-from reV.utilities.cli_functions import parse_from_pipeline
+from reV.utilities.cli_functions import (parse_from_pipeline,
+                                         compile_descriptions)
 from reV.utilities.exceptions import ConfigError
 
 
@@ -101,6 +107,38 @@ sc_agg_command = CLICommandFromClass(SupplyCurveAggregation, method="run",
                                      split_keys=None,
                                      config_preprocessor=_preprocessor)
 main = as_click_command(sc_agg_command)
+
+
+@click.command()
+@click.version_option(version=__version__)
+@click.option('--sc_fpath', '-sc', type=click.Path(), default=None,
+              help='Supply curve CSV file path used to subset the columns')
+@click.option('--out_fp', '-of', default=None, type=click.Path(),
+              help='Output CSV file for the column descriptions')
+@click.pass_context
+def sc_col_descriptions(ctx, sc_fpath, out_fp):
+    """Generate reV supply curve column descriptions"""
+    if ctx.obj.get('VERBOSE', False):
+        log_level = 'DEBUG'
+    else:
+        log_level = 'INFO'
+
+    init_logger('reV', log_level=log_level)
+
+    cols = []
+    if sc_fpath:
+        cols = pd.read_csv(sc_fpath, nrows=0).columns.tolist()
+
+    if not out_fp:
+        if sc_fpath:
+            sc_name = Path(sc_fpath).stem
+            out_fp = Path(sc_fpath).parent / f"{sc_name}_column_lookup.csv"
+        else:
+            out_fp = "rev_supply_curve_column_lookup.csv"
+
+    columns = compile_descriptions(cols)
+    columns.to_csv(out_fp, index=False)
+    logger.info("Column descriptions saved to %s", out_fp)
 
 
 if __name__ == '__main__':
