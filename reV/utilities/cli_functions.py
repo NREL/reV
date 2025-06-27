@@ -5,10 +5,11 @@ General CLI utility functions.
 import logging
 from warnings import warn
 
+import pandas as pd
 from gaps.pipeline import Status
 from rex.utilities.loggers import init_mult
 
-from reV.utilities import ModuleName
+from reV.utilities import ModuleName, SupplyCurveField
 from reV.utilities.exceptions import ConfigWarning, PipelineError
 
 
@@ -115,3 +116,44 @@ def parse_from_pipeline(config, out_dir, config_key, target_modules):
                     .format(config_key, val[0]))
 
     return config
+
+
+def compile_descriptions(cols=None):
+    """Compile a meta table with reV column descriptions.
+
+    Descriptions are pulled from the
+    :class:`~reV.utilities.SupplyCurveField` enum, which
+    contains the known reV supply curve field descriptions. Columns
+    which do not have a known description are excluded from the
+    output.
+
+    Parameters
+    ----------
+    cols : iterable, optional
+        Optional iterable of column names to include in the output.
+        By default, ``None``, which compiles all known reV supply curve
+        field descriptions.
+
+    Returns
+    -------
+    pd.DataFrame
+        Pandas DataFrame containing column names, corresponding units,
+        and descriptions for each column. Only columns that have a known
+        description are included in the output.
+    """
+    if not cols:
+        cols = [c.value for c in SupplyCurveField]
+
+    data = []
+    for col in cols:
+        try:
+            scf = SupplyCurveField(col)
+        except ValueError:
+            continue
+
+        if scf.description is None:
+            continue
+
+        data.append((str(scf), scf.units, scf.description))
+
+    return pd.DataFrame(data, columns=["reV Column", "Units", "Description"])
