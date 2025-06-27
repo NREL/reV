@@ -7,8 +7,16 @@ PyTest file reV utilities module
 import os
 import pytest
 
-from reV.utilities import ModuleName
+from reV.utilities import ModuleName, DocEnum
 from reV.cli import main
+
+
+class _EnumForTests(str, DocEnum):
+    """Test Enum with a description"""
+
+    VALUE_ONE = 'value_one'
+    """First Value to test"""
+    VALUE_TWO = 'value_two'
 
 
 def test_module_names_enum():
@@ -21,6 +29,15 @@ def test_module_names_enum():
     for enum in ModuleName.__members__.values():
         err_msg = msg.format(enum.value, enum.name, all_commands)
         assert enum.value in all_commands, err_msg
+
+
+def test_doc_enum():
+    """Test the DocEnum class and its description property"""
+
+    assert _EnumForTests.VALUE_ONE == 'value_one'
+    assert _EnumForTests.VALUE_TWO == 'value_two'
+    assert _EnumForTests.VALUE_ONE.description == "First Value to test"
+    assert _EnumForTests.VALUE_TWO.description is None
 
 
 def execute_pytest(capture='all', flags='-rapP'):

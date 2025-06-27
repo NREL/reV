@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """reV utilities."""
-from enum import Enum
+import ast
+import inspect
+from enum import Enum, EnumMeta
 
 import PySAM
 from rex.utilities.loggers import log_versions as rex_log_versions
@@ -8,7 +10,49 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
 
 
-class FieldEnum(str, Enum):
+class _DocstringEnumMeta(EnumMeta):
+    """Metaclass to assign docstrings to Enum members"""
+
+    def __new__(metacls, clsname, bases, clsdict):
+        cls = super().__new__(metacls, clsname, bases, clsdict)
+
+        try:
+            source = inspect.getsource(cls)
+        except TypeError:
+            return cls  # source not available (e.g., in interactive shell)
+
+        module = ast.parse(source)
+
+        for node in ast.iter_child_nodes(module):
+            if isinstance(node, ast.ClassDef) and node.name == cls.__name__:
+                prev = None
+                for body_item in node.body:
+                    if isinstance(body_item, ast.Assign):
+                        target = body_item.targets[0]
+                        if isinstance(target, ast.Name):
+                            name = target.id
+                            prev = body_item
+                    elif (isinstance(body_item, ast.Expr)
+                          and isinstance(body_item.value, ast.Constant)):
+                        if prev:
+                            doc = body_item.value.s
+                            member = cls.__members__.get(name)
+                            if member:
+                                member._description = doc.strip()
+                            prev = None
+        return cls
+
+
+class DocEnum(Enum, metaclass=_DocstringEnumMeta):
+    """Base Enum class with docstring support"""
+
+    @property
+    def description(self):
+        """Description of enum member pulled from docstring"""
+        return getattr(self, '_description', None)
+
+
+class FieldEnum(str, DocEnum):
     """Base Field enum with some mapping methods."""
 
     @classmethod
