@@ -480,7 +480,7 @@ def test_default_curtailment(points):
     assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
 
 
-def test_multiple_spatial_curtailment_cli(runner):
+def test_multiple_spatial_curtailment_cli(runner, clear_loggers):
     """Test execution with multiple spatial curtailments from CLI"""
 
     res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
@@ -533,6 +533,8 @@ def test_multiple_spatial_curtailment_cli(runner):
         out_file = os.path.join(td, h5_files[0])
         with Resource(out_file) as res:
             wind_speeds = res["windspeed"]
+
+        clear_loggers()
 
     for (gid, g_ind) in [(10, 1), (49, 4)]:
         df = _compute_res_curtailment_df(2012, gid, curt_fn="curtailment.json")
