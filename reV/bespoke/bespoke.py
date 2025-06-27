@@ -1282,6 +1282,14 @@ class BespokeSinglePlant:
             for k, v in plant.outputs.items():
                 self._outputs[k + "-{}".format(year)] = v
 
+        self._compute_output_means()
+        self._add_extra_meta_columns()
+        logger.debug("Timeseries analysis complete!")
+
+        return self.outputs
+
+    def _compute_output_means(self):
+        """Compute time series means and store them in the outputs dict"""
         means = {}
         for k1, v1 in self._outputs.items():
             if isinstance(v1, Number) and parse_year(k1, option="boolean"):
@@ -1293,6 +1301,9 @@ class BespokeSinglePlant:
                 means[base_str + "means"] = np.mean(all_values)
 
         self._outputs.update(means)
+
+    def _add_extra_meta_columns(self):
+        """Copy over some non-temporal datasets to meta"""
 
         self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
         self._meta[SupplyCurveField.MEAN_CF_DC] = np.nan
@@ -1318,10 +1329,6 @@ class BespokeSinglePlant:
             self._meta[SupplyCurveField.WAKE_LOSSES] = (
                 self.outputs["annual_wake_loss_internal_percent-means"]
             )
-
-        logger.debug("Timeseries analysis complete!")
-
-        return self.outputs
 
     def run_plant_optimization(self):
         """Run the wind plant layout optimization and export outputs
