@@ -2,7 +2,6 @@
 """
 reV Supply Curve Aggregation CLI utility functions.
 """
-import os
 import logging
 from pathlib import Path
 
