@@ -19,7 +19,8 @@ from rex import Resource
 from reV import TESTDATADIR
 from reV.econ.utilities import lcoe_fcr
 from reV.bespoke.bespoke import BespokeSinglePlant, BespokeWindPlants
-from reV.bespoke.place_turbines import PlaceTurbines, _compute_nn_conn_dist
+from reV.bespoke.place_turbines import (PlaceTurbines, _compute_nn_conn_dist,
+                                        _fix_wp_keys)
 from reV.cli import main
 from reV.handlers.outputs import Outputs
 from reV.losses.power_curve import PowerCurveLossesMixin
@@ -72,18 +73,21 @@ SAM_CONFIGS = {"default": SAM_SYS_INPUTS}
 
 
 CAP_COST_FUN = (
-    "140 * system_capacity "
-    "* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))"
+    "[140][0] * system_capacity "
+    "* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1)) "
+    "+ (self.wind_plant[annual_energy] or 0) * 0"
 )
 FOC_FUN = (
-    "60 * system_capacity "
-    "* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1))"
+    "[60][0] * system_capacity "
+    "* np.exp(-system_capacity / 1E5 * 0.1 + (1 - 0.1)) "
+    "+ (self.wind_plant[annual_energy] or 0) * 0"
 )
-VOC_FUN = "3"
-BOS_FUN = '0'
+VOC_FUN = "[3][0]"
+BOS_FUN = '0 * (self.wind_plant[annual_energy] or 0)'
 OBJECTIVE_FUNCTION = (
     "(0.0975 * capital_cost + fixed_operating_cost) "
-    "/ aep + variable_operating_cost"
+    "/ aep + variable_operating_cost "
+    "+ (self.wind_plant[annual_energy] or 0) * 0"
 )
 EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.SC_POINT_GID,
@@ -122,7 +126,8 @@ EXPECTED_META_COLUMNS = ["gid",  # needed for H5 collection to work properly
                          SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST]
 
 
-def test_turbine_placement(gid=33):
+@pytest.mark.parametrize("use_wp", [False, True])
+def test_turbine_placement(use_wp, gid=33):
     """Test turbine placement with zero available area."""
     output_request = ("system_capacity", "cf_mean", "cf_profile")
     with tempfile.TemporaryDirectory() as td:
@@ -141,9 +146,16 @@ def test_turbine_placement(gid=33):
             excl_fp, RES.format(2012), dset=TM_DSET, max_workers=1,
             sc_resolution=2560
         )
+
+        objective_function = OBJECTIVE_FUNCTION
+        if use_wp:
+            objective_function = (
+                "(0.0975 * capital_cost + fixed_operating_cost) "
+                "/ self.wind_plant[annual_energy] + variable_operating_cost"
+            )
         bsp = BespokeSinglePlant(gid, excl_fp, res_fp, TM_DSET,
                                  sam_sys_inputs,
-                                 OBJECTIVE_FUNCTION,
+                                 objective_function,
                                  CAP_COST_FUN,
                                  FOC_FUN,
                                  VOC_FUN,
@@ -193,6 +205,10 @@ def test_turbine_placement(gid=33):
             place_optimizer.aep == place_optimizer.wind_plant.annual_energy()
         )
 
+        # pylint: disable=W0641
+        self = place_optimizer
+        # pylint: disable=W0641
+        annual_energy = "annual_energy"
         # pylint: disable=W0641
         system_capacity = place_optimizer.capacity
         # pylint: disable=W0641
@@ -1786,3 +1802,27 @@ def test_bespoke_5min_sample():
             assert len(f["time_index-2010"]) == 8760
             assert len(f["windspeed-2010"]) == 8760
             assert len(f["winddirection-2010"]) == 8760
+
+
+def test_fix_wp_keys():
+    """Test the `_fix_wp_keys` function"""
+
+    input_text = '''
+    self.wind_plant[annual_energy]
+    [1, 2, 3]
+    self.wind_plant[some_var]
+    self.wind_plant[ another_var ]
+    self.wind_plant[ a_third_var]
+    self.wind_plant[  a_third_var ]
+    '''
+
+    expected_output_text = '''
+    self.wind_plant["annual_energy"]
+    [1, 2, 3]
+    self.wind_plant["some_var"]
+    self.wind_plant[ "another_var" ]
+    self.wind_plant[ "a_third_var"]
+    self.wind_plant[  "a_third_var" ]
+    '''
+
+    assert _fix_wp_keys(input_text) == expected_output_text

@@ -310,7 +310,24 @@ class BespokeSinglePlant:
                   cost ($) as evaluated by
                   `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
-                  through which all SAM variables can be accessed
+                  through which all SAM variables can be accessed.
+
+                  .. IMPORTANT::
+                     When using the `self.wind_plant` variable,
+                     DO NOT include quotes around variable names (keys).
+
+                        - ❌ Wrong: ``self.wind_plant["annual_energy"]``
+                        - ✅ Correct: ``self.wind_plant[annual_energy]``
+
+                  .. IMPORTANT::
+                     It's possible for SAM wind plant variables to be
+                     ``None``, especially if something went wrong while
+                     optimizing the wind plant layout. In this case,
+                     your objective function may fail to evaluate and
+                     terminate the program entirely. To avoid this, add
+                     a default value for the variable in your objective
+                     function, like so:
+                     ``(self.wind_plant[annual_energy] or 0)``
 
         capital_cost_function : str
             The plant capital cost function as a string, must return the total
@@ -1265,6 +1282,14 @@ class BespokeSinglePlant:
             for k, v in plant.outputs.items():
                 self._outputs[k + "-{}".format(year)] = v
 
+        self._compute_output_means()
+        self._add_extra_meta_columns()
+        logger.debug("Timeseries analysis complete!")
+
+        return self.outputs
+
+    def _compute_output_means(self):
+        """Compute time series means and store them in the outputs dict"""
         means = {}
         for k1, v1 in self._outputs.items():
             if isinstance(v1, Number) and parse_year(k1, option="boolean"):
@@ -1276,6 +1301,9 @@ class BespokeSinglePlant:
                 means[base_str + "means"] = np.mean(all_values)
 
         self._outputs.update(means)
+
+    def _add_extra_meta_columns(self):
+        """Copy over some non-temporal datasets to meta"""
 
         self._meta[SupplyCurveField.MEAN_RES] = self.res_df["windspeed"].mean()
         self._meta[SupplyCurveField.MEAN_CF_DC] = np.nan
@@ -1301,10 +1329,6 @@ class BespokeSinglePlant:
             self._meta[SupplyCurveField.WAKE_LOSSES] = (
                 self.outputs["annual_wake_loss_internal_percent-means"]
             )
-
-        logger.debug("Timeseries analysis complete!")
-
-        return self.outputs
 
     def run_plant_optimization(self):
         """Run the wind plant layout optimization and export outputs
@@ -1626,7 +1650,24 @@ class BespokeWindPlants(BaseAggregation):
                   cost ($) as evaluated by
                   `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
-                  through which all SAM variables can be accessed
+                  through which all SAM variables can be accessed.
+
+                  .. IMPORTANT::
+                     When using the `self.wind_plant` variable,
+                     DO NOT include quotes around variable names (keys).
+
+                        - ❌ Wrong: ``self.wind_plant["annual_energy"]``
+                        - ✅ Correct: ``self.wind_plant[annual_energy]``
+
+                  .. IMPORTANT::
+                     It's possible for SAM wind plant variables to be
+                     ``None``, especially if something went wrong while
+                     optimizing the wind plant layout. In this case,
+                     your objective function may fail to evaluate and
+                     terminate the program entirely. To avoid this, add
+                     a default value for the variable in your objective
+                     function, like so:
+                     ``(self.wind_plant[annual_energy] or 0)``
 
         capital_cost_function : str
             The plant capital cost function written out as a string.

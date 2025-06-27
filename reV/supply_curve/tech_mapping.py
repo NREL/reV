@@ -32,6 +32,7 @@ class TechMapping:
 
     def __init__(self, excl_fpath, sc_resolution=1200):
         """
+
         Parameters
         ----------
         excl_fpath : str
@@ -44,9 +45,9 @@ class TechMapping:
             map the exclusion pixels in 1200x1200 pixel chunks.
 
             .. Note:: This parameter does not affect the exclusion to resource
-            (tech) mapping, which deviates from how the effect of the
-            ``sc_resolution`` parameter works in other functionality within
-            ``reV``.
+                      (tech) mapping, which deviates from how the effect of the
+                      ``sc_resolution`` parameter works in other functionality
+                      within ``reV``.
 
         """
         self._excl_fpath = excl_fpath
@@ -433,7 +434,7 @@ class TechMapping:
             techmap (exclusions-to-resource mapping data) will be saved.
 
             .. Important:: If this dataset already exists in the h5 file,
-              it will be overwritten.
+                           it will be overwritten.
 
         sc_resolution : int | None, optional
             Defines how many exclusion pixels are mapped at a time. Units
@@ -442,9 +443,9 @@ class TechMapping:
             map the exclusion pixels in 1200x1200 pixel chunks.
 
             .. Note:: This parameter does not affect the exclusion to resource
-            (tech) mapping, which deviates from how the effect of the
-            ``sc_resolution`` parameter works in other functionality within
-            ``reV``.
+                      (tech) mapping, which deviates from how the effect of the
+                      ``sc_resolution`` parameter works in other functionality
+                      within ``reV``.
 
         dist_margin : float, optional
             Extra margin to multiply times the computed distance between

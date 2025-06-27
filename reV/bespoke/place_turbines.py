@@ -3,6 +3,7 @@
 """
 place turbines for bespoke wind plants
 """
+import re
 from functools import wraps
 
 import numpy as np
@@ -96,7 +97,24 @@ class PlaceTurbines:
                   cost ($) as evaluated by
                   `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
-                  through which all SAM variables can be accessed
+                  through which all SAM variables can be accessed.
+
+                  .. IMPORTANT::
+                     When using the `self.wind_plant` variable,
+                     DO NOT include quotes around variable names (keys).
+
+                        - ❌ Wrong: ``self.wind_plant["annual_energy"]``
+                        - ✅ Correct: ``self.wind_plant[annual_energy]``
+
+                  .. IMPORTANT::
+                     It's possible for SAM wind plant variables to be
+                     ``None``, especially if something went wrong while
+                     optimizing the wind plant layout. In this case,
+                     your objective function may fail to evaluate and
+                     terminate the program entirely. To avoid this, add
+                     a default value for the variable in your objective
+                     function, like so:
+                     ``(self.wind_plant[annual_energy] or 0)``
 
         capital_cost_function : str
             The plant capital cost function as a string, must return the
@@ -133,13 +151,15 @@ class PlaceTurbines:
         # inputs
         self.wind_plant = wind_plant
 
-        self.capital_cost_function = capital_cost_function
-        self.fixed_operating_cost_function = fixed_operating_cost_function
-        self.variable_operating_cost_function = \
-            variable_operating_cost_function
-        self.balance_of_system_cost_function = balance_of_system_cost_function
+        self.capital_cost_function = _fix_wp_keys(capital_cost_function)
+        self.fixed_operating_cost_function = _fix_wp_keys(
+            fixed_operating_cost_function)
+        self.variable_operating_cost_function = _fix_wp_keys(
+            variable_operating_cost_function)
+        self.balance_of_system_cost_function = _fix_wp_keys(
+            balance_of_system_cost_function)
 
-        self.objective_function = objective_function
+        self.objective_function = _fix_wp_keys(objective_function)
         self.include_mask = include_mask
         self.pixel_side_length = pixel_side_length
         self.min_spacing = min_spacing
@@ -158,7 +178,6 @@ class PlaceTurbines:
         self.safe_polygons = None
         self._optimized_nn_conn_dist_m = None
 
-        self.ILLEGAL = ('import ', 'os.', 'sys.', '.__', '__.', 'eval', 'exec')
         self._preflight(self.objective_function)
         self._preflight(self.capital_cost_function)
         self._preflight(self.fixed_operating_cost_function)
@@ -167,7 +186,10 @@ class PlaceTurbines:
 
     def _preflight(self, eqn):
         """Run preflight checks on the equation string."""
-        for substr in self.ILLEGAL:
+        _illegal_substr = ('import ', 'os.', 'sys.', '.__', '__.', 'eval',
+                           'exec')
+
+        for substr in _illegal_substr:
             if substr in str(eqn):
                 msg = ('Will not evaluate string which contains "{}": {}'
                        .format(substr, eqn))
@@ -656,3 +678,10 @@ def _compute_nn_conn_dist(x_coords, y_coords):
         left_to_connect.mask[next_connection] = 1
 
     return total_dist
+
+
+def _fix_wp_keys(eqn):
+    """Surround key of `self.wind_plant` in quotes"""
+    pattern = r'(self\.wind_plant\[\s*)([^\]]+?)(\s*\])'
+    replacement = r'\1"\2"\3'
+    return re.sub(pattern, replacement, str(eqn))
