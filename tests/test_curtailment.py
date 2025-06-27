@@ -412,13 +412,13 @@ def test_multiple_spatial_curtailment():
     res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
     sam_files = os.path.join(TESTDATADIR,
                              "SAM/wind_gen_standard_losses_0.json")
-    curtail_config = {"c1": os.path.join(TESTDATADIR, "config",
-                                         "curtailment.json"),
-                      "c2": os.path.join(TESTDATADIR, "config",
-                                         "curtailment_date_range.json")}
+    curtail_config = {"c 1": os.path.join(TESTDATADIR, "config",
+                                          "curtailment.json"),
+                      "c 2": os.path.join(TESTDATADIR, "config",
+                                          "curtailment_date_range.json")}
 
     points = pd.DataFrame({"gid": [0, 10, 25, 33, 49],
-                           "curtailment": ["c1", None, "c2", "c1", None]})
+                           "curtailment": ["c 1", None, "c 2", "c 1", None]})
     # run reV 2.0 generation
     gen = Gen("windpower", points, sam_files, res_file,
               output_request=("cf_profile", "windspeed"),
