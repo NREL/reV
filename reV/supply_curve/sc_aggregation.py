@@ -1218,7 +1218,7 @@ class SupplyCurveAggregation(BaseAggregation):
                                          .format(gid, zone_id))
                         else:
                             pointsum['res_class'] = ri
-                            pointsum['zone_id'] = zone_id
+                            pointsum[SupplyCurveField.ZONE_ID] = zone_id
 
                             summary.append(pointsum)
                             logger.debug(
